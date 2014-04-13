@@ -1,0 +1,271 @@
+package WeltladenDB;
+
+// Basic Java stuff:
+import java.util.*; // for Vector
+import java.text.*; // for NumberFormat, DecimalFormat
+
+// MySQL Connector/J stuff:
+import java.sql.SQLException;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.sql.ResultSet;
+
+// GUI stuff:
+//import java.awt.BorderLayout;
+//import java.awt.FlowLayout;
+//import java.awt.Dimension;
+import java.awt.*;
+//import java.awt.event.ActionEvent;
+//import java.awt.event.ActionListener;
+import java.awt.event.*;
+ 
+//import javax.swing.JFrame;
+//import javax.swing.JPanel;
+//import javax.swing.JScrollPane;
+//import javax.swing.JTable;
+//import javax.swing.JTextArea;
+//import javax.swing.JButton;
+//import javax.swing.JCheckBox;
+import javax.swing.*;
+import javax.swing.tree.*;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.table.*;
+
+public abstract class ProduktgruppenlisteGrundlage extends WindowContent implements TreeSelectionListener {
+    // Attribute:
+    protected final String titleStr = "Produktgruppen";
+    private String aktivFilterStr = " AND aktiv = TRUE ";
+    
+    // The panels
+    protected JPanel groupListPanel;
+    // The table holding the article list
+    protected JTree tree;
+
+    // Methoden:
+
+    /**
+     *    The constructor.
+     *       */
+    public ProduktgruppenlisteGrundlage(Connection conn, MainWindowGrundlage mw) {
+	super(conn, mw);
+
+	showTree(titleStr);
+    }
+
+    public JPanel getGroupListPanel() { return groupListPanel; }
+    public JTree getTree() { return tree; }
+
+    public void setGroupListPanel(JPanel pa) { groupListPanel = pa; }
+    public void setTree(JTree tr) { tree = tr; }
+
+    void showTree(String titleStr){
+	groupListPanel = new JPanel();
+	groupListPanel.setLayout(new BoxLayout(groupListPanel, BoxLayout.Y_AXIS));
+	groupListPanel.setBorder(BorderFactory.createTitledBorder(titleStr));
+
+        String artikelCount = queryArtikelCount(null,null,null); // how many artikel are there in total?
+        DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new Gruppe(null,null,null, "Alle Artikel ("+artikelCount+")"));
+        addProduktgruppenToRootNode(rootNode);
+        tree = new JTree(rootNode);
+        tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION); // set the tree so that only one node is selectable
+        tree.addTreeSelectionListener(this);
+
+	JScrollPane scrollPane = new JScrollPane(tree);
+//	scrollPane.setBounds(30,30,200,150);
+	groupListPanel.add(scrollPane);
+
+	this.add(groupListPanel, BorderLayout.CENTER);
+    }
+
+    protected class Gruppe {
+        public String toplevel_id;
+        public String sub_id;
+        public String subsub_id;
+        public String name;
+
+        public Gruppe(String tid, String sid, String ssid, String gname) {
+            toplevel_id = tid; sub_id = sid; subsub_id = ssid;
+            name = gname;
+        }
+
+        public String toString() {
+            return name;
+        }
+    }
+
+    void addProduktgruppenToRootNode(DefaultMutableTreeNode rootNode){
+        DefaultMutableTreeNode groupNode = null;
+        DefaultMutableTreeNode subgroupNode = null;
+        DefaultMutableTreeNode subsubgroupNode = null;
+        String artikelCount, topid, subid, subsubid, groupname;
+
+        Vector< Vector<String> > toplevelgroups = queryTopGruppen();
+        for ( Vector<String> group : toplevelgroups ){
+            topid = group.get(0); subid = group.get(1);
+            subsubid = group.get(2); groupname = group.get(3);
+            artikelCount = queryArtikelCount(topid, subid, subsubid); // how many artikel are there in this gruppe?
+            groupNode = new DefaultMutableTreeNode(new Gruppe(topid, subid, subsubid, groupname+" ("+artikelCount+")"));
+            Vector< Vector<String> > subgroups = querySubGruppen(topid);
+            for ( Vector<String> subgroup : subgroups ){
+                topid = subgroup.get(0); subid = subgroup.get(1);
+                subsubid = subgroup.get(2); groupname = subgroup.get(3);
+                artikelCount = queryArtikelCount(topid, subid, subsubid);
+                subgroupNode = new DefaultMutableTreeNode(new Gruppe(topid, subid, subsubid, groupname+" ("+artikelCount+")"));
+                Vector< Vector<String> > subsubgroups = querySubSubGruppen(topid, subid);
+                for ( Vector<String> subsubgroup : subsubgroups ){
+                    topid = subsubgroup.get(0); subid = subsubgroup.get(1);
+                    subsubid = subsubgroup.get(2); groupname = subsubgroup.get(3);
+                    artikelCount = queryArtikelCount(topid, subid, subsubid);
+                    subsubgroupNode = new DefaultMutableTreeNode(new Gruppe(topid, subid, subsubid, groupname+" ("+artikelCount+")"));
+                    subgroupNode.add(subsubgroupNode);
+                }
+                groupNode.add(subgroupNode);
+            }
+            rootNode.add(groupNode);
+        }
+    }
+
+    protected void updateTree(String filterStr, String titleStr){
+	this.remove(groupListPanel);
+	this.revalidate();
+	showTree(titleStr);
+    }
+
+    //////////////////////////
+    // DB Query Functions
+    //////////////////////////
+
+    private Vector< Vector<String> > queryTopGruppen(){ // select top level nodes in tree
+        Vector< Vector<String> > produktgruppen = new Vector< Vector<String> >();
+	try {
+	    // Create statement for MySQL database
+	    Statement stmt = this.conn.createStatement();
+	    // Run MySQL command
+	    ResultSet rs = stmt.executeQuery(
+		    "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name FROM produktgruppe " +
+                    "WHERE toplevel_id IS NOT NULL AND sub_id IS NULL " + aktivFilterStr +
+                    "ORDER BY toplevel_id"
+		    );
+	    // Now do something with the ResultSet ...
+	    while (rs.next()){
+                Vector<String> rowVector = new Vector<String>();
+                rowVector.add(rs.getString(1));
+                rowVector.add(rs.getString(2));
+                rowVector.add(rs.getString(3));
+                rowVector.add(rs.getString(4));
+                produktgruppen.add(rowVector);
+            }
+	    rs.close();
+	    stmt.close();
+	} catch (SQLException ex) {
+	    System.out.println("Exception: " + ex.getMessage());
+	    ex.printStackTrace();
+	}
+        return produktgruppen;
+    }
+
+    private Vector< Vector<String> > querySubGruppen(String topid){ // select second level nodes in tree
+        Vector< Vector<String> > subgruppen = new Vector< Vector<String> >();
+	try {
+	    // Create statement for MySQL database
+	    Statement stmt = this.conn.createStatement();
+	    // Run MySQL command
+	    ResultSet rs = stmt.executeQuery(
+		    "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name FROM produktgruppe " +
+                    "WHERE toplevel_id = " + topid + " " +
+                    "AND sub_id IS NOT NULL AND subsub_id IS NULL " + aktivFilterStr +
+                    "ORDER BY sub_id"
+		    );
+	    // Now do something with the ResultSet ...
+	    while (rs.next()){
+                Vector<String> rowVector = new Vector<String>();
+                rowVector.add(rs.getString(1));
+                rowVector.add(rs.getString(2));
+                rowVector.add(rs.getString(3));
+                rowVector.add(rs.getString(4));
+                subgruppen.add(rowVector);
+            }
+	    rs.close();
+	    stmt.close();
+	} catch (SQLException ex) {
+	    System.out.println("Exception: " + ex.getMessage());
+	    ex.printStackTrace();
+	}
+        return subgruppen;
+    }
+
+    private Vector< Vector<String> > querySubSubGruppen(String topid, String subid){ // select third level nodes in tree
+        Vector< Vector<String> > subsubgruppen = new Vector< Vector<String> >();
+	try {
+	    // Create statement for MySQL database
+	    Statement stmt = this.conn.createStatement();
+	    // Run MySQL command
+	    ResultSet rs = stmt.executeQuery(
+		    "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name FROM produktgruppe " +
+                    "WHERE toplevel_id = " + topid + " " +
+                    "AND sub_id = " + subid + " AND subsub_id IS NOT NULL " + aktivFilterStr +
+                    "ORDER BY subsub_id"
+		    );
+	    // Now do something with the ResultSet ...
+	    while (rs.next()){
+                Vector<String> rowVector = new Vector<String>();
+                rowVector.add(rs.getString(1));
+                rowVector.add(rs.getString(2));
+                rowVector.add(rs.getString(3));
+                rowVector.add(rs.getString(4));
+                subsubgruppen.add(rowVector);
+            }
+	    rs.close();
+	    stmt.close();
+	} catch (SQLException ex) {
+	    System.out.println("Exception: " + ex.getMessage());
+	    ex.printStackTrace();
+	}
+        return subsubgruppen;
+    }
+
+    private String queryArtikelCount(String topid, String subid, String subsubid){
+        String artikelCount = new String();
+        String filter = "";
+        if (topid == null) 
+            filter = "produktgruppe.toplevel_id > 0 ";
+        else 
+            filter = "produktgruppe.toplevel_id = " + topid + " ";
+        if (subid != null) 
+            filter += " AND produktgruppe.sub_id = " + subid + " ";
+        if (subsubid != null) 
+            filter += " AND produktgruppe.subsub_id = " + subsubid + " ";
+        try {
+            // Create statement for MySQL database
+            Statement stmt = this.conn.createStatement();
+            // Run MySQL command
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT COUNT(artikel_id) FROM artikel INNER JOIN produktgruppe " +
+                    "USING (produktgruppen_id) " + 
+                    "WHERE artikel.aktiv = TRUE AND " + filter
+                    );
+            // Now do something with the ResultSet ...
+            rs.next();
+            artikelCount = rs.getString(1);
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return artikelCount;
+    }
+
+    /**
+     *    * Each non abstract class that implements the ActionListener
+     *      must have this method.
+     *
+     *    @param e the action event.
+     **/
+    public abstract void actionPerformed(ActionEvent e);
+
+    /** Required by TreeSelectionListener interface. */
+    public abstract void valueChanged(TreeSelectionEvent e);
+
+}

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Weltladenkasse" default="debug-jar" basedir=".">
+    <property name="src-kasse" location="src/kasse"/>
+    <property name="src-besteller" location="src/besteller"/>
+    <property name="build" location="build"/>
+    <property name="build-kasse" location="build/kasse"/>
+    <property name="build-besteller" location="build/besteller"/>
+    <property name="build-kasse-resources" location="build/kasse/resources"/>
+    <property name="build-besteller-resources" location="build/besteller/resources"/>
+    <property name="lib" location="lib"/>
+    <property name="resources" location="resources"/>
+    <property name="jarfile-kasse" location="Weltladenkasse_v0.9.jar"/>
+    <property name="jarfile-besteller" location="Weltladenbesteller_v0.9.jar"/>
+
+    <target name="init">
+        <!-- Create the time stamp -->
+        <tstamp/>
+        <!-- Create the build directory structure used by compile -->
+        <mkdir dir="${build}"/>
+        <mkdir dir="${build-kasse}"/>
+        <mkdir dir="${build-kasse-resources}"/>
+        <mkdir dir="${build-besteller}"/>
+        <mkdir dir="${build-besteller-resources}"/>
+    </target>
+
+    <target name="copy" depends="init" description="compile the source">
+        <copy todir="${build-kasse-resources}">
+            <fileset dir="${resources}"/>
+                                 <!-- excludes="**/*.java" -->
+        </copy>
+        <copy todir="${build-besteller-resources}">
+            <fileset dir="${resources}"/>
+        </copy>
+    </target>
+
+    <target name="compile" depends="copy" description="compile the source">
+        <javac srcdir="${src-kasse}" destdir="${build-kasse}" includeantruntime="false"/>
+        <javac srcdir="${src-besteller}" destdir="${build-besteller}" includeantruntime="false"/>
+    </target>
+
+    <target name="debug-compile" depends="copy" description="compile the source in debugging mode">
+        <javac srcdir="${src-kasse}" destdir="${build-kasse}" debug="on" debuglevel="lines,vars,source" includeantruntime="false"/>
+        <javac srcdir="${src-besteller}" destdir="${build-besteller}" debug="on" debuglevel="lines,vars,source" includeantruntime="false"/>
+    </target>
+
+    <target name="jar" depends="compile" description="generate the distribution .jar file">
+        <!-- destfile="Weltladenkasse-${DSTAMP}.jar" -->
+        <jar destfile="${jarfile-kasse}" basedir="${build-kasse}">
+            <manifest>
+                <attribute name="Main-Class" value="Weltladenkasse.Kasse"/>
+            </manifest>
+            <!-- with this solution, the external jars in lib are unzipped and included in the
+                 program's jar http://stackoverflow.com/questions/183292/classpath-including-jar-within-a-jar -->
+            <zipgroupfileset dir="${lib}"/>
+        </jar>
+        <jar destfile="${jarfile-besteller}" basedir="${build-besteller}">
+            <manifest>
+                <attribute name="Main-Class" value="Weltladenbesteller.Besteller"/>
+            </manifest>
+            <zipgroupfileset dir="${lib}"/>
+        </jar>
+    </target>
+
+    <target name="debug-jar" depends="debug-compile,jar" description="generate the distribution .jar file, with debug compile">
+    </target>
+
+    <target name="clean">
+        <delete dir="${build}"/>
+        <delete file="${jarfile-kasse}"/>
+        <delete file="${jarfile-besteller}"/>
+    </target>
+</project>
