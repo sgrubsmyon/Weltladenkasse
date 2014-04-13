@@ -59,6 +59,9 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
 
     private JSplitPane splitPane;
 
+    protected JButton submitButton;
+    protected JButton deleteButton;
+
     // Methoden:
     public ArtikelReadIn(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia) {
 	super(conn, mw, pw, dia);
@@ -132,6 +135,35 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
     }
 
     void showFooter() {
+        footerPanel = new JPanel();
+        submitButton = new JButton("Abschicken");
+        submitButton.setMnemonic(KeyEvent.VK_A);
+        submitButton.addActionListener(this);
+        if (artikelNeu.data.size() == 0){
+            submitButton.setEnabled(false);
+        } else {
+            submitButton.setEnabled(true);
+        }
+        footerPanel.add(submitButton);
+        deleteButton = new JButton("Verwerfen");
+        deleteButton.setMnemonic(KeyEvent.VK_V);
+        deleteButton.addActionListener(this);
+        if (artikelNeu.data.size() == 0){
+            deleteButton.setEnabled(false);
+        } else {
+            deleteButton.setEnabled(true);
+        }
+        footerPanel.add(deleteButton);
+        closeButton = new JButton("Schließen");
+        closeButton.setMnemonic(KeyEvent.VK_S);
+        closeButton.addActionListener(this);
+        if ( !willDataBeLost() ){
+            closeButton.setEnabled(true);
+        } else {
+            closeButton.setEnabled(false);
+        }
+        footerPanel.add(closeButton);
+        allPanel.add(footerPanel);
     }
 
     // will data be lost on close?
@@ -438,7 +470,8 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
 
                 // This is where a real application would open the file.
                 parseFile(file);
-                utf.updateTable();
+                //utf.updateTable();
+                updateAll();
 
                 System.out.println("Opened " + file.getName() + ".");
             } else {
@@ -446,6 +479,21 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
             }
             return;
         }
+	if (e.getSource() == submitButton){
+            submit();
+            artikelNeu.artikelListe.updateAll();
+            emptyTable();
+            //utf.updateTable();
+            updateAll();
+            return;
+        }
+	if (e.getSource() == deleteButton){
+            emptyTable();
+            //utf.updateTable();
+            updateAll();
+            return;
+        }
         super.actionPerformed(e);
+        artikelNeu.actionPerformed(e);
     }
 }
