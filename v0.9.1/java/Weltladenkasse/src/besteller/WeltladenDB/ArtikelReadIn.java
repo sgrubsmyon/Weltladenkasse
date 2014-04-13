@@ -195,7 +195,8 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT produktgruppen_id, barcode, vk_preis, ek_preis, variabler_preis, lieferant_id, herkunft FROM artikel "+
+                    "SELECT produktgruppen_id, barcode, vk_preis, ek_preis, variabler_preis, vpe, " +
+                    "lieferant_id, herkunft FROM artikel "+
                     "WHERE artikel_name = '"+artikelname+"' AND artikel_nr = '"+artikelnummer+"' AND aktiv = TRUE"
                     );
             rs.next();
@@ -203,9 +204,10 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
             results.add(rs.getString(2) == null ? "NULL" : rs.getString(2)); // barcode
             results.add(rs.getString(3) == null ? "NULL" : rs.getString(3)); // vk_preis
             results.add(rs.getString(4) == null ? "NULL" : rs.getString(4)); // ek_preis
-            results.add(rs.getString(5)); // variabler_preis
-            results.add(rs.getString(6) == null ? "NULL" : rs.getString(6)); // lieferant_id
-            results.add(rs.getString(7) == null ? "NULL" : rs.getString(7)); // herkunft
+            results.add(rs.getString(5));                                    // variabler_preis
+            results.add(rs.getString(6) == null ? "NULL" : rs.getString(6)); // vpe
+            results.add(rs.getString(7) == null ? "NULL" : rs.getString(7)); // lieferant_id
+            results.add(rs.getString(8) == null ? "NULL" : rs.getString(8)); // herkunft
             rs.close();
             stmt.close();
         } catch (SQLException ex) {
@@ -216,18 +218,9 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
     }
 
     void parseFile(File file) {
-        //logString += "<div style=\""+baseStyle+"\">-------</div>\n";
         logString += "<div>-------</div>\n";
         logString += "<div style=\""+baseStyle+"\">Datei " + file.getName() + " wird geöffnet...</div>\n";
-        //System.out.println(logString);
         log.setText(logString+logStringEnd);
-        //StringReader sr = new StringReader(logString+logStringEnd);
-        //try {
-        //    log.read(sr, new HTMLDocument());
-        //} catch (IOException ex) {
-        //    System.out.println("Exception: " + ex.getMessage());
-        //    ex.printStackTrace();
-        //}
         try {
             //// use InputStream classes for binary files:
             //FileInputStream fis = new FileInputStream(file);
@@ -251,15 +244,7 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
                 String[] fields = line.split(delimiter);
                 if (fields.length < 5 ){
                     logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (nicht genug Felder).</div>\n";
-                    //System.out.println(logString);
                     log.setText(logString+logStringEnd);
-                    //sr = new StringReader(logString+logStringEnd);
-                    //try {
-                    //    log.read(sr, new HTMLDocument());
-                    //} catch (IOException ex) {
-                    //    System.out.println("Exception: " + ex.getMessage());
-                    //    ex.printStackTrace();
-                    //}
                     continue;
                 }
                 String gruppenname = fields[0];
@@ -273,52 +258,31 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
                 String variabel = "false";
                 if (fields.length > 6)
                     variabel = fields[6].length() == 0 ? "false" : fields[6];
-                String lieferant = "";
+                String vpe = "NULL";
                 if (fields.length > 7)
-                    lieferant = fields[7];
-                String herkunft = "NULL";
+                    vpe = fields[7].length() == 0 ? "NULL" : fields[7];
+                String lieferant = "";
                 if (fields.length > 8)
-                    herkunft = fields[8].length() == 0 ? "NULL" : fields[8];
+                    lieferant = fields[8];
+                String herkunft = "NULL";
+                if (fields.length > 9)
+                    herkunft = fields[9].length() == 0 ? "NULL" : fields[9];
 
                 // parse the fields
                 String gruppenid = queryGruppenID(gruppenname);
                 if (gruppenid.equals("NULL")){
                     logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 1: Produktgruppe unbekannt).</div>\n";
-                    //System.out.println(logString);
                     log.setText(logString+logStringEnd);
-                    //sr = new StringReader(logString+logStringEnd);
-                    //try {
-                    //    log.read(sr, new HTMLDocument());
-                    //} catch (IOException ex) {
-                    //    System.out.println("Exception: " + ex.getMessage());
-                    //    ex.printStackTrace();
-                    //}
                     continue;
                 }
                 if ( name.length() == 0 ){
                     logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 2: Kein Artikelname).</div>\n";
-                    //System.out.println(logString);
                     log.setText(logString+logStringEnd);
-                    //sr = new StringReader(logString+logStringEnd);
-                    //try {
-                    //    log.read(sr, new HTMLDocument());
-                    //} catch (IOException ex) {
-                    //    System.out.println("Exception: " + ex.getMessage());
-                    //    ex.printStackTrace();
-                    //}
                     continue;
                 }
                 if ( nummer.length() == 0 ){
                     logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 3: Keine Artikelnummer).</div>\n";
-                    //System.out.println(logString);
                     log.setText(logString+logStringEnd);
-                    //sr = new StringReader(logString+logStringEnd);
-                    //try {
-                    //    log.read(sr, new HTMLDocument());
-                    //} catch (IOException ex) {
-                    //    System.out.println("Exception: " + ex.getMessage());
-                    //    ex.printStackTrace();
-                    //}
                     continue;
                 }
                 if ( !variabel.equalsIgnoreCase("true") && !variabel.equalsIgnoreCase("false") &&
@@ -327,17 +291,9 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
                         !variabel.equalsIgnoreCase("wahr") && !variabel.equalsIgnoreCase("falsch") &&
                         !variabel.equalsIgnoreCase("ja") && !variabel.equalsIgnoreCase("nein") ){
                     logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 7: 'Variabel').</div>\n";
-                    //System.out.println(logString);
                     log.setText(logString+logStringEnd);
-                    //sr = new StringReader(logString+logStringEnd);
-                    //try {
-                    //    log.read(sr, new HTMLDocument());
-                    //} catch (IOException ex) {
-                    //    System.out.println("Exception: " + ex.getMessage());
-                    //    ex.printStackTrace();
-                    //}
                     continue;
-                        }
+                }
                 if ( variabel.equalsIgnoreCase("true") || variabel.equalsIgnoreCase("yes") || variabel.equalsIgnoreCase("1") ||
                         variabel.equalsIgnoreCase("wahr") || variabel.equalsIgnoreCase("ja") ){
                     variabel = "1";
@@ -349,15 +305,7 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
                         vkpreis = priceFormatterIntern( new BigDecimal( vkpreis.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') ) );
                     } catch (NumberFormatException ex) {
                         logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 5: 'VK-Preis').</div>\n";
-                        //System.out.println(logString);
                         log.setText(logString+logStringEnd);
-                        //sr = new StringReader(logString+logStringEnd);
-                        //try {
-                        //    log.read(sr, new HTMLDocument());
-                        //} catch (IOException exp) {
-                        //    System.out.println("Exception: " + exp.getMessage());
-                        //    exp.printStackTrace();
-                        //}
                         continue;
                     }
                     if ( !ekpreis.equals("NULL") ){
@@ -365,15 +313,7 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
                             ekpreis = priceFormatterIntern( new BigDecimal( ekpreis.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') ) );
                         } catch (NumberFormatException ex) {
                             logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 6: 'EK-Preis').</div>\n";
-                            //System.out.println(logString);
                             log.setText(logString+logStringEnd);
-                            //sr = new StringReader(logString+logStringEnd);
-                            //try {
-                            //    log.read(sr, new HTMLDocument());
-                            //} catch (IOException exp) {
-                            //    System.out.println("Exception: " + exp.getMessage());
-                            //    exp.printStackTrace();
-                            //}
                             continue;
                         }
                     }
@@ -388,15 +328,7 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
                 }
                 if (lieferantid.equals("NULL")){
                     logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 8: Lieferant unbekannt).</div>\n";
-                    //System.out.println(logString);
                     log.setText(logString+logStringEnd);
-                    //sr = new StringReader(logString+logStringEnd);
-                    //try {
-                    //    log.read(sr, new HTMLDocument());
-                    //} catch (IOException ex) {
-                    //    System.out.println("Exception: " + ex.getMessage());
-                    //    ex.printStackTrace();
-                    //}
                     continue;
                 }
 
@@ -418,8 +350,9 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
                         colors.add(Color.black);
                     }
                     colors.add( variabel.equals(allFields.get(4)) ? Color.black : Color.red ); // variabel
-                    colors.add( lieferantid.equals(allFields.get(5)) ? Color.black : Color.red ); // lieferantid
-                    colors.add( herkunft.equals(allFields.get(6)) ? Color.black : Color.red ); // herkunft
+                    colors.add( vpe.equals(allFields.get(5)) ? Color.black : Color.red ); // vpe
+                    colors.add( lieferantid.equals(allFields.get(6)) ? Color.black : Color.red ); // lieferantid
+                    colors.add( herkunft.equals(allFields.get(7)) ? Color.black : Color.red ); // herkunft
                     colors.add(Color.black); // entfernen
                 }
                 else {
@@ -442,6 +375,7 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
                     artikelNeu.vkPreise.add(vkpreis);
                     artikelNeu.ekPreise.add(ekpreis);
                     artikelNeu.variablePreise.add(variabel);
+                    artikelNeu.vpes.add(vpe);
                     artikelNeu.selLieferantIDs.add(lieferantid);
                     artikelNeu.selProduktgruppenIDs.add(gruppenid);
                     artikelNeu.herkuenfte.add(herkunft);
@@ -451,54 +385,32 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
 
                     Vector<Object> row = new Vector<Object>();
                     row.add(gruppenname);
-                    row.add(artikelNeu.artikelNamen.lastElement());
-                    row.add(artikelNeu.artikelNummern.lastElement());
+                    row.add(name);
+                    row.add(nummer);
                     row.add( barcode == "NULL" ? "" : barcode );
-                    String le = artikelNeu.vkPreise.lastElement(); row.add( le.equals("NULL") ? "" : le.replace('.',',')+" "+currencySymbol );
-                    le = artikelNeu.ekPreise.lastElement(); row.add( le.equals("NULL") ? "" : le.replace('.',',')+" "+currencySymbol );
-                    le = artikelNeu.variablePreise.lastElement(); row.add( le.equals("TRUE") ? true : false );
+                    row.add( vkpreis.equals("NULL") ? "" : vkpreis.replace('.',',')+" "+currencySymbol );
+                    row.add( ekpreis.equals("NULL") ? "" : ekpreis.replace('.',',')+" "+currencySymbol );
+                    row.add( variabel.equals("TRUE") ? true : false );
+                    row.add( vpe.equals("NULL") ? "" : vpe );
+                    row.add( barcode == "NULL" ? "" : barcode );
                     row.add(lieferant);
-                    le = artikelNeu.herkuenfte.lastElement(); row.add( le.equals("NULL") ? "" : le );
+                    row.add( herkunft.equals("NULL") ? "" : herkunft );
                     row.add(artikelNeu.removeButtons.lastElement());
                     artikelNeu.data.add(row);
                 }
                 if (itemAlreadyKnown == 0){
                     logString += "<div style=\""+baseStyle+"\">Artikel \""+ name + "\" wird hinzugefügt.</div>\n";
-                    //System.out.println(logString);
                     log.setText(logString+logStringEnd);
-                    //sr = new StringReader(logString+logStringEnd);
-                    //try {
-                    //    log.read(sr, new HTMLDocument());
-                    //} catch (IOException ex) {
-                    //    System.out.println("Exception: " + ex.getMessage());
-                    //    ex.printStackTrace();
-                    //}
                     log.updateUI();
                 }
                 else if (itemAlreadyKnown == 2){ // item already in table
                     logString += "<div style=\""+redStyle+"\">Artikel \""+ name + "\" wird nicht erneut hinzugefügt/verändert.</div>\n";
-                    //System.out.println(logString);
                     log.setText(logString+logStringEnd);
-                    //sr = new StringReader(logString+logStringEnd);
-                    //try {
-                    //    log.read(sr, new HTMLDocument());
-                    //} catch (IOException ex) {
-                    //    System.out.println("Exception: " + ex.getMessage());
-                    //    ex.printStackTrace();
-                    //}
                     log.updateUI();
                 }
                 else if (itemChanged){
                     logString += "<div style=\""+baseStyle+"\">Artikel \""+ name + "\" wird verändert.</div>\n";
-                    //System.out.println(logString);
                     log.setText(logString+logStringEnd);
-                    //sr = new StringReader(logString+logStringEnd);
-                    //try {
-                    //    log.read(sr, new HTMLDocument());
-                    //} catch (IOException ex) {
-                    //    System.out.println("Exception: " + ex.getMessage());
-                    //    ex.printStackTrace();
-                    //}
                     log.updateUI();
                 }
             }

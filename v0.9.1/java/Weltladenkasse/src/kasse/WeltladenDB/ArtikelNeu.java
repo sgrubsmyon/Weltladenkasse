@@ -214,10 +214,10 @@ public class ArtikelNeu extends WindowContent
                 int result = stmt.executeUpdate(
                         "INSERT INTO artikel SET artikel_name = '"+artikelNamen.get(i)+"', artikel_nr = '"+artikelNummern.get(i)+"', " +
                         "barcode = "+barcode+", " +
-                        "vk_preis = "+vkPreise.get(i)+", ek_preis = "+ekPreise.get(i)+", lieferant_id = "+selLieferantIDs.get(i)+", " +
+                        "vk_preis = "+vkPreise.get(i)+", ek_preis = "+ekPreise.get(i)+", " +
+                        "vpe = "+vpes.get(i)+", lieferant_id = "+selLieferantIDs.get(i)+", " +
                         "produktgruppen_id = "+selProduktgruppenIDs.get(i)+", herkunft = "+herkunft+", " +
-                        "von = NOW(), aktiv = TRUE, variabler_preis = "+variablePreise.get(i) +
-                        ", vpe = "+vpes.get(i)
+                        "von = NOW(), aktiv = TRUE, variabler_preis = "+variablePreise.get(i)
                         );
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,

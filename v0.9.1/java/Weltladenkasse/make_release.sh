@@ -13,5 +13,5 @@ rsync -aPvci install-ubuntu.sh $releasedir
 rsync -aPvci --exclude=".*" mysql $releasedir
 #rsync -aPvci ../../Artikel.ods $releasedir
 #rsync -aPvci ../../Artikel.csv $releasedir
-rsync -aPvci /home/uriuri/Documents/private/Weltladen/kasse/Artikelliste.ods $releasedir
-rsync -aPvci /home/uriuri/Documents/private/Weltladen/kasse/Artikelliste.csv $releasedir
+rsync -aPvci /home/uriuri/Documents/private/Weltladen/einkauf/Artikelliste.ods $releasedir
+rsync -aPvci /home/uriuri/Documents/private/Weltladen/einkauf/Artikelliste.csv $releasedir
