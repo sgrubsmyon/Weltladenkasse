@@ -49,7 +49,7 @@ public class CurrencyDocumentFilter extends DocumentFilter {
                 String validLegalText = new String("");
                 boolean hadDecimalSign = false;
                 int nCharsAfterDecimal = 0;
-                for (int i = 0; i<strLength; i++){ 
+                for (int i = 0; i<strLength; i++){
                     char c = legalText.charAt(i);
                     if (c == ',' || c == '.'){
                         if (hadDecimalSign) { } // do nothing (already had a ',' or '.', don't add second one)
@@ -68,13 +68,17 @@ public class CurrencyDocumentFilter extends DocumentFilter {
         }
     }
 
-    public void insertString(FilterBypass fb, int offset, String newText, AttributeSet attr) throws BadLocationException {
+    @Override
+    public void insertString(FilterBypass fb, int offset, String newText,
+            AttributeSet attr) throws BadLocationException {
         // replace illegal characters with nothing, then send them to the super constructor
         String legalText = getLegalText(fb, offset, newText);
         super.insertString(fb, offset, legalText, attr);
     }
 
-    public void replace(FilterBypass fb, int offset, int length, String newText, AttributeSet attr) throws BadLocationException {
+    @Override
+    public void replace(FilterBypass fb, int offset, int length, String newText,
+            AttributeSet attr) throws BadLocationException {
         if (newText != null) {
             String legalText = getLegalText(fb, offset, newText);
             newText = legalText;

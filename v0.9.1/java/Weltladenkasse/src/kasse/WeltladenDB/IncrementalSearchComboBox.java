@@ -58,6 +58,8 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
     }
 
 // credit to: http://stackoverflow.com/questions/11278209/how-can-i-make-comboboxs-list-wider
+// (see also http://stackoverflow.com/questions/956003/how-can-i-change-the-width-of-a-jcombobox-dropdown-list)
+// (see also http://tips4java.wordpress.com/2010/11/28/combo-box-popup/)
 /********************* Start Insert */
     // Setting the JComboBox wide
     public void setWide() {

@@ -72,6 +72,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private Vector<String> editArtikelNummer;
     private Vector<String> changedVKP;
     private Vector<String> changedEKP;
+    private Vector<String> changedVPE;
     private Vector<String> changedHerkunft;
     private Vector<Boolean> changedAktiv;
 
@@ -197,6 +198,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         editArtikelNummer = new Vector<String>();
         changedVKP = new Vector<String>();
         changedEKP = new Vector<String>();
+        changedVPE = new Vector<String>();
         changedHerkunft = new Vector<String>();
         changedAktiv = new Vector<Boolean>();
     }
@@ -229,8 +231,11 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                         // add row for new item (with updated prices):
                         result = stmt.executeUpdate(
                                 "INSERT INTO artikel SET artikel_name = \""+editArtikelName.get(index)+"\", "+
-                                "artikel_nr = \""+editArtikelNummer.get(index)+"\", vk_preis = "+changedVKP.get(index)+", ek_preis = "+changedEKP.get(index)+", "+
-                                "produktgruppen_id = "+prod_id+", lieferant_id = "+lief_id+", herkunft = \""+changedHerkunft.get(index)+"\", von = NOW(), " +
+                                "artikel_nr = \""+editArtikelNummer.get(index)+"\", "+
+                                "vk_preis = "+changedVKP.get(index)+", ek_preis = "+changedEKP.get(index)+", "+
+                                "vpe = "+changedVPE.get(index)+", "+
+                                "produktgruppen_id = "+prod_id+", lieferant_id = "+lief_id+", "+
+                                "herkunft = \""+changedHerkunft.get(index)+"\", von = NOW(), " +
                                 "aktiv = TRUE, variabler_preis = FALSE"
                                 );
                         if (result == 0){
@@ -374,7 +379,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                         if ( ! data.get(row).get(col).equals("variabel") )
                             return true;
                     }
-                    else if ( header.equals("Aktiv") || header.equals("Herkunft") ){
+                    else if ( header.equals("Aktiv") || header.equals("Herkunft") ||
+                            header.equals("VPE") ){
                         return true;
                     }
                 }
@@ -456,6 +462,31 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         myTable.getColumn("VK-Preis").setCellEditor(geldEditor);
         myTable.getColumn("EK-Preis").setCellEditor(geldEditor);
 
+        // extra cell editor that has the IntegerDocumentFilter
+        class AnzahlEditor extends DefaultCellEditor {
+            JTextField textField;
+
+            public AnzahlEditor() {
+                super(new JTextField()); // call to super must be first statement in constructor
+                textField = (JTextField)getComponent();
+                IntegerDocumentFilter intFilter = new IntegerDocumentFilter();
+                ((AbstractDocument)textField.getDocument()).setDocumentFilter(intFilter);
+            }
+
+            ////Override to invoke setText on the document filtered text field.
+            //@Override
+            //public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected,
+            //        int row, int column) {
+            //    this.textField.setText(""); // delete history of the (old) text field, maybe from a different cell
+            //    JTextField newTextField = (JTextField)super.getTableCellEditorComponent(table, value, isSelected, row, column);
+            //    //newTextField.setText(value.toString()); // if this line is present, then the
+            //                                    // DocumentFilter is called twice (not good)
+            //    return newTextField;
+            //}
+        }
+        AnzahlEditor anzahlEditor = new AnzahlEditor();
+        myTable.getColumn("VPE").setCellEditor(anzahlEditor);
+
         JScrollPane scrollPane = new JScrollPane(myTable);
         artikelListPanel.add(scrollPane, BorderLayout.CENTER);
         allPanel.add(artikelListPanel, BorderLayout.CENTER);
@@ -525,61 +556,83 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
 
     /** Needed for TableModelListener. */
     public void tableChanged(TableModelEvent e) {
+        // get info about edited cell
         int row = e.getFirstRow();
         int column = e.getColumn();
         AbstractTableModel model = (AbstractTableModel)e.getSource();
-        String value = model.getValueAt(row, column).toString();
-        String originalValue = originalData.get(row).get(column).toString();
+        String value = model.getValueAt(row, column).toString().replace(currencySymbol,"")
+            .replaceAll("\\s","").replace(',','.');
         String header = model.getColumnName(column);
+
+        // post-edit edited cell
         if ( header.equals("VK-Preis") || header.equals("EK-Preis") ) {
-            model.removeTableModelListener(this); // remove listener before doing changes
-            model.setValueAt(value+" "+currencySymbol, row, column); // update table cell with currency symbol
-            model.addTableModelListener(this);
-            value = priceFormatter( new BigDecimal( value.replace(',','.') ) );
-            System.out.println(new BigDecimal( originalValue.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') ));
-            originalValue = priceFormatter( new BigDecimal( originalValue.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') ) );
+            if ( !value.equals("") ){
+                // format the entered money value appropriately
+                value = priceFormatter( new BigDecimal(value) )+" "+currencySymbol;
+                model.removeTableModelListener(this); // remove listener before doing changes
+                model.setValueAt(value, row, column); // update table cell with currency symbol
+                model.addTableModelListener(this);
+            } else {
+                if ( header.equals("VK-Preis") ){
+                    // user tried to delete the vkpreis (not allowed)
+                    // reset to original value
+                    model.setValueAt(originalData.get(row).get(column).toString(), row, column);
+                }
+            }
         }
+
+        // get and store all the values of the edited row
         String artikelName = model.getValueAt(row, model.findColumn("Name")).toString();
         String artikelNummer = model.getValueAt(row, model.findColumn("Nummer")).toString();
         String vkpreis = model.getValueAt(row, model.findColumn("VK-Preis")).toString();
-        if (!vkpreis.matches(".*[a-zA-Z].*")){
-            vkpreis = priceFormatter( new BigDecimal( vkpreis.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') ) );
+        if ( !vkpreis.matches(".*[a-zA-Z].*") ){
+            vkpreis = priceFormatterIntern( new BigDecimal( vkpreis.replace(currencySymbol,"")
+                        .replaceAll("\\s","").replace(',','.') ) );
         }
         String ekpreis = model.getValueAt(row, model.findColumn("EK-Preis")).toString();
         if ( !ekpreis.matches(".*[a-zA-Z].*") && !ekpreis.equals("") ){
-            ekpreis = priceFormatter( new BigDecimal( ekpreis.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') ) );
+            ekpreis = priceFormatterIntern( new BigDecimal( ekpreis.replace(currencySymbol,"")
+                        .replaceAll("\\s","").replace(',','.') ) );
         }
+        if ( ekpreis.equals("") ){ ekpreis = "NULL"; }
+        String vpe = model.getValueAt(row, model.findColumn("VPE")).toString();
+        if ( vpe.equals("") ){ vpe = "NULL"; }
         boolean aktiv = model.getValueAt(row, model.findColumn("Aktiv")).toString().equals("true") ? true : false;
         String herkunft = model.getValueAt(row, model.findColumn("Herkunft")).toString();
 
-        // Do something with the data...
-        int nummerIndex = editArtikelNummer.indexOf(artikelNummer); // look up artikelNummer in change list
-        int nameIndex = editArtikelName.indexOf(artikelName); // look up artikelName in change list
+        // Compare entire row to original data
         boolean changed = false;
         for ( int col=0; col<data.get(row).size(); col++){ // compare entire row to original data
             String colName = model.getColumnName(col);
             String val = data.get(row).get(col).toString();
             String origVal = originalData.get(row).get(col).toString();
-            if ( ( colName.equals("VK-Preis") || colName.equals("EK-Preis") ) && !origVal.matches(".*[a-zA-Z].*") && !origVal.equals("") ){
-                val = priceFormatter( new BigDecimal( data.get(row).get(col).toString().replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') ) );
-                origVal = priceFormatter( new BigDecimal( originalData.get(row).get(col).toString().replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') ) );
-            }
+            //if ( ( colName.equals("VK-Preis") || colName.equals("EK-Preis") ) &&
+            //        !origVal.matches(".*[a-zA-Z].*") && !origVal.equals("") ){
+            //    val = priceFormatter( new BigDecimal( data.get(row).get(col).toString().replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') ) );
+            //    origVal = priceFormatter( new BigDecimal( originalData.get(row).get(col).toString().replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') ) );
+            //}
             if ( ! val.equals( origVal ) ){
                 changed = true;
                 break;
             }
         }
+
+        // update the vectors caching the changes
+        int nummerIndex = editArtikelNummer.indexOf(artikelNummer); // look up artikelNummer in change list
+        int nameIndex = editArtikelName.indexOf(artikelName); // look up artikelName in change list
         if (nummerIndex == nameIndex && nummerIndex != -1){ // this row has been changed before
             if ( ! changed ){ // all changes have been undone
                 editArtikelNummer.remove(nummerIndex); // remove item from list of changes
                 editArtikelName.remove(nummerIndex);
                 changedVKP.remove(nummerIndex);
                 changedEKP.remove(nummerIndex);
+                changedVPE.remove(nummerIndex);
                 changedHerkunft.remove(nummerIndex);
                 changedAktiv.remove(nummerIndex);
             } else { // update the change saving vectors
                 changedVKP.set(nummerIndex, vkpreis);
                 changedEKP.set(nummerIndex, ekpreis);
+                changedVPE.set(nummerIndex, vpe);
                 changedHerkunft.set(nummerIndex, herkunft);
                 changedAktiv.set(nummerIndex, aktiv);
             }
@@ -589,10 +642,12 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 editArtikelNummer.add(artikelNummer);
                 changedVKP.add(vkpreis);
                 changedEKP.add(ekpreis);
+                changedVPE.add(vpe);
                 changedHerkunft.add(herkunft);
                 changedAktiv.add(aktiv);
             }
         }
+
         enableButtons();
     }
 
