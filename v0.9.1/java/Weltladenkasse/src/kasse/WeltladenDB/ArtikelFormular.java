@@ -73,14 +73,6 @@ public class ArtikelFormular extends WindowContent
         produktgruppenIDsList = new Vector< Vector<String> >();
         lieferantNamen = new Vector<String>();
         lieferantIDs = new Vector<String>();
-        //String pattern = new String();
-        //if (this.gruppenid.length() == 0){
-        //    pattern = "";
-        //}
-        //else {
-        //    pattern = this.gruppenid.replaceAll("0*$","");
-        //    if (pattern.length() == 0) pattern = "00";
-        //}
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
@@ -93,14 +85,6 @@ public class ArtikelFormular extends WindowContent
                 ids.add(rs.getString(3));
                 ids.add(rs.getString(4));
                 String name = rs.getString(5);
-                // die Einrueckung geschieht mittels IndentedRenderer
-                //if ( !id.endsWith("00") ){ // maximale Einrueckung
-                //    name = einrueckung+einrueckung + name;
-                //}
-                //else if ( !id.endsWith("0000") ){ // eine Stufe Einrueckung
-                //    name = einrueckung + name;
-                //}
-                //// sonst keine Einrueckung
 
                 produktgruppenIDs.add(id);
                 produktgruppenIDsList.add(ids);
