@@ -70,6 +70,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     // Vectors storing table edits
     private Vector<String> editArtikelName;
     private Vector<String> editArtikelNummer;
+    private Vector<String> changedBarcode;
     private Vector<String> changedVKP;
     private Vector<String> changedEKP;
     private Vector<String> changedVPE;
@@ -196,6 +197,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         }
         editArtikelName = new Vector<String>();
         editArtikelNummer = new Vector<String>();
+        changedBarcode = new Vector<String>();
         changedVKP = new Vector<String>();
         changedEKP = new Vector<String>();
         changedVPE = new Vector<String>();
@@ -207,19 +209,22 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         for (int index=0; index<editArtikelName.size(); index++){
             try {
                 Statement stmt = this.conn.createStatement();
-                // query produktgruppen_id and lieferant_id for edited item:
+                // query produktgruppen_id, lieferant_id and variabler_preis for edited item:
                 ResultSet rs = stmt.executeQuery(
-                        "SELECT produktgruppen_id, lieferant_id FROM artikel WHERE artikel_name = \""+editArtikelName.get(index)+"\" AND "+
+                        "SELECT produktgruppen_id, lieferant_id, variabler_preis FROM artikel WHERE "+
+                        "artikel_name = \""+editArtikelName.get(index)+"\" AND "+
                         "artikel_nr = \""+editArtikelNummer.get(index)+"\" AND aktiv = TRUE"
                         );
                 // Now do something with the ResultSet, should be only one result ...
                 rs.next();
                 String prod_id = rs.getString(1);
                 String lief_id = rs.getString(2);
+                String var_preis = rs.getString(3);
                 rs.close();
                 // set old item to inactive:
                 int result = stmt.executeUpdate(
-                        "UPDATE artikel SET aktiv = FALSE, bis = NOW() WHERE artikel_name = \""+editArtikelName.get(index)+"\" AND "+
+                        "UPDATE artikel SET aktiv = FALSE, bis = NOW() WHERE "+
+                        "artikel_name = \""+editArtikelName.get(index)+"\" AND "+
                         "artikel_nr = \""+editArtikelNummer.get(index)+"\" AND aktiv = TRUE"
                         );
                 if (result == 0){
@@ -229,14 +234,23 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 } else {
                     if ( changedAktiv.get(index) == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
                         // add row for new item (with updated prices):
+                        String barcodeString = changedBarcode.get(index);
+                        if ( !barcodeString.equals("NULL") ){
+                            barcodeString = "\""+barcodeString+"\"";
+                        }
+                        String herkunftString = changedHerkunft.get(index);
+                        if ( !herkunftString.equals("NULL") ){
+                            herkunftString = "\""+herkunftString+"\"";
+                        }
                         result = stmt.executeUpdate(
                                 "INSERT INTO artikel SET artikel_name = \""+editArtikelName.get(index)+"\", "+
                                 "artikel_nr = \""+editArtikelNummer.get(index)+"\", "+
+                                "barcode = "+barcodeString+", "+
                                 "vk_preis = "+changedVKP.get(index)+", ek_preis = "+changedEKP.get(index)+", "+
                                 "vpe = "+changedVPE.get(index)+", "+
                                 "produktgruppen_id = "+prod_id+", lieferant_id = "+lief_id+", "+
-                                "herkunft = \""+changedHerkunft.get(index)+"\", von = NOW(), " +
-                                "aktiv = TRUE, variabler_preis = FALSE"
+                                "herkunft = "+herkunftString+", von = NOW(), " +
+                                "aktiv = TRUE, variabler_preis = "+var_preis
                                 );
                         if (result == 0){
                             JOptionPane.showMessageDialog(this,
@@ -380,7 +394,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                             return true;
                     }
                     else if ( header.equals("Aktiv") || header.equals("Herkunft") ||
-                            header.equals("VPE") ){
+                            header.equals("VPE") || header.equals("Barcode") ){
                         return true;
                     }
                 }
@@ -560,11 +574,18 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         int row = e.getFirstRow();
         int column = e.getColumn();
         AbstractTableModel model = (AbstractTableModel)e.getSource();
-        String value = model.getValueAt(row, column).toString().replace(currencySymbol,"")
-            .replaceAll("\\s","").replace(',','.');
-        String header = model.getColumnName(column);
 
         // post-edit edited cell
+        String value = model.getValueAt(row, column).toString().replaceAll("\\s","");
+        if ( value.equals("") ){
+            // replace whitespace only entries with nothing
+            model.removeTableModelListener(this); // remove listener before doing changes
+            model.setValueAt(value, row, column); // update table cell with currency symbol
+            model.addTableModelListener(this);
+        }
+        value = model.getValueAt(row, column).toString().replace(currencySymbol,"")
+            .replaceAll("\\s","").replace(',','.');
+        String header = model.getColumnName(column);
         if ( header.equals("VK-Preis") || header.equals("EK-Preis") ) {
             if ( !value.equals("") ){
                 // format the entered money value appropriately
@@ -581,40 +602,45 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             }
         }
 
-        // get and store all the values of the edited row
-        String artikelName = model.getValueAt(row, model.findColumn("Name")).toString();
-        String artikelNummer = model.getValueAt(row, model.findColumn("Nummer")).toString();
-        String vkpreis = model.getValueAt(row, model.findColumn("VK-Preis")).toString();
-        if ( !vkpreis.matches(".*[a-zA-Z].*") ){
-            vkpreis = priceFormatterIntern( new BigDecimal( vkpreis.replace(currencySymbol,"")
-                        .replaceAll("\\s","").replace(',','.') ) );
-        }
-        String ekpreis = model.getValueAt(row, model.findColumn("EK-Preis")).toString();
-        if ( !ekpreis.matches(".*[a-zA-Z].*") && !ekpreis.equals("") ){
-            ekpreis = priceFormatterIntern( new BigDecimal( ekpreis.replace(currencySymbol,"")
-                        .replaceAll("\\s","").replace(',','.') ) );
-        }
-        if ( ekpreis.equals("") ){ ekpreis = "NULL"; }
-        String vpe = model.getValueAt(row, model.findColumn("VPE")).toString();
-        if ( vpe.equals("") ){ vpe = "NULL"; }
-        boolean aktiv = model.getValueAt(row, model.findColumn("Aktiv")).toString().equals("true") ? true : false;
-        String herkunft = model.getValueAt(row, model.findColumn("Herkunft")).toString();
-
         // Compare entire row to original data
         boolean changed = false;
         for ( int col=0; col<data.get(row).size(); col++){ // compare entire row to original data
             String colName = model.getColumnName(col);
             String val = data.get(row).get(col).toString();
             String origVal = originalData.get(row).get(col).toString();
-            //if ( ( colName.equals("VK-Preis") || colName.equals("EK-Preis") ) &&
-            //        !origVal.matches(".*[a-zA-Z].*") && !origVal.equals("") ){
-            //    val = priceFormatter( new BigDecimal( data.get(row).get(col).toString().replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') ) );
-            //    origVal = priceFormatter( new BigDecimal( originalData.get(row).get(col).toString().replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') ) );
-            //}
             if ( ! val.equals( origVal ) ){
                 changed = true;
                 break;
             }
+        }
+
+        // get and store all the values of the edited row
+        String artikelName = model.getValueAt(row, model.findColumn("Name")).toString();
+        String artikelNummer = model.getValueAt(row, model.findColumn("Nummer")).toString();
+        String barcode = model.getValueAt(row, model.findColumn("Barcode")).toString();
+        if ( barcode.equals("") ){
+            barcode = "NULL";
+        }
+        String vkpreis = model.getValueAt(row, model.findColumn("VK-Preis")).toString();
+        try {
+            vkpreis = priceFormatterIntern( new BigDecimal( vkpreis.replace(currencySymbol,"")
+                        .replaceAll("\\s","").replace(',','.') ) );
+        } catch (NumberFormatException nfe) {
+            vkpreis = "NULL";
+        }
+        String ekpreis = model.getValueAt(row, model.findColumn("EK-Preis")).toString();
+        try {
+            ekpreis = priceFormatterIntern( new BigDecimal( ekpreis.replace(currencySymbol,"")
+                        .replaceAll("\\s","").replace(',','.') ) );
+        } catch (NumberFormatException nfe) {
+            ekpreis = "NULL";
+        }
+        String vpe = model.getValueAt(row, model.findColumn("VPE")).toString();
+        if ( vpe.equals("") ){ vpe = "NULL"; }
+        boolean aktiv = model.getValueAt(row, model.findColumn("Aktiv")).toString().equals("true") ? true : false;
+        String herkunft = model.getValueAt(row, model.findColumn("Herkunft")).toString();
+        if ( herkunft.equals("") ){
+            herkunft = "NULL";
         }
 
         // update the vectors caching the changes
@@ -624,12 +650,14 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             if ( ! changed ){ // all changes have been undone
                 editArtikelNummer.remove(nummerIndex); // remove item from list of changes
                 editArtikelName.remove(nummerIndex);
+                changedBarcode.remove(nummerIndex);
                 changedVKP.remove(nummerIndex);
                 changedEKP.remove(nummerIndex);
                 changedVPE.remove(nummerIndex);
                 changedHerkunft.remove(nummerIndex);
                 changedAktiv.remove(nummerIndex);
             } else { // update the change saving vectors
+                changedBarcode.set(nummerIndex, barcode);
                 changedVKP.set(nummerIndex, vkpreis);
                 changedEKP.set(nummerIndex, ekpreis);
                 changedVPE.set(nummerIndex, vpe);
@@ -640,6 +668,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             if ( changed ){
                 editArtikelName.add(artikelName);
                 editArtikelNummer.add(artikelNummer);
+                changedBarcode.add(barcode);
                 changedVKP.add(vkpreis);
                 changedEKP.add(ekpreis);
                 changedVPE.add(vpe);
