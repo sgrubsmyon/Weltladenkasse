@@ -36,7 +36,6 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
     protected ArtikelFormular artikelFormular;
 
     protected JButton submitButton;
-    protected JButton closeButton;
 
     private CurrencyDocumentFilter geldFilter = new CurrencyDocumentFilter();
 
@@ -48,6 +47,7 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
     }
 
     void showHeader() {
+        headerPanel = new JPanel();
         artikelFormular.showHeader(headerPanel, allPanel);
 
         KeyAdapter enterAdapter = new KeyAdapter() {
@@ -95,35 +95,26 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         allPanel.add(footerPanel);
     }
 
-    public boolean checkIfFormIsComplete() {
-        return artikelFormular.checkIfFormIsComplete();
+    // will data be lost on close?
+    public boolean willDataBeLost() {
+        return false;
     }
 
     public void fillComboBoxes() {
         artikelFormular.fillComboBoxes();
     }
 
-    void submit() {
+    public boolean checkIfFormIsComplete() {
+        return artikelFormular.checkIfFormIsComplete();
     }
 
-    // will data be lost on close?
-    public boolean willDataBeLost() {
-        return false;
+    public void submit() {
     }
 
     /** Needed for ItemListener. */
     public void itemStateChanged(ItemEvent e) {
-        Object source = e.getItemSelectable();
-        if (source == artikelFormular.preisVariabelBox) {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                artikelFormular.vkpreisField.setEnabled(false);
-                artikelFormular.ekpreisField.setEnabled(false);
-            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                artikelFormular.vkpreisField.setEnabled(true);
-                artikelFormular.ekpreisField.setEnabled(true);
-            }
-            submitButton.setEnabled( checkIfFormIsComplete() );
-        }
+        artikelFormular.itemStateChanged(e);
+        submitButton.setEnabled( checkIfFormIsComplete() );
     }
 
     /**
@@ -162,7 +153,7 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         }
 	if (e.getSource() == submitButton){
             submit();
-            updateAll();
+            // close
             return;
         }
         super.actionPerformed(e);

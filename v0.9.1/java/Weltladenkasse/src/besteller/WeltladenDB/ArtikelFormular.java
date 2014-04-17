@@ -256,6 +256,5 @@ public class ArtikelFormular extends WindowContent
      *    @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
-        //super.actionPerformed(e);
     }
 }

@@ -53,6 +53,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private JButton stopButton;
     private JButton saveButton;
     private JButton revertButton;
+    private JButton editButton;
     private JButton newButton;
     private JButton readButton;
 
@@ -70,6 +71,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     // Vectors storing table edits
     private Vector<String> editArtikelName;
     private Vector<String> editArtikelNummer;
+    private Vector<String> changedName;
+    private Vector<String> changedNummer;
     private Vector<String> changedBarcode;
     private Vector<String> changedVKP;
     private Vector<String> changedEKP;
@@ -77,9 +80,6 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private Vector<String> changedHerkunft;
     private Vector<Boolean> changedAktiv;
 
-    // Dialog to enter new items
-    private JDialog newItemDialog;
-    private ArtikelNeuEingeben newItems;
     // Dialog to read items from file
     private JDialog readFromFileDialog;
     private ArtikelReadIn itemsFromFile;
@@ -197,6 +197,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         }
         editArtikelName = new Vector<String>();
         editArtikelNummer = new Vector<String>();
+        changedName = new Vector<String>();
+        changedNummer = new Vector<String>();
         changedBarcode = new Vector<String>();
         changedVKP = new Vector<String>();
         changedEKP = new Vector<String>();
@@ -321,31 +323,37 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         showTable();
 
         JPanel bottomPanel = new JPanel();
-        bottomPanel.setLayout(new BorderLayout());
-        JPanel bottomLeftPanel = new JPanel();
-        bottomLeftPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-          saveButton = new JButton("Änderungen speichern");
-          saveButton.addActionListener(this);
-          bottomLeftPanel.add(saveButton);
+	bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
+          JPanel bottomLeftPanel = new JPanel();
+          bottomLeftPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
+            saveButton = new JButton("Änderungen speichern");
+            saveButton.addActionListener(this);
+            bottomLeftPanel.add(saveButton);
 
-          revertButton = new JButton("Änderungen verwerfen");
-          revertButton.addActionListener(this);
-          bottomLeftPanel.add(revertButton);
-        bottomPanel.add(bottomLeftPanel, BorderLayout.WEST);
-        JPanel bottomRightPanel = new JPanel();
-        bottomRightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
-          newButton = new JButton("Neue Artikel eingeben");
-          newButton.setMnemonic(KeyEvent.VK_N);
-          newButton.addActionListener(this);
-          bottomRightPanel.add(newButton);
+            revertButton = new JButton("Änderungen verwerfen");
+            revertButton.addActionListener(this);
+            bottomLeftPanel.add(revertButton);
+        bottomPanel.add(bottomLeftPanel);
+          JPanel bottomRightPanel = new JPanel();
+          bottomRightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
+            editButton = new JButton("Markierte Artikel bearbeiten");
+            editButton.setMnemonic(KeyEvent.VK_B);
+            editButton.addActionListener(this);
+            bottomRightPanel.add(editButton);
 
-          readButton = new JButton("Artikel aus Datei einlesen");
-          readButton.setMnemonic(KeyEvent.VK_D);
-          readButton.addActionListener(this);
-          bottomRightPanel.add(readButton);
-        bottomPanel.add(bottomRightPanel, BorderLayout.EAST);
-        enableButtons();
+            newButton = new JButton("Neue Artikel eingeben");
+            newButton.setMnemonic(KeyEvent.VK_N);
+            newButton.addActionListener(this);
+            bottomRightPanel.add(newButton);
+
+            readButton = new JButton("Artikel aus Datei einlesen");
+            readButton.setMnemonic(KeyEvent.VK_D);
+            readButton.addActionListener(this);
+            bottomRightPanel.add(readButton);
+        bottomPanel.add(bottomRightPanel);
         allPanel.add(bottomPanel, BorderLayout.SOUTH);
+
+        enableButtons();
 
         this.add(allPanel, BorderLayout.CENTER);
     }
@@ -353,6 +361,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     void enableButtons() {
         saveButton.setEnabled(editArtikelName.size() > 0);
         revertButton.setEnabled(editArtikelName.size() > 0);
+        editButton.setEnabled(editArtikelName.size() == 0);
         newButton.setEnabled(editArtikelName.size() == 0);
         readButton.setEnabled(editArtikelName.size() == 0);
     }
@@ -393,8 +402,11 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                         if ( ! data.get(row).get(col).equals("variabel") )
                             return true;
                     }
-                    else if ( header.equals("Aktiv") || header.equals("Herkunft") ||
-                            header.equals("VPE") || header.equals("Barcode") ){
+                    else if (
+                            header.equals("Name") || header.equals("Nummer") ||
+                            header.equals("Barcode") || header.equals("VPE") ||
+                            header.equals("Herkunft") || header.equals("Aktiv")
+                            ){
                         return true;
                     }
                 }
@@ -568,25 +580,58 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         }
     }
 
+    public boolean isItemAlreadyKnown(String name, String nummer) {
+        boolean exists = false;
+        try {
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT COUNT(artikel_id) FROM artikel WHERE artikel_name = '"+name+"' AND artikel_nr = '"+nummer+"' AND aktiv = TRUE"
+                    );
+            rs.next();
+            int count = rs.getInt(1);
+            exists = count > 0;
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return exists;
+    }
+
     /** Needed for TableModelListener. */
     public void tableChanged(TableModelEvent e) {
         // get info about edited cell
         int row = e.getFirstRow();
         int column = e.getColumn();
         AbstractTableModel model = (AbstractTableModel)e.getSource();
+        String origArtikelName = originalData.get(row).get(model.findColumn("Name")).toString();
+        String origArtikelNummer = originalData.get(row).get(model.findColumn("Nummer")).toString();
+        int nummerIndex = editArtikelNummer.indexOf(origArtikelNummer); // look up artikelNummer in change list
+        int nameIndex = editArtikelName.indexOf(origArtikelName); // look up artikelName in change list
 
         // post-edit edited cell
         String value = model.getValueAt(row, column).toString().replaceAll("\\s","");
         if ( value.equals("") ){
             // replace whitespace only entries with nothing
             model.removeTableModelListener(this); // remove listener before doing changes
-            model.setValueAt(value, row, column); // update table cell with currency symbol
+            model.setValueAt(value, row, column);
             model.addTableModelListener(this);
+        }
+        String header = model.getColumnName(column);
+        if ( header.equals("Name") && value.equals("") ){
+            // user tried to delete the name (not allowed)
+            // reset to original value
+            model.setValueAt(origArtikelName, row, column);
+        }
+        if ( header.equals("Nummer") && value.equals("") ){
+            // user tried to delete the nummer (not allowed)
+            // reset to original value
+            model.setValueAt(origArtikelNummer, row, column);
         }
         value = model.getValueAt(row, column).toString().replace(currencySymbol,"")
             .replaceAll("\\s","").replace(',','.');
-        String header = model.getColumnName(column);
-        if ( header.equals("VK-Preis") || header.equals("EK-Preis") ) {
+        if ( header.equals("VK-Preis") || header.equals("EK-Preis") ){
             if ( !value.equals("") ){
                 // format the entered money value appropriately
                 value = priceFormatter( new BigDecimal(value) )+" "+currencySymbol;
@@ -614,60 +659,61 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             }
         }
 
-        // get and store all the values of the edited row
-        String artikelName = model.getValueAt(row, model.findColumn("Name")).toString();
-        String artikelNummer = model.getValueAt(row, model.findColumn("Nummer")).toString();
-        String barcode = model.getValueAt(row, model.findColumn("Barcode")).toString();
-        if ( barcode.equals("") ){
-            barcode = "NULL";
-        }
-        String vkpreis = model.getValueAt(row, model.findColumn("VK-Preis")).toString();
-        try {
-            vkpreis = priceFormatterIntern( new BigDecimal( vkpreis.replace(currencySymbol,"")
-                        .replaceAll("\\s","").replace(',','.') ) );
-        } catch (NumberFormatException nfe) {
-            vkpreis = "NULL";
-        }
-        String ekpreis = model.getValueAt(row, model.findColumn("EK-Preis")).toString();
-        try {
-            ekpreis = priceFormatterIntern( new BigDecimal( ekpreis.replace(currencySymbol,"")
-                        .replaceAll("\\s","").replace(',','.') ) );
-        } catch (NumberFormatException nfe) {
-            ekpreis = "NULL";
-        }
-        String vpe = model.getValueAt(row, model.findColumn("VPE")).toString();
-        if ( vpe.equals("") ){ vpe = "NULL"; }
-        boolean aktiv = model.getValueAt(row, model.findColumn("Aktiv")).toString().equals("true") ? true : false;
-        String herkunft = model.getValueAt(row, model.findColumn("Herkunft")).toString();
-        if ( herkunft.equals("") ){
-            herkunft = "NULL";
-        }
+        if (changed){
+            // get and store all the values of the edited row
+            String artikelName = model.getValueAt(row, model.findColumn("Name")).toString();
+            String artikelNummer = model.getValueAt(row, model.findColumn("Nummer")).toString();
+            if ( !artikelName.equals(origArtikelName) || !artikelNummer.equals(origArtikelNummer) ){
+                if ( isItemAlreadyKnown(artikelName, artikelNummer) ){
+                    // not allowed: changing name and nummer to a pair that is already registered in DB
+                    JOptionPane.showMessageDialog(this, "Fehler: Kombination Namme/Nummer bereits vorhanden! Wird zurückgesetzt.",
+                            "Info", JOptionPane.INFORMATION_MESSAGE);
+                    model.setValueAt(origArtikelName, row, model.findColumn("Name"));
+                    model.setValueAt(origArtikelNummer, row, model.findColumn("Nummer"));
+                    return;
+                }
+            }
+            String barcode = model.getValueAt(row, model.findColumn("Barcode")).toString();
+            if ( barcode.equals("") ){
+                barcode = "NULL";
+            }
+            String vkpreis = model.getValueAt(row, model.findColumn("VK-Preis")).toString();
+            try {
+                vkpreis = priceFormatterIntern( new BigDecimal( vkpreis.replace(currencySymbol,"")
+                            .replaceAll("\\s","").replace(',','.') ) );
+            } catch (NumberFormatException nfe) {
+                vkpreis = "NULL";
+            }
+            String ekpreis = model.getValueAt(row, model.findColumn("EK-Preis")).toString();
+            try {
+                ekpreis = priceFormatterIntern( new BigDecimal( ekpreis.replace(currencySymbol,"")
+                            .replaceAll("\\s","").replace(',','.') ) );
+            } catch (NumberFormatException nfe) {
+                ekpreis = "NULL";
+            }
+            String vpe = model.getValueAt(row, model.findColumn("VPE")).toString();
+            if ( vpe.equals("") ){ vpe = "NULL"; }
+            boolean aktiv = model.getValueAt(row, model.findColumn("Aktiv")).toString().equals("true") ? true : false;
+            String herkunft = model.getValueAt(row, model.findColumn("Herkunft")).toString();
+            if ( herkunft.equals("") ){
+                herkunft = "NULL";
+            }
 
-        // update the vectors caching the changes
-        int nummerIndex = editArtikelNummer.indexOf(artikelNummer); // look up artikelNummer in change list
-        int nameIndex = editArtikelName.indexOf(artikelName); // look up artikelName in change list
-        if (nummerIndex == nameIndex && nummerIndex != -1){ // this row has been changed before
-            if ( ! changed ){ // all changes have been undone
-                editArtikelNummer.remove(nummerIndex); // remove item from list of changes
-                editArtikelName.remove(nummerIndex);
-                changedBarcode.remove(nummerIndex);
-                changedVKP.remove(nummerIndex);
-                changedEKP.remove(nummerIndex);
-                changedVPE.remove(nummerIndex);
-                changedHerkunft.remove(nummerIndex);
-                changedAktiv.remove(nummerIndex);
-            } else { // update the change saving vectors
+            // update the vectors caching the changes
+            if (nummerIndex == nameIndex && nummerIndex != -1){ // this row has been changed before, update the change cache
+                changedName.set(nummerIndex, barcode);
+                changedNummer.set(nummerIndex, barcode);
                 changedBarcode.set(nummerIndex, barcode);
                 changedVKP.set(nummerIndex, vkpreis);
                 changedEKP.set(nummerIndex, ekpreis);
                 changedVPE.set(nummerIndex, vpe);
                 changedHerkunft.set(nummerIndex, herkunft);
                 changedAktiv.set(nummerIndex, aktiv);
-            }
-        } else { // an edit occurred in a row that is not in the list of changes yet
-            if ( changed ){
-                editArtikelName.add(artikelName);
-                editArtikelNummer.add(artikelNummer);
+            } else { // an edit occurred in a row that is not in the list of changes yet
+                editArtikelName.add(origArtikelName);
+                editArtikelNummer.add(origArtikelNummer);
+                changedName.add(artikelName);
+                changedNummer.add(artikelNummer);
                 changedBarcode.add(barcode);
                 changedVKP.add(vkpreis);
                 changedEKP.add(ekpreis);
@@ -675,22 +721,36 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 changedHerkunft.add(herkunft);
                 changedAktiv.add(aktiv);
             }
+        } else if (!changed) {
+            // update the vectors caching the changes
+            if (nummerIndex == nameIndex && nummerIndex != -1){ // this row has been changed before, all changes undone
+                editArtikelName.remove(nummerIndex); // remove item from list of changes
+                editArtikelNummer.remove(nummerIndex);
+                changedNummer.remove(nummerIndex);
+                changedName.remove(nummerIndex);
+                changedBarcode.remove(nummerIndex);
+                changedVKP.remove(nummerIndex);
+                changedEKP.remove(nummerIndex);
+                changedVPE.remove(nummerIndex);
+                changedHerkunft.remove(nummerIndex);
+                changedAktiv.remove(nummerIndex);
+            }
         }
 
         enableButtons();
     }
 
     private class WindowAdapterNewItems extends WindowAdapter {
-        private ArtikelDialogWindowGrundlage newItems;
+        private ArtikelDialogWindowGrundlage dwindow;
         private JDialog dialog;
         public WindowAdapterNewItems(ArtikelDialogWindowGrundlage ni, JDialog dia) {
             super();
-            this.newItems = ni;
+            this.dwindow = ni;
             this.dialog = dia;
         }
         @Override
         public void windowClosing(WindowEvent we) {
-            if ( newItems.willDataBeLost() ){
+            if ( this.dwindow.willDataBeLost() ){
                 int answer = JOptionPane.showConfirmDialog(dialog,
                         "Achtung: Neue Artikel gehen verloren (noch nicht abgeschickt).\nWirklich schließen?", "Neue Artikel werden gelöscht",
                         JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -705,9 +765,20 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         }
     }
 
+    void showEditDialog() {
+        JDialog editDialog = new JDialog(this.mainWindow, "Artikel bearbeiten", true);
+        ArtikelBearbeiten bearb = new ArtikelBearbeiten(this.conn, this.mainWindow, this, editDialog, toplevel_id, sub_id, subsub_id);
+        editDialog.getContentPane().add(bearb, BorderLayout.CENTER);
+        editDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        WindowAdapterNewItems wani = new WindowAdapterNewItems(bearb, editDialog);
+        editDialog.addWindowListener(wani);
+        editDialog.pack();
+        editDialog.setVisible(true);
+    }
+
     void showNewItemDialog() {
-        newItemDialog = new JDialog(this.mainWindow, "Neue Artikel hinzufügen", true);
-        newItems = new ArtikelNeuEingeben(this.conn, this.mainWindow, this, newItemDialog, toplevel_id, sub_id, subsub_id);
+        JDialog newItemDialog = new JDialog(this.mainWindow, "Neue Artikel hinzufügen", true);
+        ArtikelNeuEingeben newItems = new ArtikelNeuEingeben(this.conn, this.mainWindow, this, newItemDialog, toplevel_id, sub_id, subsub_id);
         newItemDialog.getContentPane().add(newItems, BorderLayout.CENTER);
         newItemDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         WindowAdapterNewItems wani = new WindowAdapterNewItems(newItems, newItemDialog);
@@ -752,6 +823,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         }
         if (e.getSource() == revertButton){
             updateAll();
+            return;
+        }
+        if (e.getSource() == editButton){
+            showEditDialog();
             return;
         }
         if (e.getSource() == newButton){

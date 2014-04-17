@@ -215,7 +215,7 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
     }
 
     // will data be lost on close?
-    boolean willDataBeLost() {
+    public boolean willDataBeLost() {
         return artikelNeu.willDataBeLost();
     }
 
