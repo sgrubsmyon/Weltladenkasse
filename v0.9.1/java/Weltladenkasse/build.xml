@@ -9,8 +9,8 @@
     <property name="build-besteller-resources" location="build/besteller/resources"/>
     <property name="lib" location="lib"/>
     <property name="resources" location="resources"/>
-    <property name="jarfile-kasse" location="Weltladenkasse_v0.9.jar"/>
-    <property name="jarfile-besteller" location="Weltladenbesteller_v0.9.jar"/>
+    <property name="jarfile-kasse" location="Weltladenkasse_v0.9.1.jar"/>
+    <property name="jarfile-besteller" location="Weltladenbesteller_v0.9.1.jar"/>
 
     <target name="init">
         <!-- Create the time stamp -->

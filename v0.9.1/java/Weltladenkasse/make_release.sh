@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=v0.9
+version=v0.9.1
 
 releasedir=../../../../releases/$version
 if [ ! -e $releasedir ]; then
