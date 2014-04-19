@@ -167,10 +167,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 if (barcode == null){ barcode = ""; }
                 if (vpe == null){ vpe = ""; }
                 if (ekp == null){ ekp = ""; }
-                else { ekp = priceFormatter( new BigDecimal(ekp) )+" "+currencySymbol; }
+                else { ekp = priceFormatter(ekp)+" "+currencySymbol; }
                 String vkpOutput = "";
                 String mwstOutput = "";
-                if (vkp != null){ vkpOutput = priceFormatter( new BigDecimal(vkp) )+" "+currencySymbol; }
+                if (vkp != null){ vkpOutput = priceFormatter(vkp)+" "+currencySymbol; }
                 if (mwst != null){ mwstOutput = vatFormatter(mwst); }
                 if (vkp == null){ vkpOutput = ""; mwstBetrag = ""; }
                 if (mwst == null){ mwstOutput = ""; mwstBetrag = ""; }
@@ -646,7 +646,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         if ( header.equals("VK-Preis") || header.equals("EK-Preis") ){
             if ( !value.equals("") ){
                 // format the entered money value appropriately
-                value = priceFormatter( new BigDecimal(value) )+" "+currencySymbol;
+                value = priceFormatter(value)+" "+currencySymbol;
                 model.removeTableModelListener(this); // remove listener before doing changes
                 model.setValueAt(value, row, column); // update table cell with currency symbol
                 model.addTableModelListener(this);
@@ -693,15 +693,13 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             }
             String vkpreis = model.getValueAt(row, model.findColumn("VK-Preis")).toString();
             try {
-                vkpreis = priceFormatterIntern( new BigDecimal( vkpreis.replace(currencySymbol,"")
-                            .replaceAll("\\s","").replace(',','.') ) );
+                vkpreis = priceFormatterIntern(vkpreis);
             } catch (NumberFormatException nfe) {
                 vkpreis = "NULL";
             }
             String ekpreis = model.getValueAt(row, model.findColumn("EK-Preis")).toString();
             try {
-                ekpreis = priceFormatterIntern( new BigDecimal( ekpreis.replace(currencySymbol,"")
-                            .replaceAll("\\s","").replace(',','.') ) );
+                ekpreis = priceFormatterIntern(ekpreis);
             } catch (NumberFormatException nfe) {
                 ekpreis = "NULL";
             }
@@ -783,10 +781,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
 
     void showEditDialog() {
         // get data from the selected rows
-        Vector< Vector<String> > selectedData = new Vector< Vector<String> >();
-        Vector< Vector<String> > selectedProdGrIDs = new Vector< Vector<String> >();
-        Vector< Vector<String> > selectedLiefIDs = new Vector< Vector<String> >();
-        Vector< Vector<Boolean> > selectedVarPreisBools = new Vector< Vector<Boolean> >();
+        Vector< Vector<Object> > selectedData = new Vector< Vector<Object> >();
+        Vector<String> selectedProdGrIDs = new Vector<String>();
+        Vector<String> selectedLiefIDs = new Vector<String>();
+        Vector<Boolean> selectedVarPreisBools = new Vector<Boolean>();
         int[] selection = myTable.getSelectedRows();
         for (int i = 0; i < selection.length; i++) {
             selection[i] = myTable.convertRowIndexToModel(selection[i]);
