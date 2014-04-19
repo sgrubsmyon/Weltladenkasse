@@ -31,7 +31,7 @@ import javax.swing.event.*; // for DocumentListener
 import javax.swing.text.*; // for DocumentFilter
 
 public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
-    implements ArtikelFormularInterface, DocumentListener, ItemListener {
+    implements ArtikelFormularInterface, DocumentListener, ItemListener, ChangeListener {
     // Attribute:
     protected ArtikelFormular artikelFormular;
     protected Vector< Vector<Object> > originalData;
@@ -93,6 +93,7 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         artikelFormular.ekpreisField.addKeyListener(enterAdapter);
         artikelFormular.ekpreisField.getDocument().addDocumentListener(this);
         artikelFormular.preisVariabelBox.addItemListener(this);
+        artikelFormular.vpeSpinner.addChangeListener(this);
         artikelFormular.lieferantBox.addActionListener(this);
         artikelFormular.herkunftField.getDocument().addDocumentListener(this);
         artikelFormular.herkunftField.addKeyListener(enterAdapter);
@@ -294,6 +295,27 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
     }
 
     public void submit() {
+        for (int i=0; i<originalData.size(); i++){
+            String origName = (String)originalData.get(i).get(0);
+            String origNummer = (String)originalData.get(i).get(1);
+            String newName = artikelFormular.nameField.isEnabled() ? artikelFormular.nameField.getText() : origName;
+            String newNummer = artikelFormular.nummerField.isEnabled() ? artikelFormular.nummerField.getText() : origNummer;
+            if (newName != origName || newNummer != origNummer){
+                if ( isItemAlreadyKnown(newName, newNummer) ){
+                    // not allowed: changing name and nummer to a pair that is already registered in DB
+                    JOptionPane.showMessageDialog(this, "Fehler: Kombination Namme/Nummer bereits vorhanden! Wird zurückgesetzt.",
+                            "Info", JOptionPane.INFORMATION_MESSAGE);
+                    artikelFormular.nameField.setText(origName);
+                    artikelFormular.nummerField.setText(origNummer);
+                    return;
+                }
+            }
+        }
+    }
+
+    /** Needed for ChangeListener. */
+    public void stateChanged(ChangeEvent e) {
+        submitButton.setEnabled( isSubmittable() );
     }
 
     /** Needed for ItemListener. */
@@ -339,6 +361,14 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
 	if (e.getSource() == submitButton){
             submit();
             // close
+            return;
+        }
+	if (e.getSource() == closeButton){
+            // Create the same effect as if user clicks on x or uses Alt-F4:
+            // Do this by explicitly calling the method of the WindowAdapter
+            // installed in Artikelliste.java
+            WindowAdapter wa = (WindowAdapter)this.window.getWindowListeners()[0];
+            wa.windowClosing(new WindowEvent(this.window, 0));
             return;
         }
         super.actionPerformed(e);

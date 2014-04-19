@@ -10,6 +10,9 @@ import java.math.RoundingMode;
 
 // MySQL Connector/J stuff:
 import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.ResultSet;
 
 // GUI stuff:
 import java.awt.event.*;
@@ -116,6 +119,25 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
     protected String vatFormatter(String vat) {
         return vatFormat.format( (new BigDecimal(vat)).multiply(new BigDecimal("100.")) ).replace('.',',') + " %";
+    }
+
+    protected boolean isItemAlreadyKnown(String name, String nummer) {
+        boolean exists = false;
+        try {
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT COUNT(artikel_id) FROM artikel WHERE artikel_name = '"+name+"' AND artikel_nr = '"+nummer+"' AND aktiv = TRUE"
+                    );
+            rs.next();
+            int count = rs.getInt(1);
+            exists = count > 0;
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return exists;
     }
 
     protected void setCalButtFromSpinner(SpinnerModel m, JCalendarButton b) {

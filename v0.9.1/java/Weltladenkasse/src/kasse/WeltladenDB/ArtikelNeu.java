@@ -158,19 +158,8 @@ public class ArtikelNeu extends WindowContent
 
     public int checkIfItemAlreadyKnown(String name, String nummer) {
         int exists = 0;
-        try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT COUNT(artikel_id) FROM artikel WHERE artikel_name = '"+name+"' AND artikel_nr = '"+nummer+"' AND aktiv = TRUE"
-                    );
-            rs.next();
-            int count = rs.getInt(1);
-            if ( count > 0 ){ exists = 1; } // item already in db
-            rs.close();
-            stmt.close();
-        } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+        if ( isItemAlreadyKnown(name, nummer) ){
+            exists = 1;
         }
         // always look into table, too
         for (int i=0; i<data.size(); i++){
