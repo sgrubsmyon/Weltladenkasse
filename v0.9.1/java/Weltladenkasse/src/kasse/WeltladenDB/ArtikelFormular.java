@@ -226,14 +226,23 @@ public class ArtikelFormular extends WindowContent
     }
 
     public boolean checkIfFormIsComplete() {
-        if (
-                nameField.getText().length() > 0 && nummerField.getText().length() > 0 &&
-                ( (vkpreisField.getText().length() > 0 ) || preisVariabelBox.isSelected() )
-           ){
-            return true;
-        } else {
+        if ( nameField.isEnabled() && nameField.getText().replaceAll("\\s","").equals("") )
             return false;
-        }
+        if ( nummerField.isEnabled() && nummerField.getText().replaceAll("\\s","").equals("") )
+            return false;
+        if ( vkpreisField.isEnabled() && vkpreisField.getText().replaceAll("\\s","").equals("") && 
+                preisVariabelBox.isEnabled() && !preisVariabelBox.isSelected() )
+            return false;
+        return true;
+
+        //if (
+        //        nameField.getText().length() > 0 && nummerField.getText().length() > 0 &&
+        //        ( (vkpreisField.getText().length() > 0) || preisVariabelBox.isSelected() )
+        //   ){
+        //    return true;
+        //} else {
+        //    return false;
+        //}
     }
 
     public void itemStateChanged(ItemEvent e) {

@@ -334,7 +334,7 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
                 } else {
                     variabel = "0";
                     try {
-                        vkpreis = priceFormatterIntern( new BigDecimal( vkpreis.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') ) );
+                        vkpreis = priceFormatterIntern(vkpreis);
                     } catch (NumberFormatException ex) {
                         logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 5: 'VK-Preis').</div>\n";
                         log.setText(logString+logStringEnd);
@@ -342,7 +342,7 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
                     }
                     if ( !ekpreis.equals("NULL") ){
                         try {
-                            ekpreis = priceFormatterIntern( new BigDecimal( ekpreis.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') ) );
+                            ekpreis = priceFormatterIntern(ekpreis);
                         } catch (NumberFormatException ex) {
                             logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 6: 'EK-Preis').</div>\n";
                             log.setText(logString+logStringEnd);

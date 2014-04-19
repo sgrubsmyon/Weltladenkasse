@@ -169,11 +169,11 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
             artikelNeu.ekPreise.add("NULL");
             artikelNeu.variablePreise.add("TRUE");
         } else {
-            artikelNeu.vkPreise.add( priceFormatterIntern( new BigDecimal(artikelFormular.vkpreisField.getText().replace(',','.')) ) );
+            artikelNeu.vkPreise.add( priceFormatterIntern(artikelFormular.vkpreisField.getText()) );
             if ( artikelFormular.ekpreisField.getText().length() == 0 )
                 artikelNeu.ekPreise.add("NULL");
             else
-                artikelNeu.ekPreise.add( priceFormatterIntern( new BigDecimal(artikelFormular.ekpreisField.getText().replace(',','.')) ) );
+                artikelNeu.ekPreise.add( priceFormatterIntern(artikelFormular.ekpreisField.getText()) );
             artikelNeu.variablePreise.add("FALSE");
         }
         int vpeInt = (Integer)artikelFormular.vpeSpinner.getValue();

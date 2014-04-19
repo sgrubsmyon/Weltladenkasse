@@ -35,10 +35,11 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
     // Attribute:
     protected ArtikelFormular artikelFormular;
     protected Vector< Vector<Object> > originalData;
-    protected Vector<Object> originalProdGrIDs;
-    protected Vector<Object> originalLiefIDs;
-    protected Vector<Object> originalVarPreisBools;
+    protected Vector<String> originalProdGrIDs;
+    protected Vector<String> originalLiefIDs;
+    protected Vector<Boolean> originalVarPreisBools;
 
+    protected JCheckBox aktivBox;
     protected JButton submitButton;
 
     private CurrencyDocumentFilter geldFilter = new CurrencyDocumentFilter();
@@ -52,15 +53,21 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
 	super(conn, mw, pw, dia);
         artikelFormular = new ArtikelFormular(conn, mw, "", "", "");
         originalData = new Vector< Vector<Object> >(origData);
-        originalProdGrIDs = new Vector<Object>(origPrGrIDs);
-        originalLiefIDs = new Vector<Object>(origLiefIDs);
-        originalVarPreisBools = new Vector<Object>(origVPBools);
+        originalProdGrIDs = new Vector<String>(origPrGrIDs);
+        originalLiefIDs = new Vector<String>(origLiefIDs);
+        originalVarPreisBools = new Vector<Boolean>(origVPBools);
         showAll();
     }
 
     void showHeader() {
         headerPanel = new JPanel();
         artikelFormular.showHeader(headerPanel, allPanel);
+
+        JPanel aktivPanel = new JPanel();
+        aktivBox = new JCheckBox("Artikel aktiv");
+        aktivBox.setSelected(true);
+        aktivPanel.add(aktivBox);
+        headerPanel.add(aktivPanel);
 
         setOriginalValues();
 
@@ -99,7 +106,7 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         submitButton = new JButton("Abschicken");
         submitButton.setMnemonic(KeyEvent.VK_A);
         submitButton.addActionListener(this);
-        submitButton.setEnabled( checkIfFormIsComplete() && willDataBeLost() );
+        submitButton.setEnabled( isSubmittable() );
         footerPanel.add(submitButton);
         closeButton = new JButton("Schließen");
         closeButton.setMnemonic(KeyEvent.VK_S);
@@ -113,12 +120,12 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         String firstName = (String)originalData.get(0).get(0);
         String firstNummer = (String)originalData.get(0).get(1);
         String firstBarcode = (String)originalData.get(0).get(2);
-        String firstGruppenID = (String)originalProdGrIDs.get(0);
-        Boolean firstVarPreis = (Boolean)originalVarPreisBools.get(0);
+        String firstGruppenID = originalProdGrIDs.get(0);
+        Boolean firstVarPreis = originalVarPreisBools.get(0);
         String firstVKP = (String)originalData.get(0).get(4);
         String firstEKP = (String)originalData.get(0).get(5);
         String firstVPE = (String)originalData.get(0).get(6);
-        String firstLieferantID = (String)originalLiefIDs.get(0);
+        String firstLieferantID = originalLiefIDs.get(0);
         String firstHerkunft = (String)originalData.get(0).get(11);
         Boolean firstAktiv = (Boolean)originalData.get(0).get(12);
         if ( allRowsEqual(firstName, 0) ){
@@ -155,6 +162,9 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
                 } else {
                     artikelFormular.ekpreisField.setEnabled(false);
                 }
+            } else { // if all items have variable prices
+                artikelFormular.vkpreisField.setEnabled(false);
+                artikelFormular.ekpreisField.setEnabled(false);
             }
         } else {
             artikelFormular.vkpreisField.setEnabled(false);
@@ -163,12 +173,12 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         }
         if ( allRowsEqual(firstVPE, 6) ){
             if ( firstVPE.equals("") ){ firstVPE = "0"; }
-            artikelFormular.vpeField.setText(firstVPE);
+            artikelFormular.vpeSpinner.setValue(Integer.parseInt(firstVPE));
         } else {
-            artikelFormular.vpeField.setEnabled(false);
+            artikelFormular.vpeSpinner.setEnabled(false);
         }
         if ( allElementsEqual(firstLieferantID, originalLiefIDs) ){
-            liefIndex = artikelFormular.lieferantIDs.indexOf(firstLieferantID);
+            int liefIndex = artikelFormular.lieferantIDs.indexOf(firstLieferantID);
             artikelFormular.lieferantBox.setSelectedIndex(liefIndex);
         } else {
             artikelFormular.lieferantBox.setEnabled(false);
@@ -179,9 +189,9 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
             artikelFormular.herkunftField.setEnabled(false);
         }
         if ( allRowsEqual(firstAktiv, 12) ){
-            aktivCheckBox.setText(firstAktiv);
+            aktivBox.setSelected(firstAktiv);
         } else {
-            artikelFormular.nameField.setEnabled(false);
+            aktivBox.setEnabled(false);
         }
     }
 
@@ -194,8 +204,8 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         return true;
     }
 
-    private boolean allElementsEqual(Object element, Vector<Object> vector) {
-        for (Object elem : vector){
+    private <T> boolean allElementsEqual(T element, Vector<T> vector) {
+        for (T elem : vector){
             if ( ! elem.equals(element) ){
                 return false;
             }
@@ -205,7 +215,74 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
 
     // will data be lost on close?
     public boolean willDataBeLost() {
+        if ( artikelFormular.nameField.isEnabled() ){
+            String origName = (String)originalData.get(0).get(0);
+            if ( !origName.equals(artikelFormular.nameField.getText()) )
+                    return true;
+        }
+        if ( artikelFormular.nummerField.isEnabled() ){
+            String origNummer = (String)originalData.get(0).get(1);
+            if ( !origNummer.equals(artikelFormular.nummerField.getText()) )
+                return true;
+        }
+        if ( artikelFormular.barcodeField.isEnabled() ){
+            String origBarcode = (String)originalData.get(0).get(2);
+            if ( !origBarcode.equals(artikelFormular.barcodeField.getText()) )
+                return true;
+        }
+        if ( artikelFormular.produktgruppenBox.isEnabled() ){
+            String origGruppenID = originalProdGrIDs.get(0);
+            int selProdIndex = artikelFormular.produktgruppenBox.getSelectedIndex();
+            String selProdID = artikelFormular.produktgruppenIDs.get(selProdIndex);
+            if ( !origGruppenID.equals(selProdID) )
+                return true;
+        }
+        if ( artikelFormular.preisVariabelBox.isEnabled() ){
+            Boolean origVarPreis = originalVarPreisBools.get(0);
+            if ( !origVarPreis.equals(artikelFormular.preisVariabelBox.isSelected()) )
+                return true;
+        }
+        if ( artikelFormular.vkpreisField.isEnabled() ){
+            String origVKP = priceFormatterIntern( (String)originalData.get(0).get(4) );
+            String newVKP = priceFormatterIntern( artikelFormular.vkpreisField.getText() );
+            if ( !origVKP.equals(newVKP) )
+                return true;
+        }
+        if ( artikelFormular.ekpreisField.isEnabled() ){
+            String origEKP = priceFormatterIntern( (String)originalData.get(0).get(5) );
+            String newEKP = priceFormatterIntern( artikelFormular.ekpreisField.getText() );
+            if ( !origEKP.equals(newEKP) )
+                return true;
+        }
+        if ( artikelFormular.vpeSpinner.isEnabled() ){
+            String origVPEStr = (String)originalData.get(0).get(6);
+            if ( origVPEStr.equals("") ){ origVPEStr = "0"; }
+            Integer origVPE = Integer.parseInt(origVPEStr);
+            if ( !origVPE.equals(artikelFormular.vpeSpinner.getValue()) )
+                return true;
+        }
+        if ( artikelFormular.lieferantBox.isEnabled() ){
+            String origLieferantID = originalLiefIDs.get(0);
+            int selLiefIndex = artikelFormular.lieferantBox.getSelectedIndex();
+            String selLiefID = artikelFormular.lieferantIDs.get(selLiefIndex);
+            if ( !origLieferantID.equals(selLiefID) )
+                return true;
+        }
+        if ( artikelFormular.herkunftField.isEnabled() ){
+            String origHerkunft = (String)originalData.get(0).get(11);
+            if ( !origHerkunft.equals(artikelFormular.herkunftField.getText()) )
+                return true;
+        }
+        if ( aktivBox.isEnabled() ){
+            Boolean origAktiv = (Boolean)originalData.get(0).get(12);
+            if ( !origAktiv.equals(aktivBox.isSelected()) )
+                return true;
+        }
         return false;
+    }
+
+    public boolean isSubmittable() {
+        return checkIfFormIsComplete() && willDataBeLost();
     }
 
     public void fillComboBoxes() {
@@ -222,7 +299,7 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
     /** Needed for ItemListener. */
     public void itemStateChanged(ItemEvent e) {
         artikelFormular.itemStateChanged(e);
-        submitButton.setEnabled( checkIfFormIsComplete() );
+        submitButton.setEnabled( isSubmittable() );
     }
 
     /**
@@ -233,7 +310,7 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
      **/
     public void insertUpdate(DocumentEvent e) {
 	// check if form is valid (if item can be added to list)
-        submitButton.setEnabled( checkIfFormIsComplete() );
+        submitButton.setEnabled( isSubmittable() );
     }
     public void removeUpdate(DocumentEvent e) {
 	// check if form is valid (if item can be added to list)
@@ -252,11 +329,11 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
      **/
     public void actionPerformed(ActionEvent e) {
 	if (e.getSource() == artikelFormular.produktgruppenBox){
-            submitButton.setEnabled( checkIfFormIsComplete() );
+            submitButton.setEnabled( isSubmittable() );
             return;
         }
 	if (e.getSource() == artikelFormular.lieferantBox){
-            submitButton.setEnabled( checkIfFormIsComplete() );
+            submitButton.setEnabled( isSubmittable() );
             return;
         }
 	if (e.getSource() == submitButton){

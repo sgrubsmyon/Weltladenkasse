@@ -87,6 +87,24 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return totalPrice.divide(one.add(mwst), 10, RoundingMode.HALF_UP).multiply(mwst); // VAT = bruttoPreis / (1.+mwst) * mwst;
     }
 
+    protected String priceFormatter(String priceStr) {
+        try {
+            BigDecimal price = new BigDecimal( priceStr.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') );
+            return priceFormatter(price);
+        } catch (NumberFormatException nfe) {
+            return "";
+        }
+    }
+
+    protected String priceFormatterIntern(String priceStr) {
+        try {
+            BigDecimal price = new BigDecimal( priceStr.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.'));
+            return priceFormatterIntern(price);
+        } catch (NumberFormatException nfe) {
+            return "";
+        }
+    }
+
     protected String priceFormatter(BigDecimal price) {
         return priceFormatterIntern(price).replace('.',',');
     }
