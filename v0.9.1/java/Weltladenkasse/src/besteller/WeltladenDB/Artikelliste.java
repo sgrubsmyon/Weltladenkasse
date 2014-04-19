@@ -28,13 +28,11 @@ import java.awt.event.*;
 //import javax.swing.JCheckBox;
 import javax.swing.*;
 import javax.swing.tree.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.*;
 import javax.swing.event.*; // for TableModelListener
 import javax.swing.text.*; // for DocumentFilter
 
-public class Artikelliste extends WindowContent implements ItemListener, TableModelListener {
+public class Artikelliste extends WindowContent implements ItemListener, TableModelListener, ListSelectionListener {
     // Attribute:
     private ArtikellisteContainer container;
     private String toplevel_id;
@@ -66,7 +64,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private Vector< Vector<Object> > data;
     private Vector< Vector<Object> > originalData;
     private Vector<String> columnLabels;
-    private Vector<Boolean> activeRow;
+    private Vector<Boolean> activeRowBools;
+    private Vector<Boolean> varPreisBools;
+    private Vector<String> produktGruppeIDs;
+    private Vector<String> lieferantIDs;
 
     // Vectors storing table edits
     private Vector<String> editArtikelName;
@@ -107,7 +108,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         columnLabels.add("MwSt."); //columnLabels.add("Betrag MwSt.");
         columnLabels.add("Ab/Seit"); columnLabels.add("Bis");
         columnLabels.add("Lieferant"); columnLabels.add("Herkunft"); columnLabels.add("Aktiv");
-        activeRow = new Vector<Boolean>();
+        activeRowBools = new Vector<Boolean>();
+        varPreisBools = new Vector<Boolean>();
+        produktGruppeIDs = new Vector<String>();
+        lieferantIDs = new Vector<String>();
 
         String filter = "";
         if (toplevel_id == null){ // if user clicked on "Alle Artikel"
@@ -125,12 +129,15 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT produktgruppen_name, artikel_name, artikel_nr, barcode, " +
-                    "vk_preis, variabler_preis, ek_preis, vpe, mwst_satz, " +
-                    "DATE_FORMAT(von, '"+dateFormatSQL+"'), DATE_FORMAT(bis, '"+dateFormatSQL+"'), lieferant_name, herkunft, artikel.aktiv " +
-                    "FROM artikel LEFT JOIN lieferant USING (lieferant_id) " +
-                    "LEFT JOIN produktgruppe USING (produktgruppen_id) " +
-                    "LEFT JOIN mwst USING (mwst_id) " +
+                    "SELECT produktgruppen_id, produktgruppen_name, "+
+                    "artikel_name, artikel_nr, barcode, "+
+                    "vk_preis, variabler_preis, ek_preis, vpe, mwst_satz, "+
+                    "DATE_FORMAT(von, '"+dateFormatSQL+"'), DATE_FORMAT(bis, '"+dateFormatSQL+"'), "+
+                    "lieferant_id, lieferant_name, "+
+                    "herkunft, artikel.aktiv "+
+                    "FROM artikel LEFT JOIN lieferant USING (lieferant_id) "+
+                    "LEFT JOIN produktgruppe USING (produktgruppen_id) "+
+                    "LEFT JOIN mwst USING (mwst_id) "+
                     "WHERE " + filter +
                     "AND ( artikel_name LIKE '%" + filterStr + "%' OR artikel_nr LIKE '%" + filterStr + "%' OR lieferant_name LIKE '%" + filterStr + "%' " +
                     "OR herkunft LIKE '%" + filterStr + "%' ) " +
@@ -139,21 +146,23 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     );
             while (rs.next()) {
                 Vector<Object> row = new Vector<Object>();
-                String gruppenname = rs.getString(1);
-                String name = rs.getString(2);
-                String nr = rs.getString(3);
-                String barcode = rs.getString(4);
-                String vkp = rs.getString(5);
-                String var = rs.getString(6);
-                String ekp = rs.getString(7);
-                String vpe = rs.getString(8);
-                String mwst = rs.getString(9);
+                String produktgruppen_id = rs.getString(1);
+                String gruppenname = rs.getString(2);
+                String name = rs.getString(3);
+                String nr = rs.getString(4);
+                String barcode = rs.getString(5);
+                String vkp = rs.getString(6);
+                String var = rs.getString(7);
+                String ekp = rs.getString(8);
+                String vpe = rs.getString(9);
+                String mwst = rs.getString(10);
                 String mwstBetrag = "";
-                String von = rs.getString(10);
-                String bis = rs.getString(11);
-                String lieferant = rs.getString(12);
-                String herkunft = rs.getString(13);
-                boolean aktivBool = rs.getBoolean(14);
+                String von = rs.getString(11);
+                String bis = rs.getString(12);
+                String lieferant_id = rs.getString(13);
+                String lieferant = rs.getString(14);
+                String herkunft = rs.getString(15);
+                Boolean aktivBool = rs.getBoolean(16);
 
                 if (barcode == null){ barcode = ""; }
                 if (vpe == null){ vpe = ""; }
@@ -171,6 +180,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 }
                 if (von == null) von = "";
                 if (bis == null) bis = "";
+                if (lieferant_id == null) lieferant_id = "1";
                 if (lieferant == null) lieferant = "";
                 if (herkunft == null) herkunft = "";
 
@@ -181,7 +191,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 row.add(von); row.add(bis);
                 row.add(lieferant); row.add(herkunft); row.add(aktivBool);
                 data.add(row);
-                activeRow.add(aktivBool);
+                activeRowBools.add(aktivBool);
+                varPreisBools.add(var.equals("1"));
+                produktGruppeIDs.add(produktgruppen_id);
+                lieferantIDs.add(lieferant_id);
             }
             rs.close();
             stmt.close();
@@ -236,22 +249,14 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 } else {
                     if ( changedAktiv.get(index) == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
                         // add row for new item (with updated prices):
-                        String barcodeString = changedBarcode.get(index);
-                        if ( !barcodeString.equals("NULL") ){
-                            barcodeString = "\""+barcodeString+"\"";
-                        }
-                        String herkunftString = changedHerkunft.get(index);
-                        if ( !herkunftString.equals("NULL") ){
-                            herkunftString = "\""+herkunftString+"\"";
-                        }
                         result = stmt.executeUpdate(
                                 "INSERT INTO artikel SET artikel_name = \""+editArtikelName.get(index)+"\", "+
                                 "artikel_nr = \""+editArtikelNummer.get(index)+"\", "+
-                                "barcode = "+barcodeString+", "+
+                                "barcode = "+changedBarcode.get(index)+", "+
                                 "vk_preis = "+changedVKP.get(index)+", ek_preis = "+changedEKP.get(index)+", "+
                                 "vpe = "+changedVPE.get(index)+", "+
                                 "produktgruppen_id = "+prod_id+", lieferant_id = "+lief_id+", "+
-                                "herkunft = "+herkunftString+", von = NOW(), " +
+                                "herkunft = "+changedHerkunft.get(index)+", von = NOW(), " +
                                 "aktiv = TRUE, variabler_preis = "+var_preis
                                 );
                         if (result == 0){
@@ -361,7 +366,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     void enableButtons() {
         saveButton.setEnabled(editArtikelName.size() > 0);
         revertButton.setEnabled(editArtikelName.size() > 0);
-        editButton.setEnabled(editArtikelName.size() == 0);
+        editButton.setEnabled(myTable.getSelectedRowCount() > 0);
         newButton.setEnabled(editArtikelName.size() == 0);
         readButton.setEnabled(editArtikelName.size() == 0);
     }
@@ -397,7 +402,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             }
             public boolean isCellEditable(int row, int col) {
                 String header = this.getColumnName(col);
-                if ( activeRow.get(row) ){
+                if ( activeRowBools.get(row) ){
                     if ( header.equals("VK-Preis") || header.equals("EK-Preis") ) {
                         if ( ! data.get(row).get(col).equals("variabel") )
                             return true;
@@ -423,7 +428,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 Component c = super.prepareRenderer(renderer, row, column);
                 // add custom rendering here
                 int realRowIndex = convertRowIndexToModel(row);
-                if ( ! activeRow.get(realRowIndex) ){ // for rows with inactive items
+                if ( ! activeRowBools.get(realRowIndex) ){ // for rows with inactive items
                     c.setFont( c.getFont().deriveFont(Font.ITALIC) );
                     c.setForeground(Color.GRAY);
                 }
@@ -458,6 +463,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         };
         myTable.setAutoCreateRowSorter(true);
         myTable.getModel().addTableModelListener(this);
+        myTable.getSelectionModel().addListSelectionListener(this);
         //myTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
         //myTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
         setTableProperties(myTable);
@@ -599,6 +605,12 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         return exists;
     }
 
+    /** Needed for ListSelectionListener.
+     * Invoked when the row selection changes. */
+    public void valueChanged(ListSelectionEvent e) {
+        enableButtons();
+    }
+
     /** Needed for TableModelListener. */
     public void tableChanged(TableModelEvent e) {
         // get info about edited cell
@@ -676,6 +688,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             String barcode = model.getValueAt(row, model.findColumn("Barcode")).toString();
             if ( barcode.equals("") ){
                 barcode = "NULL";
+            } else {
+                barcode = "'"+barcode+"'";
             }
             String vkpreis = model.getValueAt(row, model.findColumn("VK-Preis")).toString();
             try {
@@ -697,12 +711,14 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             String herkunft = model.getValueAt(row, model.findColumn("Herkunft")).toString();
             if ( herkunft.equals("") ){
                 herkunft = "NULL";
+            } else {
+                herkunft = "'"+herkunft+"'";
             }
 
             // update the vectors caching the changes
             if (nummerIndex == nameIndex && nummerIndex != -1){ // this row has been changed before, update the change cache
-                changedName.set(nummerIndex, barcode);
-                changedNummer.set(nummerIndex, barcode);
+                changedName.set(nummerIndex, artikelName);
+                changedNummer.set(nummerIndex, artikelNummer);
                 changedBarcode.set(nummerIndex, barcode);
                 changedVKP.set(nummerIndex, vkpreis);
                 changedEKP.set(nummerIndex, ekpreis);
@@ -766,8 +782,22 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     }
 
     void showEditDialog() {
+        // get data from the selected rows
+        Vector< Vector<String> > selectedData = new Vector< Vector<String> >();
+        Vector< Vector<String> > selectedProdGrIDs = new Vector< Vector<String> >();
+        Vector< Vector<String> > selectedLiefIDs = new Vector< Vector<String> >();
+        Vector< Vector<Boolean> > selectedVarPreisBools = new Vector< Vector<Boolean> >();
+        int[] selection = myTable.getSelectedRows();
+        for (int i = 0; i < selection.length; i++) {
+            selection[i] = myTable.convertRowIndexToModel(selection[i]);
+            selectedData.add( data.get(selection[i]) );
+            selectedProdGrIDs.add( produktGruppeIDs.get(selection[i]) );
+            selectedLiefIDs.add( lieferantIDs.get(selection[i]) );
+            selectedVarPreisBools.add( varPreisBools.get(selection[i]) );
+        }
         JDialog editDialog = new JDialog(this.mainWindow, "Artikel bearbeiten", true);
-        ArtikelBearbeiten bearb = new ArtikelBearbeiten(this.conn, this.mainWindow, this, editDialog, toplevel_id, sub_id, subsub_id);
+        ArtikelBearbeiten bearb = new ArtikelBearbeiten(this.conn, this.mainWindow, this, editDialog,
+                selectedData, selectedProdGrIDs, selectedLiefIDs, selectedVarPreisBools);
         editDialog.getContentPane().add(bearb, BorderLayout.CENTER);
         editDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         WindowAdapterNewItems wani = new WindowAdapterNewItems(bearb, editDialog);
