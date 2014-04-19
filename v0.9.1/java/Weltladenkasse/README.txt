@@ -12,7 +12,7 @@ $ ./install-ubuntu.sh
 Run the software:
 -----------------
 
-$ java -jar Weltladenkasse_v0.9.jar
+$ java -jar Weltladenkasse_v0.9.1.jar
 
 A version of the Java Runtime Environment (JRE) needs to be installed in order to run the software.
 
