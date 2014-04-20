@@ -17,7 +17,7 @@ import java.sql.ResultSet;
 // GUI stuff:
 import java.awt.event.*;
 import java.awt.BorderLayout;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -84,11 +84,19 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         this.currencySymbol = mw.currencySymbol;
     }
 
+    /**
+     * Price calculation methods
+     */
+
     protected BigDecimal calculateVAT(BigDecimal totalPrice, BigDecimal mwst){
         BigDecimal one = new BigDecimal(1);
         //return totalPrice.multiply( one.subtract( one.divide(one.add(mwst), 10, RoundingMode.HALF_UP) ) ); // VAT = bruttoPreis * ( 1. - 1./(1.+mwst) );
         return totalPrice.divide(one.add(mwst), 10, RoundingMode.HALF_UP).multiply(mwst); // VAT = bruttoPreis / (1.+mwst) * mwst;
     }
+
+    /**
+     * Number formatting methods
+     */
 
     protected String priceFormatter(String priceStr) {
         try {
@@ -121,6 +129,10 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return vatFormat.format( (new BigDecimal(vat)).multiply(new BigDecimal("100.")) ).replace('.',',') + " %";
     }
 
+    /**
+     * DB methods
+     */
+
     protected boolean isItemAlreadyKnown(String name, String nummer) {
         boolean exists = false;
         try {
@@ -139,6 +151,90 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
         return exists;
     }
+
+    protected int setItemInactive(String name, String nummer) {
+        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        int result = 0;
+        try {
+            Statement stmt = this.conn.createStatement();
+            result = stmt.executeUpdate(
+                    "UPDATE artikel SET aktiv = FALSE, bis = NOW() WHERE "+
+                    "artikel_name = '"+name+"' AND "+
+                    "artikel_nr = '"+nummer+"' AND aktiv = TRUE"
+                    );
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    protected int setItemActive(String name, String nummer) {
+        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        int result = 0;
+        try {
+            Statement stmt = this.conn.createStatement();
+            result = stmt.executeUpdate(
+                    "UPDATE artikel SET aktiv = TRUE, bis = NOW() WHERE "+
+                    "artikel_name = '"+name+"' AND "+
+                    "artikel_nr = '"+nummer+"' AND aktiv = FALSE"
+                    );
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    protected int insertNewItem(String name, String nummer, String barcode,
+            String var_preis, String vkpreis, String ekpreis, String vpe,
+            String produktgruppen_id, String lieferant_id,
+            String herkunft){
+        // add row for new item (with updated fields)
+        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        int result = 0;
+
+        // prepare value strings:
+        if (barcode.equals("") || barcode.equals("NULL")){ barcode = "NULL"; }
+        else { barcode = "'"+barcode+"'"; }
+
+        vkpreis = priceFormatterIntern(vkpreis);
+        if (vkpreis.equals("")){ vkpreis = "NULL"; }
+
+        ekpreis = priceFormatterIntern(ekpreis);
+        if (ekpreis.equals("")){ ekpreis = "NULL"; }
+
+        if (vpe.equals("") || vpe.equals("0")){ vpe = "NULL"; }
+
+        if (herkunft.equals("") || herkunft.equals("NULL")){ herkunft = "NULL"; }
+        else { herkunft = "'"+herkunft+"'"; }
+
+        try {
+            Statement stmt = this.conn.createStatement();
+            result = stmt.executeUpdate(
+                    "INSERT INTO artikel SET "+
+                    "artikel_name = '"+name+"', "+
+                    "artikel_nr = '"+nummer+"', "+
+                    "barcode = "+barcode+", "+
+                    "vk_preis = "+vkpreis+", ek_preis = "+ekpreis+", "+
+                    "vpe = "+vpe+", "+
+                    "produktgruppen_id = "+produktgruppen_id+", lieferant_id = "+lieferant_id+", "+
+                    "herkunft = "+herkunft+", von = NOW(), " +
+                    "aktiv = TRUE, variabler_preis = "+var_preis
+                    );
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    /**
+     * Calendar methods
+     */
 
     protected void setCalButtFromSpinner(SpinnerModel m, JCalendarButton b) {
         if (m instanceof SpinnerDateModel) {

@@ -30,7 +30,6 @@ import javax.swing.table.*;
 public class ArtikelNeu extends WindowContent
     implements ArtikelNeuInterface {
     // Attribute:
-    public Artikelliste artikelListe;
     UpdateTableFunctor updateTableFunc;
 
     public AnyJComponentJTable myTable;
@@ -52,9 +51,8 @@ public class ArtikelNeu extends WindowContent
     public JPanel tablePanel;
 
     // Methoden:
-    public ArtikelNeu(Connection conn, MainWindowGrundlage mw, Artikelliste pw, UpdateTableFunctor utf) {
+    public ArtikelNeu(Connection conn, MainWindowGrundlage mw, UpdateTableFunctor utf) {
 	super(conn, mw);
-        this.artikelListe = pw;
         this.updateTableFunc = utf;
 
         initiateTable();
@@ -182,41 +180,35 @@ public class ArtikelNeu extends WindowContent
                     break;
                 }
             }
-            try {
-                Statement stmt = this.conn.createStatement();
+            if (itemChanged){
+                // set old item to inactive:
+                int result = setItemInactive(artikelNamen.get(i), artikelNummern.get(i));
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Artikel "+artikelNamen.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht geändert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                    continue; // don't insert this new item, continue with next
+                }
+            }
+            int result = insertNewItem(artikelNamen.get(i), artikelNummern.get(i), barcodes.get(i),
+                    variablePreise.get(i), vkPreise.get(i), ekPreise.get(i), vpes.get(i),
+                    selProduktgruppenIDs.get(i), selLieferantIDs.get(i), herkuenfte.get(i));
+            if (result == 0){
                 if (itemChanged){
-                    // set old item to inactive:
-                    int result = stmt.executeUpdate(
-                            "UPDATE artikel SET aktiv = FALSE, bis = NOW() WHERE artikel_name = \""+artikelNamen.get(i)+"\" AND "+
-                            "artikel_nr = \""+artikelNummern.get(i)+"\" AND aktiv = TRUE"
-                            );
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Artikel "+artikelNamen.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht geändert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                    result = setItemActive(artikelNamen.get(i), artikelNummern.get(i));
                     if (result == 0){
                         JOptionPane.showMessageDialog(this,
-                                "Fehler: Artikel "+artikelNamen.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht geändert werden.",
+                                "Fehler: Artikel "+artikelNamen.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht wieder hergestellt werden. Artikel ist nun gelöscht (inaktiv).",
                                 "Fehler", JOptionPane.ERROR_MESSAGE);
                     }
-                }
-                String barcode = barcodes.get(i);
-                String herkunft = herkuenfte.get(i);
-                if ( !barcode.equals("NULL") ){ barcode = "'"+barcode+"'"; }
-                if ( !herkunft.equals("NULL") ){ herkunft = "'"+herkunft+"'"; }
-                int result = stmt.executeUpdate(
-                        "INSERT INTO artikel SET artikel_name = '"+artikelNamen.get(i)+"', artikel_nr = '"+artikelNummern.get(i)+"', " +
-                        "barcode = "+barcode+", " +
-                        "vk_preis = "+vkPreise.get(i)+", ek_preis = "+ekPreise.get(i)+", " +
-                        "vpe = "+vpes.get(i)+", lieferant_id = "+selLieferantIDs.get(i)+", " +
-                        "produktgruppen_id = "+selProduktgruppenIDs.get(i)+", herkunft = "+herkunft+", " +
-                        "von = NOW(), aktiv = TRUE, variabler_preis = "+variablePreise.get(i)
-                        );
-                if (result == 0){
+                } else {
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Artikel "+artikelNamen.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht in DB gespeichert werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
-                stmt.close();
-            } catch (SQLException ex) {
-                System.out.println("Exception: " + ex.getMessage());
-                ex.printStackTrace();
             }
         }
     }

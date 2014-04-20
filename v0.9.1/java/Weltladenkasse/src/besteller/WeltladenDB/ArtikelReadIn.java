@@ -74,7 +74,7 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
                 splitPane.setBottomComponent(artikelNeu.tablePanel);
             }
         };
-        artikelNeu = new ArtikelNeu(conn, mw, pw, utf);
+        artikelNeu = new ArtikelNeu(conn, mw, utf);
 
         showAll();
     }
@@ -481,7 +481,7 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
         }
 	if (e.getSource() == submitButton){
             submit();
-            artikelNeu.artikelListe.updateAll();
+            artikelListe.updateAll();
             emptyTable();
             //utf.updateTable();
             updateAll();

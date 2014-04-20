@@ -298,16 +298,71 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         for (int i=0; i<originalData.size(); i++){
             String origName = (String)originalData.get(i).get(0);
             String origNummer = (String)originalData.get(i).get(1);
-            String newName = artikelFormular.nameField.isEnabled() ? artikelFormular.nameField.getText() : origName;
-            String newNummer = artikelFormular.nummerField.isEnabled() ? artikelFormular.nummerField.getText() : origNummer;
+            String newName = artikelFormular.nameField.isEnabled() ?
+                artikelFormular.nameField.getText() : origName;
+            String newNummer = artikelFormular.nummerField.isEnabled() ?
+                artikelFormular.nummerField.getText() : origNummer;
             if (newName != origName || newNummer != origNummer){
                 if ( isItemAlreadyKnown(newName, newNummer) ){
                     // not allowed: changing name and nummer to a pair that is already registered in DB
-                    JOptionPane.showMessageDialog(this, "Fehler: Kombination Namme/Nummer bereits vorhanden! Wird zurückgesetzt.",
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Kombination Namme/Nummer bereits vorhanden! Wird zurückgesetzt.",
                             "Info", JOptionPane.INFORMATION_MESSAGE);
                     artikelFormular.nameField.setText(origName);
                     artikelFormular.nummerField.setText(origNummer);
                     return;
+                }
+            }
+            String barcode = artikelFormular.barcodeField.isEnabled() ?
+                artikelFormular.barcodeField.getText() :
+                (String)originalData.get(i).get(2);
+            String produktgruppen_id = artikelFormular.produktgruppenBox.isEnabled() ?
+                artikelFormular.produktgruppenIDs.get( artikelFormular.produktgruppenBox.getSelectedIndex() ) :
+                originalProdGrIDs.get(i);
+            Boolean preisVar = artikelFormular.preisVariabelBox.isEnabled() ?
+                artikelFormular.preisVariabelBox.isSelected() :
+                (Boolean)originalVarPreisBools.get(i);
+            String vkpreis = artikelFormular.vkpreisField.isEnabled() ?
+                artikelFormular.vkpreisField.getText() :
+                (String)originalData.get(i).get(4);
+            String ekpreis = artikelFormular.ekpreisField.isEnabled() ?
+                artikelFormular.ekpreisField.getText() :
+                (String)originalData.get(i).get(5);
+            String vpe = artikelFormular.vpeSpinner.isEnabled() ?
+                artikelFormular.vpeSpinner.getValue().toString() :
+                (String)originalData.get(i).get(6);
+            String lieferant_id = artikelFormular.lieferantBox.isEnabled() ?
+                artikelFormular.lieferantIDs.get( artikelFormular.lieferantBox.getSelectedIndex() ) :
+                (String)originalLiefIDs.get(i);
+            String herkunft = artikelFormular.herkunftField.isEnabled() ?
+                artikelFormular.herkunftField.getText() :
+                (String)originalData.get(i).get(11);
+            Boolean aktiv = aktivBox.isEnabled() ?
+                aktivBox.isSelected() :
+                (Boolean)originalData.get(i).get(12);
+
+            // set old item to inactive:
+            int result = setItemInactive(origName, origNummer);
+            if (result == 0){
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Artikel "+origName+" mit Nummer "+origNummer+" konnte nicht geändert werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                continue; // continue with next item
+            }
+            if ( aktiv == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
+                String var_preis = preisVar ? "TRUE" : "FALSE";
+                result = insertNewItem(newName, newNummer, barcode, var_preis, vkpreis, ekpreis, vpe,
+                        produktgruppen_id, lieferant_id, herkunft);
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Artikel "+origName+" mit Nummer "+origNummer+" konnte nicht geändert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                    result = setItemActive(origName, origNummer);
+                    if (result == 0){
+                        JOptionPane.showMessageDialog(this,
+                                "Fehler: Artikel "+origName+" mit Nummer "+origNummer+" konnte nicht wieder hergestellt werden. Artikel ist nun gelöscht (inaktiv).",
+                                "Fehler", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             }
         }
@@ -360,7 +415,8 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         }
 	if (e.getSource() == submitButton){
             submit();
-            // close
+            artikelListe.updateAll();
+            this.window.dispose(); // close
             return;
         }
 	if (e.getSource() == closeButton){

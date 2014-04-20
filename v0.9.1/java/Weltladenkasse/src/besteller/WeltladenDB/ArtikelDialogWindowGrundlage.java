@@ -30,6 +30,7 @@ import javax.swing.table.*;
 public abstract class ArtikelDialogWindowGrundlage extends DialogWindow {
     // Attribute:
     protected JPanel allPanel;
+    protected Artikelliste artikelListe;
 
     protected JPanel headerPanel;
     protected JPanel footerPanel;
@@ -37,6 +38,7 @@ public abstract class ArtikelDialogWindowGrundlage extends DialogWindow {
     // Methoden:
     public ArtikelDialogWindowGrundlage(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia) {
 	super(conn, mw, dia);
+        this.artikelListe = pw;
     }
 
     protected void showAll() {

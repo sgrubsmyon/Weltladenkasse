@@ -222,6 +222,9 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
 
     private void putChangesIntoDB() {
         for (int index=0; index<editArtikelName.size(); index++){
+            String prod_id = "";
+            String lief_id = "";
+            String var_preis = "";
             try {
                 Statement stmt = this.conn.createStatement();
                 // query produktgruppen_id, lieferant_id and variabler_preis for edited item:
@@ -232,44 +235,39 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                         );
                 // Now do something with the ResultSet, should be only one result ...
                 rs.next();
-                String prod_id = rs.getString(1);
-                String lief_id = rs.getString(2);
-                String var_preis = rs.getString(3);
+                prod_id = rs.getString(1);
+                lief_id = rs.getString(2);
+                var_preis = rs.getString(3);
                 rs.close();
-                // set old item to inactive:
-                int result = stmt.executeUpdate(
-                        "UPDATE artikel SET aktiv = FALSE, bis = NOW() WHERE "+
-                        "artikel_name = \""+editArtikelName.get(index)+"\" AND "+
-                        "artikel_nr = \""+editArtikelNummer.get(index)+"\" AND aktiv = TRUE"
-                        );
-                if (result == 0){
-                    JOptionPane.showMessageDialog(this,
-                            "Fehler: Artikel "+editArtikelName.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht geändert werden.",
-                            "Fehler", JOptionPane.ERROR_MESSAGE);
-                } else {
-                    if ( changedAktiv.get(index) == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
-                        // add row for new item (with updated prices):
-                        result = stmt.executeUpdate(
-                                "INSERT INTO artikel SET artikel_name = \""+editArtikelName.get(index)+"\", "+
-                                "artikel_nr = \""+editArtikelNummer.get(index)+"\", "+
-                                "barcode = "+changedBarcode.get(index)+", "+
-                                "vk_preis = "+changedVKP.get(index)+", ek_preis = "+changedEKP.get(index)+", "+
-                                "vpe = "+changedVPE.get(index)+", "+
-                                "produktgruppen_id = "+prod_id+", lieferant_id = "+lief_id+", "+
-                                "herkunft = "+changedHerkunft.get(index)+", von = NOW(), " +
-                                "aktiv = TRUE, variabler_preis = "+var_preis
-                                );
-                        if (result == 0){
-                            JOptionPane.showMessageDialog(this,
-                                    "Fehler: Artikel "+editArtikelName.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht geändert werden.",
-                                    "Fehler", JOptionPane.ERROR_MESSAGE);
-                        }
-                    }
-                }
                 stmt.close();
             } catch (SQLException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
+            }
+
+            // set old item to inactive:
+            int result = setItemInactive(editArtikelName.get(index), editArtikelNummer.get(index));
+            if (result == 0){
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Artikel "+editArtikelName.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht geändert werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                continue; // continue with next item
+            }
+            if ( changedAktiv.get(index) == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
+                result = insertNewItem(editArtikelName.get(index), editArtikelNummer.get(index), changedBarcode.get(index),
+                        var_preis, changedVKP.get(index), changedEKP.get(index), changedVPE.get(index),
+                        prod_id, lief_id, changedHerkunft.get(index));
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Artikel "+editArtikelName.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht geändert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                    result = setItemActive(editArtikelName.get(index), editArtikelNummer.get(index));
+                    if (result == 0){
+                        JOptionPane.showMessageDialog(this,
+                                "Fehler: Artikel "+editArtikelName.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht wieder hergestellt werden. Artikel ist nun gelöscht (inaktiv).",
+                                "Fehler", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
             }
         }
     }
@@ -667,32 +665,11 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 }
             }
             String barcode = model.getValueAt(row, model.findColumn("Barcode")).toString();
-            if ( barcode.equals("") ){
-                barcode = "NULL";
-            } else {
-                barcode = "'"+barcode+"'";
-            }
             String vkpreis = model.getValueAt(row, model.findColumn("VK-Preis")).toString();
-            try {
-                vkpreis = priceFormatterIntern(vkpreis);
-            } catch (NumberFormatException nfe) {
-                vkpreis = "NULL";
-            }
             String ekpreis = model.getValueAt(row, model.findColumn("EK-Preis")).toString();
-            try {
-                ekpreis = priceFormatterIntern(ekpreis);
-            } catch (NumberFormatException nfe) {
-                ekpreis = "NULL";
-            }
             String vpe = model.getValueAt(row, model.findColumn("VPE")).toString();
-            if ( vpe.equals("") ){ vpe = "NULL"; }
             boolean aktiv = model.getValueAt(row, model.findColumn("Aktiv")).toString().equals("true") ? true : false;
             String herkunft = model.getValueAt(row, model.findColumn("Herkunft")).toString();
-            if ( herkunft.equals("") ){
-                herkunft = "NULL";
-            } else {
-                herkunft = "'"+herkunft+"'";
-            }
 
             // update the vectors caching the changes
             if (nummerIndex == nameIndex && nummerIndex != -1){ // this row has been changed before, update the change cache

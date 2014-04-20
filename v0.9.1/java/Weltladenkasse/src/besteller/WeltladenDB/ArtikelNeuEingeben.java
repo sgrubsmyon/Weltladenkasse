@@ -49,7 +49,7 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
                 artikelNeu.updateTable(allPanel);
             }
         };
-        artikelNeu = new ArtikelNeu(conn, mw, pw, utf);
+        artikelNeu = new ArtikelNeu(conn, mw, utf);
         artikelFormular = new ArtikelFormular(conn, mw, tid, sid, ssid);
         showAll();
     }
@@ -265,7 +265,7 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
     public void actionPerformed(ActionEvent e) {
 	if (e.getSource() == submitButton){
             submit();
-            artikelNeu.artikelListe.updateAll();
+            artikelListe.updateAll();
             emptyTable();
             utf.updateTable();
             return;
