@@ -53,7 +53,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private JButton revertButton;
     private JButton editButton;
     private JButton newButton;
-    private JButton readButton;
+    private JButton importButton;
+    private JButton exportButton;
 
     private String filterStr = "";
     private String aktivFilterStr = " AND artikel.aktiv = TRUE ";
@@ -62,7 +63,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     // The table holding the items
     private JTable myTable;
     private Vector< Vector<Object> > data;
-    private Vector< Vector<Object> > originalData;
+    public Vector< Vector<Object> > originalData;
     private Vector<String> columnLabels;
     private Vector<Boolean> activeRowBools;
     private Vector<Boolean> varPreisBools;
@@ -83,7 +84,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
 
     // Dialog to read items from file
     private JDialog readFromFileDialog;
-    private ArtikelReadIn itemsFromFile;
+    //private ArtikelImport itemsFromFile;
 
     // Methoden:
     public Artikelliste(Connection conn, ArtikellisteContainer ac, String tid, String sid, String ssid, String gn) {
@@ -336,23 +337,29 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             revertButton = new JButton("Änderungen verwerfen");
             revertButton.addActionListener(this);
             bottomLeftPanel.add(revertButton);
-        bottomPanel.add(bottomLeftPanel);
-          JPanel bottomRightPanel = new JPanel();
-          bottomRightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
+
             editButton = new JButton("Markierte Artikel bearbeiten");
             editButton.setMnemonic(KeyEvent.VK_B);
             editButton.addActionListener(this);
-            bottomRightPanel.add(editButton);
+            bottomLeftPanel.add(editButton);
+        bottomPanel.add(bottomLeftPanel);
 
+          JPanel bottomRightPanel = new JPanel();
+          bottomRightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
             newButton = new JButton("Neue Artikel eingeben");
             newButton.setMnemonic(KeyEvent.VK_N);
             newButton.addActionListener(this);
             bottomRightPanel.add(newButton);
 
-            readButton = new JButton("Artikel aus Datei einlesen");
-            readButton.setMnemonic(KeyEvent.VK_D);
-            readButton.addActionListener(this);
-            bottomRightPanel.add(readButton);
+            importButton = new JButton("Artikel importieren");
+            importButton.setMnemonic(KeyEvent.VK_D);
+            importButton.addActionListener(this);
+            bottomRightPanel.add(importButton);
+
+            exportButton = new JButton("Artikel exportieren");
+            exportButton.setMnemonic(KeyEvent.VK_B);
+            exportButton.addActionListener(this);
+            bottomRightPanel.add(exportButton);
         bottomPanel.add(bottomRightPanel);
         allPanel.add(bottomPanel, BorderLayout.SOUTH);
 
@@ -366,7 +373,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         revertButton.setEnabled(editArtikelName.size() > 0);
         editButton.setEnabled(myTable.getSelectedRowCount() > 0);
         newButton.setEnabled(editArtikelName.size() == 0);
-        readButton.setEnabled(editArtikelName.size() == 0);
+        importButton.setEnabled(editArtikelName.size() == 0);
+        exportButton.setEnabled(editArtikelName.size() == 0);
     }
 
     void showTable() {
@@ -777,13 +785,17 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
 
     void showReadFromFileDialog() {
         readFromFileDialog = new JDialog(this.mainWindow, "Artikel aus Datei einlesen", true);
-        itemsFromFile = new ArtikelReadIn(this.conn, this.mainWindow, this, readFromFileDialog);
+        ArtikelImport itemsFromFile = new ArtikelImport(this.conn, this.mainWindow, this, readFromFileDialog);
         readFromFileDialog.getContentPane().add(itemsFromFile, BorderLayout.CENTER);
         readFromFileDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         WindowAdapterArtikelDialog waad = new WindowAdapterArtikelDialog(itemsFromFile, readFromFileDialog, "Achtung: Neue Artikel gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
         readFromFileDialog.addWindowListener(waad);
         readFromFileDialog.pack();
         readFromFileDialog.setVisible(true);
+    }
+
+    void showExportDialog() {
+        ArtikelExport itemsToFile = new ArtikelExport(this.conn, this.mainWindow, this);
     }
 
     int changeLossConfirmDialog() {
@@ -821,8 +833,12 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             showNewItemDialog();
             return;
         }
-        if (e.getSource() == readButton){
+        if (e.getSource() == importButton){
             showReadFromFileDialog();
+            return;
+        }
+        if (e.getSource() == exportButton){
+            showExportDialog();
             return;
         }
         if (e.getSource() == searchButton){

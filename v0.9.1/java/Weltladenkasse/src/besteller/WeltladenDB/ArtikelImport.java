@@ -31,7 +31,7 @@ import javax.swing.table.*;
 //import javax.swing.filechooser.*;
 import javax.swing.text.html.HTMLDocument;
 
-public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements ArtikelNeuInterface {
+public class ArtikelImport extends ArtikelDialogWindowGrundlage implements ArtikelNeuInterface {
     // Attribute:
     protected ArtikelNeu artikelNeu;
     protected UpdateTableFunctor utf;
@@ -63,7 +63,7 @@ public class ArtikelReadIn extends ArtikelDialogWindowGrundlage implements Artik
     protected JButton deleteButton;
 
     // Methoden:
-    public ArtikelReadIn(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia) {
+    public ArtikelImport(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia) {
 	super(conn, mw, pw, dia);
         logString = logStringStart;
         //"<style type=\"text/css\" media=\"screen\"> \" font-family: sans-serif; \">\n";
