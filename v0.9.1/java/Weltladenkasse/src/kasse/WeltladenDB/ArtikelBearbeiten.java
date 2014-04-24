@@ -51,7 +51,7 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
             Vector<String> origLiefIDs,
             Vector<Boolean> origVPBools) {
 	super(conn, mw, pw, dia);
-        artikelFormular = new ArtikelFormular(conn, mw, "", "", "");
+        artikelFormular = new ArtikelFormular(conn, mw);
         originalData = new Vector< Vector<Object> >(origData);
         originalProdGrIDs = new Vector<String>(origPrGrIDs);
         originalLiefIDs = new Vector<String>(origLiefIDs);

@@ -34,9 +34,6 @@ import javax.swing.text.*; // for DocumentFilter
 public class ArtikelFormular extends WindowContent
     implements ArtikelFormularInterface {
     // Attribute:
-    private String toplevel_id;
-    private String sub_id;
-    private String subsub_id;
     public JComboBox produktgruppenBox;
     public JTextField nameField;
     public JTextField nummerField;
@@ -57,12 +54,8 @@ public class ArtikelFormular extends WindowContent
     private CurrencyDocumentFilter geldFilter = new CurrencyDocumentFilter();
 
     // Methoden:
-    public ArtikelFormular(Connection conn, MainWindowGrundlage mw,
-            String tid, String sid, String ssid) {
+    public ArtikelFormular(Connection conn, MainWindowGrundlage mw) {
 	super(conn, mw);
-        this.toplevel_id = tid;
-        this.sub_id = sid;
-        this.subsub_id = ssid;
 
         fillComboBoxes();
     }
@@ -76,7 +69,9 @@ public class ArtikelFormular extends WindowContent
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT produktgruppen_id, toplevel_id, sub_id, subsub_id, produktgruppen_name FROM produktgruppe WHERE mwst_id IS NOT NULL AND toplevel_id IS NOT NULL ORDER BY toplevel_id, sub_id, subsub_id"
+                    "SELECT produktgruppen_id, toplevel_id, sub_id, subsub_id, produktgruppen_name "+
+                    "FROM produktgruppe WHERE mwst_id IS NOT NULL AND toplevel_id IS NOT NULL "+
+                    "AND aktiv = TRUE ORDER BY toplevel_id, sub_id, subsub_id"
                     );
             while (rs.next()) {
                 String id = rs.getString(1);

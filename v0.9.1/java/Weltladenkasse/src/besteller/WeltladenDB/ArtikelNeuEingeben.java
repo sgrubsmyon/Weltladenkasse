@@ -36,6 +36,9 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
     protected ArtikelNeu artikelNeu;
     protected ArtikelFormular artikelFormular;
     protected UpdateTableFunctor utf;
+    private String toplevel_id;
+    private String sub_id;
+    private String subsub_id;
 
     protected JButton hinzufuegenButton;
     protected JButton submitButton;
@@ -44,14 +47,42 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
     // Methoden:
     public ArtikelNeuEingeben(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia, String tid, String sid, String ssid) {
 	super(conn, mw, pw, dia);
+        this.toplevel_id = tid;
+        this.sub_id = sid;
+        this.subsub_id = ssid;
         utf = new UpdateTableFunctor() {
             public void updateTable() {
                 artikelNeu.updateTable(allPanel);
             }
         };
         artikelNeu = new ArtikelNeu(conn, mw, utf);
-        artikelFormular = new ArtikelFormular(conn, mw, tid, sid, ssid);
+        artikelFormular = new ArtikelFormular(conn, mw);
         showAll();
+    }
+
+    private String retrieveGruppenID() {
+        String result = "";
+        System.out.println(toplevel_id);
+        System.out.println(sub_id);
+        System.out.println(subsub_id);
+        String toplevelStr = "toplevel_id = "+this.toplevel_id;
+        String subStr = this.sub_id == null ? "sub_id IS NULL" : "sub_id = "+this.sub_id;
+        String subsubStr = this.subsub_id == null ? "subsub_id IS NULL" : "subsub_id = "+this.subsub_id;
+        try {
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT produktgruppen_id FROM produktgruppe WHERE "+
+                    toplevelStr+" AND "+subStr+" AND "+subsubStr+" AND aktiv = TRUE"
+                    );
+            rs.next();
+            result = rs.getString(1);
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
     }
 
     void showHeader() {
@@ -65,6 +96,10 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
 	hinzufuegenButton.setEnabled(false);
         buttonPanel.add(hinzufuegenButton);
         headerPanel.add(buttonPanel);
+
+        String gruppenID = retrieveGruppenID();
+        int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(gruppenID);
+        artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
 
         KeyAdapter enterAdapter = new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
