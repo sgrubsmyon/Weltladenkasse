@@ -473,7 +473,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                 //utf.updateTable();
                 updateAll();
 
-                System.out.println("Opened " + file.getName() + ".");
+                System.out.println("Opened " + file.getName());
             } else {
                 System.out.println("Open command cancelled by user.");
             }

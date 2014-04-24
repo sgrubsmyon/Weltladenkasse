@@ -66,7 +66,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     public Vector< Vector<Object> > originalData;
     private Vector<String> columnLabels;
     private Vector<Boolean> activeRowBools;
-    private Vector<Boolean> varPreisBools;
+    public Vector<Boolean> varPreisBools;
     private Vector<String> produktGruppeIDs;
     private Vector<String> lieferantIDs;
 
