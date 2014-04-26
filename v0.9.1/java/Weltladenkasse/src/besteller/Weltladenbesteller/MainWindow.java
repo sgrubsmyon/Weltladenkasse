@@ -41,8 +41,10 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
      *       */
     public MainWindow(String password){
         super(password);
-        myTabbedPane = new TabbedPane(this.conn, this);
-        setContentPanel(myTabbedPane);
+        if (connectionWorks){
+            myTabbedPane = new TabbedPane(this.conn, this);
+            setContentPanel(myTabbedPane);
+        }
     }
 
     /**

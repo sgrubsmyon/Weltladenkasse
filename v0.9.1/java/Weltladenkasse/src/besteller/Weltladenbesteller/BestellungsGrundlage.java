@@ -31,10 +31,7 @@ public abstract class BestellungsGrundlage extends ArtikelGrundlage {
 
     protected JTextField totalPriceField;
 
-    protected Vector<String> preise;
-    protected Vector<String> mwsts;
     protected Vector<String> colors;
-    protected Vector<String> types;
 
     protected Vector<String> columnLabels;
 
@@ -53,86 +50,7 @@ public abstract class BestellungsGrundlage extends ArtikelGrundlage {
 	columnLabels = new Vector<String>();
 	columnLabels.add("Lieferant"); columnLabels.add("Artikel-Nr."); columnLabels.add("Artikel-Name"); 
         columnLabels.add("Einzelpreis"); columnLabels.add("VPE"); columnLabels.add("Stückzahl");
-        preise = new Vector<String>();
-        mwsts = new Vector<String>();
         colors = new Vector<String>();
-        types = new Vector<String>();
-    }
-
-    //////////////////////////////////
-    // DB query functions:
-    //////////////////////////////////
-    private HashMap<Integer, String> retrieveVATs() {
-        HashMap<Integer, String> vatMap = new HashMap<Integer, String>();
-        try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT mwst_id, mwst_satz FROM mwst"
-                    );
-	    while (rs.next()) {  
-                vatMap.put(rs.getInt(1), rs.getString(2));
-            }
-            rs.close();
-            stmt.close();
-        } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-        return vatMap;
-    }
-
-    //////////////////////////////////
-    // price calculation functions:
-    //////////////////////////////////
-    protected String calculateTotalPrice() {
-        BigDecimal totalPrice = new BigDecimal(0);
-        for ( String preisString : preise ){
-            BigDecimal preis = new BigDecimal(preisString);
-            totalPrice = totalPrice.add(preis);
-        }
-        return priceFormatter(totalPrice);
-    }
-
-    protected String calculateTotalVAT(String vat) {
-        BigDecimal priceForVAT = new BigDecimal(0);
-        for (int i=0; i<mwsts.size(); i++){ 
-            String mwstString = mwsts.get(i);
-            if ( mwstString.equals(vat) ){
-                BigDecimal preis = new BigDecimal( preise.get(i) );
-                priceForVAT = priceForVAT.add(preis);
-            }
-        }
-        BigDecimal totalVAT = calculateVAT(priceForVAT, new BigDecimal(vat)); 
-        return priceFormatter(totalVAT);
-    }
-
-    protected JPanel createTotalPricePanel() {
-        JPanel totalPricePanel = new JPanel();
-        totalPricePanel.setLayout(new FlowLayout());
-        JLabel totalPriceLabel = new JLabel("Ges. Preis: ");
-        totalPricePanel.add(totalPriceLabel);
-        totalPriceField = new JTextField(calculateTotalPrice()+" "+currencySymbol);
-        totalPriceField.setEditable(false);
-        totalPriceField.setColumns(7);
-        totalPriceField.setHorizontalAlignment(JTextField.RIGHT);
-        totalPricePanel.add(totalPriceField);
-
-        totalPricePanel.add(new JLabel("   inkl.: "));
-        HashMap<Integer, String> vatMap = retrieveVATs();
-        for ( Map.Entry<Integer, String> v : vatMap.entrySet() ){
-            String vat = v.getValue();
-            BigDecimal vatValue = new BigDecimal(vat);
-            if (vatValue.signum() != 0){
-                String vatPercent = vatFormatter(vat);
-                totalPricePanel.add(new JLabel("   "+vatPercent+" MwSt.: "));
-                JTextField vatField = new JTextField(calculateTotalVAT(vat)+" "+currencySymbol);
-                vatField.setEditable(false);
-                vatField.setColumns(7);
-                vatField.setHorizontalAlignment(JTextField.RIGHT);
-                totalPricePanel.add(vatField);
-            }
-        }
-        return totalPricePanel;
     }
 
     protected class BestellungsTable extends AnyJComponentJTable {

@@ -36,7 +36,6 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
     protected ArtikelNeu artikelNeu;
     protected UpdateTableFunctor utf;
 
-    private final String delimiter = ";";
     private JButton fileButton;
     private JFileChooser fc;
     private String logString;

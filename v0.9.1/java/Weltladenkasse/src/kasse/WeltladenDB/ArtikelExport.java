@@ -33,7 +33,6 @@ import javax.swing.text.html.HTMLDocument;
 
 public class ArtikelExport extends WindowContent {
     // Attribute:
-    private final String delimiter = ";";
     private JFileChooser fc;
     private Artikelliste artikelListe;
 
@@ -84,7 +83,7 @@ public class ArtikelExport extends WindowContent {
     void writeCSVToFile(File file) {
         // format of csv file:
         String fileStr = "";
-        fileStr += "#Produktgruppe;Artikelname;Art.-Nr.;Barcode;VK-Preis;EK-Preis;Variabel;VPE;Lieferant;Herkunft\n";
+        fileStr += "#Produktgruppe;Artikelname;Art.-Nr.;Barcode;VK-Preis;EK-Preis;Variabel;VPE;Lieferant;Herkunft"+lineSep;
         for (int i=0; i<artikelListe.originalData.size(); i++){
             String produktgruppe = (String)artikelListe.originalData.get(i).get(3);
             String name = (String)artikelListe.originalData.get(i).get(0);
@@ -107,7 +106,7 @@ public class ArtikelExport extends WindowContent {
             fileStr += varStr + delimiter;
             fileStr += vpe + delimiter;
             fileStr += lieferant + delimiter;
-            fileStr += herkunft + "\n";
+            fileStr += herkunft + lineSep;
         }
 
         System.out.println(fileStr);

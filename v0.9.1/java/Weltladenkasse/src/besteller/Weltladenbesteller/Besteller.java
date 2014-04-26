@@ -56,8 +56,10 @@ public class Besteller {
 
                     // Show it!
                     myWindow.setVisible(true);
+                    System.out.println("Password was correct.");
                     return;
                 } else {
+                    System.out.println("Password was incorrect.");
                     passwdIncorrect = true;
                 }
             }

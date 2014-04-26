@@ -2,6 +2,7 @@ package Weltladenbesteller;
 
 // Basic Java stuff:
 import java.util.*; // for Vector
+import java.io.*; // for File
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
@@ -43,6 +44,7 @@ import WeltladenDB.BoundsPopupMenuListener;
 
 public class Bestellen extends BestellungsGrundlage implements ItemListener, DocumentListener {
     // Attribute:
+    private final String backupFilename = System.getProperty("user.home")+fileSep+".Weltladenkasse_Bestellung.backup";
     private final BigDecimal minusOne = new BigDecimal(-1);
     private final BigDecimal percent = new BigDecimal("0.01");
 
@@ -79,9 +81,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     // The table holding the purchase articles.
     private BestellungsTable myTable;
     private Vector< Vector<Object> > data;
-
     private Vector<Integer> artikelIDs;
-    private Vector<Integer> stueckzahlen;
 
     private CurrencyDocumentFilter geldFilter = new CurrencyDocumentFilter();
 
@@ -125,6 +125,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
         emptyTable();
 	showAll();
+        doCSVBackupReadin();
         barcodeBox.requestFocus();
     }
 
@@ -336,31 +337,20 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             JScrollPane scrollPane = new JScrollPane(myTable);
             articleListPanel.add(scrollPane);
 
-            //JPanel totalPricePanel = createTotalPricePanel();
-            //articleListPanel.add(totalPricePanel);
-
 	allPanel.add(articleListPanel);
     }
 
     void emptyTable(){
 	data = new Vector< Vector<Object> >();
         artikelIDs = new Vector<Integer>();
-        preise = new Vector<String>();
-        mwsts = new Vector<String>();
         colors = new Vector<String>();
-        types = new Vector<String>();
-        stueckzahlen = new Vector<Integer>();
         removeButtons = new Vector<JButton>();
     }
 
     private void clearAll(){
         data.clear();
         artikelIDs.clear();
-        preise.clear();
         colors.clear();
-        types.clear();
-        mwsts.clear();
-        stueckzahlen.clear();
         removeButtons.clear();
     }
 
@@ -369,6 +359,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	this.revalidate();
 	showAll();
         barcodeBox.requestFocus();
+        // save a CSV backup to hard disk
+        doCSVBackup();
     }
 
     private void updateTable(){
@@ -379,6 +371,97 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
 
 
+
+    // CSV export:
+    private void doCSVBackup() {
+        File file = new File(backupFilename);
+
+        String fileStr = "";
+        // format of csv file:
+        fileStr += "#Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;color;artikelID"+lineSep;
+        for (int i=0; i<data.size(); i++){
+            String lieferant = (String)data.get(i).get(0);
+            String nummer = (String)data.get(i).get(1);
+            String name = (String)data.get(i).get(2);
+            String vkp = (String)data.get(i).get(3);
+            String vpe = (String)data.get(i).get(4);
+            String stueck = (String)data.get(i).get(5);
+            String color = colors.get(i);
+            String artikelID = artikelIDs.get(i).toString();
+
+            fileStr += lieferant + delimiter;
+            fileStr += nummer + delimiter;
+            fileStr += name + delimiter;
+            fileStr += vkp + delimiter;
+            fileStr += vpe + delimiter;
+            fileStr += stueck + delimiter;
+            fileStr += color + delimiter;
+            fileStr += artikelID + lineSep;
+        }
+
+        System.out.println(fileStr);
+
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(file));
+            writer.write(fileStr);
+        } catch (Exception ex) {
+            System.out.println("Error writing to file " + file.getName());
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            try {
+                // Close the writer regardless of what happens...
+                writer.close();
+            } catch (Exception ex) {
+                System.out.println("Error closing file " + file.getName());
+                System.out.println("Exception: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
+    }
+
+
+
+
+    private void doCSVBackupReadin() {
+        File file = new File(backupFilename);
+
+        try {
+            // use Reader classes for text files:
+            BufferedReader in = new BufferedReader(new FileReader(file)); // Lesen einer Textdatei mit Default Zeichensatz-Codierung, see http://www.wsoftware.de/practices/charsets.html
+            String line;
+            while ( (line = in.readLine()) != null) {
+                line = line.replaceAll("#.*","");
+                line = line.replaceAll("\"","");
+                line = line.replaceAll("\'","\\\\\'"); // four backslashes are for one! See: http://www.xyzws.com/javafaq/how-many-backslashes/198
+
+                // get the fields
+                String[] fields = line.split(delimiter);
+                if (fields.length < 8 ){
+                    continue;
+                }
+
+                String lieferant = fields[0];
+                String nummer = fields[1];
+                String name = fields[2];
+                String vkp = fields[3];
+                String vpe = fields[4];
+                String stueck = fields[5];
+                String color = fields[6];
+                String artikelID = fields[7];
+
+                hinzufuegen(Integer.parseInt(artikelID), color, lieferant, nummer, name,
+                        vkp, vpe, stueck);
+            }
+            updateAll();
+        } catch (FileNotFoundException ex) {
+            System.out.println("No backup file found. No backed up order loaded.");
+        } catch (IOException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
 
 
 
@@ -574,7 +657,22 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         setButtonsEnabled();
     }
 
-    private void hinzufuegen(Integer stueck) {
+    private void hinzufuegen(Integer artikelID, String color,
+            String lieferant, String artikelNummer, String artikelName,
+            String vkp, String vpe, String stueck) {
+        artikelIDs.add(artikelID);
+        colors.add(color);
+        removeButtons.add(new JButton("-"));
+        removeButtons.lastElement().addActionListener(this);
+
+        Vector<Object> row = new Vector<Object>();
+        row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
+        row.add(vkp); row.add(vpe); row.add(stueck);
+        row.add(removeButtons.lastElement());
+        data.add(row);
+    }
+
+    private void fuegeArtikelHinzu(Integer stueck) {
         if (artikelBox.getItemCount() != 1 || nummerBox.getItemCount() != 1){
             System.out.println("Error: article not selected unambiguously.");
             return;
@@ -587,11 +685,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         String vpe = vpeField.getText();
         Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
         String artikelPreis = priceFormatterIntern(new BigDecimal( preisField.getText().replace(',','.') ));
+        artikelPreis = artikelPreis.replace('.',',')+' '+currencySymbol;
         String artikelMwSt = getVAT(selectedArtikelID);
-
-        artikelIDs.add(selectedArtikelID);
-        stueckzahlen.add(stueck);
-        preise.add(artikelPreis);
+        artikelMwSt = vatFormatter(artikelMwSt);
         String color = "";
         if (vpeInt <= 0){
             color = "default";
@@ -602,27 +698,15 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 color = "green";
             }
         }
-        colors.add(color);
-        types.add("artikel");
-        mwsts.add(artikelMwSt);
-        removeButtons.add(new JButton("-"));
-        removeButtons.lastElement().addActionListener(this);
 
-        artikelPreis = artikelPreis.replace('.',',')+' '+currencySymbol;
-        artikelMwSt = vatFormatter(artikelMwSt);
-
-        Vector<Object> row = new Vector<Object>();
-            row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
-            row.add(artikelPreis); row.add(vpe); row.add(stueck.toString());
-            row.add(removeButtons.lastElement());
-        data.add(row);
-
+        hinzufuegen(selectedArtikelID, color, lieferant, artikelNummer, artikelName,
+                artikelPreis, vpe, stueck.toString());
         updateAll();
     }
 
     private void artikelHinzufuegen() {
         Integer stueck = (Integer)anzahlSpinner.getValue();
-        hinzufuegen(stueck);
+        fuegeArtikelHinzu(stueck);
     }
 
     private void speichern() {
@@ -631,22 +715,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private void stornieren() {
         clearAll();
         updateAll();
-    }
-
-    private void addToHashMap(HashMap<BigDecimal, BigDecimal> hashMap, int artikelIndex){
-        BigDecimal mwst = new BigDecimal(mwsts.get(artikelIndex));
-        BigDecimal gesPreis = new BigDecimal(preise.get(artikelIndex));
-        boolean found = false;
-        for ( Map.Entry<BigDecimal, BigDecimal> entry : hashMap.entrySet() ){
-            if (entry.getKey().compareTo(mwst) == 0){
-                entry.setValue( entry.getValue().add(gesPreis) );
-                found = true;
-                break;
-            }
-        }
-        if (!found){ // make new entry
-            hashMap.put(mwst, gesPreis);
-        }
     }
 
     private void resetFormFromBarcodeBox() {
@@ -896,21 +964,13 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         if (removeRow > -1){
             data.remove(removeRow);
             artikelIDs.remove(removeRow);
-            preise.remove(removeRow);
             colors.remove(removeRow);
-            types.remove(removeRow);
-            mwsts.remove(removeRow);
-            stueckzahlen.remove(removeRow);
             removeButtons.remove(removeRow);
             // remove extra rows (Rabatt oder Pfand):
             while ( removeRow < removeButtons.size() && removeButtons.get(removeRow) == null ){
                 data.remove(removeRow);
                 artikelIDs.remove(removeRow);
-                preise.remove(removeRow);
                 colors.remove(removeRow);
-                types.remove(removeRow);
-                mwsts.remove(removeRow);
-                stueckzahlen.remove(removeRow);
                 removeButtons.remove(removeRow);
             }
             updateAll();

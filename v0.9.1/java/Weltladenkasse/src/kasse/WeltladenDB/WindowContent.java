@@ -42,6 +42,9 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected Locale myLocale = Locale.GERMAN;
     protected final String dateFormatSQL = "%d.%m.%Y, %H:%i Uhr";
     protected final String dateFormatJava = "dd.MM.yyyy, HH:mm 'Uhr'";
+    protected final String delimiter = ";"; // for CSV export/import
+    protected final String fileSep = System.getProperty("file.separator");
+    protected final String lineSep = System.getProperty("line.separator");
 
     // Die Ausrichter:
     protected DefaultTableCellRenderer rechtsAusrichter = new DefaultTableCellRenderer();
@@ -126,7 +129,16 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected String vatFormatter(String vat) {
-        return vatFormat.format( (new BigDecimal(vat)).multiply(new BigDecimal("100.")) ).replace('.',',') + " %";
+        vat = vat.replace(',','.');
+        String vatFormatted = "";
+        try {
+            vatFormatted = vatFormat.format( (new BigDecimal(vat)).multiply(new BigDecimal("100.")) ).replace('.',',') + " %";
+        } catch (NumberFormatException nfe) {
+            System.out.println("vat = "+vat);
+            System.out.println("Exception: " + nfe.getMessage());
+            nfe.printStackTrace();
+        }
+        return vatFormatted;
     }
 
     /**
