@@ -8,7 +8,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
 import java.sql.Connection;
-import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -82,6 +82,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private BestellungsTable myTable;
     private Vector< Vector<Object> > data;
     private Vector<Integer> artikelIDs;
+    private Vector<Integer> stueckzahlen;
 
     private CurrencyDocumentFilter geldFilter = new CurrencyDocumentFilter();
 
@@ -343,6 +344,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     void emptyTable(){
 	data = new Vector< Vector<Object> >();
         artikelIDs = new Vector<Integer>();
+        stueckzahlen = new Vector<Integer>();
         colors = new Vector<String>();
         removeButtons = new Vector<JButton>();
     }
@@ -350,6 +352,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private void clearAll(){
         data.clear();
         artikelIDs.clear();
+        stueckzahlen.clear();
         colors.clear();
         removeButtons.clear();
     }
@@ -661,6 +664,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             String lieferant, String artikelNummer, String artikelName,
             String vkp, String vpe, String stueck) {
         artikelIDs.add(artikelID);
+        stueckzahlen.add(Integer.parseInt(stueck));
         colors.add(color);
         removeButtons.add(new JButton("-"));
         removeButtons.lastElement().addActionListener(this);
@@ -710,6 +714,41 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     }
 
     private void speichern() {
+        int bestellNr = 0;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement("INSERT INTO bestellung "+
+                    "SET bestell_datum = NOW(), jahr = ?, kw = ?");
+            int result = pstmt.executeUpdate();
+            if (result == 0){
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Bestellung konnte nicht abgespeichert werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+            }
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT MAX(bestell_nr) FROM bestellung"
+                    );
+            rs.next(); bestellNr = rs.getInt(1); rs.close();
+            for (int i=0; i<artikelIDs.size(); i++){
+                pstmt = this.conn.prepareStatement(
+                        "INSERT INTO bestellung_details SET bestell_nr = ?, "+
+                        "artikel_id = ?, stueckzahl = ?"
+                        );
+                pstmt.setInt(1, bestellNr);
+                pstmt.setInt(2, artikelIDs.get(i));
+                pstmt.setInt(3, stueckzahlen.get(i));
+                result = pstmt.executeUpdate();
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Artikel mit ID "+artikelIDs.get(i)+" konnte nicht abgespeichert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
     }
 
     private void stornieren() {
@@ -964,12 +1003,14 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         if (removeRow > -1){
             data.remove(removeRow);
             artikelIDs.remove(removeRow);
+            stueckzahlen.remove(removeRow);
             colors.remove(removeRow);
             removeButtons.remove(removeRow);
             // remove extra rows (Rabatt oder Pfand):
             while ( removeRow < removeButtons.size() && removeButtons.get(removeRow) == null ){
                 data.remove(removeRow);
                 artikelIDs.remove(removeRow);
+                stueckzahlen.remove(removeRow);
                 colors.remove(removeRow);
                 removeButtons.remove(removeRow);
             }
