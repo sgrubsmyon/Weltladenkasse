@@ -8,6 +8,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
 import java.sql.Connection;
+import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
@@ -66,6 +67,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private JTextField anzahlField;
     private JTextField vpeField;
     private JTextField preisField;
+    private JSpinner jahrSpinner;
+    private JTextField jahrField;
+    private JSpinner kwSpinner;
+    private JTextField kwField;
     // Buttons
     private JButton emptyBarcodeButton;
     private JButton emptyArtikelButton;
@@ -171,6 +176,46 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     void showAll(){
 	allPanel = new JPanel();
 	allPanel.setLayout(new BoxLayout(allPanel, BoxLayout.Y_AXIS));
+
+        JPanel datePanel = new JPanel();
+	datePanel.setLayout(new FlowLayout());
+            datePanel.add(new JLabel("Rechnung für"));
+            /////
+	    JLabel jahrLabel = new JLabel("Jahr:");
+            datePanel.add(jahrLabel);
+            Calendar rightNow = Calendar.getInstance();
+            int curYear = rightNow.get(Calendar.YEAR);
+            SpinnerNumberModel jahrModel = new SpinnerNumberModel(curYear, // initial value
+                                                                  0, // min
+                                                                  null, // max (null == no max)
+                                                                  1); // step
+	    jahrSpinner = new JSpinner(jahrModel);
+            JSpinner.NumberEditor jahrEditor = new JSpinner.NumberEditor(jahrSpinner, "####");
+            jahrField = jahrEditor.getTextField();
+            jahrField.getDocument().addDocumentListener(this);
+            jahrSpinner.setEditor(jahrEditor);
+            ( (NumberFormatter) jahrEditor.getTextField().getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
+            jahrField.setColumns(4);
+	    jahrLabel.setLabelFor(jahrSpinner);
+            datePanel.add(jahrSpinner);
+            /////
+	    JLabel kwLabel = new JLabel("KW:");
+            datePanel.add(kwLabel);
+            int curWeek = rightNow.get(Calendar.WEEK_OF_YEAR);
+            SpinnerNumberModel kwModel = new SpinnerNumberModel(curWeek+1, // initial value
+                                                                1, // min
+                                                                53, // max (null == no max)
+                                                                1); // step
+	    kwSpinner = new JSpinner(kwModel);
+            JSpinner.NumberEditor kwEditor = new JSpinner.NumberEditor(kwSpinner, "##");
+            kwField = kwEditor.getTextField();
+            kwField.getDocument().addDocumentListener(this);
+            kwSpinner.setEditor(kwEditor);
+            ( (NumberFormatter) kwEditor.getTextField().getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
+            kwField.setColumns(2);
+	    kwLabel.setLabelFor(kwSpinner);
+            datePanel.add(kwSpinner);
+        allPanel.add(datePanel);
 
         JPanel barcodePanel = new JPanel();
 	barcodePanel.setLayout(new FlowLayout());
@@ -355,6 +400,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         stueckzahlen.clear();
         colors.clear();
         removeButtons.clear();
+
+        setButtonsEnabled();
     }
 
     private void updateAll(){
@@ -612,9 +659,13 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private void setButtonsEnabled() {
         if (preisField.getText().length() > 0) {
             hinzufuegenButton.setEnabled(true);
-        }
-        else {
+        } else {
             hinzufuegenButton.setEnabled(false);
+        }
+        if (artikelIDs.size() > 0) {
+            speichernButton.setEnabled(true);
+        } else {
+            speichernButton.setEnabled(false);
         }
     }
 
@@ -674,6 +725,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         row.add(vkp); row.add(vpe); row.add(stueck);
         row.add(removeButtons.lastElement());
         data.add(row);
+
+        setButtonsEnabled();
     }
 
     private void fuegeArtikelHinzu(Integer stueck) {
@@ -718,6 +771,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         try {
             PreparedStatement pstmt = this.conn.prepareStatement("INSERT INTO bestellung "+
                     "SET bestell_datum = NOW(), jahr = ?, kw = ?");
+            pstmt.setInt(1, Integer.parseInt(jahrField.getText()));
+            pstmt.setInt(2, Integer.parseInt(kwField.getText()));
             int result = pstmt.executeUpdate();
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
@@ -1015,6 +1070,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 removeButtons.remove(removeRow);
             }
             updateAll();
+
+            setButtonsEnabled();
             return;
         }
     }
