@@ -51,6 +51,7 @@ public class BestellAnzeige extends ArtikelGrundlage {
     protected JButton prevButton;
     protected JButton nextButton;
     protected JButton editButton; // click the button to edit the order (in the Bestellen tab)
+    protected JTextField filterField;
 
     protected Vector< Vector<String> > orderData;
     protected Vector<String> orderLabels;
