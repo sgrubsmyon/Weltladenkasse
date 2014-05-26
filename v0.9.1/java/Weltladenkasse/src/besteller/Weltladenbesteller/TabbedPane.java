@@ -17,7 +17,7 @@ import java.awt.*;
 //import java.awt.event.ActionEvent;
 //import java.awt.event.ActionListener;
 import java.awt.event.*;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -37,7 +37,7 @@ import WeltladenDB.WindowContent;
 // Klasse, die Bestellfenster und Artikelliste speichert und anzeigt
 public class TabbedPane extends WindowContent {
     private JTabbedPane tabbedPane;
-    
+
     // Methoden:
     public TabbedPane(Connection conn, MainWindow mw) {
 	super(conn, mw);
@@ -45,8 +45,10 @@ public class TabbedPane extends WindowContent {
         tabbedPane = new JTabbedPane();
         Bestellen myBestellen = new Bestellen(this.conn, mw);
         ArtikellisteContainer myArtikellisteC = new ArtikellisteContainer(this.conn, mw);
+        BestellAnzeige myBestellAnzeige = new BestellAnzeige(this.conn, mw);
         tabbedPane.addTab("Bestellen", null, myBestellen, "Bestellung erstellen");
         tabbedPane.addTab("Artikelliste", null, myArtikellisteC, "Artikel bearbeiten/hinzufügen");
+        tabbedPane.addTab("Bestellungen", null, myBestellAnzeige, "Bestellung anzeigen/drucken");
 
         this.add(tabbedPane, BorderLayout.CENTER);
     }

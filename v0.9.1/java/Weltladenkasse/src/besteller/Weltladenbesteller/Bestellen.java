@@ -411,6 +411,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         barcodeBox.requestFocus();
         // save a CSV backup to hard disk
         doCSVBackup();
+        setButtonsEnabled(); // for speichernButton
     }
 
     private void updateTable(){
@@ -662,7 +663,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         } else {
             hinzufuegenButton.setEnabled(false);
         }
+        System.out.println("In setButtonsEnabled.");
+        System.out.println("artikelIDs.size(): "+artikelIDs.size());
         if (artikelIDs.size() > 0) {
+            System.out.println("Enabling speichernButton.");
             speichernButton.setEnabled(true);
         } else {
             speichernButton.setEnabled(false);
@@ -725,8 +729,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         row.add(vkp); row.add(vpe); row.add(stueck);
         row.add(removeButtons.lastElement());
         data.add(row);
-
-        setButtonsEnabled();
     }
 
     private void fuegeArtikelHinzu(Integer stueck) {
@@ -1046,6 +1048,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	}
 	if (e.getSource() == speichernButton){
             speichern();
+            stornieren();
+            // switch to "Rechnung ansehen" tab
 	    return;
 	}
 	int removeRow = -1;
@@ -1070,8 +1074,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 removeButtons.remove(removeRow);
             }
             updateAll();
-
-            setButtonsEnabled();
             return;
         }
     }

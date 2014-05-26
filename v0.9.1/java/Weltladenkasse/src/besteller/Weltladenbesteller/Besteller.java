@@ -65,7 +65,7 @@ public class Besteller {
             }
         }
     }
-    
+
     private static Vector<String> showPasswordWindow(JLabel label) {
         // retrieve the password from the user, set focus to password field
         // gracefully taken from http://blogger.ziesemer.com/2007/03/java-password-dialog.html,
@@ -97,7 +97,7 @@ public class Besteller {
                     pf.requestFocusInWindow();
                 }
             }
-        }); 
+        });
         dialog.setVisible(true);
         int result = (Integer)jop.getValue();
         dialog.dispose();
@@ -123,7 +123,7 @@ public class Besteller {
                    try {
                 // Set System Look&Feel
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                   } 
+                   }
                    catch (UnsupportedLookAndFeelException ex) {
                    System.out.println("Exception: " + ex.getMessage());
                    ex.printStackTrace();
