@@ -31,6 +31,7 @@ import javax.swing.*;
 import javax.swing.table.*;
 
 import WeltladenDB.MainWindowGrundlage;
+import WeltladenDB.ArtikelGrundlage;
 import WeltladenDB.AnyJComponentJTable;
 import WeltladenDB.JComponentCellRenderer;
 import WeltladenDB.JComponentCellEditor;
@@ -40,25 +41,28 @@ public class BestellAnzeige extends ArtikelGrundlage {
     protected int bestellungenProSeite = 25;
     protected int currentPage = 1;
     protected int totalPage;
+    protected String bestellungsZahl;
+    protected int bestellungsZahlInt;
 
     protected String filterStr; // show only specific items of the order
-
-    protected JPanel navigationPanel; // on the left
-    protected JPanel tablePanel; // on the right
-    protected AnyJComponentJTable orderTable;
-    protected AnyJComponentJTable orderDetailTable;
 
     protected JButton prevButton;
     protected JButton nextButton;
     protected JButton editButton; // click the button to edit the order (in the Bestellen tab)
     protected JTextField filterField;
 
+    private int selBestellNr;
+    private Vector<Integer> bestellNummern;
     protected Vector< Vector<String> > orderData;
     protected Vector<String> orderLabels;
     protected Vector< Vector<String> > orderDetailData;
     protected Vector<String> orderDetailLabels;
-    protected String bestellungsZahl;
-    protected int bestellungsZahlInt;
+
+    private JSplitPane splitPane;
+    private JPanel orderPanel;
+    private JPanel orderDetailPanel;
+    protected AnyJComponentJTable orderTable;
+    protected BestellungsTable orderDetailTable;
 
     // Methoden:
 
@@ -68,4 +72,95 @@ public class BestellAnzeige extends ArtikelGrundlage {
     public BestellAnzeige(Connection conn, MainWindowGrundlage mw)
     {
 	super(conn, mw);
+        selBestellNr = -1;
+        showAll();
     }
+
+    void showAll() {
+        orderPanel = new JPanel();
+        orderDetailPanel = new JPanel();
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+                orderPanel,
+                orderDetailPanel);
+        splitPane.setOneTouchExpandable(true);
+        splitPane.setResizeWeight(0.3);
+        this.add(splitPane);
+        showTables();
+    }
+
+    void showTables() {
+        showOrderTable();
+        showOrderDetailTable(selBestellNr);
+    }
+
+    void showOrderTable() {
+        orderLabels = new Vector<String>();
+        orderLabels.add("Nr.");
+        orderLabels.add("Jahr");
+        orderLabels.add("KW");
+        orderLabels.add("Datum");
+        retrieveOrderData();
+        orderTable = new AnyJComponentJTable(orderData, orderLabels);
+
+        JScrollPane scrollPane = new JScrollPane(orderTable);
+        orderPanel.add(scrollPane);
+    }
+
+    public void showOrderDetailTable(int bestellNr) {
+        selBestellNr = bestellNr;
+        // XXX CONTINUE HERE!!!
+    }
+
+    private void updateAll(){
+	this.remove(splitPane);
+	this.revalidate();
+        selBestellNr = -1;
+	showAll();
+    }
+
+    void retrieveOrderData() {
+        orderData = new Vector< Vector<String> >();
+        bestellNummern = new Vector<Integer>();
+        try {
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT bestell_nr, jahr, kw, bestell_datum FROM bestellung " +
+		    "ORDER BY bestell_nr DESC LIMIT " + (currentPage-1)*bestellungenProSeite + "," + bestellungenProSeite
+                    );
+            // Now do something with the ResultSet, should be only one result ...
+            while ( rs.next() ){
+                bestellNummern.add(rs.getInt(1));
+                Vector<String> row = new Vector<String>();
+                System.out.println(rs.getString(2));
+                row.add(rs.getString(1));
+                row.add(rs.getString(2));
+                row.add(rs.getString(3));
+                row.add(rs.getString(4));
+                orderData.add(row);
+            }
+	    rs.close();
+	    rs = stmt.executeQuery(
+		    "SELECT COUNT(bestell_nr) FROM bestellung"
+		    );
+	    // Now do something with the ResultSet ...
+	    rs.next();
+	    bestellungsZahl = rs.getString(1);
+	    bestellungsZahlInt = Integer.parseInt(bestellungsZahl);
+	    totalPage = bestellungsZahlInt/bestellungenProSeite + 1;
+	    rs.close();
+	    stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     *    * Each non abstract class that implements the ActionListener
+     *      must have this method.
+     *
+     *    @param e the action event.
+     **/
+    public void actionPerformed(ActionEvent e) {
+    }
+}

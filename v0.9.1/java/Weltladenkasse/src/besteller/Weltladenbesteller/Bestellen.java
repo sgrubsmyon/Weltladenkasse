@@ -35,6 +35,7 @@ import javax.swing.event.*;
 //import java.beans.PropertyChangeEvent;
 //import java.beans.PropertyChangeListener;
 
+import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.BarcodeComboBox;
 import WeltladenDB.ArtikelNameComboBox;
 import WeltladenDB.ArtikelNummerComboBox;
@@ -49,7 +50,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private final BigDecimal minusOne = new BigDecimal(-1);
     private final BigDecimal percent = new BigDecimal("0.01");
 
-    private Bestellen myBestellen;
+    private TabbedPane tabbedPane;
 
     // Text Fields
     private BarcodeComboBox barcodeBox;
@@ -86,6 +87,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     // The table holding the purchase articles.
     private BestellungsTable myTable;
     private Vector< Vector<Object> > data;
+    private Vector<String> colors;
     private Vector<Integer> artikelIDs;
     private Vector<Integer> stueckzahlen;
 
@@ -96,10 +98,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     /**
      *    The constructor.
      *       */
-    public Bestellen(Connection conn, MainWindow mw)
+    public Bestellen(Connection conn, MainWindowGrundlage mw, TabbedPane tp)
     {
 	super(conn, mw);
-        myBestellen = this;
+        tabbedPane = tp;
 
         columnLabels.add("Entfernen");
 
@@ -365,7 +367,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
 
     void showTable(){
-	myTable = new BestellungsTable(data, columnLabels);
+	myTable = new BestellungsTable(data, columnLabels, colors);
         myTable.setColEditableTrue(columnLabels.size()-1); // last column has buttons
 	myTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
 	myTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
@@ -388,9 +390,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
     void emptyTable(){
 	data = new Vector< Vector<Object> >();
+        colors = new Vector<String>();
+        myTable = new BestellungsTable(data, columnLabels, colors);
         artikelIDs = new Vector<Integer>();
         stueckzahlen = new Vector<Integer>();
-        colors = new Vector<String>();
         removeButtons = new Vector<JButton>();
     }
 
@@ -405,12 +408,13 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     }
 
     private void updateAll(){
-	this.remove(allPanel);
-	this.revalidate();
-	showAll();
-        barcodeBox.requestFocus();
         // save a CSV backup to hard disk
         doCSVBackup();
+	this.remove(allPanel);
+	this.revalidate();
+        // create table anew
+	showAll();
+        barcodeBox.requestFocus();
         setButtonsEnabled(); // for speichernButton
     }
 
@@ -419,6 +423,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	allPanel.revalidate();
 	showTable();
     }
+
 
 
 
@@ -437,6 +442,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             String vkp = (String)data.get(i).get(3);
             String vpe = (String)data.get(i).get(4);
             String stueck = (String)data.get(i).get(5);
+            System.out.println("doCSVBackup: "+colors.size());
+            System.out.println(i);
             String color = colors.get(i);
             String artikelID = artikelIDs.get(i).toString();
 
@@ -721,6 +728,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         artikelIDs.add(artikelID);
         stueckzahlen.add(Integer.parseInt(stueck));
         colors.add(color);
+        System.out.println("hinzufuegen: "+colors.size());
         removeButtons.add(new JButton("-"));
         removeButtons.lastElement().addActionListener(this);
 
@@ -768,7 +776,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         fuegeArtikelHinzu(stueck);
     }
 
-    private void speichern() {
+    private int speichern() {
         int bestellNr = 0;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement("INSERT INTO bestellung "+
@@ -806,6 +814,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+        return bestellNr;
     }
 
     private void stornieren() {
@@ -1047,9 +1056,12 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	    return;
 	}
 	if (e.getSource() == speichernButton){
-            speichern();
+            int bestellNr = speichern();
             stornieren();
-            // switch to "Rechnung ansehen" tab
+            // update the BestellAnzeige tab
+            tabbedPane.recreateTabbedPane();
+            // switch to BestellAnzeige tab
+            tabbedPane.switchToBestellAnzeige(bestellNr);
 	    return;
 	}
 	int removeRow = -1;

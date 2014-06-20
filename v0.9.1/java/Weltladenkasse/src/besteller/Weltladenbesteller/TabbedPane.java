@@ -37,20 +37,37 @@ import WeltladenDB.WindowContent;
 // Klasse, die Bestellfenster und Artikelliste speichert und anzeigt
 public class TabbedPane extends WindowContent {
     private JTabbedPane tabbedPane;
+    private BestellAnzeige bestellAnzeige;
 
     // Methoden:
     public TabbedPane(Connection conn, MainWindow mw) {
 	super(conn, mw);
 
+        createTabbedPane();
+    }
+
+    void createTabbedPane() {
         tabbedPane = new JTabbedPane();
-        Bestellen myBestellen = new Bestellen(this.conn, mw);
-        ArtikellisteContainer myArtikellisteC = new ArtikellisteContainer(this.conn, mw);
-        BestellAnzeige myBestellAnzeige = new BestellAnzeige(this.conn, mw);
+        Bestellen myBestellen = new Bestellen(this.conn, this.mainWindow, this);
+        ArtikellisteContainer myArtikellisteC = new ArtikellisteContainer(this.conn, this.mainWindow);
+        bestellAnzeige = new BestellAnzeige(this.conn, this.mainWindow);
         tabbedPane.addTab("Bestellen", null, myBestellen, "Bestellung erstellen");
         tabbedPane.addTab("Artikelliste", null, myArtikellisteC, "Artikel bearbeiten/hinzufügen");
-        tabbedPane.addTab("Bestellungen", null, myBestellAnzeige, "Bestellung anzeigen/drucken");
+        tabbedPane.addTab("Bestellungen", null, bestellAnzeige, "Bestellung anzeigen/drucken");
 
         this.add(tabbedPane, BorderLayout.CENTER);
+    }
+
+    public void recreateTabbedPane() {
+        this.remove(tabbedPane);
+	this.revalidate();
+        createTabbedPane();
+    }
+
+    public void switchToBestellAnzeige(int bestellNr) {
+        int tabIndex = tabbedPane.indexOfTab("Bestellungen");
+        tabbedPane.setSelectedIndex(tabIndex);
+        bestellAnzeige.showOrderDetailTable(bestellNr);
     }
 
     /**
