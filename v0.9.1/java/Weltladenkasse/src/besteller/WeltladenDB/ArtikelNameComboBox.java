@@ -50,7 +50,7 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
                     "SELECT DISTINCT a.artikel_name, l.lieferant_name FROM artikel AS a " +
                     "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE artikel_name LIKE '%"+textFeld.getText().replaceAll("\'","\\\\\'")+"%' AND a.aktiv = TRUE " + filterStr +
+                    "WHERE artikel_name LIKE '%"+textFeld.getText()+"%' AND a.aktiv = TRUE " + filterStr +
                     "ORDER BY a.artikel_name, l.lieferant_name"
                     );
             // Now do something with the ResultSet ...

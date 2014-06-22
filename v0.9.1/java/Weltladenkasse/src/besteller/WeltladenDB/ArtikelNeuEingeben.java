@@ -173,8 +173,7 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
     }
 
     protected int hinzufuegen() {
-        String nameDisplay = artikelFormular.nameField.getText();
-        String name = nameDisplay.replaceAll("\'","\\\\\'"); // four backslashes are for one! See: http://www.xyzws.com/javafaq/how-many-backslashes/198
+        String name = artikelFormular.nameField.getText();
         String nummer = artikelFormular.nummerField.getText();
         String barcodeDisplay = artikelFormular.barcodeField.getText();
         String barcode = barcodeDisplay;
@@ -235,7 +234,7 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
 
         Vector<Object> row = new Vector<Object>();
         row.add((String)artikelFormular.produktgruppenBox.getSelectedItem());
-        row.add(nameDisplay);
+        row.add(name);
         row.add(artikelNeu.artikelNummern.lastElement());
         row.add(barcodeDisplay);
         String le = artikelNeu.vkPreise.lastElement(); row.add( le.equals("NULL") ? "" : le.replace('.',',')+" "+currencySymbol );

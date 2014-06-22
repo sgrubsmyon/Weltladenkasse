@@ -269,7 +269,6 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                 lineCount++;
                 line = line.replaceAll("#.*","");
                 line = line.replaceAll("\"","");
-                line = line.replaceAll("\'","\\\\\'"); // four backslashes are for one! See: http://www.xyzws.com/javafaq/how-many-backslashes/198
 
                 // get the fields
                 String[] fields = line.split(delimiter);

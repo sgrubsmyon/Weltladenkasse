@@ -303,7 +303,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         JPanel topRightPanel = new JPanel();
         topRightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
           JLabel searchFieldLabel = new JLabel("Filter");
-          searchField = new JTextField(filterStr.replaceAll("\\\\\'","\'"));
+          searchField = new JTextField(filterStr);
           searchField.setColumns(20);
           searchField.addKeyListener(new KeyAdapter() {
               public void keyPressed(KeyEvent e) {
@@ -845,13 +845,13 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             if ( editArtikelName.size() > 0 ){
                 int answer = changeLossConfirmDialog();
                 if (answer == JOptionPane.YES_OPTION){
-                    filterStr = searchField.getText().replaceAll("\'","\\\\\'"); // four backslashes are for one! See: http://www.xyzws.com/javafaq/how-many-backslashes/198
+                    filterStr = searchField.getText();
                     updateAll();
                 } else {
-                    searchField.setText(filterStr.replaceAll("\\\\\'","\'"));
+                    searchField.setText(filterStr);
                 }
             } else {
-                filterStr = searchField.getText().replaceAll("\'","\\\\\'"); // four backslashes are for one! See: http://www.xyzws.com/javafaq/how-many-backslashes/198
+                filterStr = searchField.getText();
                 updateAll();
             }
             return;
