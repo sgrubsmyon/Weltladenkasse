@@ -100,7 +100,34 @@ public class BestellAnzeige extends ArtikelGrundlage {
         orderLabels.add("KW");
         orderLabels.add("Datum");
         retrieveOrderData();
-        orderTable = new AnyJComponentJTable(orderData, orderLabels);
+        orderTable = new AnyJComponentJTable(orderData, orderLabels){
+            // Implement table cell tool tips.
+            @Override
+            public String getToolTipText(MouseEvent e) {
+                Point p = e.getPoint();
+                int rowIndex = rowAtPoint(p);
+                int colIndex = columnAtPoint(p);
+                int realRowIndex = convertRowIndexToModel(rowIndex); // user might have changed row order
+                int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
+                String tip = "";
+                tip = this.getModel().getValueAt(realRowIndex, realColIndex).toString();
+                return tip;
+            }
+            // Implement table header tool tips.
+            @Override
+            protected JTableHeader createDefaultTableHeader() {
+                return new JTableHeader(columnModel) {
+                    public String getToolTipText(MouseEvent e) {
+                        String tip = null;
+                        Point p = e.getPoint();
+                        int colIndex = columnAtPoint(p);
+                        int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
+                        tip = getColumnName(realColIndex);
+                        return tip;
+                    }
+                };
+            }
+        };
 
         JScrollPane scrollPane = new JScrollPane(orderTable);
         orderPanel.add(scrollPane);

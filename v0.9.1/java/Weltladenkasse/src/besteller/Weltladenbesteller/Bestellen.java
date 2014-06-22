@@ -490,9 +490,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             BufferedReader in = new BufferedReader(new FileReader(file)); // Lesen einer Textdatei mit Default Zeichensatz-Codierung, see http://www.wsoftware.de/practices/charsets.html
             String line;
             while ( (line = in.readLine()) != null) {
-                line = line.replaceAll("#.*","");
-                line = line.replaceAll("\"","");
-                line = line.replaceAll("\'","\\\\\'"); // four backslashes are for one! See: http://www.xyzws.com/javafaq/how-many-backslashes/198
+                line = line.replaceAll("#.*",""); // remove commented lines
+                //line = line.replaceAll("\"","");
+                //line = line.replaceAll("\'","\\\\\'"); // four backslashes are for one! See: http://www.xyzws.com/javafaq/how-many-backslashes/198
 
                 // get the fields
                 String[] fields = line.split(delimiter);
@@ -613,25 +613,28 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         // get artikelName
         String[] an = artikelBox.parseArtikelName();
         String artikelName = an[0];
-        String lieferantQuery = an[1].equals("") ? "IS NULL" : "= '"+an[1]+"'";
+        String artikelNummer = an[1];
+        String lieferantQuery = artikelNummer.equals("") ? "IS NULL" : "= ?";
         Vector<String[]> artikelNummern = new Vector<String[]>();
         // get artikelNummer for artikelName
         try {
-            // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
-            // Run MySQL command
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT DISTINCT a.artikel_nr FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.artikel_name = '"+artikelName+"' AND l.lieferant_name "+lieferantQuery+" " +
+                    "WHERE a.artikel_name = ? AND l.lieferant_name "+lieferantQuery+" "+
                     "AND a.aktiv = TRUE"
                     );
+            pstmt.setString(1, artikelName);
+            if (!artikelNummer.equals("")){
+                pstmt.setString(2, artikelNummer);
+            }
+            ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
                 artikelNummern.add( new String[]{rs.getString(1)} );
             }
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

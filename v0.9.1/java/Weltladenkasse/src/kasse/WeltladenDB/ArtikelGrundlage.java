@@ -6,6 +6,7 @@ import java.util.*; // for Vector
 // MySQL Connector/J stuff:
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -24,22 +25,26 @@ public abstract class ArtikelGrundlage extends WindowContent {
     public int getArticleID(String artikelName, String lieferant, String artikelNummer) {
         // get artikelID for artikelName and artikelNummer
         int artikelID = -1;
-        String lieferantQuery = lieferant.equals("") ? "IS NULL" : "= '"+lieferant+"'";
+        String lieferantQuery = lieferant.equals("") ? "IS NULL" : "= ?";
         try {
-            // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
-            // Run MySQL command
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT a.artikel_id FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.artikel_name = '"+artikelName+"' " +
+                    "WHERE a.artikel_name = ? " +
                     "AND l.lieferant_name "+lieferantQuery+" " +
-                    "AND a.artikel_nr = '"+artikelNummer+"' " +
+                    "AND a.artikel_nr = ? " +
                     "AND a.aktiv = TRUE"
                     );
-            // Now do something with the ResultSet, should be only one result ...
+            pstmt.setString(1, artikelName);
+            int artikelNrIndex = 2;
+            if (!lieferant.equals("")){
+                pstmt.setString(2, lieferant);
+                artikelNrIndex++;
+            }
+            pstmt.setString(artikelNrIndex, artikelNummer);
+            ResultSet rs = pstmt.executeQuery();
             rs.next(); artikelID = rs.getInt(1); rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

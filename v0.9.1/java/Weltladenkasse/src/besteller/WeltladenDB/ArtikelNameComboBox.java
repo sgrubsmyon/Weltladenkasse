@@ -35,9 +35,9 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
     }
 
     public String[] parseArtikelName() {
+        //System.out.println("this.getSelectedIndex(): "+this.getSelectedIndex());
         String[] item = this.items.get(this.getSelectedIndex());
-        return new String[]{( item[0] ).replaceAll("\'","\\\\\'"),
-            ( item[1] ).replaceAll("\'","\\\\\'")};
+        return new String[]{item[0], item[1]};
     }
 
     public Vector<String[]> doQuery() {
