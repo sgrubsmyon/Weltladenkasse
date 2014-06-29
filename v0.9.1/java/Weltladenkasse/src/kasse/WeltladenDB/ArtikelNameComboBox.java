@@ -54,7 +54,7 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             pstmt.setString(1, "%"+textFeld.getText()+"%");
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet ...
-            while (rs.next()) { 
+            while (rs.next()) {
                 String artName = rs.getString(1);
                 String liefName = rs.getString(2) != null ? rs.getString(2) : "";
                 searchResults.add(new String[]{artName, liefName});

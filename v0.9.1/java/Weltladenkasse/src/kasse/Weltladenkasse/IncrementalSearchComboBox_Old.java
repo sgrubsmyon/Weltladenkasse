@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 import java.awt.event.*;
@@ -184,18 +185,17 @@ public class IncrementalSearchComboBox_Old extends JComboBox {
         if ( searchCache.size() == 0 && typeText.length() >= 3 ){
             // cache the search results (do mysql query)
             try {
-                // Create statement for MySQL database
-                Statement stmt = this.conn.createStatement();
-                // Run MySQL command
-                ResultSet rs = stmt.executeQuery(
+                PreparedStatement pstmt = this.conn.prepareStatement(
                         "SELECT artikel_name FROM artikel AS a " +
                         "INNER JOIN produktgruppe AS p USING (produktgruppen_id) " +
-                        "WHERE artikel_name LIKE '%"+typeText.replaceAll(" ","%")+"%' AND a.aktiv = TRUE  " + internalFilterStr
+                        "WHERE artikel_name LIKE ? AND a.aktiv = TRUE " + internalFilterStr
                         );
+                pstmt.setString(1, "%"+typeText.replaceAll(" ","%")+"%");
+                ResultSet rs = pstmt.executeQuery();
                 // Now do something with the ResultSet ...
                 while (rs.next()) { searchCache.add(rs.getString(1)); }
                 rs.close();
-                stmt.close();
+                pstmt.close();
             } catch (SQLException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();

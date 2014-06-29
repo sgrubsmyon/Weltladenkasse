@@ -8,6 +8,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -85,7 +86,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
     private Vector<String> columnLabels;
     private Vector<JButton> editButtons;
     private Vector<JButton> deleteButtons;
-    private Vector<String> rabattIDs;
+    private Vector<Integer> rabattIDs;
 
     private String kassenstandZahl;
     private int kassenstandZahlInt;
@@ -175,7 +176,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	columnLabels = new Vector<String>();
         editButtons = new Vector<JButton>();
         deleteButtons = new Vector<JButton>();
-	rabattIDs = new Vector<String>();
+	rabattIDs = new Vector<Integer>();
 	columnLabels.add("Aktionsname"); columnLabels.add("von"); columnLabels.add("bis");
         columnLabels.add("Artikel"); columnLabels.add("Produktgruppe");
         columnLabels.add("Rabatt relativ"); columnLabels.add("Rabatt absolut");
@@ -199,7 +200,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 		    );
 	    // Now do something with the ResultSet ...
 	    while (rs.next()) {  
-                String rabattID = rs.getString(1);
+                Integer rabattID = rs.getInt(1);
                 String aktionsname = rs.getString(2);
                 String rabattRel = rs.getString(3);
                 String rabattAbs = rs.getString(4);
@@ -439,17 +440,18 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
         updateAll();
     }
 
-    private void setBisDate(String rabattID, String aktionsname, String bis) {
+    private void setBisDate(Integer rabattID, String aktionsname, String bis) {
         int answer = JOptionPane.showConfirmDialog(this,
                 "Rabattaktion \'"+aktionsname+"\' beenden/löschen?",
                 "Rabattaktion löschen",
                 JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (answer == JOptionPane.YES_OPTION){
             try {
-                Statement stmt = this.conn.createStatement();
-                int result = stmt.executeUpdate(
-                        "UPDATE rabattaktion SET bis = "+bis+" WHERE rabatt_id = "+rabattID
+                PreparedStatement pstmt = this.conn.prepareStatement(
+                        "UPDATE rabattaktion SET bis = "+bis+" WHERE rabatt_id = ?"
                         );
+                pstmt.setInt(1, rabattID);
+                int result = pstmt.executeUpdate();
                 if (result != 0){
                     // update everything
                 } else {
@@ -457,7 +459,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
                             "Fehler: Rabattaktion konnte nicht gelöscht werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
-                stmt.close();
+                pstmt.close();
             } catch (SQLException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
@@ -467,33 +469,39 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
                     "Info", JOptionPane.INFORMATION_MESSAGE);
         }
     }
-    private void setBisDateToVonDate(String rabattID, String aktionsname) {
+    private void setBisDateToVonDate(Integer rabattID, String aktionsname) {
         setBisDate(rabattID, aktionsname, "von");
     }
-    private void setBisDateToNow(String rabattID, String aktionsname) {
+    private void setBisDateToNow(Integer rabattID, String aktionsname) {
         setBisDate(rabattID, aktionsname, "NOW()");
     }
 
-    private Boolean isVonDateAfterNow(String rabattID) {
+    private Boolean isVonDateAfterNow(Integer rabattID) {
         Boolean vonAfterNow = null;
 	try {
-	    Statement stmt = this.conn.createStatement();
-	    ResultSet rs = stmt.executeQuery("SELECT von > NOW() FROM rabattaktion WHERE rabatt_id = "+rabattID);
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT von > NOW() FROM rabattaktion WHERE rabatt_id = ?"
+                    );
+            pstmt.setInt(1, rabattID);
+	    ResultSet rs = pstmt.executeQuery();
 	    rs.next(); vonAfterNow = rs.getBoolean(1); rs.close();
-	    stmt.close();
+	    pstmt.close();
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
 	}
         return vonAfterNow;
     }
-    private Boolean isBisDateAfterNow(String rabattID) {
+    private Boolean isBisDateAfterNow(Integer rabattID) {
         Boolean bisAfterNow = null;
 	try {
-	    Statement stmt = this.conn.createStatement();
-	    ResultSet rs = stmt.executeQuery("SELECT bis > NOW() OR bis IS NULL FROM rabattaktion WHERE rabatt_id = "+rabattID);
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT bis > NOW() OR bis IS NULL FROM rabattaktion WHERE rabatt_id = ?"
+                    );
+            pstmt.setInt(1, rabattID);
+	    ResultSet rs = pstmt.executeQuery();
 	    rs.next(); bisAfterNow = rs.getBoolean(1); rs.close();
-	    stmt.close();
+	    pstmt.close();
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
@@ -562,7 +570,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
         newRabattDialog.setVisible(true);
     }
 
-    void showEditRabattDialog(String rabattID, boolean onlyNameAndBis) {
+    void showEditRabattDialog(Integer rabattID, boolean onlyNameAndBis) {
         editRabattDialog = new JDialog(this.mainWindow, "Rabattaktion bearbeiten", true);
         editRabatt = new RabattDialog(this.conn, this.mainWindow, this, editRabattDialog, 
                 "Rabattaktion bearbeiten", true, rabattID, onlyNameAndBis);
@@ -622,7 +630,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    }
 	}
         if (deleteRow > -1){
-            String rabattID = rabattIDs.get(deleteRow);
+            Integer rabattID = rabattIDs.get(deleteRow);
             Boolean vonAfterNow = isVonDateAfterNow(rabattID);
             Boolean bisAfterNow = isBisDateAfterNow(rabattID);
             if ( vonAfterNow != null ){
@@ -647,7 +655,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    }
 	}
         if (editRow > -1){
-            String rabattID = rabattIDs.get(editRow);
+            Integer rabattID = rabattIDs.get(editRow);
             Boolean vonAfterNow = isVonDateAfterNow(rabattID);
             Boolean bisAfterNow = isBisDateAfterNow(rabattID);
             if ( vonAfterNow != null ){ // if von date is null, there's something fishy -> don't allow editing

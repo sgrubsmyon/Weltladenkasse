@@ -7,6 +7,7 @@ import java.util.*; // for Vector
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 
 // GUI stuff:
 import java.awt.event.*;
@@ -51,14 +52,13 @@ public class HeutigeRechnungen extends Rechnungen {
     }
 
     private void stornieren(int stornoRow) {
-	String rechnungsnummer = (String)data.get(stornoRow).get(1);
+	Integer rechnungsnummer = Integer.parseInt(data.get(stornoRow).get(1));
 	try {
-	    // Create statement for MySQL database
-	    Statement stmt = this.conn.createStatement();
-	    // Run MySQL command
-	    int result = stmt.executeUpdate(
-		    "UPDATE verkauf SET verkauf.storniert = 1 WHERE verkauf.rechnungs_nr = " + rechnungsnummer
+            PreparedStatement pstmt = this.conn.prepareStatement(
+		    "UPDATE verkauf SET verkauf.storniert = 1 WHERE verkauf.rechnungs_nr = ?"
 		    );
+            pstmt.setInt(1, rechnungsnummer);
+	    int result = pstmt.executeUpdate();
 	    if (result != 0){
 		JOptionPane.showMessageDialog(this, "Rechnung " + rechnungsnummer + " wurde storniert.",
 			"Stornierung ausgeführt", JOptionPane.INFORMATION_MESSAGE);
@@ -68,7 +68,7 @@ public class HeutigeRechnungen extends Rechnungen {
 			"Fehler: Rechnung " + rechnungsnummer + " konnte nicht storniert werden.",
 			"Fehler bei Stornierung", JOptionPane.ERROR_MESSAGE);
 	    }
-	    stmt.close();
+	    pstmt.close();
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();

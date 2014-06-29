@@ -9,6 +9,7 @@ import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -19,7 +20,7 @@ import java.awt.*;
 //import java.awt.event.ActionEvent;
 //import java.awt.event.ActionListener;
 import java.awt.event.*;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -115,17 +116,17 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    Statement stmt = this.conn.createStatement();
 	    // Run MySQL command
 	    ResultSet rs = stmt.executeQuery(
-		    "SELECT vd.rechnungs_nr, SUM(vd.ges_preis) AS rechnungs_betrag, " + 
-		    "DATE_FORMAT(verkauf.verkaufsdatum, '"+dateFormatSQL+"') " + 
+		    "SELECT vd.rechnungs_nr, SUM(vd.ges_preis) AS rechnungs_betrag, " +
+		    "DATE_FORMAT(verkauf.verkaufsdatum, '"+dateFormatSQL+"') " +
 		    "FROM verkauf_details AS vd " +
                     "INNER JOIN verkauf USING (rechnungs_nr) " +
-		    filterStr + 
+		    filterStr +
 		    "GROUP BY vd.rechnungs_nr " +
 		    "ORDER BY vd.rechnungs_nr DESC " +
 		    "LIMIT " + (currentPage-1)*rechnungenProSeite + "," + rechnungenProSeite
 		    );
 	    // Now do something with the ResultSet ...
-	    while (rs.next()) {  
+	    while (rs.next()) {
 		Vector<String> row = new Vector<String>();
 		row.add("");
 		row.add(rs.getString(1)); row.add(rs.getString(2) + ' ' + currencySymbol); row.add(rs.getString(3));
@@ -179,7 +180,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	int currentPageMin = (currentPage-1)*rechnungenProSeite + 1;
 	int currentPageMax = rechnungenProSeite*currentPage;
 	currentPageMax = (currentPageMax <= rechnungsZahlInt) ? currentPageMax : rechnungsZahlInt;
-	JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Rechnungen "+ 
+	JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Rechnungen "+
 	    currentPageMin + " bis "+ currentPageMax +" von "+ rechnungsZahlInt);
 	pageChangePanel.add(header);
 	tablePanel.add(pageChangePanel);
@@ -219,9 +220,9 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	// First row: Show total of invoice
 	Vector<String> coolRow = new Vector<String>(5);
 	coolRow.add("");
-	coolRow.add((String)this.data.get(detailRow).get(1));
-	coolRow.add((String)this.data.get(detailRow).get(2));
-	coolRow.add((String)this.data.get(detailRow).get(3));
+	coolRow.add(this.data.get(detailRow).get(1));
+	coolRow.add(this.data.get(detailRow).get(2));
+	coolRow.add(this.data.get(detailRow).get(3));
 	coolRow.add("");
 	Vector<Vector> overviewData = new Vector<Vector>(1);
 //	overviewData.add(this.data.get(detailRow));
@@ -257,10 +258,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	Vector< Vector<Object> > detailData = new Vector< Vector<Object> >();
 	String artikelZahl = "";
 	try {
-	    // Create statement for MySQL database
-	    Statement stmt = this.conn.createStatement();
-	    // Run MySQL command
-	    ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT a.artikel_name, ra.aktionsname, a.artikel_nr, "+
                     "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, (p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, "+
                     "vd.stueckzahl, vd.ges_preis, vd.mwst_satz "+
@@ -268,10 +266,12 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                     "LEFT JOIN artikel AS a USING (artikel_id) "+
                     "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
                     "LEFT JOIN rabattaktion AS ra USING (rabatt_id) "+
-                    "WHERE vd.rechnungs_nr = "+(String)this.data.get(detailRow).get(1)
+                    "WHERE vd.rechnungs_nr = ?"
 		    );
+            pstmt.setInt(1, Integer.parseInt(this.data.get(detailRow).get(1)));
+	    ResultSet rs = pstmt.executeQuery();
 	    // Now do something with the ResultSet ...
-	    while (rs.next()) {  
+	    while (rs.next()) {
                 String artikelname = rs.getString(1);
                 String aktionsname = rs.getString(2);
                 String artikelnummer = rs.getString(3);
@@ -288,7 +288,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 mwsts.add(mwst);
                 mwst = vatFormatter(mwst);
                 String einzelPreis = "";
-                if (stueck != null){ 
+                if (stueck != null){
                     einzelPreis = priceFormatter( gesPreisDec.divide( stueckDec, 10, RoundingMode.HALF_UP ) )+' '+currencySymbol;
                 }
                 gesPreis = gesPreis.replace('.',',')+' '+currencySymbol;
@@ -310,15 +310,18 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 		detailData.add(row);
 	    }
 	    rs.close();
-	    rs = stmt.executeQuery(
+            pstmt.close();
+            pstmt = this.conn.prepareStatement(
 		    "SELECT COUNT(vd.artikel_id) FROM verkauf_details AS vd " +
-		    "WHERE vd.rechnungs_nr = " + (String)this.data.get(detailRow).get(1)
+		    "WHERE vd.rechnungs_nr = ?"
 		    );
+            pstmt.setInt(1, Integer.parseInt(this.data.get(detailRow).get(1)));
+	    rs = pstmt.executeQuery();
 	    // Now do something with the ResultSet ...
 	    rs.next();
 	    artikelZahl = rs.getString(1);
 	    rs.close();
-	    stmt.close();
+	    pstmt.close();
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
@@ -335,7 +338,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	//JTextField footer = new JTextField(artikelZahl+" Artikel", 25);
 	//footer.setEditable(false);
 	//tablePanel.add(footer);
-        
+
         JPanel totalPricePanel = createTotalPricePanel();
 	tablePanel.add(totalPricePanel);
 
