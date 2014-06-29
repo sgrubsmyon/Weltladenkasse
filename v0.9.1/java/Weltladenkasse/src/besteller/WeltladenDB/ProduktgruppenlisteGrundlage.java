@@ -8,6 +8,7 @@ import java.text.*; // for NumberFormat, DecimalFormat
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -18,7 +19,7 @@ import java.awt.*;
 //import java.awt.event.ActionEvent;
 //import java.awt.event.ActionListener;
 import java.awt.event.*;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -36,7 +37,7 @@ public abstract class ProduktgruppenlisteGrundlage extends WindowContent impleme
     // Attribute:
     protected final String titleStr = "Produktgruppen";
     private String aktivFilterStr = " AND aktiv = TRUE ";
-    
+
     // The panels
     protected JPanel groupListPanel;
     // The table holding the article list
@@ -64,7 +65,7 @@ public abstract class ProduktgruppenlisteGrundlage extends WindowContent impleme
 	groupListPanel.setLayout(new BoxLayout(groupListPanel, BoxLayout.Y_AXIS));
 	groupListPanel.setBorder(BorderFactory.createTitledBorder(titleStr));
 
-        String artikelCount = queryArtikelCount(null,null,null); // how many artikel are there in total?
+        Integer artikelCount = queryArtikelCount(null,null,null); // how many artikel are there in total?
         DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new Gruppe(null,null,null, "Alle Artikel ("+artikelCount+")"));
         addProduktgruppenToRootNode(rootNode);
         tree = new JTree(rootNode);
@@ -79,12 +80,12 @@ public abstract class ProduktgruppenlisteGrundlage extends WindowContent impleme
     }
 
     protected class Gruppe {
-        public String toplevel_id;
-        public String sub_id;
-        public String subsub_id;
+        public Integer toplevel_id;
+        public Integer sub_id;
+        public Integer subsub_id;
         public String name;
 
-        public Gruppe(String tid, String sid, String ssid, String gname) {
+        public Gruppe(Integer tid, Integer sid, Integer ssid, String gname) {
             toplevel_id = tid; sub_id = sid; subsub_id = ssid;
             name = gname;
         }
@@ -98,24 +99,31 @@ public abstract class ProduktgruppenlisteGrundlage extends WindowContent impleme
         DefaultMutableTreeNode groupNode = null;
         DefaultMutableTreeNode subgroupNode = null;
         DefaultMutableTreeNode subsubgroupNode = null;
-        String artikelCount, topid, subid, subsubid, groupname;
+        Integer artikelCount, topid, subid, subsubid;
+        String groupname;
 
         Vector< Vector<String> > toplevelgroups = queryTopGruppen();
         for ( Vector<String> group : toplevelgroups ){
-            topid = group.get(0); subid = group.get(1);
-            subsubid = group.get(2); groupname = group.get(3);
+            topid = Integer.parseInt(group.get(0));
+            subid = Integer.parseInt(group.get(1));
+            subsubid = Integer.parseInt(group.get(2));
+            groupname = group.get(3);
             artikelCount = queryArtikelCount(topid, subid, subsubid); // how many artikel are there in this gruppe?
             groupNode = new DefaultMutableTreeNode(new Gruppe(topid, subid, subsubid, groupname+" ("+artikelCount+")"));
             Vector< Vector<String> > subgroups = querySubGruppen(topid);
             for ( Vector<String> subgroup : subgroups ){
-                topid = subgroup.get(0); subid = subgroup.get(1);
-                subsubid = subgroup.get(2); groupname = subgroup.get(3);
+                topid = Integer.parseInt(subgroup.get(0));
+                subid = Integer.parseInt(subgroup.get(1));
+                subsubid = Integer.parseInt(subgroup.get(2));
+                groupname = subgroup.get(3);
                 artikelCount = queryArtikelCount(topid, subid, subsubid);
                 subgroupNode = new DefaultMutableTreeNode(new Gruppe(topid, subid, subsubid, groupname+" ("+artikelCount+")"));
                 Vector< Vector<String> > subsubgroups = querySubSubGruppen(topid, subid);
                 for ( Vector<String> subsubgroup : subsubgroups ){
-                    topid = subsubgroup.get(0); subid = subsubgroup.get(1);
-                    subsubid = subsubgroup.get(2); groupname = subsubgroup.get(3);
+                    topid = Integer.parseInt(subsubgroup.get(0));
+                    subid = Integer.parseInt(subsubgroup.get(1));
+                    subsubid = Integer.parseInt(subsubgroup.get(2));
+                    groupname = subsubgroup.get(3);
                     artikelCount = queryArtikelCount(topid, subid, subsubid);
                     subsubgroupNode = new DefaultMutableTreeNode(new Gruppe(topid, subid, subsubid, groupname+" ("+artikelCount+")"));
                     subgroupNode.add(subsubgroupNode);
@@ -165,18 +173,17 @@ public abstract class ProduktgruppenlisteGrundlage extends WindowContent impleme
         return produktgruppen;
     }
 
-    private Vector< Vector<String> > querySubGruppen(String topid){ // select second level nodes in tree
+    private Vector< Vector<String> > querySubGruppen(Integer topid){ // select second level nodes in tree
         Vector< Vector<String> > subgruppen = new Vector< Vector<String> >();
 	try {
-	    // Create statement for MySQL database
-	    Statement stmt = this.conn.createStatement();
-	    // Run MySQL command
-	    ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
 		    "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name FROM produktgruppe " +
-                    "WHERE toplevel_id = " + topid + " " +
+                    "WHERE toplevel_id = ? " +
                     "AND sub_id IS NOT NULL AND subsub_id IS NULL " + aktivFilterStr +
                     "ORDER BY sub_id"
 		    );
+            pstmt.setInt(1, topid);
+	    ResultSet rs = pstmt.executeQuery();
 	    // Now do something with the ResultSet ...
 	    while (rs.next()){
                 Vector<String> rowVector = new Vector<String>();
@@ -187,7 +194,7 @@ public abstract class ProduktgruppenlisteGrundlage extends WindowContent impleme
                 subgruppen.add(rowVector);
             }
 	    rs.close();
-	    stmt.close();
+	    pstmt.close();
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
@@ -195,18 +202,18 @@ public abstract class ProduktgruppenlisteGrundlage extends WindowContent impleme
         return subgruppen;
     }
 
-    private Vector< Vector<String> > querySubSubGruppen(String topid, String subid){ // select third level nodes in tree
+    private Vector< Vector<String> > querySubSubGruppen(Integer topid, Integer subid){ // select third level nodes in tree
         Vector< Vector<String> > subsubgruppen = new Vector< Vector<String> >();
 	try {
-	    // Create statement for MySQL database
-	    Statement stmt = this.conn.createStatement();
-	    // Run MySQL command
-	    ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
 		    "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name FROM produktgruppe " +
-                    "WHERE toplevel_id = " + topid + " " +
-                    "AND sub_id = " + subid + " AND subsub_id IS NOT NULL " + aktivFilterStr +
+                    "WHERE toplevel_id = ? " +
+                    "AND sub_id = ? AND subsub_id IS NOT NULL " + aktivFilterStr +
                     "ORDER BY subsub_id"
 		    );
+            pstmt.setInt(1, topid);
+            pstmt.setInt(2, subid);
+	    ResultSet rs = pstmt.executeQuery();
 	    // Now do something with the ResultSet ...
 	    while (rs.next()){
                 Vector<String> rowVector = new Vector<String>();
@@ -217,7 +224,7 @@ public abstract class ProduktgruppenlisteGrundlage extends WindowContent impleme
                 subsubgruppen.add(rowVector);
             }
 	    rs.close();
-	    stmt.close();
+	    pstmt.close();
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
@@ -225,16 +232,16 @@ public abstract class ProduktgruppenlisteGrundlage extends WindowContent impleme
         return subsubgruppen;
     }
 
-    private String queryArtikelCount(String topid, String subid, String subsubid){
-        String artikelCount = new String();
+    private Integer queryArtikelCount(Integer topid, Integer subid, Integer subsubid){
+        Integer artikelCount = new Integer(0);
         String filter = "";
-        if (topid == null) 
+        if (topid == null)
             filter = "produktgruppe.toplevel_id > 0 ";
-        else 
+        else
             filter = "produktgruppe.toplevel_id = " + topid + " ";
-        if (subid != null) 
+        if (subid != null)
             filter += " AND produktgruppe.sub_id = " + subid + " ";
-        if (subsubid != null) 
+        if (subsubid != null)
             filter += " AND produktgruppe.subsub_id = " + subsubid + " ";
         try {
             // Create statement for MySQL database
@@ -242,12 +249,12 @@ public abstract class ProduktgruppenlisteGrundlage extends WindowContent impleme
             // Run MySQL command
             ResultSet rs = stmt.executeQuery(
                     "SELECT COUNT(artikel_id) FROM artikel INNER JOIN produktgruppe " +
-                    "USING (produktgruppen_id) " + 
+                    "USING (produktgruppen_id) " +
                     "WHERE artikel.aktiv = TRUE AND " + filter
                     );
             // Now do something with the ResultSet ...
             rs.next();
-            artikelCount = rs.getString(1);
+            artikelCount = rs.getInt(1);
             rs.close();
             stmt.close();
         } catch (SQLException ex) {

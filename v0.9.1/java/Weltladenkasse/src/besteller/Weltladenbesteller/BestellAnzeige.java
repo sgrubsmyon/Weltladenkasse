@@ -151,7 +151,7 @@ public class BestellAnzeige extends ArtikelGrundlage {
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT bestell_nr, jahr, kw, bestell_datum FROM bestellung " +
+                    "SELECT bestell_nr, jahr, kw, DATE_FORMAT(bestell_datum, '"+dateFormatSQL+"') FROM bestellung " +
 		    "ORDER BY bestell_nr DESC LIMIT " + (currentPage-1)*bestellungenProSeite + "," + bestellungenProSeite
                     );
             // Now do something with the ResultSet, should be only one result ...

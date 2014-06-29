@@ -12,6 +12,7 @@ import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -128,6 +129,10 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return price.setScale(2, RoundingMode.HALF_UP).toString(); // for 2 digits after period sign and "0.5-is-rounded-up" rounding
     }
 
+    protected String vatFormatter(Float vat) {
+        return vatFormatter(vat.toString());
+    }
+
     protected String vatFormatter(String vat) {
         vat = vat.replace(',','.');
         String vatFormatted = "";
@@ -148,15 +153,17 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected boolean isItemAlreadyKnown(String name, String nummer) {
         boolean exists = false;
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT COUNT(artikel_id) FROM artikel WHERE artikel_name = '"+name+"' AND artikel_nr = '"+nummer+"' AND aktiv = TRUE"
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT COUNT(artikel_id) FROM artikel WHERE artikel_name = ? AND artikel_nr = ? AND aktiv = TRUE"
                     );
+            pstmt.setString(1, name);
+            pstmt.setString(2, nummer);
+            ResultSet rs = pstmt.executeQuery();
             rs.next();
             int count = rs.getInt(1);
             exists = count > 0;
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -168,13 +175,15 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
-            Statement stmt = this.conn.createStatement();
-            result = stmt.executeUpdate(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "UPDATE artikel SET aktiv = FALSE, bis = NOW() WHERE "+
-                    "artikel_name = '"+name+"' AND "+
-                    "artikel_nr = '"+nummer+"' AND aktiv = TRUE"
+                    "artikel_name = ? AND "+
+                    "artikel_nr = ? AND aktiv = TRUE"
                     );
-            stmt.close();
+            pstmt.setString(1, name);
+            pstmt.setString(2, nummer);
+            result = pstmt.executeUpdate();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -186,13 +195,15 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
-            Statement stmt = this.conn.createStatement();
-            result = stmt.executeUpdate(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "UPDATE artikel SET aktiv = TRUE, bis = NOW() WHERE "+
-                    "artikel_name = '"+name+"' AND "+
-                    "artikel_nr = '"+nummer+"' AND aktiv = FALSE"
+                    "artikel_name = ? AND "+
+                    "artikel_nr = ? AND aktiv = FALSE"
                     );
-            stmt.close();
+            pstmt.setString(1, name);
+            pstmt.setString(2, nummer);
+            result = pstmt.executeUpdate();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

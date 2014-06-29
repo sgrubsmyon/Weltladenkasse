@@ -60,7 +60,8 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
      *    The constructor.
      *       */
     public AlteRechnungen(Connection conn, MainWindowGrundlage mw){
-	super(conn, mw, "WHERE verkauf.verkaufsdatum <= (SELECT MAX(zeitpunkt) FROM abrechnung_tag) AND verkauf.storniert = FALSE ", "Alte Rechnungen");
+	super(conn, mw, "WHERE verkauf.verkaufsdatum <= (SELECT MAX(zeitpunkt) FROM abrechnung_tag) AND "+
+                "verkauf.storniert = FALSE", "Alte Rechnungen");
 	queryEarliestRechnung();
 	initiateSpinners();
 	showTable();

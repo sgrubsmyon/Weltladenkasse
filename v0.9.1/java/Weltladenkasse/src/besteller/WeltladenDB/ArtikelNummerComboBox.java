@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 public class ArtikelNummerComboBox extends IncrementalSearchComboBox {
@@ -22,21 +23,20 @@ public class ArtikelNummerComboBox extends IncrementalSearchComboBox {
     public Vector<String[]> doQuery() {
         Vector<String[]> searchResults = new Vector<String[]>();
         try {
-            // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
-            // Run MySQL command
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT DISTINCT artikel_nr FROM artikel AS a " +
                     "INNER JOIN produktgruppe AS p USING (produktgruppen_id) " +
-                    "WHERE artikel_nr LIKE '%"+textFeld.getText().replaceAll(" ","%")+"%' AND a.aktiv = TRUE " + filterStr +
+                    "WHERE artikel_nr LIKE ? AND a.aktiv = TRUE " + filterStr +
                     "ORDER BY artikel_nr"
                     );
+            pstmt.setString(1, "%"+textFeld.getText().replaceAll(" ","%")+"%");
+            ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet ...
             while (rs.next()) { 
                 searchResults.add(new String[]{rs.getString(1)});
             }
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

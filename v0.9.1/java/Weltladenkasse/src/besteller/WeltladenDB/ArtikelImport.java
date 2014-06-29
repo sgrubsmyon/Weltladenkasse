@@ -9,6 +9,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -188,14 +189,15 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
     private String queryGruppenID(String gruppenname) {
         String gruppenid = "NULL";
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT produktgruppen_id FROM produktgruppe WHERE produktgruppen_name = '"+gruppenname+"'"
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT produktgruppen_id FROM produktgruppe WHERE produktgruppen_name = ?"
                     );
+            pstmt.setString(1, gruppenname);
+            ResultSet rs = pstmt.executeQuery();
             if ( rs.next() )
                 gruppenid = rs.getString(1) == null ? "NULL" : rs.getString(1);
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -206,14 +208,15 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
     private String queryLieferantID(String lieferantname) {
         String lieferantid = "NULL";
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT lieferant_id FROM lieferant WHERE lieferant_name = '"+lieferantname+"'"
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT lieferant_id FROM lieferant WHERE lieferant_name = ?"
                     );
+            pstmt.setString(1, lieferantname);
+            ResultSet rs = pstmt.executeQuery();
             if ( rs.next() )
                 lieferantid = rs.getString(1) == null ? "NULL" : rs.getString(1);
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -224,12 +227,14 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
     private Vector<String> queryAllFields(String artikelname, String artikelnummer) {
         Vector<String> results = new Vector<String>();
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT produktgruppen_id, barcode, vk_preis, ek_preis, variabler_preis, vpe, " +
                     "lieferant_id, herkunft FROM artikel "+
-                    "WHERE artikel_name = '"+artikelname+"' AND artikel_nr = '"+artikelnummer+"' AND aktiv = TRUE"
+                    "WHERE artikel_name = ? AND artikel_nr = ? AND aktiv = TRUE"
                     );
+            pstmt.setString(1, artikelname);
+            pstmt.setString(2, artikelnummer);
+            ResultSet rs = pstmt.executeQuery();
             rs.next();
             results.add(rs.getString(1)); // produktgruppen_id
             results.add(rs.getString(2) == null ? "NULL" : rs.getString(2)); // barcode
@@ -240,7 +245,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
             results.add(rs.getString(7) == null ? "NULL" : rs.getString(7)); // lieferant_id
             results.add(rs.getString(8) == null ? "NULL" : rs.getString(8)); // herkunft
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

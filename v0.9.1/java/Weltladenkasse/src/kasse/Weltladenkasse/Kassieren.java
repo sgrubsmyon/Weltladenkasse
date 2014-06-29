@@ -8,6 +8,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -733,13 +734,14 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         Vector< Vector<Object> > mengenrabattAnzahlVector = new Vector< Vector<Object> >();
         Vector< Vector<Object> > mengenrabattRelativVector = new Vector< Vector<Object> >();
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     // get alle Rabatte auf artikelID
                     "SELECT rabatt_absolut, rabatt_relativ, mengenrabatt_schwelle, mengenrabatt_anzahl_kostenlos, "+
-                    "mengenrabatt_relativ, aktionsname, rabatt_id FROM rabattaktion WHERE artikel_id = "+artikelID+" "+
+                    "mengenrabatt_relativ, aktionsname, rabatt_id FROM rabattaktion WHERE artikel_id = ? "+
                     "AND von <= NOW() AND IFNULL(bis >= NOW(), true)"
                     );
+            pstmt.setInt(1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
             while ( rs.next() ){
                 BigDecimal einzelAbsolut = rs.getString(1) == null ? null : new BigDecimal(rs.getString(1));
                 BigDecimal einzelRelativ = rs.getString(2) == null ? null : new BigDecimal(rs.getString(2));
@@ -752,24 +754,32 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                         einzelrabattAbsolutVector, einzelrabattRelativVector, mengenrabattAnzahlVector, mengenrabattRelativVector);
             }
             rs.close();
-            rs = stmt.executeQuery(
+            pstmt.close();
+            pstmt = this.conn.prepareStatement(
                     // get toplevel_id, sub_id, subsub_id for produktgruppenID of artikelID
                     "SELECT toplevel_id, sub_id, subsub_id FROM produktgruppe AS p INNER JOIN "+
-                    "artikel AS a USING (produktgruppen_id) WHERE a.artikel_id = "+artikelID
+                    "artikel AS a USING (produktgruppen_id) WHERE a.artikel_id = ?"
                     );
+            pstmt.setInt(1, artikelID);
+            rs = pstmt.executeQuery();
             rs.next();
             int toplevelID = rs.getInt(1);
             int subID = rs.getInt(2);
             int subsubID = rs.getInt(3);
             rs.close();
-            rs = stmt.executeQuery(
+            pstmt.close();
+            pstmt = this.conn.prepareStatement(
                     // get alle Rabatte auf produktgruppe
                     "SELECT rabatt_absolut, rabatt_relativ, mengenrabatt_schwelle, mengenrabatt_anzahl_kostenlos, "+
                     "mengenrabatt_relativ, aktionsname, rabatt_id FROM rabattaktion AS r INNER JOIN produktgruppe AS p "+
-                    "USING (produktgruppen_id) WHERE (toplevel_id = "+toplevelID+") AND "+
-                    "(sub_id = "+subID+" OR sub_id IS NULL) AND (subsub_id = "+subsubID+" OR subsub_id IS NULL) "+
+                    "USING (produktgruppen_id) WHERE (toplevel_id = ?) AND "+
+                    "(sub_id = ? OR sub_id IS NULL) AND (subsub_id = ? OR subsub_id IS NULL) "+
                     "AND von <= NOW() AND IFNULL(bis >= NOW(), true)"
                     );
+            pstmt.setInt(1, toplevelID);
+            pstmt.setInt(2, subID);
+            pstmt.setInt(3, subsubID);
+            rs = pstmt.executeQuery();
             while ( rs.next() ){
                 BigDecimal einzelAbsolut = rs.getString(1) == null ? null : new BigDecimal(rs.getString(1));
                 BigDecimal einzelRelativ = rs.getString(2) == null ? null : new BigDecimal(rs.getString(2));
@@ -782,7 +792,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                         einzelrabattAbsolutVector, einzelrabattRelativVector, mengenrabattAnzahlVector, mengenrabattRelativVector);
             }
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -927,17 +937,18 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private int queryPfandArtikelID(int artikelID) {
         int pfandArtikelID = -1;
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT pfand.artikel_id FROM artikel INNER JOIN produktgruppe USING (produktgruppen_id) "+
                     "INNER JOIN pfand USING (pfand_id) "+
-                    "WHERE artikel.artikel_id = "+artikelID
+                    "WHERE artikel.artikel_id = ?"
                     );
+            pstmt.setInt(1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
             if (rs.next()) { // artikel hat Pfand
                 pfandArtikelID = rs.getInt(1);
             }
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -949,15 +960,16 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         int artikelID = selectedArtikelID;
         boolean hasPfand = false;
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT p.pfand_id IS NOT NULL FROM artikel AS a INNER JOIN produktgruppe AS p USING (produktgruppen_id) "+
-                    "WHERE a.artikel_id = "+artikelID
+                    "WHERE a.artikel_id = ?"
                     );
+            pstmt.setInt(1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
             rs.next();
             hasPfand = rs.getBoolean(1);
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -1008,19 +1020,23 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
     private void insertIntoKassenstand(int rechnungsNr) {
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT verkaufsdatum FROM verkauf WHERE rechnungs_nr = "+rechnungsNr
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT verkaufsdatum FROM verkauf WHERE rechnungs_nr = ?"
                     );
+            pstmt.setInt(1, rechnungsNr);
+            ResultSet rs = pstmt.executeQuery();
             rs.next(); String verkaufsdatum = rs.getString(1); rs.close();
+            pstmt.close();
             BigDecimal betrag = new BigDecimal( getTotalPrice() );
             BigDecimal alterKassenstandBD = new BigDecimal( parsePrice(mainWindow.getKassenstand()) );
             BigDecimal neuerKassenstandBD = alterKassenstandBD.add(betrag);
             String neuerKassenstand = priceFormatterIntern(neuerKassenstandBD);
-            int result = stmt.executeUpdate(
+            pstmt = this.conn.prepareStatement(
                     "INSERT INTO kassenstand SET rechnungs_nr = "+rechnungsNr+", buchungsdatum = '"+verkaufsdatum+"', "+
                     "manuell = FALSE, neuer_kassenstand = "+neuerKassenstand
                     );
+            int result = pstmt.executeUpdate();
+            pstmt.close();
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Kassenstand konnte nicht geändert werden.",
@@ -1028,7 +1044,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             } else {
                 mainWindow.setKassenstand(neuerKassenstand.replace('.',',')+" "+currencySymbol);
             }
-            stmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -1044,15 +1059,14 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         Vector<String[]> artikelNamen = new Vector<String[]>();
         Vector<String[]> artikelNummern = new Vector<String[]>();
         try {
-            // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
-            // Run MySQL command
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.artikel_nr FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.barcode = '"+barcode+"' " + 
+                    "WHERE a.barcode = ? " + 
                     "AND a.aktiv = TRUE"
                     );
+            pstmt.setString(1, barcode);
+            ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
                 String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
@@ -1060,7 +1074,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 artikelNummern.add( new String[]{rs.getString(3)} );
             }
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -1091,22 +1105,21 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         Vector<String[]> artikelNamen = new Vector<String[]>();
         // get artikelName for artikelNummer
         try {
-            // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
-            // Run MySQL command
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT DISTINCT a.artikel_name, l.lieferant_name FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.artikel_nr = '"+artikelNummer+"' " + 
+                    "WHERE a.artikel_nr = ? " + 
                     "AND a.aktiv = TRUE"
                     );
+            pstmt.setString(1, artikelNummer);
+            ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
                 String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
                 artikelNamen.add( new String[]{rs.getString(1), lieferant} );
             }
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -1126,25 +1139,27 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         // get artikelName
         String[] an = artikelBox.parseArtikelName();
         String artikelName = an[0];
-        String lieferantQuery = an[1].equals("") ? "IS NULL" : "= '"+an[1]+"'";
+        String lieferantQuery = an[1].equals("") ? "IS NULL" : "= ?";
         Vector<String[]> artikelNummern = new Vector<String[]>();
         // get artikelNummer for artikelName
         try {
-            // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
-            // Run MySQL command
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT DISTINCT a.artikel_nr FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.artikel_name = '"+artikelName+"' AND l.lieferant_name "+lieferantQuery+" " +
+                    "WHERE a.artikel_name = ? AND l.lieferant_name "+lieferantQuery+" " +
                     "AND a.aktiv = TRUE"
                     );
+            pstmt.setString(1, artikelName);
+            if (!an[1].equals("")){
+                pstmt.setString(2, an[1]);
+            }
+            ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
                 artikelNummern.add( new String[]{rs.getString(1)} );
             }
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

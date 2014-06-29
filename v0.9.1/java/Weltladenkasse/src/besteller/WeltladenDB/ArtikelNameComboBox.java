@@ -11,6 +11,7 @@ import java.lang.ArrayIndexOutOfBoundsException;
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -43,16 +44,15 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
     public Vector<String[]> doQuery() {
         Vector<String[]> searchResults = new Vector<String[]>();
         try {
-            // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
-            // Run MySQL command
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT DISTINCT a.artikel_name, l.lieferant_name FROM artikel AS a " +
                     "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE artikel_name LIKE '%"+textFeld.getText()+"%' AND a.aktiv = TRUE " + filterStr +
+                    "WHERE artikel_name LIKE ? AND a.aktiv = TRUE " + filterStr +
                     "ORDER BY a.artikel_name, l.lieferant_name"
                     );
+            pstmt.setString(1, "%"+textFeld.getText()+"%");
+            ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet ...
             while (rs.next()) { 
                 String artName = rs.getString(1);
@@ -60,7 +60,7 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
                 searchResults.add(new String[]{artName, liefName});
             }
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

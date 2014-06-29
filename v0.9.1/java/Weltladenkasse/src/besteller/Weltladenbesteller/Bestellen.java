@@ -531,15 +531,14 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         Vector<String[]> artikelNamen = new Vector<String[]>();
         Vector<String[]> artikelNummern = new Vector<String[]>();
         try {
-            // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
-            // Run MySQL command
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.artikel_nr FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.barcode = '"+barcode+"' " +
+                    "WHERE a.barcode = ? " +
                     "AND a.aktiv = TRUE"
                     );
+            pstmt.setString(1, barcode);
+            ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
                 String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
@@ -547,7 +546,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 artikelNummern.add( new String[]{rs.getString(3)} );
             }
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -578,22 +577,21 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         Vector<String[]> artikelNamen = new Vector<String[]>();
         // get artikelName for artikelNummer
         try {
-            // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
-            // Run MySQL command
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT DISTINCT a.artikel_name, l.lieferant_name FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.artikel_nr = '"+artikelNummer+"' " +
+                    "WHERE a.artikel_nr = ? " +
                     "AND a.aktiv = TRUE"
                     );
+            pstmt.setString(1, artikelNummer);
+            ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
                 String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
                 artikelNamen.add( new String[]{rs.getString(1), lieferant} );
             }
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -26,18 +27,17 @@ public class BarcodeComboBox_Old extends AutoCompleteComboBox_Old {
         if ( searchCache.size() == 0 && pattern.length() >= 3 ){
             // cache the search results (do mysql query)
             try {
-                // Create statement for MySQL database
-                Statement stmt = this.conn.createStatement();
-                // Run MySQL command
-                ResultSet rs = stmt.executeQuery(
+                PreparedStatement pstmt = this.conn.prepareStatement(
                         "SELECT barcode FROM artikel AS a " +
                         "INNER JOIN produktgruppe AS p USING (produktgruppen_id) " +
-                        "WHERE barcode LIKE '%"+pattern.replaceAll(" ","%")+"%' AND a.aktiv = TRUE " + internalFilterStr
+                        "WHERE barcode LIKE ? AND a.aktiv = TRUE " + internalFilterStr
                         );
+                pstmt.setString(1, "%"+pattern.replaceAll(" ","%")+"%");
+                ResultSet rs = pstmt.executeQuery();
                 // Now do something with the ResultSet ...
                 while (rs.next()) { searchCache.add(rs.getString(1)); }
                 rs.close();
-                stmt.close();
+                pstmt.close();
             } catch (SQLException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();

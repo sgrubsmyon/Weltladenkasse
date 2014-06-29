@@ -56,18 +56,19 @@ public abstract class ArtikelGrundlage extends WindowContent {
         String artikelName = new String();
         String lieferant = new String();
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT a.artikel_name, l.lieferant_name FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.artikel_id = '"+artikelID+"' " + 
+                    "WHERE a.artikel_id = ? " +
                     "AND a.aktiv = TRUE"
                     );
+            pstmt.setInt(1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
             rs.next();
             artikelName = rs.getString(1);
             lieferant = rs.getString(2) != null ? rs.getString(2) : "";
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -78,13 +79,14 @@ public abstract class ArtikelGrundlage extends WindowContent {
     protected String[] getArticleNumber(int artikelID) {
         String artikelNumber = new String();
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT artikel_nr FROM artikel WHERE artikel_id = '"+artikelID+"' " + 
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT artikel_nr FROM artikel WHERE artikel_id = ? " +
                     "AND aktiv = TRUE"
                     );
+            pstmt.setInt(1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
             rs.next(); artikelNumber = rs.getString(1); rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -96,12 +98,13 @@ public abstract class ArtikelGrundlage extends WindowContent {
         // is price variable for artikelID?
         boolean variabel = false;
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT variabler_preis FROM artikel WHERE artikel_id = "+artikelID
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT variabler_preis FROM artikel WHERE artikel_id = ?"
                     );
+            pstmt.setInt(1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
             rs.next(); variabel = ( rs.getInt(1) != 0 ); rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -113,13 +116,14 @@ public abstract class ArtikelGrundlage extends WindowContent {
         // get price from DB
         String price = "";
         try {
-            Statement stmt = this.conn.createStatement();
             // return regular price:
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT vk_preis FROM artikel WHERE artikel_id = "+artikelID
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT vk_preis FROM artikel WHERE artikel_id = ?"
                     );
+            pstmt.setInt(1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
             rs.next(); price = rs.getString(1); rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -131,16 +135,15 @@ public abstract class ArtikelGrundlage extends WindowContent {
         // get VAT rate for artikelID
         String vat = "";
         try {
-            // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
-            // Run MySQL command
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT mwst.mwst_satz FROM mwst INNER JOIN produktgruppe USING (mwst_id) "+
-                    "INNER JOIN artikel USING (produktgruppen_id) WHERE artikel.artikel_id = "+artikelID
+                    "INNER JOIN artikel USING (produktgruppen_id) WHERE artikel.artikel_id = ?"
                     );
+            pstmt.setInt(1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
             rs.next(); vat = rs.getString(1); rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -151,15 +154,15 @@ public abstract class ArtikelGrundlage extends WindowContent {
     protected String getVPE(int artikelID) {
         String vpe = "";
         try {
-            Statement stmt = this.conn.createStatement();
-            // return regular price:
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT vpe FROM artikel WHERE artikel_id = "+artikelID
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT vpe FROM artikel WHERE artikel_id = ?"
                     );
-            rs.next(); 
+            pstmt.setInt(1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
             vpe = rs.getString(1) != null ? rs.getString(1) : "";
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

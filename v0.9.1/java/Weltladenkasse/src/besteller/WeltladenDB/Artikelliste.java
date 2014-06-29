@@ -8,6 +8,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -128,8 +129,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         if (subsub_id != null)
             filter += " AND produktgruppe.subsub_id = " + subsub_id + " ";
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT produktgruppen_id, produktgruppen_name, "+
                     "artikel_name, artikel_nr, barcode, "+
                     "vk_preis, variabler_preis, ek_preis, vpe, mwst_satz, "+
@@ -140,11 +140,16 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     "LEFT JOIN produktgruppe USING (produktgruppen_id) "+
                     "LEFT JOIN mwst USING (mwst_id) "+
                     "WHERE " + filter +
-                    "AND ( artikel_name LIKE '%" + filterStr + "%' OR artikel_nr LIKE '%" + filterStr + "%' OR lieferant_name LIKE '%" + filterStr + "%' " +
-                    "OR herkunft LIKE '%" + filterStr + "%' ) " +
+                    "AND ( artikel_name LIKE ? OR artikel_nr LIKE ? OR lieferant_name LIKE ? " +
+                    "OR herkunft LIKE ? ) " +
                     aktivFilterStr +
                     "ORDER BY " + orderByStr
                     );
+            pstmt.setString(1, "%"+filterStr+"%");
+            pstmt.setString(2, "%"+filterStr+"%");
+            pstmt.setString(3, "%"+filterStr+"%");
+            pstmt.setString(4, "%"+filterStr+"%");
+            ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 Vector<Object> row = new Vector<Object>();
                 String produktgruppen_id = rs.getString(1);
@@ -198,7 +203,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 lieferantIDs.add(lieferant_id);
             }
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -227,20 +232,21 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             String lief_id = "";
             String var_preis = "";
             try {
-                Statement stmt = this.conn.createStatement();
-                // query produktgruppen_id, lieferant_id and variabler_preis for edited item:
-                ResultSet rs = stmt.executeQuery(
+                PreparedStatement pstmt = this.conn.prepareStatement(
                         "SELECT produktgruppen_id, lieferant_id, variabler_preis FROM artikel WHERE "+
-                        "artikel_name = \""+editArtikelName.get(index)+"\" AND "+
-                        "artikel_nr = \""+editArtikelNummer.get(index)+"\" AND aktiv = TRUE"
+                        "artikel_name = ? AND "+
+                        "artikel_nr = ? AND aktiv = TRUE"
                         );
+                pstmt.setString(1, editArtikelName.get(index));
+                pstmt.setString(2, editArtikelNummer.get(index));
+                ResultSet rs = pstmt.executeQuery();
                 // Now do something with the ResultSet, should be only one result ...
                 rs.next();
                 prod_id = rs.getString(1);
                 lief_id = rs.getString(2);
                 var_preis = rs.getString(3);
                 rs.close();
-                stmt.close();
+                pstmt.close();
             } catch (SQLException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();

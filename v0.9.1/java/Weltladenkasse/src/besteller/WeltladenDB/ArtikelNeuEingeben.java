@@ -8,6 +8,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -36,16 +37,16 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
     protected ArtikelNeu artikelNeu;
     protected ArtikelFormular artikelFormular;
     protected UpdateTableFunctor utf;
-    private String toplevel_id;
-    private String sub_id;
-    private String subsub_id;
+    private Integer toplevel_id;
+    private Integer sub_id;
+    private Integer subsub_id;
 
     protected JButton hinzufuegenButton;
     protected JButton submitButton;
     protected JButton deleteButton;
 
     // Methoden:
-    public ArtikelNeuEingeben(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia, String tid, String sid, String ssid) {
+    public ArtikelNeuEingeben(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia, Integer tid, Integer sid, Integer ssid) {
 	super(conn, mw, pw, dia);
         this.toplevel_id = tid;
         this.sub_id = sid;
@@ -62,22 +63,28 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
 
     private String retrieveGruppenID() {
         String result = "";
-        System.out.println(toplevel_id);
-        System.out.println(sub_id);
-        System.out.println(subsub_id);
-        String toplevelStr = "toplevel_id = "+this.toplevel_id;
-        String subStr = this.sub_id == null ? "sub_id IS NULL" : "sub_id = "+this.sub_id;
-        String subsubStr = this.subsub_id == null ? "subsub_id IS NULL" : "subsub_id = "+this.subsub_id;
+        String subStr = this.sub_id == null ? "sub_id IS NULL" : "sub_id = ?";
+        String subsubStr = this.subsub_id == null ? "subsub_id IS NULL" : "subsub_id = ";
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT produktgruppen_id FROM produktgruppe WHERE "+
-                    toplevelStr+" AND "+subStr+" AND "+subsubStr+" AND aktiv = TRUE"
+                    "toplevel_id = ? AND "+subStr+" AND "+subsubStr+" AND aktiv = TRUE"
                     );
+            pstmt.setInt(1, this.toplevel_id);
+            int itemCounter = 2;
+            if (this.sub_id != null){
+                pstmt.setInt(itemCounter, this.sub_id);
+                itemCounter++;
+            }
+            if (this.subsub_id != null){
+                pstmt.setInt(itemCounter, this.subsub_id);
+                itemCounter++;
+            }
+            ResultSet rs = pstmt.executeQuery();
             rs.next();
             result = rs.getString(1);
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

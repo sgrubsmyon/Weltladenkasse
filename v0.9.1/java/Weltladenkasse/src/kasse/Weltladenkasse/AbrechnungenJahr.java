@@ -9,6 +9,7 @@ import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -72,15 +73,16 @@ public class AbrechnungenJahr extends Abrechnungen {
     Vector<String> returnAllNewYears(String maxYear) { // all years to be put into the db (abrechnung_jahr table)
         Vector<String> result = new Vector<String>();
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT DISTINCT DATE_FORMAT(monat,'%Y') FROM abrechnung_monat WHERE monat > '"+maxYear+"' + INTERVAL 1 YEAR)"
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT DISTINCT DATE_FORMAT(monat,'%Y') FROM abrechnung_monat WHERE monat > ? + INTERVAL 1 YEAR)"
                     );
+            pstmt.setString(1, maxYear);
+            ResultSet rs = pstmt.executeQuery();
             while(rs.next()){
                 result.add(rs.getString(1));
             }
             rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -88,13 +90,16 @@ public class AbrechnungenJahr extends Abrechnungen {
         return result;
     }
 
-    HashMap<String, Vector<String>> queryMonatsAbrechnung(Statement stmt, String year) {
+    HashMap<String, Vector<String>> queryMonatsAbrechnung(String year) {
         HashMap<String, Vector<String>> abrechnung = new HashMap<String, Vector<String>>();
         try {
-            ResultSet rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM abrechnung_tag "+
-                    "WHERE zeitpunkt > '"+year+"' AND zeitpunkt < ('"+year+"' + INTERVAL 1 MONTH) GROUP BY mwst_satz"
+                    "WHERE zeitpunkt > ? AND zeitpunkt < (? + INTERVAL 1 MONTH) GROUP BY mwst_satz"
                     );
+            pstmt.setString(1, year);
+            pstmt.setString(2, year);
+            ResultSet rs = pstmt.executeQuery();
             while (rs.next()){
                 String mwst_satz = rs.getString(1);
                 Vector<String> betraege = new Vector<String>();
@@ -104,6 +109,7 @@ public class AbrechnungenJahr extends Abrechnungen {
                 abrechnung.put(mwst_satz, betraege);
             }
             rs.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -122,7 +128,7 @@ public class AbrechnungenJahr extends Abrechnungen {
                         );
                 rs.next(); boolean doIt = rs.getBoolean(1); rs.close();
                 if (doIt){
-                    HashMap<String, Vector<String>> sachen = queryMonatsAbrechnung(stmt, year);
+                    HashMap<String, Vector<String>> sachen = queryMonatsAbrechnung(year);
                     for ( Map.Entry< String, Vector<String> > entry : sachen.entrySet() ){
                         String mwst_satz = entry.getKey();
                         Vector<String> betraege = entry.getValue();
@@ -160,24 +166,29 @@ public class AbrechnungenJahr extends Abrechnungen {
                     "SELECT DATE_FORMAT(CURDATE(), '%Y-%m-01')"
                     );
             rs.next(); String cur_year = rs.getString(1); rs.close();
+            stmt.close();
 
             // totals (sum over mwsts)
-            rs = stmt.executeQuery(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT SUM(mwst_netto + mwst_betrag), SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) FROM abrechnung_tag " +
                        //   ^^^ Gesamt Brutto              ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
-                    "WHERE zeitpunkt > '"+cur_year+"' AND zeitpunkt < ('"+cur_year+"' + INTERVAL 1 MONTH)"
+                    "WHERE zeitpunkt > ? AND zeitpunkt < (? + INTERVAL 1 MONTH)"
                     );
+            pstmt.setString(1, cur_year);
+            pstmt.setString(2, cur_year);
+            rs = pstmt.executeQuery();
             rs.next();
             Vector<BigDecimal> totalsValues = new Vector<BigDecimal>();
             totalsValues.add(new BigDecimal(rs.getString(1) == null ? "0." : rs.getString(1))); 
             totalsValues.add(new BigDecimal(rs.getString(2) == null ? "0." : rs.getString(2))); 
             totalsValues.add(new BigDecimal(rs.getString(3) == null ? "0." : rs.getString(3))); 
             rs.close();
+            pstmt.close();
             // store in map under date
             totalsMap.put(cur_year, totalsValues);
 
             // grouped by mwst
-            HashMap<String, Vector<String>> sachen = queryMonatsAbrechnung(stmt, cur_year);
+            HashMap<String, Vector<String>> sachen = queryMonatsAbrechnung(cur_year);
             int rowCount = 0;
             for ( Map.Entry< String, Vector<String> > entry : sachen.entrySet() ){
                 String mwst_satz = entry.getKey();
@@ -208,8 +219,6 @@ public class AbrechnungenJahr extends Abrechnungen {
                 abrechnung.put("0.19", mwstValues);
                 abrechnungsMap.put(cur_year, abrechnung);
             }
-
-            stmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
