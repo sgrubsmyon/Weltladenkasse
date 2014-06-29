@@ -104,25 +104,25 @@ public abstract class ProduktgruppenlisteGrundlage extends WindowContent impleme
 
         Vector< Vector<String> > toplevelgroups = queryTopGruppen();
         for ( Vector<String> group : toplevelgroups ){
-            topid = Integer.parseInt(group.get(0));
-            subid = Integer.parseInt(group.get(1));
-            subsubid = Integer.parseInt(group.get(2));
+            topid = group.get(0) == null ? null : Integer.parseInt(group.get(0));
+            subid = group.get(1) == null ? null : Integer.parseInt(group.get(1));
+            subsubid = group.get(2) == null ? null : Integer.parseInt(group.get(2));
             groupname = group.get(3);
             artikelCount = queryArtikelCount(topid, subid, subsubid); // how many artikel are there in this gruppe?
             groupNode = new DefaultMutableTreeNode(new Gruppe(topid, subid, subsubid, groupname+" ("+artikelCount+")"));
             Vector< Vector<String> > subgroups = querySubGruppen(topid);
             for ( Vector<String> subgroup : subgroups ){
-                topid = Integer.parseInt(subgroup.get(0));
-                subid = Integer.parseInt(subgroup.get(1));
-                subsubid = Integer.parseInt(subgroup.get(2));
+                topid = subgroup.get(0) == null ? null : Integer.parseInt(subgroup.get(0));
+                subid = subgroup.get(1) == null ? null : Integer.parseInt(subgroup.get(1));
+                subsubid = subgroup.get(2) == null ? null : Integer.parseInt(subgroup.get(2));
                 groupname = subgroup.get(3);
                 artikelCount = queryArtikelCount(topid, subid, subsubid);
                 subgroupNode = new DefaultMutableTreeNode(new Gruppe(topid, subid, subsubid, groupname+" ("+artikelCount+")"));
                 Vector< Vector<String> > subsubgroups = querySubSubGruppen(topid, subid);
                 for ( Vector<String> subsubgroup : subsubgroups ){
-                    topid = Integer.parseInt(subsubgroup.get(0));
-                    subid = Integer.parseInt(subsubgroup.get(1));
-                    subsubid = Integer.parseInt(subsubgroup.get(2));
+                    topid = subsubgroup.get(0) == null ? null : Integer.parseInt(subsubgroup.get(0));
+                    subid = subsubgroup.get(1) == null ? null : Integer.parseInt(subsubgroup.get(1));
+                    subsubid = subsubgroup.get(2) == null ? null : Integer.parseInt(subsubgroup.get(2));
                     groupname = subsubgroup.get(3);
                     artikelCount = queryArtikelCount(topid, subid, subsubid);
                     subsubgroupNode = new DefaultMutableTreeNode(new Gruppe(topid, subid, subsubid, groupname+" ("+artikelCount+")"));

@@ -36,9 +36,9 @@ import javax.swing.text.*; // for DocumentFilter
 public class Artikelliste extends WindowContent implements ItemListener, TableModelListener, ListSelectionListener {
     // Attribute:
     private ArtikellisteContainer container;
-    private String toplevel_id;
-    private String sub_id;
-    private String subsub_id;
+    private Integer toplevel_id;
+    private Integer sub_id;
+    private Integer subsub_id;
     private String gruppenname;
 
     private JPanel allPanel;
@@ -88,7 +88,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     //private ArtikelImport itemsFromFile;
 
     // Methoden:
-    public Artikelliste(Connection conn, ArtikellisteContainer ac, String tid, String sid, String ssid, String gn) {
+    public Artikelliste(Connection conn, ArtikellisteContainer ac, Integer tid, Integer sid, Integer ssid, String gn) {
         super(conn, ac.getMainWindowPointer());
 
         this.container = ac;

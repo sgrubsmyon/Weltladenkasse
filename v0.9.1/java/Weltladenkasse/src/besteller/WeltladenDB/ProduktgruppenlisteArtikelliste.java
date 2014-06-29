@@ -18,7 +18,7 @@ import java.awt.*;
 //import java.awt.event.ActionEvent;
 //import java.awt.event.ActionListener;
 import java.awt.event.*;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -75,9 +75,9 @@ public class ProduktgruppenlisteArtikelliste extends ProduktgruppenlisteGrundlag
         Object nodeObject = node.getUserObject();
         if ( nodeObject instanceof Gruppe ){ // one of the product groups selected
             Gruppe gruppe = (Gruppe) nodeObject;
-            String topid = gruppe.toplevel_id;
-            String subid = gruppe.sub_id;
-            String subsubid = gruppe.subsub_id;
+            Integer topid = gruppe.toplevel_id;
+            Integer subid = gruppe.sub_id;
+            Integer subsubid = gruppe.subsub_id;
             String gruppenname = gruppe.name;
             container.switchToArtikelliste(topid, subid, subsubid, gruppenname);
         }
