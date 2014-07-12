@@ -129,7 +129,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return price.setScale(2, RoundingMode.HALF_UP).toString(); // for 2 digits after period sign and "0.5-is-rounded-up" rounding
     }
 
-    protected String vatFormatter(Float vat) {
+    protected String vatFormatter(BigDecimal vat) {
         return vatFormatter(vat.toString());
     }
 
@@ -212,41 +212,54 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected int insertNewItem(String name, String nummer, String barcode,
-            String var_preis, String vkpreis, String ekpreis, String vpe,
-            String produktgruppen_id, String lieferant_id,
+            Boolean var_preis, String vkpreis, String ekpreis, Integer vpe,
+            Integer produktgruppen_id, Integer lieferant_id,
             String herkunft){
         // add row for new item (with updated fields)
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
 
         // prepare value strings:
-        if (barcode.equals("") || barcode.equals("NULL")){ barcode = "NULL"; }
-        else { barcode = "'"+barcode+"'"; }
+        if (barcode.equals("") || barcode.equals("NULL")){ barcode = null; }
 
-        vkpreis = priceFormatterIntern(vkpreis);
-        if (vkpreis.equals("")){ vkpreis = "NULL"; }
+        BigDecimal vkpDecimal = null;
+        if (! vkpreis.equals("")){
+            vkpDecimal = new BigDecimal(priceFormatterIntern(vkpreis));
+        }
 
-        ekpreis = priceFormatterIntern(ekpreis);
-        if (ekpreis.equals("")){ ekpreis = "NULL"; }
+        BigDecimal ekpDecimal = null;
+        if (! ekpreis.equals("")){
+            ekpDecimal = new BigDecimal(priceFormatterIntern(ekpreis));
+        }
 
-        if (vpe.equals("") || vpe.equals("0")){ vpe = "NULL"; }
+        if (vpe.equals(0)){ vpe = null; }
 
-        if (herkunft.equals("") || herkunft.equals("NULL")){ herkunft = "NULL"; }
-        else { herkunft = "'"+herkunft+"'"; }
+        if (herkunft.equals("") || herkunft.equals("NULL")){ herkunft = null; }
 
         try {
             Statement stmt = this.conn.createStatement();
-            result = stmt.executeUpdate(
+            PreparedStatement pstmt = this.conn.prepareStatement(
                     "INSERT INTO artikel SET "+
-                    "artikel_name = '"+name+"', "+
-                    "artikel_nr = '"+nummer+"', "+
-                    "barcode = "+barcode+", "+
-                    "vk_preis = "+vkpreis+", ek_preis = "+ekpreis+", "+
-                    "vpe = "+vpe+", "+
-                    "produktgruppen_id = "+produktgruppen_id+", lieferant_id = "+lieferant_id+", "+
-                    "herkunft = "+herkunft+", von = NOW(), " +
-                    "aktiv = TRUE, variabler_preis = "+var_preis
+                    "artikel_name = ?, "+
+                    "artikel_nr = ?, "+
+                    "barcode = ?, "+
+                    "vk_preis = ?, ek_preis = ?, "+
+                    "vpe = ?, "+
+                    "produktgruppen_id = ?, lieferant_id = ?, "+
+                    "herkunft = ?, von = NOW(), " +
+                    "aktiv = TRUE, variabler_preis = ?"
                     );
+            pstmt.setString(1, name);
+            pstmt.setString(2, nummer);
+            pstmt.setString(3, barcode);
+            pstmt.setBigDecimal(4, vkpDecimal);
+            pstmt.setBigDecimal(5, ekpDecimal);
+            pstmt.setInt(6, vpe);
+            pstmt.setInt(7, produktgruppen_id);
+            pstmt.setInt(8, lieferant_id);
+            pstmt.setString(9, herkunft);
+            pstmt.setBoolean(10, var_preis);
+            result = pstmt.executeUpdate();
             stmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());

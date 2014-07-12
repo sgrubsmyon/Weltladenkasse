@@ -68,8 +68,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private Vector<String> columnLabels;
     private Vector<Boolean> activeRowBools;
     public Vector<Boolean> varPreisBools;
-    private Vector<String> produktGruppeIDs;
-    private Vector<String> lieferantIDs;
+    private Vector<Integer> produktGruppeIDs;
+    private Vector<Integer> lieferantIDs;
 
     // Vectors storing table edits
     private Vector<String> editArtikelName;
@@ -79,7 +79,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private Vector<String> changedBarcode;
     private Vector<String> changedVKP;
     private Vector<String> changedEKP;
-    private Vector<String> changedVPE;
+    private Vector<Integer> changedVPE;
     private Vector<String> changedHerkunft;
     private Vector<Boolean> changedAktiv;
 
@@ -112,8 +112,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         columnLabels.add("Lieferant"); columnLabels.add("Herkunft"); columnLabels.add("Aktiv");
         activeRowBools = new Vector<Boolean>();
         varPreisBools = new Vector<Boolean>();
-        produktGruppeIDs = new Vector<String>();
-        lieferantIDs = new Vector<String>();
+        produktGruppeIDs = new Vector<Integer>();
+        lieferantIDs = new Vector<Integer>();
 
         String filter = "";
         if (toplevel_id == null){ // if user clicked on "Alle Artikel"
@@ -151,21 +151,20 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             pstmt.setString(4, "%"+filterStr+"%");
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                Vector<Object> row = new Vector<Object>();
-                String produktgruppen_id = rs.getString(1);
+                Integer produktgruppen_id = rs.getInt(1);
                 String gruppenname = rs.getString(2);
                 String name = rs.getString(3);
                 String nr = rs.getString(4);
                 String barcode = rs.getString(5);
                 String vkp = rs.getString(6);
-                String var = rs.getString(7);
+                Boolean var = rs.getBoolean(7);
                 String ekp = rs.getString(8);
                 String vpe = rs.getString(9);
                 String mwst = rs.getString(10);
                 String mwstBetrag = "";
                 String von = rs.getString(11);
                 String bis = rs.getString(12);
-                String lieferant_id = rs.getString(13);
+                Integer lieferant_id = rs.getInt(13);
                 String lieferant = rs.getString(14);
                 String herkunft = rs.getString(15);
                 Boolean aktivBool = rs.getBoolean(16);
@@ -186,10 +185,11 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 }
                 if (von == null) von = "";
                 if (bis == null) bis = "";
-                if (lieferant_id == null) lieferant_id = "1";
+                if (lieferant_id == null) lieferant_id = 1; // corresponds to "unknown"
                 if (lieferant == null) lieferant = "";
                 if (herkunft == null) herkunft = "";
 
+                Vector<Object> row = new Vector<Object>();
                 row.add(name); row.add(nr); row.add(barcode);
                 row.add(gruppenname);
                 row.add(vkpOutput); row.add(ekp); row.add(vpe);
@@ -221,16 +221,16 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         changedBarcode = new Vector<String>();
         changedVKP = new Vector<String>();
         changedEKP = new Vector<String>();
-        changedVPE = new Vector<String>();
+        changedVPE = new Vector<Integer>();
         changedHerkunft = new Vector<String>();
         changedAktiv = new Vector<Boolean>();
     }
 
     private void putChangesIntoDB() {
         for (int index=0; index<editArtikelName.size(); index++){
-            String prod_id = "";
-            String lief_id = "";
-            String var_preis = "";
+            Integer prod_id = null;
+            Integer lief_id = null;
+            Boolean var_preis = null;
             try {
                 PreparedStatement pstmt = this.conn.prepareStatement(
                         "SELECT produktgruppen_id, lieferant_id, variabler_preis FROM artikel WHERE "+
@@ -242,9 +242,9 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 ResultSet rs = pstmt.executeQuery();
                 // Now do something with the ResultSet, should be only one result ...
                 rs.next();
-                prod_id = rs.getString(1);
-                lief_id = rs.getString(2);
-                var_preis = rs.getString(3);
+                prod_id = rs.getInt(1);
+                lief_id = rs.getInt(2);
+                var_preis = rs.getBoolean(3);
                 rs.close();
                 pstmt.close();
             } catch (SQLException ex) {
@@ -261,9 +261,12 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 continue; // continue with next item
             }
             if ( changedAktiv.get(index) == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
-                result = insertNewItem(editArtikelName.get(index), editArtikelNummer.get(index), changedBarcode.get(index),
-                        var_preis, changedVKP.get(index), changedEKP.get(index), changedVPE.get(index),
-                        prod_id, lief_id, changedHerkunft.get(index));
+                result = insertNewItem(editArtikelName.get(index),
+                        editArtikelNummer.get(index),
+                        changedBarcode.get(index), var_preis,
+                        changedVKP.get(index), changedEKP.get(index),
+                        changedVPE.get(index), prod_id, lief_id,
+                        changedHerkunft.get(index));
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Artikel "+editArtikelName.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht geändert werden.",
@@ -681,7 +684,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             String barcode = model.getValueAt(row, model.findColumn("Barcode")).toString();
             String vkpreis = model.getValueAt(row, model.findColumn("VK-Preis")).toString();
             String ekpreis = model.getValueAt(row, model.findColumn("EK-Preis")).toString();
-            String vpe = model.getValueAt(row, model.findColumn("VPE")).toString();
+            Integer vpe = Integer.parseInt( model.getValueAt(row, model.findColumn("VPE")).toString() );
             boolean aktiv = model.getValueAt(row, model.findColumn("Aktiv")).toString().equals("true") ? true : false;
             String herkunft = model.getValueAt(row, model.findColumn("Herkunft")).toString();
 
@@ -756,8 +759,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     void showEditDialog() {
         // get data from the selected rows
         Vector< Vector<Object> > selectedData = new Vector< Vector<Object> >();
-        Vector<String> selectedProdGrIDs = new Vector<String>();
-        Vector<String> selectedLiefIDs = new Vector<String>();
+        Vector<Integer> selectedProdGrIDs = new Vector<Integer>();
+        Vector<Integer> selectedLiefIDs = new Vector<Integer>();
         Vector<Boolean> selectedVarPreisBools = new Vector<Boolean>();
         int[] selection = myTable.getSelectedRows();
         for (int i = 0; i < selection.length; i++) {

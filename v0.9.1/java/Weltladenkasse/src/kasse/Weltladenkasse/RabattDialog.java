@@ -21,7 +21,7 @@ import java.awt.*;
 //import java.awt.event.ActionEvent;
 //import java.awt.event.ActionListener;
 import java.awt.event.*;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -51,7 +51,7 @@ import WeltladenDB.BoundsPopupMenuListener;
 
 public class RabattDialog extends DialogWindow implements ChangeListener, DocumentListener, ItemListener {
     // Attribute:
-    protected final Float percent = new Float(0.01);
+    protected final BigDecimal percent = new BigDecimal("0.01");
     protected JPanel allPanel;
     protected Rabattaktionen rabattaktionen;
     protected SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -61,7 +61,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
 
     protected Vector<String> produktgruppenNamen;
     protected Vector<Integer> produktgruppenIDs;
-    protected Vector< Vector<String> > produktgruppenIDsList;
+    protected Vector< Vector<Integer> > produktgruppenIDsList;
     protected String produktModus, rabattModus;
 
     // Text Fields
@@ -118,10 +118,10 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
     protected String artikelNummer;
     protected Integer produktgruppenID;
     protected BigDecimal rabattAbsolut;
-    protected Float rabattRelativ;
+    protected BigDecimal rabattRelativ;
     protected Integer mengenrabattSchwelle;
     protected Integer mengenrabattAnzahl;
-    protected Float mengenrabattRelativ;
+    protected BigDecimal mengenrabattRelativ;
     protected String presetProduktModus;
     protected String presetRabattModus;
 
@@ -160,10 +160,10 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
     void fillComboBoxes() {
         produktgruppenNamen = new Vector<String>();
         produktgruppenIDs = new Vector<Integer>();
-        produktgruppenIDsList = new Vector< Vector<String> >();
+        produktgruppenIDsList = new Vector< Vector<Integer> >();
         produktgruppenNamen.add("");
         produktgruppenIDs.add(null);
-        Vector<String> nullIDs = new Vector<String>();
+        Vector<Integer> nullIDs = new Vector<Integer>();
         nullIDs.add(null); nullIDs.add(null); nullIDs.add(null);
         produktgruppenIDsList.add(nullIDs);
         try {
@@ -175,10 +175,10 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                     );
             while (rs.next()) {
                 Integer id = rs.getInt(1);
-                Vector<String> ids = new Vector<String>();
-                ids.add(rs.getString(2));
-                ids.add(rs.getString(3));
-                ids.add(rs.getString(4));
+                Vector<Integer> ids = new Vector<Integer>();
+                ids.add(rs.getInt(2));
+                ids.add(rs.getInt(3));
+                ids.add(rs.getInt(4));
                 String name = rs.getString(5);
 
                 produktgruppenNamen.add(name);
@@ -205,7 +205,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                     );
             pstmt.setInt(1, this.presetRabattID);
             ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {  
+            while (rs.next()) {
                 this.aktionsname = rs.getString(1) == null ? "" : rs.getString(1);
                 this.von = rs.getString(2) == null ? "" : rs.getString(2).split(" ")[0];
                 this.bis = rs.getString(3) == null ? "" : rs.getString(3).split(" ")[0];
@@ -216,10 +216,10 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                 this.artikelNummer = rs.getString(6) == null ? "" : rs.getString(6);
                 this.produktgruppenID = rs.getInt(7);
                 this.rabattAbsolut = rs.getBigDecimal(8);
-                this.rabattRelativ = rs.getFloat(9);
+                this.rabattRelativ = rs.getBigDecimal(9);
                 this.mengenrabattSchwelle = rs.getInt(10);
                 this.mengenrabattAnzahl = rs.getInt(11);
-                this.mengenrabattRelativ = rs.getFloat(12);
+                this.mengenrabattRelativ = rs.getBigDecimal(12);
             }
             rs.close();
             pstmt.close();
@@ -558,23 +558,23 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
 	showAll();
     }
 
-protected void retrieveValuesFromForm(StringBuffer aktname, StringBuffer von, StringBuffer bis, 
-        StringBuffer artName, StringBuffer lieferant, StringBuffer artNummer, 
-        Integer artikelID, Integer prodGrID, 
-        BigDecimal absolutValue, Float relativValue,
-        Integer schwelle, Integer mengeKostenlos, Float mengeRel) {
+protected void retrieveValuesFromForm(StringBuffer aktname, StringBuffer von, StringBuffer bis,
+        StringBuffer artName, StringBuffer lieferant, StringBuffer artNummer,
+        Integer artikelID, Integer prodGrID,
+        BigDecimal absolutValue, BigDecimal relativValue,
+        Integer schwelle, Integer mengeKostenlos, BigDecimal mengeRel) {
     aktname.replace(0, aktname.length(), nameValue());
 
     String vonDate = vonValue();
     String bisDate = bisValue();
     String today = this.sdf.format(now);
-    if ( vonDate.equals(today) ) 
+    if ( vonDate.equals(today) )
         von.replace(0, von.length(), "NOW()");
-    else 
+    else
         von.replace(0, von.length(), "\'" + vonDate + " 00:00:00\'");
-    if ( unlimitedValue() ) 
+    if ( unlimitedValue() )
         bis.replace(0, bis.length(), "NULL");
-    else 
+    else
         bis.replace(0, bis.length(), "\'" + bisDate + " 23:59:59\'");
 
     if (rabattModus == rabattDropDownOptions[0]){ // Einzelrabatt
@@ -587,7 +587,7 @@ protected void retrieveValuesFromForm(StringBuffer aktname, StringBuffer von, St
         mengeKostenlos = kostenlosValue();
         mengeKostenlos = mengeKostenlos <= 0 ? null : mengeKostenlos;
         mengeRel = mengeRelativValue();
-        mengeRel = mengeRel <= 0 ? null : mengeRel;
+        mengeRel = mengeRel.signum() <= 0 ? null : mengeRel;
     }
 
     if (produktModus == produktDropDownOptions[0]){ // Einzelprodukt
@@ -603,12 +603,12 @@ protected void retrieveValuesFromForm(StringBuffer aktname, StringBuffer von, St
 }
 
 protected void insertRabattaktion() {
-    StringBuffer aktname = new StringBuffer(""), von = new StringBuffer(""), bis = new StringBuffer(""), 
-                 artName = new StringBuffer(""), lieferant = new StringBuffer(""), 
+    StringBuffer aktname = new StringBuffer(""), von = new StringBuffer(""), bis = new StringBuffer(""),
+                 artName = new StringBuffer(""), lieferant = new StringBuffer(""),
                  artNummer = new StringBuffer("");
     Integer artikelID = new Integer(0), prodGrID = new Integer(0), schwelle = new Integer(0),
             mengeKostenlos = new Integer(0);
-    Float relativValue = null, mengeRel = null;
+    BigDecimal relativValue = null, mengeRel = null;
     BigDecimal absolutValue = null;
     retrieveValuesFromForm(aktname, von, bis, artName, lieferant, artNummer, artikelID, prodGrID, absolutValue, relativValue, schwelle, mengeKostenlos, mengeRel);
     System.out.println(
@@ -628,15 +628,26 @@ protected void insertRabattaktion() {
             JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
     if (answer == JOptionPane.YES_OPTION){
         try {
-            // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
-            // Run MySQL command
-            int result = stmt.executeUpdate(
-                    "INSERT INTO rabattaktion SET aktionsname = \'"+aktname+"\', rabatt_relativ = "+relativValue+", rabatt_absolut = "+absolutValue+", "+
-                    "mengenrabatt_schwelle = "+schwelle+", mengenrabatt_anzahl_kostenlos = "+mengeKostenlos+", mengenrabatt_relativ = "+mengeRel+", " +
-                    "von = "+von+", bis = "+bis+", " +
-                    "produktgruppen_id = "+prodGrID+", artikel_id = "+artikelID
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "INSERT INTO rabattaktion SET aktionsname = ?, "+
+                    "rabatt_relativ = ?, "+
+                    "rabatt_absolut = ?, "+
+                    "mengenrabatt_schwelle = ?, "+
+                    "mengenrabatt_anzahl_kostenlos = ?, "+
+                    "mengenrabatt_relativ = ?, "+
+                    "von = "+von+", "+"bis = "+bis+", "+
+                    "produktgruppen_id = ?, "+
+                    "artikel_id = ?"
                     );
+            pstmt.setString(1, aktname.toString());
+            pstmt.setBigDecimal(2, relativValue);
+            pstmt.setBigDecimal(3, absolutValue);
+            pstmt.setInt(4, schwelle);
+            pstmt.setInt(5, mengeKostenlos);
+            pstmt.setBigDecimal(6, mengeRel);
+            pstmt.setInt(7, prodGrID);
+            pstmt.setInt(8, artikelID);
+            int result = pstmt.executeUpdate();
             if (result != 0){
                 // update everything
                 JOptionPane.showMessageDialog(this, "Rabattaktion wurde in Datenbank eingetragen!",
@@ -649,7 +660,7 @@ protected void insertRabattaktion() {
                         "Fehler: Rabattaktion konnte nicht in Datenbank eingetragen werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
             }
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -661,12 +672,12 @@ protected void insertRabattaktion() {
 }
 
 protected void updateRabattaktion() {
-    StringBuffer aktname = new StringBuffer(""), von = new StringBuffer(""), bis = new StringBuffer(""), 
-                 artName = new StringBuffer(""), lieferant = new StringBuffer(""), 
+    StringBuffer aktname = new StringBuffer(""), von = new StringBuffer(""), bis = new StringBuffer(""),
+                 artName = new StringBuffer(""), lieferant = new StringBuffer(""),
                  artNummer = new StringBuffer("");
     Integer artikelID = new Integer(0), prodGrID = new Integer(0), schwelle = new Integer(0),
             mengeKostenlos = new Integer(0);
-    Float relativValue = null, mengeRel = null;
+    BigDecimal relativValue = null, mengeRel = null;
     BigDecimal absolutValue = null;
     retrieveValuesFromForm(aktname, von, bis, artName, lieferant, artNummer, artikelID, prodGrID, absolutValue, relativValue, schwelle, mengeKostenlos, mengeRel);
     System.out.println(
@@ -690,17 +701,18 @@ protected void updateRabattaktion() {
             Statement stmt = this.conn.createStatement();
             // Run MySQL command
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "UPDATE rabattaktion SET aktionsname = ?, rabatt_relativ = ?, rabatt_absolut = ?, "+
-                    "mengenrabatt_schwelle = ?, mengenrabatt_anzahl_kostenlos = ?, mengenrabatt_relativ = ?, " +
-                    "von = "+von+", bis = "+bis+", " +
+                    "UPDATE rabattaktion SET aktionsname = ?, rabatt_relativ = ?, "+
+                    "rabatt_absolut = ?, "+ "mengenrabatt_schwelle = ?, "+
+                    "mengenrabatt_anzahl_kostenlos = ?, mengenrabatt_relativ = ?, "+
+                    "von = "+von+", bis = "+bis+", "+
                     "produktgruppen_id = ?, artikel_id = ? WHERE rabatt_id = ?"
                     );
             pstmt.setString(1, aktname.toString());
-            pstmt.setFloat(2, relativValue);
+            pstmt.setBigDecimal(2, relativValue);
             pstmt.setBigDecimal(3, absolutValue);
             pstmt.setInt(4, schwelle);
             pstmt.setInt(5, mengeKostenlos);
-            pstmt.setFloat(6, mengeRel);
+            pstmt.setBigDecimal(6, mengeRel);
             pstmt.setInt(7, prodGrID);
             pstmt.setInt(8, artikelID);
             pstmt.setInt(9, this.presetRabattID);
@@ -801,7 +813,7 @@ private void setArtikelNameAndNummerForBarcode() {
         PreparedStatement pstmt = this.conn.prepareStatement(
                 "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.artikel_nr FROM artikel AS a " +
                 "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                "WHERE a.barcode = ? " + 
+                "WHERE a.barcode = ? " +
                 "AND a.aktiv = TRUE"
                 );
         pstmt.setString(1, barcode);
@@ -820,7 +832,7 @@ private void setArtikelNameAndNummerForBarcode() {
     }
     if (artikelBox.getItemCount() != 1){
         //artikelBox.removeActionListener(this);
-            ////if (artikelNamen.size() == 1){ 
+            ////if (artikelNamen.size() == 1){
             ////    // update internal cache string before changing name in text field (otherwise document listener causes problems)
             ////    artikelNameText = artikelNamen.get(0)[0];
             ////}
@@ -829,7 +841,7 @@ private void setArtikelNameAndNummerForBarcode() {
     }
     if (nummerBox.getItemCount() != 1){
         //nummerBox.removeActionListener(this);
-            ////if (artikelNummern.size() == 1){ 
+            ////if (artikelNummern.size() == 1){
             ////    // update internal cache string before changing name in text field (otherwise document listener causes problems)
             ////    artikelNummerText = artikelNummern.get(0)[0];
             ////}
@@ -874,7 +886,7 @@ private void setArtikelNummerForName() {
     }
     if (nummerBox.getItemCount() != 1){
         //nummerBox.removeActionListener(this);
-            ////if (artikelNummern.size() == 1){ 
+            ////if (artikelNummern.size() == 1){
             ////    // update internal cache string before changing name in text field (otherwise document listener causes problems)
             ////    artikelNummerText = artikelNummern.get(0)[0];
             ////}
@@ -894,7 +906,7 @@ private void setArtikelNameForNummer() {
         PreparedStatement pstmt = this.conn.prepareStatement(
                 "SELECT DISTINCT a.artikel_name, l.lieferant_name FROM artikel AS a " +
                 "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                "WHERE a.artikel_nr = ? " + 
+                "WHERE a.artikel_nr = ? " +
                 "AND a.aktiv = TRUE"
                 );
         pstmt.setString(1, artikelNummer);
@@ -912,7 +924,7 @@ private void setArtikelNameForNummer() {
     }
     if (artikelBox.getItemCount() != 1){
         //artikelBox.removeActionListener(this);
-            ////if (artikelNamen.size() == 1){ 
+            ////if (artikelNamen.size() == 1){
             ////    // update internal cache string before changing name in text field (otherwise document listener causes problems)
             ////    artikelNameText = artikelNamen.get(0)[0];
             ////}
@@ -1043,7 +1055,7 @@ String vonValue() { return this.sdf.format(vonDateModel.getDate()); }
     // alternative:
     //String vonDate = (new java.sql.Date( vonDateModel.getDate().getTime() )).toString();
 boolean unlimitedValue() { return unlimitedCheckBox.isSelected(); }
-String bisValue() { 
+String bisValue() {
     if ( unlimitedValue() )
         return "NULL";
     else
@@ -1052,19 +1064,19 @@ String bisValue() {
 String[] artNameValue() { return artikelBox.parseArtikelName(); }
 String artNummerValue() { return (String)nummerBox.getSelectedItem(); }
 Integer produktgruppenValue() { return produktgruppenIDs.get(produktgruppenBox.getSelectedIndex()); }
-BigDecimal absolutValue() { 
+BigDecimal absolutValue() {
     if (absolutField.getText().equals("")) return null;
     return new BigDecimal(absolutField.getText().replace(',','.'));
 }
-Float relativValue() { 
+BigDecimal relativValue() {
     if (relativField.getText().equals("")) return null;
-    return Float.parseFloat(relativField.getText().replace(',','.')) * percent;
+    return new BigDecimal(relativField.getText().replace(',','.')).multiply(percent);
 }
 Integer schwelleValue() { return (Integer)mengenrabattSchwelleSpinner.getValue(); }
 Integer kostenlosValue() { return (Integer)kostenlosSpinner.getValue(); }
-Float mengeRelativValue() { 
+BigDecimal mengeRelativValue() {
     if (mengenrabattRelativField.getText().equals("")) return null;
-    return Float.parseFloat(mengenrabattRelativField.getText().replace(',','.')) * percent;
+    return new BigDecimal(mengenrabattRelativField.getText().replace(',','.')).multiply(percent);
 }
 
     boolean areThereChanges() {
@@ -1078,21 +1090,21 @@ Float mengeRelativValue() {
         }
         if (!changes) changes = !produktModus.equals(this.presetProduktModus);
         if (!changes) changes = !rabattModus.equals(this.presetRabattModus);
-        if (!changes && produktModus == produktDropDownOptions[0]) 
+        if (!changes && produktModus == produktDropDownOptions[0])
             changes = !artNameValue()[0].equals(this.artikelName);
-        if (!changes && produktModus == produktDropDownOptions[0]) 
+        if (!changes && produktModus == produktDropDownOptions[0])
             changes = !artNummerValue().equals(this.artikelNummer);
-        if (!changes && produktModus == produktDropDownOptions[1]) 
+        if (!changes && produktModus == produktDropDownOptions[1])
             changes = !produktgruppenValue().equals(this.produktgruppenID);
-        if (!changes && rabattModus == rabattDropDownOptions[0]) 
+        if (!changes && rabattModus == rabattDropDownOptions[0])
             changes = !absolutValue().equals(this.rabattAbsolut);
-        if (!changes && rabattModus == rabattDropDownOptions[0]) 
+        if (!changes && rabattModus == rabattDropDownOptions[0])
             changes = !relativValue().equals(this.rabattRelativ);
-        if (!changes && rabattModus == rabattDropDownOptions[1]) 
+        if (!changes && rabattModus == rabattDropDownOptions[1])
             changes = !schwelleValue().equals(this.mengenrabattSchwelle);
-        if (!changes && rabattModus == rabattDropDownOptions[1]) 
+        if (!changes && rabattModus == rabattDropDownOptions[1])
             changes = !kostenlosValue().equals(this.mengenrabattAnzahl);
-        if (!changes && rabattModus == rabattDropDownOptions[1]) 
+        if (!changes && rabattModus == rabattDropDownOptions[1])
             changes = !mengeRelativValue().equals(this.mengenrabattRelativ);
         return changes;
     }

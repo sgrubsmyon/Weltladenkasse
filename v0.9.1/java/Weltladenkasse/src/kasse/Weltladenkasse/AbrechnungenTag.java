@@ -9,6 +9,7 @@ import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -87,15 +88,15 @@ public class AbrechnungenTag extends Abrechnungen {
             totalsMap.put(date, values);
 
             // second, get values grouped by mwst
-            HashMap<String, Vector<String>> abrechnungNettoBetrag = getAbrechnungGroupedByMwst(stmt);
+            HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = getAbrechnungGroupedByMwst(stmt);
             int rowCount = 0;
-            for ( Map.Entry< String, Vector<String> > entry : abrechnungNettoBetrag.entrySet() ){
-                String mwst = entry.getKey();
-                Vector<String> mwstValues = entry.getValue();
+            for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : abrechnungNettoBetrag.entrySet() ){
+                BigDecimal mwst = entry.getKey();
+                Vector<BigDecimal> mwstValues = entry.getValue();
                 if ( abrechnungsMap.containsKey(date) ){ // Abrechnung already exists, only add information
                     abrechnungsMap.get(date).put(mwst, mwstValues);
                 } else { // start new Abrechnung
-                    HashMap<String, Vector<String>> abrechnung = new HashMap<String, Vector<String>>();
+                    HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
                     abrechnung.put(mwst, mwstValues);
                     abrechnungsMap.put(date, abrechnung);
                 }
@@ -105,12 +106,12 @@ public class AbrechnungenTag extends Abrechnungen {
                 submitButtonEnabled = true;
             }
             if ( rowCount == 0 ){ // empty, there are no verkaeufe!!! Add zeros.
-                HashMap<String, Vector<String>> abrechnung = new HashMap<String, Vector<String>>();
-                Vector<String> mwstValues = new Vector<String>();
-                mwstValues.add("0"); 
-                mwstValues.add("0");
-                abrechnung.put("0.07", mwstValues);
-                abrechnung.put("0.19", mwstValues);
+                HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
+                Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();
+                mwstValues.add(new BigDecimal("0")); 
+                mwstValues.add(new BigDecimal("0"));
+                abrechnung.put(new BigDecimal("0.07"), mwstValues);
+                abrechnung.put(new BigDecimal("0.19"), mwstValues);
                 abrechnungsMap.put(date, abrechnung);
 
                 submitButtonEnabled = false;
@@ -122,8 +123,8 @@ public class AbrechnungenTag extends Abrechnungen {
         }
     }
 
-    HashMap<String, Vector<String>> getAbrechnungGroupedByMwst(Statement stmt) {
-        HashMap<String, Vector<String>> map = new HashMap<String, Vector<String>>();
+    HashMap<BigDecimal, Vector<BigDecimal>> getAbrechnungGroupedByMwst(Statement stmt) {
+        HashMap<BigDecimal, Vector<BigDecimal>> map = new HashMap<BigDecimal, Vector<BigDecimal>>();
         try {
             ResultSet rs = stmt.executeQuery(
                     "SELECT mwst_satz, SUM( ROUND(ges_preis / (1.+mwst_satz), 2) ) AS mwst_netto, " +
@@ -133,10 +134,10 @@ public class AbrechnungenTag extends Abrechnungen {
                     "GROUP BY mwst_satz"
                     );
             while (rs.next()) {
-                String mwst_satz = rs.getString(1);
-                String mwst_netto = rs.getString(2);
-                String mwst_betrag = rs.getString(3);
-                Vector<String> values = new Vector<String>();
+                BigDecimal mwst_satz = rs.getBigDecimal(1);
+                BigDecimal mwst_netto = rs.getBigDecimal(2);
+                BigDecimal mwst_betrag = rs.getBigDecimal(3);
+                Vector<BigDecimal> values = new Vector<BigDecimal>();
                 values.add(mwst_netto);
                 values.add(mwst_betrag);
                 map.put(mwst_satz, values);
@@ -153,46 +154,52 @@ public class AbrechnungenTag extends Abrechnungen {
         try {
             Statement stmt = this.conn.createStatement();
             // get netto values grouped by mwst:
-            HashMap<String, Vector<String>> abrechnungNettoBetrag = getAbrechnungGroupedByMwst(stmt);
+            HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = getAbrechnungGroupedByMwst(stmt);
             // get totals (bar brutto):
-            HashMap<String, String> abrechnungBarBrutto = new HashMap<String, String>();
+            HashMap<String, BigDecimal> abrechnungBarBrutto = new HashMap<String, BigDecimal>();
             ResultSet rs = stmt.executeQuery(
                     "SELECT mwst_satz, SUM(ges_preis) AS bar_brutto " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND verkaufsdatum > (SELECT MAX(zeitpunkt) FROM abrechnung_tag) AND ec_zahlung = FALSE " +
+                    "WHERE storniert = FALSE AND verkaufsdatum > " +
+                    "(SELECT MAX(zeitpunkt) FROM abrechnung_tag) AND ec_zahlung = FALSE " +
                     "GROUP BY mwst_satz"
                     );
             while (rs.next()) {
                 String mwst_satz = rs.getString(1);
-                String bar_brutto = rs.getString(2);
+                BigDecimal bar_brutto = rs.getBigDecimal(2);
                 abrechnungBarBrutto.put(mwst_satz, bar_brutto);
                 System.out.println(mwst_satz+"  "+bar_brutto);
             }
             rs.close();
+            stmt.close();
             System.out.println("mwst_satz  mwst_netto  mwst_betrag  bar_brutto");
             System.out.println("----------------------------------------------");
-            for ( Map.Entry< String, Vector<String> > entry : abrechnungNettoBetrag.entrySet() ){
-                String mwst_satz = entry.getKey();
-                Vector<String> values = entry.getValue();
-                String mwst_netto = values.get(0);
-                String mwst_betrag = values.get(1);
-                String bar_brutto = "0.00";
+            for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : abrechnungNettoBetrag.entrySet() ){
+                BigDecimal mwst_satz = entry.getKey();
+                Vector<BigDecimal> values = entry.getValue();
+                BigDecimal mwst_netto = values.get(0);
+                BigDecimal mwst_betrag = values.get(1);
+                BigDecimal bar_brutto = new BigDecimal("0.00");
                 if ( abrechnungBarBrutto.containsKey(mwst_satz) ){
                     bar_brutto = abrechnungBarBrutto.get(mwst_satz);
                 }
                 System.out.println(mwst_satz+"  "+mwst_netto+"  "+mwst_betrag+"   "+bar_brutto);
-                int result = stmt.executeUpdate(
-                        "INSERT INTO abrechnung_tag SET zeitpunkt = NOW(), mwst_satz = "+mwst_satz+", " +
-                        "mwst_netto = "+mwst_netto+", mwst_betrag = "+mwst_betrag+", "+
-                        "bar_brutto = "+bar_brutto
+                PreparedStatement pstmt = this.conn.prepareStatement(
+                        "INSERT INTO abrechnung_tag SET zeitpunkt = NOW(), mwst_satz = ?, " +
+                        "mwst_netto = ?, mwst_betrag = ?, "+
+                        "bar_brutto = ?"
                         );
+                pstmt.setBigDecimal(1, mwst_satz);
+                pstmt.setBigDecimal(2, mwst_netto);
+                pstmt.setBigDecimal(3, mwst_betrag);
+                pstmt.setBigDecimal(4, bar_brutto);
+                int result = pstmt.executeUpdate();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Tagesabrechnung konnte nicht gespeichert werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
-            stmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

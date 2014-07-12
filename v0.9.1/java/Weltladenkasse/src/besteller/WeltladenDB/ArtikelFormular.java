@@ -46,10 +46,10 @@ public class ArtikelFormular extends WindowContent
     public JTextField herkunftField;
 
     private Vector<String> produktgruppenNamen;
-    public Vector<String> produktgruppenIDs;
-    private Vector< Vector<String> > produktgruppenIDsList;
+    public Vector<Integer> produktgruppenIDs;
+    private Vector< Vector<Integer> > produktgruppenIDsList;
     private Vector<String> lieferantNamen;
-    public Vector<String> lieferantIDs;
+    public Vector<Integer> lieferantIDs;
 
     private CurrencyDocumentFilter geldFilter = new CurrencyDocumentFilter();
 
@@ -62,10 +62,10 @@ public class ArtikelFormular extends WindowContent
 
     public void fillComboBoxes() {
         produktgruppenNamen = new Vector<String>();
-        produktgruppenIDs = new Vector<String>();
-        produktgruppenIDsList = new Vector< Vector<String> >();
+        produktgruppenIDs = new Vector<Integer>();
+        produktgruppenIDsList = new Vector< Vector<Integer> >();
         lieferantNamen = new Vector<String>();
-        lieferantIDs = new Vector<String>();
+        lieferantIDs = new Vector<Integer>();
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
@@ -74,11 +74,11 @@ public class ArtikelFormular extends WindowContent
                     "AND aktiv = TRUE ORDER BY toplevel_id, sub_id, subsub_id"
                     );
             while (rs.next()) {
-                String id = rs.getString(1);
-                Vector<String> ids = new Vector<String>();
-                ids.add(rs.getString(2));
-                ids.add(rs.getString(3));
-                ids.add(rs.getString(4));
+                Integer id = rs.getInt(1);
+                Vector<Integer> ids = new Vector<Integer>();
+                ids.add(rs.getInt(2));
+                ids.add(rs.getInt(3));
+                ids.add(rs.getInt(4));
                 String name = rs.getString(5);
 
                 produktgruppenIDs.add(id);
@@ -91,7 +91,7 @@ public class ArtikelFormular extends WindowContent
                     );
             while (rs.next()) {
                 String name = rs.getString(1);
-                String id = rs.getString(2);
+                Integer id = rs.getInt(2);
 
                 lieferantNamen.add(name);
                 lieferantIDs.add(id);

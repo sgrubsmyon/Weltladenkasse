@@ -22,7 +22,7 @@ import java.awt.*;
 //import java.awt.event.ActionEvent;
 //import java.awt.event.ActionListener;
 import java.awt.event.*;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -66,9 +66,9 @@ public abstract class Abrechnungen extends WindowContent {
     protected JButton prevButton;
     protected JButton nextButton;
 
-    protected TreeMap< String, HashMap<String, Vector<String>> > abrechnungsMap;
+    protected TreeMap< String, HashMap<BigDecimal, Vector<BigDecimal>> > abrechnungsMap;
     protected TreeMap< String, Vector<BigDecimal> > totalsMap;
-    protected TreeSet<String> mwstSet;
+    protected TreeSet<BigDecimal> mwstSet;
     protected Vector< Vector<String> > data;
     protected Vector<String> columnLabels;
     protected int abrechnungsZahl;
@@ -125,8 +125,8 @@ public abstract class Abrechnungen extends WindowContent {
     void queryAbrechnungen() {
         queryAbrechnungenSpecial();
 
-        abrechnungsMap = new TreeMap< String, HashMap<String, Vector<String>> >();
-        mwstSet = new TreeSet<String>();
+        abrechnungsMap = new TreeMap< String, HashMap<BigDecimal, Vector<BigDecimal>> >();
+        mwstSet = new TreeSet<BigDecimal>();
         totalsMap = new TreeMap< String, Vector<BigDecimal> >();
 
         if (currentPage == 1){
@@ -158,8 +158,11 @@ public abstract class Abrechnungen extends WindowContent {
             //System.out.println("Found limits: "+lowerLimit+" , "+upperLimit);
             // second, get the total amounts
             rs = stmt.executeQuery(
-                    "SELECT "+timeName+", SUM(mwst_netto + mwst_betrag), SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) FROM "+abrechnungTableName+" " +
-                                     //   ^^^ Gesamt Brutto              ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
+                    "SELECT "+timeName+", SUM(mwst_netto + mwst_betrag), " +
+                                       // ^^^ Gesamt Brutto
+                    "SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) " +
+                  // ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
+                    "FROM "+abrechnungTableName+" " +
                     filterStr +
                     "GROUP BY "+timeName+" ORDER BY "+timeName+" DESC " +
                     "LIMIT " + offset + "," + noOfColumns
@@ -167,31 +170,32 @@ public abstract class Abrechnungen extends WindowContent {
             while (rs.next()) {
                 String date = rs.getString(1);
                 Vector<BigDecimal> values = new Vector<BigDecimal>();
-                values.add(new BigDecimal(rs.getString(2))); 
-                values.add(new BigDecimal(rs.getString(3)));
-                values.add(new BigDecimal(rs.getString(4)));
+                values.add(rs.getBigDecimal(2));
+                values.add(rs.getBigDecimal(3));
+                values.add(rs.getBigDecimal(4));
                 // store in map under date
                 totalsMap.put(date, values);
             }
             rs.close();
             // third, get the actual abrechnungen:
             rs = stmt.executeQuery(
-                    "SELECT "+timeName+", mwst_satz, mwst_netto, mwst_betrag " + 
-                    " FROM "+abrechnungTableName+" " + 
-                    filterStr + 
+                    "SELECT "+timeName+", mwst_satz, mwst_netto, mwst_betrag " +
+                    " FROM "+abrechnungTableName+" " +
+                    filterStr +
                     "ORDER BY "+timeName+" DESC, mwst_satz " +
                     "LIMIT " + lowerLimit + "," + upperLimit
                     );
             while (rs.next()) {
                 String date = rs.getString(1);
-                String mwst = rs.getString(2);
-                Vector<String> values = new Vector<String>();
-                values.add(rs.getString(3)); 
-                values.add(rs.getString(4));
+                BigDecimal mwst = rs.getBigDecimal(2);
+                Vector<BigDecimal> values = new Vector<BigDecimal>();
+                values.add(rs.getBigDecimal(3));
+                values.add(rs.getBigDecimal(4));
                 if ( abrechnungsMap.containsKey(date) ){ // Abrechnung already exists, only add information
                     abrechnungsMap.get(date).put(mwst, values);
                 } else { // start new Abrechnung
-                    HashMap<String, Vector<String>> abrechnung = new HashMap<String, Vector<String>>();
+                    HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = 
+                        new HashMap<BigDecimal, Vector<BigDecimal>>();
                     abrechnung.put(mwst, values);
                     abrechnungsMap.put(date, abrechnung);
                 }
@@ -224,13 +228,13 @@ public abstract class Abrechnungen extends WindowContent {
         data.add(new Vector<String>()); data.lastElement().add("Gesamt Brutto");
         data.add(new Vector<String>()); data.lastElement().add("Gesamt Bar Brutto");
         data.add(new Vector<String>()); data.lastElement().add("Gesamt EC Brutto");
-        for (String mwst : mwstSet){
+        for (BigDecimal mwst : mwstSet){
             data.add(new Vector<String>()); data.lastElement().add(vatFormatter(mwst)+" MwSt. Netto");
             data.add(new Vector<String>()); data.lastElement().add(vatFormatter(mwst)+" MwSt. Betrag");
         }
         // fill data columns
         int count = 0;
-        for ( Map.Entry< String, HashMap<String, Vector<String>> > entry : abrechnungsMap.descendingMap().entrySet() ){
+        for ( Map.Entry< String, HashMap<BigDecimal, Vector<BigDecimal>> > entry : abrechnungsMap.descendingMap().entrySet() ){
             String date = entry.getKey();
             SimpleDateFormat sdfIn = new SimpleDateFormat(dateInFormat);
             SimpleDateFormat sdfOut = new SimpleDateFormat(dateOutFormat);
@@ -253,12 +257,13 @@ public abstract class Abrechnungen extends WindowContent {
             data.get(1).add( priceFormatter( totalsMap.get(date).get(1) )+" "+currencySymbol );
             // add Gesamt EC Brutto
             data.get(2).add( priceFormatter( totalsMap.get(date).get(2) )+" "+currencySymbol );
-            HashMap<String, Vector<String>> valueMap = entry.getValue(); // map with values for each mwst
+            HashMap<BigDecimal, Vector<BigDecimal>> valueMap = entry.getValue(); // map with values for each mwst
             int dataIndex = 3;
-            for (String mwst : mwstSet){
+            for (BigDecimal mwst : mwstSet){
                 for (int i=0; i<2; i++){
                     if (valueMap.containsKey(mwst)){
-                        BigDecimal bd = new BigDecimal(valueMap.get(mwst).get(i)); data.get(dataIndex).add( priceFormatter(bd)+" "+currencySymbol );
+                        BigDecimal bd = valueMap.get(mwst).get(i);
+                        data.get(dataIndex).add( priceFormatter(bd)+" "+currencySymbol );
                     } else {
                         data.get(dataIndex).add("");
                     }
@@ -294,7 +299,7 @@ public abstract class Abrechnungen extends WindowContent {
         int currentPageMin = (currentPage-1)*abrechnungenProSeite + 1;
         int currentPageMax = abrechnungenProSeite*currentPage;
         currentPageMax = (currentPageMax <= abrechnungsZahl) ? currentPageMax : abrechnungsZahl;
-        JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Abrechnungen "+ 
+        JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Abrechnungen "+
                 currentPageMin + " bis "+ currentPageMax +" von "+ abrechnungsZahl);
         pageChangePanel.add(header);
         tablePanel.add(pageChangePanel);
@@ -382,7 +387,7 @@ public abstract class Abrechnungen extends WindowContent {
             }
         }
     }
-    
+
     /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.

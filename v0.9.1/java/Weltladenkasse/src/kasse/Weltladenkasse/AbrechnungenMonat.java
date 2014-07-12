@@ -91,8 +91,8 @@ public class AbrechnungenMonat extends Abrechnungen {
         return result;
     }
 
-    HashMap<String, Vector<String>> queryMonatsAbrechnung(String month) {
-        HashMap<String, Vector<String>> abrechnung = new HashMap<String, Vector<String>>();
+    HashMap<BigDecimal, Vector<BigDecimal>> queryMonatsAbrechnung(String month) {
+        HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM abrechnung_tag "+
@@ -102,11 +102,11 @@ public class AbrechnungenMonat extends Abrechnungen {
             pstmt.setString(2, month);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()){
-                String mwst_satz = rs.getString(1);
-                Vector<String> betraege = new Vector<String>();
-                betraege.add(rs.getString(2)); // mwst_netto
-                betraege.add(rs.getString(3)); // mwst_betrag
-                betraege.add(rs.getString(4)); // bar_brutto
+                BigDecimal mwst_satz = rs.getBigDecimal(1);
+                Vector<BigDecimal> betraege = new Vector<BigDecimal>();
+                betraege.add(rs.getBigDecimal(2)); // mwst_netto
+                betraege.add(rs.getBigDecimal(3)); // mwst_betrag
+                betraege.add(rs.getBigDecimal(4)); // bar_brutto
                 abrechnung.put(mwst_satz, betraege);
             }
             rs.close();
@@ -120,28 +120,35 @@ public class AbrechnungenMonat extends Abrechnungen {
 
     void insertNewMonths(Vector<String> months) { // all months to be put into the db (abrechnung_monat table)
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = null;
             for (String month : months){
                 System.out.println("new month: "+month);
-                rs = stmt.executeQuery(
-                        "SELECT '"+month+"' < DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')"
+                PreparedStatement pstmt = this.conn.prepareStatement(
+                        "SELECT ? < DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')"
                         );
+                pstmt.setString(1, month);
+                ResultSet rs = pstmt.executeQuery();
                 rs.next(); boolean doIt = rs.getBoolean(1); rs.close();
                 if (doIt){
-                    HashMap<String, Vector<String>> sachen = queryMonatsAbrechnung(month);
-                    for ( Map.Entry< String, Vector<String> > entry : sachen.entrySet() ){
-                        String mwst_satz = entry.getKey();
-                        Vector<String> betraege = entry.getValue();
+                    HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryMonatsAbrechnung(month);
+                    for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : sachen.entrySet() ){
+                        BigDecimal mwst_satz = entry.getKey();
+                        Vector<BigDecimal> betraege = entry.getValue();
                         System.out.println("mwst_satz: "+mwst_satz);
                         System.out.println("betraege "+betraege);
-                        int result = stmt.executeUpdate(
-                                "INSERT INTO abrechnung_monat SET monat = '"+month+"', "+
-                                "mwst_satz = "+mwst_satz+", "+
-                                "mwst_netto = "+betraege.get(0)+", "+
-                                "mwst_betrag = "+betraege.get(1)+", "+
-                                "bar_brutto = "+betraege.get(2)
+                        pstmt = this.conn.prepareStatement(
+                                "INSERT INTO abrechnung_monat SET monat = ?, "+
+                                "mwst_satz = ?, "+
+                                "mwst_netto = ?, "+
+                                "mwst_betrag = ?, "+
+                                "bar_brutto = ?"
                                 );
+                        pstmt.setString(1, month);
+                        pstmt.setBigDecimal(2, mwst_satz);
+                        pstmt.setBigDecimal(3, betraege.get(0));
+                        pstmt.setBigDecimal(4, betraege.get(1));
+                        pstmt.setBigDecimal(5, betraege.get(2));
+                        int result = pstmt.executeUpdate();
+                        pstmt.close();
                         if (result != 0){
                             // do nothing
                         }
@@ -153,7 +160,6 @@ public class AbrechnungenMonat extends Abrechnungen {
                     }
                 }
             }
-            stmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -189,19 +195,19 @@ public class AbrechnungenMonat extends Abrechnungen {
             totalsMap.put(cur_month, totalsValues);
 
             // grouped by mwst
-            HashMap<String, Vector<String>> sachen = queryMonatsAbrechnung(cur_month);
+            HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryMonatsAbrechnung(cur_month);
             int rowCount = 0;
-            for ( Map.Entry< String, Vector<String> > entry : sachen.entrySet() ){
-                String mwst_satz = entry.getKey();
-                Vector<String> betraege = entry.getValue();
-                Vector<String> mwstValues = new Vector<String>();
+            for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : sachen.entrySet() ){
+                BigDecimal mwst_satz = entry.getKey();
+                Vector<BigDecimal> betraege = entry.getValue();
+                Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();
                 mwstValues.add(betraege.get(0)); // mwst_netto
                 mwstValues.add(betraege.get(1)); // mwst_betrag
 
                 if ( abrechnungsMap.containsKey(cur_month) ){ // Abrechnung already exists, only add information
                     abrechnungsMap.get(cur_month).put(mwst_satz, mwstValues);
                 } else { // start new Abrechnung
-                    HashMap<String, Vector<String>> abrechnung = new HashMap<String, Vector<String>>();
+                    HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
                     abrechnung.put(mwst_satz, mwstValues);
                     abrechnungsMap.put(cur_month, abrechnung);
                 }
@@ -212,12 +218,12 @@ public class AbrechnungenMonat extends Abrechnungen {
                 System.out.println("Aktuell betraege "+betraege);
             }
             if ( rowCount == 0 ){ // empty, there are no verkaeufe!!! Add zeros.
-                HashMap<String, Vector<String>> abrechnung = new HashMap<String, Vector<String>>();
-                Vector<String> mwstValues = new Vector<String>();
-                mwstValues.add("0"); 
-                mwstValues.add("0");
-                abrechnung.put("0.07", mwstValues);
-                abrechnung.put("0.19", mwstValues);
+                HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
+                Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();
+                mwstValues.add(new BigDecimal("0")); 
+                mwstValues.add(new BigDecimal("0"));
+                abrechnung.put(new BigDecimal("0.07"), mwstValues);
+                abrechnung.put(new BigDecimal("0.19"), mwstValues);
                 abrechnungsMap.put(cur_month, abrechnung);
             }
         } catch (SQLException ex) {

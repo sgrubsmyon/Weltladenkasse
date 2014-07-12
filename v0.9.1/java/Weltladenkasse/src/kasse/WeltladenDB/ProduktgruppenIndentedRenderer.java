@@ -12,9 +12,9 @@ import javax.swing.BorderFactory;
 
 public class ProduktgruppenIndentedRenderer extends DefaultListCellRenderer {
     private final int einrueckung = 20;
-    private Vector< Vector<String> > produktgruppenIDsList;
+    private Vector< Vector<Integer> > produktgruppenIDsList;
 
-    public ProduktgruppenIndentedRenderer( Vector< Vector<String> > idsList ){
+    public ProduktgruppenIndentedRenderer( Vector< Vector<Integer> > idsList ){
         super();
         this.produktgruppenIDsList = idsList;
     }
@@ -24,9 +24,9 @@ public class ProduktgruppenIndentedRenderer extends DefaultListCellRenderer {
         JLabel lbl = (JLabel)super.getListCellRendererComponent(list,value,index,isSelected,cellHasFocus);
         int indent = 0;
         if (index >= 0){
-            String tid = produktgruppenIDsList.get(index).get(0);
-            String sid = produktgruppenIDsList.get(index).get(1);
-            String ssid = produktgruppenIDsList.get(index).get(2);
+            Integer tid = produktgruppenIDsList.get(index).get(0); // top level
+            Integer sid = produktgruppenIDsList.get(index).get(1); // sub id
+            Integer ssid = produktgruppenIDsList.get(index).get(2); // subsub id
             if ( ssid != null ){ // maximale Einrueckung
                 indent = 2*einrueckung;
             }

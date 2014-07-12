@@ -19,7 +19,7 @@ import java.awt.*;
 //import java.awt.event.ActionEvent;
 //import java.awt.event.ActionListener;
 import java.awt.event.*;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -133,21 +133,21 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         KeyStroke ecShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK); // Ctrl-E
         KeyStroke stornierenShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK); // Ctrl-S
 
-        ShortcutListener shortcutListener = new ShortcutListener(); 
-        
-        this.registerKeyboardAction(shortcutListener, "barcode", barcodeShortcut, 
+        ShortcutListener shortcutListener = new ShortcutListener();
+
+        this.registerKeyboardAction(shortcutListener, "barcode", barcodeShortcut,
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "name", artikelNameShortcut, 
+        this.registerKeyboardAction(shortcutListener, "name", artikelNameShortcut,
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "nummer", artikelNummerShortcut, 
+        this.registerKeyboardAction(shortcutListener, "nummer", artikelNummerShortcut,
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "zws", zwischensummeShortcut, 
+        this.registerKeyboardAction(shortcutListener, "zws", zwischensummeShortcut,
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "bar", barShortcut, 
+        this.registerKeyboardAction(shortcutListener, "bar", barShortcut,
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "ec", ecShortcut, 
+        this.registerKeyboardAction(shortcutListener, "ec", ecShortcut,
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "stornieren", stornierenShortcut, 
+        this.registerKeyboardAction(shortcutListener, "stornieren", stornierenShortcut,
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
 
         rabattButtons = new Vector<JButton>();
@@ -162,7 +162,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	showAll();
         barcodeBox.requestFocus();
     }
-    
+
     // listener for keyboard shortcuts
     private class ShortcutListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
@@ -220,7 +220,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             //barcodeBox.addItemListener(this);
             barcodeBox.addPopupMouseListener(new MouseListenerBarcodeBox());
             barcodeField = (JTextComponent)barcodeBox.getEditor().getEditorComponent();
-            barcodeField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none"); 
+            barcodeField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
                 // remove Ctrl-A key binding
 	    barcodeField.getDocument().addDocumentListener(this);
             barcodePanel.add(barcodeBox);
@@ -261,7 +261,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             nummerBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 30, false));
             nummerBox.setPrototypeDisplayValue("qqqqqqq");
             nummerField = (JTextComponent)nummerBox.getEditor().getEditorComponent();
-            nummerField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none"); 
+            nummerField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
                 // remove Ctrl-A key binding
 	    nummerField.getDocument().addDocumentListener(this);
             chooseArticlePanel1.add(nummerBox);
@@ -281,14 +281,14 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	    anzahlSpinner = new JSpinner(anzahlModel);
             JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(anzahlSpinner, "###");
             anzahlField = anzahlEditor.getTextField();
-            anzahlField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none"); 
+            anzahlField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
                 // remove Ctrl-A key binding
             anzahlField.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) {
                     if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
                         if (preisField.isEditable())
                             preisField.requestFocus();
-                        else { 
+                        else {
                             if (hinzufuegenButton.isEnabled()){
                                 anzahlSpinner.setValue(Integer.parseInt(anzahlField.getText()));
                                 hinzufuegenButton.doClick();
@@ -306,11 +306,11 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	    JLabel preisLabel = new JLabel("Preis: ");
             chooseArticlePanel2.add(preisLabel);
             preisField = new JTextField("");
-            preisField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none"); 
+            preisField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
                 // remove Ctrl-A key binding
             preisField.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) { if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
-                    if (hinzufuegenButton.isEnabled()){ 
+                    if (hinzufuegenButton.isEnabled()){
                         hinzufuegenButton.doClick();
                     }
                 } }
@@ -400,7 +400,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 gutscheinField.addKeyListener(new KeyAdapter() {
                     public void keyPressed(KeyEvent e) {
                         if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
-                            if (gutscheinButton.isEnabled()){ gutscheinButton.doClick(); } 
+                            if (gutscheinButton.isEnabled()){ gutscheinButton.doClick(); }
                         }
                     }
                 });
@@ -642,7 +642,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	data = new Vector< Vector<Object> >();
         artikelIDs = new Vector<Integer>();
         rabattIDs = new Vector<Integer>();
-        preise = new Vector<String>();
+        preise = new Vector<BigDecimal>();
         mwsts = new Vector<String>();
         colors = new Vector<String>();
         types = new Vector<String>();
@@ -695,12 +695,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
     }
 
-    private String parsePrice(String price) {
-        return price.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.');
-    }
-
     String getTotalPrice() {
-        return parsePrice( totalPriceField.getText() );
+        return priceFormatterIntern( totalPriceField.getText() );
     }
 
     //////////////////////////////////
@@ -748,9 +744,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 BigDecimal mengenSchwelle = rs.getString(3) == null ? null : new BigDecimal(rs.getInt(3));
                 BigDecimal mengenAnzahl = rs.getString(4) == null ? null : new BigDecimal(rs.getInt(4));
                 BigDecimal mengenRelativ = rs.getString(5) == null ? null : new BigDecimal(rs.getString(5));
-                String aktionsname = rs.getString(6); 
+                String aktionsname = rs.getString(6);
                 int rabattID = rs.getInt(7);
-                addRabatteToVectors(einzelAbsolut, einzelRelativ, mengenSchwelle, mengenAnzahl, mengenRelativ, aktionsname, rabattID, 
+                addRabatteToVectors(einzelAbsolut, einzelRelativ, mengenSchwelle, mengenAnzahl, mengenRelativ, aktionsname, rabattID,
                         einzelrabattAbsolutVector, einzelrabattRelativVector, mengenrabattAnzahlVector, mengenrabattRelativVector);
             }
             rs.close();
@@ -786,9 +782,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 BigDecimal mengenSchwelle = rs.getString(3) == null ? null : new BigDecimal(rs.getInt(3));
                 BigDecimal mengenAnzahl = rs.getString(4) == null ? null : new BigDecimal(rs.getInt(4));
                 BigDecimal mengenRelativ = rs.getString(5) == null ? null : new BigDecimal(rs.getString(5));
-                String aktionsname = rs.getString(6); 
+                String aktionsname = rs.getString(6);
                 int rabattID = rs.getInt(7);
-                addRabatteToVectors(einzelAbsolut, einzelRelativ, mengenSchwelle, mengenAnzahl, mengenRelativ, aktionsname, rabattID, 
+                addRabatteToVectors(einzelAbsolut, einzelRelativ, mengenSchwelle, mengenAnzahl, mengenRelativ, aktionsname, rabattID,
                         einzelrabattAbsolutVector, einzelrabattRelativVector, mengenrabattAnzahlVector, mengenrabattRelativVector);
             }
             rs.close();
@@ -816,7 +812,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             int rabattID = (Integer) vector.get(0);
             String aktionsname = (String) vector.get(1);
             BigDecimal einzelAbsRabatt = (BigDecimal) vector.get(2);
-            String reduktion = priceFormatterIntern( stueck.multiply(einzelAbsRabatt).multiply(minusOne) );
+            BigDecimal reduktion = stueck.multiply(einzelAbsRabatt).multiply(minusOne);
             einzelpreis = einzelpreis.subtract(einzelAbsRabatt);
 
             addRabattRow(rabattID, aktionsname, reduktion, stueck);
@@ -825,7 +821,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             int rabattID = (Integer) vector.get(0);
             String aktionsname = (String) vector.get(1);
             BigDecimal einzelRelRabatt = (BigDecimal) vector.get(2);
-            String reduktion = priceFormatterIntern( stueck.multiply(einzelRelRabatt).multiply(einzelpreis).multiply(minusOne) );
+            BigDecimal reduktion = stueck.multiply(einzelRelRabatt).multiply(einzelpreis).multiply(minusOne);
             einzelpreis = einzelpreis.subtract( einzelRelRabatt.multiply(einzelpreis) );
 
             addRabattRow(rabattID, aktionsname, reduktion, stueck);
@@ -836,8 +832,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             BigDecimal mengenSchwelle = (BigDecimal) vector.get(2);
             BigDecimal mengenAnzKostenlos = (BigDecimal) vector.get(3);
             if ( stueck.compareTo(mengenSchwelle) >= 0 ){ // if stueck >= mengenSchwelle
-                String reduktion = priceFormatterIntern( (new BigDecimal(stueck.intValue()/mengenSchwelle.intValue())).
-                        multiply(mengenAnzKostenlos).multiply(einzelpreis).multiply(minusOne) );
+                BigDecimal reduktion = (new BigDecimal(stueck.intValue()/mengenSchwelle.intValue())).
+                        multiply(mengenAnzKostenlos).multiply(einzelpreis).multiply(minusOne);
                 stueck = stueck.subtract(mengenAnzKostenlos);
 
                 addRabattRow(rabattID, aktionsname, reduktion, stueck);
@@ -849,7 +845,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             BigDecimal mengenSchwelle = (BigDecimal) vector.get(2);
             BigDecimal mengenRelRabatt = (BigDecimal) vector.get(3);
             if ( stueck.compareTo(mengenSchwelle) >= 0 ){ // if stueck >= mengenSchwelle
-                String reduktion = priceFormatterIntern( stueck.multiply(mengenRelRabatt).multiply(einzelpreis).multiply(minusOne) );
+                BigDecimal reduktion = stueck.multiply(mengenRelRabatt).multiply(einzelpreis).multiply(minusOne);
                 einzelpreis = einzelpreis.subtract( mengenRelRabatt.multiply(einzelpreis) );
 
                 addRabattRow(rabattID, aktionsname, reduktion, stueck);
@@ -857,9 +853,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
     }
 
-    private void addRabatteToVectors(BigDecimal einzelAbsolut, BigDecimal einzelRelativ, BigDecimal mengenSchwelle, BigDecimal mengenAnzahl, BigDecimal mengenRelativ, 
-            String aktionsname, int rabattID, 
-            Vector< Vector<Object> > einzelrabattAbsolutVector, Vector< Vector<Object> > einzelrabattRelativVector, 
+    private void addRabatteToVectors(BigDecimal einzelAbsolut, BigDecimal einzelRelativ, BigDecimal mengenSchwelle, BigDecimal mengenAnzahl, BigDecimal mengenRelativ,
+            String aktionsname, int rabattID,
+            Vector< Vector<Object> > einzelrabattAbsolutVector, Vector< Vector<Object> > einzelrabattRelativVector,
             Vector< Vector<Object> > mengenrabattAnzahlVector, Vector< Vector<Object> > mengenrabattRelativVector){
         if (einzelAbsolut != null){
             Vector<Object> temp = new Vector<Object>(3);
@@ -867,19 +863,19 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             temp.add( einzelAbsolut );
             einzelrabattAbsolutVector.add(temp);
         }
-        if (einzelRelativ != null){ 
+        if (einzelRelativ != null){
             Vector<Object> temp = new Vector<Object>(3);
             temp.add( new Integer(rabattID) ); temp.add( aktionsname );
             temp.add( einzelRelativ );
             einzelrabattRelativVector.add(temp);
         }
-        if (mengenSchwelle != null && mengenAnzahl != null){ 
+        if (mengenSchwelle != null && mengenAnzahl != null){
             Vector<Object> temp = new Vector<Object>(4);
             temp.add( new Integer(rabattID) ); temp.add( aktionsname );
             temp.add( mengenSchwelle ); temp.add( mengenAnzahl );
             mengenrabattAnzahlVector.add(temp);
         }
-        if (mengenSchwelle != null && mengenRelativ != null){ 
+        if (mengenSchwelle != null && mengenRelativ != null){
             Vector<Object> temp = new Vector<Object>(4);
             temp.add( new Integer(rabattID) ); temp.add( aktionsname );
             temp.add( mengenSchwelle ); temp.add( mengenRelativ );
@@ -887,7 +883,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
     }
 
-    private void addRabattRow(int rabattID, String aktionsname, String reduktion, BigDecimal stueck){
+    private void addRabattRow(int rabattID, String aktionsname, BigDecimal reduktion, BigDecimal stueck){
         String artikelMwSt = mwsts.lastElement();
         artikelIDs.add(null);
         rabattIDs.add(rabattID);
@@ -900,7 +896,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         artikelMwSt = vatFormatter(artikelMwSt);
         Vector<Object> row = new Vector<Object>();
         row.add(einrueckung+aktionsname); row.add("RABATT"); row.add(stueck.toPlainString());
-        row.add(""); row.add(reduktion.replace('.',',')+' '+currencySymbol); row.add(artikelMwSt);
+        row.add(""); row.add(priceFormatter(reduktion)+" "+currencySymbol); row.add(artikelMwSt);
         row.add("");
         data.add(row);
     }
@@ -913,12 +909,11 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             BigDecimal pfand = new BigDecimal( getPrice(pfandArtikelID) );
             String pfandName = getArticleName(pfandArtikelID)[0];
             BigDecimal gesamtPfand = pfand.multiply(stueck);
-            //String pfandMwSt = getVAT(pfandArtikelID);
             String pfandMwSt = mwsts.lastElement();
 
             artikelIDs.add(pfandArtikelID);
             rabattIDs.add(null);
-            preise.add( priceFormatterIntern(gesamtPfand) );
+            preise.add(new BigDecimal( priceFormatterIntern(gesamtPfand) ));
             colors.add("blue");
             types.add("pfand");
             mwsts.add(pfandMwSt);
@@ -983,33 +978,44 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private int insertIntoVerkauf(boolean ec) {
         int rechnungsNr = -1;
         try {
-            Statement stmt = this.conn.createStatement();
-            int result = stmt.executeUpdate(
-                    "INSERT INTO verkauf SET verkaufsdatum = NOW(), ec_zahlung = "+ec
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "INSERT INTO verkauf SET verkaufsdatum = NOW(), ec_zahlung = ?"
                     );
+            pstmt.setBoolean(1, ec);
+            int result = pstmt.executeUpdate();
+            pstmt.close();
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Rechnung konnte nicht abgespeichert werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
             }
+            Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
                     "SELECT MAX(rechnungs_nr) FROM verkauf"
                     );
             rs.next(); rechnungsNr = rs.getInt(1); rs.close();
+            stmt.close();
             for (int i=0; i<artikelIDs.size(); i++){
-                result = stmt.executeUpdate(
-                        "INSERT INTO verkauf_details SET rechnungs_nr = "+rechnungsNr+", "+
-                        "artikel_id = "+artikelIDs.get(i)+", rabatt_id = "+rabattIDs.get(i)+", stueckzahl = "+stueckzahlen.get(i)+", "+
-                        "ges_preis = "+preise.get(i)+", "+
-                        "mwst_satz = "+mwsts.get(i)
+                pstmt = this.conn.prepareStatement(
+                        "INSERT INTO verkauf_details SET rechnungs_nr = ?, "+
+                        "artikel_id = ?, rabatt_id = ?, stueckzahl = ?, "+
+                        "ges_preis = ?, "+
+                        "mwst_satz = ?"
                         );
+                pstmt.setInt(1, rechnungsNr);
+                pstmt.setInt(2, artikelIDs.get(i));
+                pstmt.setInt(3, rabattIDs.get(i));
+                pstmt.setInt(4, stueckzahlen.get(i));
+                pstmt.setBigDecimal(5, preise.get(i));
+                pstmt.setFloat(6, Float.parseFloat(mwsts.get(i)));
+                result = pstmt.executeUpdate();
+                pstmt.close();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Artikel mit ID "+artikelIDs.get(i)+" konnte nicht abgespeichert werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
-            stmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -1028,13 +1034,16 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             rs.next(); String verkaufsdatum = rs.getString(1); rs.close();
             pstmt.close();
             BigDecimal betrag = new BigDecimal( getTotalPrice() );
-            BigDecimal alterKassenstandBD = new BigDecimal( parsePrice(mainWindow.getKassenstand()) );
-            BigDecimal neuerKassenstandBD = alterKassenstandBD.add(betrag);
-            String neuerKassenstand = priceFormatterIntern(neuerKassenstandBD);
+            BigDecimal alterKassenstand = new BigDecimal( priceFormatterIntern(mainWindow.getKassenstand()) );
+            BigDecimal neuerKassenstand = alterKassenstand.add(betrag);
             pstmt = this.conn.prepareStatement(
-                    "INSERT INTO kassenstand SET rechnungs_nr = "+rechnungsNr+", buchungsdatum = '"+verkaufsdatum+"', "+
-                    "manuell = FALSE, neuer_kassenstand = "+neuerKassenstand
+                    "INSERT INTO kassenstand SET rechnungs_nr = ?,"+
+                    "buchungsdatum = ?, "+
+                    "manuell = FALSE, neuer_kassenstand = ?"
                     );
+            pstmt.setInt(1, rechnungsNr);
+            pstmt.setString(2, verkaufsdatum);
+            pstmt.setBigDecimal(3, neuerKassenstand);
             int result = pstmt.executeUpdate();
             pstmt.close();
             if (result == 0){
@@ -1042,7 +1051,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                         "Fehler: Kassenstand konnte nicht geändert werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
             } else {
-                mainWindow.setKassenstand(neuerKassenstand.replace('.',',')+" "+currencySymbol);
+                mainWindow.setKassenstand(priceFormatter(neuerKassenstand)+" "+currencySymbol);
             }
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
@@ -1062,7 +1071,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.artikel_nr FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.barcode = ? " + 
+                    "WHERE a.barcode = ? " +
                     "AND a.aktiv = TRUE"
                     );
             pstmt.setString(1, barcode);
@@ -1081,7 +1090,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
         if (artikelBox.getItemCount() != 1){
             //artikelBox.removeActionListener(this);
-                if (artikelNamen.size() == 1){ 
+                if (artikelNamen.size() == 1){
                     // update internal cache string before changing name in text field (otherwise document listener causes problems)
                     artikelNameText = artikelNamen.get(0)[0];
                 }
@@ -1090,7 +1099,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
         if (nummerBox.getItemCount() != 1){
             //nummerBox.removeActionListener(this);
-                if (artikelNummern.size() == 1){ 
+                if (artikelNummern.size() == 1){
                     // update internal cache string before changing name in text field (otherwise document listener causes problems)
                     artikelNummerText = artikelNummern.get(0)[0];
                 }
@@ -1108,7 +1117,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT DISTINCT a.artikel_name, l.lieferant_name FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.artikel_nr = ? " + 
+                    "WHERE a.artikel_nr = ? " +
                     "AND a.aktiv = TRUE"
                     );
             pstmt.setString(1, artikelNummer);
@@ -1126,7 +1135,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
         if (artikelBox.getItemCount() != 1){
             //artikelBox.removeActionListener(this);
-                if (artikelNamen.size() == 1){ 
+                if (artikelNamen.size() == 1){
                     // update internal cache string before changing name in text field (otherwise document listener causes problems)
                     artikelNameText = artikelNamen.get(0)[0];
                 }
@@ -1166,7 +1175,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
         if (nummerBox.getItemCount() != 1){
             //nummerBox.removeActionListener(this);
-                if (artikelNummern.size() == 1){ 
+                if (artikelNummern.size() == 1){
                     // update internal cache string before changing name in text field (otherwise document listener causes problems)
                     artikelNummerText = artikelNummern.get(0)[0];
                 }
@@ -1235,14 +1244,15 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         String lieferant = an[1];
         String artikelNummer = (String)nummerBox.getSelectedItem();
         selectedStueck = stueck;
-        String artikelPreis = priceFormatterIntern(new BigDecimal( preisField.getText().replace(',','.') ));
-        String artikelGesamtPreis = priceFormatterIntern( (new BigDecimal(artikelPreis)).multiply(new BigDecimal(stueck)) );
+        String artikelPreis = priceFormatterIntern(preisField.getText());
+        BigDecimal gesPreis = new BigDecimal(artikelPreis).multiply(new BigDecimal(stueck));
+        String artikelGesamtPreis = priceFormatterIntern(gesPreis);
         String artikelMwSt = getVAT(selectedArtikelID);
 
         artikelIDs.add(selectedArtikelID);
         rabattIDs.add(null);
         stueckzahlen.add(stueck);
-        preise.add(artikelGesamtPreis);
+        preise.add(gesPreis);
         colors.add(color);
         types.add("artikel");
         mwsts.add(artikelMwSt);
@@ -1278,7 +1288,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             artikelIDs.add(pfandArtikelID);
             rabattIDs.add(null);
             stueckzahlen.add(stueck);
-            preise.add( priceFormatterIntern(gesamtPfand) );
+            preise.add(gesamtPfand);
             colors.add("green");
             types.add("artikel");
             mwsts.add(pfandMwSt);
@@ -1344,7 +1354,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         anzahlSpinner.setValue(1);
         ruecknahmeHinzufuegen();
         zwischensumme();
-        if (zahlungsModus == "bar"){ bar(); } 
+        if (zahlungsModus == "bar"){ bar(); }
         else if (zahlungsModus == "ec"){ ec(); }
     }
 
@@ -1370,8 +1380,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             i--;
         }
         // Now i points to the Artikel that gets the Rabatt
-        BigDecimal gesPreis = new BigDecimal(preise.get(i));
-        String reduktion = priceFormatterIntern( rabattRelativ.multiply(gesPreis).multiply(minusOne) );
+        BigDecimal gesPreis = preise.get(i);
+        BigDecimal reduktion = rabattRelativ.multiply(gesPreis).multiply(minusOne);
         String artikelMwSt = mwsts.get(i);
         artikelIDs.add(i+1, artikelRabattArtikelID);
         rabattIDs.add(i+1, null);
@@ -1387,7 +1397,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
         Vector<Object> rabattRow = new Vector<Object>();
         rabattRow.add(einrueckung+rabattName); rabattRow.add("RABATT"); rabattRow.add(Integer.toString(selectedStueck));
-        rabattRow.add(""); rabattRow.add(reduktion.replace('.',',')+' '+currencySymbol); rabattRow.add(artikelMwSt);
+        rabattRow.add(""); rabattRow.add(priceFormatter(reduktion)+" "+currencySymbol); rabattRow.add(artikelMwSt);
         rabattRow.add("");
         data.add(i+1, rabattRow);
         updateAll();
@@ -1399,7 +1409,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             i--;
         }
         // Now i points to the Artikel that gets the Rabatt
-        String reduktion = priceFormatterIntern( rabattAbsolut.multiply(minusOne) );
+        BigDecimal reduktion = rabattAbsolut.multiply(minusOne);
         String artikelMwSt = mwsts.get(i);
         artikelIDs.add(i+1, artikelRabattArtikelID);
         rabattIDs.add(i+1, null);
@@ -1415,7 +1425,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
         Vector<Object> rabattRow = new Vector<Object>();
         rabattRow.add(einrueckung+rabattName); rabattRow.add("RABATT"); rabattRow.add(Integer.toString(selectedStueck));
-        rabattRow.add(""); rabattRow.add(reduktion.replace('.',',')+' '+currencySymbol); rabattRow.add(artikelMwSt);
+        rabattRow.add(""); rabattRow.add(priceFormatter(reduktion)+" "+currencySymbol); rabattRow.add(artikelMwSt);
         rabattRow.add("");
         data.add(i+1, rabattRow);
         updateAll();
@@ -1423,7 +1433,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
     private void addToHashMap(HashMap<BigDecimal, BigDecimal> hashMap, int artikelIndex){
         BigDecimal mwst = new BigDecimal(mwsts.get(artikelIndex));
-        BigDecimal gesPreis = new BigDecimal(preise.get(artikelIndex));
+        BigDecimal gesPreis = preise.get(artikelIndex);
         boolean found = false;
         for ( Map.Entry<BigDecimal, BigDecimal> entry : hashMap.entrySet() ){
             if (entry.getKey().compareTo(mwst) == 0){
@@ -1473,7 +1483,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         for ( Map.Entry<BigDecimal, BigDecimal> entry : rabattArtikelPreise.entrySet() ){
             artikelIDs.add(rechnungRabattArtikelID);
             rabattIDs.add(null);
-            String reduktion = priceFormatterIntern( rabattRelativ.multiply(entry.getValue()).multiply(minusOne) );
+            BigDecimal reduktion = rabattRelativ.multiply(entry.getValue()).multiply(minusOne);
             preise.add(reduktion);
             colors.add("red");
             types.add("rabattrechnung");
@@ -1486,7 +1496,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
             Vector<Object> rabattRow = new Vector<Object>();
             rabattRow.add(rabattName); rabattRow.add("RABATT"); rabattRow.add("");
-            rabattRow.add(""); rabattRow.add(reduktion.replace('.',',')+' '+currencySymbol); rabattRow.add(mwst);
+            rabattRow.add(""); rabattRow.add(priceFormatter(reduktion)+" "+currencySymbol); rabattRow.add(mwst);
             rabattRow.add(removeButtons.lastElement());
             data.add(rabattRow);
 

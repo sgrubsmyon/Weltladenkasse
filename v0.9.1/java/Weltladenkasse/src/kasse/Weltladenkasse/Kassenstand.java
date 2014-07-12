@@ -8,6 +8,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -18,7 +19,7 @@ import java.awt.*;
 //import java.awt.event.ActionEvent;
 //import java.awt.event.ActionListener;
 import java.awt.event.*;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -185,7 +186,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 		    "LIMIT " + (currentPage-1)*kassenstaendeProSeite + "," + kassenstaendeProSeite
 		    );
 	    // Now do something with the ResultSet ...
-	    while (rs.next()) {  
+	    while (rs.next()) {
 		Vector<String> row = new Vector<String>();
 		row.add(rs.getString(1)); row.add(rs.getString(2)+" "+currencySymbol);
 		row.add(rs.getString(3).contentEquals("0") ? "Nein" : "Ja"); row.add(rs.getString(4));
@@ -350,7 +351,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    int currentPageMin = (currentPage-1)*kassenstaendeProSeite + 1;
 	    int currentPageMax = kassenstaendeProSeite*currentPage;
 	    currentPageMax = (currentPageMax <= kassenstandZahlInt) ? currentPageMax : kassenstandZahlInt;
-	    JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Kassenstand "+ 
+	    JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Kassenstand "+
 		currentPageMin + " bis "+ currentPageMax +" von "+ kassenstandZahlInt);
 	    pageChangePanel.add(header);
 	    historyPanel.add(pageChangePanel);
@@ -422,24 +423,25 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 		    kommentarField.setText("");
 		    return;
 		}
-		text = priceFormatter( new BigDecimal(text.replace(',','.')) );
+		text = priceFormatter(text)+" "+currencySymbol;
 		int answer = JOptionPane.showConfirmDialog(this,
-			"Kassenstand wirklich auf "+text+" "+currencySymbol+" setzen "+
+			"Kassenstand wirklich auf "+text+" setzen "+
 			"mit Kommentar \n\""+kommentar+"\"?", "Kassenstand ändern",
 			JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 		if (answer == JOptionPane.YES_OPTION){
-		    String newValue = text.replace(',','.');
+		    BigDecimal newValue = new BigDecimal( priceFormatterIntern(text) );
 		    try {
-			// Create statement for MySQL database
-			Statement stmt = this.conn.createStatement();
-			// Run MySQL command
-			int result = stmt.executeUpdate(
-				"INSERT INTO kassenstand SET buchungsdatum = NOW(), neuer_kassenstand = "+newValue+", " +
-				"manuell = TRUE, kommentar = \'" + kommentar + "\'"
+                        PreparedStatement pstmt = this.conn.prepareStatement(
+                                "INSERT INTO kassenstand SET buchungsdatum = "+
+                                "NOW(), neuer_kassenstand = ?, " +
+                                "manuell = TRUE, kommentar = ?"
 				);
+                        pstmt.setBigDecimal(1, newValue);
+                        pstmt.setString(2, kommentar);
+                        int result = pstmt.executeUpdate();
 			if (result != 0){
 			    // update everything
-			    mainWindow.setKassenstand(text+" "+currencySymbol);
+			    mainWindow.setKassenstand(text);
 			    neuerKassenstandField.setText("");
 			    differenzField.setText("");
 			    kommentarField.setText("");
@@ -450,7 +452,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 				    "Fehler: Kassenstand konnte nicht geändert werden.",
 				    "Fehler", JOptionPane.ERROR_MESSAGE);
 			}
-			stmt.close();
+			pstmt.close();
 		    } catch (SQLException ex) {
 			System.out.println("Exception: " + ex.getMessage());
 			ex.printStackTrace();
@@ -469,35 +471,33 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 		    kommentarField.setText("");
 		    return;
 		}
-		text = priceFormatter( new BigDecimal(text.replace(',','.')) );
-		BigDecimal differenzBD = new BigDecimal(text.replace(',','.'));
+		text = priceFormatter(text)+" "+currencySymbol;
+		BigDecimal differenz = new BigDecimal( priceFormatterIntern(text) );
 		String erhoehenReduzieren = new String("");
-		if (text.charAt(0) == '-'){ 
+		if (text.charAt(0) == '-'){
 		    erhoehenReduzieren = "reduzieren";
 		    text = text.substring(1, text.length()); // strip off the "-"
 		}
 		else erhoehenReduzieren = "erhöhen";
 		int answer = JOptionPane.showConfirmDialog(this,
-			"Kassenstand wirklich um "+text+" "+currencySymbol+" "+erhoehenReduzieren+" "+
+			"Kassenstand wirklich um "+text+" "+erhoehenReduzieren+" "+
 			"mit Kommentar \n\""+kommentar+"\"?", "Kassenstand ändern",
 			JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 		if (answer == JOptionPane.YES_OPTION){
-		    String oldValue = mainWindow.getKassenstand();
-		    oldValue = oldValue.replace(currencySymbol,"").replaceAll("\\s",""); // remove currencySymbol
-		    BigDecimal oldValueBD = new BigDecimal(oldValue.replace(',','.'));
-		    BigDecimal newValueBD = oldValueBD.add(differenzBD);
-		    String newValue = priceFormatterIntern(newValueBD);
+		    BigDecimal oldValue = new BigDecimal( priceFormatterIntern(mainWindow.getKassenstand()) );
+		    BigDecimal newValue = oldValue.add(differenz);
 		    try {
-			// Create statement for MySQL database
-			Statement stmt = this.conn.createStatement();
-			// Run MySQL command
-			int result = stmt.executeUpdate(
-				"INSERT INTO kassenstand SET buchungsdatum = NOW(), neuer_kassenstand = "+newValue+", " +
-				"manuell = TRUE, kommentar = \'" + kommentar + "\'"
+                        PreparedStatement pstmt = this.conn.prepareStatement(
+                                "INSERT INTO kassenstand SET buchungsdatum = "+
+                                "NOW(), neuer_kassenstand = ?, " +
+                                "manuell = TRUE, kommentar = ?"
 				);
+                        pstmt.setBigDecimal(1, newValue);
+                        pstmt.setString(2, kommentar);
+                        int result = pstmt.executeUpdate();
 			if (result != 0){
 			    // update everything
-			    mainWindow.setKassenstand(newValue.replace('.',',')+" "+currencySymbol);
+			    mainWindow.setKassenstand(text);
 			    neuerKassenstandField.setText("");
 			    differenzField.setText("");
 			    kommentarField.setText("");
@@ -508,7 +508,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 				    "Fehler: Kassenstand konnte nicht geändert werden.",
 				    "Fehler", JOptionPane.ERROR_MESSAGE);
 			}
-			stmt.close();
+			pstmt.close();
 		    } catch (SQLException ex) {
 			System.out.println("Exception: " + ex.getMessage());
 			ex.printStackTrace();
@@ -647,7 +647,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
     }
 
     void checkIfFormIsComplete() {
-	if ( (neuerKassenstandField.getText().length() > 0 || differenzField.getText().length() > 0) && 
+	if ( (neuerKassenstandField.getText().length() > 0 || differenzField.getText().length() > 0) &&
 		kommentarField.getText().length() > 0 ){
 	    returnButton.setEnabled(true);
 	}

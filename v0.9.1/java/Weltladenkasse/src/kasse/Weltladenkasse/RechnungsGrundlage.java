@@ -31,7 +31,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
 
     protected JTextField totalPriceField;
 
-    protected Vector<String> preise;
+    protected Vector<BigDecimal> preise;
     protected Vector<String> mwsts;
     protected Vector<String> colors;
     protected Vector<String> types;
@@ -53,7 +53,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
 	columnLabels = new Vector<String>();
 	columnLabels.add("Artikel-Name"); columnLabels.add("Artikel-Nr."); columnLabels.add("Stückzahl"); 
         columnLabels.add("Einzelpreis"); columnLabels.add("Ges.-Preis"); columnLabels.add("MwSt.");
-        preise = new Vector<String>();
+        preise = new Vector<BigDecimal>();
         mwsts = new Vector<String>();
         colors = new Vector<String>();
         types = new Vector<String>();
@@ -86,8 +86,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     //////////////////////////////////
     protected String calculateTotalPrice() {
         BigDecimal totalPrice = new BigDecimal(0);
-        for ( String preisString : preise ){
-            BigDecimal preis = new BigDecimal(preisString);
+        for ( BigDecimal preis : preise ){
             totalPrice = totalPrice.add(preis);
         }
         return priceFormatter(totalPrice);
@@ -98,7 +97,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         for (int i=0; i<mwsts.size(); i++){ 
             String mwstString = mwsts.get(i);
             if ( mwstString.equals(vat) ){
-                BigDecimal preis = new BigDecimal( preise.get(i) );
+                BigDecimal preis = preise.get(i);
                 priceForVAT = priceForVAT.add(preis);
             }
         }

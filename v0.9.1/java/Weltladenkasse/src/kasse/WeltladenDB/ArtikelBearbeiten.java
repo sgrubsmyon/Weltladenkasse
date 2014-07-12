@@ -35,8 +35,8 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
     // Attribute:
     protected ArtikelFormular artikelFormular;
     protected Vector< Vector<Object> > originalData;
-    protected Vector<String> originalProdGrIDs;
-    protected Vector<String> originalLiefIDs;
+    protected Vector<Integer> originalProdGrIDs;
+    protected Vector<Integer> originalLiefIDs;
     protected Vector<Boolean> originalVarPreisBools;
 
     protected JCheckBox aktivBox;
@@ -47,14 +47,14 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
     // Methoden:
     public ArtikelBearbeiten(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia,
             Vector< Vector<Object> > origData,
-            Vector<String> origPrGrIDs,
-            Vector<String> origLiefIDs,
+            Vector<Integer> origPrGrIDs,
+            Vector<Integer> origLiefIDs,
             Vector<Boolean> origVPBools) {
 	super(conn, mw, pw, dia);
         artikelFormular = new ArtikelFormular(conn, mw);
         originalData = new Vector< Vector<Object> >(origData);
-        originalProdGrIDs = new Vector<String>(origPrGrIDs);
-        originalLiefIDs = new Vector<String>(origLiefIDs);
+        originalProdGrIDs = new Vector<Integer>(origPrGrIDs);
+        originalLiefIDs = new Vector<Integer>(origLiefIDs);
         originalVarPreisBools = new Vector<Boolean>(origVPBools);
         showAll();
     }
@@ -121,12 +121,12 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         String firstName = (String)originalData.get(0).get(0);
         String firstNummer = (String)originalData.get(0).get(1);
         String firstBarcode = (String)originalData.get(0).get(2);
-        String firstGruppenID = originalProdGrIDs.get(0);
+        Integer firstGruppenID = originalProdGrIDs.get(0);
         Boolean firstVarPreis = originalVarPreisBools.get(0);
         String firstVKP = (String)originalData.get(0).get(4);
         String firstEKP = (String)originalData.get(0).get(5);
-        String firstVPE = (String)originalData.get(0).get(6);
-        String firstLieferantID = originalLiefIDs.get(0);
+        Integer firstVPE = (Integer)originalData.get(0).get(6);
+        Integer firstLieferantID = originalLiefIDs.get(0);
         String firstHerkunft = (String)originalData.get(0).get(11);
         Boolean firstAktiv = (Boolean)originalData.get(0).get(12);
         if ( allRowsEqual(firstName, 0) ){
@@ -173,8 +173,8 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
             artikelFormular.preisVariabelBox.setEnabled(false);
         }
         if ( allRowsEqual(firstVPE, 6) ){
-            if ( firstVPE.equals("") ){ firstVPE = "0"; }
-            artikelFormular.vpeSpinner.setValue(Integer.parseInt(firstVPE));
+            //if ( firstVPE.equals("") ){ firstVPE = "0"; }
+            artikelFormular.vpeSpinner.setValue(firstVPE);
         } else {
             artikelFormular.vpeSpinner.setEnabled(false);
         }
@@ -232,9 +232,9 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
                 return true;
         }
         if ( artikelFormular.produktgruppenBox.isEnabled() ){
-            String origGruppenID = originalProdGrIDs.get(0);
+            Integer origGruppenID = originalProdGrIDs.get(0);
             int selProdIndex = artikelFormular.produktgruppenBox.getSelectedIndex();
-            String selProdID = artikelFormular.produktgruppenIDs.get(selProdIndex);
+            Integer selProdID = artikelFormular.produktgruppenIDs.get(selProdIndex);
             if ( !origGruppenID.equals(selProdID) )
                 return true;
         }
@@ -263,9 +263,9 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
                 return true;
         }
         if ( artikelFormular.lieferantBox.isEnabled() ){
-            String origLieferantID = originalLiefIDs.get(0);
+            Integer origLieferantID = originalLiefIDs.get(0);
             int selLiefIndex = artikelFormular.lieferantBox.getSelectedIndex();
-            String selLiefID = artikelFormular.lieferantIDs.get(selLiefIndex);
+            Integer selLiefID = artikelFormular.lieferantIDs.get(selLiefIndex);
             if ( !origLieferantID.equals(selLiefID) )
                 return true;
         }
@@ -316,7 +316,7 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
             String barcode = artikelFormular.barcodeField.isEnabled() ?
                 artikelFormular.barcodeField.getText() :
                 (String)originalData.get(i).get(2);
-            String produktgruppen_id = artikelFormular.produktgruppenBox.isEnabled() ?
+            Integer produktgruppen_id = artikelFormular.produktgruppenBox.isEnabled() ?
                 artikelFormular.produktgruppenIDs.get( artikelFormular.produktgruppenBox.getSelectedIndex() ) :
                 originalProdGrIDs.get(i);
             Boolean preisVar = artikelFormular.preisVariabelBox.isEnabled() ?
@@ -328,12 +328,12 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
             String ekpreis = artikelFormular.ekpreisField.isEnabled() ?
                 artikelFormular.ekpreisField.getText() :
                 (String)originalData.get(i).get(5);
-            String vpe = artikelFormular.vpeSpinner.isEnabled() ?
-                artikelFormular.vpeSpinner.getValue().toString() :
-                (String)originalData.get(i).get(6);
-            String lieferant_id = artikelFormular.lieferantBox.isEnabled() ?
+            Integer vpe = artikelFormular.vpeSpinner.isEnabled() ?
+                (Integer)artikelFormular.vpeSpinner.getValue() :
+                (Integer)originalData.get(i).get(6);
+            Integer lieferant_id = artikelFormular.lieferantBox.isEnabled() ?
                 artikelFormular.lieferantIDs.get( artikelFormular.lieferantBox.getSelectedIndex() ) :
-                (String)originalLiefIDs.get(i);
+                (Integer)originalLiefIDs.get(i);
             String herkunft = artikelFormular.herkunftField.isEnabled() ?
                 artikelFormular.herkunftField.getText() :
                 (String)originalData.get(i).get(11);
@@ -350,8 +350,7 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
                 continue; // continue with next item
             }
             if ( aktiv == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
-                String var_preis = preisVar ? "TRUE" : "FALSE";
-                result = insertNewItem(newName, newNummer, barcode, var_preis, vkpreis, ekpreis, vpe,
+                result = insertNewItem(newName, newNummer, barcode, preisVar, vkpreis, ekpreis, vpe,
                         produktgruppen_id, lieferant_id, herkunft);
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
