@@ -156,7 +156,7 @@ public class AbrechnungenTag extends Abrechnungen {
             // get netto values grouped by mwst:
             HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = getAbrechnungGroupedByMwst(stmt);
             // get totals (bar brutto):
-            HashMap<String, BigDecimal> abrechnungBarBrutto = new HashMap<String, BigDecimal>();
+            HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = new HashMap<BigDecimal, BigDecimal>();
             ResultSet rs = stmt.executeQuery(
                     "SELECT mwst_satz, SUM(ges_preis) AS bar_brutto " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
@@ -165,7 +165,7 @@ public class AbrechnungenTag extends Abrechnungen {
                     "GROUP BY mwst_satz"
                     );
             while (rs.next()) {
-                String mwst_satz = rs.getString(1);
+                BigDecimal mwst_satz = rs.getBigDecimal(1);
                 BigDecimal bar_brutto = rs.getBigDecimal(2);
                 abrechnungBarBrutto.put(mwst_satz, bar_brutto);
                 System.out.println(mwst_satz+"  "+bar_brutto);

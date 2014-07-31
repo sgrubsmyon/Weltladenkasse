@@ -20,7 +20,7 @@ import java.awt.*;
 //import java.awt.event.ActionEvent;
 //import java.awt.event.ActionListener;
 import java.awt.event.*;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -186,9 +186,9 @@ public class AbrechnungenMonat extends Abrechnungen {
             rs = pstmt.executeQuery();
             rs.next();
             Vector<BigDecimal> totalsValues = new Vector<BigDecimal>();
-            totalsValues.add(new BigDecimal(rs.getString(1) == null ? "0." : rs.getString(1))); 
-            totalsValues.add(new BigDecimal(rs.getString(2) == null ? "0." : rs.getString(2))); 
-            totalsValues.add(new BigDecimal(rs.getString(3) == null ? "0." : rs.getString(3))); 
+            totalsValues.add(new BigDecimal(rs.getString(1) == null ? "0." : rs.getString(1)));
+            totalsValues.add(new BigDecimal(rs.getString(2) == null ? "0." : rs.getString(2)));
+            totalsValues.add(new BigDecimal(rs.getString(3) == null ? "0." : rs.getString(3)));
             rs.close();
             pstmt.close();
             // store in map under date
@@ -220,7 +220,7 @@ public class AbrechnungenMonat extends Abrechnungen {
             if ( rowCount == 0 ){ // empty, there are no verkaeufe!!! Add zeros.
                 HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
                 Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();
-                mwstValues.add(new BigDecimal("0")); 
+                mwstValues.add(new BigDecimal("0"));
                 mwstValues.add(new BigDecimal("0"));
                 abrechnung.put(new BigDecimal("0.07"), mwstValues);
                 abrechnung.put(new BigDecimal("0.19"), mwstValues);

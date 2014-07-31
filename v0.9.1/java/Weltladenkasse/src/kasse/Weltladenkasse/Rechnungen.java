@@ -283,9 +283,9 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                     stueckDec = new BigDecimal(stueck);
                 String gesPreis = rs.getString(7);
                 BigDecimal gesPreisDec = new BigDecimal(gesPreis);
-                preise.add(gesPreis);
+                preise.add(gesPreisDec);
                 String mwst = rs.getString(8);
-                mwsts.add(mwst);
+                mwsts.add(new BigDecimal(mwst));
                 mwst = vatFormatter(mwst);
                 String einzelPreis = "";
                 if (stueck != null){

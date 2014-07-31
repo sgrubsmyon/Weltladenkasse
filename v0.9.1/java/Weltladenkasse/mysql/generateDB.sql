@@ -12,7 +12,7 @@ CREATE TABLE lieferant (
 
 CREATE TABLE mwst (
     mwst_id int(10) unsigned NOT NULL AUTO_INCREMENT,
-    mwst_satz float NOT NULL,
+    mwst_satz decimal(6,5) NOT NULL,
     PRIMARY KEY(mwst_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
@@ -61,11 +61,11 @@ ALTER TABLE pfand ADD FOREIGN KEY(artikel_id) REFERENCES artikel(artikel_id);
 CREATE TABLE rabattaktion (
     rabatt_id int(10) unsigned NOT NULL AUTO_INCREMENT,
     aktionsname varchar(50) DEFAULT NULL,
-    rabatt_relativ float DEFAULT NULL,
+    rabatt_relativ decimal(6,5) DEFAULT NULL,
     rabatt_absolut decimal(13,2) DEFAULT NULL,
     mengenrabatt_schwelle int(10) unsigned DEFAULT NULL,
     mengenrabatt_anzahl_kostenlos int(10) unsigned DEFAULT NULL,
-    mengenrabatt_relativ float DEFAULT NULL,
+    mengenrabatt_relativ decimal(6,5) DEFAULT NULL,
     von DATETIME NOT NULL,
     bis DATETIME,
     produktgruppen_id int(10) unsigned DEFAULT NULL,
@@ -88,7 +88,7 @@ CREATE TABLE verkauf_details (
     rabatt_id int(10) unsigned DEFAULT NULL,
     stueckzahl int,
     ges_preis decimal(13,2) NOT NULL,
-    mwst_satz float NOT NULL,
+    mwst_satz decimal(6,5) NOT NULL,
     FOREIGN KEY(rechnungs_nr) REFERENCES verkauf(rechnungs_nr),
     FOREIGN KEY(artikel_id) REFERENCES artikel(artikel_id),
     FOREIGN KEY(rabatt_id) REFERENCES rabattaktion(rabatt_id)
@@ -108,7 +108,7 @@ CREATE TABLE kassenstand (
 CREATE TABLE abrechnung_tag (
     id int(10) unsigned NOT NULL AUTO_INCREMENT,
     zeitpunkt DATETIME NOT NULL,
-    mwst_satz float NOT NULL,
+    mwst_satz decimal(6,5) NOT NULL,
     mwst_netto decimal(13,2) NOT NULL,
     mwst_betrag decimal(13,2) NOT NULL,
     bar_brutto decimal(13,2) NOT NULL,
@@ -117,7 +117,7 @@ CREATE TABLE abrechnung_tag (
 CREATE TABLE abrechnung_monat (
     id int(10) unsigned NOT NULL AUTO_INCREMENT,
     monat DATE NOT NULL,
-    mwst_satz float NOT NULL,
+    mwst_satz decimal(6,5) NOT NULL,
     mwst_netto decimal(13,2) NOT NULL,
     mwst_betrag decimal(13,2) NOT NULL,
     bar_brutto decimal(13,2) NOT NULL,
@@ -126,7 +126,7 @@ CREATE TABLE abrechnung_monat (
 CREATE TABLE abrechnung_jahr (
     id int(10) unsigned NOT NULL AUTO_INCREMENT,
     jahr YEAR NOT NULL,
-    mwst_satz float NOT NULL,
+    mwst_satz decimal(6,5) NOT NULL,
     mwst_netto decimal(13,2) NOT NULL,
     mwst_betrag decimal(13,2) NOT NULL,
     bar_brutto decimal(13,2) NOT NULL,

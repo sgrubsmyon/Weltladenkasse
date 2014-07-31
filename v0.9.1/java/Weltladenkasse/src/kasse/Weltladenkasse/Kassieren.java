@@ -643,7 +643,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         artikelIDs = new Vector<Integer>();
         rabattIDs = new Vector<Integer>();
         preise = new Vector<BigDecimal>();
-        mwsts = new Vector<String>();
+        mwsts = new Vector<BigDecimal>();
         colors = new Vector<String>();
         types = new Vector<String>();
         stueckzahlen = new Vector<Integer>();
@@ -884,7 +884,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     }
 
     private void addRabattRow(int rabattID, String aktionsname, BigDecimal reduktion, BigDecimal stueck){
-        String artikelMwSt = mwsts.lastElement();
+        BigDecimal artikelMwSt = mwsts.lastElement();
         artikelIDs.add(null);
         rabattIDs.add(rabattID);
         preise.add(reduktion);
@@ -893,10 +893,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         mwsts.add(artikelMwSt);
         stueckzahlen.add(stueck.intValue());
         removeButtons.add(null);
-        artikelMwSt = vatFormatter(artikelMwSt);
         Vector<Object> row = new Vector<Object>();
         row.add(einrueckung+aktionsname); row.add("RABATT"); row.add(stueck.toPlainString());
-        row.add(""); row.add(priceFormatter(reduktion)+" "+currencySymbol); row.add(artikelMwSt);
+        row.add(""); row.add(priceFormatter(reduktion)+" "+currencySymbol);
+        row.add(vatFormatter(artikelMwSt));
         row.add("");
         data.add(row);
     }
@@ -909,7 +909,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             BigDecimal pfand = new BigDecimal( getPrice(pfandArtikelID) );
             String pfandName = getArticleName(pfandArtikelID)[0];
             BigDecimal gesamtPfand = pfand.multiply(stueck);
-            String pfandMwSt = mwsts.lastElement();
+            BigDecimal pfandMwSt = mwsts.lastElement();
 
             artikelIDs.add(pfandArtikelID);
             rabattIDs.add(null);
@@ -920,10 +920,11 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             stueckzahlen.add(stueck.intValue());
             removeButtons.add(null);
 
-            pfandMwSt = vatFormatter(pfandMwSt);
             Vector<Object> row = new Vector<Object>();
                 row.add(einrueckung+pfandName); row.add("PFAND"); row.add(stueck);
-                row.add( priceFormatter(pfand)+' '+currencySymbol ); row.add( priceFormatter(gesamtPfand)+' '+currencySymbol ); row.add(pfandMwSt);
+                row.add( priceFormatter(pfand)+' '+currencySymbol );
+                row.add( priceFormatter(gesamtPfand)+' '+currencySymbol );
+                row.add(vatFormatter(pfandMwSt));
                 row.add("");
             data.add(row);
         }
@@ -1007,7 +1008,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 pstmt.setInt(3, rabattIDs.get(i));
                 pstmt.setInt(4, stueckzahlen.get(i));
                 pstmt.setBigDecimal(5, preise.get(i));
-                pstmt.setFloat(6, Float.parseFloat(mwsts.get(i)));
+                pstmt.setBigDecimal(6, mwsts.get(i));
                 result = pstmt.executeUpdate();
                 pstmt.close();
                 if (result == 0){
@@ -1255,17 +1256,16 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         preise.add(gesPreis);
         colors.add(color);
         types.add("artikel");
-        mwsts.add(artikelMwSt);
+        mwsts.add(new BigDecimal(artikelMwSt));
         removeButtons.add(new JButton("-"));
         removeButtons.lastElement().addActionListener(this);
 
         artikelGesamtPreis = artikelGesamtPreis.replace('.',',')+' '+currencySymbol;
         artikelPreis = artikelPreis.replace('.',',')+' '+currencySymbol;
-        artikelMwSt = vatFormatter(artikelMwSt);
 
         Vector<Object> row = new Vector<Object>();
             row.add(artikelName); row.add(artikelNummer); row.add(stueck.toString());
-            row.add(artikelPreis); row.add(artikelGesamtPreis); row.add(artikelMwSt);
+            row.add(artikelPreis); row.add(artikelGesamtPreis); row.add(vatFormatter(artikelMwSt));
             row.add(removeButtons.lastElement());
         data.add(row);
 
@@ -1291,14 +1291,15 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             preise.add(gesamtPfand);
             colors.add("green");
             types.add("artikel");
-            mwsts.add(pfandMwSt);
+            mwsts.add(new BigDecimal(pfandMwSt));
             removeButtons.add(new JButton("-"));
             removeButtons.lastElement().addActionListener(this);
 
-            pfandMwSt = vatFormatter(pfandMwSt);
             Vector<Object> row = new Vector<Object>();
                 row.add(pfandName); row.add("LEERGUT"); row.add(stueck.toString());
-                row.add( priceFormatter(pfand)+' '+currencySymbol ); row.add( priceFormatter(gesamtPfand)+' '+currencySymbol ); row.add(pfandMwSt);
+                row.add( priceFormatter(pfand)+' '+currencySymbol );
+                row.add( priceFormatter(gesamtPfand)+' '+currencySymbol );
+                row.add(vatFormatter(pfandMwSt));
                 row.add(removeButtons.lastElement());
             data.add(row);
 
@@ -1382,7 +1383,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         // Now i points to the Artikel that gets the Rabatt
         BigDecimal gesPreis = preise.get(i);
         BigDecimal reduktion = rabattRelativ.multiply(gesPreis).multiply(minusOne);
-        String artikelMwSt = mwsts.get(i);
+        BigDecimal artikelMwSt = mwsts.get(i);
         artikelIDs.add(i+1, artikelRabattArtikelID);
         rabattIDs.add(i+1, null);
         preise.add(i+1, reduktion);
@@ -1391,13 +1392,13 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         mwsts.add(i+1, artikelMwSt);
         stueckzahlen.add(i+1, selectedStueck);
         removeButtons.add(i+1, null);
-        artikelMwSt = vatFormatter(artikelMwSt);
 
         String rabattName = getArticleName(artikelRabattArtikelID)[0];
 
         Vector<Object> rabattRow = new Vector<Object>();
         rabattRow.add(einrueckung+rabattName); rabattRow.add("RABATT"); rabattRow.add(Integer.toString(selectedStueck));
-        rabattRow.add(""); rabattRow.add(priceFormatter(reduktion)+" "+currencySymbol); rabattRow.add(artikelMwSt);
+        rabattRow.add(""); rabattRow.add(priceFormatter(reduktion)+" "+currencySymbol);
+        rabattRow.add(vatFormatter(artikelMwSt));
         rabattRow.add("");
         data.add(i+1, rabattRow);
         updateAll();
@@ -1410,7 +1411,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
         // Now i points to the Artikel that gets the Rabatt
         BigDecimal reduktion = rabattAbsolut.multiply(minusOne);
-        String artikelMwSt = mwsts.get(i);
+        BigDecimal artikelMwSt = mwsts.get(i);
         artikelIDs.add(i+1, artikelRabattArtikelID);
         rabattIDs.add(i+1, null);
         preise.add(i+1, reduktion);
@@ -1419,20 +1420,20 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         mwsts.add(i+1, artikelMwSt);
         stueckzahlen.add(i+1, selectedStueck);
         removeButtons.add(i+1, null);
-        artikelMwSt = vatFormatter(artikelMwSt);
 
         String rabattName = getArticleName(artikelRabattArtikelID)[0];
 
         Vector<Object> rabattRow = new Vector<Object>();
         rabattRow.add(einrueckung+rabattName); rabattRow.add("RABATT"); rabattRow.add(Integer.toString(selectedStueck));
-        rabattRow.add(""); rabattRow.add(priceFormatter(reduktion)+" "+currencySymbol); rabattRow.add(artikelMwSt);
+        rabattRow.add(""); rabattRow.add(priceFormatter(reduktion)+" "+currencySymbol);
+        rabattRow.add(vatFormatter(artikelMwSt));
         rabattRow.add("");
         data.add(i+1, rabattRow);
         updateAll();
     }
 
     private void addToHashMap(HashMap<BigDecimal, BigDecimal> hashMap, int artikelIndex){
-        BigDecimal mwst = new BigDecimal(mwsts.get(artikelIndex));
+        BigDecimal mwst = mwsts.get(artikelIndex);
         BigDecimal gesPreis = preise.get(artikelIndex);
         boolean found = false;
         for ( Map.Entry<BigDecimal, BigDecimal> entry : hashMap.entrySet() ){
@@ -1487,16 +1488,16 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             preise.add(reduktion);
             colors.add("red");
             types.add("rabattrechnung");
-            String mwst = vatFormat.format( entry.getKey() );
+            BigDecimal mwst = entry.getKey();
             mwsts.add(mwst);
             stueckzahlen.add(null);
             removeButtons.add(new JButton("-"));
             removeButtons.lastElement().addActionListener(this);
-            mwst = vatFormatter(mwst);
 
             Vector<Object> rabattRow = new Vector<Object>();
             rabattRow.add(rabattName); rabattRow.add("RABATT"); rabattRow.add("");
-            rabattRow.add(""); rabattRow.add(priceFormatter(reduktion)+" "+currencySymbol); rabattRow.add(mwst);
+            rabattRow.add(""); rabattRow.add(priceFormatter(reduktion)+" "+currencySymbol);
+            rabattRow.add(vatFormatter(mwst));
             rabattRow.add(removeButtons.lastElement());
             data.add(rabattRow);
 

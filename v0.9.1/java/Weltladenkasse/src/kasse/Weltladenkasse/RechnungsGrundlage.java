@@ -32,7 +32,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     protected JTextField totalPriceField;
 
     protected Vector<BigDecimal> preise;
-    protected Vector<String> mwsts;
+    protected Vector<BigDecimal> mwsts;
     protected Vector<String> colors;
     protected Vector<String> types;
 
@@ -51,10 +51,10 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     }
     private void initiateVectors() {
 	columnLabels = new Vector<String>();
-	columnLabels.add("Artikel-Name"); columnLabels.add("Artikel-Nr."); columnLabels.add("Stückzahl"); 
+	columnLabels.add("Artikel-Name"); columnLabels.add("Artikel-Nr."); columnLabels.add("Stückzahl");
         columnLabels.add("Einzelpreis"); columnLabels.add("Ges.-Preis"); columnLabels.add("MwSt.");
         preise = new Vector<BigDecimal>();
-        mwsts = new Vector<String>();
+        mwsts = new Vector<BigDecimal>();
         colors = new Vector<String>();
         types = new Vector<String>();
     }
@@ -62,15 +62,15 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     //////////////////////////////////
     // DB query functions:
     //////////////////////////////////
-    private HashMap<Integer, String> retrieveVATs() {
-        HashMap<Integer, String> vatMap = new HashMap<Integer, String>();
+    private HashMap<Integer, BigDecimal> retrieveVATs() {
+        HashMap<Integer, BigDecimal> vatMap = new HashMap<Integer, BigDecimal>();
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
                     "SELECT mwst_id, mwst_satz FROM mwst"
                     );
-	    while (rs.next()) {  
-                vatMap.put(rs.getInt(1), rs.getString(2));
+	    while (rs.next()) {
+                vatMap.put(rs.getInt(1), rs.getBigDecimal(2));
             }
             rs.close();
             stmt.close();
@@ -92,16 +92,16 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         return priceFormatter(totalPrice);
     }
 
-    protected String calculateTotalVAT(String vat) {
+    protected String calculateTotalVAT(BigDecimal vat) {
         BigDecimal priceForVAT = new BigDecimal(0);
-        for (int i=0; i<mwsts.size(); i++){ 
-            String mwstString = mwsts.get(i);
-            if ( mwstString.equals(vat) ){
+        for (int i=0; i<mwsts.size(); i++){
+            BigDecimal mwst = mwsts.get(i);
+            if ( mwst.equals(vat) ){
                 BigDecimal preis = preise.get(i);
                 priceForVAT = priceForVAT.add(preis);
             }
         }
-        BigDecimal totalVAT = calculateVAT(priceForVAT, new BigDecimal(vat)); 
+        BigDecimal totalVAT = calculateVAT(priceForVAT, vat);
         return priceFormatter(totalVAT);
     }
 
@@ -117,14 +117,13 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         totalPricePanel.add(totalPriceField);
 
         totalPricePanel.add(new JLabel("   inkl.: "));
-        HashMap<Integer, String> vatMap = retrieveVATs();
-        for ( Map.Entry<Integer, String> v : vatMap.entrySet() ){
-            String vat = v.getValue();
-            BigDecimal vatValue = new BigDecimal(vat);
+        HashMap<Integer, BigDecimal> vatMap = retrieveVATs();
+        for ( Map.Entry<Integer, BigDecimal> v : vatMap.entrySet() ){
+            BigDecimal vatValue = v.getValue();
             if (vatValue.signum() != 0){
-                String vatPercent = vatFormatter(vat);
+                String vatPercent = vatFormatter(vatValue);
                 totalPricePanel.add(new JLabel("   "+vatPercent+" MwSt.: "));
-                JTextField vatField = new JTextField(calculateTotalVAT(vat)+" "+currencySymbol);
+                JTextField vatField = new JTextField(calculateTotalVAT(vatValue).toString()+" "+currencySymbol);
                 vatField.setEditable(false);
                 vatField.setColumns(7);
                 vatField.setHorizontalAlignment(JTextField.RIGHT);

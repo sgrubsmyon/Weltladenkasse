@@ -194,7 +194,7 @@ public abstract class Abrechnungen extends WindowContent {
                 if ( abrechnungsMap.containsKey(date) ){ // Abrechnung already exists, only add information
                     abrechnungsMap.get(date).put(mwst, values);
                 } else { // start new Abrechnung
-                    HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = 
+                    HashMap<BigDecimal, Vector<BigDecimal>> abrechnung =
                         new HashMap<BigDecimal, Vector<BigDecimal>>();
                     abrechnung.put(mwst, values);
                     abrechnungsMap.put(date, abrechnung);
