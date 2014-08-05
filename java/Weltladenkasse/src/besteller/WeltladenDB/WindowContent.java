@@ -222,17 +222,21 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         // prepare value strings:
         if (barcode.equals("") || barcode.equals("NULL")){ barcode = null; }
 
-        BigDecimal vkpDecimal = null;
-        if (! vkpreis.equals("")){
+        BigDecimal vkpDecimal;
+        try {
             vkpDecimal = new BigDecimal(priceFormatterIntern(vkpreis));
+        } catch (NumberFormatException ex) { 
+            vkpDecimal = null;
         }
 
-        BigDecimal ekpDecimal = null;
-        if (! ekpreis.equals("")){
+        BigDecimal ekpDecimal;
+        try {
             ekpDecimal = new BigDecimal(priceFormatterIntern(ekpreis));
+        } catch (NumberFormatException ex) {
+            ekpDecimal = null;
         }
 
-        if (vpe.equals(0)){ vpe = null; }
+        if ( vpe == null || vpe.equals(0)){ vpe = null; }
 
         if (herkunft.equals("") || herkunft.equals("NULL")){ herkunft = null; }
 

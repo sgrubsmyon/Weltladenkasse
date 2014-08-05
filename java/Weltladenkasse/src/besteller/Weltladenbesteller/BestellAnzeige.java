@@ -36,7 +36,7 @@ import WeltladenDB.AnyJComponentJTable;
 import WeltladenDB.JComponentCellRenderer;
 import WeltladenDB.JComponentCellEditor;
 
-public class BestellAnzeige extends ArtikelGrundlage {
+public class BestellAnzeige extends BestellungsGrundlage {
     // Attribute:
     protected int bestellungenProSeite = 25;
     protected int currentPage = 1;
@@ -55,8 +55,8 @@ public class BestellAnzeige extends ArtikelGrundlage {
     private Vector<Integer> bestellNummern;
     protected Vector< Vector<String> > orderData;
     protected Vector<String> orderLabels;
-    protected Vector< Vector<String> > orderDetailData;
-    protected Vector<String> orderDetailLabels;
+    protected Vector< Vector<Object> > orderDetailData;
+    private Vector<String> orderDetailColors;
 
     private JSplitPane splitPane;
     private JPanel orderPanel;
@@ -136,6 +136,12 @@ public class BestellAnzeige extends ArtikelGrundlage {
     public void showOrderDetailTable(int bestellNr) {
         selBestellNr = bestellNr;
         // XXX CONTINUE HERE!!!
+        retrieveOrderDetailData(bestellNr);
+        orderDetailTable = new BestellungsTable(orderDetailData, columnLabels, orderDetailColors);
+	setTableProperties(orderDetailTable);
+
+        JScrollPane scrollPane = new JScrollPane(orderDetailTable);
+        orderDetailPanel.add(scrollPane);
     }
 
     private void updateAll(){
@@ -164,6 +170,43 @@ public class BestellAnzeige extends ArtikelGrundlage {
                 row.add(rs.getString(3));
                 row.add(rs.getString(4));
                 orderData.add(row);
+            }
+	    rs.close();
+	    rs = stmt.executeQuery(
+		    "SELECT COUNT(bestell_nr) FROM bestellung"
+		    );
+	    // Now do something with the ResultSet ...
+	    rs.next();
+	    bestellungsZahl = rs.getString(1);
+	    bestellungsZahlInt = Integer.parseInt(bestellungsZahl);
+	    totalPage = bestellungsZahlInt/bestellungenProSeite + 1;
+	    rs.close();
+	    stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    void retrieveOrderDetailData(int bestellNr) {
+        orderDetailData = new Vector< Vector<Object> >();
+        orderDetailColors = new Vector<String>();
+        try {
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT bestell_nr, jahr, kw, DATE_FORMAT(bestell_datum, '"+dateFormatSQL+"') FROM bestellung " +
+		    "ORDER BY bestell_nr DESC LIMIT " + (currentPage-1)*bestellungenProSeite + "," + bestellungenProSeite
+                    );
+            // Now do something with the ResultSet, should be only one result ...
+            while ( rs.next() ){
+                bestellNummern.add(rs.getInt(1));
+                Vector<Object> row = new Vector<Object>();
+                System.out.println(rs.getString(2));
+                row.add(rs.getString(1));
+                row.add(rs.getString(2));
+                row.add(rs.getString(3));
+                row.add(rs.getString(4));
+                orderDetailData.add(row);
             }
 	    rs.close();
 	    rs = stmt.executeQuery(

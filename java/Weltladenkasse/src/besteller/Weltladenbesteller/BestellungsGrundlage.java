@@ -68,7 +68,5 @@ public abstract class BestellungsGrundlage extends ArtikelGrundlage {
 	TableColumn stueckzahl = table.getColumn("Stückzahl");
 	stueckzahl.setCellRenderer(rechtsAusrichter);
 	stueckzahl.setPreferredWidth(5);
-	TableColumn entf = table.getColumn("Entfernen");
-	entf.setPreferredWidth(5);
     }
 }

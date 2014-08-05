@@ -391,12 +391,12 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                     colors.add(Color.black); // entfernen
                 }
                 else {
-                    for (int i=0; i<10; i++){
+                    for (int i=0; i<11; i++){
                         colors.add(Color.black);
                     }
                 }
                 boolean itemChanged = false;
-                for (int i=0; i<9; i++){
+                for (int i=0; i<11; i++){
                     if (colors.get(i) == Color.red){
                         itemChanged = true;
                         break;
@@ -409,10 +409,13 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                     artikelNeu.barcodes.add(barcode);
                     artikelNeu.vkPreise.add(vkpreis);
                     artikelNeu.ekPreise.add(ekpreis);
-                    artikelNeu.variablePreise.add(variabel);
-                    artikelNeu.vpes.add(vpe);
-                    artikelNeu.selLieferantIDs.add(lieferantid);
-                    artikelNeu.selProduktgruppenIDs.add(gruppenid);
+                    artikelNeu.variablePreise.add( variabel.equals("0") ? false : true );
+                    artikelNeu.vpes.add( vpe.equals("NULL") ? null :
+                            Integer.parseInt(vpe) );
+                    artikelNeu.selLieferantIDs.add( lieferantid.equals("NULL") ? null : 
+                            Integer.parseInt(lieferantid) );
+                    artikelNeu.selProduktgruppenIDs.add( gruppenid.equals("NULL") ? null :
+                            Integer.parseInt(gruppenid) );
                     artikelNeu.herkuenfte.add(herkunft);
                     artikelNeu.removeButtons.add(new JButton("-"));
                     artikelNeu.removeButtons.lastElement().addActionListener(this);
