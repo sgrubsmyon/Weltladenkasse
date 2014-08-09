@@ -268,7 +268,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                     "LEFT JOIN rabattaktion AS ra USING (rabatt_id) "+
                     "WHERE vd.rechnungs_nr = ?"
 		    );
-            pstmt.setInt(1, Integer.parseInt(this.data.get(detailRow).get(1)));
+            pstmtSetInteger(pstmt, 1, Integer.parseInt(this.data.get(detailRow).get(1)));
 	    ResultSet rs = pstmt.executeQuery();
 	    // Now do something with the ResultSet ...
 	    while (rs.next()) {
@@ -315,7 +315,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 		    "SELECT COUNT(vd.artikel_id) FROM verkauf_details AS vd " +
 		    "WHERE vd.rechnungs_nr = ?"
 		    );
-            pstmt.setInt(1, Integer.parseInt(this.data.get(detailRow).get(1)));
+            pstmtSetInteger(pstmt, 1, Integer.parseInt(this.data.get(detailRow).get(1)));
 	    rs = pstmt.executeQuery();
 	    // Now do something with the ResultSet ...
 	    rs.next();

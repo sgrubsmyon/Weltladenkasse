@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Types;
 
 // GUI stuff:
 import java.awt.event.*;
@@ -150,6 +151,36 @@ public abstract class WindowContent extends JPanel implements ActionListener {
      * DB methods
      */
 
+    protected void pstmtSetInteger(PreparedStatement pstmt, int paramIndex, Integer x) {
+        /** Home made method to put Integer class instances (that can be null)
+         *  into a DB and treat them accordingly (Java null becomes SQL NULL) */
+        try {
+            if (x == null){
+                pstmt.setNull(paramIndex, Types.INTEGER);
+            } else {
+                pstmt.setInt(paramIndex, x);
+            }
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    protected void pstmtSetBoolean(PreparedStatement pstmt, int paramIndex, Boolean x) {
+        /** Home made method to put Boolean class instances (that can be null)
+         *  into a DB and treat them accordingly (Java null becomes SQL NULL) */
+        try {
+            if (x == null){
+                pstmt.setNull(paramIndex, Types.INTEGER);
+            } else {
+                pstmt.setBoolean(paramIndex, x);
+            }
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
     protected boolean isItemAlreadyKnown(String name, String nummer) {
         boolean exists = false;
         try {
@@ -225,7 +256,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         BigDecimal vkpDecimal;
         try {
             vkpDecimal = new BigDecimal(priceFormatterIntern(vkpreis));
-        } catch (NumberFormatException ex) { 
+        } catch (NumberFormatException ex) {
             vkpDecimal = null;
         }
 
@@ -236,7 +267,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             ekpDecimal = null;
         }
 
-        if ( vpe == null || vpe.equals(0)){ vpe = null; }
+        if ( vpe == null || vpe.equals(0) ){ vpe = null; }
 
         if (herkunft.equals("") || herkunft.equals("NULL")){ herkunft = null; }
 
@@ -258,11 +289,11 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             pstmt.setString(3, barcode);
             pstmt.setBigDecimal(4, vkpDecimal);
             pstmt.setBigDecimal(5, ekpDecimal);
-            pstmt.setInt(6, vpe);
-            pstmt.setInt(7, produktgruppen_id);
-            pstmt.setInt(8, lieferant_id);
+            pstmtSetInteger(pstmt, 6, vpe);
+            pstmtSetInteger(pstmt, 7, produktgruppen_id);
+            pstmtSetInteger(pstmt, 8, lieferant_id);
             pstmt.setString(9, herkunft);
-            pstmt.setBoolean(10, var_preis);
+            pstmtSetBoolean(pstmt, 10, var_preis);
             result = pstmt.executeUpdate();
             stmt.close();
         } catch (SQLException ex) {

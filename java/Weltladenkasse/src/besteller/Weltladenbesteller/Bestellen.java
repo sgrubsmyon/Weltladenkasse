@@ -782,8 +782,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         try {
             PreparedStatement pstmt = this.conn.prepareStatement("INSERT INTO bestellung "+
                     "SET bestell_datum = NOW(), jahr = ?, kw = ?");
-            pstmt.setInt(1, Integer.parseInt(jahrField.getText()));
-            pstmt.setInt(2, Integer.parseInt(kwField.getText()));
+            pstmtSetInteger(pstmt, 1, Integer.parseInt(jahrField.getText()));
+            pstmtSetInteger(pstmt, 2, Integer.parseInt(kwField.getText()));
             int result = pstmt.executeUpdate();
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
@@ -800,9 +800,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                         "INSERT INTO bestellung_details SET bestell_nr = ?, "+
                         "artikel_id = ?, stueckzahl = ?"
                         );
-                pstmt.setInt(1, bestellNr);
-                pstmt.setInt(2, artikelIDs.get(i));
-                pstmt.setInt(3, stueckzahlen.get(i));
+                pstmtSetInteger(pstmt, 1, bestellNr);
+                pstmtSetInteger(pstmt, 2, artikelIDs.get(i));
+                pstmtSetInteger(pstmt, 3, stueckzahlen.get(i));
                 result = pstmt.executeUpdate();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,

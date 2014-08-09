@@ -62,7 +62,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
                     "WHERE a.artikel_id = ? " +
                     "AND a.aktiv = TRUE"
                     );
-            pstmt.setInt(1, artikelID);
+            pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
             artikelName = rs.getString(1);
@@ -83,7 +83,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
                     "SELECT artikel_nr FROM artikel WHERE artikel_id = ? " +
                     "AND aktiv = TRUE"
                     );
-            pstmt.setInt(1, artikelID);
+            pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
             rs.next(); artikelNumber = rs.getString(1); rs.close();
             pstmt.close();
@@ -101,7 +101,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT variabler_preis FROM artikel WHERE artikel_id = ?"
                     );
-            pstmt.setInt(1, artikelID);
+            pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
             rs.next(); variabel = ( rs.getInt(1) != 0 ); rs.close();
             pstmt.close();
@@ -120,7 +120,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT vk_preis FROM artikel WHERE artikel_id = ?"
                     );
-            pstmt.setInt(1, artikelID);
+            pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
             rs.next(); price = rs.getString(1); rs.close();
             pstmt.close();
@@ -139,7 +139,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
                     "SELECT mwst.mwst_satz FROM mwst INNER JOIN produktgruppe USING (mwst_id) "+
                     "INNER JOIN artikel USING (produktgruppen_id) WHERE artikel.artikel_id = ?"
                     );
-            pstmt.setInt(1, artikelID);
+            pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
             rs.next(); vat = rs.getString(1); rs.close();
@@ -157,7 +157,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT vpe FROM artikel WHERE artikel_id = ?"
                     );
-            pstmt.setInt(1, artikelID);
+            pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
             vpe = rs.getString(1) != null ? rs.getString(1) : "";

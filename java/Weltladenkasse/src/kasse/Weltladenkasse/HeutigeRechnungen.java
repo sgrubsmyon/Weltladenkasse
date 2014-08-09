@@ -11,7 +11,7 @@ import java.sql.PreparedStatement;
 
 // GUI stuff:
 import java.awt.event.*;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -57,7 +57,7 @@ public class HeutigeRechnungen extends Rechnungen {
             PreparedStatement pstmt = this.conn.prepareStatement(
 		    "UPDATE verkauf SET verkauf.storniert = 1 WHERE verkauf.rechnungs_nr = ?"
 		    );
-            pstmt.setInt(1, rechnungsnummer);
+            pstmtSetInteger(pstmt, 1, rechnungsnummer);
 	    int result = pstmt.executeUpdate();
 	    if (result != 0){
 		JOptionPane.showMessageDialog(this, "Rechnung " + rechnungsnummer + " wurde storniert.",

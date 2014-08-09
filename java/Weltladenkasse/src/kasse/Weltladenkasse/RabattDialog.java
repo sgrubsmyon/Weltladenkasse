@@ -203,7 +203,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                     "LEFT JOIN lieferant AS l USING (lieferant_id) "+
                     "WHERE r.rabatt_id = ?"
                     );
-            pstmt.setInt(1, this.presetRabattID);
+            pstmtSetInteger(pstmt, 1, this.presetRabattID);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 this.aktionsname = rs.getString(1) == null ? "" : rs.getString(1);
@@ -642,11 +642,11 @@ protected void insertRabattaktion() {
             pstmt.setString(1, aktname.toString());
             pstmt.setBigDecimal(2, relativValue);
             pstmt.setBigDecimal(3, absolutValue);
-            pstmt.setInt(4, schwelle);
-            pstmt.setInt(5, mengeKostenlos);
+            pstmtSetInteger(pstmt, 4, schwelle);
+            pstmtSetInteger(pstmt, 5, mengeKostenlos);
             pstmt.setBigDecimal(6, mengeRel);
-            pstmt.setInt(7, prodGrID);
-            pstmt.setInt(8, artikelID);
+            pstmtSetInteger(pstmt, 7, prodGrID);
+            pstmtSetInteger(pstmt, 8, artikelID);
             int result = pstmt.executeUpdate();
             if (result != 0){
                 // update everything
@@ -710,12 +710,12 @@ protected void updateRabattaktion() {
             pstmt.setString(1, aktname.toString());
             pstmt.setBigDecimal(2, relativValue);
             pstmt.setBigDecimal(3, absolutValue);
-            pstmt.setInt(4, schwelle);
-            pstmt.setInt(5, mengeKostenlos);
+            pstmtSetInteger(pstmt, 4, schwelle);
+            pstmtSetInteger(pstmt, 5, mengeKostenlos);
             pstmt.setBigDecimal(6, mengeRel);
-            pstmt.setInt(7, prodGrID);
-            pstmt.setInt(8, artikelID);
-            pstmt.setInt(9, this.presetRabattID);
+            pstmtSetInteger(pstmt, 7, prodGrID);
+            pstmtSetInteger(pstmt, 8, artikelID);
+            pstmtSetInteger(pstmt, 9, this.presetRabattID);
             int result = pstmt.executeUpdate();
             if (result != 0){
                 // update everything

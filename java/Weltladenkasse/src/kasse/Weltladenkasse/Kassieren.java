@@ -736,7 +736,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     "mengenrabatt_relativ, aktionsname, rabatt_id FROM rabattaktion WHERE artikel_id = ? "+
                     "AND von <= NOW() AND IFNULL(bis >= NOW(), true)"
                     );
-            pstmt.setInt(1, artikelID);
+            pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
             while ( rs.next() ){
                 BigDecimal einzelAbsolut = rs.getString(1) == null ? null : new BigDecimal(rs.getString(1));
@@ -756,7 +756,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     "SELECT toplevel_id, sub_id, subsub_id FROM produktgruppe AS p INNER JOIN "+
                     "artikel AS a USING (produktgruppen_id) WHERE a.artikel_id = ?"
                     );
-            pstmt.setInt(1, artikelID);
+            pstmtSetInteger(pstmt, 1, artikelID);
             rs = pstmt.executeQuery();
             rs.next();
             int toplevelID = rs.getInt(1);
@@ -772,9 +772,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     "(sub_id = ? OR sub_id IS NULL) AND (subsub_id = ? OR subsub_id IS NULL) "+
                     "AND von <= NOW() AND IFNULL(bis >= NOW(), true)"
                     );
-            pstmt.setInt(1, toplevelID);
-            pstmt.setInt(2, subID);
-            pstmt.setInt(3, subsubID);
+            pstmtSetInteger(pstmt, 1, toplevelID);
+            pstmtSetInteger(pstmt, 2, subID);
+            pstmtSetInteger(pstmt, 3, subsubID);
             rs = pstmt.executeQuery();
             while ( rs.next() ){
                 BigDecimal einzelAbsolut = rs.getString(1) == null ? null : new BigDecimal(rs.getString(1));
@@ -938,7 +938,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     "INNER JOIN pfand USING (pfand_id) "+
                     "WHERE artikel.artikel_id = ?"
                     );
-            pstmt.setInt(1, artikelID);
+            pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) { // artikel hat Pfand
                 pfandArtikelID = rs.getInt(1);
@@ -960,7 +960,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     "SELECT p.pfand_id IS NOT NULL FROM artikel AS a INNER JOIN produktgruppe AS p USING (produktgruppen_id) "+
                     "WHERE a.artikel_id = ?"
                     );
-            pstmt.setInt(1, artikelID);
+            pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
             hasPfand = rs.getBoolean(1);
@@ -982,7 +982,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "INSERT INTO verkauf SET verkaufsdatum = NOW(), ec_zahlung = ?"
                     );
-            pstmt.setBoolean(1, ec);
+            pstmtSetBoolean(pstmt, 1, ec);
             int result = pstmt.executeUpdate();
             pstmt.close();
             if (result == 0){
@@ -1003,10 +1003,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                         "ges_preis = ?, "+
                         "mwst_satz = ?"
                         );
-                pstmt.setInt(1, rechnungsNr);
-                pstmt.setInt(2, artikelIDs.get(i));
-                pstmt.setInt(3, rabattIDs.get(i));
-                pstmt.setInt(4, stueckzahlen.get(i));
+                pstmtSetInteger(pstmt, 1, rechnungsNr);
+                pstmtSetInteger(pstmt, 2, artikelIDs.get(i));
+                pstmtSetInteger(pstmt, 3, rabattIDs.get(i));
+                pstmtSetInteger(pstmt, 4, stueckzahlen.get(i));
                 pstmt.setBigDecimal(5, preise.get(i));
                 pstmt.setBigDecimal(6, mwsts.get(i));
                 result = pstmt.executeUpdate();
@@ -1030,7 +1030,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT verkaufsdatum FROM verkauf WHERE rechnungs_nr = ?"
                     );
-            pstmt.setInt(1, rechnungsNr);
+            pstmtSetInteger(pstmt, 1, rechnungsNr);
             ResultSet rs = pstmt.executeQuery();
             rs.next(); String verkaufsdatum = rs.getString(1); rs.close();
             pstmt.close();
@@ -1042,7 +1042,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     "buchungsdatum = ?, "+
                     "manuell = FALSE, neuer_kassenstand = ?"
                     );
-            pstmt.setInt(1, rechnungsNr);
+            pstmtSetInteger(pstmt, 1, rechnungsNr);
             pstmt.setString(2, verkaufsdatum);
             pstmt.setBigDecimal(3, neuerKassenstand);
             int result = pstmt.executeUpdate();

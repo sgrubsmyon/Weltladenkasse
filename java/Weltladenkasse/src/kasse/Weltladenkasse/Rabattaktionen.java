@@ -19,7 +19,7 @@ import java.awt.*;
 //import java.awt.event.ActionEvent;
 //import java.awt.event.ActionListener;
 import java.awt.event.*;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -199,7 +199,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 		    "LIMIT " + (currentPage-1)*rabattaktionenProSeite + "," + rabattaktionenProSeite
 		    );
 	    // Now do something with the ResultSet ...
-	    while (rs.next()) {  
+	    while (rs.next()) {
                 Integer rabattID = rs.getInt(1);
                 String aktionsname = rs.getString(2);
                 String rabattRel = rs.getString(3);
@@ -247,7 +247,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
                         editButtons.lastElement().setEnabled(true); // only name and bis date can be changed
                         deleteButtons.lastElement().setEnabled(true); // this actually doesn't delete it, but sets bis to now
                     }
-                } 
+                }
                 rabattIDs.add(rabattID);
 	    }
 	    rs.close();
@@ -383,7 +383,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    int currentPageMin = (currentPage-1)*rabattaktionenProSeite + 1;
 	    int currentPageMax = rabattaktionenProSeite*currentPage;
 	    currentPageMax = (currentPageMax <= kassenstandZahlInt) ? currentPageMax : kassenstandZahlInt;
-	    JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Rabattaktionen "+ 
+	    JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Rabattaktionen "+
 		currentPageMin + " bis "+ currentPageMax +" von "+ kassenstandZahlInt);
 	    pageChangePanel.add(header);
 	    historyPanel.add(pageChangePanel);
@@ -450,7 +450,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
                 PreparedStatement pstmt = this.conn.prepareStatement(
                         "UPDATE rabattaktion SET bis = "+bis+" WHERE rabatt_id = ?"
                         );
-                pstmt.setInt(1, rabattID);
+                pstmtSetInteger(pstmt, 1, rabattID);
                 int result = pstmt.executeUpdate();
                 if (result != 0){
                     // update everything
@@ -482,7 +482,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT von > NOW() FROM rabattaktion WHERE rabatt_id = ?"
                     );
-            pstmt.setInt(1, rabattID);
+            pstmtSetInteger(pstmt, 1, rabattID);
 	    ResultSet rs = pstmt.executeQuery();
 	    rs.next(); vonAfterNow = rs.getBoolean(1); rs.close();
 	    pstmt.close();
@@ -498,7 +498,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT bis > NOW() OR bis IS NULL FROM rabattaktion WHERE rabatt_id = ?"
                     );
-            pstmt.setInt(1, rabattID);
+            pstmtSetInteger(pstmt, 1, rabattID);
 	    ResultSet rs = pstmt.executeQuery();
 	    rs.next(); bisAfterNow = rs.getBoolean(1); rs.close();
 	    pstmt.close();
@@ -572,7 +572,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 
     void showEditRabattDialog(Integer rabattID, boolean onlyNameAndBis) {
         editRabattDialog = new JDialog(this.mainWindow, "Rabattaktion bearbeiten", true);
-        editRabatt = new RabattDialog(this.conn, this.mainWindow, this, editRabattDialog, 
+        editRabatt = new RabattDialog(this.conn, this.mainWindow, this, editRabattDialog,
                 "Rabattaktion bearbeiten", true, rabattID, onlyNameAndBis);
         editRabattDialog.getContentPane().add(editRabatt, BorderLayout.CENTER);
         editRabattDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
@@ -664,7 +664,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
                 } else if ( bisAfterNow ){ // Rabattaktion has started, but not ended yet
                     showEditRabattDialog(rabattID, true); // only name and bis date can be changed
                 }
-            } 
+            }
             initiateSpinners();
             updateAll();
             return;

@@ -70,14 +70,14 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
                     "SELECT produktgruppen_id FROM produktgruppe WHERE "+
                     "toplevel_id = ? AND "+subStr+" AND "+subsubStr+" AND aktiv = TRUE"
                     );
-            pstmt.setInt(1, this.toplevel_id);
+            pstmtSetInteger(pstmt, 1, this.toplevel_id);
             int itemCounter = 2;
             if (this.sub_id != null){
-                pstmt.setInt(itemCounter, this.sub_id);
+                pstmtSetInteger(pstmt, itemCounter, this.sub_id);
                 itemCounter++;
             }
             if (this.subsub_id != null){
-                pstmt.setInt(itemCounter, this.subsub_id);
+                pstmtSetInteger(pstmt, itemCounter, this.subsub_id);
                 itemCounter++;
             }
             ResultSet rs = pstmt.executeQuery();
@@ -208,14 +208,14 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
         if (artikelFormular.preisVariabelBox.isSelected()){
             artikelNeu.vkPreise.add("NULL");
             artikelNeu.ekPreise.add("NULL");
-            artikelNeu.variablePreise.add("TRUE");
+            artikelNeu.variablePreise.add(true);
         } else {
             artikelNeu.vkPreise.add( priceFormatterIntern(artikelFormular.vkpreisField.getText()) );
             if ( artikelFormular.ekpreisField.getText().length() == 0 )
                 artikelNeu.ekPreise.add("NULL");
             else
                 artikelNeu.ekPreise.add( priceFormatterIntern(artikelFormular.ekpreisField.getText()) );
-            artikelNeu.variablePreise.add("FALSE");
+            artikelNeu.variablePreise.add(false);
         }
         int vpeInt = (Integer)artikelFormular.vpeSpinner.getValue();
         String vpe = vpeInt == 0 ? "NULL" : Integer.toString(vpeInt);
@@ -246,7 +246,7 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
         row.add(barcodeDisplay);
         String le = artikelNeu.vkPreise.lastElement(); row.add( le.equals("NULL") ? "" : le.replace('.',',')+" "+currencySymbol );
         le = artikelNeu.ekPreise.lastElement(); row.add( le.equals("NULL") ? "" : le.replace('.',',')+" "+currencySymbol );
-        le = artikelNeu.variablePreise.lastElement(); row.add( le.equals("TRUE") ? true : false );
+        row.add( artikelNeu.variablePreise.lastElement() );
         row.add( vpe.equals("NULL") ? "" : vpe);
         row.add((String)artikelFormular.lieferantBox.getSelectedItem());
         row.add(artikelNeu.herkuenfte.lastElement());

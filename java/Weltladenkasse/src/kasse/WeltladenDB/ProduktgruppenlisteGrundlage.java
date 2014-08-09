@@ -182,7 +182,7 @@ public abstract class ProduktgruppenlisteGrundlage extends WindowContent impleme
                     "AND sub_id IS NOT NULL AND subsub_id IS NULL " + aktivFilterStr +
                     "ORDER BY sub_id"
 		    );
-            pstmt.setInt(1, topid);
+            pstmtSetInteger(pstmt, 1, topid);
 	    ResultSet rs = pstmt.executeQuery();
 	    // Now do something with the ResultSet ...
 	    while (rs.next()){
@@ -211,8 +211,8 @@ public abstract class ProduktgruppenlisteGrundlage extends WindowContent impleme
                     "AND sub_id = ? AND subsub_id IS NOT NULL " + aktivFilterStr +
                     "ORDER BY subsub_id"
 		    );
-            pstmt.setInt(1, topid);
-            pstmt.setInt(2, subid);
+            pstmtSetInteger(pstmt, 1, topid);
+            pstmtSetInteger(pstmt, 2, subid);
 	    ResultSet rs = pstmt.executeQuery();
 	    // Now do something with the ResultSet ...
 	    while (rs.next()){
