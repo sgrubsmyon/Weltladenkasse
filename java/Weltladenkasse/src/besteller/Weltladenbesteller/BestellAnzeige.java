@@ -9,6 +9,7 @@ import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -134,14 +135,16 @@ public class BestellAnzeige extends BestellungsGrundlage {
     }
 
     public void showOrderDetailTable(int bestellNr) {
-        selBestellNr = bestellNr;
+        //selBestellNr = bestellNr;
         // XXX CONTINUE HERE!!!
-        retrieveOrderDetailData(bestellNr);
-        orderDetailTable = new BestellungsTable(orderDetailData, columnLabels, orderDetailColors);
-	setTableProperties(orderDetailTable);
+        if ( bestellNr > 0 ){
+            retrieveOrderDetailData(bestellNr);
+            orderDetailTable = new BestellungsTable(orderDetailData, columnLabels, orderDetailColors);
+            setTableProperties(orderDetailTable);
 
-        JScrollPane scrollPane = new JScrollPane(orderDetailTable);
-        orderDetailPanel.add(scrollPane);
+            JScrollPane scrollPane = new JScrollPane(orderDetailTable);
+            orderDetailPanel.add(scrollPane);
+        }
     }
 
     private void updateAll(){
@@ -157,8 +160,10 @@ public class BestellAnzeige extends BestellungsGrundlage {
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT bestell_nr, jahr, kw, DATE_FORMAT(bestell_datum, '"+dateFormatSQL+"') FROM bestellung " +
-		    "ORDER BY bestell_nr DESC LIMIT " + (currentPage-1)*bestellungenProSeite + "," + bestellungenProSeite
+                    "SELECT bestell_nr, jahr, kw, DATE_FORMAT(bestell_datum, "+
+                    "'"+dateFormatSQL+"') FROM bestellung ORDER BY "+
+                    "bestell_nr DESC LIMIT " +
+                    (currentPage-1)*bestellungenProSeite + "," + bestellungenProSeite
                     );
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
@@ -192,33 +197,46 @@ public class BestellAnzeige extends BestellungsGrundlage {
         orderDetailData = new Vector< Vector<Object> >();
         orderDetailColors = new Vector<String>();
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT bestell_nr, jahr, kw, DATE_FORMAT(bestell_datum, '"+dateFormatSQL+"') FROM bestellung " +
-		    "ORDER BY bestell_nr DESC LIMIT " + (currentPage-1)*bestellungenProSeite + "," + bestellungenProSeite
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT l.lieferant_name, a.artikel_nr, a.artikel_name, "+
+                    "a.vk_preis, a.vpe, bd.stueckzahl FROM bestellung_details AS bd "+
+                    "LEFT JOIN artikel AS a USING (artikel_id) "+
+                    "LEFT JOIN lieferant AS l USING (lieferant_id) "+
+                    "WHERE bd.bestell_nr = ?"
                     );
+            pstmt.setInt(1, bestellNr);
+            ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
-                bestellNummern.add(rs.getInt(1));
+                String lieferant = rs.getString(1);
+                String artikelNummer = rs.getString(2);
+                String artikelName = rs.getString(3);
+                String vkp = rs.getString(4);
+                String vpe = rs.getString(5);
+                Integer vpeInt = rs.getInt(5);
+                vpeInt = vpeInt > 0 ? vpeInt : 0;
+                Integer stueck = rs.getInt(6);
+
                 Vector<Object> row = new Vector<Object>();
-                System.out.println(rs.getString(2));
-                row.add(rs.getString(1));
-                row.add(rs.getString(2));
-                row.add(rs.getString(3));
-                row.add(rs.getString(4));
+                row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
+                row.add(vkp); row.add(vpe); row.add(stueck.toString());
+                row.add(""); // row.add(removeButtons.lastElement())
                 orderDetailData.add(row);
+                // color:
+                String color = "";
+                if (vpeInt <= 0){
+                    color = "default";
+                } else {
+                    if (stueck < vpeInt){
+                        color = "red";
+                    } else {
+                        color = "green";
+                    }
+                }
+                orderDetailColors.add(color);
             }
 	    rs.close();
-	    rs = stmt.executeQuery(
-		    "SELECT COUNT(bestell_nr) FROM bestellung"
-		    );
-	    // Now do something with the ResultSet ...
-	    rs.next();
-	    bestellungsZahl = rs.getString(1);
-	    bestellungsZahlInt = Integer.parseInt(bestellungsZahl);
-	    totalPage = bestellungsZahlInt/bestellungenProSeite + 1;
-	    rs.close();
-	    stmt.close();
+	    pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

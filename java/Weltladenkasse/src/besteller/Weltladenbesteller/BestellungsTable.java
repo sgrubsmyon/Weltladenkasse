@@ -22,6 +22,7 @@ public class BestellungsTable extends AnyJComponentJTable {
     public BestellungsTable(Vector< Vector<Object> > data, Vector<String> columns,
             Vector<String> cs) {
         super(data, columns);
+        System.out.println("Constructor: " + colors);
         colors = cs;
     }
 
@@ -30,6 +31,7 @@ public class BestellungsTable extends AnyJComponentJTable {
             Component c = super.prepareRenderer(renderer, row, column);
             // add custom rendering here
             c.setFont( c.getFont().deriveFont(Font.BOLD) );
+            System.out.println("Renderer: " + colors);
             String color = colors.get(row);
             int realColIndex = convertColumnIndexToModel(column); // user might have changed column order
             if ( getColumnName(realColIndex).equals("Stückzahl") ){
