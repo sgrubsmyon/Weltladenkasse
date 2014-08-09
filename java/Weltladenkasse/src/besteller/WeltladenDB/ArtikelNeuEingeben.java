@@ -217,9 +217,9 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
                 artikelNeu.ekPreise.add( priceFormatterIntern(artikelFormular.ekpreisField.getText()) );
             artikelNeu.variablePreise.add(false);
         }
-        int vpeInt = (Integer)artikelFormular.vpeSpinner.getValue();
-        String vpe = vpeInt == 0 ? "NULL" : Integer.toString(vpeInt);
-        artikelNeu.vpes.add(vpe);
+        Integer vpeInteger = (Integer)artikelFormular.vpeSpinner.getValue();
+        vpeInteger = vpeInteger == 0 ? null : vpeInteger;
+        artikelNeu.vpes.add(vpeInteger);
         artikelNeu.selLieferantIDs.add( artikelFormular.lieferantIDs.get(artikelFormular.lieferantBox.getSelectedIndex()) );
         artikelNeu.selProduktgruppenIDs.add( artikelFormular.produktgruppenIDs.get(artikelFormular.produktgruppenBox.getSelectedIndex()) );
         artikelNeu.herkuenfte.add(artikelFormular.herkunftField.getText());
@@ -247,7 +247,7 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
         String le = artikelNeu.vkPreise.lastElement(); row.add( le.equals("NULL") ? "" : le.replace('.',',')+" "+currencySymbol );
         le = artikelNeu.ekPreise.lastElement(); row.add( le.equals("NULL") ? "" : le.replace('.',',')+" "+currencySymbol );
         row.add( artikelNeu.variablePreise.lastElement() );
-        row.add( vpe.equals("NULL") ? "" : vpe);
+        row.add( vpeInteger == null ? "" : vpeInteger.toString() );
         row.add((String)artikelFormular.lieferantBox.getSelectedItem());
         row.add(artikelNeu.herkuenfte.lastElement());
         row.add(artikelNeu.removeButtons.lastElement());
