@@ -14,16 +14,12 @@ import javax.swing.table.*;
 import WeltladenDB.AnyJComponentJTable;
 
 public class BestellungsTable extends AnyJComponentJTable {
-    protected Vector<String> colors;
 
     /**
      *    The constructor.
      *       */
-    public BestellungsTable(Vector< Vector<Object> > data, Vector<String> columns,
-            Vector<String> cs) {
+    public BestellungsTable(Vector< Vector<Object> > data, Vector<String> columns) {
         super(data, columns);
-        System.out.println("Constructor: " + colors);
-        colors = cs;
     }
 
     @Override
@@ -31,16 +27,22 @@ public class BestellungsTable extends AnyJComponentJTable {
             Component c = super.prepareRenderer(renderer, row, column);
             // add custom rendering here
             c.setFont( c.getFont().deriveFont(Font.BOLD) );
-            System.out.println("Renderer: " + colors);
-            String color = colors.get(row);
-            int realColIndex = convertColumnIndexToModel(column); // user might have changed column order
-            if ( getColumnName(realColIndex).equals("Stückzahl") ){
-                if (color.equals("red")){ c.setForeground(Color.red); }
-                else if (color.equals("blue")){ c.setForeground(Color.blue); }
-                else if (color.equals("green")){ c.setForeground(Color.green.darker().darker()); }
-                else { c.setForeground(Color.black); }
+            if ( getColumnName(column).equals("Stückzahl") ){
+                //int vpeColIndex = convertColumnIndexToView( getColumnModel().getColumnIndex("VPE") );
+                int vpeColIndex = convertColumnIndexToView( getColumn("VPE").getModelIndex() );
+                try {
+                    int vpeInt = Integer.parseInt(getValueAt(row, vpeColIndex).toString());
+                    int stueck = Integer.parseInt(getValueAt(row, column).toString());
+                    if (stueck < vpeInt){
+                        c.setForeground(Color.red);
+                    } else {
+                        c.setForeground(Color.green.darker().darker());
+                    }
+                } catch (Exception ex) {
+                    c.setForeground(Color.black); // if sth. goes wrong: default color
+                }
             } else {
-                c.setForeground(Color.black);
+                c.setForeground(Color.black); // if not stueck column: default color
             }
             //c.setBackground(Color.LIGHT_GRAY);
             return c;
@@ -52,11 +54,10 @@ public class BestellungsTable extends AnyJComponentJTable {
             Point p = e.getPoint();
             int rowIndex = rowAtPoint(p);
             int colIndex = columnAtPoint(p);
-            int realRowIndex = convertRowIndexToModel(rowIndex); // user might have changed row order
-            int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
-            String tip = "";
-            if ( !getColumnName(realColIndex).equals("Entfernen") ){ // exclude column with buttons
-                tip = this.getModel().getValueAt(realRowIndex, realColIndex).toString();
+            String tip = null;
+            if ( !getColumnName(colIndex).equals("Entfernen") ){ // exclude column with buttons
+                try { tip = getValueAt(rowIndex, colIndex).toString(); }
+                catch (Exception ex) { } // e.g. catch if cell contains NullPointer
             }
             return tip;
         }
@@ -65,11 +66,11 @@ public class BestellungsTable extends AnyJComponentJTable {
         protected JTableHeader createDefaultTableHeader() {
             return new JTableHeader(columnModel) {
                 public String getToolTipText(MouseEvent e) {
-                    String tip = null;
                     Point p = e.getPoint();
                     int colIndex = columnAtPoint(p);
-                    int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
-                    tip = getColumnName(realColIndex);
+                    String tip = null;
+                    try { tip = getColumnName(colIndex); }
+                    catch (Exception ex) { }
                     return tip;
                 }
             };

@@ -67,7 +67,8 @@ public class TabbedPane extends WindowContent {
     public void switchToBestellAnzeige(int bestellNr) {
         int tabIndex = tabbedPane.indexOfTab("Bestellungen");
         tabbedPane.setSelectedIndex(tabIndex);
-        bestellAnzeige.showOrderDetailTable(bestellNr);
+        int rowIndex = bestellAnzeige.bestellNummern.indexOf(bestellNr);
+        bestellAnzeige.orderTable.setRowSelectionInterval(rowIndex, rowIndex);
     }
 
     /**

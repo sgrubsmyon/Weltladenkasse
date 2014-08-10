@@ -78,7 +78,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private JButton emptyNummerButton;
     private JButton hinzufuegenButton;
     private Vector<JButton> removeButtons;
-    private JButton speichernButton;
+    private JButton abschliessenButton;
 
     // The panels
     private JPanel allPanel;
@@ -87,7 +87,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     // The table holding the purchase articles.
     private BestellungsTable myTable;
     private Vector< Vector<Object> > data;
-    private Vector<String> colors;
     private Vector<Integer> artikelIDs;
     private Vector<Integer> stueckzahlen;
 
@@ -353,21 +352,21 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
 	showTable();
 
-        JPanel speichernPanel = new JPanel();
-        speichernPanel.setLayout(new BoxLayout(speichernPanel, BoxLayout.Y_AXIS));
-            speichernButton = new JButton("Bestellung speichern");
-            speichernButton.setEnabled(false);
-            speichernButton.addActionListener(this);
-            speichernButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-            speichernPanel.add(speichernButton);
-        allPanel.add(speichernPanel);
+        JPanel abschliessenPanel = new JPanel();
+        abschliessenPanel.setLayout(new BoxLayout(abschliessenPanel, BoxLayout.Y_AXIS));
+            abschliessenButton = new JButton("Bestellung abschließen");
+            abschliessenButton.setEnabled(false);
+            abschliessenButton.addActionListener(this);
+            abschliessenButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+            abschliessenPanel.add(abschliessenButton);
+        allPanel.add(abschliessenPanel);
 
 	this.add(allPanel, BorderLayout.CENTER);
     }
 
 
     void showTable(){
-	myTable = new BestellungsTable(data, columnLabels, colors);
+	myTable = new BestellungsTable(data, columnLabels);
         myTable.setColEditableTrue(columnLabels.size()-1); // last column has buttons
 	myTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
 	myTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
@@ -390,8 +389,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
     void emptyTable(){
 	data = new Vector< Vector<Object> >();
-        colors = new Vector<String>();
-        myTable = new BestellungsTable(data, columnLabels, colors);
+        myTable = new BestellungsTable(data, columnLabels);
         artikelIDs = new Vector<Integer>();
         stueckzahlen = new Vector<Integer>();
         removeButtons = new Vector<JButton>();
@@ -401,7 +399,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         data.clear();
         artikelIDs.clear();
         stueckzahlen.clear();
-        colors.clear();
         removeButtons.clear();
 
         setButtonsEnabled();
@@ -415,7 +412,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         // create table anew
 	showAll();
         barcodeBox.requestFocus();
-        setButtonsEnabled(); // for speichernButton
+        setButtonsEnabled(); // for abschliessenButton
     }
 
     private void updateTable(){
@@ -434,7 +431,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
         String fileStr = "";
         // format of csv file:
-        fileStr += "#Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;color;artikelID"+lineSep;
+        fileStr += "#Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;artikelID"+lineSep;
         for (int i=0; i<data.size(); i++){
             String lieferant = (String)data.get(i).get(0);
             String nummer = (String)data.get(i).get(1);
@@ -442,9 +439,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             String vkp = (String)data.get(i).get(3);
             String vpe = (String)data.get(i).get(4);
             String stueck = (String)data.get(i).get(5);
-            System.out.println("doCSVBackup: "+colors.size());
-            System.out.println(i);
-            String color = colors.get(i);
             String artikelID = artikelIDs.get(i).toString();
 
             fileStr += lieferant + delimiter;
@@ -453,7 +447,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             fileStr += vkp + delimiter;
             fileStr += vpe + delimiter;
             fileStr += stueck + delimiter;
-            fileStr += color + delimiter;
             fileStr += artikelID + lineSep;
         }
 
@@ -496,7 +489,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
                 // get the fields
                 String[] fields = line.split(delimiter);
-                if (fields.length < 8 ){
+                if (fields.length < 7 ){
                     continue;
                 }
 
@@ -506,10 +499,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 String vkp = fields[3];
                 String vpe = fields[4];
                 String stueck = fields[5];
-                String color = fields[6];
-                String artikelID = fields[7];
+                String artikelID = fields[6];
 
-                hinzufuegen(Integer.parseInt(artikelID), color, lieferant, nummer, name,
+                hinzufuegen(Integer.parseInt(artikelID), lieferant, nummer, name,
                         vkp, vpe, stueck);
             }
             updateAll();
@@ -674,10 +666,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         System.out.println("In setButtonsEnabled.");
         System.out.println("artikelIDs.size(): "+artikelIDs.size());
         if (artikelIDs.size() > 0) {
-            System.out.println("Enabling speichernButton.");
-            speichernButton.setEnabled(true);
+            System.out.println("Enabling abschliessenButton.");
+            abschliessenButton.setEnabled(true);
         } else {
-            speichernButton.setEnabled(false);
+            abschliessenButton.setEnabled(false);
         }
     }
 
@@ -723,13 +715,11 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         setButtonsEnabled();
     }
 
-    private void hinzufuegen(Integer artikelID, String color,
+    private void hinzufuegen(Integer artikelID,
             String lieferant, String artikelNummer, String artikelName,
             String vkp, String vpe, String stueck) {
         artikelIDs.add(artikelID);
         stueckzahlen.add(Integer.parseInt(stueck));
-        colors.add(color);
-        System.out.println("hinzufuegen: "+colors.size());
         removeButtons.add(new JButton("-"));
         removeButtons.lastElement().addActionListener(this);
 
@@ -756,18 +746,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         artikelPreis = artikelPreis.replace('.',',')+' '+currencySymbol;
         String artikelMwSt = getVAT(selectedArtikelID);
         artikelMwSt = vatFormatter(artikelMwSt);
-        String color = "";
-        if (vpeInt <= 0){
-            color = "default";
-        } else {
-            if (stueck < vpeInt){
-                color = "red";
-            } else {
-                color = "green";
-            }
-        }
 
-        hinzufuegen(selectedArtikelID, color, lieferant, artikelNummer, artikelName,
+        hinzufuegen(selectedArtikelID, lieferant, artikelNummer, artikelName,
                 artikelPreis, vpe, stueck.toString());
         updateAll();
     }
@@ -777,7 +757,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         fuegeArtikelHinzu(stueck);
     }
 
-    private int speichern() {
+    private int abschliessen() {
         int bestellNr = 0;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement("INSERT INTO bestellung "+
@@ -1056,8 +1036,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             nummerBox.requestFocus();
 	    return;
 	}
-	if (e.getSource() == speichernButton){
-            int bestellNr = speichern();
+	if (e.getSource() == abschliessenButton){
+            int bestellNr = abschliessen();
             stornieren();
             // update the BestellAnzeige tab
             tabbedPane.recreateTabbedPane();
@@ -1076,14 +1056,12 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             data.remove(removeRow);
             artikelIDs.remove(removeRow);
             stueckzahlen.remove(removeRow);
-            colors.remove(removeRow);
             removeButtons.remove(removeRow);
             // remove extra rows (Rabatt oder Pfand):
             while ( removeRow < removeButtons.size() && removeButtons.get(removeRow) == null ){
                 data.remove(removeRow);
                 artikelIDs.remove(removeRow);
                 stueckzahlen.remove(removeRow);
-                colors.remove(removeRow);
                 removeButtons.remove(removeRow);
             }
             updateAll();
