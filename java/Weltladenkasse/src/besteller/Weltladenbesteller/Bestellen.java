@@ -50,6 +50,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private final BigDecimal minusOne = new BigDecimal(-1);
     private final BigDecimal percent = new BigDecimal("0.01");
 
+    protected int selBestellNr = -1;
+    protected int selJahr = -1;
+    protected int selKW = -1;
+
     private TabbedPane tabbedPane;
 
     // Text Fields
@@ -69,9 +73,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private JTextField vpeField;
     private JTextField preisField;
     private JSpinner jahrSpinner;
-    private JTextField jahrField;
+    protected JTextField jahrField;
     private JSpinner kwSpinner;
-    private JTextField kwField;
+    protected JTextField kwField;
     // Buttons
     private JButton emptyBarcodeButton;
     private JButton emptyArtikelButton;
@@ -79,10 +83,12 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private JButton hinzufuegenButton;
     private Vector<JButton> removeButtons;
     private JButton abschliessenButton;
+    private JButton verwerfenButton;
 
     // The panels
     private JPanel allPanel;
     private JPanel articleListPanel;
+    private JPanel abschliessenPanel;
 
     // The table holding the purchase articles.
     private BestellungsTable orderTable;
@@ -185,8 +191,11 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	    JLabel jahrLabel = new JLabel("Jahr:");
             datePanel.add(jahrLabel);
             Calendar rightNow = Calendar.getInstance();
-            int curYear = rightNow.get(Calendar.YEAR);
-            SpinnerNumberModel jahrModel = new SpinnerNumberModel(curYear, // initial value
+            int year = rightNow.get(Calendar.YEAR);
+            if (selJahr > 0){
+                year = selJahr;
+            }
+            SpinnerNumberModel jahrModel = new SpinnerNumberModel(year, // initial value
                                                                   0, // min
                                                                   null, // max (null == no max)
                                                                   1); // step
@@ -202,8 +211,11 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             /////
 	    JLabel kwLabel = new JLabel("KW:");
             datePanel.add(kwLabel);
-            int curWeek = rightNow.get(Calendar.WEEK_OF_YEAR);
-            SpinnerNumberModel kwModel = new SpinnerNumberModel(curWeek+1, // initial value
+            int week = rightNow.get(Calendar.WEEK_OF_YEAR)+1; // default: following week
+            if (selKW > 0){
+                week = selKW;
+            }
+            SpinnerNumberModel kwModel = new SpinnerNumberModel(week, // initial value
                                                                 1, // min
                                                                 53, // max (null == no max)
                                                                 1); // step
@@ -352,15 +364,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
 	showTable();
 
-        JPanel abschliessenPanel = new JPanel();
-        abschliessenPanel.setLayout(new BoxLayout(abschliessenPanel, BoxLayout.Y_AXIS));
-            abschliessenButton = new JButton("Bestellung abschließen");
-            abschliessenButton.setEnabled(false);
-            abschliessenButton.addActionListener(this);
-            abschliessenButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-            abschliessenPanel.add(abschliessenButton);
-        allPanel.add(abschliessenPanel);
-
 	this.add(allPanel, BorderLayout.CENTER);
     }
 
@@ -385,6 +388,21 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             articleListPanel.add(scrollPane);
 
 	allPanel.add(articleListPanel);
+
+        abschliessenPanel = new JPanel();
+        abschliessenPanel.setLayout(new FlowLayout());
+            abschliessenButton = new JButton("Bestellung abschließen");
+            abschliessenButton.setEnabled(false);
+            abschliessenButton.addActionListener(this);
+            abschliessenButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+            abschliessenPanel.add(abschliessenButton);
+
+            verwerfenButton = new JButton("Verwerfen");
+            verwerfenButton.setEnabled(false);
+            verwerfenButton.addActionListener(this);
+            verwerfenButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+            abschliessenPanel.add(verwerfenButton);
+        allPanel.add(abschliessenPanel);
     }
 
     void emptyTable(){
@@ -400,11 +418,14 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         artikelIDs.clear();
         stueckzahlen.clear();
         removeButtons.clear();
+        selBestellNr = -1;
+        selJahr = -1;
+        selKW = -1;
 
         setButtonsEnabled();
     }
 
-    private void updateAll(){
+    protected void updateAll(){
         // save a CSV backup to hard disk
         doCSVBackup();
 	this.remove(allPanel);
@@ -415,10 +436,12 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         setButtonsEnabled(); // for abschliessenButton
     }
 
-    protected void updateTable(){
-	allPanel.remove(articleListPanel);
+    private void updateTable(){
+        allPanel.remove(articleListPanel);
+	allPanel.remove(abschliessenPanel);
 	allPanel.revalidate();
 	showTable();
+        setButtonsEnabled();
     }
 
 
@@ -430,14 +453,19 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         File file = new File(backupFilename);
 
         String fileStr = "";
+        // general infos:
+        fileStr += "#bestellNr;Jahr;KW"+lineSep;
+        fileStr += selBestellNr + delimiter;
+        fileStr += selJahr + delimiter;
+        fileStr += selKW + lineSep;
         // format of csv file:
         fileStr += "#Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;artikelID"+lineSep;
         for (int i=0; i<data.size(); i++){
             String lieferant = (String)data.get(i).get(0);
             String nummer = (String)data.get(i).get(1);
             String name = (String)data.get(i).get(2);
-            String vkp = (String)data.get(i).get(3);
-            String vpe = (String)data.get(i).get(4);
+            String vkp = (String)data.get(i).get(3); vkp = vkp == null ? "" : vkp;
+            String vpe = (String)data.get(i).get(4); vpe = vpe == null ? "" : vpe;
             String stueck = (String)data.get(i).get(5);
             String artikelID = artikelIDs.get(i).toString();
 
@@ -482,11 +510,24 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             // use Reader classes for text files:
             BufferedReader in = new BufferedReader(new FileReader(file)); // Lesen einer Textdatei mit Default Zeichensatz-Codierung, see http://www.wsoftware.de/practices/charsets.html
             String line;
+            // parse general info at top:
             while ( (line = in.readLine()) != null) {
                 line = line.replaceAll("#.*",""); // remove commented lines
-                //line = line.replaceAll("\"","");
-                //line = line.replaceAll("\'","\\\\\'"); // four backslashes are for one! See: http://www.xyzws.com/javafaq/how-many-backslashes/198
+                // get the fields
+                String[] fields = line.split(delimiter);
+                if (fields.length < 3 ){
+                    continue;
+                }
 
+                selBestellNr = Integer.parseInt(fields[0]);
+                selJahr = Integer.parseInt(fields[1]);
+                selKW = Integer.parseInt(fields[2]);
+
+                break;
+            }
+            // parse articles:
+            while ( (line = in.readLine()) != null) {
+                line = line.replaceAll("#.*",""); // remove commented lines
                 // get the fields
                 String[] fields = line.split(delimiter);
                 if (fields.length < 7 ){
@@ -663,13 +704,12 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         } else {
             hinzufuegenButton.setEnabled(false);
         }
-        System.out.println("In setButtonsEnabled.");
-        System.out.println("artikelIDs.size(): "+artikelIDs.size());
         if (artikelIDs.size() > 0) {
-            System.out.println("Enabling abschliessenButton.");
             abschliessenButton.setEnabled(true);
+            verwerfenButton.setEnabled(true);
         } else {
             abschliessenButton.setEnabled(false);
+            verwerfenButton.setEnabled(false);
         }
     }
 
@@ -760,21 +800,37 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private int abschliessen() {
         int bestellNr = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement("INSERT INTO bestellung "+
-                    "SET bestell_datum = NOW(), jahr = ?, kw = ?");
-            pstmtSetInteger(pstmt, 1, Integer.parseInt(jahrField.getText()));
-            pstmtSetInteger(pstmt, 2, Integer.parseInt(kwField.getText()));
+            PreparedStatement pstmt;
+            if (selBestellNr > 0){
+                pstmt = this.conn.prepareStatement("INSERT INTO bestellung "+
+                        "SET bestell_nr = ?, bestell_datum = NOW(), jahr = ?, kw = ?");
+            } else {
+                pstmt = this.conn.prepareStatement("INSERT INTO bestellung "+
+                        "SET bestell_datum = NOW(), jahr = ?, kw = ?");
+            }
+            int fieldCounter = 1;
+            if (selBestellNr > 0){
+                pstmtSetInteger(pstmt, fieldCounter, selBestellNr); fieldCounter++;
+            }
+            pstmtSetInteger(pstmt, fieldCounter, Integer.parseInt(jahrField.getText())); fieldCounter++;
+            pstmtSetInteger(pstmt, fieldCounter, Integer.parseInt(kwField.getText())); fieldCounter++;
             int result = pstmt.executeUpdate();
+            pstmt.close();
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Bestellung konnte nicht abgespeichert werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
             }
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT MAX(bestell_nr) FROM bestellung"
-                    );
-            rs.next(); bestellNr = rs.getInt(1); rs.close();
+            if (selBestellNr > 0){
+                bestellNr = selBestellNr;
+            } else {
+                Statement stmt = this.conn.createStatement();
+                ResultSet rs = stmt.executeQuery(
+                        "SELECT MAX(bestell_nr) FROM bestellung"
+                        );
+                rs.next(); bestellNr = rs.getInt(1); rs.close();
+                stmt.close();
+            }
             for (int i=0; i<artikelIDs.size(); i++){
                 pstmt = this.conn.prepareStatement(
                         "INSERT INTO bestellung_details SET bestell_nr = ?, "+
@@ -784,13 +840,13 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 pstmtSetInteger(pstmt, 2, artikelIDs.get(i));
                 pstmtSetInteger(pstmt, 3, stueckzahlen.get(i));
                 result = pstmt.executeUpdate();
+                pstmt.close();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Artikel mit ID "+artikelIDs.get(i)+" konnte nicht abgespeichert werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
-            stmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -798,7 +854,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         return bestellNr;
     }
 
-    private void stornieren() {
+    private void verwerfen() {
         clearAll();
         updateAll();
     }
@@ -1038,11 +1094,15 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	}
 	if (e.getSource() == abschliessenButton){
             int bestellNr = abschliessen();
-            stornieren();
+            verwerfen();
             // update the BestellAnzeige tab
             tabbedPane.recreateTabbedPane();
             // switch to BestellAnzeige tab
             tabbedPane.switchToBestellAnzeige(bestellNr);
+	    return;
+	}
+	if (e.getSource() == verwerfenButton){
+            verwerfen();
 	    return;
 	}
 	int removeRow = -1;

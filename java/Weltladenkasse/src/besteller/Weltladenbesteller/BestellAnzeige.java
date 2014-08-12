@@ -301,24 +301,26 @@ public class BestellAnzeige extends BestellungsGrundlage {
     }
 
     private void deleteOrderFromDB(int bestellNr) {
-        try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "DELETE bestellung, bestellung_details FROM bestellung "+
-                    "INNER JOIN bestellung_details USING (bestell_nr) "+
-                    "WHERE bestell_nr = ?"
-                    );
-            pstmt.setInt(1, bestellNr);
-            int result = pstmt.executeUpdate();
-            if (result == 0){
-                JOptionPane.showMessageDialog(this,
-                        "Fehler: Bestellung konnte nicht zum Ändern aus DB entfernt werden.\n"+
-                        "Sie könnte beim nächsten Abschließen doppelt in DB enthalten sein.",
-                        "Fehler", JOptionPane.ERROR_MESSAGE);
+        if (bestellNr > 0){
+            try {
+                PreparedStatement pstmt = this.conn.prepareStatement(
+                        "DELETE bestellung, bestellung_details FROM bestellung "+
+                        "INNER JOIN bestellung_details USING (bestell_nr) "+
+                        "WHERE bestell_nr = ?"
+                        );
+                pstmt.setInt(1, bestellNr);
+                int result = pstmt.executeUpdate();
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Bestellung konnte nicht zum Ändern aus DB entfernt werden.\n"+
+                            "Sie könnte beim nächsten Abschließen doppelt in DB enthalten sein.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+                pstmt.close();
+            } catch (SQLException ex) {
+                System.out.println("Exception: " + ex.getMessage());
+                ex.printStackTrace();
             }
-	    pstmt.close();
-        } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
         }
     }
 
@@ -332,8 +334,11 @@ public class BestellAnzeige extends BestellungsGrundlage {
         if (e.getSource() == editButton){
             if (selBestellNr > 0){
                 deleteOrderFromDB(selBestellNr);
+                Vector<String> bestellung = orderData.get(bestellNummern.indexOf(selBestellNr));
+                String jahr = bestellung.get(1);
+                String kw = bestellung.get(2);
                 // put order data into Bestellen tab
-                tabbedPane.setBestellenTable(orderDetailArtikelIDs, orderDetailData);
+                tabbedPane.setBestellenTable(selBestellNr, jahr, kw, orderDetailArtikelIDs, orderDetailData);
                 // clear the BestellAnzeige
                 updateAll();
                 // switch to Bestellen tab

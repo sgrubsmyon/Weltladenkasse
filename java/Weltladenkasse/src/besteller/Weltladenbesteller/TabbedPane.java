@@ -77,19 +77,22 @@ public class TabbedPane extends WindowContent {
         tabbedPane.setSelectedIndex(tabIndex);
     }
 
-    public void setBestellenTable(Vector<Integer> artikelIDs, Vector< Vector<Object> > data) {
+    public void setBestellenTable(int bestellNr, String jahr, String kw, Vector<Integer> artikelIDs, Vector< Vector<Object> > data) {
         myBestellen.emptyTable();
+        myBestellen.selBestellNr = bestellNr;
+        myBestellen.jahrField.setText(jahr);
+        myBestellen.kwField.setText(kw);
         for (int i=0; i<artikelIDs.size(); i++){
             String lieferant = data.get(i).get(0).toString();
             String artikelNr = data.get(i).get(1).toString();
             String artikelName = data.get(i).get(2).toString();
             String vkp = data.get(i).get(3).toString();
-            String vpe = data.get(i).get(4).toString();
+            String vpe = data.get(i).get(4) == null ? null : data.get(i).get(4).toString();
             String stueck = data.get(i).get(5).toString();
             myBestellen.hinzufuegen(artikelIDs.get(i), lieferant, artikelNr,
                     artikelName, vkp, vpe, stueck);
         }
-        myBestellen.updateTable();
+        myBestellen.updateAll();
     }
 
     /**
