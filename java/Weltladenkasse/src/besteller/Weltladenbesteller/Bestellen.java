@@ -228,6 +228,15 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             kwField.setColumns(2);
 	    kwLabel.setLabelFor(kwSpinner);
             datePanel.add(kwSpinner);
+            ///////
+            datePanel.add(new JLabel("Bestell-Nr.:"));
+            JTextField bestNrField = new JTextField("");
+            bestNrField.setColumns(6);
+            if (selBestellNr > 0){
+                bestNrField.setText(new Integer(selBestellNr).toString());
+            }
+            bestNrField.setEditable(false);
+            datePanel.add(bestNrField);
         allPanel.add(datePanel);
 
         JPanel barcodePanel = new JPanel();
