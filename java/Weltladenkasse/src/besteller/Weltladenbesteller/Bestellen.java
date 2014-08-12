@@ -73,9 +73,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private JTextField vpeField;
     private JTextField preisField;
     private JSpinner jahrSpinner;
-    protected JTextField jahrField;
+    private JTextField jahrField;
     private JSpinner kwSpinner;
-    protected JTextField kwField;
+    private JTextField kwField;
     // Buttons
     private JButton emptyBarcodeButton;
     private JButton emptyArtikelButton;
@@ -232,6 +232,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             datePanel.add(new JLabel("Bestell-Nr.:"));
             JTextField bestNrField = new JTextField("");
             bestNrField.setColumns(6);
+            bestNrField.setHorizontalAlignment(JTextField.RIGHT);
             if (selBestellNr > 0){
                 bestNrField.setText(new Integer(selBestellNr).toString());
             }

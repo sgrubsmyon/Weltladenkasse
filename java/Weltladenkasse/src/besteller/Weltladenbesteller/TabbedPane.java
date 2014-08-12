@@ -77,11 +77,11 @@ public class TabbedPane extends WindowContent {
         tabbedPane.setSelectedIndex(tabIndex);
     }
 
-    public void setBestellenTable(int bestellNr, String jahr, String kw, Vector<Integer> artikelIDs, Vector< Vector<Object> > data) {
+    public void setBestellenTable(int bestellNr, int jahr, int kw, Vector<Integer> artikelIDs, Vector< Vector<Object> > data) {
         myBestellen.emptyTable();
         myBestellen.selBestellNr = bestellNr;
-        myBestellen.jahrField.setText(jahr);
-        myBestellen.kwField.setText(kw);
+        myBestellen.selJahr = jahr;
+        myBestellen.selKW = kw;
         for (int i=0; i<artikelIDs.size(); i++){
             String lieferant = data.get(i).get(0).toString();
             String artikelNr = data.get(i).get(1).toString();

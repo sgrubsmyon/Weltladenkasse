@@ -335,8 +335,8 @@ public class BestellAnzeige extends BestellungsGrundlage {
             if (selBestellNr > 0){
                 deleteOrderFromDB(selBestellNr);
                 Vector<String> bestellung = orderData.get(bestellNummern.indexOf(selBestellNr));
-                String jahr = bestellung.get(1);
-                String kw = bestellung.get(2);
+                int jahr = Integer.parseInt(bestellung.get(1));
+                int kw = Integer.parseInt(bestellung.get(2));
                 // put order data into Bestellen tab
                 tabbedPane.setBestellenTable(selBestellNr, jahr, kw, orderDetailArtikelIDs, orderDetailData);
                 // clear the BestellAnzeige
