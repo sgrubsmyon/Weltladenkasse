@@ -161,5 +161,5 @@ GRANT INSERT ON kasse.pfand TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.abrechnung_tag TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.abrechnung_monat TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.abrechnung_jahr TO 'mitarbeiter'@'localhost';
-GRANT INSERT, UPDATE ON kasse.bestellung TO 'mitarbeiter'@'localhost';
+GRANT INSERT, UPDATE, DELETE ON kasse.bestellung TO 'mitarbeiter'@'localhost';
 GRANT INSERT, UPDATE, DELETE ON kasse.bestellung_details TO 'mitarbeiter'@'localhost';

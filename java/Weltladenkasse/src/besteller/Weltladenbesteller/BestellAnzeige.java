@@ -49,9 +49,11 @@ public class BestellAnzeige extends BestellungsGrundlage {
 
     protected String filterStr; // show only specific items of the order
 
+    private TabbedPane tabbedPane;
+
     protected JButton prevButton;
     protected JButton nextButton;
-    protected JButton printButton; // click the button to print the order
+    protected JButton exportButton; // click the button to print the order
     protected JButton editButton; // click the button to edit the order (in the Bestellen tab)
     protected JTextField filterField;
 
@@ -60,6 +62,7 @@ public class BestellAnzeige extends BestellungsGrundlage {
     protected Vector< Vector<String> > orderData;
     protected Vector<String> orderLabels;
     protected Vector< Vector<Object> > orderDetailData;
+    protected Vector<Integer> orderDetailArtikelIDs;
 
     private JSplitPane splitPane;
     private JPanel orderPanel;
@@ -72,9 +75,10 @@ public class BestellAnzeige extends BestellungsGrundlage {
     /**
      *    The constructor.
      *       */
-    public BestellAnzeige(Connection conn, MainWindowGrundlage mw)
+    public BestellAnzeige(Connection conn, MainWindowGrundlage mw, TabbedPane tp)
     {
 	super(conn, mw);
+        tabbedPane = tp;
         selBestellNr = -1;
         showAll();
     }
@@ -193,9 +197,11 @@ public class BestellAnzeige extends BestellungsGrundlage {
 
             // Panel for buttons
             JPanel buttonPanel = new JPanel(new FlowLayout());
-            printButton = new JButton("Drucken");
+            exportButton = new JButton("Exportieren");
             editButton = new JButton("Bearbeiten");
-            buttonPanel.add(printButton);
+	    exportButton.addActionListener(this);
+	    editButton.addActionListener(this);
+            buttonPanel.add(exportButton);
             buttonPanel.add(editButton);
             orderDetailPanel.add(buttonPanel, BorderLayout.SOUTH);
         }
@@ -255,10 +261,12 @@ public class BestellAnzeige extends BestellungsGrundlage {
 
     void retrieveOrderDetailData(int bestellNr) {
         orderDetailData = new Vector< Vector<Object> >();
+        orderDetailArtikelIDs = new Vector<Integer>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT l.lieferant_name, a.artikel_nr, a.artikel_name, "+
-                    "a.vk_preis, a.vpe, bd.stueckzahl FROM bestellung_details AS bd "+
+                    "a.vk_preis, a.vpe, bd.stueckzahl, bd.artikel_id "+
+                    "FROM bestellung_details AS bd "+
                     "LEFT JOIN artikel AS a USING (artikel_id) "+
                     "LEFT JOIN lieferant AS l USING (lieferant_id) "+
                     "WHERE bd.bestell_nr = ?"
@@ -275,14 +283,38 @@ public class BestellAnzeige extends BestellungsGrundlage {
                 Integer vpeInt = rs.getInt(5);
                 vpeInt = vpeInt > 0 ? vpeInt : 0;
                 Integer stueck = rs.getInt(6);
+                Integer artikelID = rs.getInt(7);
 
                 Vector<Object> row = new Vector<Object>();
                 row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
                 row.add(priceFormatter(vkp)+" "+currencySymbol); row.add(vpe); row.add(stueck.toString());
                 row.add(""); // row.add(removeButtons.lastElement())
                 orderDetailData.add(row);
+                orderDetailArtikelIDs.add(artikelID);
             }
 	    rs.close();
+	    pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    private void deleteOrderFromDB(int bestellNr) {
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "DELETE bestellung, bestellung_details FROM bestellung "+
+                    "INNER JOIN bestellung_details USING (bestell_nr) "+
+                    "WHERE bestell_nr = ?"
+                    );
+            pstmt.setInt(1, bestellNr);
+            int result = pstmt.executeUpdate();
+            if (result == 0){
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Bestellung konnte nicht zum Ändern aus DB entfernt werden.\n"+
+                        "Sie könnte beim nächsten Abschließen doppelt in DB enthalten sein.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+            }
 	    pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
@@ -297,5 +329,17 @@ public class BestellAnzeige extends BestellungsGrundlage {
      *    @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == editButton){
+            if (selBestellNr > 0){
+                deleteOrderFromDB(selBestellNr);
+                // put order data into Bestellen tab
+                tabbedPane.setBestellenTable(orderDetailArtikelIDs, orderDetailData);
+                // clear the BestellAnzeige
+                updateAll();
+                // switch to Bestellen tab
+                tabbedPane.switchToBestellen();
+            }
+	    return;
+	}
     }
 }

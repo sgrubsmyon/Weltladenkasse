@@ -38,6 +38,7 @@ import WeltladenDB.WindowContent;
 public class TabbedPane extends WindowContent {
     private JTabbedPane tabbedPane;
     private BestellAnzeige bestellAnzeige;
+    private Bestellen myBestellen;
 
     // Methoden:
     public TabbedPane(Connection conn, MainWindow mw) {
@@ -48,9 +49,9 @@ public class TabbedPane extends WindowContent {
 
     void createTabbedPane() {
         tabbedPane = new JTabbedPane();
-        Bestellen myBestellen = new Bestellen(this.conn, this.mainWindow, this);
+        myBestellen = new Bestellen(this.conn, this.mainWindow, this);
         ArtikellisteContainer myArtikellisteC = new ArtikellisteContainer(this.conn, this.mainWindow);
-        bestellAnzeige = new BestellAnzeige(this.conn, this.mainWindow);
+        bestellAnzeige = new BestellAnzeige(this.conn, this.mainWindow, this);
         tabbedPane.addTab("Bestellen", null, myBestellen, "Bestellung erstellen");
         tabbedPane.addTab("Artikelliste", null, myArtikellisteC, "Artikel bearbeiten/hinzufügen");
         tabbedPane.addTab("Bestellungen", null, bestellAnzeige, "Bestellung anzeigen/drucken");
@@ -69,6 +70,26 @@ public class TabbedPane extends WindowContent {
         tabbedPane.setSelectedIndex(tabIndex);
         int rowIndex = bestellAnzeige.bestellNummern.indexOf(bestellNr);
         bestellAnzeige.orderTable.setRowSelectionInterval(rowIndex, rowIndex);
+    }
+
+    public void switchToBestellen() {
+        int tabIndex = tabbedPane.indexOfTab("Bestellen");
+        tabbedPane.setSelectedIndex(tabIndex);
+    }
+
+    public void setBestellenTable(Vector<Integer> artikelIDs, Vector< Vector<Object> > data) {
+        myBestellen.emptyTable();
+        for (int i=0; i<artikelIDs.size(); i++){
+            String lieferant = data.get(i).get(0).toString();
+            String artikelNr = data.get(i).get(1).toString();
+            String artikelName = data.get(i).get(2).toString();
+            String vkp = data.get(i).get(3).toString();
+            String vpe = data.get(i).get(4).toString();
+            String stueck = data.get(i).get(5).toString();
+            myBestellen.hinzufuegen(artikelIDs.get(i), lieferant, artikelNr,
+                    artikelName, vkp, vpe, stueck);
+        }
+        myBestellen.updateTable();
     }
 
     /**

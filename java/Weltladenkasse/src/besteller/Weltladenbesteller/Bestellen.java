@@ -85,8 +85,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private JPanel articleListPanel;
 
     // The table holding the purchase articles.
-    private BestellungsTable myTable;
-    private Vector< Vector<Object> > data;
+    private BestellungsTable orderTable;
+    protected Vector< Vector<Object> > data;
     private Vector<Integer> artikelIDs;
     private Vector<Integer> stueckzahlen;
 
@@ -366,22 +366,22 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
 
     void showTable(){
-	myTable = new BestellungsTable(data, columnLabels);
-        myTable.setColEditableTrue(columnLabels.size()-1); // last column has buttons
-	myTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
-	myTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
-//	myTable.setBounds(71,53,150,100);
-//	myTable.setToolTipText("Tabelle kann nur gelesen werden.");
-	setTableProperties(myTable);
-	TableColumn entf = myTable.getColumn("Entfernen");
+	orderTable = new BestellungsTable(data, columnLabels);
+        orderTable.setColEditableTrue(columnLabels.size()-1); // last column has buttons
+	orderTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
+	orderTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
+//	orderTable.setBounds(71,53,150,100);
+//	orderTable.setToolTipText("Tabelle kann nur gelesen werden.");
+	setTableProperties(orderTable);
+	TableColumn entf = orderTable.getColumn("Entfernen");
 	entf.setPreferredWidth(2);
-//	myTable.setAutoResizeMode(5);
+//	orderTable.setAutoResizeMode(5);
 
 	articleListPanel = new JPanel();
 	articleListPanel.setLayout(new BoxLayout(articleListPanel, BoxLayout.Y_AXIS));
 	articleListPanel.setBorder(BorderFactory.createTitledBorder("Gewählte Artikel"));
 
-            JScrollPane scrollPane = new JScrollPane(myTable);
+            JScrollPane scrollPane = new JScrollPane(orderTable);
             articleListPanel.add(scrollPane);
 
 	allPanel.add(articleListPanel);
@@ -389,7 +389,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
     void emptyTable(){
 	data = new Vector< Vector<Object> >();
-        myTable = new BestellungsTable(data, columnLabels);
+        orderTable = new BestellungsTable(data, columnLabels);
         artikelIDs = new Vector<Integer>();
         stueckzahlen = new Vector<Integer>();
         removeButtons = new Vector<JButton>();
@@ -415,7 +415,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         setButtonsEnabled(); // for abschliessenButton
     }
 
-    private void updateTable(){
+    protected void updateTable(){
 	allPanel.remove(articleListPanel);
 	allPanel.revalidate();
 	showTable();
@@ -715,7 +715,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         setButtonsEnabled();
     }
 
-    private void hinzufuegen(Integer artikelID,
+    protected void hinzufuegen(Integer artikelID,
             String lieferant, String artikelNummer, String artikelName,
             String vkp, String vpe, String stueck) {
         artikelIDs.add(artikelID);
