@@ -4,6 +4,7 @@ package Weltladenbesteller;
 import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 import java.math.RoundingMode;
+import java.io.File;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -11,6 +12,10 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+
+// OpenDocument stuff:
+import org.jopendocument.dom.spreadsheet.SpreadSheet;
+import org.jopendocument.dom.OOUtils;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -333,6 +338,17 @@ public class BestellAnzeige extends BestellungsGrundlage {
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == editButton){
             if (selBestellNr > 0){
+                if (!tabbedPane.bestellenTableIsEmpty()){
+                    int answer = JOptionPane.showConfirmDialog(this,
+                            "Achtung: Bestellen-Tab enthält bereits eine Bestellung.\nDaten gehen verloren. Fortfahren?",
+                            "Warnung",
+                            JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    if (answer == JOptionPane.YES_OPTION){
+                        // continue (below)
+                    } else {
+                        return;
+                    }
+                }
                 deleteOrderFromDB(selBestellNr);
                 Vector<String> bestellung = orderData.get(bestellNummern.indexOf(selBestellNr));
                 int jahr = Integer.parseInt(bestellung.get(1));
@@ -344,6 +360,27 @@ public class BestellAnzeige extends BestellungsGrundlage {
                 // switch to Bestellen tab
                 tabbedPane.switchToBestellen();
             }
+	    return;
+	}
+        if (e.getSource() == exportButton){
+            // Create the data to save.
+            final Object[][] data = new Object[6][2];
+            data[0] = new Object[] { "January", 1 };
+            data[1] = new Object[] { "February", 3 };
+            data[2] = new Object[] { "March", 8 };
+            data[3] = new Object[] { "April", 10 };
+            data[4] = new Object[] { "May", 15 };
+            data[5] = new Object[] { "June", 18 };
+
+            String[] columns = new String[] { "Month", "Temp" };
+
+            TableModel model = new DefaultTableModel(data, columns);  
+
+            // Save the data to an ODS file and open it.
+            final File file = new File("temperature.ods");
+            SpreadSheet.createEmpty(model).saveAs(file);
+
+            OOUtils.open(file);
 	    return;
 	}
     }

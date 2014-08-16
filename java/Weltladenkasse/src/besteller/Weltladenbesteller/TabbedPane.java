@@ -77,6 +77,10 @@ public class TabbedPane extends WindowContent {
         tabbedPane.setSelectedIndex(tabIndex);
     }
 
+    public boolean bestellenTableIsEmpty() {
+        return myBestellen.numberOfRows() == 0;
+    }
+
     public void setBestellenTable(int bestellNr, int jahr, int kw, Vector<Integer> artikelIDs, Vector< Vector<Object> > data) {
         myBestellen.emptyTable();
         myBestellen.selBestellNr = bestellNr;

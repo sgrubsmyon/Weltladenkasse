@@ -454,6 +454,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         setButtonsEnabled();
     }
 
+    protected int numberOfRows() {
+        return data.size();
+    }
+
 
 
 
