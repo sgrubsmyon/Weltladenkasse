@@ -1,2 +1,9 @@
 mysql connector from: http://dev.mysql.com/downloads/connector/j/
 jOpenDocument library from: http://www.jopendocument.org/downloads.html
+
+in vim on .csv file:
+Merge 250g etc. with artikelname:
+    Zeilen markieren
+    :'<,'>s/;\([^;]*\)\(;[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;$\)/ \1;\2/
+Zeilenumbrüche entfernen:
+    :%s/\([^;]\)$\n/\1 /c

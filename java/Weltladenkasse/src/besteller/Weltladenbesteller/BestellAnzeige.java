@@ -7,6 +7,8 @@ import java.math.RoundingMode;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -16,6 +18,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // OpenDocument stuff:
+import org.jopendocument.dom.spreadsheet.Sheet;
 import org.jopendocument.dom.spreadsheet.SpreadSheet;
 import org.jopendocument.dom.OOUtils;
 
@@ -309,6 +312,47 @@ public class BestellAnzeige extends BestellungsGrundlage {
         }
     }
 
+    Vector< Vector<Object> > retrieveOrderDetailData_forExport(int bestellNr) {
+        Vector< Vector<Object> > orderExportData = new Vector< Vector<Object> >();
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT l.lieferant_name, a.artikel_nr, a.artikel_name, "+
+                    "a.vpe, a.vk_preis, a.ek_preis, m.mwst_satz, bd.stueckzahl "+
+                    "FROM bestellung_details AS bd "+
+                    "LEFT JOIN artikel AS a USING (artikel_id) "+
+                    "LEFT JOIN lieferant AS l USING (lieferant_id) "+
+                    "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
+                    "LEFT JOIN mwst AS m USING (mwst_id) "+
+                    "WHERE bd.bestell_nr = ? "+
+                    "ORDER BY p.toplevel_id, p.sub_id, p.subsub_id"
+                    );
+            pstmt.setInt(1, bestellNr);
+            ResultSet rs = pstmt.executeQuery();
+            // Now do something with the ResultSet, should be only one result ...
+            while ( rs.next() ){
+                String lieferant = rs.getString(1);
+                String artikelNummer = rs.getString(2);
+                String artikelName = rs.getString(3);
+                Integer vpe = rs.getString(4) == null ? null : rs.getInt(4);
+                BigDecimal vkp = rs.getBigDecimal(5);
+                BigDecimal ekp = rs.getBigDecimal(6);
+                BigDecimal mwst = rs.getBigDecimal(7);
+                Integer stueck = rs.getInt(8);
+
+                Vector<Object> row = new Vector<Object>();
+                row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
+                row.add(vpe); row.add(vkp); row.add(ekp); row.add(mwst); row.add(stueck);
+                orderExportData.add(row);
+            }
+	    rs.close();
+	    pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return orderExportData;
+    }
+
     private void deleteOrderFromDB(int bestellNr) {
         if (bestellNr > 0){
             try {
@@ -363,25 +407,57 @@ public class BestellAnzeige extends BestellungsGrundlage {
     }
 
     void writeSpreadSheet(File file) {
-/*
-        // Load the file.
-        File file = new File("/resources/Bestellvorlage.ods");
-        final Sheet sheet = SpreadSheet.createFromFile(file).getSheet(0);
-        // Change date.
-        sheet.getCellAt("I10").setValue(new Date());
-        // Change strings.
-        sheet.setValueAt("Filling test", 1, 1);
-        sheet.getCellAt("B27").setValue("On site support");
-        // Change number.
-        sheet.getCellAt("F24").setValue(3);
-        // Or better yet use a named range
-        // (relative to the first cell of the range, wherever it might be).
-        sheet.getSpreadSheet().getTableModel("Products").setValueAt(1, 5, 4);
-        // Save to file and open it.
-        File outputFile = new File("fillingTest.ods");
-        OOUtils.open(sheet.getSpreadSheet().saveAs(outputFile));
-*/
+        // Load the template file
+        final Sheet sheet;
+        try {
+            File infile = new File("Bestellvorlage.ods");
+            sheet = SpreadSheet.createFromFile(infile).getSheet(0);
+        } catch (IOException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+            return;
+        }
 
+        // Get general order data
+        Vector<String> bestellung = orderData.get(bestellNummern.indexOf(selBestellNr));
+        //int jahr = Integer.parseInt(bestellung.get(1));
+        Integer kw = Integer.parseInt(bestellung.get(2));
+        String oldDate = bestellung.get(3);
+        String newDate = oldDate;
+        try {
+            // reformat the date to be without hour:
+            Date date = new SimpleDateFormat(dateFormatJava).parse(oldDate);
+            newDate = new SimpleDateFormat("dd.MM.yyyy").format(date);;
+        } catch (java.text.ParseException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        // Change date
+        sheet.getCellAt("C2").setValue(newDate);
+        // Change KW
+        sheet.getCellAt("H2").setValue(kw);
+
+        // Insert order items
+        Vector< Vector<Object> > data = retrieveOrderDetailData_forExport(selBestellNr);
+        System.out.println("Export data: "+data);
+        for (int row=0; row<data.size(); row++){
+            for (int col=0; col<data.get(row).size(); col++){
+                System.out.println("Setting value at "+(13+row)+","+col+": "+data.get(row).get(col));
+                sheet.setValueAt(data.get(row).get(col), col, 13+row);
+            }
+        }
+
+        try {
+            // Save to file and open it.
+            OOUtils.open(sheet.getSpreadSheet().saveAs(file));
+        } catch (FileNotFoundException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+/*
         // Get the data to save (create a copy)
         Vector< Vector<Object> > data = new Vector< Vector<Object> >(orderDetailData);
         // Convert columns as needed
@@ -420,6 +496,7 @@ public class BestellAnzeige extends BestellungsGrundlage {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+*/
     }
 
     /**
