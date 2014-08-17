@@ -1,0 +1,2 @@
+mysql connector from: http://dev.mysql.com/downloads/connector/j/
+jOpenDocument library from: http://www.jopendocument.org/downloads.html

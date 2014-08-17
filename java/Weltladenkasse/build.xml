@@ -12,6 +12,11 @@
     <property name="jarfile-kasse" location="Weltladenkasse_v0.9.1.jar"/>
     <property name="jarfile-besteller" location="Weltladenbesteller_v0.9.1.jar"/>
 
+    <!-- with a little help from: https://ant.apache.org/manual/tutorial-HelloWorldWithAnt.html -->
+    <path id="classpath">
+        <fileset dir="${lib}" includes="**/*.jar"/>
+    </path>
+
     <target name="init">
         <!-- Create the time stamp -->
         <tstamp/>
@@ -34,13 +39,17 @@
     </target>
 
     <target name="compile" depends="copy" description="compile the source">
-        <javac srcdir="${src-kasse}" destdir="${build-kasse}" includeantruntime="false"/>
-        <javac srcdir="${src-besteller}" destdir="${build-besteller}" includeantruntime="false"/>
+        <javac srcdir="${src-kasse}" destdir="${build-kasse}" includeantruntime="false"
+            classpathref="classpath"/>
+        <javac srcdir="${src-besteller}" destdir="${build-besteller}" includeantruntime="false"
+            classpathref="classpath"/>
     </target>
 
     <target name="debug-compile" depends="copy" description="compile the source in debugging mode">
-        <javac srcdir="${src-kasse}" destdir="${build-kasse}" debug="on" debuglevel="lines,vars,source" includeantruntime="false"/>
-        <javac srcdir="${src-besteller}" destdir="${build-besteller}" debug="on" debuglevel="lines,vars,source" includeantruntime="false"/>
+        <javac srcdir="${src-kasse}" destdir="${build-kasse}" debug="on" debuglevel="lines,vars,source"
+            includeantruntime="false" classpathref="classpath"/>
+        <javac srcdir="${src-besteller}" destdir="${build-besteller}" debug="on" debuglevel="lines,vars,source"
+            includeantruntime="false" classpathref="classpath"/>
     </target>
 
     <target name="jar" depends="compile" description="generate the distribution .jar file">

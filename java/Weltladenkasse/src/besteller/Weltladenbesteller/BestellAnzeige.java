@@ -5,6 +5,8 @@ import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 import java.math.RoundingMode;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -56,6 +58,7 @@ public class BestellAnzeige extends BestellungsGrundlage {
 
     private TabbedPane tabbedPane;
 
+    private JFileChooser fc;
     protected JButton prevButton;
     protected JButton nextButton;
     protected JButton exportButton; // click the button to print the order
@@ -86,6 +89,7 @@ public class BestellAnzeige extends BestellungsGrundlage {
         tabbedPane = tp;
         selBestellNr = -1;
         showAll();
+        initializeExportDialog();
     }
 
     void showAll() {
@@ -285,14 +289,14 @@ public class BestellAnzeige extends BestellungsGrundlage {
                 String artikelName = rs.getString(3);
                 String vkp = rs.getString(4);
                 String vpe = rs.getString(5);
-                Integer vpeInt = rs.getInt(5);
-                vpeInt = vpeInt > 0 ? vpeInt : 0;
+                //Integer vpeInt = rs.getInt(5);
+                //vpeInt = vpeInt > 0 ? vpeInt : 0;
                 Integer stueck = rs.getInt(6);
                 Integer artikelID = rs.getInt(7);
 
                 Vector<Object> row = new Vector<Object>();
                 row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
-                row.add(priceFormatter(vkp)+" "+currencySymbol); row.add(vpe); row.add(stueck.toString());
+                row.add(priceFormatter(vkp)+" "+currencySymbol); row.add(vpe); row.add(stueck);
                 row.add(""); // row.add(removeButtons.lastElement())
                 orderDetailData.add(row);
                 orderDetailArtikelIDs.add(artikelID);
@@ -326,6 +330,95 @@ public class BestellAnzeige extends BestellungsGrundlage {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
             }
+        }
+    }
+
+    void initializeExportDialog() {
+        fc = new JFileChooser(){
+            // override approveSelection to get a confirmation dialog if file exists
+            @Override
+            public void approveSelection(){
+                File f = getSelectedFile();
+                if (f.exists() && getDialogType() == SAVE_DIALOG){
+                    int result = JOptionPane.showConfirmDialog(this,
+                            "Datei existiert bereits. Überschreiben?",
+                            "Datei existiert",
+                            JOptionPane.YES_NO_CANCEL_OPTION);
+                    switch (result){
+                        case JOptionPane.YES_OPTION:
+                            super.approveSelection();
+                            return;
+                        case JOptionPane.NO_OPTION:
+                            return;
+                        case JOptionPane.CLOSED_OPTION:
+                            return;
+                        case JOptionPane.CANCEL_OPTION:
+                            cancelSelection();
+                            return;
+                    }
+                }
+                super.approveSelection();
+            }
+        };
+    }
+
+    void writeSpreadSheet(File file) {
+/*
+        // Load the file.
+        File file = new File("/resources/Bestellvorlage.ods");
+        final Sheet sheet = SpreadSheet.createFromFile(file).getSheet(0);
+        // Change date.
+        sheet.getCellAt("I10").setValue(new Date());
+        // Change strings.
+        sheet.setValueAt("Filling test", 1, 1);
+        sheet.getCellAt("B27").setValue("On site support");
+        // Change number.
+        sheet.getCellAt("F24").setValue(3);
+        // Or better yet use a named range
+        // (relative to the first cell of the range, wherever it might be).
+        sheet.getSpreadSheet().getTableModel("Products").setValueAt(1, 5, 4);
+        // Save to file and open it.
+        File outputFile = new File("fillingTest.ods");
+        OOUtils.open(sheet.getSpreadSheet().saveAs(outputFile));
+*/
+
+        // Get the data to save (create a copy)
+        Vector< Vector<Object> > data = new Vector< Vector<Object> >(orderDetailData);
+        // Convert columns as needed
+        int index = columnLabels.indexOf("Einzelpreis");
+        for (int row=0; row<data.size(); row++){
+            String value = data.get(row).get(index).toString();
+            value = value.replace(',','.').replace(currencySymbol, "").trim();
+            BigDecimal newValue = new BigDecimal(value);
+            data.get(row).set(index, newValue);
+        }
+        index = columnLabels.indexOf("VPE");
+        for (int row=0; row<data.size(); row++){
+            String value = (String) data.get(row).get(index);
+            Integer newValue = null;
+            if (value != null){
+                newValue = Integer.parseInt(value);
+            }
+            data.get(row).set(index, newValue);
+        }
+        index = columnLabels.indexOf("Stückzahl");
+        for (int row=0; row<data.size(); row++){
+            String value = data.get(row).get(index).toString();
+            Integer newValue = Integer.parseInt(value);
+            data.get(row).set(index, newValue);
+        }
+        TableModel model = new DefaultTableModel(data, columnLabels);
+
+        try {
+            // Save the data to an ODS file and open it.
+            SpreadSheet.createEmpty(model).saveAs(file);
+            OOUtils.open(file);
+        } catch (FileNotFoundException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
@@ -363,25 +456,17 @@ public class BestellAnzeige extends BestellungsGrundlage {
 	    return;
 	}
         if (e.getSource() == exportButton){
-            // Create the data to save.
-            final Object[][] data = new Object[6][2];
-            data[0] = new Object[] { "January", 1 };
-            data[1] = new Object[] { "February", 3 };
-            data[2] = new Object[] { "March", 8 };
-            data[3] = new Object[] { "April", 10 };
-            data[4] = new Object[] { "May", 15 };
-            data[5] = new Object[] { "June", 18 };
+            int returnVal = fc.showSaveDialog(this);
+            if (returnVal == JFileChooser.APPROVE_OPTION){
+                File file = fc.getSelectedFile();
 
-            String[] columns = new String[] { "Month", "Temp" };
+                writeSpreadSheet(file);
 
-            TableModel model = new DefaultTableModel(data, columns);  
-
-            // Save the data to an ODS file and open it.
-            final File file = new File("temperature.ods");
-            SpreadSheet.createEmpty(model).saveAs(file);
-
-            OOUtils.open(file);
-	    return;
+                System.out.println("Written to " + file.getName());
+            } else {
+                System.out.println("Open command cancelled by user.");
+            }
+            return;
 	}
     }
 }
