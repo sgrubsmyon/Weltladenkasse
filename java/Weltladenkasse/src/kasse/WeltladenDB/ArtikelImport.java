@@ -296,12 +296,8 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                 String herkunft = fields[5].length() == 0 ? "NULL" : fields[5];
                 String vpe = fields[6].length() == 0 ? "NULL" : fields[6];
                 String vkpreis = fields[7].length() == 0 ? "NULL" : fields[7];
-                String ekpreis = "NULL";
-                if (fields.length > 8)
-                    ekpreis = fields[8].length() == 0 ? "NULL" : fields[8];
-                String variabel = "false";
-                if (fields.length > 9)
-                    variabel = fields[9].length() == 0 ? "false" : fields[9];
+                String ekpreis = fields[8].length() == 0 ? "NULL" : fields[8];
+                String variabel = fields[9].length() == 0 ? "false" : fields[9];
 
                 // parse the fields
                 String gruppenid = queryGruppenID(gruppenname);
@@ -336,12 +332,14 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                     ekpreis = "NULL";
                 } else {
                     variabel = "0";
-                    try {
-                        vkpreis = priceFormatterIntern(vkpreis);
-                    } catch (NumberFormatException ex) {
-                        logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 5: 'VK-Preis').</div>\n";
-                        log.setText(logString+logStringEnd);
-                        continue;
+                    if ( !vkpreis.equals("NULL") ){
+                        try {
+                            vkpreis = priceFormatterIntern(vkpreis);
+                        } catch (NumberFormatException ex) {
+                            logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 5: 'VK-Preis').</div>\n";
+                            log.setText(logString+logStringEnd);
+                            continue;
+                        }
                     }
                     if ( !ekpreis.equals("NULL") ){
                         try {

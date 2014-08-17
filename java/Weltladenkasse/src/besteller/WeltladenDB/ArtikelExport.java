@@ -86,27 +86,27 @@ public class ArtikelExport extends WindowContent {
         fileStr += "#Produktgruppe;Artikelname;Art.-Nr.;Barcode;VK-Preis;EK-Preis;Variabel;VPE;Lieferant;Herkunft"+lineSep;
         for (int i=0; i<artikelListe.originalData.size(); i++){
             String produktgruppe = (String)artikelListe.originalData.get(i).get(3);
-            String name = (String)artikelListe.originalData.get(i).get(0);
+            String lieferant = (String)artikelListe.originalData.get(i).get(10);
             String nummer = (String)artikelListe.originalData.get(i).get(1);
+            String name = (String)artikelListe.originalData.get(i).get(0);
             String barcode = (String)artikelListe.originalData.get(i).get(2);
+            String herkunft = (String)artikelListe.originalData.get(i).get(11);
+            String vpe = (String)artikelListe.originalData.get(i).get(6);
             Boolean var = artikelListe.varPreisBools.get(i);
             String varStr = var ? "Ja" : "Nein";
             String vkp = var ? "" : (String)artikelListe.originalData.get(i).get(4);
             String ekp = var ? "" : (String)artikelListe.originalData.get(i).get(5);
-            String vpe = (String)artikelListe.originalData.get(i).get(6);
-            String lieferant = (String)artikelListe.originalData.get(i).get(10);
-            String herkunft = (String)artikelListe.originalData.get(i).get(11);
 
             fileStr += produktgruppe + delimiter;
-            fileStr += name + delimiter;
+            fileStr += lieferant + delimiter;
             fileStr += nummer + delimiter;
+            fileStr += name + delimiter;
             fileStr += barcode + delimiter;
+            fileStr += herkunft + delimiter;
+            fileStr += vpe + delimiter;
             fileStr += vkp + delimiter;
             fileStr += ekp + delimiter;
-            fileStr += varStr + delimiter;
-            fileStr += vpe + delimiter;
-            fileStr += lieferant + delimiter;
-            fileStr += herkunft + lineSep;
+            fileStr += varStr + lineSep;
         }
 
         System.out.println(fileStr);

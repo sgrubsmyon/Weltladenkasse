@@ -179,7 +179,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 if (mwst != null){ mwstOutput = vatFormatter(mwst); }
                 if (vkp == null){ vkpOutput = ""; mwstBetrag = ""; }
                 if (mwst == null){ mwstOutput = ""; mwstBetrag = ""; }
-                if (var.equals("1")){ vkpOutput = "variabel"; ekp = "variabel"; mwstBetrag = "variabel"; }
+                if (var == true){ vkpOutput = "variabel"; ekp = "variabel"; mwstBetrag = "variabel"; }
                 else if (vkp != null && mwst != null) {
                     mwstBetrag = priceFormatter( calculateVAT(new BigDecimal(vkp), new BigDecimal(mwst)) )+" "+currencySymbol;
                 }
@@ -198,7 +198,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 row.add(lieferant); row.add(herkunft); row.add(aktivBool);
                 data.add(row);
                 activeRowBools.add(aktivBool);
-                varPreisBools.add(var.equals("1"));
+                varPreisBools.add(var);
                 produktGruppeIDs.add(produktgruppen_id);
                 lieferantIDs.add(lieferant_id);
             }
@@ -261,8 +261,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 continue; // continue with next item
             }
             if ( changedAktiv.get(index) == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
-                result = insertNewItem(editArtikelName.get(index),
-                        editArtikelNummer.get(index),
+                result = insertNewItem(changedName.get(index),
+                        changedNummer.get(index),
                         changedBarcode.get(index), var_preis,
                         changedVKP.get(index), changedEKP.get(index),
                         changedVPE.get(index), prod_id, lief_id,
@@ -715,8 +715,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             if (nummerIndex == nameIndex && nummerIndex != -1){ // this row has been changed before, all changes undone
                 editArtikelName.remove(nummerIndex); // remove item from list of changes
                 editArtikelNummer.remove(nummerIndex);
-                changedNummer.remove(nummerIndex);
                 changedName.remove(nummerIndex);
+                changedNummer.remove(nummerIndex);
                 changedBarcode.remove(nummerIndex);
                 changedVKP.remove(nummerIndex);
                 changedEKP.remove(nummerIndex);
