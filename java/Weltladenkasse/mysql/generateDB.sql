@@ -38,7 +38,7 @@ CREATE TABLE produktgruppe (
 
 CREATE TABLE artikel (
     artikel_id int(10) unsigned NOT NULL AUTO_INCREMENT,
-    artikel_name varchar(100) NOT NULL,
+    artikel_name varchar(160) NOT NULL,
     artikel_nr varchar(30) NOT NULL,
     barcode varchar(30) DEFAULT NULL,
     vk_preis decimal(13,2),
