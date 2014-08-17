@@ -276,32 +276,32 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                 line = line.replaceAll("\"","");
 
                 // get the fields
-                String[] fields = line.split(delimiter);
-                if (fields.length < 5 ){
+                String[] fields = line.split(delimiter, 10);
+                //if (fields.length < 4 ){
+                //    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (nicht genug Felder).</div>\n";
+                //    log.setText(logString+logStringEnd);
+                //    continue;
+                //}
+
+                String gruppenname = fields[0];
+                if (gruppenname.length() == 0){
                     logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (nicht genug Felder).</div>\n";
                     log.setText(logString+logStringEnd);
                     continue;
                 }
-                String gruppenname = fields[0];
-                String name = fields[1];
+                String lieferant = fields[1].length() == 0 ? "unbekannt" : fields[1];
                 String nummer = fields[2];
-                String barcode = fields[3].length() == 0 ? "NULL" : fields[3];
-                String vkpreis = fields[4];
+                String name = fields[3];
+                String barcode = fields[4].length() == 0 ? "NULL" : fields[4];
+                String herkunft = fields[5].length() == 0 ? "NULL" : fields[5];
+                String vpe = fields[6].length() == 0 ? "NULL" : fields[6];
+                String vkpreis = fields[7].length() == 0 ? "NULL" : fields[7];
                 String ekpreis = "NULL";
-                if (fields.length > 5)
-                    ekpreis = fields[5].length() == 0 ? "NULL" : fields[5];
-                String variabel = "false";
-                if (fields.length > 6)
-                    variabel = fields[6].length() == 0 ? "false" : fields[6];
-                String vpe = "NULL";
-                if (fields.length > 7)
-                    vpe = fields[7].length() == 0 ? "NULL" : fields[7];
-                String lieferant = "";
                 if (fields.length > 8)
-                    lieferant = fields[8];
-                String herkunft = "NULL";
+                    ekpreis = fields[8].length() == 0 ? "NULL" : fields[8];
+                String variabel = "false";
                 if (fields.length > 9)
-                    herkunft = fields[9].length() == 0 ? "NULL" : fields[9];
+                    variabel = fields[9].length() == 0 ? "false" : fields[9];
 
                 // parse the fields
                 String gruppenid = queryGruppenID(gruppenname);
@@ -412,7 +412,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                     artikelNeu.variablePreise.add( variabel.equals("0") ? false : true );
                     artikelNeu.vpes.add( vpe.equals("NULL") ? null :
                             Integer.parseInt(vpe) );
-                    artikelNeu.selLieferantIDs.add( lieferantid.equals("NULL") ? null : 
+                    artikelNeu.selLieferantIDs.add( lieferantid.equals("NULL") ? null :
                             Integer.parseInt(lieferantid) );
                     artikelNeu.selProduktgruppenIDs.add( gruppenid.equals("NULL") ? null :
                             Integer.parseInt(gruppenid) );
