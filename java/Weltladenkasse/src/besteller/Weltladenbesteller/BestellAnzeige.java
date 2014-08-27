@@ -42,6 +42,8 @@ import javax.swing.*;
 import javax.swing.table.*;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.DocumentEvent;
 
 import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.ArtikelGrundlage;
@@ -49,37 +51,41 @@ import WeltladenDB.AnyJComponentJTable;
 import WeltladenDB.JComponentCellRenderer;
 import WeltladenDB.JComponentCellEditor;
 
-public class BestellAnzeige extends BestellungsGrundlage {
+public class BestellAnzeige extends BestellungsGrundlage implements DocumentListener {
     // Attribute:
-    protected int bestellungenProSeite = 25;
-    protected int currentPage = 1;
-    protected int totalPage;
-    protected String bestellungsZahl;
-    protected int bestellungsZahlInt;
-
-    protected String filterStr; // show only specific items of the order
+    private int bestellungenProSeite = 25;
+    private int currentPage = 1;
+    private int totalPage;
+    private String bestellungsZahl;
+    private int bestellungsZahlInt;
 
     private TabbedPane tabbedPane;
 
     private JFileChooser fc;
-    protected JButton prevButton;
-    protected JButton nextButton;
-    protected JButton exportButton; // click the button to print the order
-    protected JButton editButton; // click the button to edit the order (in the Bestellen tab)
-    protected JTextField filterField;
+    private JButton prevButton;
+    private JButton nextButton;
+    private JButton exportButton; // click the button to print the order
+    private JButton editButton; // click the button to edit the order (in the Bestellen tab)
+    private JTextField filterField;
 
-    protected int selBestellNr;
-    protected Vector<Integer> bestellNummern;
-    protected Vector< Vector<String> > orderData;
-    protected Vector<String> orderLabels;
-    protected Vector< Vector<Object> > orderDetailData;
-    protected Vector<Integer> orderDetailArtikelIDs;
+    private int selBestellNr;
+    private Vector<Integer> bestellNummern;
+    private Vector< Vector<String> > orderData;
+    private Vector<String> orderLabels;
+    private Vector< Vector<Object> > orderDetailData;
+    private Vector<Integer> orderDetailArtikelIDs;
+    private Vector< Vector<Object> > orderDetailDisplayData;
+    private Vector<Integer> orderDetailDisplayIndices;
 
     private JSplitPane splitPane;
     private JPanel orderPanel;
     private JPanel orderDetailPanel;
-    protected AnyJComponentJTable orderTable;
-    protected BestellungsTable orderDetailTable;
+    private JPanel orderDetailTablePanel;
+    private JScrollPane orderDetailScrollPane;
+    private AnyJComponentJTable orderTable;
+    private BestellungsTable orderDetailTable;
+
+    private String filterStr = ""; // show only specific items of the order
 
     // Methoden:
 
@@ -180,13 +186,13 @@ public class BestellAnzeige extends BestellungsGrundlage {
             orderDetailPanel.setLayout(new BorderLayout());
 
             // Panel for header and both tables
-            JPanel tablePanel = new JPanel();
-            tablePanel.setLayout(new BoxLayout(tablePanel, BoxLayout.Y_AXIS));
+            orderDetailTablePanel = new JPanel();
+            orderDetailTablePanel.setLayout(new BoxLayout(orderDetailTablePanel, BoxLayout.Y_AXIS));
 
                 // Header
                 JLabel headerLabel = new JLabel("Details der Bestellung:");
                 headerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-                tablePanel.add(headerLabel);
+                orderDetailTablePanel.add(headerLabel);
 
                 // Table with general order data:
                 Vector<String> bestellung = orderData.get(bestellNummern.indexOf(bestellNr));
@@ -195,17 +201,17 @@ public class BestellAnzeige extends BestellungsGrundlage {
                 JTable bestellTable = new JTable(bestellData, orderLabels);
                 JScrollPane sp1 = new JScrollPane(bestellTable);
                 sp1.setPreferredSize(new Dimension((int)sp1.getPreferredSize().getWidth(), 40));
-                tablePanel.add(sp1);
+                orderDetailTablePanel.add(sp1);
 
                 // Table with order details:
                 retrieveOrderDetailData(bestellNr);
-                orderDetailTable = new BestellungsTable(orderDetailData, columnLabels);
+                orderDetailTable = new BestellungsTable(orderDetailDisplayData, columnLabels);
                 setTableProperties(orderDetailTable);
 
-                JScrollPane sp2 = new JScrollPane(orderDetailTable);
-                tablePanel.add(sp2);
+                orderDetailScrollPane = new JScrollPane(orderDetailTable);
+                orderDetailTablePanel.add(orderDetailScrollPane);
 
-            orderDetailPanel.add(tablePanel, BorderLayout.CENTER);
+            orderDetailPanel.add(orderDetailTablePanel, BorderLayout.CENTER);
 
             // Panel for buttons
             JPanel buttonPanel = new JPanel(new FlowLayout());
@@ -215,6 +221,16 @@ public class BestellAnzeige extends BestellungsGrundlage {
 	    editButton.addActionListener(this);
             buttonPanel.add(exportButton);
             buttonPanel.add(editButton);
+            
+            JLabel filterLabel = new JLabel("Filter:");
+            filterLabel.setAlignmentX(JComponent.RIGHT_ALIGNMENT);
+            buttonPanel.add(filterLabel);
+            filterField = new JTextField("");
+            filterField.setColumns(10);
+            filterField.getDocument().addDocumentListener(this);
+            filterField.setAlignmentX(JComponent.RIGHT_ALIGNMENT);
+            buttonPanel.add(filterField);
+
             orderDetailPanel.add(buttonPanel, BorderLayout.SOUTH);
         }
     }
@@ -231,6 +247,17 @@ public class BestellAnzeige extends BestellungsGrundlage {
         splitPane.setRightComponent(orderDetailPanel);
 	//this.revalidate();
 	showOrderDetailTable(selBestellNr);
+    }
+
+    private void updateDetailTable() {
+        orderDetailTablePanel.remove(orderDetailScrollPane);
+	orderDetailTablePanel.revalidate();
+
+        orderDetailTable = new BestellungsTable(orderDetailDisplayData, columnLabels);
+        setTableProperties(orderDetailTable);
+
+        orderDetailScrollPane = new JScrollPane(orderDetailTable);
+        orderDetailTablePanel.add(orderDetailScrollPane);
     }
 
     void retrieveOrderData() {
@@ -310,6 +337,8 @@ public class BestellAnzeige extends BestellungsGrundlage {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+        orderDetailDisplayData = new Vector< Vector<Object> >(orderDetailData);
+        initiateDisplayIndices();
     }
 
     Vector< Vector<Object> > retrieveOrderDetailData_forExport(int bestellNr) {
@@ -457,46 +486,62 @@ public class BestellAnzeige extends BestellungsGrundlage {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
-/*
-        // Get the data to save (create a copy)
-        Vector< Vector<Object> > data = new Vector< Vector<Object> >(orderDetailData);
-        // Convert columns as needed
-        int index = columnLabels.indexOf("Einzelpreis");
-        for (int row=0; row<data.size(); row++){
-            String value = data.get(row).get(index).toString();
-            value = value.replace(',','.').replace(currencySymbol, "").trim();
-            BigDecimal newValue = new BigDecimal(value);
-            data.get(row).set(index, newValue);
-        }
-        index = columnLabels.indexOf("VPE");
-        for (int row=0; row<data.size(); row++){
-            String value = (String) data.get(row).get(index);
-            Integer newValue = null;
-            if (value != null){
-                newValue = Integer.parseInt(value);
-            }
-            data.get(row).set(index, newValue);
-        }
-        index = columnLabels.indexOf("Stückzahl");
-        for (int row=0; row<data.size(); row++){
-            String value = data.get(row).get(index).toString();
-            Integer newValue = Integer.parseInt(value);
-            data.get(row).set(index, newValue);
-        }
-        TableModel model = new DefaultTableModel(data, columnLabels);
+    }
 
-        try {
-            // Save the data to an ODS file and open it.
-            SpreadSheet.createEmpty(model).saveAs(file);
-            OOUtils.open(file);
-        } catch (FileNotFoundException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+    /**
+     *    * Each non abstract class that implements the DocumentListener
+     *      must have these methods.
+     *
+     *    @param e the document event.
+     **/
+    public void insertUpdate(DocumentEvent e) {
+        if (e.getDocument() == filterField.getDocument()){
+            filterStr = filterField.getText();
+            applyFilter();
+            updateDetailTable();
         }
-*/
+    }
+    public void removeUpdate(DocumentEvent e) {
+        insertUpdate(e);
+    }
+    public void changedUpdate(DocumentEvent e) {
+	// Plain text components do not fire these events
+    }
+
+    private void initiateDisplayIndices() {
+        orderDetailDisplayIndices = new Vector<Integer>();
+        for (int i=0; i<orderDetailData.size(); i++){
+            orderDetailDisplayIndices.add(i);
+        }
+    }
+
+    private void applyFilter() {
+        orderDetailDisplayData = new Vector< Vector<Object> >(orderDetailData);
+        initiateDisplayIndices();
+        if (filterStr.length() == 0){
+            return;
+        }
+        for (int i=0; i<orderDetailData.size(); i++){
+            boolean contains = false;
+            for (Object obj : orderDetailData.get(i)){
+                String str;
+                try {
+                    str = (String) obj;
+                    str = str.toLowerCase();
+                } catch (ClassCastException ex) {
+                    str = "";
+                }
+                if (str.contains(filterStr.toLowerCase())){
+                    contains = true;
+                    break;
+                }
+            }
+            if (!contains){
+                int display_index = orderDetailDisplayIndices.indexOf(i);
+                orderDetailDisplayData.remove(display_index);
+                orderDetailDisplayIndices.remove(display_index);
+            }
+        }
     }
 
     /**

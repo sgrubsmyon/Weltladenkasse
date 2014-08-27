@@ -76,6 +76,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private JTextField jahrField;
     private JSpinner kwSpinner;
     private JTextField kwField;
+    private JTextField filterField;
     // Buttons
     private JButton emptyBarcodeButton;
     private JButton emptyArtikelButton;
@@ -88,15 +89,21 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     // The panels
     private JPanel allPanel;
     private JPanel articleListPanel;
+    private JScrollPane articleScrollPane;
     private JPanel abschliessenPanel;
 
     // The table holding the purchase articles.
     private BestellungsTable orderTable;
-    protected Vector< Vector<Object> > data;
+    protected Vector< Vector<Object> > data; // holding full/original data
+    protected Vector< Vector<Object> > displayData; // holding the subset of data used for display
+                                                    // (after applying filter)
+    private Vector<Integer> displayIndices; // holding indices that rows in displayData have in data
     private Vector<Integer> artikelIDs;
     private Vector<Integer> stueckzahlen;
 
     private CurrencyDocumentFilter geldFilter = new CurrencyDocumentFilter();
+
+    private String filterStr = "";
 
     // Methoden:
 
@@ -246,8 +253,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             barcodeLabel.setLabelFor(barcodeBox);
             barcodeLabel.setDisplayedMnemonic(KeyEvent.VK_C);
             barcodePanel.add(barcodeLabel);
-            String filterStr = " AND variabler_preis = FALSE AND toplevel_id IS NOT NULL ";
-            barcodeBox = new BarcodeComboBox(this.conn, filterStr);
+            String comboBoxFilterStr = " AND variabler_preis = FALSE AND toplevel_id IS NOT NULL ";
+            barcodeBox = new BarcodeComboBox(this.conn, comboBoxFilterStr);
             barcodeBox.addActionListener(this);
             //barcodeBox.addItemListener(this);
             barcodeBox.addPopupMouseListener(new MouseListenerBarcodeBox());
@@ -267,7 +274,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             artikelLabel.setLabelFor(artikelBox);
             artikelLabel.setDisplayedMnemonic(KeyEvent.VK_A);
             chooseArticlePanel1.add(artikelLabel);
-            artikelBox = new ArtikelNameComboBox(this.conn, filterStr);
+            artikelBox = new ArtikelNameComboBox(this.conn, comboBoxFilterStr);
             artikelBox.addActionListener(this);
             //artikelBox.addItemListener(this);
             artikelBox.addPopupMouseListener(new MouseListenerArtikelBox());
@@ -285,7 +292,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             nummerLabel.setLabelFor(nummerBox);
             nummerLabel.setDisplayedMnemonic(KeyEvent.VK_N);
             chooseArticlePanel1.add(nummerLabel);
-            nummerBox = new ArtikelNummerComboBox(this.conn, filterStr);
+            nummerBox = new ArtikelNummerComboBox(this.conn, comboBoxFilterStr);
             nummerBox.addActionListener(this);
             //nummerBox.addItemListener(this);
             nummerBox.addPopupMouseListener(new MouseListenerNummerBox());
@@ -377,9 +384,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	this.add(allPanel, BorderLayout.CENTER);
     }
 
-
-    void showTable(){
-	orderTable = new BestellungsTable(data, columnLabels);
+    void initiateTable() {
+	orderTable = new BestellungsTable(displayData, columnLabels);
         orderTable.setColEditableTrue(columnLabels.size()-1); // last column has buttons
 	orderTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
 	orderTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
@@ -389,13 +395,17 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	TableColumn entf = orderTable.getColumn("Entfernen");
 	entf.setPreferredWidth(2);
 //	orderTable.setAutoResizeMode(5);
+    }
+
+    void showTable(){
+        initiateTable();
 
 	articleListPanel = new JPanel();
 	articleListPanel.setLayout(new BoxLayout(articleListPanel, BoxLayout.Y_AXIS));
 	articleListPanel.setBorder(BorderFactory.createTitledBorder("Gewählte Artikel"));
 
-            JScrollPane scrollPane = new JScrollPane(orderTable);
-            articleListPanel.add(scrollPane);
+            articleScrollPane = new JScrollPane(orderTable);
+            articleListPanel.add(articleScrollPane);
 
 	allPanel.add(articleListPanel);
 
@@ -412,12 +422,23 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             verwerfenButton.addActionListener(this);
             verwerfenButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
             abschliessenPanel.add(verwerfenButton);
+
+            JLabel filterLabel = new JLabel("Filter:");
+            filterLabel.setAlignmentX(JComponent.RIGHT_ALIGNMENT);
+            abschliessenPanel.add(filterLabel);
+            filterField = new JTextField("");
+            filterField.setColumns(10);
+            filterField.getDocument().addDocumentListener(this);
+            filterField.setAlignmentX(JComponent.RIGHT_ALIGNMENT);
+            abschliessenPanel.add(filterField);
         allPanel.add(abschliessenPanel);
     }
 
     void emptyTable(){
 	data = new Vector< Vector<Object> >();
-        orderTable = new BestellungsTable(data, columnLabels);
+        displayData = new Vector< Vector<Object> >();
+        displayIndices = new Vector<Integer>();
+        orderTable = new BestellungsTable(displayData, columnLabels);
         artikelIDs = new Vector<Integer>();
         stueckzahlen = new Vector<Integer>();
         removeButtons = new Vector<JButton>();
@@ -425,6 +446,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
     private void clearAll(){
         data.clear();
+        displayData.clear();
+        displayIndices.clear();
         artikelIDs.clear();
         stueckzahlen.clear();
         removeButtons.clear();
@@ -447,10 +470,11 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     }
 
     private void updateTable(){
-        allPanel.remove(articleListPanel);
-	allPanel.remove(abschliessenPanel);
-	allPanel.revalidate();
-	showTable();
+        articleListPanel.remove(articleScrollPane);
+	articleListPanel.revalidate();
+        initiateTable();
+        articleScrollPane = new JScrollPane(orderTable);
+        articleListPanel.add(articleScrollPane);
         setButtonsEnabled();
     }
 
@@ -782,6 +806,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         row.add(vkp); row.add(vpe); row.add(stueck);
         row.add(removeButtons.lastElement());
         data.add(row);
+
+        displayData = new Vector< Vector<Object> >(data);
+        initiateDisplayIndices();
     }
 
     private void fuegeArtikelHinzu(Integer stueck) {
@@ -804,11 +831,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         hinzufuegen(selectedArtikelID, lieferant, artikelNummer, artikelName,
                 artikelPreis, vpe, stueck.toString());
         updateAll();
-    }
-
-    private void artikelHinzufuegen() {
-        Integer stueck = (Integer)anzahlSpinner.getValue();
-        fuegeArtikelHinzu(stueck);
     }
 
     private int abschliessen() {
@@ -1032,12 +1054,53 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
             updateAnzahlColor(vpeInt);
         }
+        if (e.getDocument() == filterField.getDocument()){
+            filterStr = filterField.getText();
+            applyFilter();
+            updateTable();
+        }
     }
     public void removeUpdate(DocumentEvent e) {
         insertUpdate(e);
     }
     public void changedUpdate(DocumentEvent e) {
 	// Plain text components do not fire these events
+    }
+
+    private void initiateDisplayIndices() {
+        displayIndices = new Vector<Integer>();
+        for (int i=0; i<data.size(); i++){
+            displayIndices.add(i);
+        }
+    }
+
+    private void applyFilter() {
+        displayData = new Vector< Vector<Object> >(data);
+        initiateDisplayIndices();
+        if (filterStr.length() == 0){
+            return;
+        }
+        for (int i=0; i<data.size(); i++){
+            boolean contains = false;
+            for (Object obj : data.get(i)){
+                String str;
+                try {
+                    str = (String) obj;
+                    str = str.toLowerCase();
+                } catch (ClassCastException ex) {
+                    str = "";
+                }
+                if (str.contains(filterStr.toLowerCase())){
+                    contains = true;
+                    break;
+                }
+            }
+            if (!contains){
+                int display_index = displayIndices.indexOf(i);
+                displayData.remove(display_index);
+                displayIndices.remove(display_index);
+            }
+        }
     }
 
     /**
@@ -1085,7 +1148,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             return;
         }
         if (e.getSource() == hinzufuegenButton){
-            artikelHinzufuegen();
+            Integer stueck = (Integer)anzahlSpinner.getValue();
+            fuegeArtikelHinzu(stueck);
 	    return;
 	}
         if (e.getSource() == emptyBarcodeButton){
@@ -1119,26 +1183,24 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             verwerfen();
 	    return;
 	}
-	int removeRow = -1;
+	int removeIndex = -1;
 	for (int i=0; i<removeButtons.size(); i++){
-	    if (e.getSource() == removeButtons.get(i) ){
-		removeRow = i;
+	    if ( e.getSource() == removeButtons.get(i) ){
+		removeIndex = i;
 		break;
 	    }
 	}
-        if (removeRow > -1){
-            data.remove(removeRow);
-            artikelIDs.remove(removeRow);
-            stueckzahlen.remove(removeRow);
-            removeButtons.remove(removeRow);
-            // remove extra rows (Rabatt oder Pfand):
-            while ( removeRow < removeButtons.size() && removeButtons.get(removeRow) == null ){
-                data.remove(removeRow);
-                artikelIDs.remove(removeRow);
-                stueckzahlen.remove(removeRow);
-                removeButtons.remove(removeRow);
-            }
-            updateAll();
+        if (removeIndex > -1){
+            data.remove(removeIndex);
+            artikelIDs.remove(removeIndex);
+            stueckzahlen.remove(removeIndex);
+            removeButtons.remove(removeIndex);
+
+            int removeRow = displayIndices.indexOf(removeIndex);
+            displayData.remove(removeRow);
+            displayIndices.remove(removeRow);
+
+            updateTable();
             return;
         }
     }
