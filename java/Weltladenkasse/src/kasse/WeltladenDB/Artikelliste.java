@@ -33,7 +33,8 @@ import javax.swing.table.*;
 import javax.swing.event.*; // for TableModelListener
 import javax.swing.text.*; // for DocumentFilter
 
-public class Artikelliste extends WindowContent implements ItemListener, TableModelListener, ListSelectionListener {
+public class Artikelliste extends WindowContent implements ItemListener, TableModelListener,
+       ListSelectionListener, DocumentListener {
     // Attribute:
     private ArtikellisteContainer container;
     private Integer toplevel_id;
@@ -47,9 +48,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private boolean showInaktive = false;
     private JCheckBox internalCheckBox;
     private boolean showInternals = false;
-    private JTextField searchField;
-    private JButton searchButton;
-    private JButton stopButton;
+    private JTextField filterField;
     private JButton saveButton;
     private JButton revertButton;
     private JButton editButton;
@@ -65,6 +64,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private JTable myTable;
     private Vector< Vector<Object> > data;
     public Vector< Vector<Object> > originalData;
+    public Vector< Vector<Object> > displayData;
+    public Vector<Integer> displayIndices;
     private Vector<String> columnLabels;
     private Vector<Boolean> activeRowBools;
     public Vector<Boolean> varPreisBools;
@@ -140,15 +141,9 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     "LEFT JOIN produktgruppe USING (produktgruppen_id) "+
                     "LEFT JOIN mwst USING (mwst_id) "+
                     "WHERE " + filter +
-                    "AND ( artikel_name LIKE ? OR artikel_nr LIKE ? OR lieferant_name LIKE ? " +
-                    "OR herkunft LIKE ? ) " +
                     aktivFilterStr +
                     "ORDER BY " + orderByStr
                     );
-            pstmt.setString(1, "%"+filterStr+"%");
-            pstmt.setString(2, "%"+filterStr+"%");
-            pstmt.setString(3, "%"+filterStr+"%");
-            pstmt.setString(4, "%"+filterStr+"%");
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 Integer produktgruppen_id = rs.getInt(1);
@@ -214,6 +209,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             originalRow.addAll(row);
             originalData.add(originalRow);
         }
+        displayData = new Vector< Vector<Object> >(data);
         editArtikelName = new Vector<String>();
         editArtikelNummer = new Vector<String>();
         changedName = new Vector<String>();
@@ -311,25 +307,13 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         topPanel.add(topLeftPanel, BorderLayout.WEST);
         JPanel topRightPanel = new JPanel();
         topRightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
-          JLabel searchFieldLabel = new JLabel("Filter");
-          searchField = new JTextField(filterStr);
-          searchField.setColumns(20);
-          searchField.addKeyListener(new KeyAdapter() {
-              public void keyPressed(KeyEvent e) {
-                  if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
-                      searchButton.doClick();
-                  }
-              }
-          });
-          searchButton = new JButton("Los!");
-          searchButton.addActionListener(this);
-          stopButton = new JButton("Stop");
-          stopButton.addActionListener(this);
+          JLabel filterLabel = new JLabel("Filter:");
+          topRightPanel.add(filterLabel);
+          filterField = new JTextField("");
+          filterField.setColumns(20);
+          filterField.getDocument().addDocumentListener(this);
 
-          topRightPanel.add(searchFieldLabel);
-          topRightPanel.add(searchField);
-          topRightPanel.add(searchButton);
-          topRightPanel.add(stopButton);
+          topRightPanel.add(filterField);
         topPanel.add(topRightPanel, BorderLayout.EAST);
         allPanel.add(topPanel, BorderLayout.NORTH);
 
@@ -405,10 +389,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 }
                 return -1;
             }
-            public int getRowCount() { return data.size(); }
+            public int getRowCount() { return displayData.size(); }
             public int getColumnCount() { return columnLabels.size(); }
             public Object getValueAt(int row, int col) {
-                return data.get(row).get(col);
+                return displayData.get(row).get(col);
             }
             public Class getColumnClass(int c) { // JTable uses this method to determine the default renderer/editor for each cell.
                                                  // If we didn't implement this method, then the last column would contain text ("true"/"false"),
@@ -419,7 +403,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 String header = this.getColumnName(col);
                 if ( activeRowBools.get(row) ){
                     if ( header.equals("VK-Preis") || header.equals("EK-Preis") ) {
-                        if ( ! data.get(row).get(col).equals("variabel") )
+                        if ( ! displayData.get(row).get(col).equals("variabel") )
                             return true;
                     }
                     else if (
@@ -433,9 +417,9 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 return false;
             }
             public void setValueAt(Object value, int row, int col) {
-                Vector<Object> rowentries = data.get(row);
+                Vector<Object> rowentries = displayData.get(row);
                 rowentries.set(col, value);
-                data.set(row, rowentries);
+                displayData.set(row, rowentries);
                 fireTableCellUpdated(row, col);
             }
         } ) { // subclass the JTable to set font properties and tool tip text
@@ -815,6 +799,62 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     }
 
     /**
+     *    * Each non abstract class that implements the DocumentListener
+     *      must have these methods.
+     *
+     *    @param e the document event.
+     **/
+    public void insertUpdate(DocumentEvent e) {
+        if (e.getDocument() == filterField.getDocument()){
+            filterStr = filterField.getText();
+            applyFilter();
+            updateTable();
+        }
+    }
+    public void removeUpdate(DocumentEvent e) {
+        insertUpdate(e);
+    }
+    public void changedUpdate(DocumentEvent e) {
+	// Plain text components do not fire these events
+    }
+
+    private void initiateDisplayIndices() {
+        displayIndices = new Vector<Integer>();
+        for (int i=0; i<data.size(); i++){
+            displayIndices.add(i);
+        }
+    }
+
+    private void applyFilter() {
+        displayData = new Vector< Vector<Object> >(data);
+        initiateDisplayIndices();
+        if (filterStr.length() == 0){
+            return;
+        }
+        for (int i=0; i<data.size(); i++){
+            boolean contains = false;
+            for (Object obj : data.get(i)){
+                String str;
+                try {
+                    str = (String) obj;
+                    str = str.toLowerCase();
+                } catch (ClassCastException ex) {
+                    str = "";
+                }
+                if (str.contains(filterStr.toLowerCase())){
+                    contains = true;
+                    break;
+                }
+            }
+            if (!contains){
+                int display_index = displayIndices.indexOf(i);
+                displayData.remove(display_index);
+                displayIndices.remove(display_index);
+            }
+        }
+    }
+
+    /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.
      *
@@ -848,26 +888,6 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         }
         if (e.getSource() == exportButton){
             showExportDialog();
-            return;
-        }
-        if (e.getSource() == searchButton){
-            if ( editArtikelName.size() > 0 ){
-                int answer = changeLossConfirmDialog();
-                if (answer == JOptionPane.YES_OPTION){
-                    filterStr = searchField.getText();
-                    updateAll();
-                } else {
-                    searchField.setText(filterStr);
-                }
-            } else {
-                filterStr = searchField.getText();
-                updateAll();
-            }
-            return;
-        }
-        if (e.getSource() == stopButton){
-            searchField.setText("");
-            searchButton.doClick();
             return;
         }
         if (e.getSource() == inaktivCheckBox){
