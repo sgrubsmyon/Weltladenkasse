@@ -125,7 +125,7 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         Boolean firstVarPreis = originalVarPreisBools.get(0);
         String firstVKP = (String)originalData.get(0).get(4);
         String firstEKP = (String)originalData.get(0).get(5);
-        Integer firstVPE = (Integer)originalData.get(0).get(6);
+        Integer firstVPE = Integer.parseInt( (String)originalData.get(0).get(6) );
         Integer firstLieferantID = originalLiefIDs.get(0);
         String firstHerkunft = (String)originalData.get(0).get(11);
         Boolean firstAktiv = (Boolean)originalData.get(0).get(12);
@@ -330,10 +330,10 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
                 (String)originalData.get(i).get(5);
             Integer vpe = artikelFormular.vpeSpinner.isEnabled() ?
                 (Integer)artikelFormular.vpeSpinner.getValue() :
-                (Integer)originalData.get(i).get(6);
+                Integer.parseInt( (String)originalData.get(i).get(6) );
             Integer lieferant_id = artikelFormular.lieferantBox.isEnabled() ?
                 artikelFormular.lieferantIDs.get( artikelFormular.lieferantBox.getSelectedIndex() ) :
-                (Integer)originalLiefIDs.get(i);
+                originalLiefIDs.get(i);
             String herkunft = artikelFormular.herkunftField.isEnabled() ?
                 artikelFormular.herkunftField.getText() :
                 (String)originalData.get(i).get(11);

@@ -43,6 +43,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private String gruppenname;
 
     private JPanel allPanel;
+    private JPanel artikelListPanel;
+    private JScrollPane scrollPane;
     private JButton backButton;
     private JCheckBox inaktivCheckBox;
     private boolean showInaktive = false;
@@ -210,6 +212,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             originalData.add(originalRow);
         }
         displayData = new Vector< Vector<Object> >(data);
+        initiateDisplayIndices();
         editArtikelName = new Vector<String>();
         editArtikelNummer = new Vector<String>();
         changedName = new Vector<String>();
@@ -368,13 +371,14 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         newButton.setEnabled(editArtikelName.size() == 0);
         importButton.setEnabled(editArtikelName.size() == 0);
         exportButton.setEnabled(editArtikelName.size() == 0);
+
+        System.out.println("Enable Buttons.");
+        System.out.println("data: "+data);
+        System.out.println("displayData: "+displayData);
+        System.out.println("displayIndices: "+displayIndices);
     }
 
-    void showTable() {
-        JPanel artikelListPanel = new JPanel();
-        artikelListPanel.setLayout(new BorderLayout());
-        artikelListPanel.setBorder(BorderFactory.createTitledBorder(this.gruppenname));
-
+    void initiateTable() {
         myTable = new JTable(new AbstractTableModel() { // subclass the AbstractTableModel to set editable cells etc.
             public String getColumnName(int col) {
                 return columnLabels.get(col);
@@ -420,6 +424,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 Vector<Object> rowentries = displayData.get(row);
                 rowentries.set(col, value);
                 displayData.set(row, rowentries);
+                int dataRow = displayIndices.get(row); // convert from displayData index to data index
+                data.set(dataRow, rowentries);
                 fireTableCellUpdated(row, col);
             }
         } ) { // subclass the JTable to set font properties and tool tip text
@@ -517,10 +523,27 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         }
         AnzahlEditor anzahlEditor = new AnzahlEditor();
         myTable.getColumn("VPE").setCellEditor(anzahlEditor);
+    }
 
-        JScrollPane scrollPane = new JScrollPane(myTable);
+    void showTable() {
+        initiateTable();
+
+        artikelListPanel = new JPanel();
+        artikelListPanel.setLayout(new BorderLayout());
+        artikelListPanel.setBorder(BorderFactory.createTitledBorder(this.gruppenname));
+
+        scrollPane = new JScrollPane(myTable);
         artikelListPanel.add(scrollPane, BorderLayout.CENTER);
         allPanel.add(artikelListPanel, BorderLayout.CENTER);
+    }
+
+    void updateTable() {
+        artikelListPanel.remove(scrollPane);
+	artikelListPanel.revalidate();
+        initiateTable();
+        scrollPane = new JScrollPane(myTable);
+        artikelListPanel.add(scrollPane);
+        enableButtons();
     }
 
     void setTableProperties(JTable myTable) {
@@ -749,6 +772,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         int[] selection = myTable.getSelectedRows();
         for (int i = 0; i < selection.length; i++) {
             selection[i] = myTable.convertRowIndexToModel(selection[i]);
+            selection[i] = displayIndices.get(selection[i]); // convert from displayData index to data index
             selectedData.add( data.get(selection[i]) );
             selectedProdGrIDs.add( produktGruppeIDs.get(selection[i]) );
             selectedLiefIDs.add( lieferantIDs.get(selection[i]) );
