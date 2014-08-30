@@ -51,6 +51,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     // Die Ausrichter:
     protected DefaultTableCellRenderer rechtsAusrichter = new DefaultTableCellRenderer();
     protected DefaultTableCellRenderer linksAusrichter = new DefaultTableCellRenderer();
+    protected DefaultTableCellRenderer zentralAusrichter = new DefaultTableCellRenderer();
     // Formats to format and parse numbers
     protected NumberFormat amountFormat;
     protected NumberFormat vatFormat;
@@ -83,6 +84,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 	vatFormat = new DecimalFormat("0.####");
 	rechtsAusrichter.setHorizontalAlignment(JLabel.RIGHT);
 	linksAusrichter.setHorizontalAlignment(JLabel.LEFT);
+	zentralAusrichter.setHorizontalAlignment(JLabel.CENTER);
 	this.setLayout(new BorderLayout());
 
 	this.mainWindow = mw;

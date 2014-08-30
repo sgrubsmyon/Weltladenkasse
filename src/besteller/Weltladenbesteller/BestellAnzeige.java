@@ -303,7 +303,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         orderDetailArtikelIDs = new Vector<Integer>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT l.lieferant_name, a.artikel_nr, a.artikel_name, "+
+                    "SELECT bd.position, l.lieferant_name, a.artikel_nr, a.artikel_name, "+
                     "a.vk_preis, a.vpe, bd.stueckzahl, bd.artikel_id "+
                     "FROM bestellung_details AS bd "+
                     "LEFT JOIN artikel AS a USING (artikel_id) "+
@@ -314,17 +314,19 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
-                String lieferant = rs.getString(1);
-                String artikelNummer = rs.getString(2);
-                String artikelName = rs.getString(3);
-                String vkp = rs.getString(4);
-                String vpe = rs.getString(5);
-                //Integer vpeInt = rs.getInt(5);
+                String pos = rs.getString(1);
+                String lieferant = rs.getString(2);
+                String artikelNummer = rs.getString(3);
+                String artikelName = rs.getString(4);
+                String vkp = rs.getString(5);
+                String vpe = rs.getString(6);
+                //Integer vpeInt = rs.getInt(6);
                 //vpeInt = vpeInt > 0 ? vpeInt : 0;
-                Integer stueck = rs.getInt(6);
-                Integer artikelID = rs.getInt(7);
+                Integer stueck = rs.getInt(7);
+                Integer artikelID = rs.getInt(8);
 
                 Vector<Object> row = new Vector<Object>();
+                row.add(pos);
                 row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
                 row.add(priceFormatter(vkp)+" "+currencySymbol); row.add(vpe); row.add(stueck);
                 row.add(""); // row.add(removeButtons.lastElement())
@@ -345,7 +347,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         Vector< Vector<Object> > orderExportData = new Vector< Vector<Object> >();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT l.lieferant_name, a.artikel_nr, a.artikel_name, "+
+                    "SELECT bd.position, l.lieferant_name, a.artikel_nr, a.artikel_name, "+
                     "a.vpe, a.vk_preis, a.ek_preis, m.mwst_satz, bd.stueckzahl "+
                     "FROM bestellung_details AS bd "+
                     "LEFT JOIN artikel AS a USING (artikel_id) "+
@@ -359,16 +361,18 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
-                String lieferant = rs.getString(1);
-                String artikelNummer = rs.getString(2);
-                String artikelName = rs.getString(3);
-                Integer vpe = rs.getString(4) == null ? null : rs.getInt(4);
-                BigDecimal vkp = rs.getBigDecimal(5);
-                BigDecimal ekp = rs.getBigDecimal(6);
-                BigDecimal mwst = rs.getBigDecimal(7);
-                Integer stueck = rs.getInt(8);
+                Integer pos = rs.getInt(1);
+                String lieferant = rs.getString(2);
+                String artikelNummer = rs.getString(3);
+                String artikelName = rs.getString(4);
+                Integer vpe = rs.getString(5) == null ? null : rs.getInt(4);
+                BigDecimal vkp = rs.getBigDecimal(6);
+                BigDecimal ekp = rs.getBigDecimal(7);
+                BigDecimal mwst = rs.getBigDecimal(8);
+                Integer stueck = rs.getInt(9);
 
                 Vector<Object> row = new Vector<Object>();
+                row.add(pos);
                 row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
                 row.add(vpe); row.add(vkp); row.add(ekp); row.add(mwst); row.add(stueck);
                 orderExportData.add(row);
