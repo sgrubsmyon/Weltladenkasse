@@ -100,6 +100,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private Vector<Integer> displayIndices; // holding indices that rows in displayData have in data
     private Vector<Integer> artikelIDs;
     private Vector<Integer> stueckzahlen;
+    private Vector<Integer> positions;
 
     private CurrencyDocumentFilter geldFilter = new CurrencyDocumentFilter();
 
@@ -427,7 +428,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             filterLabel.setAlignmentX(JComponent.RIGHT_ALIGNMENT);
             abschliessenPanel.add(filterLabel);
             filterField = new JTextField("");
-            filterField.setColumns(10);
+            filterField.setColumns(20);
             filterField.getDocument().addDocumentListener(this);
             filterField.setAlignmentX(JComponent.RIGHT_ALIGNMENT);
             abschliessenPanel.add(filterField);
@@ -441,6 +442,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         orderTable = new BestellungsTable(displayData, columnLabels);
         artikelIDs = new Vector<Integer>();
         stueckzahlen = new Vector<Integer>();
+        positions = new Vector<Integer>();
         removeButtons = new Vector<JButton>();
     }
 
@@ -450,6 +452,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         displayIndices.clear();
         artikelIDs.clear();
         stueckzahlen.clear();
+        positions.clear();
         removeButtons.clear();
         selBestellNr = -1;
         selJahr = -1;
@@ -497,14 +500,14 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         fileStr += selJahr + delimiter;
         fileStr += selKW + lineSep;
         // format of csv file:
-        fileStr += "#Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;artikelID"+lineSep;
+        fileStr += "#Position;Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;artikelID"+lineSep;
         for (int i=0; i<data.size(); i++){
-            String lieferant = (String)data.get(i).get(0);
-            String nummer = (String)data.get(i).get(1);
-            String name = (String)data.get(i).get(2);
-            String vkp = (String)data.get(i).get(3); vkp = vkp == null ? "" : vkp;
-            String vpe = (String)data.get(i).get(4); vpe = vpe == null ? "" : vpe;
-            String stueck = (String)data.get(i).get(5);
+            String lieferant = (String)data.get(i).get(1);
+            String nummer = (String)data.get(i).get(2);
+            String name = (String)data.get(i).get(3);
+            String vkp = (String)data.get(i).get(4); vkp = vkp == null ? "" : vkp;
+            String vpe = (String)data.get(i).get(5); vpe = vpe == null ? "" : vpe;
+            String stueck = (String)data.get(i).get(6);
             String artikelID = artikelIDs.get(i).toString();
 
             fileStr += lieferant + delimiter;
@@ -796,12 +799,18 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     protected void hinzufuegen(Integer artikelID,
             String lieferant, String artikelNummer, String artikelName,
             String vkp, String vpe, String stueck) {
+        Integer lastPos = 0;
+        try {
+            lastPos = positions.lastElement();
+        } catch (NoSuchElementException ex) { }
+        positions.add(lastPos+1);
         artikelIDs.add(artikelID);
         stueckzahlen.add(Integer.parseInt(stueck));
         removeButtons.add(new JButton("-"));
         removeButtons.lastElement().addActionListener(this);
 
         Vector<Object> row = new Vector<Object>();
+        row.add(positions.lastElement());
         row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
         row.add(vkp); row.add(vpe); row.add(stueck);
         row.add(removeButtons.lastElement());
@@ -870,11 +879,12 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             for (int i=0; i<artikelIDs.size(); i++){
                 pstmt = this.conn.prepareStatement(
                         "INSERT INTO bestellung_details SET bestell_nr = ?, "+
-                        "artikel_id = ?, stueckzahl = ?"
+                        "position = ?, artikel_id = ?, stueckzahl = ?"
                         );
                 pstmtSetInteger(pstmt, 1, bestellNr);
-                pstmtSetInteger(pstmt, 2, artikelIDs.get(i));
-                pstmtSetInteger(pstmt, 3, stueckzahlen.get(i));
+                pstmtSetInteger(pstmt, 2, positions.get(i));
+                pstmtSetInteger(pstmt, 3, artikelIDs.get(i));
+                pstmtSetInteger(pstmt, 4, stueckzahlen.get(i));
                 result = pstmt.executeUpdate();
                 pstmt.close();
                 if (result == 0){
@@ -1195,6 +1205,11 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             artikelIDs.remove(removeIndex);
             stueckzahlen.remove(removeIndex);
             removeButtons.remove(removeIndex);
+
+            positions.remove(removeIndex);
+            for (int i=removeIndex; i<positions.size(); i++){
+                positions.set(i, positions.get(i)+1);
+            }
 
             int removeRow = displayIndices.indexOf(removeIndex);
             displayData.remove(removeRow);

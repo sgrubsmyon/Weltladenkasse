@@ -43,6 +43,7 @@ public abstract class BestellungsGrundlage extends ArtikelGrundlage {
     {
 	super(conn, mw);
 	columnLabels = new Vector<String>();
+        columnLabels.add("Pos.");
 	columnLabels.add("Lieferant"); columnLabels.add("Artikel-Nr."); columnLabels.add("Artikel-Name"); 
         columnLabels.add("Einzelpreis"); columnLabels.add("VPE"); columnLabels.add("Stückzahl");
     }
@@ -50,6 +51,9 @@ public abstract class BestellungsGrundlage extends ArtikelGrundlage {
     protected void setTableProperties(JTable table) {
 	// Spalteneigenschaften:
 //	table.getColumnModel().getColumn(0).setPreferredWidth(10);
+	TableColumn pos = table.getColumn("Pos.");
+	pos.setCellRenderer(zentralAusrichter);
+	pos.setPreferredWidth(1);
 	TableColumn lieferant = table.getColumn("Lieferant");
 	lieferant.setCellRenderer(linksAusrichter);
 	lieferant.setPreferredWidth(50);
