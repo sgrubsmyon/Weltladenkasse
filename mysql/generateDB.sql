@@ -7,19 +7,19 @@ CREATE TABLE lieferant (
     lieferant_id int(10) unsigned NOT NULL AUTO_INCREMENT,
     lieferant_name varchar(50) NOT NULL,
     aktiv BOOL NOT NULL DEFAULT TRUE,
-    PRIMARY KEY(lieferant_id)
+    PRIMARY KEY (lieferant_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE mwst (
     mwst_id int(10) unsigned NOT NULL AUTO_INCREMENT,
     mwst_satz decimal(6,5) NOT NULL,
-    PRIMARY KEY(mwst_id)
+    PRIMARY KEY (mwst_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE pfand (
     pfand_id int(10) unsigned NOT NULL AUTO_INCREMENT,
     artikel_id int(10) unsigned NOT NULL,
-    PRIMARY KEY(pfand_id)
+    PRIMARY KEY (pfand_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE produktgruppe (
@@ -31,9 +31,9 @@ CREATE TABLE produktgruppe (
     mwst_id int(10) unsigned DEFAULT NULL,
     pfand_id int(10) unsigned DEFAULT NULL,
     aktiv BOOL NOT NULL DEFAULT TRUE,
-    PRIMARY KEY(produktgruppen_id),
-    FOREIGN KEY(mwst_id) REFERENCES mwst(mwst_id),
-    FOREIGN KEY(pfand_id) REFERENCES pfand(pfand_id)
+    PRIMARY KEY (produktgruppen_id),
+    FOREIGN KEY (mwst_id) REFERENCES mwst(mwst_id),
+    FOREIGN KEY (pfand_id) REFERENCES pfand(pfand_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE artikel (
@@ -52,11 +52,11 @@ CREATE TABLE artikel (
     variabler_preis BOOL NOT NULL DEFAULT FALSE,
     vpe int(10) unsigned DEFAULT NULL,
     bestand int DEFAULT NULL,
-    PRIMARY KEY(artikel_id),
-    FOREIGN KEY(lieferant_id) REFERENCES lieferant(lieferant_id),
-    FOREIGN KEY(produktgruppen_id) REFERENCES produktgruppe(produktgruppen_id)
+    PRIMARY KEY (artikel_id),
+    FOREIGN KEY (lieferant_id) REFERENCES lieferant(lieferant_id),
+    FOREIGN KEY (produktgruppen_id) REFERENCES produktgruppe(produktgruppen_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
-ALTER TABLE pfand ADD FOREIGN KEY(artikel_id) REFERENCES artikel(artikel_id);
+ALTER TABLE pfand ADD FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id);
 
 CREATE TABLE rabattaktion (
     rabatt_id int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -70,9 +70,9 @@ CREATE TABLE rabattaktion (
     bis DATETIME,
     produktgruppen_id int(10) unsigned DEFAULT NULL,
     artikel_id int(10) unsigned DEFAULT NULL,
-    PRIMARY KEY(rabatt_id),
-    FOREIGN KEY(produktgruppen_id) REFERENCES produktgruppe(produktgruppen_id),
-    FOREIGN KEY(artikel_id) REFERENCES artikel(artikel_id)
+    PRIMARY KEY (rabatt_id),
+    FOREIGN KEY (produktgruppen_id) REFERENCES produktgruppe(produktgruppen_id),
+    FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE verkauf (
@@ -80,18 +80,20 @@ CREATE TABLE verkauf (
     verkaufsdatum DATETIME NOT NULL,
     storniert BOOL NOT NULL DEFAULT FALSE,
     ec_zahlung BOOL NOT NULL DEFAULT FALSE,
-    PRIMARY KEY(rechnungs_nr)
+    PRIMARY KEY (rechnungs_nr)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 CREATE TABLE verkauf_details (
     rechnungs_nr int(10) unsigned NOT NULL,
+    position int(5) unsigned NOT NULL,
     artikel_id int(10) unsigned DEFAULT NULL,
     rabatt_id int(10) unsigned DEFAULT NULL,
-    stueckzahl int,
+    stueckzahl int(5) NOT NULL DEFAULT 1,
     ges_preis decimal(13,2) NOT NULL,
     mwst_satz decimal(6,5) NOT NULL,
-    FOREIGN KEY(rechnungs_nr) REFERENCES verkauf(rechnungs_nr),
-    FOREIGN KEY(artikel_id) REFERENCES artikel(artikel_id),
-    FOREIGN KEY(rabatt_id) REFERENCES rabattaktion(rabatt_id)
+    PRIMARY KEY (rechnungs_nr, position),
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr),
+    FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id),
+    FOREIGN KEY (rabatt_id) REFERENCES rabattaktion(rabatt_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE kassenstand (
@@ -101,8 +103,8 @@ CREATE TABLE kassenstand (
     manuell BOOL NOT NULL DEFAULT FALSE,
     rechnungs_nr int(10) unsigned DEFAULT NULL,
     kommentar varchar(70),
-    PRIMARY KEY(kassenstand_id),
-    FOREIGN KEY(rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
+    PRIMARY KEY (kassenstand_id),
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE abrechnung_tag (
@@ -112,7 +114,7 @@ CREATE TABLE abrechnung_tag (
     mwst_netto decimal(13,2) NOT NULL,
     mwst_betrag decimal(13,2) NOT NULL,
     bar_brutto decimal(13,2) NOT NULL,
-    PRIMARY KEY(id)
+    PRIMARY KEY (id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_monat (
     id int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -121,7 +123,7 @@ CREATE TABLE abrechnung_monat (
     mwst_netto decimal(13,2) NOT NULL,
     mwst_betrag decimal(13,2) NOT NULL,
     bar_brutto decimal(13,2) NOT NULL,
-    PRIMARY KEY(id)
+    PRIMARY KEY (id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_jahr (
     id int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -130,7 +132,7 @@ CREATE TABLE abrechnung_jahr (
     mwst_netto decimal(13,2) NOT NULL,
     mwst_betrag decimal(13,2) NOT NULL,
     bar_brutto decimal(13,2) NOT NULL,
-    PRIMARY KEY(id)
+    PRIMARY KEY (id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE bestellung (
@@ -138,13 +140,16 @@ CREATE TABLE bestellung (
     bestell_datum DATETIME NOT NULL,
     jahr YEAR NOT NULL DEFAULT 2000,
     kw int(2) NOT NULL DEFAULT 1,
-    PRIMARY KEY(bestell_nr)
+    PRIMARY KEY (bestell_nr)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 CREATE TABLE bestellung_details (
     bestell_nr int(10) unsigned NOT NULL,
+    position int(5) unsigned NOT NULL,
     artikel_id int(10) unsigned NOT NULL,
-    stueckzahl int NOT NULL DEFAULT 1,
-    FOREIGN KEY(artikel_id) REFERENCES artikel(artikel_id)
+    stueckzahl int(5) NOT NULL DEFAULT 1,
+    PRIMARY KEY (bestell_nr, position),
+    FOREIGN KEY (bestell_nr) REFERENCES bestellung(bestell_nr),
+    FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 GRANT ALL PRIVILEGES ON kasse.* TO 'kassenadmin'@'localhost';
