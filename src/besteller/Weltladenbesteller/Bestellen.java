@@ -394,7 +394,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 //	orderTable.setToolTipText("Tabelle kann nur gelesen werden.");
 	setTableProperties(orderTable);
 	TableColumn entf = orderTable.getColumn("Entfernen");
-	entf.setPreferredWidth(2);
+	entf.setPreferredWidth(200);
 //	orderTable.setAutoResizeMode(5);
     }
 
