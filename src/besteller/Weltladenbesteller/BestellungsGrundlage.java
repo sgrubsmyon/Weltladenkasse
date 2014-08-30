@@ -53,24 +53,24 @@ public abstract class BestellungsGrundlage extends ArtikelGrundlage {
 //	table.getColumnModel().getColumn(0).setPreferredWidth(10);
 	TableColumn pos = table.getColumn("Pos.");
 	pos.setCellRenderer(zentralAusrichter);
-	pos.setPreferredWidth(1);
+	pos.setPreferredWidth(200);
 	TableColumn lieferant = table.getColumn("Lieferant");
 	lieferant.setCellRenderer(linksAusrichter);
-	lieferant.setPreferredWidth(50);
+	lieferant.setPreferredWidth(500);
 	TableColumn artikelnr = table.getColumn("Artikel-Nr.");
 	artikelnr.setCellRenderer(linksAusrichter);
-	artikelnr.setPreferredWidth(50);
+	artikelnr.setPreferredWidth(500);
 	TableColumn artikelbez = table.getColumn("Artikel-Name");
 	artikelbez.setCellRenderer(linksAusrichter);
-	artikelbez.setPreferredWidth(150);
+	artikelbez.setPreferredWidth(1500);
 	TableColumn preis = table.getColumn("Einzelpreis");
 	preis.setCellRenderer(rechtsAusrichter);
-	preis.setPreferredWidth(30);
+	preis.setPreferredWidth(300);
 	TableColumn vpe = table.getColumn("VPE");
 	vpe.setCellRenderer(rechtsAusrichter);
-	vpe.setPreferredWidth(5);
+	vpe.setPreferredWidth(200);
 	TableColumn stueckzahl = table.getColumn("Stückzahl");
 	stueckzahl.setCellRenderer(rechtsAusrichter);
-	stueckzahl.setPreferredWidth(5);
+	stueckzahl.setPreferredWidth(200);
     }
 }
