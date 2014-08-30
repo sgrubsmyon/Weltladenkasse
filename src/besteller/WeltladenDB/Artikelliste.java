@@ -372,10 +372,12 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         importButton.setEnabled(editArtikelName.size() == 0);
         exportButton.setEnabled(editArtikelName.size() == 0);
 
-        System.out.println("Enable Buttons.");
-        System.out.println("data: "+data);
-        System.out.println("displayData: "+displayData);
-        System.out.println("displayIndices: "+displayIndices);
+        //System.out.println("Enable Buttons.");
+        //System.out.println("originalData: "+originalData);
+        //System.out.println("data: "+data);
+        //System.out.println("displayData: "+displayData);
+        //System.out.println("displayIndices: "+displayIndices);
+        //System.out.println("editArtikelName:  "+editArtikelName);
     }
 
     void initiateTable() {
@@ -618,10 +620,11 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     public void tableChanged(TableModelEvent e) {
         // get info about edited cell
         int row = e.getFirstRow();
+        int dataRow = displayIndices.get(row); // convert from displayData index to data index
         int column = e.getColumn();
         AbstractTableModel model = (AbstractTableModel)e.getSource();
-        String origArtikelName = originalData.get(row).get(model.findColumn("Name")).toString();
-        String origArtikelNummer = originalData.get(row).get(model.findColumn("Nummer")).toString();
+        String origArtikelName = originalData.get(dataRow).get(model.findColumn("Name")).toString();
+        String origArtikelNummer = originalData.get(dataRow).get(model.findColumn("Nummer")).toString();
         int nummerIndex = editArtikelNummer.indexOf(origArtikelNummer); // look up artikelNummer in change list
         int nameIndex = editArtikelName.indexOf(origArtikelName); // look up artikelName in change list
 
@@ -657,17 +660,17 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 if ( header.equals("VK-Preis") ){
                     // user tried to delete the vkpreis (not allowed)
                     // reset to original value
-                    model.setValueAt(originalData.get(row).get(column).toString(), row, column);
+                    model.setValueAt(originalData.get(dataRow).get(column).toString(), row, column);
                 }
             }
         }
 
         // Compare entire row to original data
         boolean changed = false;
-        for ( int col=0; col<data.get(row).size(); col++){ // compare entire row to original data
+        for ( int col=0; col<data.get(dataRow).size(); col++){ // compare entire row to original data
             String colName = model.getColumnName(col);
-            String val = data.get(row).get(col).toString();
-            String origVal = originalData.get(row).get(col).toString();
+            String val = data.get(dataRow).get(col).toString();
+            String origVal = originalData.get(dataRow).get(col).toString();
             if ( ! val.equals( origVal ) ){
                 changed = true;
                 break;
