@@ -365,14 +365,14 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 String lieferant = rs.getString(2);
                 String artikelNummer = rs.getString(3);
                 String artikelName = rs.getString(4);
-                Integer vpe = rs.getString(5) == null ? null : rs.getInt(4);
+                Integer vpe = rs.getString(5) == null ? null : rs.getInt(5);
                 BigDecimal vkp = rs.getBigDecimal(6);
                 BigDecimal ekp = rs.getBigDecimal(7);
                 BigDecimal mwst = rs.getBigDecimal(8);
                 Integer stueck = rs.getInt(9);
 
                 Vector<Object> row = new Vector<Object>();
-                row.add(pos);
+                //row.add(pos); // omit position
                 row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
                 row.add(vpe); row.add(vkp); row.add(ekp); row.add(mwst); row.add(stueck);
                 orderExportData.add(row);
@@ -468,15 +468,15 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         // Change date
         sheet.getCellAt("C2").setValue(newDate);
         // Change KW
-        sheet.getCellAt("H2").setValue(kw);
+        sheet.getCellAt("I2").setValue(kw);
 
         // Insert order items
         Vector< Vector<Object> > data = retrieveOrderDetailData_forExport(selBestellNr);
         System.out.println("Export data: "+data);
         for (int row=0; row<data.size(); row++){
             for (int col=0; col<data.get(row).size(); col++){
-                System.out.println("Setting value at "+(13+row)+","+col+": "+data.get(row).get(col));
-                sheet.setValueAt(data.get(row).get(col), col, 13+row);
+                System.out.println("Setting value at "+(8+row)+","+col+": "+data.get(row).get(col));
+                sheet.setValueAt(data.get(row).get(col), col, 8+row);
             }
         }
 
