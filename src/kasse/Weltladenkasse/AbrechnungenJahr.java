@@ -41,13 +41,13 @@ public class AbrechnungenJahr extends Abrechnungen {
      *    The constructor.
      *       */
     public AbrechnungenJahr(Connection conn, MainWindowGrundlage mw){
-	super(conn, mw, "", "Monatsabrechnungen", "yyyy-MM-dd", "MMM yyyy", "jahr", "abrechnung_jahr");
+	super(conn, mw, "", "Jahresabrechnungen", "yyyy", "yyyy", "jahr", "abrechnung_jahr");
 	showTable();
     }
 
     void addOtherStuff() {
         JPanel otherPanel = new JPanel();
-        otherPanel.add(new JLabel("(Zahlen in rot werden als neue Monatsabrechnung gespeichert.)"));
+        otherPanel.add(new JLabel("(Zahlen in rot werden als neue Jahresabrechnung gespeichert.)"));
         tablePanel.add(otherPanel);
     }
 
@@ -65,18 +65,19 @@ public class AbrechnungenJahr extends Abrechnungen {
             ex.printStackTrace();
         }
         if (result == null){
-            result = "0000"; // set date very far back, every possible date should be after this one (hopefully)
+            result = "0001"; // set date very far back, every possible date should be after this one (hopefully)
         }
-        return result;
+        return result+"-01-01";
     }
 
-    Vector<String> returnAllNewYears(String maxYear) { // all years to be put into the db (abrechnung_jahr table)
+    Vector<String> returnAllNewYears(String maxDate) { // all years to be put into the db (abrechnung_jahr table)
         Vector<String> result = new Vector<String>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT DISTINCT DATE_FORMAT(monat,'%Y') FROM abrechnung_monat WHERE monat > ? + INTERVAL 1 YEAR)"
+                    "SELECT DISTINCT DATE_FORMAT(monat,'%Y-01-01') FROM abrechnung_monat "+
+                    "WHERE monat >= (? + INTERVAL 1 YEAR)"
                     );
-            pstmt.setString(1, maxYear);
+            pstmt.setString(1, maxDate);
             ResultSet rs = pstmt.executeQuery();
             while(rs.next()){
                 result.add(rs.getString(1));
@@ -90,12 +91,12 @@ public class AbrechnungenJahr extends Abrechnungen {
         return result;
     }
 
-    HashMap<BigDecimal, Vector<BigDecimal>> queryMonatsAbrechnung(String year) {
+    HashMap<BigDecimal, Vector<BigDecimal>> queryJahresAbrechnung(String year) {
         HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM abrechnung_tag "+
-                    "WHERE zeitpunkt > ? AND zeitpunkt < (? + INTERVAL 1 MONTH) GROUP BY mwst_satz"
+                    "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 YEAR) GROUP BY mwst_satz"
                     );
             pstmt.setString(1, year);
             pstmt.setString(2, year);
@@ -122,14 +123,14 @@ public class AbrechnungenJahr extends Abrechnungen {
             for (String year : years){
                 System.out.println("new year: "+year);
                 PreparedStatement pstmt = this.conn.prepareStatement(
-                        "SELECT ? < DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')"
+                        "SELECT ? < DATE_FORMAT(CURRENT_DATE, '%Y-01-01')"
                         );
                 pstmt.setString(1, year);
                 ResultSet rs = pstmt.executeQuery();
                 rs.next(); boolean doIt = rs.getBoolean(1); rs.close();
                 pstmt.close();
                 if (doIt){
-                    HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryMonatsAbrechnung(year);
+                    HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryJahresAbrechnung(year);
                     for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : sachen.entrySet() ){
                         BigDecimal mwst_satz = entry.getKey();
                         Vector<BigDecimal> betraege = entry.getValue();
@@ -142,7 +143,7 @@ public class AbrechnungenJahr extends Abrechnungen {
                                 "mwst_betrag = ?, "+
                                 "bar_brutto = ?"
                                 );
-                        pstmt.setString(1, year);
+                        pstmt.setString(1, year.substring(0,4));
                         pstmt.setBigDecimal(2, mwst_satz);
                         pstmt.setBigDecimal(3, betraege.get(0));
                         pstmt.setBigDecimal(4, betraege.get(1));
@@ -154,7 +155,8 @@ public class AbrechnungenJahr extends Abrechnungen {
                         }
                         else {
                             JOptionPane.showMessageDialog(this,
-                                    "Fehler: Monatsabrechnung für Monat "+year+", MwSt.-Satz "+mwst_satz+" konnte nicht gespeichert werden.",
+                                    "Fehler: Jahresabrechnung für Jahr "+year.substring(0,4)+", "+
+                                    "MwSt.-Satz "+mwst_satz+" konnte nicht gespeichert werden.",
                                     "Fehler", JOptionPane.ERROR_MESSAGE);
                         }
                     }
@@ -170,7 +172,7 @@ public class AbrechnungenJahr extends Abrechnungen {
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT DATE_FORMAT(CURDATE(), '%Y-%m-01')"
+                    "SELECT DATE_FORMAT(CURDATE(), '%Y-01-01')"
                     );
             rs.next(); String cur_year = rs.getString(1); rs.close();
             stmt.close();
@@ -179,7 +181,7 @@ public class AbrechnungenJahr extends Abrechnungen {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT SUM(mwst_netto + mwst_betrag), SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) FROM abrechnung_tag " +
                        //   ^^^ Gesamt Brutto              ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
-                    "WHERE zeitpunkt > ? AND zeitpunkt < (? + INTERVAL 1 MONTH)"
+                    "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 YEAR)"
                     );
             pstmt.setString(1, cur_year);
             pstmt.setString(2, cur_year);
@@ -195,7 +197,7 @@ public class AbrechnungenJahr extends Abrechnungen {
             totalsMap.put(cur_year, totalsValues);
 
             // grouped by mwst
-            HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryMonatsAbrechnung(cur_year);
+            HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryJahresAbrechnung(cur_year);
             int rowCount = 0;
             for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : sachen.entrySet() ){
                 BigDecimal mwst_satz = entry.getKey();
@@ -233,9 +235,9 @@ public class AbrechnungenJahr extends Abrechnungen {
     }
 
     void queryAbrechnungenSpecial() {
-        String maxYear = returnMaxAbechnungDate();
-        Vector<String> years = returnAllNewYears(maxYear);
-        System.out.println("max date is: "+maxYear);
+        String maxDate = returnMaxAbechnungDate();
+        Vector<String> years = returnAllNewYears(maxDate);
+        System.out.println("max date is: "+maxDate);
         System.out.println("new years are: "+years);
         insertNewYears(years);
     }
