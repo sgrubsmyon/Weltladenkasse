@@ -75,7 +75,7 @@ public class AbrechnungenMonat extends Abrechnungen {
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT DISTINCT DATE_FORMAT(zeitpunkt,'%Y-%m-01') FROM abrechnung_tag "+
-                    "WHERE zeitpunkt > (? + INTERVAL 1 MONTH)"
+                    "WHERE zeitpunkt >= (? + INTERVAL 1 MONTH)"
                     );
             pstmt.setString(1, maxDate);
             ResultSet rs = pstmt.executeQuery();
@@ -96,7 +96,7 @@ public class AbrechnungenMonat extends Abrechnungen {
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM abrechnung_tag "+
-                    "WHERE zeitpunkt > ? AND zeitpunkt < (? + INTERVAL 1 MONTH) GROUP BY mwst_satz"
+                    "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 MONTH) GROUP BY mwst_satz"
                     );
             pstmt.setString(1, month);
             pstmt.setString(2, month);
@@ -154,7 +154,8 @@ public class AbrechnungenMonat extends Abrechnungen {
                         }
                         else {
                             JOptionPane.showMessageDialog(this,
-                                    "Fehler: Monatsabrechnung für Monat "+month+", MwSt.-Satz "+mwst_satz+" konnte nicht gespeichert werden.",
+                                    "Fehler: Monatsabrechnung für Monat "+month.substring(0,7)+", "+
+                                    "MwSt.-Satz "+mwst_satz+" konnte nicht gespeichert werden.",
                                     "Fehler", JOptionPane.ERROR_MESSAGE);
                         }
                     }
@@ -179,7 +180,7 @@ public class AbrechnungenMonat extends Abrechnungen {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT SUM(mwst_netto + mwst_betrag), SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) FROM abrechnung_tag " +
                        //   ^^^ Gesamt Brutto              ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
-                    "WHERE zeitpunkt > ? AND zeitpunkt < (? + INTERVAL 1 MONTH)"
+                    "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 MONTH)"
                     );
             pstmt.setString(1, cur_month);
             pstmt.setString(2, cur_month);
