@@ -31,7 +31,8 @@ public class HeutigeRechnungen extends Rechnungen {
      *    The constructor.
      *       */
     public HeutigeRechnungen(Connection conn, MainWindowGrundlage mw){
-	super(conn, mw, "WHERE verkauf.verkaufsdatum > (SELECT MAX(zeitpunkt) FROM abrechnung_tag) AND verkauf.storniert = FALSE ", "Aktuelle Rechnungen");
+	super(conn, mw, "WHERE verkauf.verkaufsdatum > (SELECT MAX(zeitpunkt) FROM abrechnung_tag) AND "+
+                "verkauf.storniert = FALSE ", "Heutige Rechnungen");
 	showTable();
     }
 
