@@ -83,14 +83,15 @@ CREATE TABLE verkauf (
     PRIMARY KEY (rechnungs_nr)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 CREATE TABLE verkauf_details (
+    vd_id int(10) unsigned NOT NULL AUTO_INCREMENT,
     rechnungs_nr int(10) unsigned NOT NULL,
-    position int(5) unsigned NOT NULL,
+    position int(5) unsigned DEFAULT NULL,
     artikel_id int(10) unsigned DEFAULT NULL,
     rabatt_id int(10) unsigned DEFAULT NULL,
     stueckzahl int(5) NOT NULL DEFAULT 1,
     ges_preis decimal(13,2) NOT NULL,
     mwst_satz decimal(6,5) NOT NULL,
-    PRIMARY KEY (rechnungs_nr, position),
+    PRIMARY KEY (vd_id),
     FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr),
     FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id),
     FOREIGN KEY (rabatt_id) REFERENCES rabattaktion(rabatt_id)

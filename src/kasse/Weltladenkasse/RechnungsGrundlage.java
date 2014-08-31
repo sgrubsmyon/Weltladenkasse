@@ -51,6 +51,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     }
     private void initiateVectors() {
 	columnLabels = new Vector<String>();
+        columnLabels.add("Pos.");
 	columnLabels.add("Artikel-Name"); columnLabels.add("Artikel-Nr."); columnLabels.add("Stückzahl");
         columnLabels.add("Einzelpreis"); columnLabels.add("Ges.-Preis"); columnLabels.add("MwSt.");
         preise = new Vector<BigDecimal>();
@@ -188,6 +189,9 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     protected void setTableProperties(RechnungsTable table) {
 	// Spalteneigenschaften:
 //	table.getColumnModel().getColumn(0).setPreferredWidth(10);
+	TableColumn pos = table.getColumn("Pos.");
+	pos.setCellRenderer(zentralAusrichter);
+	pos.setPreferredWidth(5);
 	TableColumn artikelbez = table.getColumn("Artikel-Name");
 	artikelbez.setCellRenderer(linksAusrichter);
 	artikelbez.setPreferredWidth(150);
