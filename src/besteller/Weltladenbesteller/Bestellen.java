@@ -1134,6 +1134,11 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         //}
     }
 
+    void refreshPositionsInData() {
+        for (int i=0; i<positions.size(); i++){
+            data.get(i).set(0, positions.get(i));
+        }
+    }
 
     /**
      *    * Each non abstract class that implements the ActionListener
@@ -1206,16 +1211,19 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             stueckzahlen.remove(removeIndex);
             removeButtons.remove(removeIndex);
 
+            System.out.println("positions before remove: "+positions);
             positions.remove(removeIndex);
             for (int i=removeIndex; i<positions.size(); i++){
-                positions.set(i, positions.get(i)+1);
+                positions.set(i, positions.get(i)-1);
             }
+            refreshPositionsInData();
+            System.out.println("positions after remove: "+positions);
 
             int removeRow = displayIndices.indexOf(removeIndex);
             displayData.remove(removeRow);
             displayIndices.remove(removeRow);
 
-            updateTable();
+            updateAll();
             return;
         }
     }

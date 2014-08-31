@@ -137,7 +137,6 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    }
 	    rs.close();
 	    rs = stmt.executeQuery(
-		    //"SELECT COUNT(DISTINCT rechnungs_nr) FROM verkauf_details " +
 		    "SELECT COUNT(verkauf.rechnungs_nr) FROM verkauf " +
 		    filterStr
 		    );
@@ -259,7 +258,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	String artikelZahl = "";
 	try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT a.artikel_name, ra.aktionsname, a.artikel_nr, "+
+                    "SELECT vd.position, a.artikel_name, ra.aktionsname, a.artikel_nr, "+
                     "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, (p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, "+
                     "vd.stueckzahl, vd.ges_preis, vd.mwst_satz "+
                     "FROM verkauf_details AS vd "+
@@ -272,19 +271,20 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    ResultSet rs = pstmt.executeQuery();
 	    // Now do something with the ResultSet ...
 	    while (rs.next()) {
-                String artikelname = rs.getString(1);
-                String aktionsname = rs.getString(2);
-                String artikelnummer = rs.getString(3);
-                boolean manuRabatt = rs.getBoolean(4);
-                boolean pfand = rs.getBoolean(5);
-                String stueck = rs.getString(6);
+                Integer pos = rs.getString(1) == null ? null : rs.getInt(1);
+                String artikelname = rs.getString(2);
+                String aktionsname = rs.getString(3);
+                String artikelnummer = rs.getString(4);
+                boolean manuRabatt = rs.getBoolean(5);
+                boolean pfand = rs.getBoolean(6);
+                String stueck = rs.getString(7);
                 BigDecimal stueckDec = new BigDecimal(0);
                 if (stueck != null)
                     stueckDec = new BigDecimal(stueck);
-                String gesPreis = rs.getString(7);
+                String gesPreis = rs.getString(8);
                 BigDecimal gesPreisDec = new BigDecimal(gesPreis);
                 preise.add(gesPreisDec);
-                String mwst = rs.getString(8);
+                String mwst = rs.getString(9);
                 mwsts.add(new BigDecimal(mwst));
                 mwst = vatFormatter(mwst);
                 String einzelPreis = "";
@@ -304,9 +304,10 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 else if ( artikelname != null ){ name = artikelname; }
                 colors.add(color);
 		Vector<Object> row = new Vector<Object>();
-		// add units
-                row.add(name); row.add(artikelnummer); row.add(stueck);
-                row.add(einzelPreis); row.add(gesPreis); row.add(mwst);
+                    // add units
+                    row.add(pos);
+                    row.add(name); row.add(artikelnummer); row.add(stueck);
+                    row.add(einzelPreis); row.add(gesPreis); row.add(mwst);
 		detailData.add(row);
 	    }
 	    rs.close();
