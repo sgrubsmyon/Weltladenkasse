@@ -11,6 +11,11 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
 
+// OpenDocument stuff:
+import org.jopendocument.dom.spreadsheet.Sheet;
+import org.jopendocument.dom.spreadsheet.SpreadSheet;
+import org.jopendocument.dom.OOUtils;
+
 // GUI stuff:
 //import java.awt.BorderLayout;
 //import java.awt.FlowLayout;
@@ -70,9 +75,10 @@ public class ArtikelExport extends WindowContent {
 
         int returnVal = fc.showSaveDialog(pw);
         if (returnVal == JFileChooser.APPROVE_OPTION){
-            File file = fc.getSelectedFile();
+            final File file = fc.getSelectedFile();
 
-            writeCSVToFile(file);
+            //writeCSVToFile(file);
+            writeToODSFile(file);
 
             System.out.println("Written to " + file.getName());
         } else {
@@ -80,6 +86,64 @@ public class ArtikelExport extends WindowContent {
         }
     }
 
+    void writeToODSFile(File file) {
+        // table header
+        final Vector<String> columns = new Vector<String>();
+            columns.add("Produktgruppe"); columns.add("Artikelname"); columns.add("Art.-Nr.");
+            columns.add("Barcode"); columns.add("VK-Preis"); columns.add("EK-Preis"); columns.add("Variabel");
+            columns.add("VPE"); columns.add("Lieferant"); columns.add("Herkunft");
+        // table rows
+        final Vector< Vector<Object> > data = new Vector< Vector<Object> >();
+        for (int i=0; i<artikelListe.originalData.size(); i++){
+            if (artikelListe.activeRowBools.get(i) == false){
+                // skip deactivated articles
+                continue;
+            }
+            String produktgruppe = (String)artikelListe.originalData.get(i).get(0);
+            String name = (String)artikelListe.originalData.get(i).get(1);
+            String nummer = (String)artikelListe.originalData.get(i).get(2);
+            String barcode = (String)artikelListe.originalData.get(i).get(3);
+            Boolean var = artikelListe.varPreisBools.get(i);
+            String vkp = var ? "" : (String)artikelListe.originalData.get(i).get(4);
+            String ekp = var ? "" : (String)artikelListe.originalData.get(i).get(5);
+            String varStr = var ? "Ja" : "Nein";
+            String vpe = (String)artikelListe.originalData.get(i).get(6);
+            String lieferant = (String)artikelListe.originalData.get(i).get(10);
+            String herkunft = (String)artikelListe.originalData.get(i).get(11);
+
+            Vector<Object> row = new Vector<Object>();
+                row.add(produktgruppe);
+                row.add(name); row.add(nummer); row.add(barcode);
+                row.add(vkp); row.add(ekp); row.add(varStr);
+                row.add(vpe); row.add(lieferant); row.add(herkunft);
+            data.add(row);
+        }
+        /*
+        final Object[][] data = new Object[6][2];
+        data[0] = new Object[] { "January", 1 };
+        data[1] = new Object[] { "February", 3 };
+        data[2] = new Object[] { "March", 8 };
+        data[3] = new Object[] { "April", 10 };
+        data[4] = new Object[] { "May", 15 };
+        data[5] = new Object[] { "June", 18 };
+        */
+
+        TableModel model = new DefaultTableModel(data, columns);  
+
+        try {
+            // Save the data to an ODS file and open it.
+            SpreadSheet.createEmpty(model).saveAs(file);
+            OOUtils.open(file);
+        } catch (FileNotFoundException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    /*
     void writeCSVToFile(File file) {
         // format of csv file:
         String fileStr = "";
@@ -130,6 +194,7 @@ public class ArtikelExport extends WindowContent {
             }
         }
     }
+    */
 
     /**
      *    * Each non abstract class that implements the ActionListener
