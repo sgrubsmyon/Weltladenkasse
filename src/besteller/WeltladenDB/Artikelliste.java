@@ -60,17 +60,18 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
 
     private String filterStr = "";
     private String aktivFilterStr = " AND artikel.aktiv = TRUE ";
-    private String orderByStr = "artikel_name";
+    //private String orderByStr = "artikel_name";
+    private String orderByStr = "p.toplevel_id, p.sub_id, p.subsub_id, artikel_name";
 
     // The table holding the items
     private JTable myTable;
     private Vector< Vector<Object> > data;
-    public Vector< Vector<Object> > originalData;
-    public Vector< Vector<Object> > displayData;
-    public Vector<Integer> displayIndices;
+    protected Vector< Vector<Object> > originalData;
+    protected Vector< Vector<Object> > displayData;
+    protected Vector<Integer> displayIndices;
     private Vector<String> columnLabels;
-    private Vector<Boolean> activeRowBools;
-    public Vector<Boolean> varPreisBools;
+    protected Vector<Boolean> activeRowBools;
+    protected Vector<Boolean> varPreisBools;
     private Vector<Integer> produktGruppeIDs;
     private Vector<Integer> lieferantIDs;
 
@@ -91,7 +92,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     //private ArtikelImport itemsFromFile;
 
     // Methoden:
-    public Artikelliste(Connection conn, ArtikellisteContainer ac, Integer tid, Integer sid, Integer ssid, String gn) {
+    protected Artikelliste(Connection conn, ArtikellisteContainer ac, Integer tid, Integer sid, Integer ssid, String gn) {
         super(conn, ac.getMainWindowPointer());
 
         this.container = ac;
@@ -107,8 +108,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private void fillDataArray() {
         this.data = new Vector< Vector<Object> >();
         columnLabels = new Vector<String>();
-        columnLabels.add("Name"); columnLabels.add("Nummer"); columnLabels.add("Barcode");
-        columnLabels.add("Produktgruppe");
+        columnLabels.add("Produktgruppe"); columnLabels.add("Name"); columnLabels.add("Nummer");
+        columnLabels.add("Barcode");
         columnLabels.add("VK-Preis"); columnLabels.add("EK-Preis"); columnLabels.add("VPE");
         columnLabels.add("MwSt."); //columnLabels.add("Betrag MwSt.");
         columnLabels.add("Ab/Seit"); columnLabels.add("Bis");
@@ -123,24 +124,24 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             if (showInternals)
                 filter = "TRUE "; // to show all items, also internal ones (where toplevel_id == null)
             else
-                filter = "produktgruppe.toplevel_id > 0 ";
+                filter = "p.toplevel_id > 0 ";
         } else {
-            filter = "produktgruppe.toplevel_id = " + toplevel_id + " ";
+            filter = "p.toplevel_id = " + toplevel_id + " ";
         }
         if (sub_id != null)
-            filter += " AND produktgruppe.sub_id = " + sub_id + " ";
+            filter += " AND p.sub_id = " + sub_id + " ";
         if (subsub_id != null)
-            filter += " AND produktgruppe.subsub_id = " + subsub_id + " ";
+            filter += " AND p.subsub_id = " + subsub_id + " ";
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT produktgruppen_id, produktgruppen_name, "+
                     "artikel_name, artikel_nr, barcode, "+
-                    "vk_preis, variabler_preis, ek_preis, vpe, mwst_satz, "+
+                    "vk_preis, ek_preis, variabler_preis, vpe, mwst_satz, "+
                     "DATE_FORMAT(von, '"+dateFormatSQL+"'), DATE_FORMAT(bis, '"+dateFormatSQL+"'), "+
                     "lieferant_id, lieferant_name, "+
                     "herkunft, artikel.aktiv "+
                     "FROM artikel LEFT JOIN lieferant USING (lieferant_id) "+
-                    "LEFT JOIN produktgruppe USING (produktgruppen_id) "+
+                    "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
                     "LEFT JOIN mwst USING (mwst_id) "+
                     "WHERE " + filter +
                     aktivFilterStr +
@@ -154,8 +155,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 String nr = rs.getString(4);
                 String barcode = rs.getString(5);
                 String vkp = rs.getString(6);
-                Boolean var = rs.getBoolean(7);
                 String ekp = rs.getString(8);
+                Boolean var = rs.getBoolean(7);
                 String vpe = rs.getString(9);
                 String mwst = rs.getString(10);
                 String mwstBetrag = "";
@@ -187,12 +188,13 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 if (herkunft == null) herkunft = "";
 
                 Vector<Object> row = new Vector<Object>();
-                row.add(name); row.add(nr); row.add(barcode);
-                row.add(gruppenname);
-                row.add(vkpOutput); row.add(ekp); row.add(vpe);
-                row.add(mwstOutput); //row.add(mwstBetrag);
-                row.add(von); row.add(bis);
-                row.add(lieferant); row.add(herkunft); row.add(aktivBool);
+                    row.add(gruppenname);
+                    row.add(name); row.add(nr); row.add(barcode);
+                    row.add(vkpOutput); row.add(ekp); row.add(vpe);
+                    row.add(mwstOutput); //row.add(mwstBetrag);
+                    row.add(von); row.add(bis);
+                    row.add(lieferant); row.add(herkunft);
+                    row.add(aktivBool);
                 data.add(row);
                 activeRowBools.add(aktivBool);
                 varPreisBools.add(var);
