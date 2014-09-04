@@ -89,9 +89,10 @@ public class ArtikelExport extends WindowContent {
     void writeToODSFile(File file) {
         // table header
         final Vector<String> columns = new Vector<String>();
-            columns.add("Produktgruppe"); columns.add("Artikelname"); columns.add("Art.-Nr.");
-            columns.add("Barcode"); columns.add("VK-Preis"); columns.add("EK-Preis"); columns.add("Variabel");
-            columns.add("VPE"); columns.add("Lieferant"); columns.add("Herkunft");
+            columns.add("Produktgruppe"); columns.add("Lieferant");
+            columns.add("Art.-Nr."); columns.add("Artikelname"); columns.add("Barcode");
+            columns.add("Herkunft"); columns.add("VPE");
+            columns.add("VK-Preis"); columns.add("EK-Preis"); columns.add("Variabel");
         // table rows
         final Vector< Vector<Object> > data = new Vector< Vector<Object> >();
         for (int i=0; i<artikelListe.originalData.size(); i++){
@@ -112,21 +113,12 @@ public class ArtikelExport extends WindowContent {
             String herkunft = (String)artikelListe.originalData.get(i).get(11);
 
             Vector<Object> row = new Vector<Object>();
-                row.add(produktgruppe);
-                row.add(name); row.add(nummer); row.add(barcode);
+                row.add(produktgruppe); row.add(lieferant);
+                row.add(nummer); row.add(name); row.add(barcode);
+                row.add(herkunft); row.add(vpe);
                 row.add(vkp); row.add(ekp); row.add(varStr);
-                row.add(vpe); row.add(lieferant); row.add(herkunft);
             data.add(row);
         }
-        /*
-        final Object[][] data = new Object[6][2];
-        data[0] = new Object[] { "January", 1 };
-        data[1] = new Object[] { "February", 3 };
-        data[2] = new Object[] { "March", 8 };
-        data[3] = new Object[] { "April", 10 };
-        data[4] = new Object[] { "May", 15 };
-        data[5] = new Object[] { "June", 18 };
-        */
 
         TableModel model = new DefaultTableModel(data, columns);  
 
