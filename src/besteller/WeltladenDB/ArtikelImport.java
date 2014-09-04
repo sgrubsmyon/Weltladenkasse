@@ -12,6 +12,11 @@ import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+// OpenDocument stuff:
+import org.jopendocument.dom.spreadsheet.Sheet;
+import org.jopendocument.dom.spreadsheet.SpreadSheet;
+import org.jopendocument.dom.OOUtils;
+
 // GUI stuff:
 //import java.awt.BorderLayout;
 //import java.awt.FlowLayout;
@@ -257,6 +262,197 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
         logString += "<div>-------</div>\n";
         logString += "<div style=\""+baseStyle+"\">Datei " + file.getName() + " wird geöffnet...</div>\n";
         log.setText(logString+logStringEnd);
+
+        // Load the file
+        final Sheet sheet;
+        try {
+            sheet = SpreadSheet.createFromFile(file).getSheet(0);
+        } catch (IOException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+            return;
+        }
+
+        for (int rowIndex = 1; rowIndex<sheet.getRowCount(); rowIndex++) {
+            // ^ ignore first line with table header (column labels)
+            int lineCount = rowIndex+1;
+
+            String gruppenname = (String)sheet.getValueAt(0, rowIndex);
+            if (gruppenname.length() == 0){
+                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 1: Keine Produktgruppe).</div>\n";
+                log.setText(logString+logStringEnd);
+                continue;
+            }
+            String lieferant = (String)sheet.getValueAt(1, rowIndex);
+            if (lieferant.length() == 0){ lieferant = "unbekannt"; }
+            String nummer = (String)sheet.getValueAt(2, rowIndex);
+            if ( nummer.length() == 0 ){
+                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 3: Keine Artikelnummer).</div>\n";
+                log.setText(logString+logStringEnd);
+                continue;
+            }
+            String name = (String)sheet.getValueAt(3, rowIndex);
+            if ( name.length() == 0 ){
+                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 4: Kein Artikelname).</div>\n";
+                log.setText(logString+logStringEnd);
+                continue;
+            }
+            String barcode = (String)sheet.getValueAt(4, rowIndex);
+            if (barcode.length() == 0){ barcode = "NULL"; }
+            String herkunft = (String)sheet.getValueAt(5, rowIndex);
+            if (herkunft.length() == 0){ herkunft = "NULL"; }
+            String vpe = (String)sheet.getValueAt(6, rowIndex);
+            if (vpe.length() == 0){ vpe = "NULL"; }
+            String vkpreis = (String)sheet.getValueAt(7, rowIndex);
+            if (vkpreis.length() == 0){ vkpreis = "NULL"; }
+            String ekpreis = (String)sheet.getValueAt(8, rowIndex);
+            if (ekpreis.length() == 0){ ekpreis = "NULL"; }
+            String variabel = (String)sheet.getValueAt(9, rowIndex);
+            if (variabel.length() == 0){ variabel = "false"; }
+
+            System.out.println(lineCount+" "+gruppenname+" "+name);
+
+            // parse the fields
+            String gruppenid = queryGruppenID(gruppenname);
+            if (gruppenid.equals("NULL")){
+                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 1: Produktgruppe unbekannt).</div>\n";
+                log.setText(logString+logStringEnd);
+                continue;
+            }
+            if ( !variabel.equalsIgnoreCase("true") && !variabel.equalsIgnoreCase("false") &&
+                    !variabel.equalsIgnoreCase("yes") && !variabel.equalsIgnoreCase("no") &&
+                    !variabel.equalsIgnoreCase("1") && !variabel.equalsIgnoreCase("0") &&
+                    !variabel.equalsIgnoreCase("wahr") && !variabel.equalsIgnoreCase("falsch") &&
+                    !variabel.equalsIgnoreCase("ja") && !variabel.equalsIgnoreCase("nein") ){
+                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 10: 'Variabel').</div>\n";
+                log.setText(logString+logStringEnd);
+                continue;
+                    }
+            if ( variabel.equalsIgnoreCase("true") || variabel.equalsIgnoreCase("yes") || variabel.equalsIgnoreCase("1") ||
+                    variabel.equalsIgnoreCase("wahr") || variabel.equalsIgnoreCase("ja") ){
+                variabel = "1";
+                vkpreis = "NULL";
+                ekpreis = "NULL";
+            } else {
+                variabel = "0";
+                if ( !vkpreis.equals("NULL") ){
+                    try {
+                        vkpreis = priceFormatterIntern(vkpreis);
+                    } catch (NumberFormatException ex) {
+                        logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 8: 'VK-Preis').</div>\n";
+                        log.setText(logString+logStringEnd);
+                        continue;
+                    }
+                }
+                if ( !ekpreis.equals("NULL") ){
+                    try {
+                        ekpreis = priceFormatterIntern(ekpreis);
+                    } catch (NumberFormatException ex) {
+                        logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 9: 'EK-Preis').</div>\n";
+                        log.setText(logString+logStringEnd);
+                        continue;
+                    }
+                }
+            }
+            String lieferantid = queryLieferantID(lieferant);
+            if (lieferantid.equals("NULL")){
+                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 2: Lieferant unbekannt).</div>\n";
+                log.setText(logString+logStringEnd);
+                continue;
+            }
+
+            Vector<Color> colors = new Vector<Color>();
+            int itemAlreadyKnown = checkIfItemAlreadyKnown(name, nummer);
+            if (itemAlreadyKnown == 1){ // item already in db
+                // compare every field:
+                Vector<String> allFields = queryAllFields(name, nummer);
+
+                colors.add( gruppenid.equals(allFields.get(0)) ? Color.black : Color.red ); // produktgruppe
+                colors.add(Color.black); // name
+                colors.add(Color.black); // nummer
+                colors.add( barcode.equals(allFields.get(1)) ? Color.black : Color.red ); // barcode
+                if (variabel.equals("0")){ // compare prices:
+                    colors.add( vkpreis.equals(allFields.get(2)) ? Color.black : Color.red ); // vkpreis
+                    colors.add( ekpreis.equals(allFields.get(3)) ? Color.black : Color.red ); // ekpreis
+                } else {
+                    colors.add(Color.black);
+                    colors.add(Color.black);
+                }
+                colors.add( variabel.equals(allFields.get(4)) ? Color.black : Color.red ); // variabel
+                colors.add( vpe.equals(allFields.get(5)) ? Color.black : Color.red ); // vpe
+                colors.add( lieferantid.equals(allFields.get(6)) ? Color.black : Color.red ); // lieferantid
+                colors.add( herkunft.equals(allFields.get(7)) ? Color.black : Color.red ); // herkunft
+                colors.add(Color.black); // entfernen
+            }
+            else {
+                for (int i=0; i<11; i++){
+                    colors.add(Color.black);
+                }
+            }
+            boolean itemChanged = false;
+            for (int i=0; i<11; i++){
+                if (colors.get(i) == Color.red){
+                    itemChanged = true;
+                    break;
+                }
+            }
+            if ( itemAlreadyKnown == 0 || (itemChanged && itemAlreadyKnown != 2) ){ // if item not known or item changed
+                // add new item to the list
+                artikelNeu.artikelNamen.add(name);
+                artikelNeu.artikelNummern.add(nummer);
+                artikelNeu.barcodes.add(barcode);
+                artikelNeu.vkPreise.add(vkpreis);
+                artikelNeu.ekPreise.add(ekpreis);
+                artikelNeu.variablePreise.add( variabel.equals("0") ? false : true );
+                artikelNeu.vpes.add( vpe.equals("NULL") ? null :
+                        Integer.parseInt(vpe) );
+                artikelNeu.selLieferantIDs.add( lieferantid.equals("NULL") ? null :
+                        Integer.parseInt(lieferantid) );
+                artikelNeu.selProduktgruppenIDs.add( gruppenid.equals("NULL") ? null :
+                        Integer.parseInt(gruppenid) );
+                artikelNeu.herkuenfte.add(herkunft);
+                artikelNeu.removeButtons.add(new JButton("-"));
+                artikelNeu.removeButtons.lastElement().addActionListener(this);
+                artikelNeu.colorMatrix.add(colors);
+
+                Vector<Object> row = new Vector<Object>();
+                    row.add(gruppenname);
+                    row.add(name);
+                    row.add(nummer);
+                    row.add( barcode == "NULL" ? "" : barcode );
+                    row.add( vkpreis.equals("NULL") ? "" : vkpreis.replace('.',',')+" "+currencySymbol );
+                    row.add( ekpreis.equals("NULL") ? "" : ekpreis.replace('.',',')+" "+currencySymbol );
+                    row.add( variabel.equals("TRUE") ? true : false );
+                    row.add( vpe.equals("NULL") ? "" : vpe );
+                    row.add(lieferant);
+                    row.add( herkunft.equals("NULL") ? "" : herkunft );
+                    row.add(artikelNeu.removeButtons.lastElement());
+                artikelNeu.data.add(row);
+            }
+            if (itemAlreadyKnown == 0){
+                logString += "<div style=\""+baseStyle+"\">Artikel \""+ name + "\" wird hinzugefügt.</div>\n";
+                log.setText(logString+logStringEnd);
+                log.updateUI();
+            }
+            else if (itemAlreadyKnown == 2){ // item already in table
+                logString += "<div style=\""+redStyle+"\">Artikel \""+ name + "\" wird nicht erneut hinzugefügt/verändert.</div>\n";
+                log.setText(logString+logStringEnd);
+                log.updateUI();
+            }
+            else if (itemChanged){
+                logString += "<div style=\""+baseStyle+"\">Artikel \""+ name + "\" wird verändert.</div>\n";
+                log.setText(logString+logStringEnd);
+                log.updateUI();
+            }
+        }
+    }
+
+    // old version with CSV file:
+    /*
+    void parseFile(File file) {
+        logString += "<div>-------</div>\n";
+        logString += "<div style=\""+baseStyle+"\">Datei " + file.getName() + " wird geöffnet...</div>\n";
+        log.setText(logString+logStringEnd);
         try {
             //// use InputStream classes for binary files:
             //FileInputStream fis = new FileInputStream(file);
@@ -459,6 +655,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
             ex.printStackTrace();
         }
     }
+    */
 
     /**
      *    * Each non abstract class that implements the ActionListener

@@ -61,10 +61,12 @@ public class ArtikelNeu extends WindowContent
 
     private void initiateTable() {
         columnLabels = new Vector<String>();
-        columnLabels.add("Produktgruppe"); columnLabels.add("Name"); columnLabels.add("Nummer"); columnLabels.add("Barcode");
-        columnLabels.add("VK-Preis"); columnLabels.add("EK-Preis"); columnLabels.add("Variabel");
-        columnLabels.add("VPE");
-        columnLabels.add("Lieferant"); columnLabels.add("Herkunft"); columnLabels.add("Entf.");
+        columnLabels.add("Produktgruppe"); columnLabels.add("Name");
+        columnLabels.add("Nummer"); columnLabels.add("Barcode");
+        columnLabels.add("VK-Preis"); columnLabels.add("EK-Preis");
+        columnLabels.add("Variabel"); columnLabels.add("VPE");
+        columnLabels.add("Lieferant"); columnLabels.add("Herkunft");
+        columnLabels.add("Entf.");
     }
 
     public void emptyTable(){
