@@ -155,8 +155,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 String nr = rs.getString(4);
                 String barcode = rs.getString(5);
                 String vkp = rs.getString(6);
-                String ekp = rs.getString(8);
-                Boolean var = rs.getBoolean(7);
+                String ekp = rs.getString(7);
+                Boolean var = rs.getBoolean(8);
                 String vpe = rs.getString(9);
                 String mwst = rs.getString(10);
                 String mwstBetrag = "";
@@ -696,7 +696,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             String barcode = model.getValueAt(row, model.findColumn("Barcode")).toString();
             String vkpreis = model.getValueAt(row, model.findColumn("VK-Preis")).toString();
             String ekpreis = model.getValueAt(row, model.findColumn("EK-Preis")).toString();
-            Integer vpe = Integer.parseInt( model.getValueAt(row, model.findColumn("VPE")).toString() );
+            Integer vpe;
+            try {
+                vpe = Integer.parseInt( model.getValueAt(row, model.findColumn("VPE")).toString() );
+            } catch (NumberFormatException ex){ vpe = null; }
             boolean aktiv = model.getValueAt(row, model.findColumn("Aktiv")).toString().equals("true") ? true : false;
             String herkunft = model.getValueAt(row, model.findColumn("Herkunft")).toString();
 
