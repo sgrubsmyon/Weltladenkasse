@@ -260,7 +260,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
 
     void parseFile(File file) {
         logString += "<div>-------</div>\n";
-        logString += "<div style=\""+baseStyle+"\">Datei " + file.getName() + " wird geöffnet...</div>\n";
+        logString += "<div style=\""+baseStyle+"\">Datei " + file.getName() + " wurde geöffnet...</div>\n";
         log.setText(logString+logStringEnd);
 
         // Load the file
@@ -422,7 +422,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                     row.add( barcode == "NULL" ? "" : barcode );
                     row.add( vkpreis.equals("NULL") ? "" : vkpreis.replace('.',',')+" "+currencySymbol );
                     row.add( ekpreis.equals("NULL") ? "" : ekpreis.replace('.',',')+" "+currencySymbol );
-                    row.add( variabel.equals("TRUE") ? true : false );
+                    row.add( variabel.equals("0") ? false : true );
                     row.add( vpe.equals("NULL") ? "" : vpe );
                     row.add(lieferant);
                     row.add( herkunft.equals("NULL") ? "" : herkunft );
@@ -445,13 +445,14 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                 log.updateUI();
             }
         }
+        logString += "<div style=\""+baseStyle+"\">Datei " + file.getName() + " wurde komplett eingelesen.</div>\n";
     }
 
     // old version with CSV file:
     /*
     void parseFile(File file) {
         logString += "<div>-------</div>\n";
-        logString += "<div style=\""+baseStyle+"\">Datei " + file.getName() + " wird geöffnet...</div>\n";
+        logString += "<div style=\""+baseStyle+"\">Datei " + file.getName() + " wurde geöffnet...</div>\n";
         log.setText(logString+logStringEnd);
         try {
             //// use InputStream classes for binary files:

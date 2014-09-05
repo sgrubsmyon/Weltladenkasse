@@ -43,7 +43,7 @@ CREATE TABLE artikel (
     barcode varchar(30) DEFAULT NULL,
     vk_preis decimal(13,2),
     ek_preis decimal(13,2),
-    lieferant_id int(10) unsigned DEFAULT 1,
+    lieferant_id int(10) unsigned NOT NULL DEFAULT 1,
     produktgruppen_id int(10) unsigned NOT NULL DEFAULT 8,
     herkunft varchar(100) DEFAULT NULL,
     von DATETIME DEFAULT NULL,
