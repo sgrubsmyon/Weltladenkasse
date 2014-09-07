@@ -7,3 +7,9 @@ Merge 250g etc. with artikelname:
     :'<,'>s/;\([^;]*\)\(;[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;$\)/ \1;\2/
 Zeilenumbrüche entfernen:
     :%s/\([^;]\)$\n/\1 /c
+
+DB dump:
+mysqldump -u kassenadmin -p kasse > testdump.sql
+
+DB import:
+mysql -u kassenadmin -p kasse < testdump.sql
