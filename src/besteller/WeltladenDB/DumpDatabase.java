@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.DriverManager;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -29,6 +30,8 @@ public class DumpDatabase extends WindowContent {
     private JButton dumpButton;
     private JButton readButton;
     private JFileChooser fc;
+
+    private Connection adminConn;
 
     /**
      *    The constructor.
@@ -98,6 +101,7 @@ public class DumpDatabase extends WindowContent {
             File file = fc.getSelectedFile();
             System.out.println("Selected read file "+file.getName());
             return file.getName();
+            //return file.getAbsolutePath();
         } else {
             System.out.println("Open command cancelled by user.");
         }
@@ -110,7 +114,7 @@ public class DumpDatabase extends WindowContent {
 	    // Load JDBC driver and register with DriverManager
 	    Class.forName("com.mysql.jdbc.Driver").newInstance();
 	    // Obtain connection to MySQL database from DriverManager
-	    Connection adminConn = DriverManager.getConnection("jdbc:mysql://localhost/kasse",
+	    adminConn = DriverManager.getConnection("jdbc:mysql://localhost/kasse",
 		    "kassenadmin", password);
 	} catch (Exception ex) {
 	    System.out.println("Exception: " + ex.getMessage());
@@ -193,17 +197,15 @@ public class DumpDatabase extends WindowContent {
     void dumpDatabase(String password, String filename) {
         // From: http://www.jvmhost.com/articles/mysql-postgresql-dump-restore-java-jsp-code#sthash.6M0ty78M.dpuf
         String executeCmd = "mysqldump -u kassenadmin -p"+password+" kasse -r "+filename;
-
-        Process runtimeProcess;
         try {
-            runtimeProcess = Runtime.getRuntime().exec(executeCmd);
+            Process runtimeProcess = Runtime.getRuntime().exec(executeCmd);
             int processComplete = runtimeProcess.waitFor();
             if (processComplete == 0) {
                 System.out.println("Dump created successfully");
             } else {
                 System.out.println("Could not create the dump");
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: Dump-Datei konnte nicht erstellt werden.",
+                        "Fehler: Dump-Datei "+filename+" konnte nicht erstellt werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception ex) {
@@ -212,18 +214,49 @@ public class DumpDatabase extends WindowContent {
     }
 
     void readDatabase(String password, String filename) {
-        // alternative: User JDBC connection for admin and 'SOURCE filename;' (http://stackoverflow.com/questions/105776/how-do-i-restore-a-mysql-dump-file)
-        String executeCmd = "mysql -u kassenadmin -p"+password+" kasse < "+filename;
-
-        Process runtimeProcess;
+        // alternative: User JDBC connection for admin and 'SOURCE filename;' (http://stackoverflow.com/questions/105776/how-do-i-restore-a-mysql-dump-file), but doesn't work (SyntaxError)
+        //try {
+        //    Statement stmt = adminConn.createStatement();
+        //    int result = stmt.executeUpdate("SOURCE "+filename);
+        //    stmt.close();
+        //    if (result == 0){
+        //        JOptionPane.showMessageDialog(this,
+        //                "Fehler: Dump-Datei "+filename+" konnte nicht eingelesen werden.",
+        //                "Fehler", JOptionPane.ERROR_MESSAGE);
+        //    }
+        //} catch (SQLException ex) {
+        //    System.out.println("Exception: " + ex.getMessage());
+        //    ex.printStackTrace();
+        //    JOptionPane.showMessageDialog(this,
+        //            "Fehler: Dump-Datei "+filename+" konnte nicht eingelesen werden.",
+        //            "Fehler", JOptionPane.ERROR_MESSAGE);
+        //}
+        // From: http://stackoverflow.com/questions/14691112/import-a-dump-file-to-mysql-jdbc
+        // Use mysqlimport
+        //String executeCmd = "mysql -u kassenadmin -p"+password+" kasse < "+filename;
+        String[] executeCmd = new String[]{"/bin/sh", "-c", "mysql -u kassenadmin -p"+password+" kasse < "+filename};
         try {
-            runtimeProcess = Runtime.getRuntime().exec(executeCmd);
-            int processComplete = runtimeProcess.waitFor();
+            Process p = Runtime.getRuntime().exec(executeCmd);
+            BufferedReader stdInput = new BufferedReader(new
+                                     InputStreamReader(p.getInputStream()));
+            BufferedReader stdError = new BufferedReader(new
+                                     InputStreamReader(p.getErrorStream()));
+            System.out.println("Here is the standard output of the command "+executeCmd+":\n");
+            String s = null;
+            while ((s = stdInput.readLine()) != null) {
+                System.out.println(s);
+            }
+            System.out.println("Here is the standard error of the command (if any):\n");
+            while ((s = stdError.readLine()) != null) {
+                System.out.println(s);
+            }
+            int processComplete = p.waitFor();
             if (processComplete == 0) {
                 System.out.println("Dump read in successfully");
             } else {
+                System.out.println("Could not read in the dump");
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: Dump-Datei "+filename+" konnte nicht eingelesen werden.",
+                        "Fehler: Dump-Datei "+filename+" konnte nicht gelesen werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception ex) {
