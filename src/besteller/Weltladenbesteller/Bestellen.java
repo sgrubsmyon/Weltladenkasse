@@ -810,10 +810,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         removeButtons.lastElement().addActionListener(this);
 
         Vector<Object> row = new Vector<Object>();
-        row.add(positions.lastElement());
-        row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
-        row.add(vkp); row.add(vpe); row.add(stueck);
-        row.add(removeButtons.lastElement());
+            row.add(positions.lastElement());
+            row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
+            row.add(vkp); row.add(vpe); row.add(stueck);
+            row.add(removeButtons.lastElement());
         data.add(row);
 
         displayData = new Vector< Vector<Object> >(data);
