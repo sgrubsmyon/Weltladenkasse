@@ -843,7 +843,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     }
 
     private int abschliessen() {
-        int bestellNr = 0;
+        int bestellNr = -1;
         try {
             PreparedStatement pstmt;
             if (selBestellNr > 0){
@@ -896,6 +896,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            bestellNr = -1;
         }
         return bestellNr;
     }
@@ -1187,11 +1188,13 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	}
 	if (e.getSource() == abschliessenButton){
             int bestellNr = abschliessen();
-            verwerfen();
-            // update the BestellAnzeige tab
-            tabbedPane.recreateTabbedPane();
-            // switch to BestellAnzeige tab
-            tabbedPane.switchToBestellAnzeige(bestellNr);
+            if (bestellNr > 0){ // if abschliessen was successful
+                verwerfen();
+                // update the BestellAnzeige tab
+                tabbedPane.recreateTabbedPane();
+                // switch to BestellAnzeige tab
+                tabbedPane.switchToBestellAnzeige(bestellNr);
+            }
 	    return;
 	}
 	if (e.getSource() == verwerfenButton){
