@@ -91,12 +91,12 @@ public class TabbedPane extends WindowContent {
         myBestellen.selJahr = jahr;
         myBestellen.selKW = kw;
         for (int i=0; i<artikelIDs.size(); i++){
-            String lieferant = data.get(i).get(0).toString();
-            String artikelNr = data.get(i).get(1).toString();
-            String artikelName = data.get(i).get(2).toString();
-            String vkp = data.get(i).get(3).toString();
-            String vpe = data.get(i).get(4) == null ? null : data.get(i).get(4).toString();
-            String stueck = data.get(i).get(5).toString();
+            String lieferant = data.get(i).get(1).toString();
+            String artikelNr = data.get(i).get(2).toString();
+            String artikelName = data.get(i).get(3).toString();
+            String vkp = data.get(i).get(4).toString();
+            String vpe = data.get(i).get(5) == null ? null : data.get(i).get(5).toString();
+            String stueck = data.get(i).get(6).toString();
             myBestellen.hinzufuegen(artikelIDs.get(i), lieferant, artikelNr,
                     artikelName, vkp, vpe, stueck);
         }
