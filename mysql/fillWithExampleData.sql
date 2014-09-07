@@ -3,6 +3,7 @@ USE kasse;
 LOAD DATA LOCAL INFILE 'produktgruppen.dat' INTO TABLE produktgruppe;
 LOAD DATA LOCAL INFILE 'lieferant.dat' INTO TABLE lieferant;
 
+/*
 INSERT INTO abrechnung_tag SET zeitpunkt = '2013-10-30 18:54:28', mwst_satz = 0.07, mwst_netto = 222.33, mwst_betrag = 15.56, bar_brutto = 171.39;
 INSERT INTO abrechnung_tag SET zeitpunkt = '2013-10-30 18:54:28', mwst_satz = 0.19, mwst_netto = 189.42, mwst_betrag = 35.99, bar_brutto = 170.00;
 INSERT INTO abrechnung_tag SET zeitpunkt = '2013-10-31 19:01:32', mwst_satz = 0.07, mwst_netto = 182.83, mwst_betrag = 12.80, bar_brutto = 175.50;

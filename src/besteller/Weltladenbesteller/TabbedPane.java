@@ -33,12 +33,14 @@ import javax.swing.table.*;
 
 import WeltladenDB.ArtikellisteContainer;
 import WeltladenDB.WindowContent;
+import WeltladenDB.DumpDatabase;
 
 // Klasse, die Bestellfenster und Artikelliste speichert und anzeigt
 public class TabbedPane extends WindowContent {
     private JTabbedPane tabbedPane;
     private BestellAnzeige bestellAnzeige;
     private Bestellen myBestellen;
+    private DumpDatabase myDump;
 
     // Methoden:
     public TabbedPane(Connection conn, MainWindow mw) {
@@ -52,9 +54,11 @@ public class TabbedPane extends WindowContent {
         myBestellen = new Bestellen(this.conn, this.mainWindow, this);
         ArtikellisteContainer myArtikellisteC = new ArtikellisteContainer(this.conn, this.mainWindow);
         bestellAnzeige = new BestellAnzeige(this.conn, this.mainWindow, this);
+        myDump = new DumpDatabase(this.conn, this.mainWindow);
         tabbedPane.addTab("Bestellen", null, myBestellen, "Bestellung erstellen");
         tabbedPane.addTab("Artikelliste", null, myArtikellisteC, "Artikel bearbeiten/hinzufügen");
         tabbedPane.addTab("Bestellungen", null, bestellAnzeige, "Bestellung anzeigen/drucken");
+        tabbedPane.addTab("DB Import/Export", null, myDump, "Datenbank exportieren/importieren");
 
         this.add(tabbedPane, BorderLayout.CENTER);
     }

@@ -69,7 +69,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     private JTextField filterField;
 
     private int selBestellNr;
-    private Vector<Integer> bestellNummern;
+    protected Vector<Integer> bestellNummern;
     private Vector< Vector<String> > orderData;
     private Vector<String> orderLabels;
     private Vector< Vector<Object> > orderDetailData;
@@ -82,7 +82,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     private JPanel orderDetailPanel;
     private JPanel orderDetailTablePanel;
     private JScrollPane orderDetailScrollPane;
-    private AnyJComponentJTable orderTable;
+    protected AnyJComponentJTable orderTable;
     private BestellungsTable orderDetailTable;
 
     private String filterStr = ""; // show only specific items of the order
@@ -590,7 +590,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
                 System.out.println("Written to " + file.getName());
             } else {
-                System.out.println("Open command cancelled by user.");
+                System.out.println("Save command cancelled by user.");
             }
             return;
 	}
