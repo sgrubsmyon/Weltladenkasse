@@ -326,10 +326,10 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 Integer artikelID = rs.getInt(8);
 
                 Vector<Object> row = new Vector<Object>();
-                row.add(pos);
-                row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
-                row.add(priceFormatter(vkp)+" "+currencySymbol); row.add(vpe); row.add(stueck);
-                row.add(""); // row.add(removeButtons.lastElement())
+                    row.add(pos);
+                    row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
+                    row.add(priceFormatter(vkp)+" "+currencySymbol); row.add(vpe); row.add(stueck);
+                    row.add(""); // row.add(removeButtons.lastElement())
                 orderDetailData.add(row);
                 orderDetailArtikelIDs.add(artikelID);
             }
@@ -372,9 +372,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 Integer stueck = rs.getInt(9);
 
                 Vector<Object> row = new Vector<Object>();
-                //row.add(pos); // omit position
-                row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
-                row.add(vpe); row.add(vkp); row.add(ekp); row.add(mwst); row.add(stueck);
+                    //row.add(pos); // omit position
+                    row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
+                    row.add(vpe); row.add(vkp); row.add(ekp); row.add(mwst); row.add(stueck);
                 orderExportData.add(row);
             }
 	    rs.close();
@@ -388,10 +388,13 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
     private void deleteOrderFromDB(int bestellNr) {
         if (bestellNr > 0){
+            PreparedStatement pstmt = null;
             try {
-                PreparedStatement pstmt = this.conn.prepareStatement(
-                        "DELETE bestellung, bestellung_details FROM bestellung "+
-                        "INNER JOIN bestellung_details USING (bestell_nr) "+
+                // try a transaction:
+                conn.setAutoCommit(false);
+                // first delete from bestellung_details (child)
+                pstmt = conn.prepareStatement(
+                        "DELETE FROM bestellung_details "+
                         "WHERE bestell_nr = ?"
                         );
                 pstmt.setInt(1, bestellNr);
@@ -403,9 +406,46 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
                 pstmt.close();
+                // then delete from bestellung (parent)
+                pstmt = conn.prepareStatement(
+                        "DELETE FROM bestellung "+
+                        "WHERE bestell_nr = ?"
+                        );
+                pstmt.setInt(1, bestellNr);
+                result = pstmt.executeUpdate();
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Bestellung konnte nicht zum Ändern aus DB entfernt werden.\n"+
+                            "Sie könnte beim nächsten Abschließen doppelt in DB enthalten sein.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+                conn.commit();
             } catch (SQLException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
+                try {
+                    conn.rollback();
+                } catch (SQLException ex2) {
+                    System.out.println("Rollback failed!");
+                    System.out.println("Exception: " + ex2.getMessage());
+                    ex2.printStackTrace();
+                }
+            } finally {
+                try {
+                    if (pstmt != null){
+                        pstmt.close();
+                    }
+                } catch (SQLException ex) {
+                    System.out.println("Exception: " + ex.getMessage());
+                    ex.printStackTrace();
+                }
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    System.out.println("Couldn't set auto-commit to true again after manual transaction.");
+                    System.out.println("Exception: " + ex.getMessage());
+                    ex.printStackTrace();
+                }
             }
         }
     }
