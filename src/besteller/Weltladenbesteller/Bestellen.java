@@ -1026,7 +1026,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         }
         if (e.getDocument() == barcodeField.getDocument()){
             if (barcodeBox.setBoxMode){ return; }
-            System.out.println("barcodeField DocumentListener fired!");
+            System.out.println("\nbarcodeField DocumentListener fired!");
             System.out.println("selectedItem: "+barcodeBox.getSelectedItem());
             System.out.println("barcodeField text: "+barcodeField.getText()+"   barcodeText: "+barcodeText);
             if ( !barcodeField.getText().equals(barcodeText) ) { // some editing change in box
@@ -1038,7 +1038,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         }
         if (e.getDocument() == artikelField.getDocument()){
             if (artikelBox.setBoxMode){ return; }
-            System.out.println("artikelField DocumentListener fired!");
+            System.out.println("\nartikelField DocumentListener fired!");
             System.out.println("selectedItem: "+artikelBox.getSelectedItem());
             System.out.println("artikelField text: "+artikelField.getText()+"   artikelNameText: "+artikelNameText);
             if ( !artikelField.getText().equals(artikelNameText) ) { // some editing change in box
@@ -1050,7 +1050,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         }
         if (e.getDocument() == nummerField.getDocument()){
             if (nummerBox.setBoxMode){ return; }
-            System.out.println("nummerField DocumentListener fired!");
+            System.out.println("\nnummerField DocumentListener fired!");
             System.out.println("selectedItem: "+nummerBox.getSelectedItem());
             System.out.println("nummerField text: "+nummerField.getText()+"   artikelNummerText: "+artikelNummerText);
             if ( !nummerField.getText().equals(artikelNummerText) ) { // some editing change in box
