@@ -106,7 +106,6 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
     }
 
     public void setBox(String[] item) {
-        //System.out.println("*** 2: setBox start");
         this.changeMode = true;
             items.clear();
             this.removeAllItems();
@@ -117,10 +116,6 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
         this.setBoxMode = true;
             textFeld.setText(item[0]);
         this.setBoxMode = false;
-        //System.out.println("in setBox after setText. setBoxMode = "+setBoxMode);
-        //System.out.println("textFeld text = "+textFeld.getText());
-        //System.out.println("selectedItem: "+this.getSelectedItem());
-        //System.out.println("*** 3: setBox end");
         this.setWide();
     }
 
@@ -143,6 +138,7 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
         this.changeMode = false;
         if (istr.size() == 1){
             this.setBox(istr.get(0));
+            fireActionEvent(); // needed?
         } else {
             this.changeMode = true;
                 //System.out.println("\n*******\nsetting items\n*****");
@@ -235,10 +231,9 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
                                         // I finally stopped using ItemListener and use only
                                         // listeners on enter and mouse click.
                     if (getSelectedIndex() >= 0 && getSelectedIndex() < items.size()){
-                        //System.out.println("*** 1: enter pressed.");
                         String[] item = items.get(getSelectedIndex());
                         setBox(item);
-                        //System.out.println("*** 4: after setBox");
+                        fireActionEvent(); // this is actually not needed, because ENTER key alrady fired an action event before ("comboBoxEdited")
                     }
                 }
             }
@@ -254,10 +249,12 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
     public class MyMouseListener extends MouseAdapter {
         @Override
             public void mouseReleased(MouseEvent e) {
-                //System.out.println("mouse released.");
+                System.out.println("mouse released.");
                 if (getSelectedIndex() >= 0 && getSelectedIndex() < items.size()){
                     String[] item = items.get(getSelectedIndex());
+                    System.out.println(item[0]);
                     setBox(item);
+                    fireActionEvent(); // this is needed
                 }
             }
     }
