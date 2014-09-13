@@ -1564,44 +1564,21 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     }
 
     private void checkBarcodeBox(ActionEvent e) {
-        System.out.println("actionPerformed in barcodeBox, actionCommand: "+e.getActionCommand()+", modifiers: "+e.getModifiers()+", itemCount: "+barcodeBox.getItemCount());
-        if ( e.getActionCommand().equals("comboBoxEdited") || // if enter was pressed
-                ( e.getActionCommand().equals("comboBoxChanged") && e.getModifiers() == 16 ) // if mouse button was clicked
-           ){
-            System.out.println("Enter or mouse click in barcodeBox, itemCount: "+barcodeBox.getItemCount());
-            if ( barcodeBox.getItemCount() == 1 ){ // if selection is correct and unique
-                setArtikelNameAndNummerForBarcode();
-            //} else {
-            //    resetFormFromBarcodeBox();
-            }
+        if ( barcodeBox.getItemCount() == 1 ){ // if selection is correct and unique
+            setArtikelNameAndNummerForBarcode();
         }
         checkIfFormIsComplete();
     }
     private void checkArtikelBox(ActionEvent e) {
-        System.out.println("actionPerformed in artikelBox, actionCommand: "+e.getActionCommand()+", modifiers: "+e.getModifiers()+", itemCount: "+artikelBox.getItemCount()+", selectedItem: "+artikelBox.getSelectedItem()+"   artikelNameText: "+artikelNameText);
-        if ( e.getActionCommand().equals("comboBoxEdited") || // if enter was pressed
-                ( e.getActionCommand().equals("comboBoxChanged") && e.getModifiers() == 16 ) // if mouse button was clicked
-           ){
-            System.out.println("Enter or mouse click in artikelBox, itemCount: "+artikelBox.getItemCount());
-            if ( artikelBox.getItemCount() == 1 ){ // if selection is correct and unique
-                setArtikelNummerForName();
-            //} else {
-            //    resetFormFromArtikelBox();
-            }
+        System.out.println("actionPerformed in nummerBox, actionCommand: "+e.getActionCommand()+", modifiers: "+e.getModifiers()+", itemCount: "+nummerBox.getItemCount()+", selectedItem: "+nummerBox.getSelectedItem()+"   artikelNummerText: "+artikelNummerText);
+        if ( artikelBox.getItemCount() == 1 ){ // if selection is correct and unique
+            setArtikelNummerForName();
         }
         checkIfFormIsComplete();
     }
     private void checkNummerBox(ActionEvent e) {
-        System.out.println("actionPerformed in nummerBox, actionCommand: "+e.getActionCommand()+", modifiers: "+e.getModifiers()+", itemCount: "+nummerBox.getItemCount()+", selectedItem: "+nummerBox.getSelectedItem()+"   artikelNummerText: "+artikelNummerText);
-        if ( e.getActionCommand().equals("comboBoxEdited") || // if enter was pressed
-                ( e.getActionCommand().equals("comboBoxChanged") && e.getModifiers() == 16 ) // if mouse button was clicked
-           ){
-            System.out.println("Enter or mouse click in nummerBox, itemCount: "+nummerBox.getItemCount());
-            if ( nummerBox.getItemCount() == 1 ){ // if selection is correct and unique
-                setArtikelNameForNummer();
-            //} else {
-            //    resetFormFromNummerBox();
-            }
+        if ( nummerBox.getItemCount() == 1 ){ // if selection is correct and unique
+            setArtikelNameForNummer();
         }
         checkIfFormIsComplete();
     }
