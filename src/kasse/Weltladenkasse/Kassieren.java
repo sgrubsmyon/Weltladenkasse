@@ -1570,7 +1570,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         checkIfFormIsComplete();
     }
     private void checkArtikelBox(ActionEvent e) {
-        System.out.println("actionPerformed in nummerBox, actionCommand: "+e.getActionCommand()+", modifiers: "+e.getModifiers()+", itemCount: "+nummerBox.getItemCount()+", selectedItem: "+nummerBox.getSelectedItem()+"   artikelNummerText: "+artikelNummerText);
+        System.out.println("actionPerformed in artikelBox, actionCommand: "+e.getActionCommand()+", modifiers: "+e.getModifiers()+", itemCount: "+artikelBox.getItemCount()+", selectedItem: "+artikelBox.getSelectedItem()+"   artikelNameText: "+artikelNameText);
         if ( artikelBox.getItemCount() == 1 ){ // if selection is correct and unique
             setArtikelNummerForName();
         }
