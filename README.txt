@@ -1,18 +1,26 @@
-Install on an Ubuntu system:
-----------------------------
+Auf einem Ubuntu-System installieren:
+-------------------------------------
 
-Change to the directory with the software (where this README.txt file is residing):
+Terminal öffnen.
+
+Ins Verzeichnis mit der Software wechseln (wo sich auch diese README-Datei
+befindet):
+(ohne '$' eingeben)
 
 $ cd path/to/my/directory
 
-Run install-ubuntu.sh script:
+Installations-Skript ausführen:
 
 $ ./install-ubuntu.sh
 
-Run the software:
+Software starten:
 -----------------
 
+Zum Kassieren:
 $ java -jar Weltladenkasse_v0.9.1.jar
+oder zum Bestellen:
+$ java -jar Weltladenbesteller_v0.9.1.jar
 
-A version of the Java Runtime Environment (JRE) needs to be installed in order to run the software.
+Das Java Runtime Environment (JRE) muss installiert sein, um die Software
+auszuführen (z.B. mit dem Befehl 'sudo apt-get install default-jre').
 

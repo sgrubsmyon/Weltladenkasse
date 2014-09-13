@@ -81,7 +81,7 @@ public class Besteller {
                     JOptionPane.QUESTION_MESSAGE,
                     JOptionPane.OK_CANCEL_OPTION);
         }
-        JDialog dialog = jop.createDialog("Bitte Passwort eingeben");
+        JDialog dialog = jop.createDialog("Bitte Benutzer-Passwort eingeben");
         dialog.addWindowFocusListener(new WindowAdapter(){
             @Override
             public void windowGainedFocus(WindowEvent e){
