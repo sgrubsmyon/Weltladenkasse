@@ -69,7 +69,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private int selectedArtikelID;
     private int selectedStueck;
     private JSpinner anzahlSpinner;
+    private JSpinner vpeSpinner;
     private JTextField anzahlField;
+    private JTextField vpeSpinnerField;
+    private boolean vpeOrAnzahlIsChanged = false;
     private JTextField vpeField;
     private JTextField preisField;
     private JSpinner jahrSpinner;
@@ -343,6 +346,35 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             anzahlField.setColumns(3);
 	    anzahlLabel.setLabelFor(anzahlSpinner);
             chooseArticlePanel2.add(anzahlSpinner);
+
+            SpinnerNumberModel vpeModel = new SpinnerNumberModel(1, // initial value
+                                                                    0, // min
+                                                                    null, // max (null == no max)
+                                                                    1); // step
+	    vpeSpinner = new JSpinner(vpeModel);
+            JSpinner.NumberEditor vpeEditor = new JSpinner.NumberEditor(vpeSpinner, "###");
+            vpeSpinnerField = vpeEditor.getTextField();
+            vpeSpinnerField.getDocument().addDocumentListener(this);
+            vpeSpinnerField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
+                // remove Ctrl-A key binding
+            vpeSpinnerField.addKeyListener(new KeyAdapter() {
+                public void keyPressed(KeyEvent e) {
+                    if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
+                        if (preisField.isEditable())
+                            preisField.requestFocus();
+                        else {
+                            if (hinzufuegenButton.isEnabled()){
+                                vpeSpinner.setValue(Integer.parseInt(vpeSpinnerField.getText()));
+                                hinzufuegenButton.doClick();
+                            }
+                        }
+                    }
+                }
+            });
+            vpeSpinner.setEditor(vpeEditor);
+            ( (NumberFormatter) vpeEditor.getTextField().getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
+            vpeSpinnerField.setColumns(3);
+            chooseArticlePanel2.add(vpeSpinner);
 
             JLabel vpeLabel = new JLabel("VPE: ");
             chooseArticlePanel2.add(vpeLabel);
@@ -767,6 +799,26 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         }
     }
 
+    private void updateAnzahlSpinner(Integer vpe) {
+        if (vpe > 0){
+            Integer vpes = (Integer)vpeSpinner.getValue();
+            String stueck = (new Integer(vpes*vpe)).toString();
+            this.vpeOrAnzahlIsChanged = true;
+            anzahlField.setText(stueck);
+            this.vpeOrAnzahlIsChanged = false;
+        }
+    }
+
+    private void updateVPESpinner(Integer vpe) {
+        if (vpe > 0){
+            Integer stueck = (Integer)anzahlSpinner.getValue();
+            String vpes = (new Integer(stueck/vpe)).toString();
+            this.vpeOrAnzahlIsChanged = true;
+            vpeSpinnerField.setText(vpes);
+            this.vpeOrAnzahlIsChanged = false;
+        }
+    }
+
     private void checkIfFormIsComplete() {
         int nummerNumber = nummerBox.getItemCount();
         int artikelNumber = artikelBox.getItemCount();
@@ -1037,14 +1089,25 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             return;
         }
         if (e.getDocument() == anzahlField.getDocument()){
+            if (this.vpeOrAnzahlIsChanged) return;
             String vpe = getVPE(selectedArtikelID);
             Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
             updateAnzahlColor(vpeInt);
+            updateVPESpinner(vpeInt);
+            return;
+        }
+        if (e.getDocument() == vpeSpinnerField.getDocument()){
+            if (this.vpeOrAnzahlIsChanged) return;
+            String vpe = getVPE(selectedArtikelID);
+            Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
+            updateAnzahlSpinner(vpeInt);
+            return;
         }
         if (e.getDocument() == filterField.getDocument()){
             filterStr = filterField.getText();
             applyFilter();
             updateTable();
+            return;
         }
     }
     public void removeUpdate(DocumentEvent e) {
