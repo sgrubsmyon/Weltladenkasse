@@ -118,31 +118,31 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
         columnLabels.add("Entfernen");
 
-//        // keyboard shortcuts:
-//        KeyStroke barcodeShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK); // Ctrl-C
-//        KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK); // Ctrl-A
-//        KeyStroke artikelNummerShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_N, Event.CTRL_MASK); // Ctrl-N
-//        KeyStroke zwischensummeShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_Z, Event.CTRL_MASK); // Ctrl-Z
-//        KeyStroke barShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_B, Event.CTRL_MASK); // Ctrl-B
-//        KeyStroke ecShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK); // Ctrl-E
-//        KeyStroke stornierenShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK); // Ctrl-S
-//
-//        ShortcutListener shortcutListener = new ShortcutListener();
-//
-//        this.registerKeyboardAction(shortcutListener, "barcode", barcodeShortcut,
-//                JComponent.WHEN_IN_FOCUSED_WINDOW);
-//        this.registerKeyboardAction(shortcutListener, "name", artikelNameShortcut,
-//                JComponent.WHEN_IN_FOCUSED_WINDOW);
-//        this.registerKeyboardAction(shortcutListener, "nummer", artikelNummerShortcut,
-//                JComponent.WHEN_IN_FOCUSED_WINDOW);
-//        this.registerKeyboardAction(shortcutListener, "zws", zwischensummeShortcut,
-//                JComponent.WHEN_IN_FOCUSED_WINDOW);
-//        this.registerKeyboardAction(shortcutListener, "bar", barShortcut,
-//                JComponent.WHEN_IN_FOCUSED_WINDOW);
-//        this.registerKeyboardAction(shortcutListener, "ec", ecShortcut,
-//                JComponent.WHEN_IN_FOCUSED_WINDOW);
-//        this.registerKeyboardAction(shortcutListener, "stornieren", stornierenShortcut,
-//                JComponent.WHEN_IN_FOCUSED_WINDOW);
+        // keyboard shortcuts:
+        KeyStroke barcodeShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK); // Ctrl-C
+        KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK); // Ctrl-A
+        KeyStroke artikelNummerShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_N, Event.CTRL_MASK); // Ctrl-N
+        //KeyStroke zwischensummeShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_Z, Event.CTRL_MASK); // Ctrl-Z
+        //KeyStroke barShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_B, Event.CTRL_MASK); // Ctrl-B
+        //KeyStroke ecShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK); // Ctrl-E
+        //KeyStroke stornierenShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK); // Ctrl-S
+
+        ShortcutListener shortcutListener = new ShortcutListener();
+
+        this.registerKeyboardAction(shortcutListener, "barcode", barcodeShortcut,
+                JComponent.WHEN_IN_FOCUSED_WINDOW);
+        this.registerKeyboardAction(shortcutListener, "name", artikelNameShortcut,
+                JComponent.WHEN_IN_FOCUSED_WINDOW);
+        this.registerKeyboardAction(shortcutListener, "nummer", artikelNummerShortcut,
+                JComponent.WHEN_IN_FOCUSED_WINDOW);
+        //this.registerKeyboardAction(shortcutListener, "zws", zwischensummeShortcut,
+        //        JComponent.WHEN_IN_FOCUSED_WINDOW);
+        //this.registerKeyboardAction(shortcutListener, "bar", barShortcut,
+        //        JComponent.WHEN_IN_FOCUSED_WINDOW);
+        //this.registerKeyboardAction(shortcutListener, "ec", ecShortcut,
+        //        JComponent.WHEN_IN_FOCUSED_WINDOW);
+        //this.registerKeyboardAction(shortcutListener, "stornieren", stornierenShortcut,
+        //        JComponent.WHEN_IN_FOCUSED_WINDOW);
 
         emptyTable();
 	showAll();
@@ -150,43 +150,43 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         barcodeBox.requestFocus();
     }
 
-//    // listener for keyboard shortcuts
-//    private class ShortcutListener implements ActionListener {
-//        public void actionPerformed(ActionEvent e) {
-//            if (e.getActionCommand() == "barcode"){
-//                barcodeBox.requestFocus();
-//                return;
-//            }
-//            if (e.getActionCommand() == "name"){
-//                artikelBox.requestFocus();
-//                return;
-//            }
-//            if (e.getActionCommand() == "nummer"){
-//                nummerBox.requestFocus();
-//                return;
-//            }
-//            if (e.getActionCommand() == "zws"){
-//                if (zwischensummeButton.isEnabled())
-//                    zwischensumme();
-//                return;
-//            }
-//            if (e.getActionCommand() == "bar"){
-//                if (barButton.isEnabled())
-//                    bar();
-//                return;
-//            }
-//            if (e.getActionCommand() == "ec"){
-//                if (ecButton.isEnabled())
-//                    ec();
-//                return;
-//            }
-//            if (e.getActionCommand() == "stornieren"){
-//                if (stornoButton.isEnabled())
-//                    stornieren();
-//                return;
-//            }
-//        }
-//    }
+    // listener for keyboard shortcuts
+    private class ShortcutListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            if (e.getActionCommand() == "barcode"){
+                barcodeBox.requestFocus();
+                return;
+            }
+            if (e.getActionCommand() == "name"){
+                artikelBox.requestFocus();
+                return;
+            }
+            if (e.getActionCommand() == "nummer"){
+                nummerBox.requestFocus();
+                return;
+            }
+            //if (e.getActionCommand() == "zws"){
+            //    if (zwischensummeButton.isEnabled())
+            //        zwischensumme();
+            //    return;
+            //}
+            //if (e.getActionCommand() == "bar"){
+            //    if (barButton.isEnabled())
+            //        bar();
+            //    return;
+            //}
+            //if (e.getActionCommand() == "ec"){
+            //    if (ecButton.isEnabled())
+            //        ec();
+            //    return;
+            //}
+            //if (e.getActionCommand() == "stornieren"){
+            //    if (stornoButton.isEnabled())
+            //        stornieren();
+            //    return;
+            //}
+        }
+    }
 
     void showAll(){
 	allPanel = new JPanel();
