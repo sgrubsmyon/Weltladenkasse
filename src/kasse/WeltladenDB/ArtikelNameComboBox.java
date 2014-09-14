@@ -44,14 +44,31 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
     public Vector<String[]> doQuery() {
         Vector<String[]> searchResults = new Vector<String[]>();
         try {
+            // construct where clause from the textFeld words, separated by spaces:
+            String[] words = textFeld.getText().split("\\s+");
+            System.out.print("Search words: {");
+            for (int i=0; i<words.length; i++){
+                System.out.print("\""+words[i]+"\",");
+            }
+            System.out.println("}");
+            String whereClause = "";
+            if (words.length > 0){
+                whereClause += "artikel_name LIKE ? ";
+            }
+            for (int i=1; i<words.length; i++){
+                whereClause += "AND artikel_name LIKE ? ";
+            }
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT DISTINCT a.artikel_name, l.lieferant_name FROM artikel AS a " +
                     "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE artikel_name LIKE ? AND a.aktiv = TRUE " + filterStr +
+                    "WHERE " + whereClause +
+                    "AND a.aktiv = TRUE " + filterStr +
                     "ORDER BY a.artikel_name, l.lieferant_name"
                     );
-            pstmt.setString(1, "%"+textFeld.getText()+"%");
+            for (int i=0; i<words.length; i++){
+                pstmt.setString(i+1, "%"+words[i]+"%");
+            }
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet ...
             while (rs.next()) {
