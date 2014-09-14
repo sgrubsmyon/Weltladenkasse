@@ -78,7 +78,7 @@ public class DumpDatabase extends WindowContent {
             }
         };
     }
-    
+
     void initializeReadDialog() {
         fc = new JFileChooser();
     }
@@ -88,12 +88,8 @@ public class DumpDatabase extends WindowContent {
         if (returnVal == JFileChooser.APPROVE_OPTION){
             File file = fc.getSelectedFile();
             System.out.println("Selected dump file "+file.getName());
-<<<<<<< HEAD
-            return file.getName();
-=======
             //return file.getName();
             return file.getAbsolutePath();
->>>>>>> better_search_box
         } else {
             System.out.println("Save command cancelled by user.");
         }
@@ -105,13 +101,8 @@ public class DumpDatabase extends WindowContent {
         if (returnVal == JFileChooser.APPROVE_OPTION){
             File file = fc.getSelectedFile();
             System.out.println("Selected read file "+file.getName());
-<<<<<<< HEAD
-            return file.getName();
-            //return file.getAbsolutePath();
-=======
             //return file.getName();
             return file.getAbsolutePath();
->>>>>>> better_search_box
         } else {
             System.out.println("Open command cancelled by user.");
         }
@@ -212,12 +203,9 @@ public class DumpDatabase extends WindowContent {
             int processComplete = runtimeProcess.waitFor();
             if (processComplete == 0) {
                 System.out.println("Dump created successfully");
-<<<<<<< HEAD
-=======
                 JOptionPane.showMessageDialog(this,
                         "Datenbank-Dump '"+filename+"' wurde erfolgreich angelegt.",
                         "Info", JOptionPane.INFORMATION_MESSAGE);
->>>>>>> better_search_box
             } else {
                 System.out.println("Could not create the dump");
                 JOptionPane.showMessageDialog(this,
@@ -269,12 +257,9 @@ public class DumpDatabase extends WindowContent {
             int processComplete = p.waitFor();
             if (processComplete == 0) {
                 System.out.println("Dump read in successfully");
-<<<<<<< HEAD
-=======
                 JOptionPane.showMessageDialog(this,
                         "Datenbank-Dump '"+filename+"' wurde erfolgreich eingelesen.",
                         "Info", JOptionPane.INFORMATION_MESSAGE);
->>>>>>> better_search_box
             } else {
                 System.out.println("Could not read in the dump");
                 JOptionPane.showMessageDialog(this,
