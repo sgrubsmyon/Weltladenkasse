@@ -118,31 +118,31 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
         columnLabels.add("Entfernen");
 
-//        // keyboard shortcuts:
-//        KeyStroke barcodeShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK); // Ctrl-C
-//        KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK); // Ctrl-A
-//        KeyStroke artikelNummerShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_N, Event.CTRL_MASK); // Ctrl-N
-//        KeyStroke zwischensummeShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_Z, Event.CTRL_MASK); // Ctrl-Z
-//        KeyStroke barShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_B, Event.CTRL_MASK); // Ctrl-B
-//        KeyStroke ecShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK); // Ctrl-E
-//        KeyStroke stornierenShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK); // Ctrl-S
-//
-//        ShortcutListener shortcutListener = new ShortcutListener();
-//
-//        this.registerKeyboardAction(shortcutListener, "barcode", barcodeShortcut,
-//                JComponent.WHEN_IN_FOCUSED_WINDOW);
-//        this.registerKeyboardAction(shortcutListener, "name", artikelNameShortcut,
-//                JComponent.WHEN_IN_FOCUSED_WINDOW);
-//        this.registerKeyboardAction(shortcutListener, "nummer", artikelNummerShortcut,
-//                JComponent.WHEN_IN_FOCUSED_WINDOW);
-//        this.registerKeyboardAction(shortcutListener, "zws", zwischensummeShortcut,
-//                JComponent.WHEN_IN_FOCUSED_WINDOW);
-//        this.registerKeyboardAction(shortcutListener, "bar", barShortcut,
-//                JComponent.WHEN_IN_FOCUSED_WINDOW);
-//        this.registerKeyboardAction(shortcutListener, "ec", ecShortcut,
-//                JComponent.WHEN_IN_FOCUSED_WINDOW);
-//        this.registerKeyboardAction(shortcutListener, "stornieren", stornierenShortcut,
-//                JComponent.WHEN_IN_FOCUSED_WINDOW);
+        // keyboard shortcuts:
+        KeyStroke barcodeShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK); // Ctrl-C
+        KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK); // Ctrl-A
+        KeyStroke artikelNummerShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_N, Event.CTRL_MASK); // Ctrl-N
+        //KeyStroke zwischensummeShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_Z, Event.CTRL_MASK); // Ctrl-Z
+        //KeyStroke barShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_B, Event.CTRL_MASK); // Ctrl-B
+        //KeyStroke ecShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK); // Ctrl-E
+        //KeyStroke stornierenShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK); // Ctrl-S
+
+        ShortcutListener shortcutListener = new ShortcutListener();
+
+        this.registerKeyboardAction(shortcutListener, "barcode", barcodeShortcut,
+                JComponent.WHEN_IN_FOCUSED_WINDOW);
+        this.registerKeyboardAction(shortcutListener, "name", artikelNameShortcut,
+                JComponent.WHEN_IN_FOCUSED_WINDOW);
+        this.registerKeyboardAction(shortcutListener, "nummer", artikelNummerShortcut,
+                JComponent.WHEN_IN_FOCUSED_WINDOW);
+        //this.registerKeyboardAction(shortcutListener, "zws", zwischensummeShortcut,
+        //        JComponent.WHEN_IN_FOCUSED_WINDOW);
+        //this.registerKeyboardAction(shortcutListener, "bar", barShortcut,
+        //        JComponent.WHEN_IN_FOCUSED_WINDOW);
+        //this.registerKeyboardAction(shortcutListener, "ec", ecShortcut,
+        //        JComponent.WHEN_IN_FOCUSED_WINDOW);
+        //this.registerKeyboardAction(shortcutListener, "stornieren", stornierenShortcut,
+        //        JComponent.WHEN_IN_FOCUSED_WINDOW);
 
         emptyTable();
 	showAll();
@@ -150,43 +150,43 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         barcodeBox.requestFocus();
     }
 
-//    // listener for keyboard shortcuts
-//    private class ShortcutListener implements ActionListener {
-//        public void actionPerformed(ActionEvent e) {
-//            if (e.getActionCommand() == "barcode"){
-//                barcodeBox.requestFocus();
-//                return;
-//            }
-//            if (e.getActionCommand() == "name"){
-//                artikelBox.requestFocus();
-//                return;
-//            }
-//            if (e.getActionCommand() == "nummer"){
-//                nummerBox.requestFocus();
-//                return;
-//            }
-//            if (e.getActionCommand() == "zws"){
-//                if (zwischensummeButton.isEnabled())
-//                    zwischensumme();
-//                return;
-//            }
-//            if (e.getActionCommand() == "bar"){
-//                if (barButton.isEnabled())
-//                    bar();
-//                return;
-//            }
-//            if (e.getActionCommand() == "ec"){
-//                if (ecButton.isEnabled())
-//                    ec();
-//                return;
-//            }
-//            if (e.getActionCommand() == "stornieren"){
-//                if (stornoButton.isEnabled())
-//                    stornieren();
-//                return;
-//            }
-//        }
-//    }
+    // listener for keyboard shortcuts
+    private class ShortcutListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            if (e.getActionCommand() == "barcode"){
+                barcodeBox.requestFocus();
+                return;
+            }
+            if (e.getActionCommand() == "name"){
+                artikelBox.requestFocus();
+                return;
+            }
+            if (e.getActionCommand() == "nummer"){
+                nummerBox.requestFocus();
+                return;
+            }
+            //if (e.getActionCommand() == "zws"){
+            //    if (zwischensummeButton.isEnabled())
+            //        zwischensumme();
+            //    return;
+            //}
+            //if (e.getActionCommand() == "bar"){
+            //    if (barButton.isEnabled())
+            //        bar();
+            //    return;
+            //}
+            //if (e.getActionCommand() == "ec"){
+            //    if (ecButton.isEnabled())
+            //        ec();
+            //    return;
+            //}
+            //if (e.getActionCommand() == "stornieren"){
+            //    if (stornoButton.isEnabled())
+            //        stornieren();
+            //    return;
+            //}
+        }
+    }
 
     void showAll(){
 	allPanel = new JPanel();
@@ -937,44 +937,20 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     }
 
     private void checkBarcodeBox(ActionEvent e) {
-        System.out.println("actionPerformed in barcodeBox, actionCommand: "+e.getActionCommand()+", modifiers: "+e.getModifiers()+", itemCount: "+barcodeBox.getItemCount());
-        if ( e.getActionCommand().equals("comboBoxEdited") || // if enter was pressed
-                ( e.getActionCommand().equals("comboBoxChanged") && e.getModifiers() == 16 ) // if mouse button was clicked
-           ){
-            System.out.println("Enter or mouse click in barcodeBox, itemCount: "+barcodeBox.getItemCount());
-            if ( barcodeBox.getItemCount() == 1 ){ // if selection is correct and unique
-                setArtikelNameAndNummerForBarcode();
-            //} else {
-            //    resetFormFromBarcodeBox();
-            }
+        if ( barcodeBox.getItemCount() == 1 ){ // if selection is correct and unique
+            setArtikelNameAndNummerForBarcode();
         }
         checkIfFormIsComplete();
     }
     private void checkArtikelBox(ActionEvent e) {
-        System.out.println("actionPerformed in artikelBox, actionCommand: "+e.getActionCommand()+", modifiers: "+e.getModifiers()+", itemCount: "+artikelBox.getItemCount()+", selectedItem: "+artikelBox.getSelectedItem()+"   artikelNameText: "+artikelNameText);
-        if ( e.getActionCommand().equals("comboBoxEdited") || // if enter was pressed
-                ( e.getActionCommand().equals("comboBoxChanged") && e.getModifiers() == 16 ) // if mouse button was clicked
-           ){
-            System.out.println("Enter or mouse click in artikelBox, itemCount: "+artikelBox.getItemCount());
-            if ( artikelBox.getItemCount() == 1 ){ // if selection is correct and unique
-                setArtikelNummerForName();
-            //} else {
-            //    resetFormFromArtikelBox();
-            }
+        if ( artikelBox.getItemCount() == 1 ){ // if selection is correct and unique
+            setArtikelNummerForName();
         }
         checkIfFormIsComplete();
     }
     private void checkNummerBox(ActionEvent e) {
-        System.out.println("actionPerformed in nummerBox, actionCommand: "+e.getActionCommand()+", modifiers: "+e.getModifiers()+", itemCount: "+nummerBox.getItemCount()+", selectedItem: "+nummerBox.getSelectedItem()+"   artikelNummerText: "+artikelNummerText);
-        if ( e.getActionCommand().equals("comboBoxEdited") || // if enter was pressed
-                ( e.getActionCommand().equals("comboBoxChanged") && e.getModifiers() == 16 ) // if mouse button was clicked
-           ){
-            System.out.println("Enter or mouse click in nummerBox, itemCount: "+nummerBox.getItemCount());
-            if ( nummerBox.getItemCount() == 1 ){ // if selection is correct and unique
-                setArtikelNameForNummer();
-            //} else {
-            //    resetFormFromNummerBox();
-            }
+        if ( nummerBox.getItemCount() == 1 ){ // if selection is correct and unique
+            setArtikelNameForNummer();
         }
         checkIfFormIsComplete();
     }
@@ -1026,7 +1002,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         }
         if (e.getDocument() == barcodeField.getDocument()){
             if (barcodeBox.setBoxMode){ return; }
-            System.out.println("barcodeField DocumentListener fired!");
+            System.out.println("\nbarcodeField DocumentListener fired!");
             System.out.println("selectedItem: "+barcodeBox.getSelectedItem());
             System.out.println("barcodeField text: "+barcodeField.getText()+"   barcodeText: "+barcodeText);
             if ( !barcodeField.getText().equals(barcodeText) ) { // some editing change in box
@@ -1038,7 +1014,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         }
         if (e.getDocument() == artikelField.getDocument()){
             if (artikelBox.setBoxMode){ return; }
-            System.out.println("artikelField DocumentListener fired!");
+            System.out.println("\nartikelField DocumentListener fired!");
             System.out.println("selectedItem: "+artikelBox.getSelectedItem());
             System.out.println("artikelField text: "+artikelField.getText()+"   artikelNameText: "+artikelNameText);
             if ( !artikelField.getText().equals(artikelNameText) ) { // some editing change in box
@@ -1050,7 +1026,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         }
         if (e.getDocument() == nummerField.getDocument()){
             if (nummerBox.setBoxMode){ return; }
-            System.out.println("nummerField DocumentListener fired!");
+            System.out.println("\nnummerField DocumentListener fired!");
             System.out.println("selectedItem: "+nummerBox.getSelectedItem());
             System.out.println("nummerField text: "+nummerField.getText()+"   artikelNummerText: "+artikelNummerText);
             if ( !nummerField.getText().equals(artikelNummerText) ) { // some editing change in box

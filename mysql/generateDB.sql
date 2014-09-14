@@ -1,5 +1,5 @@
 DROP DATABASE IF EXISTS kasse;
-CREATE DATABASE kasse CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+CREATE DATABASE kasse CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 USE kasse;
 
