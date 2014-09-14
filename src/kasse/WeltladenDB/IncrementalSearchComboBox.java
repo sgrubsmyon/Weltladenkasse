@@ -138,7 +138,8 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
         this.changeMode = false;
         if (istr.size() == 1){
             this.setBox(istr.get(0));
-            fireActionEvent(); // needed?
+            //System.out.println("This is setItems in SearchBox.");
+            //fireActionEvent(); // needed?
         } else {
             this.changeMode = true;
                 //System.out.println("\n*******\nsetting items\n*****");
@@ -165,6 +166,8 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
 
     // do the incremental search:
     protected void incrementalSearch() {
+        this.hidePopup(); // hide popup during editing, so that it will be resized
+
         // clear all items
         this.changeMode = true; // prevent "Attempt to mutate in notification" exception
             items.clear();
@@ -185,8 +188,6 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
         if (this.getItemCount() > 0){ 
             this.setWide();
             this.showPopup(); 
-        } else {
-            this.hidePopup();
         }
         //// Create a generic NullPointerException:
         //Integer foo = null; Integer bar = null; foo = foo + bar;
@@ -233,6 +234,7 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
                     if (getSelectedIndex() >= 0 && getSelectedIndex() < items.size()){
                         String[] item = items.get(getSelectedIndex());
                         setBox(item);
+                        System.out.println("This is KeyListener in SearchBox.");
                         fireActionEvent(); // this is actually not needed, because ENTER key alrady fired an action event before ("comboBoxEdited")
                     }
                 }
@@ -254,6 +256,7 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
                     String[] item = items.get(getSelectedIndex());
                     System.out.println(item[0]);
                     setBox(item);
+                    System.out.println("This is MouseListener in SearchBox.");
                     fireActionEvent(); // this is needed
                 }
             }
