@@ -41,6 +41,7 @@ import WeltladenDB.CurrencyDocumentFilter;
 import WeltladenDB.JComponentCellRenderer;
 import WeltladenDB.JComponentCellEditor;
 import WeltladenDB.BoundsPopupMenuListener;
+import WeltladenDB.Quittung;
 
 public class Kassieren extends RechnungsGrundlage implements ItemListener, DocumentListener {
     // Attribute:
@@ -90,6 +91,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private JButton stornoButton;
     private JButton gutscheinButton;
     private JLabel zahlungsLabel;
+    private JButton quittungsButton;
     private JButton neuerKundeButton;
     private JButton individuellRabattRelativButton;
     private JButton individuellRabattAbsolutButton;
@@ -108,8 +110,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
     private Vector<Integer> positions;
     private Vector<Integer> artikelIDs;
+    private Vector<String> articleNames;
     private Vector<Integer> rabattIDs;
     private Vector<Integer> stueckzahlen;
+    private Vector<BigDecimal> einzelpreise;
 
     private CurrencyDocumentFilter geldFilter = new CurrencyDocumentFilter();
 
@@ -446,11 +450,18 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             zahlungsLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
             neuerKundePanel.add(zahlungsLabel);
             neuerKundePanel.add(Box.createRigidArea(new Dimension(0,5)));
-            neuerKundeButton = new JButton("Neuer Kunde");
-            neuerKundeButton.setEnabled(false);
-            neuerKundeButton.addActionListener(this);
-            neuerKundeButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-            neuerKundePanel.add(neuerKundeButton);
+            JPanel buttonPanel = new JPanel();
+                quittungsButton = new JButton("Quittung");
+                quittungsButton.setEnabled(false);
+                quittungsButton.addActionListener(this);
+                quittungsButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+                buttonPanel.add(quittungsButton);
+                neuerKundeButton = new JButton("Neuer Kunde");
+                neuerKundeButton.setEnabled(false);
+                neuerKundeButton.addActionListener(this);
+                neuerKundeButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+                buttonPanel.add(neuerKundeButton);
+            neuerKundePanel.add(buttonPanel);
         allPanel.add(neuerKundePanel);
 
 	this.add(allPanel, BorderLayout.CENTER);
@@ -643,12 +654,14 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	data = new Vector< Vector<Object> >();
         positions = new Vector<Integer>();
         artikelIDs = new Vector<Integer>();
+        articleNames = new Vector<String>();
         rabattIDs = new Vector<Integer>();
-        preise = new Vector<BigDecimal>();
         mwsts = new Vector<BigDecimal>();
         colors = new Vector<String>();
         types = new Vector<String>();
         stueckzahlen = new Vector<Integer>();
+        einzelpreise = new Vector<BigDecimal>();
+        preise = new Vector<BigDecimal>();
         removeButtons = new Vector<JButton>();
     }
 
@@ -656,12 +669,14 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         data.clear();
         positions.clear();
         artikelIDs.clear();
+        articleNames.clear();
         rabattIDs.clear();
-        preise.clear();
         colors.clear();
         types.clear();
         mwsts.clear();
         stueckzahlen.clear();
+        einzelpreise.clear();
+        preise.clear();
         removeButtons.clear();
         zahlungsModus = "unbekannt";
     }
@@ -682,17 +697,17 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     void updateRueckgeld(){
         if (kundeGibtField.getDocument().getLength() == 0){
             rueckgeldField.setText("");
-            neuerKundeButton.setEnabled(false);
+            //neuerKundeButton.setEnabled(false);
         } else {
             BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
             BigDecimal kundeGibt = new BigDecimal(kundeGibtField.getText().replace(',','.'));
             BigDecimal rueckgeld = kundeGibt.subtract(totalPrice);
             if (rueckgeld.signum() < 0){
                 rueckgeldField.setForeground(Color.red);
-                neuerKundeButton.setEnabled(false);
+                //neuerKundeButton.setEnabled(false);
             } else {
                 rueckgeldField.setForeground(Color.green.darker().darker());
-                neuerKundeButton.setEnabled(true);
+                //neuerKundeButton.setEnabled(true);
             }
             rueckgeldField.setText( priceFormatter(rueckgeld) );
         }
@@ -890,12 +905,14 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         BigDecimal artikelMwSt = mwsts.lastElement();
         positions.add(null);
         artikelIDs.add(null);
+        articleNames.add(einrueckung+aktionsname);
         rabattIDs.add(rabattID);
-        preise.add(reduktion);
         colors.add("red");
         types.add("rabatt");
         mwsts.add(artikelMwSt);
         stueckzahlen.add(stueck.intValue());
+        einzelpreise.add(null);
+        preise.add(reduktion);
         removeButtons.add(null);
 
         Vector<Object> row = new Vector<Object>();
@@ -919,12 +936,14 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
             positions.add(null);
             artikelIDs.add(pfandArtikelID);
+            articleNames.add(einrueckung+pfandName);
             rabattIDs.add(null);
-            preise.add(new BigDecimal( priceFormatterIntern(gesamtPfand) ));
             colors.add("blue");
             types.add("pfand");
             mwsts.add(pfandMwSt);
             stueckzahlen.add(stueck.intValue());
+            einzelpreise.add(new BigDecimal( priceFormatterIntern(pfand) ));
+            preise.add(new BigDecimal( priceFormatterIntern(gesamtPfand) ));
             removeButtons.add(null);
 
             Vector<Object> row = new Vector<Object>();
@@ -1268,8 +1287,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
         positions.add(lastPos+1);
         artikelIDs.add(selectedArtikelID);
+        articleNames.add(artikelName);
         rabattIDs.add(null);
         stueckzahlen.add(stueck);
+        einzelpreise.add(new BigDecimal(artikelPreis));
         preise.add(gesPreis);
         colors.add(color);
         types.add("artikel");
@@ -1305,8 +1326,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
             positions.add(null);
             artikelIDs.add(pfandArtikelID);
+            articleNames.add(pfandName);
             rabattIDs.add(null);
             stueckzahlen.add(stueck);
+            einzelpreise.add(pfand);
             preise.add(gesamtPfand);
             colors.add("green");
             types.add("artikel");
@@ -1353,7 +1376,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         zahlungsLabel.setText("Bar-Zahlung. Bitte jetzt abrechnen.");
         kundeGibtField.setEditable(true);
         gutscheinField.setEditable(true);
-        neuerKundeButton.setEnabled(false);
+        //neuerKundeButton.setEnabled(false);
+        neuerKundeButton.setEnabled(true);
+        quittungsButton.setEnabled(true);
         kundeGibtField.requestFocus();
     }
 
@@ -1364,6 +1389,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         kundeGibtField.setEditable(false);
         gutscheinField.setEditable(true);
         neuerKundeButton.setEnabled(true);
+        quittungsButton.setEnabled(true);
         neuerKundeButton.requestFocus();
     }
 
@@ -1407,6 +1433,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         positions.add(i+1, null);
         artikelIDs.add(i+1, artikelRabattArtikelID);
         rabattIDs.add(i+1, null);
+        einzelpreise.add(i+1, null);
         preise.add(i+1, reduktion);
         colors.add(i+1, "red");
         types.add(i+1, "rabatt");
@@ -1415,6 +1442,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         removeButtons.add(i+1, null);
 
         String rabattName = getArticleName(artikelRabattArtikelID)[0];
+        articleNames.add(i+1, einrueckung+rabattName);
 
         Vector<Object> rabattRow = new Vector<Object>();
             rabattRow.add(""); // pos
@@ -1437,6 +1465,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         positions.add(i+1, null);
         artikelIDs.add(i+1, artikelRabattArtikelID);
         rabattIDs.add(i+1, null);
+        einzelpreise.add(i+1, null);
         preise.add(i+1, reduktion);
         colors.add(i+1, "red");
         types.add(i+1, "rabatt");
@@ -1445,6 +1474,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         removeButtons.add(i+1, null);
 
         String rabattName = getArticleName(artikelRabattArtikelID)[0];
+        articleNames.add(i+1, einrueckung+rabattName);
 
         Vector<Object> rabattRow = new Vector<Object>();
             rabattRow.add(""); // pos
@@ -1508,8 +1538,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         for ( Map.Entry<BigDecimal, BigDecimal> entry : rabattArtikelPreise.entrySet() ){
             positions.add(null);
             artikelIDs.add(rechnungRabattArtikelID);
+            articleNames.add(rabattName);
             rabattIDs.add(null);
             BigDecimal reduktion = rabattRelativ.multiply(entry.getValue()).multiply(minusOne);
+            einzelpreise.add(null);
             preise.add(reduktion);
             colors.add("red");
             types.add("rabattrechnung");
@@ -1775,6 +1807,11 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             stornieren();
 	    return;
 	}
+	if (e.getSource() == quittungsButton){
+            Quittung myQuittung = new Quittung();
+            myQuittung.printReceipt(positions, articleNames, stueckzahlen, einzelpreise, preise);
+	    return;
+	}
 	if (e.getSource() == neuerKundeButton){
             neuerKunde();
 	    return;
@@ -1832,7 +1869,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         if (removeRow > -1){
             data.remove(removeRow);
             artikelIDs.remove(removeRow);
+            articleNames.remove(removeRow);
             rabattIDs.remove(removeRow);
+            einzelpreise.remove(removeRow);
             preise.remove(removeRow);
             colors.remove(removeRow);
             types.remove(removeRow);
@@ -1840,14 +1879,15 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             stueckzahlen.remove(removeRow);
             removeButtons.remove(removeRow);
 
-            System.out.println("positions before remove: "+positions);
             positions.remove(removeRow);
 
             // remove extra rows (Rabatt oder Pfand):
             while ( removeRow < removeButtons.size() && removeButtons.get(removeRow) == null ){
                 data.remove(removeRow);
                 artikelIDs.remove(removeRow);
+                articleNames.remove(removeRow);
                 rabattIDs.remove(removeRow);
+                einzelpreise.remove(removeRow);
                 preise.remove(removeRow);
                 colors.remove(removeRow);
                 types.remove(removeRow);
@@ -1865,7 +1905,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 }
             }
             refreshPositionsInData();
-            System.out.println("positions after remove: "+positions);
 
             updateAll();
             return;
