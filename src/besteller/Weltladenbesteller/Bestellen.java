@@ -437,6 +437,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	articleListPanel.setLayout(new BoxLayout(articleListPanel, BoxLayout.Y_AXIS));
 	articleListPanel.setBorder(BorderFactory.createTitledBorder("Gewählte Artikel"));
 
+            //articleScrollPane = new ScrollPane();
+            //articleScrollPane.add(orderTable);
             articleScrollPane = new JScrollPane(orderTable);
             articleListPanel.add(articleScrollPane);
 
@@ -498,8 +500,11 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         doCSVBackup();
 	this.remove(allPanel);
 	this.revalidate();
-        // create table anew
-	showAll();
+            // create table anew
+            showAll();
+            filterStr = filterField.getText();
+            applyFilter();
+            updateTable();
         barcodeBox.requestFocus();
         setButtonsEnabled(); // for abschliessenButton
     }
@@ -508,6 +513,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         articleListPanel.remove(articleScrollPane);
 	articleListPanel.revalidate();
         initiateTable();
+        //articleScrollPane = new ScrollPane();
+        //articleScrollPane.add(orderTable);
         articleScrollPane = new JScrollPane(orderTable);
         articleListPanel.add(articleScrollPane);
         setButtonsEnabled();
@@ -870,6 +877,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
         displayData = new Vector< Vector<Object> >(data);
         initiateDisplayIndices();
+
+        // scroll the table to the bottom
+        //articleScrollPane.setScrollPosition(0, orderTable.getHeight());
     }
 
     private void fuegeArtikelHinzu(Integer stueck) {
@@ -1253,13 +1263,11 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             stueckzahlen.remove(removeIndex);
             removeButtons.remove(removeIndex);
 
-            System.out.println("positions before remove: "+positions);
             positions.remove(removeIndex);
             for (int i=removeIndex; i<positions.size(); i++){
                 positions.set(i, positions.get(i)-1);
             }
             refreshPositionsInData();
-            System.out.println("positions after remove: "+positions);
 
             int removeRow = displayIndices.indexOf(removeIndex);
             displayData.remove(removeRow);
