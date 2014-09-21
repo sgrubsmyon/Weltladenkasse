@@ -159,8 +159,9 @@ public abstract class ArtikelGrundlage extends WindowContent {
                     );
             pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
-            rs.next();
-            vpe = rs.getString(1) != null ? rs.getString(1) : "";
+            if ( rs.next() ){
+                vpe = rs.getString(1) != null ? rs.getString(1) : "";
+            }
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
