@@ -539,8 +539,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         fileStr += selJahr + delimiter;
         fileStr += selKW + lineSep;
         // format of csv file:
-        fileStr += "#Position;Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;artikelID"+lineSep;
-        for (int i=0; i<data.size(); i++){
+        fileStr += "#Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;artikelID"+lineSep;
+        for (int i=data.size()-1; i>=0; i--){
             String lieferant = (String)data.get(i).get(1);
             String nummer = (String)data.get(i).get(2);
             String name = (String)data.get(i).get(3);
@@ -860,20 +860,20 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             String vkp, String vpe, String stueck) {
         Integer lastPos = 0;
         try {
-            lastPos = positions.lastElement();
+            lastPos = positions.firstElement();
         } catch (NoSuchElementException ex) { }
-        positions.add(lastPos+1);
-        artikelIDs.add(artikelID);
-        stueckzahlen.add(Integer.parseInt(stueck));
-        removeButtons.add(new JButton("-"));
-        removeButtons.lastElement().addActionListener(this);
+        positions.add(0, lastPos+1);
+        artikelIDs.add(0, artikelID);
+        stueckzahlen.add(0, Integer.parseInt(stueck));
+        removeButtons.add(0, new JButton("-"));
+        removeButtons.firstElement().addActionListener(this);
 
         Vector<Object> row = new Vector<Object>();
-            row.add(positions.lastElement());
+            row.add(positions.firstElement());
             row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
             row.add(vkp); row.add(vpe); row.add(stueck);
-            row.add(removeButtons.lastElement());
-        data.add(row);
+            row.add(removeButtons.firstElement());
+        data.add(0, row);
 
         displayData = new Vector< Vector<Object> >(data);
         initiateDisplayIndices();
@@ -1264,7 +1264,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             removeButtons.remove(removeIndex);
 
             positions.remove(removeIndex);
-            for (int i=removeIndex; i<positions.size(); i++){
+            for (int i=removeIndex-1; i>=0; i--){
                 positions.set(i, positions.get(i)-1);
             }
             refreshPositionsInData();
