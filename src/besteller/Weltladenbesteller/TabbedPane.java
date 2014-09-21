@@ -90,7 +90,7 @@ public class TabbedPane extends WindowContent {
         myBestellen.selBestellNr = bestellNr;
         myBestellen.selJahr = jahr;
         myBestellen.selKW = kw;
-        for (int i=0; i<artikelIDs.size(); i++){
+        for (int i=artikelIDs.size()-1; i>=0; i--){
             String lieferant = data.get(i).get(1).toString();
             String artikelNr = data.get(i).get(2).toString();
             String artikelName = data.get(i).get(3).toString();

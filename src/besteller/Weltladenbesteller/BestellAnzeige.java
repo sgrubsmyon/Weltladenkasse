@@ -308,7 +308,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     "FROM bestellung_details AS bd "+
                     "LEFT JOIN artikel AS a USING (artikel_id) "+
                     "LEFT JOIN lieferant AS l USING (lieferant_id) "+
-                    "WHERE bd.bestell_nr = ?"
+                    "WHERE bd.bestell_nr = ? "+
+                    "ORDER BY bd.position DESC"
                     );
             pstmt.setInt(1, bestellNr);
             ResultSet rs = pstmt.executeQuery();
