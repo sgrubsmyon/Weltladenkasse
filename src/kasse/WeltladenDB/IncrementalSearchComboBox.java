@@ -138,6 +138,7 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
         this.changeMode = false;
         if (istr.size() == 1){
             this.setBox(istr.get(0));
+            //System.out.println("This is setItems in SearchBox.");
             //fireActionEvent(); // needed?
         } else {
             this.changeMode = true;
@@ -233,6 +234,7 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
                     if (getSelectedIndex() >= 0 && getSelectedIndex() < items.size()){
                         String[] item = items.get(getSelectedIndex());
                         setBox(item);
+                        System.out.println("This is KeyListener in SearchBox.");
                         fireActionEvent(); // this is actually not needed, because ENTER key alrady fired an action event before ("comboBoxEdited")
                     }
                 }
@@ -254,6 +256,7 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
                     String[] item = items.get(getSelectedIndex());
                     System.out.println(item[0]);
                     setBox(item);
+                    System.out.println("This is MouseListener in SearchBox.");
                     fireActionEvent(); // this is needed
                 }
             }

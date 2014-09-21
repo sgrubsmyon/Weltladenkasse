@@ -149,7 +149,7 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
                 }
             this.changeMode = false;
         }
-        if ( this.getItemCount() > 1 ){ 
+        if ( this.getItemCount() > 1 ){
             this.requestFocus();
             SwingUtilities.invokeLater(new Runnable(){
                 public void run() {
@@ -185,9 +185,9 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
             this.changeMode = false;
         }
 
-        if (this.getItemCount() > 0){ 
+        if (this.getItemCount() > 0){
             this.setWide();
-            this.showPopup(); 
+            this.showPopup();
         }
         //// Create a generic NullPointerException:
         //Integer foo = null; Integer bar = null; foo = foo + bar;
@@ -220,7 +220,7 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
         @Override
             public void keyPressed(KeyEvent e) {
                 if ( e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_PAGE_DOWN || e.getKeyCode() == KeyEvent.VK_KP_DOWN ||
-                        e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_PAGE_UP || e.getKeyCode() == KeyEvent.VK_KP_UP ){ 
+                        e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_PAGE_UP || e.getKeyCode() == KeyEvent.VK_KP_UP ){
                                         // if up/down/pg up/pg down key was pressed: go into changeMode (don't write into input box)
                     changeMode = true;
                 }
@@ -228,7 +228,7 @@ public abstract class IncrementalSearchComboBox extends JComboBox implements Doc
                                         // unfortunately, when up/down is pressed, the item
                                         // selection already takes place. When user presses enter,
                                         // nothing changes (no new selected item), so the
-                                        // ItemListener is not called. 
+                                        // ItemListener is not called.
                                         // I finally stopped using ItemListener and use only
                                         // listeners on enter and mouse click.
                     if (getSelectedIndex() >= 0 && getSelectedIndex() < items.size()){
