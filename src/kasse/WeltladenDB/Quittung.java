@@ -7,7 +7,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 // GUI stuff:
 import java.awt.event.ActionEvent;
 
-public class Quittung extends WindowContent {
+public class Quittung {
     int maxNameLength = 20;
 
     /**
@@ -24,13 +24,10 @@ public class Quittung extends WindowContent {
             String artikelName = articleNames.get(i);
             if (artikelName.length() > maxNameLength){
                 artikelName = artikelName.substring(0, maxNameLength);
-            } else {
-                for (int j=0; j<maxNameLength-artikelName.length(); j++){
-                    artikelName += " ";
-                }
             }
-            printStr += positions.get(i)+" "+artikelName+" "+stueckzahlen.get(i)+"X "+
-                einzelpreise.get(i)+" = "+preise.get(i) + lineSep;
+            printStr += String.format("% 3d %-"+maxNameLength+"s % 4dX %6.2f = %7.2f%n",
+                    positions.get(i), artikelName, stueckzahlen.get(i),
+                     einzelpreise.get(i), preise.get(i));
         }
         System.out.println(printStr);
     }
