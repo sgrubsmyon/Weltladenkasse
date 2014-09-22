@@ -106,6 +106,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
     // The table holding the purchase articles.
     private RechnungsTable myTable;
+    private JScrollPane scrollPane;
     private Vector< Vector<Object> > data;
 
     private Vector<Integer> positions;
@@ -636,7 +637,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	articleListPanel.setLayout(new BoxLayout(articleListPanel, BoxLayout.Y_AXIS));
 	articleListPanel.setBorder(BorderFactory.createTitledBorder("Gewählte Artikel"));
 
-            JScrollPane scrollPane = new JScrollPane(myTable);
+            scrollPane = new JScrollPane(myTable);
             articleListPanel.add(scrollPane);
 
             JPanel totalPricePanel = createTotalPricePanel();
@@ -686,6 +687,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	this.revalidate();
 	showAll();
         barcodeBox.requestFocus();
+
+        // scroll the table scroll pane to bottom:
+        scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum()); 
     }
 
     private void updateTable(){
