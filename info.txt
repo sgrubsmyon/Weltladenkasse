@@ -1,12 +1,22 @@
 mysql connector from: http://dev.mysql.com/downloads/connector/j/
 jOpenDocument library from: http://www.jopendocument.org/downloads.html
 
-in vim on .csv file:
-Merge 250g etc. with artikelname:
-    Zeilen markieren
-    :'<,'>s/;\([^;]*\)\(;[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;$\)/ \1;\2/
-Zeilenumbrüche entfernen:
-    :%s/\([^;]\)$\n/\1 /c
+Export Artikelliste.ods to .csv file:
+   File -> Save As -> .csv file
+   Choose "Field delimiter: ;", "Text delimiter: " (nothing)
+In vim on .csv file:
+Replace newlines with commas:
+    :%s/\([^;]\)$\n/\1, /
+Find erroneous substitutions:
+    1st line
+    /Libera, Terra
+    /PFAND-, KISTE
+Merge 250g etc. with artikelname (insert a "|"):
+    :%s/;\([^;]*\);\([^;]*\)\(;[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;$\)/ | \1 \2\3/
+Find and delete unnecessary fields:
+    / |  
+Delete VPE unit:
+    :%s/\([0-9]*\)[^;]*\(;[^;]*;[^;]*;[^;]*;$\)/\1\2/
 
 DB dump:
 mysqldump -u kassenadmin -p kasse > testdump.sql

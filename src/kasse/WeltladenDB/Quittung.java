@@ -8,7 +8,8 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 import java.awt.event.ActionEvent;
 
 public class Quittung {
-    int maxNameLength = 20;
+    int lineLength = 31;
+    int maxNameLength = 27;
 
     /**
      *    The constructor.
@@ -25,8 +26,10 @@ public class Quittung {
             if (artikelName.length() > maxNameLength){
                 artikelName = artikelName.substring(0, maxNameLength);
             }
-            printStr += String.format("% 3d %-"+maxNameLength+"s % 4dX %6.2f = %7.2f%n",
-                    positions.get(i), artikelName, stueckzahlen.get(i),
+            String position = positions.get(i) != null ?
+                String.format("% 3d", positions.get(i)) : "   ";
+            printStr += String.format("%s %-"+maxNameLength+"s % 4dX %6.2f = %7.2f%n",
+                    position, artikelName, stueckzahlen.get(i),
                      einzelpreise.get(i), preise.get(i));
         }
         System.out.println(printStr);
