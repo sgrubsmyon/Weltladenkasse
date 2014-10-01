@@ -9,14 +9,15 @@ Replace newlines with commas:
     :%s/\([^;]\)$\n/\1, /
 Find erroneous substitutions:
     1st line
+    'Ja's at the end
     /Libera, Terra
     /PFAND-, KISTE
 Merge 250g etc. with artikelname (insert a "|"):
-    :%s/;\([^;]*\);\([^;]*\)\(;[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;$\)/ | \1 \2\3/
+    :%s/;\([^;]*\);\([^;]*\)\(;[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;[^;]*$\)/ | \1 \2\3/
 Find and delete unnecessary fields:
-    / |  
+    "/ |  "
 Delete VPE unit:
-    :%s/\([0-9]*\)[^;]*\(;[^;]*;[^;]*;[^;]*;$\)/\1\2/
+    :%s/\([0-9]*\)[^;]*\(;[^;]*;[^;]*;[^;]*;[^;]*$\)/\1\2/
 
 DB dump:
 mysqldump -u kassenadmin -p kasse > testdump.sql

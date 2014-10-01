@@ -50,8 +50,10 @@ CREATE TABLE artikel (
     bis DATETIME DEFAULT NULL,
     aktiv BOOL NOT NULL DEFAULT TRUE,
     variabler_preis BOOL NOT NULL DEFAULT FALSE,
+    sortiment BOOL NOT NULL DEFAULT FALSE,
     vpe int(10) unsigned DEFAULT NULL,
-    bestand int DEFAULT NULL,
+    menge decimal(3,5) DEFAULT NULL,
+    bestand int(5) DEFAULT NULL,
     PRIMARY KEY (artikel_id),
     FOREIGN KEY (lieferant_id) REFERENCES lieferant(lieferant_id),
     FOREIGN KEY (produktgruppen_id) REFERENCES produktgruppe(produktgruppen_id)
