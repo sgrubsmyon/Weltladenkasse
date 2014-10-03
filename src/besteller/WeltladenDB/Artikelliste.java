@@ -70,21 +70,24 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     protected Vector< Vector<Object> > displayData;
     protected Vector<Integer> displayIndices;
     private Vector<String> columnLabels;
+    protected Vector<Boolean> sortimentBools;
     protected Vector<Boolean> activeRowBools;
     protected Vector<Boolean> varPreisBools;
     private Vector<Integer> produktGruppeIDs;
     private Vector<Integer> lieferantIDs;
 
     // Vectors storing table edits
-    private Vector<String> editArtikelName;
+    private Vector<String> editLieferant;
     private Vector<String> editArtikelNummer;
-    private Vector<String> changedName;
     private Vector<String> changedNummer;
+    private Vector<String> changedName;
+    private Vector<String> changedMenge;
     private Vector<String> changedBarcode;
+    private Vector<String> changedHerkunft;
+    private Vector<Integer> changedVPE;
     private Vector<String> changedVKP;
     private Vector<String> changedEKP;
-    private Vector<Integer> changedVPE;
-    private Vector<String> changedHerkunft;
+    private Vector<Boolean> changedSortiment;
     private Vector<Boolean> changedAktiv;
 
     // Dialog to read items from file
@@ -108,12 +111,15 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private void fillDataArray() {
         this.data = new Vector< Vector<Object> >();
         columnLabels = new Vector<String>();
-        columnLabels.add("Produktgruppe"); columnLabels.add("Name"); columnLabels.add("Nummer");
-        columnLabels.add("Barcode");
-        columnLabels.add("VK-Preis"); columnLabels.add("EK-Preis"); columnLabels.add("VPE");
+        columnLabels.add("Produktgruppe"); columnLabels.add("Lieferant");
+        columnLabels.add("Nummer"); columnLabels.add("Name");
+        columnLabels.add("Menge"); columnLabels.add("Barcode");
+        columnLabels.add("Herkunft"); columnLabels.add("VPE");
+        columnLabels.add("VK-Preis"); columnLabels.add("EK-Preis");
         columnLabels.add("MwSt."); //columnLabels.add("Betrag MwSt.");
         columnLabels.add("Ab/Seit"); columnLabels.add("Bis");
-        columnLabels.add("Lieferant"); columnLabels.add("Herkunft"); columnLabels.add("Aktiv");
+        columnLabels.add("Sortiment"); columnLabels.add("Aktiv");
+        sortimentBools = new Vector<Boolean>();
         activeRowBools = new Vector<Boolean>();
         varPreisBools = new Vector<Boolean>();
         produktGruppeIDs = new Vector<Integer>();
@@ -135,11 +141,13 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT produktgruppen_id, produktgruppen_name, "+
-                    "artikel_name, artikel_nr, barcode, "+
-                    "vk_preis, ek_preis, variabler_preis, vpe, mwst_satz, "+
-                    "DATE_FORMAT(von, '"+dateFormatSQL+"'), DATE_FORMAT(bis, '"+dateFormatSQL+"'), "+
                     "lieferant_id, lieferant_name, "+
-                    "herkunft, artikel.aktiv "+
+                    "artikel_nr, artikel_name, "+
+                    "menge, barcode, "+
+                    "herkunft, vpe, +"
+                    "vk_preis, ek_preis, variabler_preis, mwst_satz, "+
+                    "DATE_FORMAT(von, '"+dateFormatSQL+"'), DATE_FORMAT(bis, '"+dateFormatSQL+"'), "+
+                    "sortiment, artikel.aktiv "+
                     "FROM artikel LEFT JOIN lieferant USING (lieferant_id) "+
                     "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
                     "LEFT JOIN mwst USING (mwst_id) "+
@@ -151,55 +159,60 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             while (rs.next()) {
                 Integer produktgruppen_id = rs.getInt(1);
                 String gruppenname = rs.getString(2);
-                String name = rs.getString(3);
-                String nr = rs.getString(4);
-                String barcode = rs.getString(5);
-                String vkp = rs.getString(6);
-                String ekp = rs.getString(7);
-                Boolean var = rs.getBoolean(8);
-                String vpe = rs.getString(9);
-                String mwst = rs.getString(10);
+                Integer lieferant_id = rs.getInt(3);
+                String lieferant = rs.getString(4);
+                String nr = rs.getString(5);
+                String name = rs.getString(6);
+                String menge = rs.getString(7);
+                String barcode = rs.getString(8);
+                String herkunft = rs.getString(9);
+                String vpe = rs.getString(10);
+                String vkp = rs.getString(11);
+                String ekp = rs.getString(12);
+                Boolean var = rs.getBoolean(13);
+                String mwst = rs.getString(14);
                 String mwstBetrag = "";
-                String von = rs.getString(11);
-                String bis = rs.getString(12);
-                Integer lieferant_id = rs.getInt(13);
-                String lieferant = rs.getString(14);
-                String herkunft = rs.getString(15);
-                Boolean aktivBool = rs.getBoolean(16);
+                String von = rs.getString(15);
+                String bis = rs.getString(16);
+                Boolean sortimentBool = rs.getBoolean(17);
+                Boolean aktivBool = rs.getBoolean(18);
 
+                if (lieferant_id == null) lieferant_id = 1; // corresponds to "unknown"
+                if (lieferant == null) lieferant = "";
+                if (menge == null){ menge = ""; }
                 if (barcode == null){ barcode = ""; }
+                if (herkunft == null) herkunft = "";
                 if (vpe == null){ vpe = ""; }
+                String vkpOutput = "";
+                if (vkp != null){ vkpOutput = priceFormatter(vkp)+" "+currencySymbol; }
                 if (ekp == null){ ekp = ""; }
                 else { ekp = priceFormatter(ekp)+" "+currencySymbol; }
-                String vkpOutput = "";
                 String mwstOutput = "";
-                if (vkp != null){ vkpOutput = priceFormatter(vkp)+" "+currencySymbol; }
                 if (mwst != null){ mwstOutput = vatFormatter(mwst); }
                 if (vkp == null){ vkpOutput = ""; mwstBetrag = ""; }
                 if (mwst == null){ mwstOutput = ""; mwstBetrag = ""; }
-                if (var == true){ vkpOutput = "variabel"; ekp = "variabel"; mwstBetrag = "variabel"; }
                 else if (vkp != null && mwst != null) {
                     mwstBetrag = priceFormatter( calculateVAT(new BigDecimal(vkp), new BigDecimal(mwst)) )+" "+currencySymbol;
                 }
+                if (var == true){ vkpOutput = "variabel"; ekp = "variabel"; mwstBetrag = "variabel"; }
                 if (von == null) von = "";
                 if (bis == null) bis = "";
-                if (lieferant_id == null) lieferant_id = 1; // corresponds to "unknown"
-                if (lieferant == null) lieferant = "";
-                if (herkunft == null) herkunft = "";
 
                 Vector<Object> row = new Vector<Object>();
-                    row.add(gruppenname);
-                    row.add(name); row.add(nr); row.add(barcode);
-                    row.add(vkpOutput); row.add(ekp); row.add(vpe);
+                    row.add(gruppenname); row.add(lieferant);
+                    row.add(nr); row.add(name);
+                    row.add(menge); row.add(barcode);
+                    row.add(herkunft); row.add(vpe);
+                    row.add(vkpOutput); row.add(ekp);
                     row.add(mwstOutput); //row.add(mwstBetrag);
                     row.add(von); row.add(bis);
-                    row.add(lieferant); row.add(herkunft);
-                    row.add(aktivBool);
+                    row.add(sortimentBool); row.add(aktivBool);
                 data.add(row);
-                activeRowBools.add(aktivBool);
-                varPreisBools.add(var);
                 produktGruppeIDs.add(produktgruppen_id);
                 lieferantIDs.add(lieferant_id);
+                sortimentBools.add(sortimentBool);
+                activeRowBools.add(aktivBool);
+                varPreisBools.add(var);
             }
             rs.close();
             pstmt.close();
@@ -215,30 +228,33 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         }
         displayData = new Vector< Vector<Object> >(data);
         initiateDisplayIndices();
-        editArtikelName = new Vector<String>();
+        editLieferant = new Vector<String>();
         editArtikelNummer = new Vector<String>();
-        changedName = new Vector<String>();
         changedNummer = new Vector<String>();
+        changedName = new Vector<String>();
+        changedMenge = new Vector<String>();
         changedBarcode = new Vector<String>();
+        changedHerkunft = new Vector<String>();
+        changedVPE = new Vector<Integer>();
         changedVKP = new Vector<String>();
         changedEKP = new Vector<String>();
-        changedVPE = new Vector<Integer>();
-        changedHerkunft = new Vector<String>();
+        changedSortiment = new Vector<Boolean>();
         changedAktiv = new Vector<Boolean>();
     }
 
     private void putChangesIntoDB() {
-        for (int index=0; index<editArtikelName.size(); index++){
+        for (int index=0; index<editLieferant.size(); index++){
             Integer prod_id = null;
             Integer lief_id = null;
             Boolean var_preis = null;
             try {
                 PreparedStatement pstmt = this.conn.prepareStatement(
-                        "SELECT produktgruppen_id, lieferant_id, variabler_preis FROM artikel WHERE "+
-                        "artikel_name = ? AND "+
+                        "SELECT produktgruppen_id, lieferant_id, variabler_preis FROM artikel "+
+                        "LEFT JOIN lieferant USING (lieferant_id) WHERE "+
+                        "lieferant_name = ? AND "+
                         "artikel_nr = ? AND aktiv = TRUE"
                         );
-                pstmt.setString(1, editArtikelName.get(index));
+                pstmt.setString(1, editLieferant.get(index));
                 pstmt.setString(2, editArtikelNummer.get(index));
                 ResultSet rs = pstmt.executeQuery();
                 // Now do something with the ResultSet, should be only one result ...
@@ -254,28 +270,28 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             }
 
             // set old item to inactive:
-            int result = setItemInactive(editArtikelName.get(index), editArtikelNummer.get(index));
+            int result = setItemInactive(lief_id, editArtikelNummer.get(index));
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: Artikel "+editArtikelName.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht geändert werden.",
+                        "Fehler: Artikel von "+editLieferant.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht geändert werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
                 continue; // continue with next item
             }
             if ( changedAktiv.get(index) == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
-                result = insertNewItem(changedName.get(index),
-                        changedNummer.get(index),
-                        changedBarcode.get(index), var_preis,
+                result = insertNewItem(prod_id, lief_id,
+                        changedNummer.get(index), changedName.get(index),
+                        changedMenge.get(index), changedBarcode.get(index),
+                        changedHerkunft.get(index), changedVPE.get(index),
                         changedVKP.get(index), changedEKP.get(index),
-                        changedVPE.get(index), prod_id, lief_id,
-                        changedHerkunft.get(index));
+                        var_preis, changedSortiment.get(index));
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Artikel "+editArtikelName.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht geändert werden.",
+                            "Fehler: Artikel von "+editLieferant.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht geändert werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
-                    result = setItemActive(editArtikelName.get(index), editArtikelNummer.get(index));
+                    result = setItemActive(lief_id, editArtikelNummer.get(index));
                     if (result == 0){
                         JOptionPane.showMessageDialog(this,
-                                "Fehler: Artikel "+editArtikelName.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht wieder hergestellt werden. Artikel ist nun gelöscht (inaktiv).",
+                                "Fehler: Artikel von "+editLieferant.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht wieder hergestellt werden. Artikel ist nun gelöscht (inaktiv).",
                                 "Fehler", JOptionPane.ERROR_MESSAGE);
                     }
                 }
@@ -367,19 +383,19 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     }
 
     void enableButtons() {
-        saveButton.setEnabled(editArtikelName.size() > 0);
-        revertButton.setEnabled(editArtikelName.size() > 0);
+        saveButton.setEnabled(editLieferant.size() > 0);
+        revertButton.setEnabled(editLieferant.size() > 0);
         editButton.setEnabled(myTable.getSelectedRowCount() > 0);
-        newButton.setEnabled(editArtikelName.size() == 0);
-        importButton.setEnabled(editArtikelName.size() == 0);
-        exportButton.setEnabled(editArtikelName.size() == 0);
+        newButton.setEnabled(editLieferant.size() == 0);
+        importButton.setEnabled(editLieferant.size() == 0);
+        exportButton.setEnabled(editLieferant.size() == 0);
 
         //System.out.println("Enable Buttons.");
         //System.out.println("originalData: "+originalData);
         //System.out.println("data: "+data);
         //System.out.println("displayData: "+displayData);
         //System.out.println("displayIndices: "+displayIndices);
-        //System.out.println("editArtikelName:  "+editArtikelName);
+        //System.out.println("editArtikelName:  "+editLieferant);
     }
 
     void initiateTable() {
@@ -415,9 +431,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                             return true;
                     }
                     else if (
-                            header.equals("Name") || header.equals("Nummer") ||
-                            header.equals("Barcode") || header.equals("VPE") ||
-                            header.equals("Herkunft") || header.equals("Aktiv")
+                            header.equals("Nummer") || header.equals("Name") ||
+                            header.equals("Menge") || header.equals("Barcode") || 
+                            header.equals("Herkunft") || header.equals("VPE") ||
+                            header.equals("Sortiment") || header.equals("Aktiv")
                             ){
                         return true;
                     }
@@ -437,7 +454,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 Component c = super.prepareRenderer(renderer, row, column);
                 // add custom rendering here
                 int realRowIndex = convertRowIndexToModel(row);
-                if ( ! activeRowBools.get(realRowIndex) ){ // for rows with inactive items
+                if ( ! sortimentBools.get(realRowIndex) ){ // for articles not in sortiment
+                    c.setForeground(Color.GRAY);
+                }
+                else if ( ! activeRowBools.get(realRowIndex) ){ // for rows with inactive items
                     c.setFont( c.getFont().deriveFont(Font.ITALIC) );
                     c.setForeground(Color.GRAY);
                 }
@@ -477,6 +497,34 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         //myTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
         setTableProperties(myTable);
 
+        // extra cell editor that has the NumberDocumentFilter
+        class NumberEditor extends DefaultCellEditor {
+            JTextField textField;
+
+            public NumberEditor() {
+                super(new JTextField()); // call to super must be first statement in constructor
+                textField = (JTextField)getComponent();
+                NumberDocumentFilter numFilter = new NumberDocumentFilter(5, 8);
+                ((AbstractDocument)textField.getDocument()).setDocumentFilter(numFilter);
+            }
+        }
+        NumberEditor numberEditor = new NumberEditor();
+        myTable.getColumn("Menge").setCellEditor(numberEditor);
+
+        // extra cell editor that has the IntegerDocumentFilter
+        class AnzahlEditor extends DefaultCellEditor {
+            JTextField textField;
+
+            public AnzahlEditor() {
+                super(new JTextField()); // call to super must be first statement in constructor
+                textField = (JTextField)getComponent();
+                IntegerDocumentFilter intFilter = new IntegerDocumentFilter();
+                ((AbstractDocument)textField.getDocument()).setDocumentFilter(intFilter);
+            }
+        }
+        AnzahlEditor anzahlEditor = new AnzahlEditor();
+        myTable.getColumn("VPE").setCellEditor(anzahlEditor);
+
         // extra cell editor that has the CurrencyDocumentFilter
         class GeldEditor extends DefaultCellEditor {
             JTextField textField;
@@ -502,31 +550,6 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         GeldEditor geldEditor = new GeldEditor();
         myTable.getColumn("VK-Preis").setCellEditor(geldEditor);
         myTable.getColumn("EK-Preis").setCellEditor(geldEditor);
-
-        // extra cell editor that has the IntegerDocumentFilter
-        class AnzahlEditor extends DefaultCellEditor {
-            JTextField textField;
-
-            public AnzahlEditor() {
-                super(new JTextField()); // call to super must be first statement in constructor
-                textField = (JTextField)getComponent();
-                IntegerDocumentFilter intFilter = new IntegerDocumentFilter();
-                ((AbstractDocument)textField.getDocument()).setDocumentFilter(intFilter);
-            }
-
-            ////Override to invoke setText on the document filtered text field.
-            //@Override
-            //public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected,
-            //        int row, int column) {
-            //    this.textField.setText(""); // delete history of the (old) text field, maybe from a different cell
-            //    JTextField newTextField = (JTextField)super.getTableCellEditorComponent(table, value, isSelected, row, column);
-            //    //newTextField.setText(value.toString()); // if this line is present, then the
-            //                                    // DocumentFilter is called twice (not good)
-            //    return newTextField;
-            //}
-        }
-        AnzahlEditor anzahlEditor = new AnzahlEditor();
-        myTable.getColumn("VPE").setCellEditor(anzahlEditor);
     }
 
     void showTable() {
@@ -551,33 +574,44 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     }
 
     void setTableProperties(JTable myTable) {
+    columnLabels.add("Produktgruppe"); columnLabels.add("Lieferant");
+    columnLabels.add("Nummer"); columnLabels.add("Name");
+    columnLabels.add("Menge"); columnLabels.add("Barcode");
+    columnLabels.add("Herkunft"); columnLabels.add("VPE");
+    columnLabels.add("VK-Preis"); columnLabels.add("EK-Preis");
+    columnLabels.add("MwSt."); //columnLabels.add("Betrag MwSt.");
+    columnLabels.add("Ab/Seit"); columnLabels.add("Bis");
+    columnLabels.add("Sortiment"); columnLabels.add("Aktiv");
         myTable.getColumn("Produktgruppe").setCellRenderer(linksAusrichter);
-        myTable.getColumn("Name").setCellRenderer(linksAusrichter);
+        myTable.getColumn("Lieferant").setCellRenderer(linksAusrichter);
         myTable.getColumn("Nummer").setCellRenderer(rechtsAusrichter);
+        myTable.getColumn("Name").setCellRenderer(linksAusrichter);
+        myTable.getColumn("Menge").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("Barcode").setCellRenderer(rechtsAusrichter);
+        myTable.getColumn("Herkunft").setCellRenderer(linksAusrichter);
+        myTable.getColumn("VPE").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("VK-Preis").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("EK-Preis").setCellRenderer(rechtsAusrichter);
-        myTable.getColumn("VPE").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("MwSt.").setCellRenderer(rechtsAusrichter);
         //myTable.getColumn("Betrag MwSt.").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("Ab/Seit").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("Bis").setCellRenderer(rechtsAusrichter);
-        myTable.getColumn("Lieferant").setCellRenderer(linksAusrichter);
-        myTable.getColumn("Herkunft").setCellRenderer(linksAusrichter);
 
         myTable.getColumn("Produktgruppe").setPreferredWidth(70);
-        myTable.getColumn("Name").setPreferredWidth(100);
+        myTable.getColumn("Lieferant").setPreferredWidth(70);
         myTable.getColumn("Nummer").setPreferredWidth(70);
+        myTable.getColumn("Name").setPreferredWidth(100);
+        myTable.getColumn("Menge").setPreferredWidth(30);
         myTable.getColumn("Barcode").setPreferredWidth(70);
+        myTable.getColumn("Herkunft").setPreferredWidth(100);
+        myTable.getColumn("VPE").setPreferredWidth(10);
         myTable.getColumn("VK-Preis").setPreferredWidth(30);
         myTable.getColumn("EK-Preis").setPreferredWidth(30);
-        myTable.getColumn("VPE").setPreferredWidth(10);
         myTable.getColumn("MwSt.").setPreferredWidth(20);
         //myTable.getColumn("Betrag MwSt.").setPreferredWidth(30);
         myTable.getColumn("Ab/Seit").setPreferredWidth(70);
         myTable.getColumn("Bis").setPreferredWidth(70);
-        myTable.getColumn("Lieferant").setPreferredWidth(70);
-        myTable.getColumn("Herkunft").setPreferredWidth(100);
+        myTable.getColumn("Sortiment").setPreferredWidth(20);
         myTable.getColumn("Aktiv").setPreferredWidth(20);
     }
 
@@ -625,10 +659,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         int dataRow = displayIndices.get(row); // convert from displayData index to data index
         int column = e.getColumn();
         AbstractTableModel model = (AbstractTableModel)e.getSource();
-        String origArtikelName = originalData.get(dataRow).get(model.findColumn("Name")).toString();
+        String origLieferant = originalData.get(dataRow).get(model.findColumn("Lieferant")).toString();
         String origArtikelNummer = originalData.get(dataRow).get(model.findColumn("Nummer")).toString();
         int nummerIndex = editArtikelNummer.indexOf(origArtikelNummer); // look up artikelNummer in change list
-        int nameIndex = editArtikelName.indexOf(origArtikelName); // look up artikelName in change list
+        int nameIndex = editLieferant.indexOf(origLieferant); // look up artikelName in change list
 
         // post-edit edited cell
         String value = model.getValueAt(row, column).toString().replaceAll("\\s","");
@@ -639,10 +673,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             model.addTableModelListener(this);
         }
         String header = model.getColumnName(column);
-        if ( header.equals("Name") && value.equals("") ){
-            // user tried to delete the name (not allowed)
+        if ( header.equals("Lieferant") && value.equals("") ){
+            // user tried to delete the lieferant (not allowed)
             // reset to original value
-            model.setValueAt(origArtikelName, row, column);
+            model.setValueAt(origLieferant, row, column);
         }
         if ( header.equals("Nummer") && value.equals("") ){
             // user tried to delete the nummer (not allowed)
@@ -681,62 +715,71 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
 
         if (changed){
             // get and store all the values of the edited row
-            String artikelName = model.getValueAt(row, model.findColumn("Name")).toString();
+            String lieferant = model.getValueAt(row, model.findColumn("Lieferant")).toString();
             String artikelNummer = model.getValueAt(row, model.findColumn("Nummer")).toString();
-            if ( !artikelName.equals(origArtikelName) || !artikelNummer.equals(origArtikelNummer) ){
-                if ( isItemAlreadyKnown(artikelName, artikelNummer) ){
+            if ( !artikelName.equals(origLieferant) || !artikelNummer.equals(origArtikelNummer) ){
+                if ( isItemAlreadyKnown(lieferant, artikelNummer) ){
                     // not allowed: changing name and nummer to a pair that is already registered in DB
-                    JOptionPane.showMessageDialog(this, "Fehler: Kombination Namme/Nummer bereits vorhanden! Wird zurückgesetzt.",
+                    JOptionPane.showMessageDialog(this, "Fehler: Kombination Lieferant/Nummer bereits vorhanden! Wird zurückgesetzt.",
                             "Info", JOptionPane.INFORMATION_MESSAGE);
-                    model.setValueAt(origArtikelName, row, model.findColumn("Name"));
+                    model.setValueAt(origLieferant, row, model.findColumn("Lieferant"));
                     model.setValueAt(origArtikelNummer, row, model.findColumn("Nummer"));
                     return;
                 }
             }
+            String artikelName = model.getValueAt(row, model.findColumn("Name")).toString();
+            String menge = model.getValueAt(row, model.findColumn("Menge")).toString();
             String barcode = model.getValueAt(row, model.findColumn("Barcode")).toString();
-            String vkpreis = model.getValueAt(row, model.findColumn("VK-Preis")).toString();
-            String ekpreis = model.getValueAt(row, model.findColumn("EK-Preis")).toString();
+            String herkunft = model.getValueAt(row, model.findColumn("Herkunft")).toString();
             Integer vpe;
             try {
                 vpe = Integer.parseInt( model.getValueAt(row, model.findColumn("VPE")).toString() );
             } catch (NumberFormatException ex){ vpe = null; }
+            String vkpreis = model.getValueAt(row, model.findColumn("VK-Preis")).toString();
+            String ekpreis = model.getValueAt(row, model.findColumn("EK-Preis")).toString();
+            boolean sortiment = model.getValueAt(row, model.findColumn("Sortiment")).toString().equals("true") ? true : false;
             boolean aktiv = model.getValueAt(row, model.findColumn("Aktiv")).toString().equals("true") ? true : false;
-            String herkunft = model.getValueAt(row, model.findColumn("Herkunft")).toString();
 
             // update the vectors caching the changes
             if (nummerIndex == nameIndex && nummerIndex != -1){ // this row has been changed before, update the change cache
-                changedName.set(nummerIndex, artikelName);
                 changedNummer.set(nummerIndex, artikelNummer);
+                changedName.set(nummerIndex, artikelName);
+                changedMenge.set(nummerIndex, menge);
                 changedBarcode.set(nummerIndex, barcode);
+                changedHerkunft.set(nummerIndex, herkunft);
+                changedVPE.set(nummerIndex, vpe);
                 changedVKP.set(nummerIndex, vkpreis);
                 changedEKP.set(nummerIndex, ekpreis);
-                changedVPE.set(nummerIndex, vpe);
-                changedHerkunft.set(nummerIndex, herkunft);
+                changedSortiment.set(nummerIndex, sortiment);
                 changedAktiv.set(nummerIndex, aktiv);
             } else { // an edit occurred in a row that is not in the list of changes yet
-                editArtikelName.add(origArtikelName);
+                editLieferant.add(origLieferant);
                 editArtikelNummer.add(origArtikelNummer);
-                changedName.add(artikelName);
                 changedNummer.add(artikelNummer);
+                changedName.add(artikelName);
+                changedMenge.add(menge);
                 changedBarcode.add(barcode);
+                changedHerkunft.add(herkunft);
+                changedVPE.add(vpe);
                 changedVKP.add(vkpreis);
                 changedEKP.add(ekpreis);
-                changedVPE.add(vpe);
-                changedHerkunft.add(herkunft);
+                changedSortiment.add(sortiment);
                 changedAktiv.add(aktiv);
             }
         } else if (!changed) {
             // update the vectors caching the changes
             if (nummerIndex == nameIndex && nummerIndex != -1){ // this row has been changed before, all changes undone
-                editArtikelName.remove(nummerIndex); // remove item from list of changes
+                editLieferant.remove(nummerIndex); // remove item from list of changes
                 editArtikelNummer.remove(nummerIndex);
-                changedName.remove(nummerIndex);
                 changedNummer.remove(nummerIndex);
+                changedName.remove(nummerIndex);
+                changedMenge.remove(nummerIndex);
                 changedBarcode.remove(nummerIndex);
+                changedHerkunft.remove(nummerIndex);
+                changedVPE.remove(nummerIndex);
                 changedVKP.remove(nummerIndex);
                 changedEKP.remove(nummerIndex);
-                changedVPE.remove(nummerIndex);
-                changedHerkunft.remove(nummerIndex);
+                changedSortiment.remove(nummerIndex);
                 changedAktiv.remove(nummerIndex);
             }
         }
@@ -923,7 +966,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             return;
         }
         if (e.getSource() == inaktivCheckBox){
-            if ( editArtikelName.size() > 0 ){
+            if ( editLieferant.size() > 0 ){
                 int answer = changeLossConfirmDialog();
                 if (answer == JOptionPane.YES_OPTION){
                     updateAll();
@@ -936,7 +979,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             return;
         }
         if (e.getSource() == internalCheckBox){
-            if ( editArtikelName.size() > 0 ){
+            if ( editLieferant.size() > 0 ){
                 int answer = changeLossConfirmDialog();
                 if (answer == JOptionPane.YES_OPTION){
                     updateAll();
