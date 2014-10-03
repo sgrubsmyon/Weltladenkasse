@@ -118,22 +118,25 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
     }
 
     private void setOriginalValues() {
-        String firstName = (String)originalData.get(0).get(0);
-        String firstNummer = (String)originalData.get(0).get(1);
-        String firstBarcode = (String)originalData.get(0).get(2);
         Integer firstGruppenID = originalProdGrIDs.get(0);
-        Boolean firstVarPreis = originalVarPreisBools.get(0);
-        String firstVKP = (String)originalData.get(0).get(4);
-        String firstEKP = (String)originalData.get(0).get(5);
+        Integer firstLieferantID = originalLiefIDs.get(0);
+        String firstNummer = (String)originalData.get(0).get(2);
+        String firstName = (String)originalData.get(0).get(3);
+        String firstMenge = (String)originalData.get(0).get(4);
+        String firstBarcode = (String)originalData.get(0).get(5);
+        String firstHerkunft = (String)originalData.get(0).get(6);
         Integer firstVPE;
         try {
-            firstVPE = Integer.parseInt( (String)originalData.get(0).get(6) );
+            firstVPE = Integer.parseInt( (String)originalData.get(0).get(7) );
         } catch (NumberFormatException ex) {
             firstVPE = null;
         }
-        Integer firstLieferantID = originalLiefIDs.get(0);
-        String firstHerkunft = (String)originalData.get(0).get(11);
-        Boolean firstAktiv = (Boolean)originalData.get(0).get(12);
+        String firstVKP = (String)originalData.get(0).get(8);
+        String firstEKP = (String)originalData.get(0).get(9);
+        Boolean firstVarPreis = originalVarPreisBools.get(0);
+        Boolean firstAktiv = (Boolean)originalData.get(0).get(13);
+        Boolean firstAktiv = (Boolean)originalData.get(0).get(14);
+        // ****** CONTINUE HERE ****** //
         if ( allRowsEqual(firstName, 0) ){
             artikelFormular.nameField.setText(firstName);
         } else {
@@ -221,50 +224,11 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
 
     // will data be lost on close?
     public boolean willDataBeLost() {
-        if ( artikelFormular.nameField.isEnabled() ){
-            String origName = (String)originalData.get(0).get(0);
-            if ( !origName.equals(artikelFormular.nameField.getText()) )
-                    return true;
-        }
-        if ( artikelFormular.nummerField.isEnabled() ){
-            String origNummer = (String)originalData.get(0).get(1);
-            if ( !origNummer.equals(artikelFormular.nummerField.getText()) )
-                return true;
-        }
-        if ( artikelFormular.barcodeField.isEnabled() ){
-            String origBarcode = (String)originalData.get(0).get(2);
-            if ( !origBarcode.equals(artikelFormular.barcodeField.getText()) )
-                return true;
-        }
         if ( artikelFormular.produktgruppenBox.isEnabled() ){
             Integer origGruppenID = originalProdGrIDs.get(0);
             int selProdIndex = artikelFormular.produktgruppenBox.getSelectedIndex();
             Integer selProdID = artikelFormular.produktgruppenIDs.get(selProdIndex);
             if ( !origGruppenID.equals(selProdID) )
-                return true;
-        }
-        if ( artikelFormular.preisVariabelBox.isEnabled() ){
-            Boolean origVarPreis = originalVarPreisBools.get(0);
-            if ( !origVarPreis.equals(artikelFormular.preisVariabelBox.isSelected()) )
-                return true;
-        }
-        if ( artikelFormular.vkpreisField.isEnabled() ){
-            String origVKP = priceFormatterIntern( (String)originalData.get(0).get(4) );
-            String newVKP = priceFormatterIntern( artikelFormular.vkpreisField.getText() );
-            if ( !origVKP.equals(newVKP) )
-                return true;
-        }
-        if ( artikelFormular.ekpreisField.isEnabled() ){
-            String origEKP = priceFormatterIntern( (String)originalData.get(0).get(5) );
-            String newEKP = priceFormatterIntern( artikelFormular.ekpreisField.getText() );
-            if ( !origEKP.equals(newEKP) )
-                return true;
-        }
-        if ( artikelFormular.vpeSpinner.isEnabled() ){
-            String origVPEStr = (String)originalData.get(0).get(6);
-            if ( origVPEStr.equals("") ){ origVPEStr = "0"; }
-            Integer origVPE = Integer.parseInt(origVPEStr);
-            if ( !origVPE.equals(artikelFormular.vpeSpinner.getValue()) )
                 return true;
         }
         if ( artikelFormular.lieferantBox.isEnabled() ){
@@ -274,13 +238,52 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
             if ( !origLieferantID.equals(selLiefID) )
                 return true;
         }
+        if ( artikelFormular.nameField.isEnabled() ){
+            String origLieferant = (String)originalData.get(0).get(1);
+            if ( !origLieferant.equals(artikelFormular.nameField.getText()) )
+                    return true;
+        }
+        if ( artikelFormular.nummerField.isEnabled() ){
+            String origNummer = (String)originalData.get(0).get(2);
+            if ( !origNummer.equals(artikelFormular.nummerField.getText()) )
+                return true;
+        }
+        if ( artikelFormular.barcodeField.isEnabled() ){
+            String origBarcode = (String)originalData.get(0).get(5);
+            if ( !origBarcode.equals(artikelFormular.barcodeField.getText()) )
+                return true;
+        }
+        if ( artikelFormular.vpeSpinner.isEnabled() ){
+            String origVPEStr = (String)originalData.get(0).get(7);
+            if ( origVPEStr.equals("") ){ origVPEStr = "0"; }
+            Integer origVPE = Integer.parseInt(origVPEStr);
+            if ( !origVPE.equals(artikelFormular.vpeSpinner.getValue()) )
+                return true;
+        }
+        if ( artikelFormular.vkpreisField.isEnabled() ){
+            String origVKP = priceFormatterIntern( (String)originalData.get(0).get(8) );
+            String newVKP = priceFormatterIntern( artikelFormular.vkpreisField.getText() );
+            if ( !origVKP.equals(newVKP) )
+                return true;
+        }
+        if ( artikelFormular.ekpreisField.isEnabled() ){
+            String origEKP = priceFormatterIntern( (String)originalData.get(0).get(9) );
+            String newEKP = priceFormatterIntern( artikelFormular.ekpreisField.getText() );
+            if ( !origEKP.equals(newEKP) )
+                return true;
+        }
+        if ( artikelFormular.preisVariabelBox.isEnabled() ){
+            Boolean origVarPreis = originalVarPreisBools.get(0);
+            if ( !origVarPreis.equals(artikelFormular.preisVariabelBox.isSelected()) )
+                return true;
+        }
         if ( artikelFormular.herkunftField.isEnabled() ){
-            String origHerkunft = (String)originalData.get(0).get(11);
+            String origHerkunft = (String)originalData.get(0).get(6);
             if ( !origHerkunft.equals(artikelFormular.herkunftField.getText()) )
                 return true;
         }
         if ( aktivBox.isEnabled() ){
-            Boolean origAktiv = (Boolean)originalData.get(0).get(12);
+            Boolean origAktiv = (Boolean)originalData.get(0).get(14);
             if ( !origAktiv.equals(aktivBox.isSelected()) )
                 return true;
         }
@@ -301,19 +304,19 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
 
     public void submit() {
         for (int i=0; i<originalData.size(); i++){
-            String origName = (String)originalData.get(i).get(0);
+            String origLieferant = (String)originalData.get(i).get(0);
             String origNummer = (String)originalData.get(i).get(1);
             String newName = artikelFormular.nameField.isEnabled() ?
-                artikelFormular.nameField.getText() : origName;
+                artikelFormular.nameField.getText() : origLieferant;
             String newNummer = artikelFormular.nummerField.isEnabled() ?
                 artikelFormular.nummerField.getText() : origNummer;
-            if (newName != origName || newNummer != origNummer){
+            if (newName != origLieferant || newNummer != origNummer){
                 if ( isItemAlreadyKnown(newName, newNummer) ){
                     // not allowed: changing name and nummer to a pair that is already registered in DB
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Kombination Namme/Nummer bereits vorhanden! Wird zurückgesetzt.",
                             "Info", JOptionPane.INFORMATION_MESSAGE);
-                    artikelFormular.nameField.setText(origName);
+                    artikelFormular.nameField.setText(origLieferant);
                     artikelFormular.nummerField.setText(origNummer);
                     return;
                 }
@@ -352,10 +355,10 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
                 (Boolean)originalData.get(i).get(12);
 
             // set old item to inactive:
-            int result = setItemInactive(origName, origNummer);
+            int result = setItemInactive(origLieferant, origNummer);
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: Artikel "+origName+" mit Nummer "+origNummer+" konnte nicht geändert werden.",
+                        "Fehler: Artikel "+origLieferant+" mit Nummer "+origNummer+" konnte nicht geändert werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
                 continue; // continue with next item
             }
@@ -364,12 +367,12 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
                         produktgruppen_id, lieferant_id, herkunft);
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Artikel "+origName+" mit Nummer "+origNummer+" konnte nicht geändert werden.",
+                            "Fehler: Artikel "+origLieferant+" mit Nummer "+origNummer+" konnte nicht geändert werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
-                    result = setItemActive(origName, origNummer);
+                    result = setItemActive(origLieferant, origNummer);
                     if (result == 0){
                         JOptionPane.showMessageDialog(this,
-                                "Fehler: Artikel "+origName+" mit Nummer "+origNummer+" konnte nicht wieder hergestellt werden. Artikel ist nun gelöscht (inaktiv).",
+                                "Fehler: Artikel "+origLieferant+" mit Nummer "+origNummer+" konnte nicht wieder hergestellt werden. Artikel ist nun gelöscht (inaktiv).",
                                 "Fehler", JOptionPane.ERROR_MESSAGE);
                     }
                 }
