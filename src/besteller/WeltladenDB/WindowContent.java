@@ -183,13 +183,14 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
     }
 
-    protected boolean isItemAlreadyKnown(String name, String nummer) {
+    protected boolean isItemAlreadyKnown(String lieferant, String nummer) {
         boolean exists = false;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(artikel_id) FROM artikel WHERE artikel_name = ? AND artikel_nr = ? AND aktiv = TRUE"
+                    "SELECT COUNT(artikel_id) FROM artikel INNER JOIN lieferant USING (lieferant_id) "+
+                    "WHERE lieferant_name = ? AND artikel_nr = ? AND aktiv = TRUE"
                     );
-            pstmt.setString(1, name);
+            pstmt.setString(1, lieferant);
             pstmt.setString(2, nummer);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -204,16 +205,16 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return exists;
     }
 
-    protected int setItemInactive(String name, String nummer) {
+    protected int setItemInactive(Integer lieferantid, String nummer) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "UPDATE artikel SET aktiv = FALSE, bis = NOW() WHERE "+
-                    "artikel_name = ? AND "+
+                    "lieferant_id = ? AND "+
                     "artikel_nr = ? AND aktiv = TRUE"
                     );
-            pstmt.setString(1, name);
+            pstmt.setInt(1, lieferantid);
             pstmt.setString(2, nummer);
             result = pstmt.executeUpdate();
             pstmt.close();
@@ -224,16 +225,16 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected int setItemActive(String name, String nummer) {
+    protected int setItemActive(Integer lieferantid, String nummer) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "UPDATE artikel SET aktiv = TRUE, bis = NOW() WHERE "+
-                    "artikel_name = ? AND "+
+                    "lieferant_id = ? AND "+
                     "artikel_nr = ? AND aktiv = FALSE"
                     );
-            pstmt.setString(1, name);
+            pstmt.setInt(1, lieferantid);
             pstmt.setString(2, nummer);
             result = pstmt.executeUpdate();
             pstmt.close();
@@ -244,16 +245,27 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected int insertNewItem(String name, String nummer, String barcode,
-            Boolean var_preis, String vkpreis, String ekpreis, Integer vpe,
-            Integer produktgruppen_id, Integer lieferant_id,
-            String herkunft){
+    protected int insertNewItem(Integer produktgruppen_id, Integer
+            lieferant_id, String nummer, String name, String menge, String
+            barcode, String herkunft, Integer vpe, String vkpreis, String
+            ekpreis, Boolean var_preis, Boolean sortiment) {
         // add row for new item (with updated fields)
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
 
         // prepare value strings:
+        BigDecimal mengeDecimal;
+        try {
+            mengeDecimal = new BigDecimal(menge);
+        } catch (NumberFormatException ex) {
+            mengeDecimal = null;
+        }
+
         if (barcode.equals("") || barcode.equals("NULL")){ barcode = null; }
+
+        if (herkunft.equals("") || herkunft.equals("NULL")){ herkunft = null; }
+
+        if ( vpe == null || vpe.equals(0) ){ vpe = null; }
 
         BigDecimal vkpDecimal;
         try {
@@ -269,33 +281,32 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             ekpDecimal = null;
         }
 
-        if ( vpe == null || vpe.equals(0) ){ vpe = null; }
-
-        if (herkunft.equals("") || herkunft.equals("NULL")){ herkunft = null; }
-
         try {
             Statement stmt = this.conn.createStatement();
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "INSERT INTO artikel SET "+
-                    "artikel_name = ?, "+
-                    "artikel_nr = ?, "+
-                    "barcode = ?, "+
-                    "vk_preis = ?, ek_preis = ?, "+
-                    "vpe = ?, "+
                     "produktgruppen_id = ?, lieferant_id = ?, "+
-                    "herkunft = ?, von = NOW(), " +
-                    "aktiv = TRUE, variabler_preis = ?"
+                    "artikel_nr = ?, artikel_name = ?, "+
+                    "menge = ?, "+
+                    "barcode = ?, "+
+                    "herkunft = ?, "+
+                    "vpe = ?, "+
+                    "vk_preis = ?, ek_preis = ?, "+
+                    "variabler_preis = ?, sortiment = ?, "+
+                    "von = NOW(), aktiv = TRUE"
                     );
-            pstmt.setString(1, name);
-            pstmt.setString(2, nummer);
-            pstmt.setString(3, barcode);
-            pstmt.setBigDecimal(4, vkpDecimal);
-            pstmt.setBigDecimal(5, ekpDecimal);
-            pstmtSetInteger(pstmt, 6, vpe);
-            pstmtSetInteger(pstmt, 7, produktgruppen_id);
-            pstmtSetInteger(pstmt, 8, lieferant_id);
-            pstmt.setString(9, herkunft);
-            pstmtSetBoolean(pstmt, 10, var_preis);
+            pstmtSetInteger(pstmt, 1, produktgruppen_id);
+            pstmtSetInteger(pstmt, 2, lieferant_id);
+            pstmt.setString(3, nummer);
+            pstmt.setString(4, name);
+            pstmt.setBigDecimal(5, mengeDecimal);
+            pstmt.setString(6, barcode);
+            pstmt.setString(7, herkunft);
+            pstmtSetInteger(pstmt, 8, vpe);
+            pstmt.setBigDecimal(9, vkpDecimal);
+            pstmt.setBigDecimal(10, ekpDecimal);
+            pstmtSetBoolean(pstmt, 11, var_preis);
+            pstmtSetBoolean(pstmt, 12, sortiment);
             result = pstmt.executeUpdate();
             stmt.close();
         } catch (SQLException ex) {
