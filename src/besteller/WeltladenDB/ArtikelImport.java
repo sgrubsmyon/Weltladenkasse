@@ -176,8 +176,8 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
         return artikelNeu.willDataBeLost();
     }
 
-    public int checkIfItemAlreadyKnown(String name, String nummer) {
-        return artikelNeu.checkIfItemAlreadyKnown(name, nummer);
+    public int checkIfItemAlreadyKnown(String lieferant, String nummer) {
+        return artikelNeu.checkIfItemAlreadyKnown(lieferant, nummer);
     }
 
     public void submit() {
@@ -210,8 +210,8 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
         return gruppenid;
     }
 
-    private String queryLieferantID(String lieferantname) {
-        String lieferantid = "NULL";
+    private Integer queryLieferantID(String lieferantname) {
+        Integer lieferantid = null;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT lieferant_id FROM lieferant WHERE lieferant_name = ?"
@@ -219,7 +219,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
             pstmt.setString(1, lieferantname);
             ResultSet rs = pstmt.executeQuery();
             if ( rs.next() )
-                lieferantid = rs.getString(1) == null ? "NULL" : rs.getString(1);
+                lieferantid = rs.getString(1) == null ? null : rs.getInt(1);
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
@@ -229,26 +229,29 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
         return lieferantid;
     }
 
-    private Vector<String> queryAllFields(String artikelname, String artikelnummer) {
+    private Vector<String> queryAllFields(Integer lieferantid, String artikelnummer) {
         Vector<String> results = new Vector<String>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT produktgruppen_id, barcode, vk_preis, ek_preis, variabler_preis, vpe, " +
-                    "lieferant_id, herkunft FROM artikel "+
-                    "WHERE artikel_name = ? AND artikel_nr = ? AND aktiv = TRUE"
+                    "SELECT produktgruppen_id, artikel_name, menge, barcode, herkunft, "+
+                    "vpe, vk_preis, ek_preis, variabler_preis, sortiment " +
+                    "FROM artikel "+
+                    "WHERE lieferant_id = ? AND artikel_nr = ? AND aktiv = TRUE"
                     );
-            pstmt.setString(1, artikelname);
+            pstmt.setInt(1, lieferantid);
             pstmt.setString(2, artikelnummer);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
             results.add(rs.getString(1)); // produktgruppen_id
-            results.add(rs.getString(2) == null ? "NULL" : rs.getString(2)); // barcode
-            results.add(rs.getString(3) == null ? "NULL" : rs.getString(3)); // vk_preis
-            results.add(rs.getString(4) == null ? "NULL" : rs.getString(4)); // ek_preis
-            results.add(rs.getString(5));                                    // variabler_preis
+            results.add(rs.getString(2)); // artikel_name
+            results.add(rs.getString(3) == null ? "NULL" : rs.getString(3)); // menge
+            results.add(rs.getString(4) == null ? "NULL" : rs.getString(4)); // barcode
+            results.add(rs.getString(5) == null ? "NULL" : rs.getString(5)); // herkunft
             results.add(rs.getString(6) == null ? "NULL" : rs.getString(6)); // vpe
-            results.add(rs.getString(7) == null ? "NULL" : rs.getString(7)); // lieferant_id
-            results.add(rs.getString(8) == null ? "NULL" : rs.getString(8)); // herkunft
+            results.add(rs.getString(7) == null ? "NULL" : rs.getString(7)); // vk_preis
+            results.add(rs.getString(8) == null ? "NULL" : rs.getString(8)); // ek_preis
+            results.add(rs.getString(9));                                    // variabler_preis
+            results.add(rs.getString(10));                                   // sortiment
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
@@ -297,25 +300,29 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                 log.setText(logString+logStringEnd);
                 continue;
             }
-            String barcode = (String)sheet.getValueAt(4, rowIndex);
+            String menge = (String)sheet.getValueAt(4, rowIndex);
+            if (menge.length() == 0){ menge = "NULL"; }
+            String barcode = (String)sheet.getValueAt(5, rowIndex);
             if (barcode.length() == 0){ barcode = "NULL"; }
-            String herkunft = (String)sheet.getValueAt(5, rowIndex);
+            String herkunft = (String)sheet.getValueAt(6, rowIndex);
             if (herkunft.length() == 0){ herkunft = "NULL"; }
-            String vpe = (String)sheet.getValueAt(6, rowIndex);
+            String vpe = (String)sheet.getValueAt(7, rowIndex);
             if (vpe.length() == 0){ vpe = "NULL"; }
-            String vkpreis = (String)sheet.getValueAt(7, rowIndex);
+            String vkpreis = (String)sheet.getValueAt(8, rowIndex);
             if (vkpreis.length() == 0){ vkpreis = "NULL"; }
-            String ekpreis = (String)sheet.getValueAt(8, rowIndex);
+            String ekpreis = (String)sheet.getValueAt(9, rowIndex);
             if (ekpreis.length() == 0){ ekpreis = "NULL"; }
-            String variabel = (String)sheet.getValueAt(9, rowIndex);
+            String variabel = (String)sheet.getValueAt(10, rowIndex);
             if (variabel.length() == 0){ variabel = "false"; }
+            String sortiment = (String)sheet.getValueAt(11, rowIndex);
+            if (sortiment.length() == 0){ sortiment = "false"; }
 
             System.out.println(lineCount+" "+gruppenname+" "+name);
 
             // parse the fields
             String gruppenid = queryGruppenID(gruppenname);
             if (gruppenid.equals("NULL")){
-                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 1: Produktgruppe unbekannt).</div>\n";
+                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte A: Produktgruppe unbekannt).</div>\n";
                 log.setText(logString+logStringEnd);
                 continue;
             }
@@ -324,7 +331,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                     !variabel.equalsIgnoreCase("1") && !variabel.equalsIgnoreCase("0") &&
                     !variabel.equalsIgnoreCase("wahr") && !variabel.equalsIgnoreCase("falsch") &&
                     !variabel.equalsIgnoreCase("ja") && !variabel.equalsIgnoreCase("nein") ){
-                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 10: 'Variabel').</div>\n";
+                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte K: 'Variabel').</div>\n";
                 log.setText(logString+logStringEnd);
                 continue;
                     }
@@ -339,7 +346,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                     try {
                         vkpreis = priceFormatterIntern(vkpreis);
                     } catch (NumberFormatException ex) {
-                        logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 8: 'VK-Preis').</div>\n";
+                        logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte I: 'VK-Preis').</div>\n";
                         log.setText(logString+logStringEnd);
                         continue;
                     }
@@ -348,49 +355,76 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                     try {
                         ekpreis = priceFormatterIntern(ekpreis);
                     } catch (NumberFormatException ex) {
-                        logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 9: 'EK-Preis').</div>\n";
+                        logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte J: 'EK-Preis').</div>\n";
                         log.setText(logString+logStringEnd);
                         continue;
                     }
                 }
             }
-            String lieferantid = queryLieferantID(lieferant);
-            if (lieferantid.equals("NULL")){
-                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 2: Lieferant unbekannt).</div>\n";
+            if ( !sortiment.equalsIgnoreCase("true") && !sortiment.equalsIgnoreCase("false") &&
+                    !sortiment.equalsIgnoreCase("yes") && !sortiment.equalsIgnoreCase("no") &&
+                    !sortiment.equalsIgnoreCase("1") && !sortiment.equalsIgnoreCase("0") &&
+                    !sortiment.equalsIgnoreCase("wahr") && !sortiment.equalsIgnoreCase("falsch") &&
+                    !sortiment.equalsIgnoreCase("ja") && !sortiment.equalsIgnoreCase("nein") ){
+                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte L: 'Sortiment').</div>\n";
+                log.setText(logString+logStringEnd);
+                continue;
+                    }
+            if ( sortiment.equalsIgnoreCase("true") || sortiment.equalsIgnoreCase("yes") || sortiment.equalsIgnoreCase("1") ||
+                    sortiment.equalsIgnoreCase("wahr") || sortiment.equalsIgnoreCase("ja") ){
+                sortiment = "1";
+            } else {
+                sortiment = "0";
+            }
+            Integer lieferantid = queryLieferantID(lieferant);
+            if (lieferantid == null){
+                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte B: Lieferant unbekannt).</div>\n";
                 log.setText(logString+logStringEnd);
                 continue;
             }
+            Integer vpeInt = null;
+            if (!vpe.equals("NULL")){
+                try {
+                    vpeInt = Integer.parseInt(vpe);
+                } catch (NumberFormatException ex) {
+                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte H: 'VPE').</div>\n";
+                    log.setText(logString+logStringEnd);
+                    continue;
+                }
+            }
 
             Vector<Color> colors = new Vector<Color>();
-            int itemAlreadyKnown = checkIfItemAlreadyKnown(name, nummer);
+            int itemAlreadyKnown = checkIfItemAlreadyKnown(lieferant, nummer);
             if (itemAlreadyKnown == 1){ // item already in db
                 // compare every field:
-                Vector<String> allFields = queryAllFields(name, nummer);
+                Vector<String> allFields = queryAllFields(lieferantid, nummer);
 
                 colors.add( gruppenid.equals(allFields.get(0)) ? Color.black : Color.red ); // produktgruppe
-                colors.add(Color.black); // name
+                colors.add(Color.black); // lieferant
                 colors.add(Color.black); // nummer
-                colors.add( barcode.equals(allFields.get(1)) ? Color.black : Color.red ); // barcode
+                colors.add( name.equals(allFields.get(1)) ? Color.black : Color.red ); // name
+                colors.add( menge.equals(allFields.get(2)) ? Color.black : Color.red ); // menge
+                colors.add( barcode.equals(allFields.get(3)) ? Color.black : Color.red ); // barcode
+                colors.add( herkunft.equals(allFields.get(4)) ? Color.black : Color.red ); // herkunft
+                colors.add( vpe.equals(allFields.get(5)) ? Color.black : Color.red ); // vpe
                 if (variabel.equals("0")){ // compare prices:
-                    colors.add( vkpreis.equals(allFields.get(2)) ? Color.black : Color.red ); // vkpreis
-                    colors.add( ekpreis.equals(allFields.get(3)) ? Color.black : Color.red ); // ekpreis
+                    colors.add( vkpreis.equals(allFields.get(6)) ? Color.black : Color.red ); // vkpreis
+                    colors.add( ekpreis.equals(allFields.get(7)) ? Color.black : Color.red ); // ekpreis
                 } else {
                     colors.add(Color.black);
                     colors.add(Color.black);
                 }
-                colors.add( variabel.equals(allFields.get(4)) ? Color.black : Color.red ); // variabel
-                colors.add( vpe.equals(allFields.get(5)) ? Color.black : Color.red ); // vpe
-                colors.add( lieferantid.equals(allFields.get(6)) ? Color.black : Color.red ); // lieferantid
-                colors.add( herkunft.equals(allFields.get(7)) ? Color.black : Color.red ); // herkunft
+                colors.add( variabel.equals(allFields.get(8)) ? Color.black : Color.red ); // variabel
+                colors.add( sortiment.equals(allFields.get(9)) ? Color.black : Color.red ); // sortiment
                 colors.add(Color.black); // entfernen
             }
             else {
-                for (int i=0; i<11; i++){
+                for (int i=0; i<13; i++){
                     colors.add(Color.black);
                 }
             }
             boolean itemChanged = false;
-            for (int i=0; i<11; i++){
+            for (int i=0; i<colors.size(); i++){
                 if (colors.get(i) == Color.red){
                     itemChanged = true;
                     break;
@@ -398,40 +432,42 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
             }
             if ( itemAlreadyKnown == 0 || (itemChanged && itemAlreadyKnown != 2) ){ // if item not known or item changed
                 // add new item to the list
-                artikelNeu.artikelNamen.add(name);
+                artikelNeu.selProduktgruppenIDs.add( Integer.parseInt(gruppenid) );
+                artikelNeu.selLieferantIDs.add(lieferantid);
+                artikelNeu.lieferanten.add(lieferant);
                 artikelNeu.artikelNummern.add(nummer);
+                artikelNeu.artikelNamen.add(name);
+                artikelNeu.mengen.add(menge);
                 artikelNeu.barcodes.add(barcode);
+                artikelNeu.herkuenfte.add(herkunft);
+                artikelNeu.vpes.add(vpeInt);
                 artikelNeu.vkPreise.add(vkpreis);
                 artikelNeu.ekPreise.add(ekpreis);
                 artikelNeu.variablePreise.add( variabel.equals("0") ? false : true );
-                artikelNeu.vpes.add( vpe.equals("NULL") ? null :
-                        Integer.parseInt(vpe) );
-                artikelNeu.selLieferantIDs.add( lieferantid.equals("NULL") ? null :
-                        Integer.parseInt(lieferantid) );
-                artikelNeu.selProduktgruppenIDs.add( gruppenid.equals("NULL") ? null :
-                        Integer.parseInt(gruppenid) );
-                artikelNeu.herkuenfte.add(herkunft);
+                artikelNeu.sortimente.add( sortiment.equals("0") ? false : true );
                 artikelNeu.removeButtons.add(new JButton("-"));
                 artikelNeu.removeButtons.lastElement().addActionListener(this);
                 artikelNeu.colorMatrix.add(colors);
 
                 Vector<Object> row = new Vector<Object>();
                     row.add(gruppenname);
-                    row.add(name);
+                    row.add(lieferant);
                     row.add(nummer);
+                    row.add(name);
+                    row.add( menge == "NULL" ? "" : menge );
                     row.add( barcode == "NULL" ? "" : barcode );
+                    row.add( herkunft.equals("NULL") ? "" : herkunft );
+                    row.add( vpe.equals("NULL") ? "" : vpe );
                     row.add( vkpreis.equals("NULL") ? "" : vkpreis.replace('.',',')+" "+currencySymbol );
                     row.add( ekpreis.equals("NULL") ? "" : ekpreis.replace('.',',')+" "+currencySymbol );
                     row.add( variabel.equals("0") ? false : true );
-                    row.add( vpe.equals("NULL") ? "" : vpe );
-                    row.add(lieferant);
-                    row.add( herkunft.equals("NULL") ? "" : herkunft );
+                    row.add( sortiment.equals("0") ? false : true );
                     row.add(artikelNeu.removeButtons.lastElement());
                 artikelNeu.data.add(row);
             }
             if (itemAlreadyKnown == 0){
-                logString += "<div style=\""+baseStyle+"\">Artikel \""+ name + "\" wird hinzugefügt.</div>\n";
-                log.setText(logString+logStringEnd);
+                //logString += "<div style=\""+baseStyle+"\">Artikel \""+ name + "\" wird hinzugefügt.</div>\n";
+                //log.setText(logString+logStringEnd);
                 log.updateUI();
             }
             else if (itemAlreadyKnown == 2){ // item already in table
@@ -447,216 +483,6 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
         }
         logString += "<div style=\""+baseStyle+"\">Datei " + file.getName() + " wurde komplett eingelesen.</div>\n";
     }
-
-    // old version with CSV file:
-    /*
-    void parseFile(File file) {
-        logString += "<div>-------</div>\n";
-        logString += "<div style=\""+baseStyle+"\">Datei " + file.getName() + " wurde geöffnet...</div>\n";
-        log.setText(logString+logStringEnd);
-        try {
-            //// use InputStream classes for binary files:
-            //FileInputStream fis = new FileInputStream(file);
-            //// Here BufferedInputStream is added for fast reading.
-            //BufferedInputStream bis = new BufferedInputStream(fis);
-            //DataInputStream in = new DataInputStream(bis);
-            //fis.close();
-            //bis.close();
-            // use Reader classes for text files:
-            BufferedReader in = new BufferedReader(new FileReader(file)); // Lesen einer Textdatei mit Default Zeichensatz-Codierung, see http://www.wsoftware.de/practices/charsets.html
-            int lineCount = 0;
-            String line = "";
-            while ( (line = in.readLine()) != null) {
-                System.out.println(line);
-                lineCount++;
-                line = line.replaceAll("#.*","");
-                line = line.replaceAll("\"","");
-
-                // get the fields
-                String[] fields = line.split(delimiter, 10);
-                //if (fields.length < 4 ){
-                //    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (nicht genug Felder).</div>\n";
-                //    log.setText(logString+logStringEnd);
-                //    continue;
-                //}
-
-                String gruppenname = fields[0];
-                if (gruppenname.length() == 0){
-                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (nicht genug Felder).</div>\n";
-                    log.setText(logString+logStringEnd);
-                    continue;
-                }
-                String lieferant = fields[1].length() == 0 ? "unbekannt" : fields[1];
-                String nummer = fields[2];
-                String name = fields[3];
-                String barcode = fields[4].length() == 0 ? "NULL" : fields[4];
-                String herkunft = fields[5].length() == 0 ? "NULL" : fields[5];
-                String vpe = fields[6].length() == 0 ? "NULL" : fields[6];
-                String vkpreis = fields[7].length() == 0 ? "NULL" : fields[7];
-                String ekpreis = fields[8].length() == 0 ? "NULL" : fields[8];
-                String variabel = fields[9].length() == 0 ? "false" : fields[9];
-
-                // parse the fields
-                String gruppenid = queryGruppenID(gruppenname);
-                if (gruppenid.equals("NULL")){
-                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 1: Produktgruppe unbekannt).</div>\n";
-                    log.setText(logString+logStringEnd);
-                    continue;
-                }
-                if ( name.length() == 0 ){
-                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 2: Kein Artikelname).</div>\n";
-                    log.setText(logString+logStringEnd);
-                    continue;
-                }
-                if ( nummer.length() == 0 ){
-                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 3: Keine Artikelnummer).</div>\n";
-                    log.setText(logString+logStringEnd);
-                    continue;
-                }
-                if ( !variabel.equalsIgnoreCase("true") && !variabel.equalsIgnoreCase("false") &&
-                        !variabel.equalsIgnoreCase("yes") && !variabel.equalsIgnoreCase("no") &&
-                        !variabel.equalsIgnoreCase("1") && !variabel.equalsIgnoreCase("0") &&
-                        !variabel.equalsIgnoreCase("wahr") && !variabel.equalsIgnoreCase("falsch") &&
-                        !variabel.equalsIgnoreCase("ja") && !variabel.equalsIgnoreCase("nein") ){
-                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 7: 'Variabel').</div>\n";
-                    log.setText(logString+logStringEnd);
-                    continue;
-                }
-                if ( variabel.equalsIgnoreCase("true") || variabel.equalsIgnoreCase("yes") || variabel.equalsIgnoreCase("1") ||
-                        variabel.equalsIgnoreCase("wahr") || variabel.equalsIgnoreCase("ja") ){
-                    variabel = "1";
-                    vkpreis = "NULL";
-                    ekpreis = "NULL";
-                } else {
-                    variabel = "0";
-                    if ( !vkpreis.equals("NULL") ){
-                        try {
-                            vkpreis = priceFormatterIntern(vkpreis);
-                        } catch (NumberFormatException ex) {
-                            logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 5: 'VK-Preis').</div>\n";
-                            log.setText(logString+logStringEnd);
-                            continue;
-                        }
-                    }
-                    if ( !ekpreis.equals("NULL") ){
-                        try {
-                            ekpreis = priceFormatterIntern(ekpreis);
-                        } catch (NumberFormatException ex) {
-                            logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 6: 'EK-Preis').</div>\n";
-                            log.setText(logString+logStringEnd);
-                            continue;
-                        }
-                    }
-                }
-                String lieferantid = "";
-                if (lieferant.length() == 0){
-                    lieferantid = "1";
-                    lieferant = "unbekannt";
-                }
-                else {
-                    lieferantid = queryLieferantID(lieferant);
-                }
-                if (lieferantid.equals("NULL")){
-                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 8: Lieferant unbekannt).</div>\n";
-                    log.setText(logString+logStringEnd);
-                    continue;
-                }
-
-                Vector<Color> colors = new Vector<Color>();
-                int itemAlreadyKnown = checkIfItemAlreadyKnown(name, nummer);
-                if (itemAlreadyKnown == 1){ // item already in db
-                    // compare every field:
-                    Vector<String> allFields = queryAllFields(name, nummer);
-
-                    colors.add( gruppenid.equals(allFields.get(0)) ? Color.black : Color.red ); // produktgruppe
-                    colors.add(Color.black); // name
-                    colors.add(Color.black); // nummer
-                    colors.add( barcode.equals(allFields.get(1)) ? Color.black : Color.red ); // barcode
-                    if (variabel.equals("0")){ // compare prices:
-                        colors.add( vkpreis.equals(allFields.get(2)) ? Color.black : Color.red ); // vkpreis
-                        colors.add( ekpreis.equals(allFields.get(3)) ? Color.black : Color.red ); // ekpreis
-                    } else {
-                        colors.add(Color.black);
-                        colors.add(Color.black);
-                    }
-                    colors.add( variabel.equals(allFields.get(4)) ? Color.black : Color.red ); // variabel
-                    colors.add( vpe.equals(allFields.get(5)) ? Color.black : Color.red ); // vpe
-                    colors.add( lieferantid.equals(allFields.get(6)) ? Color.black : Color.red ); // lieferantid
-                    colors.add( herkunft.equals(allFields.get(7)) ? Color.black : Color.red ); // herkunft
-                    colors.add(Color.black); // entfernen
-                }
-                else {
-                    for (int i=0; i<11; i++){
-                        colors.add(Color.black);
-                    }
-                }
-                boolean itemChanged = false;
-                for (int i=0; i<11; i++){
-                    if (colors.get(i) == Color.red){
-                        itemChanged = true;
-                        break;
-                    }
-                }
-                if ( itemAlreadyKnown == 0 || (itemChanged && itemAlreadyKnown != 2) ){ // if item not known or item changed
-                    // add new item to the list
-                    artikelNeu.artikelNamen.add(name);
-                    artikelNeu.artikelNummern.add(nummer);
-                    artikelNeu.barcodes.add(barcode);
-                    artikelNeu.vkPreise.add(vkpreis);
-                    artikelNeu.ekPreise.add(ekpreis);
-                    artikelNeu.variablePreise.add( variabel.equals("0") ? false : true );
-                    artikelNeu.vpes.add( vpe.equals("NULL") ? null :
-                            Integer.parseInt(vpe) );
-                    artikelNeu.selLieferantIDs.add( lieferantid.equals("NULL") ? null :
-                            Integer.parseInt(lieferantid) );
-                    artikelNeu.selProduktgruppenIDs.add( gruppenid.equals("NULL") ? null :
-                            Integer.parseInt(gruppenid) );
-                    artikelNeu.herkuenfte.add(herkunft);
-                    artikelNeu.removeButtons.add(new JButton("-"));
-                    artikelNeu.removeButtons.lastElement().addActionListener(this);
-                    artikelNeu.colorMatrix.add(colors);
-
-                    Vector<Object> row = new Vector<Object>();
-                    row.add(gruppenname);
-                    row.add(name);
-                    row.add(nummer);
-                    row.add( barcode == "NULL" ? "" : barcode );
-                    row.add( vkpreis.equals("NULL") ? "" : vkpreis.replace('.',',')+" "+currencySymbol );
-                    row.add( ekpreis.equals("NULL") ? "" : ekpreis.replace('.',',')+" "+currencySymbol );
-                    row.add( variabel.equals("TRUE") ? true : false );
-                    row.add( vpe.equals("NULL") ? "" : vpe );
-                    row.add( barcode == "NULL" ? "" : barcode );
-                    row.add(lieferant);
-                    row.add( herkunft.equals("NULL") ? "" : herkunft );
-                    row.add(artikelNeu.removeButtons.lastElement());
-                    artikelNeu.data.add(row);
-                }
-                if (itemAlreadyKnown == 0){
-                    logString += "<div style=\""+baseStyle+"\">Artikel \""+ name + "\" wird hinzugefügt.</div>\n";
-                    log.setText(logString+logStringEnd);
-                    log.updateUI();
-                }
-                else if (itemAlreadyKnown == 2){ // item already in table
-                    logString += "<div style=\""+redStyle+"\">Artikel \""+ name + "\" wird nicht erneut hinzugefügt/verändert.</div>\n";
-                    log.setText(logString+logStringEnd);
-                    log.updateUI();
-                }
-                else if (itemChanged){
-                    logString += "<div style=\""+baseStyle+"\">Artikel \""+ name + "\" wird verändert.</div>\n";
-                    log.setText(logString+logStringEnd);
-                    log.updateUI();
-                }
-            }
-            in.close();
-        } catch (FileNotFoundException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-    }
-    */
 
     /**
      *    * Each non abstract class that implements the ActionListener
