@@ -724,8 +724,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         // get artikelName
         String[] an = artikelBox.parseArtikelName();
         String artikelName = an[0];
-        String artikelNummer = an[1];
-        String lieferantQuery = artikelNummer.equals("") ? "IS NULL" : "= ?";
+        String lieferant = an[1];
+        String lieferantQuery = lieferant.equals("") ? "IS NULL" : "= ?";
         Vector<String[]> artikelNummern = new Vector<String[]>();
         // get artikelNummer for artikelName
         try {
@@ -736,8 +736,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                     "AND a.aktiv = TRUE"
                     );
             pstmt.setString(1, artikelName);
-            if (!artikelNummer.equals("")){
-                pstmt.setString(2, artikelNummer);
+            if (!lieferant.equals("")){
+                pstmt.setString(2, lieferant);
             }
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...

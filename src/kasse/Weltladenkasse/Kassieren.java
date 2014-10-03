@@ -1180,7 +1180,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         // get artikelName
         String[] an = artikelBox.parseArtikelName();
         String artikelName = an[0];
-        String lieferantQuery = an[1].equals("") ? "IS NULL" : "= ?";
+        String lieferant = an[1];
+        String lieferantQuery = lieferant.equals("") ? "IS NULL" : "= ?";
         Vector<String[]> artikelNummern = new Vector<String[]>();
         // get artikelNummer for artikelName
         try {
@@ -1191,8 +1192,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     "AND a.aktiv = TRUE"
                     );
             pstmt.setString(1, artikelName);
-            if (!an[1].equals("")){
-                pstmt.setString(2, an[1]);
+            if (!lieferant.equals("")){
+                pstmt.setString(2, lieferant);
             }
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
