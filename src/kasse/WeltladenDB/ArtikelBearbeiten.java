@@ -82,21 +82,25 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         };
 
         artikelFormular.produktgruppenBox.addActionListener(this);
-        artikelFormular.nameField.getDocument().addDocumentListener(this);
-        artikelFormular.nameField.addKeyListener(enterAdapter);
+        artikelFormular.lieferantBox.addActionListener(this);
         artikelFormular.nummerField.getDocument().addDocumentListener(this);
         artikelFormular.nummerField.addKeyListener(enterAdapter);
+        artikelFormular.nameField.getDocument().addDocumentListener(this);
+        artikelFormular.nameField.addKeyListener(enterAdapter);
+        artikelFormular.mengeField.getDocument().addDocumentListener(this);
+        artikelFormular.mengeField.addKeyListener(enterAdapter);
         artikelFormular.barcodeField.getDocument().addDocumentListener(this);
         artikelFormular.barcodeField.addKeyListener(enterAdapter);
+        artikelFormular.herkunftField.getDocument().addDocumentListener(this);
+        artikelFormular.herkunftField.addKeyListener(enterAdapter);
+        artikelFormular.vpeSpinner.addChangeListener(this);
         artikelFormular.vkpreisField.addKeyListener(enterAdapter);
         artikelFormular.vkpreisField.getDocument().addDocumentListener(this);
         artikelFormular.ekpreisField.addKeyListener(enterAdapter);
         artikelFormular.ekpreisField.getDocument().addDocumentListener(this);
         artikelFormular.preisVariabelBox.addItemListener(this);
-        artikelFormular.vpeSpinner.addChangeListener(this);
-        artikelFormular.lieferantBox.addActionListener(this);
-        artikelFormular.herkunftField.getDocument().addDocumentListener(this);
-        artikelFormular.herkunftField.addKeyListener(enterAdapter);
+        artikelFormular.sortimentBox.addItemListener(this);
+        aktivBox.addItemListener(this);
     }
 
     void showMiddle() {
@@ -134,39 +138,61 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         String firstVKP = (String)originalData.get(0).get(8);
         String firstEKP = (String)originalData.get(0).get(9);
         Boolean firstVarPreis = originalVarPreisBools.get(0);
-        Boolean firstAktiv = (Boolean)originalData.get(0).get(13);
+        Boolean firstSortiment = (Boolean)originalData.get(0).get(13);
         Boolean firstAktiv = (Boolean)originalData.get(0).get(14);
-        // ****** CONTINUE HERE ****** //
-        if ( allRowsEqual(firstName, 0) ){
-            artikelFormular.nameField.setText(firstName);
-        } else {
-            artikelFormular.nameField.setEnabled(false);
-        }
-        if ( allRowsEqual(firstNummer, 1) ){
-            artikelFormular.nummerField.setText(firstNummer);
-        } else {
-            artikelFormular.nummerField.setEnabled(false);
-        }
-        if ( allRowsEqual(firstBarcode, 2) ){
-            artikelFormular.barcodeField.setText(firstBarcode);
-        } else {
-            artikelFormular.barcodeField.setEnabled(false);
-        }
+
         if ( allElementsEqual(firstGruppenID, originalProdGrIDs) ){
             int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(firstGruppenID);
             artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
         } else {
             artikelFormular.produktgruppenBox.setEnabled(false);
         }
+        if ( allElementsEqual(firstLieferantID, originalLiefIDs) ){
+            int liefIndex = artikelFormular.lieferantIDs.indexOf(firstLieferantID);
+            artikelFormular.lieferantBox.setSelectedIndex(liefIndex);
+        } else {
+            artikelFormular.lieferantBox.setEnabled(false);
+        }
+        if ( allRowsEqual(firstNummer, 2) ){
+            artikelFormular.nummerField.setText(firstNummer);
+        } else {
+            artikelFormular.nummerField.setEnabled(false);
+        }
+        if ( allRowsEqual(firstName, 3) ){
+            artikelFormular.nameField.setText(firstName);
+        } else {
+            artikelFormular.nameField.setEnabled(false);
+        }
+        if ( allRowsEqual(firstMenge, 4) ){
+            artikelFormular.mengeField.setText(firstMenge);
+        } else {
+            artikelFormular.mengeField.setEnabled(false);
+        }
+        if ( allRowsEqual(firstBarcode, 5) ){
+            artikelFormular.barcodeField.setText(firstBarcode);
+        } else {
+            artikelFormular.barcodeField.setEnabled(false);
+        }
+        if ( allRowsEqual(firstHerkunft, 6) ){
+            artikelFormular.herkunftField.setText(firstHerkunft);
+        } else {
+            artikelFormular.herkunftField.setEnabled(false);
+        }
+        if ( allRowsEqual(firstVPE, 7) ){
+            //if ( firstVPE.equals("") ){ firstVPE = "0"; }
+            artikelFormular.vpeSpinner.setValue(firstVPE);
+        } else {
+            artikelFormular.vpeSpinner.setEnabled(false);
+        }
         if ( allElementsEqual(firstVarPreis, originalVarPreisBools) ){
             artikelFormular.preisVariabelBox.setSelected(firstVarPreis);
             if (!firstVarPreis){ // if all items have non-variable prices
-                if ( allRowsEqual(firstVKP, 4) ){
+                if ( allRowsEqual(firstVKP, 8) ){
                     artikelFormular.vkpreisField.setText(firstVKP);
                 } else {
                     artikelFormular.vkpreisField.setEnabled(false);
                 }
-                if ( allRowsEqual(firstEKP, 5) ){
+                if ( allRowsEqual(firstEKP, 9) ){
                     artikelFormular.ekpreisField.setText(firstEKP);
                 } else {
                     artikelFormular.ekpreisField.setEnabled(false);
@@ -176,28 +202,16 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
                 artikelFormular.ekpreisField.setEnabled(false);
             }
         } else {
+            artikelFormular.preisVariabelBox.setEnabled(false);
             artikelFormular.vkpreisField.setEnabled(false);
             artikelFormular.ekpreisField.setEnabled(false);
-            artikelFormular.preisVariabelBox.setEnabled(false);
         }
-        if ( allRowsEqual(firstVPE, 6) ){
-            //if ( firstVPE.equals("") ){ firstVPE = "0"; }
-            artikelFormular.vpeSpinner.setValue(firstVPE);
+        if ( allRowsEqual(firstSortiment, 13) ){
+            artikelFormular.sortimentBox.setSelected(firstSortiment);
         } else {
-            artikelFormular.vpeSpinner.setEnabled(false);
+            artikelFormular.sortimentBox.setEnabled(false);
         }
-        if ( allElementsEqual(firstLieferantID, originalLiefIDs) ){
-            int liefIndex = artikelFormular.lieferantIDs.indexOf(firstLieferantID);
-            artikelFormular.lieferantBox.setSelectedIndex(liefIndex);
-        } else {
-            artikelFormular.lieferantBox.setEnabled(false);
-        }
-        if ( allRowsEqual(firstHerkunft, 11) ){
-            artikelFormular.herkunftField.setText(firstHerkunft);
-        } else {
-            artikelFormular.herkunftField.setEnabled(false);
-        }
-        if ( allRowsEqual(firstAktiv, 12) ){
+        if ( allRowsEqual(firstAktiv, 14) ){
             aktivBox.setSelected(firstAktiv);
         } else {
             aktivBox.setEnabled(false);
@@ -238,19 +252,29 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
             if ( !origLieferantID.equals(selLiefID) )
                 return true;
         }
-        if ( artikelFormular.nameField.isEnabled() ){
-            String origLieferant = (String)originalData.get(0).get(1);
-            if ( !origLieferant.equals(artikelFormular.nameField.getText()) )
-                    return true;
-        }
         if ( artikelFormular.nummerField.isEnabled() ){
             String origNummer = (String)originalData.get(0).get(2);
             if ( !origNummer.equals(artikelFormular.nummerField.getText()) )
                 return true;
         }
+        if ( artikelFormular.nameField.isEnabled() ){
+            String origName = (String)originalData.get(0).get(3);
+            if ( !origName.equals(artikelFormular.nameField.getText()) )
+                    return true;
+        }
+        if ( artikelFormular.mengeField.isEnabled() ){
+            String origMenge = (String)originalData.get(0).get(4);
+            if ( !origMenge.equals(artikelFormular.nameField.getText()) )
+                    return true;
+        }
         if ( artikelFormular.barcodeField.isEnabled() ){
             String origBarcode = (String)originalData.get(0).get(5);
             if ( !origBarcode.equals(artikelFormular.barcodeField.getText()) )
+                return true;
+        }
+        if ( artikelFormular.herkunftField.isEnabled() ){
+            String origHerkunft = (String)originalData.get(0).get(6);
+            if ( !origHerkunft.equals(artikelFormular.herkunftField.getText()) )
                 return true;
         }
         if ( artikelFormular.vpeSpinner.isEnabled() ){
@@ -277,9 +301,9 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
             if ( !origVarPreis.equals(artikelFormular.preisVariabelBox.isSelected()) )
                 return true;
         }
-        if ( artikelFormular.herkunftField.isEnabled() ){
-            String origHerkunft = (String)originalData.get(0).get(6);
-            if ( !origHerkunft.equals(artikelFormular.herkunftField.getText()) )
+        if ( artikelFormular.sortimentBox.isEnabled() ){
+            Boolean origSortiment = (Boolean)originalData.get(0).get(13);
+            if ( !origSortiment.equals(artikelFormular.sortimentBox.isSelected()) )
                 return true;
         }
         if ( aktivBox.isEnabled() ){
@@ -304,75 +328,89 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
 
     public void submit() {
         for (int i=0; i<originalData.size(); i++){
-            String origLieferant = (String)originalData.get(i).get(0);
-            String origNummer = (String)originalData.get(i).get(1);
-            String newName = artikelFormular.nameField.isEnabled() ?
-                artikelFormular.nameField.getText() : origLieferant;
+            String origLieferant = (String)originalData.get(i).get(1);
+            Integer origLieferantID = originalLiefIDs.get(i);
+            String origNummer = (String)originalData.get(i).get(2);
+            String newLieferant = artikelFormular.lieferantBox.isEnabled() ?
+                (String)artikelFormular.lieferantBox.getSelectedItem() :
+                origLieferant;
+            Integer newLieferantID = artikelFormular.lieferantBox.isEnabled() ?
+                artikelFormular.lieferantIDs.get( artikelFormular.lieferantBox.getSelectedIndex() ) :
+                origLieferantID;
             String newNummer = artikelFormular.nummerField.isEnabled() ?
                 artikelFormular.nummerField.getText() : origNummer;
-            if (newName != origLieferant || newNummer != origNummer){
-                if ( isItemAlreadyKnown(newName, newNummer) ){
+            if (newLieferant != origLieferant || newNummer != origNummer){
+                if ( isItemAlreadyKnown(newLieferant, newNummer) ){
                     // not allowed: changing name and nummer to a pair that is already registered in DB
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Kombination Namme/Nummer bereits vorhanden! Wird zurückgesetzt.",
+                            "Fehler: Kombination Lieferant/Nummer bereits vorhanden! Wird zurückgesetzt.",
                             "Info", JOptionPane.INFORMATION_MESSAGE);
-                    artikelFormular.nameField.setText(origLieferant);
+                    artikelFormular.lieferantBox.setSelectedIndex(
+                            artikelFormular.lieferantIDs.indexOf(origLieferantID)
+                            );
                     artikelFormular.nummerField.setText(origNummer);
                     return;
                 }
             }
-            String barcode = artikelFormular.barcodeField.isEnabled() ?
-                artikelFormular.barcodeField.getText() :
-                (String)originalData.get(i).get(2);
             Integer produktgruppen_id = artikelFormular.produktgruppenBox.isEnabled() ?
                 artikelFormular.produktgruppenIDs.get( artikelFormular.produktgruppenBox.getSelectedIndex() ) :
                 originalProdGrIDs.get(i);
-            Boolean preisVar = artikelFormular.preisVariabelBox.isEnabled() ?
-                artikelFormular.preisVariabelBox.isSelected() :
-                (Boolean)originalVarPreisBools.get(i);
-            String vkpreis = artikelFormular.vkpreisField.isEnabled() ?
-                artikelFormular.vkpreisField.getText() :
+            String origName = (String)originalData.get(i).get(3);
+            String newName = artikelFormular.nameField.isEnabled() ?
+                artikelFormular.nameField.getText() : origName;
+            String menge = artikelFormular.mengeField.isEnabled() ?
+                artikelFormular.mengeField.getText() :
                 (String)originalData.get(i).get(4);
-            String ekpreis = artikelFormular.ekpreisField.isEnabled() ?
-                artikelFormular.ekpreisField.getText() :
+            String barcode = artikelFormular.barcodeField.isEnabled() ?
+                artikelFormular.barcodeField.getText() :
                 (String)originalData.get(i).get(5);
-            Integer vpe;
+            String herkunft = artikelFormular.herkunftField.isEnabled() ?
+                artikelFormular.herkunftField.getText() :
+                (String)originalData.get(i).get(6);
+            Integer vpe = null;
             try {
                 vpe = artikelFormular.vpeSpinner.isEnabled() ?
                     (Integer)artikelFormular.vpeSpinner.getValue() :
-                    Integer.parseInt( (String)originalData.get(i).get(6) );
+                    Integer.parseInt( (String)originalData.get(i).get(7) );
             } catch (NumberFormatException ex) {
                 vpe = null;
             }
-            Integer lieferant_id = artikelFormular.lieferantBox.isEnabled() ?
-                artikelFormular.lieferantIDs.get( artikelFormular.lieferantBox.getSelectedIndex() ) :
-                originalLiefIDs.get(i);
-            String herkunft = artikelFormular.herkunftField.isEnabled() ?
-                artikelFormular.herkunftField.getText() :
-                (String)originalData.get(i).get(11);
+            String vkpreis = artikelFormular.vkpreisField.isEnabled() ?
+                artikelFormular.vkpreisField.getText() :
+                (String)originalData.get(i).get(8);
+            String ekpreis = artikelFormular.ekpreisField.isEnabled() ?
+                artikelFormular.ekpreisField.getText() :
+                (String)originalData.get(i).get(9);
+            Boolean preisVar = artikelFormular.preisVariabelBox.isEnabled() ?
+                artikelFormular.preisVariabelBox.isSelected() :
+                (Boolean)originalVarPreisBools.get(i);
+            Boolean sortiment = artikelFormular.sortimentBox.isEnabled() ?
+                artikelFormular.sortimentBox.isSelected() :
+                (Boolean)originalData.get(i).get(13);
             Boolean aktiv = aktivBox.isEnabled() ?
                 aktivBox.isSelected() :
-                (Boolean)originalData.get(i).get(12);
+                (Boolean)originalData.get(i).get(14);
 
             // set old item to inactive:
-            int result = setItemInactive(origLieferant, origNummer);
+            int result = setItemInactive(origLieferantID, origNummer);
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: Artikel "+origLieferant+" mit Nummer "+origNummer+" konnte nicht geändert werden.",
+                        "Fehler: Artikel "+origName+" von "+origLieferant+" mit Nummer "+origNummer+" konnte nicht geändert werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
                 continue; // continue with next item
             }
             if ( aktiv == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
-                result = insertNewItem(newName, newNummer, barcode, preisVar, vkpreis, ekpreis, vpe,
-                        produktgruppen_id, lieferant_id, herkunft);
+                result = insertNewItem(produktgruppen_id, newLieferantID,
+                        newNummer, newName, menge, barcode, herkunft, vpe,
+                        vkpreis, ekpreis, preisVar, sortiment);
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Artikel "+origLieferant+" mit Nummer "+origNummer+" konnte nicht geändert werden.",
+                            "Fehler: Artikel "+origName+" von "+origLieferant+" mit Nummer "+origNummer+" konnte nicht geändert werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
-                    result = setItemActive(origLieferant, origNummer);
+                    result = setItemActive(origLieferantID, origNummer);
                     if (result == 0){
                         JOptionPane.showMessageDialog(this,
-                                "Fehler: Artikel "+origLieferant+" mit Nummer "+origNummer+" konnte nicht wieder hergestellt werden. Artikel ist nun gelöscht (inaktiv).",
+                                "Fehler: Artikel "+origName+" von "+origLieferant+" mit Nummer "+origNummer+" konnte nicht wieder hergestellt werden. Artikel ist nun gelöscht (inaktiv).",
                                 "Fehler", JOptionPane.ERROR_MESSAGE);
                     }
                 }
