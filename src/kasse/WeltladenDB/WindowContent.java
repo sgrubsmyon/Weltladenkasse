@@ -188,7 +188,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT COUNT(artikel_id) FROM artikel INNER JOIN lieferant USING (lieferant_id) "+
-                    "WHERE lieferant_name = ? AND artikel_nr = ? AND aktiv = TRUE"
+                    "WHERE lieferant_name = ? AND artikel_nr = ? AND artikel.aktiv = TRUE"
                     );
             pstmt.setString(1, lieferant);
             pstmt.setString(2, nummer);
@@ -246,20 +246,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected int insertNewItem(Integer produktgruppen_id, Integer
-            lieferant_id, String nummer, String name, String menge, String
+            lieferant_id, String nummer, String name, BigDecimal menge, String
             barcode, String herkunft, Integer vpe, String vkpreis, String
             ekpreis, Boolean var_preis, Boolean sortiment) {
         // add row for new item (with updated fields)
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
-
-        // prepare value strings:
-        BigDecimal mengeDecimal;
-        try {
-            mengeDecimal = new BigDecimal(menge);
-        } catch (NumberFormatException ex) {
-            mengeDecimal = null;
-        }
 
         if (barcode.equals("") || barcode.equals("NULL")){ barcode = null; }
 
@@ -299,7 +291,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             pstmtSetInteger(pstmt, 2, lieferant_id);
             pstmt.setString(3, nummer);
             pstmt.setString(4, name);
-            pstmt.setBigDecimal(5, mengeDecimal);
+            pstmt.setBigDecimal(5, menge);
             pstmt.setString(6, barcode);
             pstmt.setString(7, herkunft);
             pstmtSetInteger(pstmt, 8, vpe);

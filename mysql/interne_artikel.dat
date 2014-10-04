@@ -1,11 +1,11 @@
-	Manueller Rabatt	RABATT	\N	\N	\N	1	2	\N	\N	\N	1	1
-	Rabatt auf Rechnung	RABATT	\N	\N	\N	1	2	\N	\N	\N	1	1
-	Gutschein	GUTSCHEIN	\N	\N	\N	1	6	\N	\N	\N	1	1
-	Pfand 0,08 €	PFAND	\N	0.08	0.08	1	7	\N	\N	\N	1	0
-	Pfand 0,15 €	PFAND	\N	0.15	0.15	1	7	\N	\N	\N	1	0
-	Pfand 0,25 €	PFAND	\N	0.25	0.25	1	7	\N	\N	\N	1	0
-	Pfand Kiste	PFAND	\N	1.50	1.50	1	7	\N	\N	\N	1	0
-	Pfand Cola-Kiste	PFAND	\N	3.18	3.18	1	7	\N	\N	\N	1	0
-	Pfand Kaffee-Eimer	PFAND	\N	2.60	2.60	1	7	\N	\N	\N	1	0
-	Sonstiges Variabler Preis 7% MwSt	SONSTIGES	\N	\N	\N	1	10	\N	\N	\N	1	1
-	Sonstiges Variabler Preis 19% MwSt	SONSTIGES	\N	\N	\N	1	11	\N	\N	\N	1	1
+	2	1	RABATT1	Manueller Rabatt	\N	\N	\N	\N	\N	\N	1	1	\N	\N	\N	1
+	2	1	RABATT2	Rabatt auf Rechnung	\N	\N	\N	\N	\N	\N	1	1	\N	\N	\N	1
+	6	1	GUTSCHEIN	Gutschein	\N	\N	\N	\N	\N	\N	1	1	\N	\N	\N	1
+	7	1	PFAND1	Pfand 0,08 €	1	\N	\N	\N	0.08	0.08	0	1	\N	\N	\N	1
+	7	1	PFAND2	Pfand 0,15 €	1	\N	\N	\N	0.15	0.15	0	1	\N	\N	\N	1
+	7	1	PFAND3	Pfand 0,25 €	1	\N	\N	\N	0.25	0.25	0	1	\N	\N	\N	1
+	7	1	PFAND4	Pfand Kiste	1	\N	\N	\N	1.50	1.50	0	1	\N	\N	\N	1
+	7	1	PFAND5	Pfand Cola-Kiste	1	\N	\N	\N	3.18	3.18	0	1	\N	\N	\N	1
+	7	1	PFAND6	Pfand Kaffee-Eimer	1	\N	\N	\N	2.60	2.60	0	1	\N	\N	\N	1
+	10	1	SONSTIGES1	Sonstiges Variabler Preis 7% MwSt	\N	\N	\N	\N	\N	\N	1	1	\N	\N	\N	1
+	11	1	SONSTIGES2	Sonstiges Variabler Preis 19% MwSt	\N	\N	\N	\N	\N	\N	1	1	\N	\N	\N	1

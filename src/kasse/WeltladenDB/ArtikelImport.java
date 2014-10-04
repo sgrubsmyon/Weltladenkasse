@@ -87,8 +87,8 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
     void showHeader() {
         headerPanel = new JPanel();
 	headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
-        headerPanel.setMinimumSize(minLogDimension);
-        headerPanel.setPreferredSize(prefLogDimension);
+        //headerPanel.setMinimumSize(minLogDimension);
+        //headerPanel.setPreferredSize(prefLogDimension);
 
         fc = new JFileChooser();
 
@@ -120,23 +120,25 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
         JScrollPane logScrollPane = new JScrollPane(log);
         logScrollPane.setBorder(BorderFactory.createTitledBorder("Log"));
         //logScrollPane.setBorder( BorderFactory.createEmptyBorder(5,5,5,5) );
-        logScrollPane.setMinimumSize(minLogDimension);
-        logScrollPane.setPreferredSize(prefLogDimension);
+        //logScrollPane.setMinimumSize(minLogDimension);
+        //logScrollPane.setPreferredSize(prefLogDimension);
         //logPanel.add(logScrollPane);
         //headerPanel.add(logPanel);
         //
         headerPanel.add(logScrollPane);
+
+        allPanel.add(headerPanel);
     }
 
     void showMiddle() {
         artikelNeu.showTable(allPanel);
 
-        splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                headerPanel,
-                artikelNeu.tablePanel);
-        splitPane.setOneTouchExpandable(true);
-        splitPane.setResizeWeight(0.3);
-        allPanel.add(splitPane);
+        //splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+        //        headerPanel,
+        //        artikelNeu.tablePanel);
+        //splitPane.setOneTouchExpandable(true);
+        //splitPane.setResizeWeight(0.3);
+        //allPanel.add(splitPane);
     }
 
     void showFooter() {
@@ -280,41 +282,41 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
             // ^ ignore first line with table header (column labels)
             int lineCount = rowIndex+1;
 
-            String gruppenname = (String)sheet.getValueAt(0, rowIndex);
+            String gruppenname = sheet.getValueAt(0, rowIndex).toString();
             if (gruppenname.length() == 0){
                 logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 1: Keine Produktgruppe).</div>\n";
                 log.setText(logString+logStringEnd);
                 continue;
             }
-            String lieferant = (String)sheet.getValueAt(1, rowIndex);
+            String lieferant = sheet.getValueAt(1, rowIndex).toString();
             if (lieferant.length() == 0){ lieferant = "unbekannt"; }
-            String nummer = (String)sheet.getValueAt(2, rowIndex);
+            String nummer = sheet.getValueAt(2, rowIndex).toString();
             if ( nummer.length() == 0 ){
                 logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 3: Keine Artikelnummer).</div>\n";
                 log.setText(logString+logStringEnd);
                 continue;
             }
-            String name = (String)sheet.getValueAt(3, rowIndex);
+            String name = sheet.getValueAt(3, rowIndex).toString();
             if ( name.length() == 0 ){
                 logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 4: Kein Artikelname).</div>\n";
                 log.setText(logString+logStringEnd);
                 continue;
             }
-            String menge = (String)sheet.getValueAt(4, rowIndex);
+            String menge = sheet.getValueAt(4, rowIndex).toString();
             if (menge.length() == 0){ menge = "NULL"; }
-            String barcode = (String)sheet.getValueAt(5, rowIndex);
+            String barcode = sheet.getValueAt(5, rowIndex).toString();
             if (barcode.length() == 0){ barcode = "NULL"; }
-            String herkunft = (String)sheet.getValueAt(6, rowIndex);
+            String herkunft = sheet.getValueAt(6, rowIndex).toString();
             if (herkunft.length() == 0){ herkunft = "NULL"; }
-            String vpe = (String)sheet.getValueAt(7, rowIndex);
+            String vpe = sheet.getValueAt(7, rowIndex).toString();
             if (vpe.length() == 0){ vpe = "NULL"; }
-            String vkpreis = (String)sheet.getValueAt(8, rowIndex);
+            String vkpreis = sheet.getValueAt(8, rowIndex).toString();
             if (vkpreis.length() == 0){ vkpreis = "NULL"; }
-            String ekpreis = (String)sheet.getValueAt(9, rowIndex);
+            String ekpreis = sheet.getValueAt(9, rowIndex).toString();
             if (ekpreis.length() == 0){ ekpreis = "NULL"; }
-            String variabel = (String)sheet.getValueAt(10, rowIndex);
+            String variabel = sheet.getValueAt(10, rowIndex).toString();
             if (variabel.length() == 0){ variabel = "false"; }
-            String sortiment = (String)sheet.getValueAt(11, rowIndex);
+            String sortiment = sheet.getValueAt(11, rowIndex).toString();
             if (sortiment.length() == 0){ sortiment = "false"; }
 
             System.out.println(lineCount+" "+gruppenname+" "+name);
@@ -325,6 +327,23 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                 logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte A: Produktgruppe unbekannt).</div>\n";
                 log.setText(logString+logStringEnd);
                 continue;
+            }
+            Integer lieferantid = queryLieferantID(lieferant);
+            if (lieferantid == null){
+                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte B: Lieferant unbekannt).</div>\n";
+                log.setText(logString+logStringEnd);
+                continue;
+            }
+            BigDecimal mengeDecimal = null;
+            if (!menge.equals("NULL")){
+                try {
+                    mengeDecimal = new BigDecimal( menge.replace(',', '.') );
+                    menge = mengeDecimal.toString();
+                } catch (NumberFormatException ex) {
+                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte E: 'Menge').</div>\n";
+                    log.setText(logString+logStringEnd);
+                    continue;
+                }
             }
             if ( !variabel.equalsIgnoreCase("true") && !variabel.equalsIgnoreCase("false") &&
                     !variabel.equalsIgnoreCase("yes") && !variabel.equalsIgnoreCase("no") &&
@@ -375,12 +394,6 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                 sortiment = "1";
             } else {
                 sortiment = "0";
-            }
-            Integer lieferantid = queryLieferantID(lieferant);
-            if (lieferantid == null){
-                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte B: Lieferant unbekannt).</div>\n";
-                log.setText(logString+logStringEnd);
-                continue;
             }
             Integer vpeInt = null;
             if (!vpe.equals("NULL")){
@@ -437,7 +450,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                 artikelNeu.lieferanten.add(lieferant);
                 artikelNeu.artikelNummern.add(nummer);
                 artikelNeu.artikelNamen.add(name);
-                artikelNeu.mengen.add(menge);
+                artikelNeu.mengen.add(mengeDecimal);
                 artikelNeu.barcodes.add(barcode);
                 artikelNeu.herkuenfte.add(herkunft);
                 artikelNeu.vpes.add(vpeInt);
@@ -454,7 +467,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                     row.add(lieferant);
                     row.add(nummer);
                     row.add(name);
-                    row.add( menge == "NULL" ? "" : menge );
+                    row.add( menge == "NULL" ? "" : menge.replace('.',',') );
                     row.add( barcode == "NULL" ? "" : barcode );
                     row.add( herkunft.equals("NULL") ? "" : herkunft );
                     row.add( vpe.equals("NULL") ? "" : vpe );
@@ -466,17 +479,17 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                 artikelNeu.data.add(row);
             }
             if (itemAlreadyKnown == 0){
-                //logString += "<div style=\""+baseStyle+"\">Artikel \""+ name + "\" wird hinzugefügt.</div>\n";
+                //logString += "<div style=\""+baseStyle+"\">Artikel \""+ name + "\" von "+lieferant+" mit Nr. "+nummer+" wird hinzugefügt.</div>\n";
                 //log.setText(logString+logStringEnd);
                 log.updateUI();
             }
             else if (itemAlreadyKnown == 2){ // item already in table
-                logString += "<div style=\""+redStyle+"\">Artikel \""+ name + "\" wird nicht erneut hinzugefügt/verändert.</div>\n";
+                logString += "<div style=\""+redStyle+"\">Artikel \""+ name + "\" von "+lieferant+" mit Nr. "+nummer+" wird nicht erneut hinzugefügt/verändert.</div>\n";
                 log.setText(logString+logStringEnd);
                 log.updateUI();
             }
             else if (itemChanged){
-                logString += "<div style=\""+baseStyle+"\">Artikel \""+ name + "\" wird verändert.</div>\n";
+                logString += "<div style=\""+baseStyle+"\">Artikel \""+ name + "\" von "+lieferant+" mit Nr. "+nummer+" wird verändert.</div>\n";
                 log.setText(logString+logStringEnd);
                 log.updateUI();
             }

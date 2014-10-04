@@ -42,8 +42,6 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
     protected JCheckBox aktivBox;
     protected JButton submitButton;
 
-    private CurrencyDocumentFilter geldFilter = new CurrencyDocumentFilter();
-
     // Methoden:
     public ArtikelBearbeiten(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia,
             Vector< Vector<Object> > origData,
@@ -358,9 +356,14 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
             String origName = (String)originalData.get(i).get(3);
             String newName = artikelFormular.nameField.isEnabled() ?
                 artikelFormular.nameField.getText() : origName;
-            String menge = artikelFormular.mengeField.isEnabled() ?
-                artikelFormular.mengeField.getText() :
-                (String)originalData.get(i).get(4);
+            BigDecimal menge = null;
+            try {
+                menge = artikelFormular.mengeField.isEnabled() ?
+                    new BigDecimal( artikelFormular.mengeField.getText().replace(',', '.') ) :
+                    new BigDecimal( ((String)originalData.get(i).get(7)).replace(',', '.') );
+            } catch (NumberFormatException ex) {
+                menge = null;
+            }
             String barcode = artikelFormular.barcodeField.isEnabled() ?
                 artikelFormular.barcodeField.getText() :
                 (String)originalData.get(i).get(5);
