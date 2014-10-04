@@ -2,6 +2,7 @@ package WeltladenDB;
 
 // Basic Java stuff:
 import java.util.*; // for Vector, Collections
+import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -41,7 +42,7 @@ public class ArtikelNeu extends WindowContent
     public Vector<String> lieferanten;
     public Vector<String> artikelNummern;
     public Vector<String> artikelNamen;
-    public Vector<String> mengen;
+    public Vector<BigDecimal> mengen;
     public Vector<String> barcodes;
     public Vector<String> herkuenfte;
     public Vector<Integer> vpes;
@@ -82,7 +83,7 @@ public class ArtikelNeu extends WindowContent
         lieferanten = new Vector<String>();
         artikelNummern = new Vector<String>();
         artikelNamen = new Vector<String>();
-        mengen = new Vector<String>();
+        mengen = new Vector<BigDecimal>();
         barcodes = new Vector<String>();
         herkuenfte = new Vector<String>();
         vpes = new Vector<Integer>();
@@ -202,7 +203,7 @@ public class ArtikelNeu extends WindowContent
                 int result = setItemInactive(selLieferantIDs.get(i), artikelNummern.get(i));
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Artikel "+artikelNamen.get(i)+" von "+lieferanten.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht geändert werden.",
+                            "Fehler: Artikel \""+artikelNamen.get(i)+"\" von "+lieferanten.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht geändert werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                     continue; // don't insert this new item, continue with next
                 }
@@ -215,17 +216,17 @@ public class ArtikelNeu extends WindowContent
             if (result == 0){
                 if (itemChanged){
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Artikel "+artikelNamen.get(i)+" von "+lieferanten.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht geändert werden.",
+                            "Fehler: Artikel \""+artikelNamen.get(i)+"\" von "+lieferanten.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht geändert werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                     result = setItemActive(selLieferantIDs.get(i), artikelNummern.get(i));
                     if (result == 0){
                         JOptionPane.showMessageDialog(this,
-                                "Fehler: Artikel "+artikelNamen.get(i)+" von "+lieferanten.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht wieder hergestellt werden. Artikel ist nun gelöscht (inaktiv).",
+                                "Fehler: Artikel \""+artikelNamen.get(i)+"\" von "+lieferanten.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht wieder hergestellt werden. Artikel ist nun gelöscht (inaktiv).",
                                 "Fehler", JOptionPane.ERROR_MESSAGE);
                     }
                 } else {
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Artikel "+artikelNamen.get(i)+" von "+lieferanten.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht in DB gespeichert werden.",
+                            "Fehler: Artikel \""+artikelNamen.get(i)+"\" von "+lieferanten.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht in DB gespeichert werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }

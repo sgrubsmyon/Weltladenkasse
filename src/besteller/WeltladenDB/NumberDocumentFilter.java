@@ -19,7 +19,7 @@ class NumberDocumentFilter extends DocumentFilter {
             return true;
         }
         try {
-            BigDecimal bd = new BigDecimal(text.replace(',', '.');
+            BigDecimal bd = new BigDecimal(text.replace(',', '.'));
             if (bd.signum() > 0 && bd.scale() <= decimalPlaces &&
                     bd.precision() <= numberOfPlaces){
                 return true;

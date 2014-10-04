@@ -2,19 +2,26 @@
 
 cd `dirname $0`
 
+if [ -n "$1" ]; then
+    root_pwd=$1
+fi
+
 # Check if users already exist
 echo "Checking if users/db already exist..."
 while : ; do
-    echo -n "Enter MySQL root password: "
-    exists=$(mysql -h localhost -u root -p --skip-column-names --execute="
-    SELECT EXISTS (SELECT User FROM mysql.user WHERE User = 'kassenadmin'), 
+    if [ -z "$root_pwd" ]; then
+        read -s -p "Enter MySQL root password: " root_pwd; echo
+    fi
+    exists=$(mysql -h localhost -u root -p$root_pwd --skip-column-names --execute="
+    SELECT EXISTS (SELECT User FROM mysql.user WHERE User = 'kassenadmin'),
     EXISTS (SELECT User FROM mysql.user WHERE User = 'mitarbeiter'),
     COUNT(SCHEMA_NAME) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = 'kasse';"
     )
-    if [[ $? -eq 0 ]]; then 
+    if [[ $? -eq 0 ]]; then
         break
     else
         echo "Wrong password. Try again."
+        root_pwd=""
     fi
 done
 admin_exists=${exists:0:1}
@@ -45,17 +52,18 @@ echo ""
 while : ; do
     read -s -p "Enter new admin password for MySQL user 'kassenadmin': " admin_pwd_1; echo
     read -s -p "Enter password again: " admin_pwd_2; echo
-    if [[ "$admin_pwd_1" == "$admin_pwd_2" ]]; then 
+    if [[ "$admin_pwd_1" == "$admin_pwd_2" ]]; then
         break
     else
         echo "Passwords do not match. Try again."
     fi
 done
 admin_pwd=$admin_pwd_1
+echo ""
 while : ; do
     read -s -p "Enter new user password for MySQL user 'mitarbeiter': " mitar_pwd_1; echo
     read -s -p "Enter password again: " mitar_pwd_2; echo
-    if [[ "$mitar_pwd_1" == "$mitar_pwd_2" ]]; then 
+    if [[ "$mitar_pwd_1" == "$mitar_pwd_2" ]]; then
         break
     else
         echo "Passwords do not match. Try again."
@@ -67,8 +75,7 @@ mitar_pwd=$mitar_pwd_1
 # create DB, grant access rights, and create tables
 echo ""
 echo "Will now create the MySQL users and the database..."
-echo -n "Enter MySQL root password: "
-mysql --local-infile -h localhost -u root -p --execute="
+mysql --local-infile -h localhost -u root -p$root_pwd --execute="
 GRANT USAGE ON *.* TO 'kassenadmin'@'localhost';
 GRANT USAGE ON *.* TO 'mitarbeiter'@'localhost';
 DROP USER 'kassenadmin'@'localhost';
