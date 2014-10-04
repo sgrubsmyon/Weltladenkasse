@@ -90,9 +90,11 @@ public class ArtikelExport extends WindowContent {
         // table header
         final Vector<String> columns = new Vector<String>();
             columns.add("Produktgruppe"); columns.add("Lieferant");
-            columns.add("Art.-Nr."); columns.add("Artikelname"); columns.add("Barcode");
-            columns.add("Herkunft"); columns.add("VPE");
-            columns.add("VK-Preis"); columns.add("EK-Preis"); columns.add("Variabel");
+            columns.add("Artikelnummer"); columns.add("Bezeichnung | Einheit");
+            columns.add("Menge (kg/l/Stk.)"); columns.add("Barcode");
+            columns.add("Herkunftsland"); columns.add("VPE");
+            columns.add("VK-Preis"); columns.add("EK-Preis");
+            columns.add("Variabel"); columns.add("Sortiment");
         // table rows
         final Vector< Vector<Object> > data = new Vector< Vector<Object> >();
         for (int i=0; i<artikelListe.originalData.size(); i++){
@@ -100,27 +102,54 @@ public class ArtikelExport extends WindowContent {
                 // skip deactivated articles
                 continue;
             }
-            String produktgruppe = (String)artikelListe.originalData.get(i).get(0);
-            String name = (String)artikelListe.originalData.get(i).get(1);
-            String nummer = (String)artikelListe.originalData.get(i).get(2);
-            String barcode = (String)artikelListe.originalData.get(i).get(3);
+            String produktgruppe = artikelListe.originalData.get(i).get(0).toString();
+            String lieferant = artikelListe.originalData.get(i).get(1).toString();
+            String nummer = artikelListe.originalData.get(i).get(2).toString();
+            String name = artikelListe.originalData.get(i).get(3).toString();
+            BigDecimal menge;
+            try {
+                menge = new BigDecimal(
+                        artikelListe.originalData.get(i).get(4).toString().replace(',','.') );
+            } catch (NumberFormatException ex) {
+                menge = null;
+            }
+            String barcode = artikelListe.originalData.get(i).get(5).toString();
+            String herkunft = artikelListe.originalData.get(i).get(6).toString();
+            Integer vpe;
+            try {
+                vpe = Integer.parseInt( artikelListe.originalData.get(i).get(7).toString() );
+            } catch (NumberFormatException ex) {
+                vpe = null;
+            }
             Boolean var = artikelListe.varPreisBools.get(i);
-            String vkp = var ? "" : (String)artikelListe.originalData.get(i).get(4);
-            String ekp = var ? "" : (String)artikelListe.originalData.get(i).get(5);
+            BigDecimal vkp = null;
+            BigDecimal ekp = null;
+            if (!var){
+                try {
+                    vkp = new BigDecimal(
+                            priceFormatterIntern(artikelListe.originalData.get(i).get(8).toString()));
+                } catch (NumberFormatException ex) {
+                    vkp = null;
+                }
+                try {
+                    ekp = new BigDecimal(
+                            priceFormatterIntern(artikelListe.originalData.get(i).get(9).toString()));
+                } catch (NumberFormatException ex) {
+                    ekp = null;
+                }
+            }
             String varStr = var ? "Ja" : "Nein";
-            String vpe = (String)artikelListe.originalData.get(i).get(6);
-            String lieferant = (String)artikelListe.originalData.get(i).get(10);
-            String herkunft = (String)artikelListe.originalData.get(i).get(11);
+            String sortimentStr = artikelListe.sortimentBools.get(i) ? "Ja" : "Nein";
 
             Vector<Object> row = new Vector<Object>();
-                row.add(produktgruppe); row.add(lieferant);
-                row.add(nummer); row.add(name); row.add(barcode);
-                row.add(herkunft); row.add(vpe);
-                row.add(vkp); row.add(ekp); row.add(varStr);
+                row.add(produktgruppe); row.add(lieferant); row.add(nummer);
+                row.add(name); row.add(menge); row.add(barcode);
+                row.add(herkunft); row.add(vpe); row.add(vkp); row.add(ekp);
+                row.add(varStr); row.add(sortimentStr);
             data.add(row);
         }
 
-        TableModel model = new DefaultTableModel(data, columns);  
+        TableModel model = new DefaultTableModel(data, columns);
 
         try {
             // Save the data to an ODS file and open it.
@@ -134,59 +163,6 @@ public class ArtikelExport extends WindowContent {
             ex.printStackTrace();
         }
     }
-
-    /*
-    void writeCSVToFile(File file) {
-        // format of csv file:
-        String fileStr = "";
-        fileStr += "#Produktgruppe;Artikelname;Art.-Nr.;Barcode;VK-Preis;EK-Preis;Variabel;VPE;Lieferant;Herkunft"+lineSep;
-        for (int i=0; i<artikelListe.originalData.size(); i++){
-            String produktgruppe = (String)artikelListe.originalData.get(i).get(3);
-            String lieferant = (String)artikelListe.originalData.get(i).get(10);
-            String nummer = (String)artikelListe.originalData.get(i).get(1);
-            String name = (String)artikelListe.originalData.get(i).get(0);
-            String barcode = (String)artikelListe.originalData.get(i).get(2);
-            String herkunft = (String)artikelListe.originalData.get(i).get(11);
-            String vpe = (String)artikelListe.originalData.get(i).get(6);
-            Boolean var = artikelListe.varPreisBools.get(i);
-            String varStr = var ? "Ja" : "Nein";
-            String vkp = var ? "" : (String)artikelListe.originalData.get(i).get(4);
-            String ekp = var ? "" : (String)artikelListe.originalData.get(i).get(5);
-
-            fileStr += produktgruppe + delimiter;
-            fileStr += lieferant + delimiter;
-            fileStr += nummer + delimiter;
-            fileStr += name + delimiter;
-            fileStr += barcode + delimiter;
-            fileStr += herkunft + delimiter;
-            fileStr += vpe + delimiter;
-            fileStr += vkp + delimiter;
-            fileStr += ekp + delimiter;
-            fileStr += varStr + lineSep;
-        }
-
-        System.out.println(fileStr);
-
-        BufferedWriter writer = null;
-        try {
-            writer = new BufferedWriter(new FileWriter(file));
-            writer.write(fileStr);
-        } catch (Exception ex) {
-            System.out.println("Error writing to file " + file.getName());
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        } finally {
-            try {
-                // Close the writer regardless of what happens...
-                writer.close();
-            } catch (Exception ex) {
-                System.out.println("Error closing file " + file.getName());
-                System.out.println("Exception: " + ex.getMessage());
-                ex.printStackTrace();
-            }
-        }
-    }
-    */
 
     /**
      *    * Each non abstract class that implements the ActionListener
