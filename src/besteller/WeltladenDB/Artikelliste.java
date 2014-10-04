@@ -252,7 +252,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                         "SELECT produktgruppen_id, lieferant_id, variabler_preis FROM artikel "+
                         "LEFT JOIN lieferant USING (lieferant_id) WHERE "+
                         "lieferant_name = ? AND "+
-                        "artikel_nr = ? AND aktiv = TRUE"
+                        "artikel_nr = ? AND artikel.aktiv = TRUE"
                         );
                 pstmt.setString(1, editLieferant.get(index));
                 pstmt.setString(2, editArtikelNummer.get(index));
@@ -425,7 +425,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     }
                     else if (
                             header.equals("Nummer") || header.equals("Name") ||
-                            header.equals("Menge") || header.equals("Barcode") || 
+                            header.equals("Menge") || header.equals("Barcode") ||
                             header.equals("Herkunft") || header.equals("VPE") ||
                             header.equals("Sortiment") || header.equals("Aktiv")
                             ){

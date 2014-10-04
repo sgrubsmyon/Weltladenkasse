@@ -119,20 +119,24 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
         };
 
         artikelFormular.produktgruppenBox.addActionListener(this);
-        artikelFormular.nameField.getDocument().addDocumentListener(this);
-        artikelFormular.nameField.addKeyListener(enterAdapter);
+        artikelFormular.lieferantBox.addActionListener(this);
         artikelFormular.nummerField.getDocument().addDocumentListener(this);
         artikelFormular.nummerField.addKeyListener(enterAdapter);
+        artikelFormular.nameField.getDocument().addDocumentListener(this);
+        artikelFormular.nameField.addKeyListener(enterAdapter);
+        artikelFormular.mengeField.getDocument().addDocumentListener(this);
+        artikelFormular.mengeField.addKeyListener(enterAdapter);
         artikelFormular.barcodeField.getDocument().addDocumentListener(this);
         artikelFormular.barcodeField.addKeyListener(enterAdapter);
+        artikelFormular.herkunftField.getDocument().addDocumentListener(this);
+        artikelFormular.herkunftField.addKeyListener(enterAdapter);
+        artikelFormular.vpeSpinner.addChangeListener(this);
         artikelFormular.vkpreisField.addKeyListener(enterAdapter);
         artikelFormular.vkpreisField.getDocument().addDocumentListener(this);
         artikelFormular.ekpreisField.addKeyListener(enterAdapter);
         artikelFormular.ekpreisField.getDocument().addDocumentListener(this);
         artikelFormular.preisVariabelBox.addItemListener(this);
-        artikelFormular.lieferantBox.addActionListener(this);
-        artikelFormular.herkunftField.getDocument().addDocumentListener(this);
-        artikelFormular.herkunftField.addKeyListener(enterAdapter);
+        artikelFormular.sortimentBox.addItemListener(this);
     }
 
     void showMiddle() {
@@ -175,17 +179,16 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
         artikelNeu.emptyTable();
     }
 
-    public int checkIfItemAlreadyKnown(String name, String nummer) {
-        return artikelNeu.checkIfItemAlreadyKnown(name, nummer);
+    public int checkIfItemAlreadyKnown(String lieferant, String nummer) {
+        return artikelNeu.checkIfItemAlreadyKnown(lieferant, nummer);
     }
 
     protected int hinzufuegen() {
-        String name = artikelFormular.nameField.getText();
+        Integer prodgrID = artikelFormular.produktgruppenIDs.get(artikelFormular.produktgruppenBox.getSelectedIndex());
+        Integer lieferantID = artikelFormular.lieferantIDs.get(artikelFormular.lieferantBox.getSelectedIndex());
+        String lieferant = artikelFormular.lieferantBox.getSelectedItem();
         String nummer = artikelFormular.nummerField.getText();
-        String barcodeDisplay = artikelFormular.barcodeField.getText();
-        String barcode = barcodeDisplay;
-        if (barcodeDisplay.length() == 0){ barcode = "NULL"; }
-        int itemAlreadyKnown = checkIfItemAlreadyKnown(name, nummer);
+        int itemAlreadyKnown = checkIfItemAlreadyKnown(lieferant, nummer);
         if (itemAlreadyKnown == 1){
             JOptionPane.showMessageDialog(this,
                     "Ein Artikel mit diesem Namen und dieser Nummer ist bereits in der Datenbank.\n" +
@@ -202,6 +205,13 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
                     "Fehler", JOptionPane.ERROR_MESSAGE);
             return 1;
         }
+        String name = artikelFormular.nameField.getText();
+        String barcodeDisplay = artikelFormular.barcodeField.getText();
+        String barcode = barcodeDisplay;
+        if (barcodeDisplay.length() == 0){ barcode = "NULL"; }
+        /*** CONTINUE HERE ***/
+        artikelNeu.selLieferantIDs.add(lieferantID);
+        artikelNeu.selProduktgruppenIDs.add(prodgrID);
         artikelNeu.artikelNamen.add(name);
         artikelNeu.artikelNummern.add(nummer);
         artikelNeu.barcodes.add(barcode);
@@ -220,8 +230,6 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
         Integer vpeInteger = (Integer)artikelFormular.vpeSpinner.getValue();
         vpeInteger = vpeInteger == 0 ? null : vpeInteger;
         artikelNeu.vpes.add(vpeInteger);
-        artikelNeu.selLieferantIDs.add( artikelFormular.lieferantIDs.get(artikelFormular.lieferantBox.getSelectedIndex()) );
-        artikelNeu.selProduktgruppenIDs.add( artikelFormular.produktgruppenIDs.get(artikelFormular.produktgruppenBox.getSelectedIndex()) );
         artikelNeu.herkuenfte.add(artikelFormular.herkunftField.getText());
         artikelNeu.removeButtons.add(new JButton("-"));
         artikelNeu.removeButtons.lastElement().addActionListener(this);
@@ -240,17 +248,17 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
         artikelNeu.colorMatrix.add(colors);
 
         Vector<Object> row = new Vector<Object>();
-        row.add((String)artikelFormular.produktgruppenBox.getSelectedItem());
-        row.add(name);
-        row.add(artikelNeu.artikelNummern.lastElement());
-        row.add(barcodeDisplay);
-        String le = artikelNeu.vkPreise.lastElement(); row.add( le.equals("NULL") ? "" : le.replace('.',',')+" "+currencySymbol );
-        le = artikelNeu.ekPreise.lastElement(); row.add( le.equals("NULL") ? "" : le.replace('.',',')+" "+currencySymbol );
-        row.add( artikelNeu.variablePreise.lastElement() );
-        row.add( vpeInteger == null ? "" : vpeInteger.toString() );
-        row.add((String)artikelFormular.lieferantBox.getSelectedItem());
-        row.add(artikelNeu.herkuenfte.lastElement());
-        row.add(artikelNeu.removeButtons.lastElement());
+            row.add((String)artikelFormular.produktgruppenBox.getSelectedItem());
+            row.add(name);
+            row.add(artikelNeu.artikelNummern.lastElement());
+            row.add(barcodeDisplay);
+            String le = artikelNeu.vkPreise.lastElement(); row.add( le.equals("NULL") ? "" : le.replace('.',',')+" "+currencySymbol );
+            le = artikelNeu.ekPreise.lastElement(); row.add( le.equals("NULL") ? "" : le.replace('.',',')+" "+currencySymbol );
+            row.add( artikelNeu.variablePreise.lastElement() );
+            row.add( vpeInteger == null ? "" : vpeInteger.toString() );
+            row.add((String)artikelFormular.lieferantBox.getSelectedItem());
+            row.add(artikelNeu.herkuenfte.lastElement());
+            row.add(artikelNeu.removeButtons.lastElement());
         artikelNeu.data.add(row);
         return 0;
     }
