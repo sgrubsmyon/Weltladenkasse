@@ -278,15 +278,21 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
             return;
         }
 
+        int emptyLineCount = 0;
         for (int rowIndex = 1; rowIndex<sheet.getRowCount(); rowIndex++) {
             // ^ ignore first line with table header (column labels)
+            if (emptyLineCount >= 10) break; // don't do an endless loop, stop after 10 empty lines
             int lineCount = rowIndex+1;
+            System.out.println(lineCount);
 
             String gruppenname = sheet.getValueAt(0, rowIndex).toString();
             if (gruppenname.length() == 0){
+                emptyLineCount++;
                 logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte 1: Keine Produktgruppe).</div>\n";
                 log.setText(logString+logStringEnd);
                 continue;
+            } else {
+                emptyLineCount = 0;
             }
             String lieferant = sheet.getValueAt(1, rowIndex).toString();
             if (lieferant.length() == 0){ lieferant = "unbekannt"; }
@@ -494,6 +500,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                 log.updateUI();
             }
         }
+        System.out.println("Datei " + file.getName() + " wurde komplett eingelesen.");
         logString += "<div style=\""+baseStyle+"\">Datei " + file.getName() + " wurde komplett eingelesen.</div>\n";
     }
 
