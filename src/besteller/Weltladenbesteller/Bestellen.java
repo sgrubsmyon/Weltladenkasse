@@ -811,9 +811,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         if (vpe > 0){
             Integer vpes = (Integer)vpeSpinner.getValue();
             Integer stueck = new Integer(vpes*vpe);
-            String stueckStr = stueck.toString();
             this.vpeOrAnzahlIsChanged = true;
-            //anzahlField.setText(stueckStr);
             anzahlSpinner.setValue(stueck);
             this.vpeOrAnzahlIsChanged = false;
         }
@@ -822,9 +820,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private void updateVPESpinner(Integer vpe) {
         if (vpe > 0){
             Integer stueck = (Integer)anzahlSpinner.getValue();
-            String vpes = (new Integer(stueck/vpe)).toString();
+            Integer vpes = new Integer(stueck/vpe);
             this.vpeOrAnzahlIsChanged = true;
-            vpeSpinnerField.setText(vpes);
+            vpeSpinner.setValue(vpes);
             this.vpeOrAnzahlIsChanged = false;
         }
     }
