@@ -807,11 +807,14 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     }
 
     private void updateAnzahlSpinner(Integer vpe) {
+        System.out.println("updateAnzahlSpinner: "+vpe);
         if (vpe > 0){
             Integer vpes = (Integer)vpeSpinner.getValue();
-            String stueck = (new Integer(vpes*vpe)).toString();
+            Integer stueck = new Integer(vpes*vpe);
+            String stueckStr = stueck.toString();
             this.vpeOrAnzahlIsChanged = true;
-            anzahlField.setText(stueck);
+            //anzahlField.setText(stueckStr);
+            anzahlSpinner.setValue(stueck);
             this.vpeOrAnzahlIsChanged = false;
         }
     }
