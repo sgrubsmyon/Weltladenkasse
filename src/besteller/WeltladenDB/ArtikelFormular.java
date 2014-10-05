@@ -79,9 +79,9 @@ public class ArtikelFormular extends WindowContent
             while (rs.next()) {
                 Integer id = rs.getInt(1);
                 Vector<Integer> ids = new Vector<Integer>();
-                ids.add(rs.getInt(2));
-                ids.add(rs.getInt(3));
-                ids.add(rs.getInt(4));
+                ids.add( rs.getString(2) == null ? null : rs.getInt(2) );
+                ids.add( rs.getString(3) == null ? null : rs.getInt(3) );
+                ids.add( rs.getString(4) == null ? null : rs.getInt(4) );
                 String name = rs.getString(5);
 
                 produktgruppenIDs.add(id);
