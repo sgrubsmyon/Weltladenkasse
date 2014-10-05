@@ -32,11 +32,10 @@ import javax.swing.event.*; // for DocumentListener
 import javax.swing.text.*; // for DocumentFilter
 
 public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
-    implements ArtikelNeuInterface, ArtikelFormularInterface, DocumentListener, ItemListener {
+    implements ArtikelNeuInterface, ArtikelFormularInterface, DocumentListener, ItemListener, ChangeListener {
     // Attribute:
     protected ArtikelNeu artikelNeu;
     protected ArtikelFormular artikelFormular;
-    protected UpdateTableFunctor utf;
     private Integer toplevel_id;
     private Integer sub_id;
     private Integer subsub_id;
@@ -51,7 +50,7 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
         this.toplevel_id = tid;
         this.sub_id = sid;
         this.subsub_id = ssid;
-        utf = new UpdateTableFunctor() {
+        UpdateTableFunctor utf = new UpdateTableFunctor() {
             public void updateTable() {
                 artikelNeu.updateTable(allPanel);
             }
@@ -61,10 +60,10 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
         showAll();
     }
 
-    private String retrieveGruppenID() {
-        String result = "";
+    private Integer retrieveGruppenID() {
+        Integer result = 11; // default: Sonstiges, 19% MwSt
         String subStr = this.sub_id == null ? "sub_id IS NULL" : "sub_id = ?";
-        String subsubStr = this.subsub_id == null ? "subsub_id IS NULL" : "subsub_id = ";
+        String subsubStr = this.subsub_id == null ? "subsub_id IS NULL" : "subsub_id = ?";
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT produktgruppen_id FROM produktgruppe WHERE "+
@@ -82,7 +81,11 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
             }
             ResultSet rs = pstmt.executeQuery();
             rs.next();
-            result = rs.getString(1);
+            try {
+                result = rs.getInt(1);
+            } catch (SQLException ex) {
+                result = 11; // default: Sonstiges, 19% MwSt
+            }
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
@@ -104,7 +107,7 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
         buttonPanel.add(hinzufuegenButton);
         headerPanel.add(buttonPanel);
 
-        String gruppenID = retrieveGruppenID();
+        Integer gruppenID = retrieveGruppenID();
         int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(gruppenID);
         artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
 
@@ -184,81 +187,97 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
     }
 
     protected int hinzufuegen() {
-        Integer prodgrID = artikelFormular.produktgruppenIDs.get(artikelFormular.produktgruppenBox.getSelectedIndex());
+        Integer prodgrID = artikelFormular.produktgruppenIDs.get( artikelFormular.produktgruppenBox.getSelectedIndex() );
         Integer lieferantID = artikelFormular.lieferantIDs.get(artikelFormular.lieferantBox.getSelectedIndex());
-        String lieferant = artikelFormular.lieferantBox.getSelectedItem();
+        String lieferant = artikelFormular.lieferantBox.getSelectedItem().toString();
         String nummer = artikelFormular.nummerField.getText();
         int itemAlreadyKnown = checkIfItemAlreadyKnown(lieferant, nummer);
         if (itemAlreadyKnown == 1){
             JOptionPane.showMessageDialog(this,
-                    "Ein Artikel mit diesem Namen und dieser Nummer ist bereits in der Datenbank.\n" +
-                    "Änderungen können in der Artikelliste vorgenommen werden.",
+                    "Ein Artikel mit diesem Lieferant und dieser Nummer ist bereits in der Datenbank.",
                     "Fehler", JOptionPane.ERROR_MESSAGE);
             return 1;
         }
         else if (itemAlreadyKnown == 2){
             JOptionPane.showMessageDialog(this,
-                    "Ein Artikel mit diesem Namen und dieser Nummer ist bereits in der angezeigten Tabelle.\n" +
-                    ""
-                    //"Änderungen können in der Artikelliste vorgenommen werden."
-                    ,
+                    "Ein Artikel mit diesem Lieferant und dieser Nummer ist bereits in der angezeigten Tabelle.",
                     "Fehler", JOptionPane.ERROR_MESSAGE);
             return 1;
         }
         String name = artikelFormular.nameField.getText();
-        String barcodeDisplay = artikelFormular.barcodeField.getText();
-        String barcode = barcodeDisplay;
-        if (barcodeDisplay.length() == 0){ barcode = "NULL"; }
-        /*** CONTINUE HERE ***/
-        artikelNeu.selLieferantIDs.add(lieferantID);
+        BigDecimal menge;
+        try {
+            menge = new BigDecimal(artikelFormular.mengeField.getText().replace(',','.'));
+        } catch (NumberFormatException ex) {
+            menge = null;
+        }
+        String barcode = artikelFormular.barcodeField.getText();
+        String herkunft = artikelFormular.herkunftField.getText();
+        Integer vpe = (Integer)artikelFormular.vpeSpinner.getValue();
+        vpe = vpe == 0 ? null : vpe;
+        String vkpreis = artikelFormular.vkpreisField.getText();
+        String ekpreis = artikelFormular.ekpreisField.getText();
+        Boolean var = artikelFormular.preisVariabelBox.isSelected();
+        Boolean sortiment = artikelFormular.sortimentBox.isSelected();
+
         artikelNeu.selProduktgruppenIDs.add(prodgrID);
-        artikelNeu.artikelNamen.add(name);
+        artikelNeu.selLieferantIDs.add(lieferantID);
+        artikelNeu.lieferanten.add(lieferant);
         artikelNeu.artikelNummern.add(nummer);
-        artikelNeu.barcodes.add(barcode);
-        if (artikelFormular.preisVariabelBox.isSelected()){
+        artikelNeu.artikelNamen.add(name);
+        artikelNeu.mengen.add(menge);
+        artikelNeu.barcodes.add(barcode.length() == 0 ? "NULL" : barcode);
+        artikelNeu.herkuenfte.add(herkunft);
+        artikelNeu.vpes.add(vpe);
+        if (var){
+            artikelNeu.variablePreise.add(true);
             artikelNeu.vkPreise.add("NULL");
             artikelNeu.ekPreise.add("NULL");
-            artikelNeu.variablePreise.add(true);
         } else {
-            artikelNeu.vkPreise.add( priceFormatterIntern(artikelFormular.vkpreisField.getText()) );
-            if ( artikelFormular.ekpreisField.getText().length() == 0 )
+            artikelNeu.variablePreise.add(false);
+            artikelNeu.vkPreise.add( priceFormatterIntern(vkpreis) );
+            if ( ekpreis.length() == 0 )
                 artikelNeu.ekPreise.add("NULL");
             else
-                artikelNeu.ekPreise.add( priceFormatterIntern(artikelFormular.ekpreisField.getText()) );
-            artikelNeu.variablePreise.add(false);
+                artikelNeu.ekPreise.add( priceFormatterIntern(ekpreis) );
         }
-        Integer vpeInteger = (Integer)artikelFormular.vpeSpinner.getValue();
-        vpeInteger = vpeInteger == 0 ? null : vpeInteger;
-        artikelNeu.vpes.add(vpeInteger);
-        artikelNeu.herkuenfte.add(artikelFormular.herkunftField.getText());
+        artikelNeu.sortimente.add(sortiment);
         artikelNeu.removeButtons.add(new JButton("-"));
         artikelNeu.removeButtons.lastElement().addActionListener(this);
         Vector<Color> colors = new Vector<Color>();
         colors.add(Color.black); // produktgruppe
-        colors.add(Color.black); // name
+        colors.add(Color.black); // lieferant
         colors.add(Color.black); // nummer
+        colors.add(Color.black); // name
+        colors.add(Color.black); // menge
         colors.add(Color.black); // barcode
+        colors.add(Color.black); // herkunft
+        colors.add(Color.black); // vpe
         colors.add(Color.black); // vkpreis
         colors.add(Color.black); // ekpreis
         colors.add(Color.black); // variabel
-        colors.add(Color.black); // vpe
-        colors.add(Color.black); // lieferantid
-        colors.add(Color.black); // herkunft
+        colors.add(Color.black); // sortiment
         colors.add(Color.black); // entfernen
         artikelNeu.colorMatrix.add(colors);
 
         Vector<Object> row = new Vector<Object>();
-            row.add((String)artikelFormular.produktgruppenBox.getSelectedItem());
+            row.add( artikelFormular.produktgruppenBox.getSelectedItem().toString() );
+            row.add(lieferant);
+            row.add(nummer);
             row.add(name);
-            row.add(artikelNeu.artikelNummern.lastElement());
-            row.add(barcodeDisplay);
-            String le = artikelNeu.vkPreise.lastElement(); row.add( le.equals("NULL") ? "" : le.replace('.',',')+" "+currencySymbol );
-            le = artikelNeu.ekPreise.lastElement(); row.add( le.equals("NULL") ? "" : le.replace('.',',')+" "+currencySymbol );
-            row.add( artikelNeu.variablePreise.lastElement() );
-            row.add( vpeInteger == null ? "" : vpeInteger.toString() );
-            row.add((String)artikelFormular.lieferantBox.getSelectedItem());
-            row.add(artikelNeu.herkuenfte.lastElement());
-            row.add(artikelNeu.removeButtons.lastElement());
+            row.add( menge == null ? "" : menge.toString() );
+            row.add(barcode);
+            row.add(herkunft);
+            row.add( vpe == null ? "" : vpe.toString() );
+                String vkp = priceFormatter(vkpreis);
+                if (vkp.length() > 0) vkp += " "+currencySymbol;
+                String ekp = priceFormatter(ekpreis);
+                if (ekp.length() > 0) ekp += " "+currencySymbol;
+            row.add(vkp);
+            row.add(ekp);
+            row.add(var);
+            row.add(sortiment);
+            row.add( artikelNeu.removeButtons.lastElement() );
         artikelNeu.data.add(row);
         return 0;
     }
@@ -278,6 +297,11 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
 
     public void submit() {
         artikelNeu.submit();
+    }
+
+    /** Needed for ChangeListener. */
+    public void stateChanged(ChangeEvent e) {
+        hinzufuegenButton.setEnabled( checkIfFormIsComplete() );
     }
 
     /** Needed for ItemListener. */
@@ -316,12 +340,12 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
             submit();
             artikelListe.updateAll();
             emptyTable();
-            utf.updateTable();
+            updateAll();
             return;
         }
 	if (e.getSource() == deleteButton){
             emptyTable();
-            utf.updateTable();
+            updateAll();
             return;
         }
 	if (e.getSource() == artikelFormular.produktgruppenBox){
