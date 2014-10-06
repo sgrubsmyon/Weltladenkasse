@@ -41,7 +41,7 @@ import jcalendarbutton.org.JCalendarButton;
 
 import WeltladenDB.WindowContent;
 import WeltladenDB.AnyJComponentJTable;
-import WeltladenDB.CurrencyDocumentFilter;
+import WeltladenDB.NumberDocumentFilter;
 import WeltladenDB.JComponentCellRenderer;
 import WeltladenDB.JComponentCellEditor;
 
@@ -246,7 +246,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    neuerKassenstandField.setColumns(10);
             neuerKassenstandField.setHorizontalAlignment(JTextField.RIGHT);
 	    neuerKassenstandField.getDocument().addDocumentListener(this);
-	    CurrencyDocumentFilter df = new CurrencyDocumentFilter();
+            NumberDocumentFilter df = new NumberDocumentFilter(2, 13);
 	    ((AbstractDocument)neuerKassenstandField.getDocument()).setDocumentFilter(df);
 	    neuerKassenstandLabel.setLabelFor(neuerKassenstandField);
 	    kassenstandAendernPanel.add(neuerKassenstandField);

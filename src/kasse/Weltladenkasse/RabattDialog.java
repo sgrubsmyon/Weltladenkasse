@@ -46,7 +46,7 @@ import WeltladenDB.BarcodeComboBox;
 import WeltladenDB.ArtikelNameComboBox;
 import WeltladenDB.ArtikelNummerComboBox;
 import WeltladenDB.ProduktgruppenIndentedRenderer;
-import WeltladenDB.CurrencyDocumentFilter;
+import WeltladenDB.NumberDocumentFilter;
 import WeltladenDB.BoundsPopupMenuListener;
 
 public class RabattDialog extends DialogWindow implements ChangeListener, DocumentListener, ItemListener {
@@ -445,7 +445,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                     absolutField.setColumns(10);
                     absolutField.setHorizontalAlignment(JTextField.RIGHT);
                     absolutField.getDocument().addDocumentListener(this);
-                    CurrencyDocumentFilter cdf = new CurrencyDocumentFilter();
+                    NumberDocumentFilter cdf = new NumberDocumentFilter(2, 13);
                     ((AbstractDocument)absolutField.getDocument()).setDocumentFilter(cdf);
                     absolutPanel.add(absolutField);
                     absolutPanel.add(new JLabel(currencySymbol));
