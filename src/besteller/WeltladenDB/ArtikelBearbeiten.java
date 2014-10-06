@@ -266,11 +266,19 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         }
         if ( artikelFormular.mengeField.isEnabled() ){
             String origMengeStr = originalData.get(0).get(4).toString().replace(',','.');
-            if (origMengeStr == "") origMengeStr = "0";
             String newMengeStr = artikelFormular.mengeField.getText().replace(',','.');
-            if (newMengeStr == "") newMengeStr = "0";
-            BigDecimal origMenge = new BigDecimal(origMengeStr);
-            BigDecimal newMenge = new BigDecimal(newMengeStr);
+            BigDecimal origMenge;
+            try {
+                origMenge = new BigDecimal(origMengeStr).stripTrailingZeros();
+            } catch (NumberFormatException ex) {
+                origMenge = new BigDecimal("0");
+            }
+            BigDecimal newMenge;
+            try {
+                newMenge = new BigDecimal(newMengeStr).stripTrailingZeros();
+            } catch (NumberFormatException ex) {
+                newMenge = new BigDecimal("0");
+            }
             if ( !origMenge.equals(newMenge) ){
                 return true;
             }
@@ -342,7 +350,7 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         return artikelFormular.checkIfFormIsComplete();
     }
 
-    public void submit() {
+    public int submit() {
         for (int i=0; i<originalData.size(); i++){
             String origLieferant = (String)originalData.get(i).get(1);
             Integer origLieferantID = originalLiefIDs.get(i);
@@ -355,7 +363,7 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
                 origLieferantID;
             String newNummer = artikelFormular.nummerField.isEnabled() ?
                 artikelFormular.nummerField.getText() : origNummer;
-            if (newLieferant != origLieferant || newNummer != origNummer){
+            if ( (!newLieferant.equals(origLieferant)) || (!newNummer.equals(origNummer)) ){
                 if ( isItemAlreadyKnown(newLieferant, newNummer) ){
                     // not allowed: changing name and nummer to a pair that is already registered in DB
                     JOptionPane.showMessageDialog(this,
@@ -365,7 +373,7 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
                             artikelFormular.lieferantIDs.indexOf(origLieferantID)
                             );
                     artikelFormular.nummerField.setText(origNummer);
-                    return;
+                    return 1;
                 }
             }
             Integer produktgruppen_id = artikelFormular.produktgruppenBox.isEnabled() ?
@@ -437,6 +445,7 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
                 }
             }
         }
+        return 0;
     }
 
     /** Needed for ChangeListener. */
@@ -485,9 +494,11 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
             return;
         }
 	if (e.getSource() == submitButton){
-            submit();
-            artikelListe.updateAll();
-            this.window.dispose(); // close
+            int result = submit();
+            if (result == 0){
+                artikelListe.updateAll();
+                this.window.dispose(); // close
+            }
             return;
         }
 	if (e.getSource() == closeButton){

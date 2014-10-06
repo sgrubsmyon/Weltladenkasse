@@ -163,7 +163,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 String lieferant = rs.getString(4);
                 String nr = rs.getString(5);
                 String name = rs.getString(6);
-                String menge = rs.getString(7);
+                String menge = rs.getString(7) == null ? null :
+                    rs.getBigDecimal(7).stripTrailingZeros().toPlainString();
                 String barcode = rs.getString(8);
                 String herkunft = rs.getString(9);
                 String vpe = rs.getString(10);
@@ -448,12 +449,12 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 // add custom rendering here
                 int realRowIndex = convertRowIndexToModel(row);
                 realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
-                if ( ! sortimentBools.get(realRowIndex) ){ // for articles not in sortiment
-                    c.setFont( c.getFont().deriveFont(Font.PLAIN) );
-                    c.setForeground(Color.GRAY);
-                }
-                else if ( ! activeRowBools.get(realRowIndex) ){ // for rows with inactive items
+                if ( ! activeRowBools.get(realRowIndex) ){ // for rows with inactive items
                     c.setFont( c.getFont().deriveFont(Font.ITALIC) );
+                    c.setForeground(Color.BLUE);
+                }
+                else if ( ! sortimentBools.get(realRowIndex) ){ // for articles not in sortiment
+                    c.setFont( c.getFont().deriveFont(Font.PLAIN) );
                     c.setForeground(Color.GRAY);
                 }
                 else {

@@ -189,7 +189,7 @@ public class ArtikelNeu extends WindowContent
         return exists;
     }
 
-    public void submit() {
+    public int submit() {
         for (int i=0; i<data.size(); i++){
             boolean itemChanged = false;
             for (int col=0; col<colorMatrix.get(i).size(); col++){
@@ -231,6 +231,7 @@ public class ArtikelNeu extends WindowContent
                 }
             }
         }
+        return 0;
     }
 
     public void updateTable(JPanel allPanel) {

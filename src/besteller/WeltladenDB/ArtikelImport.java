@@ -182,8 +182,8 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
         return artikelNeu.checkIfItemAlreadyKnown(lieferant, nummer);
     }
 
-    public void submit() {
-        artikelNeu.submit();
+    public int submit() {
+        return artikelNeu.submit();
     }
 
     public void emptyTable() {
