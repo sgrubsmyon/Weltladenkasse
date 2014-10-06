@@ -53,7 +53,7 @@ public class ArtikelFormular extends WindowContent
     private Vector<String> lieferantNamen;
     public Vector<Integer> lieferantIDs;
 
-    private CurrencyDocumentFilter geldFilter = new CurrencyDocumentFilter();
+    private NumberDocumentFilter geldFilter = new NumberDocumentFilter(2, 13);
     private NumberDocumentFilter numFilter = new NumberDocumentFilter(5, 8);
 
     // Methoden:

@@ -3,14 +3,14 @@ package WeltladenDB;
 import javax.swing.text.*; // for DocumentFilter, AbstractDocument, JTextComponent
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
-class NumberDocumentFilter extends DocumentFilter {
-    int decimalPlaces = 5;
-    int numberOfPlaces = 8;
+public class NumberDocumentFilter extends DocumentFilter {
+    private int scale = 5;
+    private int precision = 8;
 
-    public NumberDocumentFilter(int decPl, int numOfPl) {
+    public NumberDocumentFilter(int theScale, int thePrecision) {
         super();
-        decimalPlaces = decPl;
-        numberOfPlaces = numOfPl;
+        scale = theScale;
+        precision = thePrecision;
     }
 
     private boolean test(String text) {
@@ -20,8 +20,8 @@ class NumberDocumentFilter extends DocumentFilter {
         }
         try {
             BigDecimal bd = new BigDecimal(text.replace(',', '.'));
-            if (bd.signum() > 0 && bd.scale() <= decimalPlaces &&
-                    bd.precision() <= numberOfPlaces){
+            if (bd.signum() >= 0 && bd.scale() <= scale &&
+                    bd.precision() <= precision){
                 return true;
             } else {
                 return false;
