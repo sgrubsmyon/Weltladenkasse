@@ -37,7 +37,7 @@ import javax.swing.event.*;
 import WeltladenDB.BarcodeComboBox;
 import WeltladenDB.ArtikelNameComboBox;
 import WeltladenDB.ArtikelNummerComboBox;
-import WeltladenDB.CurrencyDocumentFilter;
+import WeltladenDB.NumberDocumentFilter;
 import WeltladenDB.JComponentCellRenderer;
 import WeltladenDB.JComponentCellEditor;
 import WeltladenDB.BoundsPopupMenuListener;
@@ -116,7 +116,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private Vector<Integer> stueckzahlen;
     private Vector<BigDecimal> einzelpreise;
 
-    private CurrencyDocumentFilter geldFilter = new CurrencyDocumentFilter();
+    private NumberDocumentFilter geldFilter = new NumberDocumentFilter(2, 13);
 
     // Methoden:
 

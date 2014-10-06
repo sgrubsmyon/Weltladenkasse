@@ -186,12 +186,12 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
             artikelFormular.preisVariabelBox.setSelected(firstVarPreis);
             if (!firstVarPreis){ // if all items have non-variable prices
                 if ( allRowsEqual(firstVKP, 8) ){
-                    artikelFormular.vkpreisField.setText(firstVKP);
+                    artikelFormular.vkpreisField.setText( priceFormatter(firstVKP) );
                 } else {
                     artikelFormular.vkpreisField.setEnabled(false);
                 }
                 if ( allRowsEqual(firstEKP, 9) ){
-                    artikelFormular.ekpreisField.setText(firstEKP);
+                    artikelFormular.ekpreisField.setText( priceFormatter(firstEKP) );
                 } else {
                     artikelFormular.ekpreisField.setEnabled(false);
                 }
@@ -240,74 +240,92 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
             Integer origGruppenID = originalProdGrIDs.get(0);
             int selProdIndex = artikelFormular.produktgruppenBox.getSelectedIndex();
             Integer selProdID = artikelFormular.produktgruppenIDs.get(selProdIndex);
-            if ( !origGruppenID.equals(selProdID) )
+            if ( !origGruppenID.equals(selProdID) ){
                 return true;
+            }
         }
         if ( artikelFormular.lieferantBox.isEnabled() ){
             Integer origLieferantID = originalLiefIDs.get(0);
             int selLiefIndex = artikelFormular.lieferantBox.getSelectedIndex();
             Integer selLiefID = artikelFormular.lieferantIDs.get(selLiefIndex);
-            if ( !origLieferantID.equals(selLiefID) )
+            if ( !origLieferantID.equals(selLiefID) ){
                 return true;
+            }
         }
         if ( artikelFormular.nummerField.isEnabled() ){
             String origNummer = (String)originalData.get(0).get(2);
-            if ( !origNummer.equals(artikelFormular.nummerField.getText()) )
+            if ( !origNummer.equals(artikelFormular.nummerField.getText()) ){
                 return true;
+            }
         }
         if ( artikelFormular.nameField.isEnabled() ){
             String origName = (String)originalData.get(0).get(3);
-            if ( !origName.equals(artikelFormular.nameField.getText()) )
-                    return true;
+            if ( !origName.equals(artikelFormular.nameField.getText()) ){
+                return true;
+            }
         }
         if ( artikelFormular.mengeField.isEnabled() ){
-            String origMenge = (String)originalData.get(0).get(4);
-            if ( !origMenge.equals(artikelFormular.nameField.getText()) )
-                    return true;
+            String origMengeStr = originalData.get(0).get(4).toString().replace(',','.');
+            if (origMengeStr == "") origMengeStr = "0";
+            String newMengeStr = artikelFormular.mengeField.getText().replace(',','.');
+            if (newMengeStr == "") newMengeStr = "0";
+            BigDecimal origMenge = new BigDecimal(origMengeStr);
+            BigDecimal newMenge = new BigDecimal(newMengeStr);
+            if ( !origMenge.equals(newMenge) ){
+                return true;
+            }
         }
         if ( artikelFormular.barcodeField.isEnabled() ){
             String origBarcode = (String)originalData.get(0).get(5);
-            if ( !origBarcode.equals(artikelFormular.barcodeField.getText()) )
+            if ( !origBarcode.equals(artikelFormular.barcodeField.getText()) ){
                 return true;
+            }
         }
         if ( artikelFormular.herkunftField.isEnabled() ){
             String origHerkunft = (String)originalData.get(0).get(6);
-            if ( !origHerkunft.equals(artikelFormular.herkunftField.getText()) )
+            if ( !origHerkunft.equals(artikelFormular.herkunftField.getText()) ){
                 return true;
+            }
         }
         if ( artikelFormular.vpeSpinner.isEnabled() ){
             String origVPEStr = (String)originalData.get(0).get(7);
             if ( origVPEStr.equals("") ){ origVPEStr = "0"; }
             Integer origVPE = Integer.parseInt(origVPEStr);
-            if ( !origVPE.equals(artikelFormular.vpeSpinner.getValue()) )
+            if ( !origVPE.equals(artikelFormular.vpeSpinner.getValue()) ){
                 return true;
+            }
         }
         if ( artikelFormular.vkpreisField.isEnabled() ){
             String origVKP = priceFormatterIntern( (String)originalData.get(0).get(8) );
             String newVKP = priceFormatterIntern( artikelFormular.vkpreisField.getText() );
-            if ( !origVKP.equals(newVKP) )
+            if ( !origVKP.equals(newVKP) ){
                 return true;
+            }
         }
         if ( artikelFormular.ekpreisField.isEnabled() ){
             String origEKP = priceFormatterIntern( (String)originalData.get(0).get(9) );
             String newEKP = priceFormatterIntern( artikelFormular.ekpreisField.getText() );
-            if ( !origEKP.equals(newEKP) )
+            if ( !origEKP.equals(newEKP) ){
                 return true;
+            }
         }
         if ( artikelFormular.preisVariabelBox.isEnabled() ){
             Boolean origVarPreis = originalVarPreisBools.get(0);
-            if ( !origVarPreis.equals(artikelFormular.preisVariabelBox.isSelected()) )
+            if ( !origVarPreis.equals(artikelFormular.preisVariabelBox.isSelected()) ){
                 return true;
+            }
         }
         if ( artikelFormular.sortimentBox.isEnabled() ){
             Boolean origSortiment = (Boolean)originalData.get(0).get(13);
-            if ( !origSortiment.equals(artikelFormular.sortimentBox.isSelected()) )
+            if ( !origSortiment.equals(artikelFormular.sortimentBox.isSelected()) ){
                 return true;
+            }
         }
         if ( aktivBox.isEnabled() ){
             Boolean origAktiv = (Boolean)originalData.get(0).get(14);
-            if ( !origAktiv.equals(aktivBox.isSelected()) )
+            if ( !origAktiv.equals(aktivBox.isSelected()) ){
                 return true;
+            }
         }
         return false;
     }

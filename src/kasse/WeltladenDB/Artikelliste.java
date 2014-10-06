@@ -392,7 +392,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     }
 
     void initiateTable() {
-        myTable = new JTable(new AbstractTableModel() { // subclass the AbstractTableModel to set editable cells etc.
+        myTable = new JTable( new AbstractTableModel() { // subclass the AbstractTableModel to set editable cells etc.
             public String getColumnName(int col) {
                 return columnLabels.get(col);
             }
@@ -449,6 +449,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 int realRowIndex = convertRowIndexToModel(row);
                 realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
                 if ( ! sortimentBools.get(realRowIndex) ){ // for articles not in sortiment
+                    c.setFont( c.getFont().deriveFont(Font.PLAIN) );
                     c.setForeground(Color.GRAY);
                 }
                 else if ( ! activeRowBools.get(realRowIndex) ){ // for rows with inactive items
@@ -456,6 +457,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     c.setForeground(Color.GRAY);
                 }
                 else {
+                    c.setFont( c.getFont().deriveFont(Font.PLAIN) );
                     c.setForeground(Color.BLACK);
                 }
                 return c;
@@ -526,7 +528,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             public GeldEditor() {
                 super(new JTextField()); // call to super must be first statement in constructor
                 textField = (JTextField)getComponent();
-                CurrencyDocumentFilter geldFilter = new CurrencyDocumentFilter();
+                NumberDocumentFilter geldFilter = new NumberDocumentFilter(2, 13);
                 ((AbstractDocument)textField.getDocument()).setDocumentFilter(geldFilter);
             }
 
