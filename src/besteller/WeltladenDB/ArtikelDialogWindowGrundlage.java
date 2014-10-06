@@ -62,7 +62,7 @@ public abstract class ArtikelDialogWindowGrundlage extends DialogWindow {
 	showAll();
     }
 
-    abstract void submit();
+    abstract int submit();
 
     // will data be lost on close?
     abstract boolean willDataBeLost();

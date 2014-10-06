@@ -295,8 +295,8 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
         return artikelFormular.checkIfFormIsComplete();
     }
 
-    public void submit() {
-        artikelNeu.submit();
+    public int submit() {
+        return artikelNeu.submit();
     }
 
     /** Needed for ChangeListener. */
