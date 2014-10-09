@@ -8,8 +8,11 @@ if [ ! -e $releasedir ]; then
 fi
 rsync -aPvci Weltladenkasse_$version.jar $releasedir
 rsync -aPvci Weltladenbesteller_$version.jar $releasedir
+rsync -aPvci Weltladenkasse.bat $releasedir
+rsync -aPvci Weltladenbesteller.bat $releasedir
 rsync -aPvci Bestellvorlage.ods $releasedir
 rsync -aPvci Artikelliste.ods $releasedir
 rsync -aPvci README.txt $releasedir
+rsync -aPvci README_Windows.txt $releasedir
 rsync -aPvci install-ubuntu.sh $releasedir
 rsync -aPvci --exclude=".*" mysql $releasedir
