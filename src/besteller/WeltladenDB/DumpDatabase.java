@@ -195,12 +195,30 @@ public class DumpDatabase extends WindowContent {
         return okPassword;
     }
 
+    private String constructProgramString(String cmd, String path) {
+        String program = "";
+        if (path.length() == 0){
+            program = cmd;
+        } else {
+            if ( path.endsWith("\"") ){
+                program = path.substring(0, path.length()-1)+fileSep+cmd+"\"";
+            } else {
+                program = path+fileSep+cmd;
+            }
+        }
+        return program;
+    }
+
     void dumpDatabase(String password, String filename) {
         // From: http://www.jvmhost.com/articles/mysql-postgresql-dump-restore-java-jsp-code#sthash.6M0ty78M.dpuf
-        String executeCmd = "mysqldump -u kassenadmin -p"+password+" kasse -r "+filename;
+        //String executeCmd = "mysqldump -u kassenadmin -p"+password+" kasse -r "+filename;
+        String program = constructProgramString("mysqldump", this.mysqlPath);
+        System.out.println("MySQL path from config.properties: *"+program+"*");
+        String[] executeCmd = new String[] {program, "-ukassenadmin", "-p"+password, "kasse", "-r", filename};
         try {
-            Process runtimeProcess = Runtime.getRuntime().exec(executeCmd);
-            int processComplete = runtimeProcess.waitFor();
+            Runtime shell = Runtime.getRuntime();
+            Process proc = shell.exec(executeCmd);
+            int processComplete = proc.waitFor();
             if (processComplete == 0) {
                 System.out.println("Dump created successfully");
                 JOptionPane.showMessageDialog(this,
@@ -238,13 +256,23 @@ public class DumpDatabase extends WindowContent {
         // From: http://stackoverflow.com/questions/14691112/import-a-dump-file-to-mysql-jdbc
         // Use mysqlimport
         //String executeCmd = "mysql -u kassenadmin -p"+password+" kasse < "+filename;
-        String[] executeCmd = new String[]{"/bin/sh", "-c", "mysql -u kassenadmin -p"+password+" kasse < "+filename};
+        //String[] executeCmd = new String[] {"/bin/sh", "-c", "mysql -u kassenadmin -p"+password+" kasse < "+filename};
+        String program = constructProgramString("mysql", this.mysqlPath);
+        System.out.println("MySQL path from config.properties: *"+program+"*");
+        String[] executeCmd = new String[] {program, "-ukassenadmin", "-p"+password, "kasse"};
         try {
-            Process p = Runtime.getRuntime().exec(executeCmd);
+            Runtime shell = Runtime.getRuntime();
+            Process proc = shell.exec(executeCmd);
+            InputStream fileInputStream = new FileInputStream(new File(filename));
+            byte[] b = new byte[1];
+            while (fileInputStream.read(b) != -1){
+                proc.getOutputStream().write(b);
+            }
+            proc.getOutputStream().close(); // don't forget to close!
             BufferedReader stdInput = new BufferedReader(new
-                                     InputStreamReader(p.getInputStream()));
+                                     InputStreamReader(proc.getInputStream()));
             BufferedReader stdError = new BufferedReader(new
-                                     InputStreamReader(p.getErrorStream()));
+                                     InputStreamReader(proc.getErrorStream()));
             System.out.println("Here is the standard output of the command "+executeCmd+":\n");
             String s = null;
             while ((s = stdInput.readLine()) != null) {
@@ -254,7 +282,7 @@ public class DumpDatabase extends WindowContent {
             while ((s = stdError.readLine()) != null) {
                 System.out.println(s);
             }
-            int processComplete = p.waitFor();
+            int processComplete = proc.waitFor();
             if (processComplete == 0) {
                 System.out.println("Dump read in successfully");
                 JOptionPane.showMessageDialog(this,
