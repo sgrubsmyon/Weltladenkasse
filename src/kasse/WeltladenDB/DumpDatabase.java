@@ -214,7 +214,8 @@ public class DumpDatabase extends WindowContent {
         //String executeCmd = "mysqldump -u kassenadmin -p"+password+" kasse -r "+filename;
         String program = constructProgramString("mysqldump", this.mysqlPath);
         System.out.println("MySQL path from config.properties: *"+program+"*");
-        String[] executeCmd = new String[] {program, "-ukassenadmin", "-p"+password, "kasse", "-r", filename};
+        String[] executeCmd = new String[] {program, "--no-create-info", "--replace",
+            "-ukassenadmin", "-p"+password, "kasse", "-r", filename};
         try {
             Runtime shell = Runtime.getRuntime();
             Process proc = shell.exec(executeCmd);
@@ -259,16 +260,12 @@ public class DumpDatabase extends WindowContent {
         //String[] executeCmd = new String[] {"/bin/sh", "-c", "mysql -u kassenadmin -p"+password+" kasse < "+filename};
         String program = constructProgramString("mysql", this.mysqlPath);
         System.out.println("MySQL path from config.properties: *"+program+"*");
-        String[] executeCmd = new String[] {program, "-ukassenadmin", "-p"+password, "kasse"};
+        String[] executeCmd = new String[] {program, "--local-infile",
+            "-hlocalhost", "-ukassenadmin", "-p"+password,
+            "-e", "source "+filename, "kasse"};
         try {
             Runtime shell = Runtime.getRuntime();
             Process proc = shell.exec(executeCmd);
-            InputStream fileInputStream = new FileInputStream(new File(filename));
-            byte[] b = new byte[1];
-            while (fileInputStream.read(b) != -1){
-                proc.getOutputStream().write(b);
-            }
-            proc.getOutputStream().close(); // don't forget to close!
             BufferedReader stdInput = new BufferedReader(new
                                      InputStreamReader(proc.getInputStream()));
             BufferedReader stdError = new BufferedReader(new
