@@ -19,4 +19,5 @@
 
 4. Datei config.properties durch config_Windows.properties ersetzen.
 
-5. Ggf. Pfad zu MySQL in config.properties anpassen.
+5. Ggf. Pfad zu MySQL in config.properties anpassen (muss auf Verzeichnis mit mysql.exe und
+      mysqldump.exe verweisen).
