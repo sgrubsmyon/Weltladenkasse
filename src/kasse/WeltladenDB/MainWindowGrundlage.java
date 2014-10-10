@@ -2,6 +2,8 @@ package WeltladenDB;
 
 // Basic Java stuff:
 import java.util.*; // for Vector
+import java.io.InputStream;
+import java.io.FileInputStream;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -32,7 +34,7 @@ public abstract class MainWindowGrundlage extends JFrame {
     // Connection to MySQL database:
     public Connection conn = null;
     public boolean connectionWorks = false;
-    public final String currencySymbol = new String("€");
+    public String currencySymbol;
 
     // Panels:
     protected JPanel holdAll = new JPanel(); // The top level panel which holds all.
@@ -57,6 +59,18 @@ public abstract class MainWindowGrundlage extends JFrame {
      *       */
     public MainWindowGrundlage(String password){
         initiate(password);
+
+        // load config file:
+        String filename = "config.properties";
+        try {
+            InputStream fis = new FileInputStream(filename);
+            Properties props = new Properties();
+            props.load(fis);
+
+            this.currencySymbol = props.getProperty("currencySymbol");
+        } catch (Exception ex) {
+            this.currencySymbol = "€";
+        }
     }
 
     public void initiate(String password){

@@ -18,7 +18,6 @@ public class BarcodeComboBox extends IncrementalSearchComboBox {
     public BarcodeComboBox(Connection conn, String fstr) {
         super(fstr);
         this.conn = conn;
-        this.filterStr = fstr;
     }
 
     public Vector<String[]> doQuery() {
