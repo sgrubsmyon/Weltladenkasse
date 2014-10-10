@@ -1,0 +1,5 @@
+mysqlPath = "C:\\Program Files\\MySQL\\MySQL Server 5.6\\bin"
+dateFormatSQL = %d.%m.%Y, %H:%i Uhr
+dateFormatJava = dd.MM.yyyy, HH:mm 'Uhr'
+delimiter = ;
+currencySymbol = €

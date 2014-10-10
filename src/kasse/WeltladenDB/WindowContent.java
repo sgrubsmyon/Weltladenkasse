@@ -1,8 +1,11 @@
 package WeltladenDB;
 
 // Basic Java stuff:
+import java.io.InputStream;
+import java.io.FileInputStream;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Properties;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
@@ -42,9 +45,10 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected MainWindowGrundlage mainWindow = null;
     protected String currencySymbol;
     protected Locale myLocale = Locale.GERMAN;
-    protected final String dateFormatSQL = "%d.%m.%Y, %H:%i Uhr";
-    protected final String dateFormatJava = "dd.MM.yyyy, HH:mm 'Uhr'";
-    protected final String delimiter = ";"; // for CSV export/import
+    protected String mysqlPath;
+    protected String dateFormatSQL;
+    protected String dateFormatJava;
+    protected String delimiter; // for CSV export/import
     protected final String fileSep = System.getProperty("file.separator");
     protected final String lineSep = System.getProperty("line.separator");
 
@@ -76,7 +80,6 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     /**
      *    The constructors.
      *       */
-    public WindowContent() { } // default constructor
     public WindowContent(Connection conn, MainWindowGrundlage mw) {
 	this.conn = conn;
 	amountFormat = new DecimalFormat("0.00");
@@ -89,6 +92,25 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
 	this.mainWindow = mw;
         this.currencySymbol = mw.currencySymbol;
+
+        // load config file:
+        String filename = "config.properties";
+        try {
+            InputStream fis = new FileInputStream(filename);
+            Properties props = new Properties();
+            props.load(fis);
+
+            this.mysqlPath = props.getProperty("mysqlPath"); // path where mysql and mysqldump lie around
+            this.dateFormatSQL = props.getProperty("dateFormatSQL");
+            this.dateFormatJava = props.getProperty("dateFormatJava");
+            this.delimiter = props.getProperty("delimiter"); // for CSV export/import
+        } catch (Exception ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            this.mysqlPath = "";
+            this.dateFormatSQL = "%d.%m.%Y, %H:%i Uhr";
+            this.dateFormatJava = "dd.MM.yyyy, HH:mm 'Uhr'";
+            this.delimiter = ";"; // for CSV export/import
+        }
     }
 
     /**

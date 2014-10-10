@@ -38,7 +38,12 @@
         </copy>
     </target>
 
-    <target name="compile" depends="copy" description="compile the source">
+    <target name="convert" depends="copy" description="convert properties files">
+        <native2ascii encoding="UTF-8" src="." dest="." includes="config.txt" ext=".properties"/>
+        <native2ascii encoding="UTF-8" src="." dest="." includes="config_Windows.txt" ext=".properties"/>
+    </target>
+
+    <target name="compile" depends="convert" description="compile the source">
         <javac srcdir="${src-kasse}" destdir="${build-kasse}" includeantruntime="false"
             classpathref="classpath"/>
         <javac srcdir="${src-besteller}" destdir="${build-besteller}" includeantruntime="false"
