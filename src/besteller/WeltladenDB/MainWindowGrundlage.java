@@ -58,8 +58,6 @@ public abstract class MainWindowGrundlage extends JFrame {
      *    The constructor.
      *       */
     public MainWindowGrundlage(String password){
-        initiate(password);
-
         // load config file:
         String filename = "config.properties";
         try {
@@ -71,6 +69,8 @@ public abstract class MainWindowGrundlage extends JFrame {
         } catch (Exception ex) {
             this.currencySymbol = "€";
         }
+
+        initiate(password);
     }
 
     public void initiate(String password){
@@ -124,7 +124,7 @@ public abstract class MainWindowGrundlage extends JFrame {
             else { ks = "0.00"; }
 	    rs.close();
 	    // change dots to commas
-	    ks = ks.replace('.',',')+" "+currencySymbol;
+	    ks = ks.replace('.',',')+" "+this.currencySymbol;
 	    stmt.close();
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());

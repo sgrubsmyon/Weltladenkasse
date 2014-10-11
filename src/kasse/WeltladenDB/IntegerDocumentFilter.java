@@ -3,7 +3,7 @@ package WeltladenDB;
 import javax.swing.text.*; // for DocumentFilter, AbstractDocument, JTextComponent
 
 // based on: http://stackoverflow.com/questions/11093326/restricting-jtextfield-input-to-integers
-class IntegerDocumentFilter extends DocumentFilter {
+public class IntegerDocumentFilter extends DocumentFilter {
     private boolean test(String text) {
         // also allow empty strings:
         if ( text.equals("") ){
