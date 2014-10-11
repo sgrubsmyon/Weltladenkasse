@@ -40,6 +40,7 @@ import WeltladenDB.BarcodeComboBox;
 import WeltladenDB.ArtikelNameComboBox;
 import WeltladenDB.ArtikelNummerComboBox;
 import WeltladenDB.NumberDocumentFilter;
+import WeltladenDB.StringDocumentFilter;
 import WeltladenDB.JComponentCellRenderer;
 import WeltladenDB.JComponentCellEditor;
 import WeltladenDB.BoundsPopupMenuListener;
@@ -51,6 +52,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private final BigDecimal percent = new BigDecimal("0.01");
 
     protected int selBestellNr = -1;
+    protected String selTyp = "";
     protected int selJahr = -1;
     protected int selKW = -1;
 
@@ -79,6 +81,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private JTextField jahrField;
     private JSpinner kwSpinner;
     private JTextField kwField;
+    private JTextField typField;
     private JTextField filterField;
     // Buttons
     private JButton emptyBarcodeButton;
@@ -168,26 +171,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 nummerBox.requestFocus();
                 return;
             }
-            //if (e.getActionCommand() == "zws"){
-            //    if (zwischensummeButton.isEnabled())
-            //        zwischensumme();
-            //    return;
-            //}
-            //if (e.getActionCommand() == "bar"){
-            //    if (barButton.isEnabled())
-            //        bar();
-            //    return;
-            //}
-            //if (e.getActionCommand() == "ec"){
-            //    if (ecButton.isEnabled())
-            //        ec();
-            //    return;
-            //}
-            //if (e.getActionCommand() == "stornieren"){
-            //    if (stornoButton.isEnabled())
-            //        stornieren();
-            //    return;
-            //}
         }
     }
 
@@ -239,6 +222,20 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             kwField.setColumns(2);
 	    kwLabel.setLabelFor(kwSpinner);
             datePanel.add(kwSpinner);
+            ///////
+	    JLabel typLabel = new JLabel("Typ:");
+            datePanel.add(typLabel);
+            String typ = "LM";
+            if (selTyp.length() > 0){
+                typ = selTyp;
+            }
+            typField = new JTextField(typ);
+            StringDocumentFilter sdf = new StringDocumentFilter(12);
+	    ((AbstractDocument)typField.getDocument()).setDocumentFilter(sdf);
+            typField.getDocument().addDocumentListener(this);
+            typField.setColumns(6);
+	    typLabel.setLabelFor(typField);
+            datePanel.add(typField);
             ///////
             datePanel.add(new JLabel("Bestell-Nr.:"));
             JTextField bestNrField = new JTextField("");
@@ -489,6 +486,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         positions.clear();
         removeButtons.clear();
         selBestellNr = -1;
+        selTyp = "";
         selJahr = -1;
         selKW = -1;
 
@@ -536,6 +534,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         // general infos:
         fileStr += "#bestellNr;Jahr;KW"+lineSep;
         fileStr += selBestellNr + delimiter;
+        fileStr += selTyp + delimiter;
         fileStr += selJahr + delimiter;
         fileStr += selKW + lineSep;
         // format of csv file:
@@ -600,8 +599,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 }
 
                 selBestellNr = Integer.parseInt(fields[0]);
-                selJahr = Integer.parseInt(fields[1]);
-                selKW = Integer.parseInt(fields[2]);
+                selTyp = fields[1];
+                selJahr = Integer.parseInt(fields[2]);
+                selKW = Integer.parseInt(fields[3]);
 
                 break;
             }
@@ -905,21 +905,24 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         updateAll();
     }
 
-    private int abschliessen() {
+    private Vector<Object> abschliessen() {
         int bestellNr = -1;
+        String typ = "";
         try {
             PreparedStatement pstmt;
             if (selBestellNr > 0){
                 pstmt = this.conn.prepareStatement("INSERT INTO bestellung "+
-                        "SET bestell_nr = ?, bestell_datum = NOW(), jahr = ?, kw = ?");
+                        "SET bestell_nr = ?, typ = ?, bestell_datum = NOW(), jahr = ?, kw = ?");
             } else {
                 pstmt = this.conn.prepareStatement("INSERT INTO bestellung "+
-                        "SET bestell_datum = NOW(), jahr = ?, kw = ?");
+                        "SET typ = ?, bestell_datum = NOW(), jahr = ?, kw = ?");
             }
             int fieldCounter = 1;
             if (selBestellNr > 0){
                 pstmtSetInteger(pstmt, fieldCounter, selBestellNr); fieldCounter++;
             }
+            typ = typField.getText();
+            pstmt.setString(fieldCounter, typ); fieldCounter++;
             pstmtSetInteger(pstmt, fieldCounter, Integer.parseInt(jahrField.getText())); fieldCounter++;
             pstmtSetInteger(pstmt, fieldCounter, Integer.parseInt(kwField.getText())); fieldCounter++;
             int result = pstmt.executeUpdate();
@@ -942,12 +945,13 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             for (int i=0; i<artikelIDs.size(); i++){
                 pstmt = this.conn.prepareStatement(
                         "INSERT INTO bestellung_details SET bestell_nr = ?, "+
-                        "position = ?, artikel_id = ?, stueckzahl = ?"
+                        "typ = ?, position = ?, artikel_id = ?, stueckzahl = ?"
                         );
                 pstmtSetInteger(pstmt, 1, bestellNr);
-                pstmtSetInteger(pstmt, 2, positions.get(i));
-                pstmtSetInteger(pstmt, 3, artikelIDs.get(i));
-                pstmtSetInteger(pstmt, 4, stueckzahlen.get(i));
+                pstmt.setString(2, typ);
+                pstmtSetInteger(pstmt, 3, positions.get(i));
+                pstmtSetInteger(pstmt, 4, artikelIDs.get(i));
+                pstmtSetInteger(pstmt, 5, stueckzahlen.get(i));
                 result = pstmt.executeUpdate();
                 pstmt.close();
                 if (result == 0){
@@ -961,7 +965,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             ex.printStackTrace();
             bestellNr = -1;
         }
-        return bestellNr;
+        Vector<Object> bestNrUndTyp = new Vector<Object>();
+            bestNrUndTyp.add(bestellNr); bestNrUndTyp.add(typ);
+        return bestNrUndTyp;
     }
 
     private void verwerfen() {
@@ -1237,13 +1243,13 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	    return;
 	}
 	if (e.getSource() == abschliessenButton){
-            int bestellNr = abschliessen();
-            if (bestellNr > 0){ // if abschliessen was successful
+            Vector<Object> bestellNrUndTyp = abschliessen();
+            if ( (Integer)bestellNrUndTyp.get(0) > 0 ){ // if abschliessen was successful
                 verwerfen();
                 // update the BestellAnzeige tab
                 tabbedPane.recreateTabbedPane();
                 // switch to BestellAnzeige tab
-                tabbedPane.switchToBestellAnzeige(bestellNr);
+                tabbedPane.switchToBestellAnzeige(bestellNrUndTyp);
             }
 	    return;
 	}

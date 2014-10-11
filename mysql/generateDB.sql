@@ -45,7 +45,7 @@ CREATE TABLE artikel (
     menge decimal(8,5) DEFAULT NULL,
     barcode varchar(30) DEFAULT NULL,
     herkunft varchar(100) DEFAULT NULL,
-    vpe int(10) unsigned DEFAULT NULL,
+    vpe smallint(10) unsigned DEFAULT NULL,
     vk_preis decimal(13,2),
     ek_preis decimal(13,2),
     variabler_preis BOOL NOT NULL DEFAULT FALSE,
@@ -87,10 +87,10 @@ CREATE TABLE verkauf (
 CREATE TABLE verkauf_details (
     vd_id int(10) unsigned NOT NULL AUTO_INCREMENT,
     rechnungs_nr int(10) unsigned NOT NULL,
-    position int(5) unsigned DEFAULT NULL,
+    position smallint(5) unsigned DEFAULT NULL,
     artikel_id int(10) unsigned DEFAULT NULL,
     rabatt_id int(10) unsigned DEFAULT NULL,
-    stueckzahl int(5) NOT NULL DEFAULT 1,
+    stueckzahl smallint(5) NOT NULL DEFAULT 1,
     ges_preis decimal(13,2) NOT NULL,
     mwst_satz decimal(6,5) NOT NULL,
     PRIMARY KEY (vd_id),
@@ -140,17 +140,19 @@ CREATE TABLE abrechnung_jahr (
 
 CREATE TABLE bestellung (
     bestell_nr int(10) unsigned NOT NULL AUTO_INCREMENT,
+    typ varchar(12) NOT NULL DEFAULT "",
     bestell_datum DATETIME NOT NULL,
     jahr YEAR NOT NULL DEFAULT 2000,
-    kw int(2) NOT NULL DEFAULT 1,
-    PRIMARY KEY (bestell_nr)
+    kw tinyint(2) NOT NULL DEFAULT 1,
+    PRIMARY KEY (bestell_nr, typ)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 CREATE TABLE bestellung_details (
     bestell_nr int(10) unsigned NOT NULL,
-    position int(5) unsigned NOT NULL,
+    typ varchar(12) NOT NULL DEFAULT "",
+    position smallint(5) unsigned NOT NULL,
     artikel_id int(10) unsigned NOT NULL,
-    stueckzahl int(5) NOT NULL DEFAULT 1,
-    PRIMARY KEY (bestell_nr, position),
+    stueckzahl smallint(5) NOT NULL DEFAULT 1,
+    PRIMARY KEY (bestell_nr, typ, position),
     FOREIGN KEY (bestell_nr) REFERENCES bestellung(bestell_nr),
     FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

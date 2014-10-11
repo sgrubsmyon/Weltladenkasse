@@ -31,13 +31,12 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.*;
 
+import WeltladenDB.TabbedPaneGrundlage;
 import WeltladenDB.ArtikellisteContainer;
-import WeltladenDB.WindowContent;
 import WeltladenDB.DumpDatabase;
 
 // Klasse, die Bestellfenster und Artikelliste speichert und anzeigt
-public class TabbedPane extends WindowContent {
-    private JTabbedPane tabbedPane;
+public class TabbedPane extends TabbedPaneGrundlage {
     private BestellAnzeige bestellAnzeige;
     private Bestellen myBestellen;
     private DumpDatabase myDump;
@@ -45,16 +44,15 @@ public class TabbedPane extends WindowContent {
     // Methoden:
     public TabbedPane(Connection conn, MainWindow mw) {
 	super(conn, mw);
-
-        createTabbedPane();
     }
 
-    void createTabbedPane() {
+    @Override
+    protected void createTabbedPane() {
         tabbedPane = new JTabbedPane();
         myBestellen = new Bestellen(this.conn, this.mainWindow, this);
         ArtikellisteContainer myArtikellisteC = new ArtikellisteContainer(this.conn, this.mainWindow);
         bestellAnzeige = new BestellAnzeige(this.conn, this.mainWindow, this);
-        myDump = new DumpDatabase(this.conn, this.mainWindow);
+        myDump = new DumpDatabase(this.conn, this.mainWindow, this);
         tabbedPane.addTab("Bestellen", null, myBestellen, "Bestellung erstellen");
         tabbedPane.addTab("Artikelliste", null, myArtikellisteC, "Artikel bearbeiten/hinzufügen");
         tabbedPane.addTab("Bestellungen", null, bestellAnzeige, "Bestellung anzeigen/drucken");
@@ -63,16 +61,10 @@ public class TabbedPane extends WindowContent {
         this.add(tabbedPane, BorderLayout.CENTER);
     }
 
-    public void recreateTabbedPane() {
-        this.remove(tabbedPane);
-	this.revalidate();
-        createTabbedPane();
-    }
-
-    public void switchToBestellAnzeige(int bestellNr) {
+    public void switchToBestellAnzeige(Vector<Object> bestellNrUndTyp) {
         int tabIndex = tabbedPane.indexOfTab("Bestellungen");
         tabbedPane.setSelectedIndex(tabIndex);
-        int rowIndex = bestellAnzeige.bestellNummern.indexOf(bestellNr);
+        int rowIndex = bestellAnzeige.bestellNummernUndTyp.indexOf(bestellNrUndTyp);
         bestellAnzeige.orderTable.setRowSelectionInterval(rowIndex, rowIndex);
     }
 
@@ -85,9 +77,10 @@ public class TabbedPane extends WindowContent {
         return myBestellen.numberOfRows() == 0;
     }
 
-    public void setBestellenTable(int bestellNr, int jahr, int kw, Vector<Integer> artikelIDs, Vector< Vector<Object> > data) {
+    public void setBestellenTable(Vector<Object> bestellNrUndTyp, int jahr, int kw, Vector<Integer> artikelIDs, Vector< Vector<Object> > data) {
         myBestellen.emptyTable();
-        myBestellen.selBestellNr = bestellNr;
+        myBestellen.selBestellNr = (Integer)bestellNrUndTyp.get(0);
+        myBestellen.selTyp = (String)bestellNrUndTyp.get(1);
         myBestellen.selJahr = jahr;
         myBestellen.selKW = kw;
         for (int i=artikelIDs.size()-1; i>=0; i--){

@@ -31,20 +31,25 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.*;
 
-import WeltladenDB.WindowContent;
+import WeltladenDB.TabbedPaneGrundlage;
 import WeltladenDB.ArtikellisteContainer;
+import WeltladenDB.DumpDatabase;
 
 // Klasse, die Produktgruppenliste und Artikelliste speichert und anzeigt
-public class OptionTabbedPane extends WindowContent {
-    private JTabbedPane tabbedPane;
+public class OptionTabbedPane extends TabbedPaneGrundlage {
     
     // Methoden:
     public OptionTabbedPane(Connection conn, MainWindow mw) {
 	super(conn, mw);
+    }
 
+    @Override
+    protected void createTabbedPane() {
         tabbedPane = new JTabbedPane();
-        ArtikellisteContainer myArtikellisteC = new ArtikellisteContainer(this.conn, mw);
-        Rabattaktionen myRabattaktionen = new Rabattaktionen(this.conn, mw);
+
+        ArtikellisteContainer myArtikellisteC = new ArtikellisteContainer(this.conn, this.mainWindow);
+        Rabattaktionen myRabattaktionen = new Rabattaktionen(this.conn, this.mainWindow);
+        DumpDatabase myDump = new DumpDatabase(this.conn, this.mainWindow, this);
         tabbedPane.addTab("Artikelliste", null, myArtikellisteC, "Artikel bearbeiten/hinzufügen");
         tabbedPane.addTab("Rabatt", null, myRabattaktionen, "Rabattaktionen bearbeiten/hinzufügen");
 
