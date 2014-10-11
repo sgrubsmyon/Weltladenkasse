@@ -2,7 +2,7 @@
 
 version=v0.9.2
 
-releasedir=../../releases/$version
+releasedir=../../releases/Weltladenkasse_$version
 if [ ! -e $releasedir ]; then
     mkdir $releasedir
 fi
@@ -18,3 +18,16 @@ rsync -aPvci README.txt $releasedir
 rsync -aPvci README_Windows.txt $releasedir
 rsync -aPvci install-ubuntu.sh $releasedir
 rsync -aPvci --exclude=".*" mysql $releasedir
+
+cd $releasedir
+if [ -e ../Weltladenkasse_$version.zip ]; then
+    rm ../Weltladenkasse_$version.zip
+fi
+zip -r ../Weltladenkasse_$version.zip *
+cd ..
+if [ -e Weltladenkasse_$version.tar.gz ]; then
+    rm Weltladenkasse_$version.tar.gz
+fi
+tar -czvf Weltladenkasse_$version.tar.gz Weltladenkasse_$version
+
+exit 0
