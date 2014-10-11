@@ -68,8 +68,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     private JButton editButton; // click the button to edit the order (in the Bestellen tab)
     private JTextField filterField;
 
-    private int selBestellNr;
-    protected Vector<Integer> bestellNummern;
+    private Vector<Object> selBestellNrUndTyp;
+    protected Vector< Vector<Object> > bestellNummernUndTyp;
     private Vector< Vector<String> > orderData;
     private Vector<String> orderLabels;
     private Vector< Vector<Object> > orderDetailData;
@@ -96,7 +96,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     {
 	super(conn, mw);
         tabbedPane = tp;
-        selBestellNr = -1;
+        selBestellNrUndTyp = new Vector<Object>();
+        selBestellNrUndTyp.add(-1); selBestellNrUndTyp.add("");
         showAll();
         initializeExportDialog();
     }
@@ -116,13 +117,14 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
     void showTables() {
         showOrderTable();
-        showOrderDetailTable(selBestellNr);
+        showOrderDetailTable(selBestellNrUndTyp);
     }
 
     void showOrderTable() {
         orderPanel.setLayout(new BorderLayout());
         orderLabels = new Vector<String>();
         orderLabels.add("Nr.");
+        orderLabels.add("Typ");
         orderLabels.add("Jahr");
         orderLabels.add("KW");
         orderLabels.add("Datum");
@@ -159,6 +161,23 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         orderTable.setFillsViewportHeight(true);
         orderTable.getSelectionModel().addListSelectionListener(new RowListener());
 
+        // set table properties:
+	TableColumn nr = orderTable.getColumn("Nr.");
+	nr.setCellRenderer(rechtsAusrichter);
+	nr.setPreferredWidth(100);
+	TableColumn typ = orderTable.getColumn("Typ");
+	typ.setCellRenderer(zentralAusrichter);
+	typ.setPreferredWidth(100);
+	TableColumn jahr = orderTable.getColumn("Jahr");
+	jahr.setCellRenderer(rechtsAusrichter);
+	jahr.setPreferredWidth(100);
+	TableColumn kw = orderTable.getColumn("KW");
+	kw.setCellRenderer(rechtsAusrichter);
+	kw.setPreferredWidth(100);
+	TableColumn datum = orderTable.getColumn("Datum");
+	datum.setCellRenderer(linksAusrichter);
+	datum.setPreferredWidth(200);
+
         JScrollPane scrollPane = new JScrollPane(orderTable);
         orderPanel.add(scrollPane, BorderLayout.CENTER);
     }
@@ -173,16 +192,17 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             int[] selRows = orderTable.getSelectedRows();
             if ( selRows.length == 1 ){
                 int realRowIndex = orderTable.convertRowIndexToModel(selRows[0]); // user might have changed row order
-                selBestellNr = bestellNummern.get(realRowIndex);
+                selBestellNrUndTyp = bestellNummernUndTyp.get(realRowIndex);
             } else {
-                selBestellNr = -1;
+                selBestellNrUndTyp = new Vector<Object>();
+                selBestellNrUndTyp.add(-1); selBestellNrUndTyp.add("");
             }
             updateDetailPanel();
         }
     }
 
-    public void showOrderDetailTable(int bestellNr) {
-        if ( bestellNr > 0 ){
+    public void showOrderDetailTable(Vector<Object> bestellNrUndTyp) {
+        if ( (Integer)bestellNrUndTyp.get(0) > 0 ){
             orderDetailPanel.setLayout(new BorderLayout());
 
             // Panel for header and both tables
@@ -194,17 +214,19 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 headerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
                 orderDetailTablePanel.add(headerLabel);
 
+                /*
                 // Table with general order data:
-                Vector<String> bestellung = orderData.get(bestellNummern.indexOf(bestellNr));
+                Vector<String> bestellung = orderData.get(bestellNummernUndTyp.indexOf(bestellNrUndTyp));
                 Vector< Vector<String> > bestellData = new Vector< Vector<String> >();
                 bestellData.add(bestellung);
                 JTable bestellTable = new JTable(bestellData, orderLabels);
                 JScrollPane sp1 = new JScrollPane(bestellTable);
                 sp1.setPreferredSize(new Dimension((int)sp1.getPreferredSize().getWidth(), 40));
                 orderDetailTablePanel.add(sp1);
+                */
 
                 // Table with order details:
-                retrieveOrderDetailData(bestellNr);
+                retrieveOrderDetailData(bestellNrUndTyp);
                 orderDetailTable = new BestellungsTable(orderDetailDisplayData, columnLabels);
                 setTableProperties(orderDetailTable);
 
@@ -238,7 +260,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     private void updateAll(){
 	this.remove(splitPane);
 	this.revalidate();
-        selBestellNr = -1;
+        selBestellNrUndTyp = new Vector<Object>();
+        selBestellNrUndTyp.add(-1); selBestellNrUndTyp.add("");
 	showAll();
     }
 
@@ -246,7 +269,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         orderDetailPanel = new JPanel();
         splitPane.setRightComponent(orderDetailPanel);
 	//this.revalidate();
-	showOrderDetailTable(selBestellNr);
+	showOrderDetailTable(selBestellNrUndTyp);
     }
 
     private void updateDetailTable() {
@@ -262,23 +285,26 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
     void retrieveOrderData() {
         orderData = new Vector< Vector<String> >();
-        bestellNummern = new Vector<Integer>();
+        bestellNummernUndTyp = new Vector< Vector<Object> >();
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT bestell_nr, jahr, kw, DATE_FORMAT(bestell_datum, "+
+                    "SELECT bestell_nr, typ, jahr, kw, DATE_FORMAT(bestell_datum, "+
                     "'"+dateFormatSQL+"') FROM bestellung ORDER BY "+
                     "bestell_nr DESC LIMIT " +
                     (currentPage-1)*bestellungenProSeite + "," + bestellungenProSeite
                     );
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
-                bestellNummern.add(rs.getInt(1));
+                Vector<Object> bestNrUndTyp = new Vector<Object>();
+                    bestNrUndTyp.add(rs.getInt(1)); bestNrUndTyp.add(rs.getString(2));
+                bestellNummernUndTyp.add(bestNrUndTyp);
                 Vector<String> row = new Vector<String>();
                 row.add(rs.getString(1));
-                row.add(rs.getString(2).substring(0,4));
-                row.add(rs.getString(3));
+                row.add(rs.getString(2));
+                row.add(rs.getString(3).substring(0,4));
                 row.add(rs.getString(4));
+                row.add(rs.getString(5));
                 orderData.add(row);
             }
 	    rs.close();
@@ -298,7 +324,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         }
     }
 
-    void retrieveOrderDetailData(int bestellNr) {
+    void retrieveOrderDetailData(Vector<Object> bestellNrUndTyp) {
         orderDetailData = new Vector< Vector<Object> >();
         orderDetailArtikelIDs = new Vector<Integer>();
         try {
@@ -308,10 +334,11 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     "FROM bestellung_details AS bd "+
                     "LEFT JOIN artikel AS a USING (artikel_id) "+
                     "LEFT JOIN lieferant AS l USING (lieferant_id) "+
-                    "WHERE bd.bestell_nr = ? "+
+                    "WHERE bd.bestell_nr = ? AND bd.typ = ? "+
                     "ORDER BY bd.position DESC"
                     );
-            pstmt.setInt(1, bestellNr);
+            pstmt.setInt(1, (Integer)bestellNrUndTyp.get(0));
+            pstmt.setString(2, (String)bestellNrUndTyp.get(1));
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
@@ -344,7 +371,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         initiateDisplayIndices();
     }
 
-    Vector< Vector<Object> > retrieveOrderDetailData_forExport(int bestellNr) {
+    Vector< Vector<Object> > retrieveOrderDetailData_forExport(Vector<Object> bestellNrUndTyp) {
         Vector< Vector<Object> > orderExportData = new Vector< Vector<Object> >();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
@@ -355,10 +382,11 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     "LEFT JOIN lieferant AS l USING (lieferant_id) "+
                     "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
                     "LEFT JOIN mwst AS m USING (mwst_id) "+
-                    "WHERE bd.bestell_nr = ? "+
+                    "WHERE bd.bestell_nr = ? AND bd.typ = ? "+
                     "ORDER BY p.toplevel_id, p.sub_id, p.subsub_id"
                     );
-            pstmt.setInt(1, bestellNr);
+            pstmt.setInt(1, (Integer)bestellNrUndTyp.get(0));
+            pstmt.setString(1, (String)bestellNrUndTyp.get(1));
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
@@ -387,8 +415,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         return orderExportData;
     }
 
-    private void deleteOrderFromDB(int bestellNr) {
-        if (bestellNr > 0){
+    private void deleteOrderFromDB(Vector<Object> bestellNrUndTyp) {
+        if ( (Integer)bestellNrUndTyp.get(0) > 0 ){
             PreparedStatement pstmt = null;
             try {
                 // try a transaction:
@@ -396,9 +424,10 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 // first delete from bestellung_details (child)
                 pstmt = conn.prepareStatement(
                         "DELETE FROM bestellung_details "+
-                        "WHERE bestell_nr = ?"
+                        "WHERE bestell_nr = ? AND typ = ?"
                         );
-                pstmt.setInt(1, bestellNr);
+                pstmt.setInt(1, (Integer)bestellNrUndTyp.get(0));
+                pstmt.setString(2, (String)bestellNrUndTyp.get(1));
                 int result = pstmt.executeUpdate();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
@@ -410,9 +439,10 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 // then delete from bestellung (parent)
                 pstmt = conn.prepareStatement(
                         "DELETE FROM bestellung "+
-                        "WHERE bestell_nr = ?"
+                        "WHERE bestell_nr = ? AND typ = ?"
                         );
-                pstmt.setInt(1, bestellNr);
+                pstmt.setInt(1, (Integer)bestellNrUndTyp.get(0));
+                pstmt.setString(2, (String)bestellNrUndTyp.get(1));
                 result = pstmt.executeUpdate();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
@@ -493,10 +523,10 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         }
 
         // Get general order data
-        Vector<String> bestellung = orderData.get(bestellNummern.indexOf(selBestellNr));
-        //int jahr = Integer.parseInt(bestellung.get(1));
-        Integer kw = Integer.parseInt(bestellung.get(2));
-        String oldDate = bestellung.get(3);
+        Vector<String> bestellung = orderData.get(bestellNummernUndTyp.indexOf(selBestellNrUndTyp));
+        //int jahr = Integer.parseInt(bestellung.get(2));
+        Integer kw = Integer.parseInt(bestellung.get(3));
+        String oldDate = bestellung.get(4);
         String newDate = oldDate;
         try {
             // reformat the date to be without hour:
@@ -512,7 +542,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         sheet.getCellAt("I2").setValue(kw);
 
         // Insert order items
-        Vector< Vector<Object> > data = retrieveOrderDetailData_forExport(selBestellNr);
+        Vector< Vector<Object> > data = retrieveOrderDetailData_forExport(selBestellNrUndTyp);
         System.out.println("Export data: "+data);
         for (int row=0; row<data.size(); row++){
             for (int col=0; col<data.get(row).size(); col++){
@@ -597,7 +627,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
      **/
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == editButton){
-            if (selBestellNr > 0){
+            if ( (Integer)selBestellNrUndTyp.get(0) > 0){
                 if (!tabbedPane.bestellenTableIsEmpty()){
                     int answer = JOptionPane.showConfirmDialog(this,
                             "Achtung: Bestellen-Tab enthält bereits eine Bestellung.\nDaten gehen verloren. Fortfahren?",
@@ -609,12 +639,12 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                         return;
                     }
                 }
-                deleteOrderFromDB(selBestellNr);
-                Vector<String> bestellung = orderData.get(bestellNummern.indexOf(selBestellNr));
-                int jahr = Integer.parseInt(bestellung.get(1));
-                int kw = Integer.parseInt(bestellung.get(2));
+                deleteOrderFromDB(selBestellNrUndTyp);
+                Vector<String> bestellung = orderData.get(bestellNummernUndTyp.indexOf(selBestellNrUndTyp));
+                int jahr = Integer.parseInt(bestellung.get(2));
+                int kw = Integer.parseInt(bestellung.get(3));
                 // put order data into Bestellen tab
-                tabbedPane.setBestellenTable(selBestellNr, jahr, kw, orderDetailArtikelIDs, orderDetailData);
+                tabbedPane.setBestellenTable(selBestellNrUndTyp, jahr, kw, orderDetailArtikelIDs, orderDetailData);
                 // clear the BestellAnzeige
                 updateAll();
                 // switch to Bestellen tab

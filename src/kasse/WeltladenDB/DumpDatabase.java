@@ -33,12 +33,15 @@ public class DumpDatabase extends WindowContent {
 
     private Connection adminConn;
 
+    private TabbedPaneGrundlage tabbedPane;
+
     /**
      *    The constructor.
      *       */
-    public DumpDatabase(Connection conn, MainWindowGrundlage mw)
+    public DumpDatabase(Connection conn, MainWindowGrundlage mw, TabbedPaneGrundlage tp)
     {
 	super(conn, mw);
+        tabbedPane = tp;
 
         JPanel buttonPanel = new JPanel();
             dumpButton = new JButton("DB exportieren");
@@ -324,6 +327,8 @@ public class DumpDatabase extends WindowContent {
             String filename = askForReadFilename();
             if (filename != null){
                 readDatabase(password, filename);
+                // update all tabs
+                tabbedPane.recreateTabbedPane();
             }
         }
     }

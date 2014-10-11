@@ -40,6 +40,7 @@ import jcalendarbutton.org.JCalendarButton;
 //import java.util.Date;
 
 import WeltladenDB.WindowContent;
+import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.ArtikelGrundlage;
 import WeltladenDB.AnyJComponentJTable;
 import WeltladenDB.JComponentCellRenderer;
@@ -96,7 +97,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
     /**
      *    The constructor.
      *       */
-    public Rabattaktionen(Connection conn, MainWindow mw) {
+    public Rabattaktionen(Connection conn, MainWindowGrundlage mw) {
 	super(conn, mw);
 
 	initiateSpinners();

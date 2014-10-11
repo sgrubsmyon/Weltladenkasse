@@ -16,8 +16,9 @@
 
 3. Im Ordner 'mysql' (befindet sich im selben Ordner wie diese Datei) auf generateDB.bat doppelklicken.
       Root-Passwort (bei MySQL-Installation gesetzt) dreimal eingeben.
+      Bei Fehlern die Datei generateDB.bat bearbeiten (mit Editor/Notepad) und den Pfad zu MySQL anpassen.
 
-4. Datei config.properties durch config_Windows.properties ersetzen.
+4. Datei config.properties löschen und Datei config_Windows.properties in config.properties umbenennen.
 
 5. Ggf. Pfad zu MySQL in config.properties anpassen (muss auf Verzeichnis mit mysql.exe und
       mysqldump.exe verweisen).
