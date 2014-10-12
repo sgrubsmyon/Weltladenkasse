@@ -105,6 +105,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                                                     // (after applying filter)
     private Vector<Integer> displayIndices; // holding indices that rows in displayData have in data
     private Vector<Integer> artikelIDs;
+    private Vector<Boolean> sortimentBools;
     private Vector<Integer> stueckzahlen;
     private Vector<Integer> positions;
 
@@ -415,7 +416,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     }
 
     void initiateTable() {
-	orderTable = new BestellungsTable(displayData, columnLabels);
+	orderTable = new BestellungsTable(displayData, columnLabels, displayIndices, sortimentBools);
         orderTable.setColEditableTrue(columnLabels.size()-1); // last column has buttons
 	orderTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
 	orderTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
@@ -470,7 +471,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	data = new Vector< Vector<Object> >();
         displayData = new Vector< Vector<Object> >();
         displayIndices = new Vector<Integer>();
-        orderTable = new BestellungsTable(displayData, columnLabels);
+        sortimentBools = new Vector<Boolean>();
+        orderTable = new BestellungsTable(displayData, columnLabels, displayIndices, sortimentBools);
         artikelIDs = new Vector<Integer>();
         stueckzahlen = new Vector<Integer>();
         positions = new Vector<Integer>();
@@ -482,6 +484,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         displayData.clear();
         displayIndices.clear();
         artikelIDs.clear();
+        sortimentBools.clear();
         stueckzahlen.clear();
         positions.clear();
         removeButtons.clear();
@@ -538,7 +541,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         fileStr += selJahr + delimiter;
         fileStr += selKW + lineSep;
         // format of csv file:
-        fileStr += "#Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;artikelID"+lineSep;
+        fileStr += "#Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;sortiment;artikelID"+lineSep;
         for (int i=data.size()-1; i>=0; i--){
             String lieferant = (String)data.get(i).get(1);
             String nummer = (String)data.get(i).get(2);
@@ -546,6 +549,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             String vkp = (String)data.get(i).get(4); vkp = vkp == null ? "" : vkp;
             String vpe = (String)data.get(i).get(5); vpe = vpe == null ? "" : vpe;
             String stueck = (String)data.get(i).get(6);
+            String sortiment = sortimentBools.get(i).toString();
             String artikelID = artikelIDs.get(i).toString();
 
             fileStr += lieferant + delimiter;
@@ -554,6 +558,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             fileStr += vkp + delimiter;
             fileStr += vpe + delimiter;
             fileStr += stueck + delimiter;
+            fileStr += sortiment + delimiter;
             fileStr += artikelID + lineSep;
         }
 
@@ -620,10 +625,11 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 String vkp = fields[3];
                 String vpe = fields[4];
                 String stueck = fields[5];
-                String artikelID = fields[6];
+                Boolean sortimentBool = fields[6] == "true" ? true : false;
+                Integer artikelID = Integer.parseInt(fields[7]);
 
-                hinzufuegen(Integer.parseInt(artikelID), lieferant, nummer, name,
-                        vkp, vpe, stueck);
+                hinzufuegen(artikelID, lieferant, nummer, name,
+                        vkp, vpe, stueck, sortimentBool);
             }
             updateAll();
         } catch (FileNotFoundException ex) {
@@ -858,13 +864,14 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
     protected void hinzufuegen(Integer artikelID,
             String lieferant, String artikelNummer, String artikelName,
-            String vkp, String vpe, String stueck) {
+            String vkp, String vpe, String stueck, Boolean sortiment) {
+        artikelIDs.add(0, artikelID);
+        sortimentBools.add(0, sortiment);
         Integer lastPos = 0;
         try {
             lastPos = positions.firstElement();
         } catch (NoSuchElementException ex) { }
         positions.add(0, lastPos+1);
-        artikelIDs.add(0, artikelID);
         stueckzahlen.add(0, Integer.parseInt(stueck));
         removeButtons.add(0, new JButton("-"));
         removeButtons.firstElement().addActionListener(this);
@@ -899,9 +906,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         artikelPreis = artikelPreis.replace('.',',')+' '+currencySymbol;
         String artikelMwSt = getVAT(selectedArtikelID);
         artikelMwSt = vatFormatter(artikelMwSt);
+        Boolean sortimentBool = getSortimentBool(selectedArtikelID);
 
         hinzufuegen(selectedArtikelID, lieferant, artikelNummer, artikelName,
-                artikelPreis, vpe, stueck.toString());
+                artikelPreis, vpe, stueck.toString(), sortimentBool);
         updateAll();
     }
 
@@ -1267,6 +1275,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         if (removeIndex > -1){
             data.remove(removeIndex);
             artikelIDs.remove(removeIndex);
+            sortimentBools.remove(removeIndex);
             stueckzahlen.remove(removeIndex);
             removeButtons.remove(removeIndex);
 

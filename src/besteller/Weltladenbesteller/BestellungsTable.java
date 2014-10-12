@@ -14,12 +14,18 @@ import javax.swing.table.*;
 import WeltladenDB.AnyJComponentJTable;
 
 public class BestellungsTable extends AnyJComponentJTable {
+    private Vector<Boolean> sortimentBools;
+    private Vector<Integer> displayIndices;
 
     /**
      *    The constructor.
      *       */
-    public BestellungsTable(Vector< Vector<Object> > data, Vector<String> columns) {
+    public BestellungsTable(Vector< Vector<Object> > data, Vector<String>
+            columns, Vector<Integer> dispInd, Vector<Boolean> sortBools)
+    {
         super(data, columns);
+        displayIndices = dispInd;
+        sortimentBools = sortBools;
     }
 
     @Override
@@ -42,7 +48,13 @@ public class BestellungsTable extends AnyJComponentJTable {
                     c.setForeground(Color.black); // if sth. goes wrong: default color
                 }
             } else {
-                c.setForeground(Color.black); // if not stueck column: default color
+                int realRowIndex = convertRowIndexToModel(row);
+                realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
+                if ( sortimentBools.get( realRowIndex ) == false ){
+                    c.setForeground(Color.GRAY); // not in sortiment
+                } else {
+                    c.setForeground(Color.BLACK); // in sortiment
+                }
             }
             //c.setBackground(Color.LIGHT_GRAY);
             return c;

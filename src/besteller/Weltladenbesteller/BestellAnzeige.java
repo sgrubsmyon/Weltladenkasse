@@ -76,6 +76,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     private Vector<String> orderLabels;
     private Vector< Vector<Object> > orderDetailData;
     private Vector<Integer> orderDetailArtikelIDs;
+    private Vector<Boolean> orderDetailSortimentBools;
     private Vector< Vector<Object> > orderDetailDisplayData;
     private Vector<Integer> orderDetailDisplayIndices;
 
@@ -233,7 +234,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
                 // Table with order details:
                 retrieveOrderDetailData(bestellNrUndTyp);
-                orderDetailTable = new BestellungsTable(orderDetailDisplayData, columnLabels);
+                orderDetailTable = new BestellungsTable(orderDetailDisplayData,
+                        columnLabels, orderDetailDisplayIndices,
+                        orderDetailSortimentBools);
                 setTableProperties(orderDetailTable);
 
                 orderDetailScrollPane = new JScrollPane(orderDetailTable);
@@ -282,7 +285,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         orderDetailTablePanel.remove(orderDetailScrollPane);
 	orderDetailTablePanel.revalidate();
 
-        orderDetailTable = new BestellungsTable(orderDetailDisplayData, columnLabels);
+        orderDetailTable = new BestellungsTable(orderDetailDisplayData,
+                columnLabels, orderDetailDisplayIndices,
+                orderDetailSortimentBools);
         setTableProperties(orderDetailTable);
 
         orderDetailScrollPane = new JScrollPane(orderDetailTable);
@@ -333,10 +338,11 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     void retrieveOrderDetailData(Vector<Object> bestellNrUndTyp) {
         orderDetailData = new Vector< Vector<Object> >();
         orderDetailArtikelIDs = new Vector<Integer>();
+        orderDetailSortimentBools = new Vector<Boolean>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT bd.position, l.lieferant_name, a.artikel_nr, a.artikel_name, "+
-                    "a.vk_preis, a.vpe, bd.stueckzahl, bd.artikel_id "+
+                    "a.vk_preis, a.vpe, bd.stueckzahl, a.sortiment, bd.artikel_id "+
                     "FROM bestellung_details AS bd "+
                     "LEFT JOIN artikel AS a USING (artikel_id) "+
                     "LEFT JOIN lieferant AS l USING (lieferant_id) "+
@@ -357,7 +363,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 //Integer vpeInt = rs.getInt(6);
                 //vpeInt = vpeInt > 0 ? vpeInt : 0;
                 Integer stueck = rs.getInt(7);
-                Integer artikelID = rs.getInt(8);
+                Boolean sortimentBool = rs.getBoolean(8);
+                Integer artikelID = rs.getInt(9);
 
                 Vector<Object> row = new Vector<Object>();
                     row.add(pos);
@@ -366,6 +373,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     row.add(""); // row.add(removeButtons.lastElement())
                 orderDetailData.add(row);
                 orderDetailArtikelIDs.add(artikelID);
+                orderDetailSortimentBools.add(sortimentBool);
             }
 	    rs.close();
 	    pstmt.close();
@@ -630,7 +638,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 int jahr = Integer.parseInt(bestellung.get(2));
                 int kw = Integer.parseInt(bestellung.get(3));
                 // put order data into Bestellen tab
-                tabbedPane.setBestellenTable(selBestellNrUndTyp, jahr, kw, orderDetailArtikelIDs, orderDetailData);
+                tabbedPane.setBestellenTable(selBestellNrUndTyp, jahr, kw, orderDetailArtikelIDs, 
+                        orderDetailSortimentBools, orderDetailData);
                 // clear the BestellAnzeige
                 updateAll();
                 // switch to Bestellen tab
