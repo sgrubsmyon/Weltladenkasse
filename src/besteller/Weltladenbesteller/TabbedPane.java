@@ -77,7 +77,8 @@ public class TabbedPane extends TabbedPaneGrundlage {
         return myBestellen.numberOfRows() == 0;
     }
 
-    public void setBestellenTable(Vector<Object> bestellNrUndTyp, int jahr, int kw, Vector<Integer> artikelIDs, Vector< Vector<Object> > data) {
+    public void setBestellenTable(Vector<Object> bestellNrUndTyp, int jahr, int kw,
+            Vector<Integer> artikelIDs, Vector<Boolean> sortimentBools, Vector< Vector<Object> > data) {
         myBestellen.emptyTable();
         myBestellen.selBestellNr = (Integer)bestellNrUndTyp.get(0);
         myBestellen.selTyp = (String)bestellNrUndTyp.get(1);
@@ -91,7 +92,7 @@ public class TabbedPane extends TabbedPaneGrundlage {
             String vpe = data.get(i).get(5) == null ? null : data.get(i).get(5).toString();
             String stueck = data.get(i).get(6).toString();
             myBestellen.hinzufuegen(artikelIDs.get(i), lieferant, artikelNr,
-                    artikelName, vkp, vpe, stueck);
+                    artikelName, vkp, vpe, stueck, sortimentBools.get(i));
         }
         myBestellen.updateAll();
     }

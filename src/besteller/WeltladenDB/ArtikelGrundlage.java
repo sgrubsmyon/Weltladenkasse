@@ -170,4 +170,23 @@ public abstract class ArtikelGrundlage extends WindowContent {
         }
         return vpe;
     }
+
+    protected Boolean getSortimentBool(int artikelID) {
+        Boolean sortimentBool = false;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT sortiment FROM artikel "+
+                    "WHERE artikel_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
+            // Now do something with the ResultSet, should be only one result ...
+            rs.next(); sortimentBool = rs.getBoolean(1); rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return sortimentBool;
+    }
 }

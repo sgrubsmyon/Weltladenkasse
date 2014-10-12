@@ -1,12 +1,12 @@
 Compile:
 #cd bin/; cd .. && ant && cd - && java Weltladenkasse.Kasse
 #ant && cd build && java -cp ../lib/mysql-connector-java-5.1.25-bin.jar:. Weltladenkasse.Kasse; cd ..
-#ant && java -jar Weltladenkasse_v0.9.2.jar
-#ant && java -jar Weltladenbesteller_v0.9.2.jar
+#ant && java -jar Weltladenkasse_v0.9.3.jar
+#ant && java -jar Weltladenbesteller_v0.9.3.jar
 ant && ./make_release.sh
 
 Create JAR file:
-jar cfe Weltladenkasse_v0.9.2.jar Weltladenkasse.Kasse icons/ jcalendarbutton/ Weltladenkasse/
+jar cfe Weltladenkasse_v0.9.3.jar Weltladenkasse.Kasse icons/ jcalendarbutton/ Weltladenkasse/
 
 Download most recent MySQL Connector:
 http://dev.mysql.com/downloads/connector/j/
