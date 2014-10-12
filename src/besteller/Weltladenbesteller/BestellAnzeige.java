@@ -44,12 +44,14 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.DocumentEvent;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.ArtikelGrundlage;
 import WeltladenDB.AnyJComponentJTable;
 import WeltladenDB.JComponentCellRenderer;
 import WeltladenDB.JComponentCellEditor;
+import WeltladenDB.FileExistsAwareFileChooser;
 
 public class BestellAnzeige extends BestellungsGrundlage implements DocumentListener {
     // Attribute:
@@ -61,7 +63,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
     private TabbedPane tabbedPane;
 
-    private JFileChooser fc;
+    private FileExistsAwareFileChooser odsChooser;
     private JButton prevButton;
     private JButton nextButton;
     private JButton exportButton; // click the button to print the order
@@ -99,7 +101,11 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         selBestellNrUndTyp = new Vector<Object>();
         selBestellNrUndTyp.add(-1); selBestellNrUndTyp.add("");
         showAll();
-        initializeExportDialog();
+
+        odsChooser = new FileExistsAwareFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "ODS Spreadsheet-Dokumente", "ods");
+        odsChooser.setFileFilter(filter);
     }
 
     void showAll() {
@@ -243,7 +249,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 	    editButton.addActionListener(this);
             buttonPanel.add(exportButton);
             buttonPanel.add(editButton);
-            
+
             JLabel filterLabel = new JLabel("Filter:");
             filterLabel.setAlignmentX(JComponent.RIGHT_ALIGNMENT);
             buttonPanel.add(filterLabel);
@@ -386,7 +392,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     "ORDER BY p.toplevel_id, p.sub_id, p.subsub_id"
                     );
             pstmt.setInt(1, (Integer)bestellNrUndTyp.get(0));
-            pstmt.setString(1, (String)bestellNrUndTyp.get(1));
+            pstmt.setString(2, (String)bestellNrUndTyp.get(1));
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
@@ -481,49 +487,10 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         }
     }
 
-    void initializeExportDialog() {
-        fc = new JFileChooser(){
-            // override approveSelection to get a confirmation dialog if file exists
-            @Override
-            public void approveSelection(){
-                File f = getSelectedFile();
-                if (f.exists() && getDialogType() == SAVE_DIALOG){
-                    int result = JOptionPane.showConfirmDialog(this,
-                            "Datei existiert bereits. Überschreiben?",
-                            "Datei existiert",
-                            JOptionPane.YES_NO_CANCEL_OPTION);
-                    switch (result){
-                        case JOptionPane.YES_OPTION:
-                            super.approveSelection();
-                            return;
-                        case JOptionPane.NO_OPTION:
-                            return;
-                        case JOptionPane.CLOSED_OPTION:
-                            return;
-                        case JOptionPane.CANCEL_OPTION:
-                            cancelSelection();
-                            return;
-                    }
-                }
-                super.approveSelection();
-            }
-        };
-    }
-
     void writeSpreadSheet(File file) {
-        // Load the template file
-        final Sheet sheet;
-        try {
-            File infile = new File("Bestellvorlage.ods");
-            sheet = SpreadSheet.createFromFile(infile).getSheet(0);
-        } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-            return;
-        }
-
         // Get general order data
         Vector<String> bestellung = orderData.get(bestellNummernUndTyp.indexOf(selBestellNrUndTyp));
+        String typ = bestellung.get(1);
         //int jahr = Integer.parseInt(bestellung.get(2));
         Integer kw = Integer.parseInt(bestellung.get(3));
         String oldDate = bestellung.get(4);
@@ -536,6 +503,25 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+
+        // Load the template file
+        final Sheet sheet;
+        try {
+            File infile = new File("Bestellvorlage_"+typ+".ods");
+            if (!infile.exists()){
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Zum Bestell-Typ '"+typ+"' gibt es keine Bestellvorlage "+
+                        "'Bestellvorlage_"+typ+".ods'.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            sheet = SpreadSheet.createFromFile(infile).getSheet(0);
+        } catch (IOException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+            return;
+        }
+
         // Change date
         sheet.getCellAt("C2").setValue(newDate);
         // Change KW
@@ -653,9 +639,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 	    return;
 	}
         if (e.getSource() == exportButton){
-            int returnVal = fc.showSaveDialog(this);
+            int returnVal = odsChooser.showSaveDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION){
-                File file = fc.getSelectedFile();
+                File file = odsChooser.getSelectedFile();
 
                 writeSpreadSheet(file);
 

@@ -34,8 +34,8 @@ import java.awt.event.*;
 //import javax.swing.JCheckBox;
 import javax.swing.*;
 import javax.swing.table.*;
-//import javax.swing.filechooser.*;
 import javax.swing.text.html.HTMLDocument;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class ArtikelImport extends ArtikelDialogWindowGrundlage implements ArtikelNeuInterface {
     // Attribute:
@@ -43,7 +43,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
     protected UpdateTableFunctor utf;
 
     private JButton fileButton;
-    private JFileChooser fc;
+    private JFileChooser odsChooser;
     private String logString;
     private final String logStringStart = "<html>\n<body>\n"+
         "<style type=\"text/css\">\n"+
@@ -90,7 +90,10 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
         //headerPanel.setMinimumSize(minLogDimension);
         //headerPanel.setPreferredSize(prefLogDimension);
 
-        fc = new JFileChooser();
+        odsChooser = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "ODS Spreadsheet-Dokumente", "ods");
+        odsChooser.setFileFilter(filter);
 
         JPanel fileButtonPanel = new JPanel();
         fileButton = new JButton("Datei auswählen");
@@ -512,9 +515,9 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
      **/
     public void actionPerformed(ActionEvent e) {
 	if (e.getSource() == fileButton){
-            int returnVal = fc.showOpenDialog(this.window);
+            int returnVal = odsChooser.showOpenDialog(this.window);
             if (returnVal == JFileChooser.APPROVE_OPTION){
-                File file = fc.getSelectedFile();
+                File file = odsChooser.getSelectedFile();
 
                 // This is where a real application would open the file.
                 parseFile(file);

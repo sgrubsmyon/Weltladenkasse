@@ -33,12 +33,12 @@ import java.awt.event.*;
 //import javax.swing.JCheckBox;
 import javax.swing.*;
 import javax.swing.table.*;
-//import javax.swing.filechooser.*;
 import javax.swing.text.html.HTMLDocument;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class ArtikelExport extends WindowContent {
     // Attribute:
-    private JFileChooser fc;
+    private FileExistsAwareFileChooser odsChooser;
     private Artikelliste artikelListe;
 
     // Methoden:
@@ -46,36 +46,14 @@ public class ArtikelExport extends WindowContent {
 	super(conn, mw);
         this.artikelListe = pw;
 
-        fc = new JFileChooser(){
-            // override approveSelection to get a confirmation dialog if file exists
-            @Override
-            public void approveSelection(){
-                File f = getSelectedFile();
-                if (f.exists() && getDialogType() == SAVE_DIALOG){
-                    int result = JOptionPane.showConfirmDialog(this,
-                            "Datei existiert bereits. Überschreiben?",
-                            "Datei existiert",
-                            JOptionPane.YES_NO_CANCEL_OPTION);
-                    switch (result){
-                        case JOptionPane.YES_OPTION:
-                            super.approveSelection();
-                            return;
-                        case JOptionPane.NO_OPTION:
-                            return;
-                        case JOptionPane.CLOSED_OPTION:
-                            return;
-                        case JOptionPane.CANCEL_OPTION:
-                            cancelSelection();
-                            return;
-                    }
-                }
-                super.approveSelection();
-            }
-        };
+        odsChooser = new FileExistsAwareFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "ODS Spreadsheet-Dokumente", "ods");
+        odsChooser.setFileFilter(filter);
 
-        int returnVal = fc.showSaveDialog(pw);
+        int returnVal = odsChooser.showSaveDialog(pw);
         if (returnVal == JFileChooser.APPROVE_OPTION){
-            final File file = fc.getSelectedFile();
+            final File file = odsChooser.getSelectedFile();
 
             //writeCSVToFile(file);
             writeToODSFile(file);
