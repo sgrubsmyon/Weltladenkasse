@@ -25,11 +25,13 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JDialog;
 import javax.swing.JPasswordField;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class DumpDatabase extends WindowContent {
     private JButton dumpButton;
     private JButton readButton;
-    private JFileChooser fc;
+    private FileExistsAwareFileChooser sqlSaveChooser;
+    private JFileChooser sqlLoadChooser;
 
     private Connection adminConn;
 
@@ -53,43 +55,24 @@ public class DumpDatabase extends WindowContent {
         this.add(buttonPanel);
     }
 
-    void initializeDumpDialog() {
-        fc = new JFileChooser(){
-            // override approveSelection to get a confirmation dialog if file exists
-            @Override
-            public void approveSelection(){
-                File f = getSelectedFile();
-                if (f.exists() && getDialogType() == SAVE_DIALOG){
-                    int result = JOptionPane.showConfirmDialog(this,
-                            "Datei existiert bereits. Überschreiben?",
-                            "Datei existiert",
-                            JOptionPane.YES_NO_CANCEL_OPTION);
-                    switch (result){
-                        case JOptionPane.YES_OPTION:
-                            super.approveSelection();
-                            return;
-                        case JOptionPane.NO_OPTION:
-                            return;
-                        case JOptionPane.CLOSED_OPTION:
-                            return;
-                        case JOptionPane.CANCEL_OPTION:
-                            cancelSelection();
-                            return;
-                    }
-                }
-                super.approveSelection();
-            }
-        };
+    void initializeSaveChooser() {
+        sqlSaveChooser = new FileExistsAwareFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "SQL Dokumente", "sql");
+        sqlSaveChooser.setFileFilter(filter);
     }
 
-    void initializeReadDialog() {
-        fc = new JFileChooser();
+    void initializeLoadChooser() {
+        sqlLoadChooser = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "SQL Dokumente", "sql");
+        sqlLoadChooser.setFileFilter(filter);
     }
 
     String askForDumpFilename() {
-        int returnVal = fc.showSaveDialog(this);
+        int returnVal = sqlSaveChooser.showSaveDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION){
-            File file = fc.getSelectedFile();
+            File file = sqlSaveChooser.getSelectedFile();
             System.out.println("Selected dump file "+file.getName());
             //return file.getName();
             return file.getAbsolutePath();
@@ -100,9 +83,9 @@ public class DumpDatabase extends WindowContent {
     }
 
     String askForReadFilename() {
-        int returnVal = fc.showOpenDialog(this);
+        int returnVal = sqlLoadChooser.showOpenDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION){
-            File file = fc.getSelectedFile();
+            File file = sqlLoadChooser.getSelectedFile();
             System.out.println("Selected read file "+file.getName());
             //return file.getName();
             return file.getAbsolutePath();
@@ -311,7 +294,7 @@ public class DumpDatabase extends WindowContent {
             if (password == null){
                 return;
             }
-            initializeDumpDialog();
+            initializeSaveChooser();
             String filename = askForDumpFilename();
             if (filename != null){
                 dumpDatabase(password, filename);
@@ -323,7 +306,7 @@ public class DumpDatabase extends WindowContent {
             if (password == null){
                 return;
             }
-            initializeReadDialog();
+            initializeLoadChooser();
             String filename = askForReadFilename();
             if (filename != null){
                 readDatabase(password, filename);
