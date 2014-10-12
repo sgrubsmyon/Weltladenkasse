@@ -12,7 +12,7 @@ rsync -aPvci Weltladenkasse.bat $releasedir
 rsync -aPvci Weltladenbesteller.bat $releasedir
 rsync -aPvci config.properties $releasedir
 rsync -aPvci config_Windows.properties $releasedir
-rsync -aPvci Bestellvorlage.ods $releasedir
+rsync -aPvci Bestellvorlage_*.ods $releasedir
 rsync -aPvci Artikelliste.ods $releasedir
 rsync -aPvci README.txt $releasedir
 rsync -aPvci README_Windows.txt $releasedir
