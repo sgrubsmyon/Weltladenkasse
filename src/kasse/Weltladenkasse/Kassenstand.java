@@ -40,6 +40,7 @@ import jcalendarbutton.org.JCalendarButton;
 //import java.util.Date;
 
 import WeltladenDB.WindowContent;
+import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.AnyJComponentJTable;
 import WeltladenDB.NumberDocumentFilter;
 import WeltladenDB.JComponentCellRenderer;
@@ -93,7 +94,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
     /**
      *    The constructor.
      *       */
-    public Kassenstand(Connection conn, MainWindow mw)
+    public Kassenstand(Connection conn, MainWindowGrundlage mw)
     {
 	super(conn, mw);
 
