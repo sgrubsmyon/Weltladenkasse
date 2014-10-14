@@ -28,7 +28,9 @@ public class StornierteRechnungen extends Rechnungen {
      *    The constructor.
      *       */
     public StornierteRechnungen(Connection conn, MainWindowGrundlage mw){
-	super(conn, mw, "WHERE verkauf.storniert = TRUE AND verkauf.verkaufsdatum > (SELECT MAX(zeitpunkt) FROM abrechnung_tag) ", "Stornierte Rechnungen");
+	super(conn, mw, "WHERE verkauf.storniert = TRUE AND " +
+                "verkauf.verkaufsdatum > IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'01-01-0001') ",
+                "Stornierte Rechnungen");
 	showTable();
     }
 

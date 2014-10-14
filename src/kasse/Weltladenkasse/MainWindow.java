@@ -16,7 +16,7 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
- 
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JButton;
@@ -31,7 +31,7 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
     // Members
     //***************************************************
     TabbedPane myTabbedPane;
-    
+
     private JButton beendenButton = new JButton("Beenden");
 
     //***************************************************

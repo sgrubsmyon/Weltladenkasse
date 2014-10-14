@@ -56,7 +56,7 @@ public class TabbedPane extends TabbedPaneGrundlage {
         myAbrech = new AbrechnungenTag(this.conn, this.mainWindow);
         myKassenstand = new Kassenstand(this.conn, this.mainWindow);
         myOptPane = new OptionTabbedPane(this.conn, this.mainWindow);
-        tabbedPane.addTab("Kassieren", null, myKassenstand, "Kunden abkassieren");
+        tabbedPane.addTab("Kassieren", null, myKassieren, "Kunden abkassieren");
         tabbedPane.addTab("Rechnungen", null, myRech, "Rechnungen ansehen/stornieren");
         tabbedPane.addTab("Abrechnungen", null, myAbrech, "Tages-/Monats-/Jahresabschluss");
         tabbedPane.addTab("Kassenstand", null, myKassenstand, "Kassenstand ansehen/ändern");

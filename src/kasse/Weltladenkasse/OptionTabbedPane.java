@@ -17,7 +17,7 @@ import java.awt.*;
 //import java.awt.event.ActionEvent;
 //import java.awt.event.ActionListener;
 import java.awt.event.*;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -31,15 +31,16 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.*;
 
+import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.TabbedPaneGrundlage;
 import WeltladenDB.ArtikellisteContainer;
 import WeltladenDB.DumpDatabase;
 
 // Klasse, die Produktgruppenliste und Artikelliste speichert und anzeigt
 public class OptionTabbedPane extends TabbedPaneGrundlage {
-    
+
     // Methoden:
-    public OptionTabbedPane(Connection conn, MainWindow mw) {
+    public OptionTabbedPane(Connection conn, MainWindowGrundlage mw) {
 	super(conn, mw);
     }
 

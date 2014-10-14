@@ -34,6 +34,7 @@ import javax.swing.event.*;
 //import java.beans.PropertyChangeEvent;
 //import java.beans.PropertyChangeListener;
 
+import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.BarcodeComboBox;
 import WeltladenDB.ArtikelNameComboBox;
 import WeltladenDB.ArtikelNummerComboBox;
@@ -123,8 +124,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     /**
      *    The constructor.
      *       */
-    public Kassieren(Connection conn, MainWindow mw)
-    {
+    public Kassieren(Connection conn, MainWindowGrundlage mw) {
 	super(conn, mw);
         myKassieren = this;
 
