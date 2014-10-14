@@ -738,7 +738,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT DISTINCT a.artikel_nr FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.artikel_name = ? AND l.lieferant_name "+lieferantQuery+" "+
+                    "WHERE a.artikel_name = ? AND l.lieferant_name "+lieferantQuery+" " +
                     "AND a.aktiv = TRUE"
                     );
             pstmt.setString(1, artikelName);

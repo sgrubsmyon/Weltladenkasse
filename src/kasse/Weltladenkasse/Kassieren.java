@@ -1281,6 +1281,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         BigDecimal gesPreis = new BigDecimal(artikelPreis).multiply(new BigDecimal(stueck));
         String artikelGesamtPreis = priceFormatterIntern(gesPreis);
         String artikelMwSt = getVAT(selectedArtikelID);
+        Boolean sortiment = getSortimentBool(selectedArtikelID);
+        if (color == "default"){
+            color = sortiment ? "default" : "gray";
+        }
 
         Integer lastPos = 0;
         for (int i=positions.size()-1; i>=0; i--){

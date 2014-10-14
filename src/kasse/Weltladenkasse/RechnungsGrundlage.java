@@ -148,10 +148,11 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
                 // add custom rendering here
                 c.setFont( c.getFont().deriveFont(Font.BOLD) );
                 String color = colors.get(row);
-                if (color.equals("red")){ c.setForeground(Color.red); }
-                else if (color.equals("blue")){ c.setForeground(Color.blue); }
-                else if (color.equals("green")){ c.setForeground(Color.green.darker().darker()); }
-                else { c.setForeground(Color.black); }
+                if (color.equals("red")){ c.setForeground(Color.RED); }
+                else if (color.equals("blue")){ c.setForeground(Color.BLUE); }
+                else if (color.equals("green")){ c.setForeground(Color.GREEN.darker().darker()); }
+                else if (color.equals("gray")){ c.setForeground(Color.GRAY); }
+                else { c.setForeground(Color.BLACK); }
                 //c.setBackground(Color.LIGHT_GRAY);
                 return c;
             }

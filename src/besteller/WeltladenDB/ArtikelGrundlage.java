@@ -14,8 +14,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
     /**
      *    The constructor.
      *       */
-    public ArtikelGrundlage(Connection conn, MainWindowGrundlage mw)
-    {
+    public ArtikelGrundlage(Connection conn, MainWindowGrundlage mw) {
 	super(conn, mw);
     }
 

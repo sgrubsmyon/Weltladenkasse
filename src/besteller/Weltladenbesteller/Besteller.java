@@ -59,8 +59,8 @@ public class Besteller {
                     System.out.println("Password was correct.");
                     return;
                 } else {
-                    System.out.println("Password was incorrect.");
                     passwdIncorrect = true;
+                    System.out.println("Password was incorrect.");
                 }
             }
         }

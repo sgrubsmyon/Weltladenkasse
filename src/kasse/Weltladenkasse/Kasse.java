@@ -51,14 +51,16 @@ public class Kasse {
                     myWindow.setPreferredSize(new Dimension(1024, 768));
                     myWindow.pack();
 
-                    WelcomeScreen welcome = new WelcomeScreen();
-                    myWindow.setContentPanel(welcome);
+                    //WelcomeScreen welcome = new WelcomeScreen();
+                    //myWindow.setContentPanel(welcome);
 
                     // Show it!
                     myWindow.setVisible(true);
+                    System.out.println("Password was correct.");
                     return;
                 } else {
                     passwdIncorrect = true;
+                    System.out.println("Password was incorrect.");
                 }
             }
         }

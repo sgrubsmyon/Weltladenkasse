@@ -20,8 +20,7 @@ public class WelcomeScreen extends WindowContent {
     /**
      *    The constructor.
      *       */
-    public WelcomeScreen()
-    {
+    public WelcomeScreen() {
 	this.add(welcomeLabel, BorderLayout.CENTER);
     }
 
