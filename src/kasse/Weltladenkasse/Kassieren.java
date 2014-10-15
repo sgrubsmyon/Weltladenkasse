@@ -459,7 +459,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 quittungsButton.addActionListener(this);
                 quittungsButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
                 buttonPanel.add(quittungsButton);
-                neuerKundeButton = new JButton("Neuer Kunde");
+                neuerKundeButton = new JButton("Fertig/Nächster Kunde");
                 neuerKundeButton.setEnabled(false);
                 neuerKundeButton.addActionListener(this);
                 neuerKundeButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);

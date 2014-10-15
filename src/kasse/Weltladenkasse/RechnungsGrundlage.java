@@ -53,7 +53,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
 	columnLabels = new Vector<String>();
         columnLabels.add("Pos.");
 	columnLabels.add("Artikel-Name"); columnLabels.add("Artikel-Nr."); columnLabels.add("Stückzahl");
-        columnLabels.add("Einzelpreis"); columnLabels.add("Ges.-Preis"); columnLabels.add("MwSt.");
+        columnLabels.add("Einzelpreis"); columnLabels.add("Gesamtpreis"); columnLabels.add("MwSt.");
         preise = new Vector<BigDecimal>();
         mwsts = new Vector<BigDecimal>();
         colors = new Vector<String>();
@@ -109,7 +109,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     protected JPanel createTotalPricePanel() {
         JPanel totalPricePanel = new JPanel();
         totalPricePanel.setLayout(new FlowLayout());
-        JLabel totalPriceLabel = new JLabel("Ges. Preis: ");
+        JLabel totalPriceLabel = new JLabel("Gesamtpreis: ");
         totalPricePanel.add(totalPriceLabel);
         totalPriceField = new JTextField(calculateTotalPrice()+" "+currencySymbol);
         totalPriceField.setEditable(false);
@@ -203,7 +203,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
 	stueckzahl.setCellRenderer(rechtsAusrichter);
 	TableColumn preis = table.getColumn("Einzelpreis");
 	preis.setCellRenderer(rechtsAusrichter);
-	TableColumn gespreis = table.getColumn("Ges.-Preis");
+	TableColumn gespreis = table.getColumn("Gesamtpreis");
 	gespreis.setCellRenderer(rechtsAusrichter);
 	TableColumn mwst = table.getColumn("MwSt.");
 	mwst.setCellRenderer(rechtsAusrichter);
