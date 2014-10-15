@@ -38,8 +38,8 @@ import WeltladenDB.DumpDatabase;
 // Klasse, die Bestellfenster und Artikelliste speichert und anzeigt
 public class TabbedPane extends TabbedPaneGrundlage {
     private Kassieren myKassieren;
-    private HeutigeRechnungen myRech;
-    private AbrechnungenTag myAbrech;
+    private RechnungenTabbedPane myRech;
+    private AbrechnungenTabbedPane myAbrech;
     private Kassenstand myKassenstand;
     private OptionTabbedPane myOptPane;
 
@@ -51,9 +51,10 @@ public class TabbedPane extends TabbedPaneGrundlage {
     @Override
     protected void createTabbedPane() {
         tabbedPane = new JTabbedPane();
-        myKassieren = new Kassieren(this.conn, this.mainWindow);
-        myRech = new HeutigeRechnungen(this.conn, this.mainWindow);
-        myAbrech = new AbrechnungenTag(this.conn, this.mainWindow);
+
+        myKassieren = new Kassieren(this.conn, this.mainWindow, this);
+        myRech = new RechnungenTabbedPane(this.conn, this.mainWindow);
+        myAbrech = new AbrechnungenTabbedPane(this.conn, this.mainWindow);
         myKassenstand = new Kassenstand(this.conn, this.mainWindow);
         myOptPane = new OptionTabbedPane(this.conn, this.mainWindow);
         tabbedPane.addTab("Kassieren", null, myKassieren, "Kunden abkassieren");

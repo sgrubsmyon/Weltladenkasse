@@ -29,7 +29,7 @@ public class StornierteRechnungen extends Rechnungen {
      *       */
     public StornierteRechnungen(Connection conn, MainWindowGrundlage mw){
 	super(conn, mw, "WHERE verkauf.storniert = TRUE AND " +
-                "verkauf.verkaufsdatum > IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'01-01-0001') ",
+                "verkauf.verkaufsdatum > IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') ",
                 "Stornierte Rechnungen");
 	showTable();
     }
@@ -53,20 +53,6 @@ public class StornierteRechnungen extends Rechnungen {
      **/
     public void actionPerformed(ActionEvent e)
     {
-	if (e.getSource() == heuteButton){
-	    HeutigeRechnungen myRech = new HeutigeRechnungen(this.conn, this.mainWindow);
-	    this.mainWindow.changeContentPanel(myRech);
-	    return;
-	}
-	if (e.getSource() == archivButton){
-	    AlteRechnungen myArchiv = new AlteRechnungen(this.conn, this.mainWindow);
-	    this.mainWindow.changeContentPanel(myArchiv);
-	    return;
-	}
-	if (e.getSource() == storniertButton){
-	    updateTable();
-	    return;
-	}
 	if (e.getSource() == removeDetailButton){
 	    updateTable();
 	    return;
