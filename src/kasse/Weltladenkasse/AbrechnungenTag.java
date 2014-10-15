@@ -20,7 +20,7 @@ import java.awt.*;
 //import java.awt.event.ActionEvent;
 //import java.awt.event.ActionListener;
 import java.awt.event.*;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -35,6 +35,7 @@ import WeltladenDB.MainWindowGrundlage;
 
 public class AbrechnungenTag extends Abrechnungen {
     // Attribute:
+    private AbrechnungenTabbedPane tabbedPane;
 
     private JButton submitButton;
     private boolean submitButtonEnabled;
@@ -43,8 +44,9 @@ public class AbrechnungenTag extends Abrechnungen {
     /**
      *    The constructor.
      *       */
-    public AbrechnungenTag(Connection conn, MainWindowGrundlage mw){
+    public AbrechnungenTag(Connection conn, MainWindowGrundlage mw, AbrechnungenTabbedPane tp){
 	super(conn, mw, "", "Tagesabrechnungen", "yyyy-MM-dd HH:mm:ss", "dd.MM. (E)", "zeitpunkt", "abrechnung_tag");
+        tabbedPane = tp;
 	showTable();
     }
 
@@ -68,20 +70,22 @@ public class AbrechnungenTag extends Abrechnungen {
             ResultSet rs = stmt.executeQuery(
                     "SELECT SUM(ges_preis) " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND verkaufsdatum > (SELECT MAX(zeitpunkt) FROM abrechnung_tag) "
+                    "WHERE storniert = FALSE AND verkaufsdatum > " +
+                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') "
                     );
             rs.next(); BigDecimal tagesGesamtBrutto = new BigDecimal(rs.getString(1) == null ? "0" : rs.getString(1)); rs.close();
             // Gesamt Bar Brutto
             rs = stmt.executeQuery(
                     "SELECT NOW(), SUM(ges_preis) AS bar_brutto " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND verkaufsdatum > (SELECT MAX(zeitpunkt) FROM abrechnung_tag) AND ec_zahlung = FALSE "
+                    "WHERE storniert = FALSE AND verkaufsdatum > " +
+                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') AND ec_zahlung = FALSE "
                     );
             rs.next(); String date = rs.getString(1); BigDecimal tagesGesamtBarBrutto = new BigDecimal(rs.getString(2) == null ? "0" : rs.getString(2)); rs.close();
             // Gesamt EC Brutto
             BigDecimal tagesGesamtECBrutto = tagesGesamtBrutto.subtract(tagesGesamtBarBrutto);
             Vector<BigDecimal> values = new Vector<BigDecimal>();
-            values.add(tagesGesamtBrutto); 
+            values.add(tagesGesamtBrutto);
             values.add(tagesGesamtBarBrutto);
             values.add(tagesGesamtECBrutto);
             // store in map under date
@@ -108,7 +112,7 @@ public class AbrechnungenTag extends Abrechnungen {
             if ( rowCount == 0 ){ // empty, there are no verkaeufe!!! Add zeros.
                 HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
                 Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();
-                mwstValues.add(new BigDecimal("0")); 
+                mwstValues.add(new BigDecimal("0"));
                 mwstValues.add(new BigDecimal("0"));
                 abrechnung.put(new BigDecimal("0.07"), mwstValues);
                 abrechnung.put(new BigDecimal("0.19"), mwstValues);
@@ -130,7 +134,8 @@ public class AbrechnungenTag extends Abrechnungen {
                     "SELECT mwst_satz, SUM( ROUND(ges_preis / (1.+mwst_satz), 2) ) AS mwst_netto, " +
                     "SUM( ROUND(ges_preis / (1. + mwst_satz) * mwst_satz, 2) ) AS mwst_betrag " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND verkaufsdatum > (SELECT MAX(zeitpunkt) FROM abrechnung_tag) " +
+                    "WHERE storniert = FALSE AND verkaufsdatum > " +
+                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') " +
                     "GROUP BY mwst_satz"
                     );
             while (rs.next()) {
@@ -161,7 +166,7 @@ public class AbrechnungenTag extends Abrechnungen {
                     "SELECT mwst_satz, SUM(ges_preis) AS bar_brutto " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
                     "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "(SELECT MAX(zeitpunkt) FROM abrechnung_tag) AND ec_zahlung = FALSE " +
+                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') AND ec_zahlung = FALSE " +
                     "GROUP BY mwst_satz"
                     );
             while (rs.next()) {
@@ -232,6 +237,7 @@ public class AbrechnungenTag extends Abrechnungen {
 	if (e.getSource() == submitButton){
             insertTagesAbrechnung();
             updateTable();
+            tabbedPane.recreateTabbedPane();
 	    return;
 	}
     }

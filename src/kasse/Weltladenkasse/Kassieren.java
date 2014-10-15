@@ -47,7 +47,7 @@ import WeltladenDB.Quittung;
 public class Kassieren extends RechnungsGrundlage implements ItemListener, DocumentListener {
     // Attribute:
     private final BigDecimal mitarbeiterRabatt = new BigDecimal("0.1");
-    private final boolean allowMitarbeiterRabatt = false;
+    private final boolean allowMitarbeiterRabatt = true;
     private final BigDecimal ecSchwelle = new BigDecimal("20.00");
     private final BigDecimal minusOne = new BigDecimal(-1);
     private final BigDecimal percent = new BigDecimal("0.01");
@@ -55,6 +55,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private int rechnungRabattArtikelID = 2;
     private String zahlungsModus = "unbekannt";
 
+    private TabbedPane tabbedPane;
     private Kassieren myKassieren;
 
     // Text Fields
@@ -124,9 +125,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     /**
      *    The constructor.
      *       */
-    public Kassieren(Connection conn, MainWindowGrundlage mw) {
+    public Kassieren(Connection conn, MainWindowGrundlage mw, TabbedPane tp) {
 	super(conn, mw);
         myKassieren = this;
+        tabbedPane = tp;
 
         columnLabels.add("Entfernen");
 
@@ -1823,6 +1825,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	}
 	if (e.getSource() == neuerKundeButton){
             neuerKunde();
+            tabbedPane.recreateTabbedPane();
 	    return;
 	}
 	if (e.getSource() == mitarbeiterRabattButton){

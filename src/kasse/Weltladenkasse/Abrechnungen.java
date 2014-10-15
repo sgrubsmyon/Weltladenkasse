@@ -54,14 +54,10 @@ public abstract class Abrechnungen extends WindowContent {
 
     // The bottom panel which holds button.
     protected JPanel bottomPanel;
-    protected JPanel navigationPanel;
     protected JPanel tablePanel;
     // The table holding the invoices. This is "anonymously subclassed" and two method are overridden
     protected AbrechnungsTable myTable;
 
-    protected JButton tagButton = new JButton("Tag");
-    protected JButton monatButton = new JButton("Monat");
-    protected JButton jahrButton = new JButton("Jahr");
     protected JButton freiButton = new JButton("Frei");
     protected JButton prevButton;
     protected JButton nextButton;
@@ -88,31 +84,9 @@ public abstract class Abrechnungen extends WindowContent {
         timeName = tn;
         abrechnungTableName = atn;
 
-	navigationPanel = new JPanel();
-	navigationPanel.setLayout(new BoxLayout(navigationPanel, BoxLayout.Y_AXIS));
-	tagButton.addActionListener(this);
-	monatButton.addActionListener(this);
-	jahrButton.addActionListener(this);
-	navigationPanel.add(tagButton);
-	navigationPanel.add(Box.createRigidArea(new Dimension(0,6)));
-	navigationPanel.add(monatButton);
-	navigationPanel.add(Box.createRigidArea(new Dimension(0,6)));
-	navigationPanel.add(jahrButton);
-	Dimension buttonDimension = new Dimension(200,50);
-        tagButton.setPreferredSize(buttonDimension);
-        monatButton.setPreferredSize(buttonDimension);
-	jahrButton.setPreferredSize(buttonDimension);
-	tagButton.setMinimumSize(buttonDimension);
-	monatButton.setMinimumSize(buttonDimension);
-	jahrButton.setMinimumSize(buttonDimension);
-//	Dimension largestSize = jahrButton.getSize();
-//	tagButton.setMaximumSize(largestSize);
-//	monatButton.setMaximumSize(largestSize);
-
 	bottomPanel = new JPanel();
 	bottomPanel.setLayout(new FlowLayout());
 
-	this.add(navigationPanel, BorderLayout.WEST);
 	this.add(bottomPanel, BorderLayout.SOUTH);
 
 	fillDataArray();
@@ -395,20 +369,5 @@ public abstract class Abrechnungen extends WindowContent {
      *    @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
-	if (e.getSource() == tagButton){
-	    AbrechnungenTag myAbrech = new AbrechnungenTag(this.conn, this.mainWindow);
-	    this.mainWindow.changeContentPanel(myAbrech);
-	    return;
-	}
-	if (e.getSource() == monatButton){
-	    AbrechnungenMonat myAbrech = new AbrechnungenMonat(this.conn, this.mainWindow);
-	    this.mainWindow.changeContentPanel(myAbrech);
-	    return;
-	}
-	if (e.getSource() == jahrButton){
-	    AbrechnungenJahr myAbrech = new AbrechnungenJahr(this.conn, this.mainWindow);
-	    this.mainWindow.changeContentPanel(myAbrech);
-	    return;
-	}
     }
 }

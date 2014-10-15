@@ -47,14 +47,10 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 
     // The bottom panel which holds button.
     protected JPanel bottomPanel;
-    protected JPanel navigationPanel;
     protected JPanel tablePanel;
     // The table holding the invoices. This is "anonymously subclassed" and two method are overridden
     protected AnyJComponentJTable myTable;
 
-    protected JButton heuteButton = new JButton(    "  Aktuelle Rechnungen  ");
-    protected JButton archivButton = new JButton(   "      Alte Rechnungen     ");
-    protected JButton storniertButton = new JButton("Stornierte Rechnungen");
     protected JButton prevButton;
     protected JButton nextButton;
 
@@ -78,28 +74,9 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         filterStr = fs;
         titleStr = ts;
 
-	navigationPanel = new JPanel();
-	navigationPanel.setLayout(new BoxLayout(navigationPanel, BoxLayout.Y_AXIS));
-	heuteButton.addActionListener(this);
-	archivButton.addActionListener(this);
-	storniertButton.addActionListener(this);
-	navigationPanel.add(heuteButton);
-	navigationPanel.add(Box.createRigidArea(new Dimension(0,6)));
-	navigationPanel.add(archivButton);
-	navigationPanel.add(Box.createRigidArea(new Dimension(0,6)));
-	navigationPanel.add(storniertButton);
-//	Dimension largestSize = storniertButton.getSize();
-	heuteButton.setPreferredSize(new Dimension(200,50));
-	archivButton.setPreferredSize(new Dimension(200,50));
-	heuteButton.setMinimumSize(new Dimension(200,50));
-	archivButton.setMinimumSize(new Dimension(200,50));
-//	heuteButton.setMaximumSize(largestSize);
-//	archivButton.setMaximumSize(largestSize);
-
 	bottomPanel = new JPanel();
 	bottomPanel.setLayout(new FlowLayout());
 
-	this.add(navigationPanel, BorderLayout.WEST);
 	this.add(bottomPanel, BorderLayout.SOUTH);
 
 	fillDataArray();

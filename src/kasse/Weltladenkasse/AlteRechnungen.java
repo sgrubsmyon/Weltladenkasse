@@ -60,7 +60,8 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
      *    The constructor.
      *       */
     public AlteRechnungen(Connection conn, MainWindowGrundlage mw){
-	super(conn, mw, "WHERE verkauf.verkaufsdatum <= (SELECT MAX(zeitpunkt) FROM abrechnung_tag) AND "+
+	super(conn, mw, "WHERE verkauf.verkaufsdatum <= " +
+                "(SELECT MAX(zeitpunkt) FROM abrechnung_tag) AND "+
                 "verkauf.storniert = FALSE ", "Alte Rechnungen");
 	queryEarliestRechnung();
 	initiateSpinners();
@@ -204,20 +205,6 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
      **/
     public void actionPerformed(ActionEvent e)
     {
-	if (e.getSource() == heuteButton){
-	    HeutigeRechnungen myRech = new HeutigeRechnungen(this.conn, this.mainWindow);
-	    this.mainWindow.changeContentPanel(myRech);
-	    return;
-	}
-	if (e.getSource() == archivButton){
-	    updateTable();
-	    return;
-	}
-	if (e.getSource() == storniertButton){
-	    StornierteRechnungen myStorniert = new StornierteRechnungen(this.conn, this.mainWindow);
-	    this.mainWindow.changeContentPanel(myStorniert);
-	    return;
-	}
 	if (e.getSource() == changeDateButton){
 	    SpinnerModel startDateModel = startSpinner.getModel();
 	    SpinnerModel endDateModel = endSpinner.getModel();

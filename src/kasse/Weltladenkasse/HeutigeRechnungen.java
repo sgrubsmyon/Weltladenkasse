@@ -25,14 +25,17 @@ import WeltladenDB.MainWindowGrundlage;
 
 public class HeutigeRechnungen extends Rechnungen {
     // Attribute:
+    private RechnungenTabbedPane tabbedPane;
 
     // Methoden:
     /**
      *    The constructor.
      *       */
-    public HeutigeRechnungen(Connection conn, MainWindowGrundlage mw){
-	super(conn, mw, "WHERE verkauf.verkaufsdatum > IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'01-01-0001') AND "+
+    public HeutigeRechnungen(Connection conn, MainWindowGrundlage mw, RechnungenTabbedPane tp){
+	super(conn, mw, "WHERE verkauf.verkaufsdatum > " +
+                "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') AND "+
                 "verkauf.storniert = FALSE ", "Heutige Rechnungen");
+        tabbedPane = tp;
 	showTable();
     }
 
@@ -85,20 +88,6 @@ public class HeutigeRechnungen extends Rechnungen {
      **/
     public void actionPerformed(ActionEvent e)
     {
-	if (e.getSource() == heuteButton){
-	    updateTable();
-	    return;
-	}
-	if (e.getSource() == archivButton){
-	    AlteRechnungen myArchiv = new AlteRechnungen(this.conn, this.mainWindow);
-	    this.mainWindow.changeContentPanel(myArchiv);
-	    return;
-	}
-	if (e.getSource() == storniertButton){
-	    StornierteRechnungen myStorniert = new StornierteRechnungen(this.conn, this.mainWindow);
-	    this.mainWindow.changeContentPanel(myStorniert);
-	    return;
-	}
 	if (e.getSource() == removeDetailButton){
 	    updateTable();
 	    return;
@@ -128,8 +117,10 @@ public class HeutigeRechnungen extends Rechnungen {
 	    int answer = JOptionPane.showConfirmDialog(this,
 		    "Rechnung " + (String)data.get(stornoRow).get(1) + " wirklich stornieren?", "Storno",
 		    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-	    if (answer == JOptionPane.YES_OPTION)
+	    if (answer == JOptionPane.YES_OPTION){
 		stornieren(stornoRow);
+                tabbedPane.recreateTabbedPane();
+            }
 	    return;
 	}
     }
