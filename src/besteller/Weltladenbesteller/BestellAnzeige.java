@@ -648,6 +648,10 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 	    return;
 	}
         if (e.getSource() == exportButton){
+            String typ = (String)selBestellNrUndTyp.get(1);
+            Vector<String> bestellung = orderData.get(bestellNummernUndTyp.indexOf(selBestellNrUndTyp));
+            Integer kw = Integer.parseInt(bestellung.get(3));
+            odsChooser.setSelectedFile(new File("Bestellung_WL_Bonn_"+typ+"_KW"+kw+".ods"));
             int returnVal = odsChooser.showSaveDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION){
                 File file = odsChooser.getSelectedFile();
