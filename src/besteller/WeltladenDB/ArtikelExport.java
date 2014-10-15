@@ -50,6 +50,7 @@ public class ArtikelExport extends WindowContent {
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "ODS Spreadsheet-Dokumente", "ods");
         odsChooser.setFileFilter(filter);
+        odsChooser.setSelectedFile(new File("Artikelliste.ods"));
 
         int returnVal = odsChooser.showSaveDialog(pw);
         if (returnVal == JFileChooser.APPROVE_OPTION){

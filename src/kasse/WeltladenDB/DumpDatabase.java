@@ -60,6 +60,7 @@ public class DumpDatabase extends WindowContent {
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "SQL Dokumente", "sql");
         sqlSaveChooser.setFileFilter(filter);
+        sqlSaveChooser.setSelectedFile(new File("DB_Dump.sql"));
     }
 
     void initializeLoadChooser() {
