@@ -53,6 +53,7 @@ public class OptionTabbedPane extends TabbedPaneGrundlage {
         DumpDatabase myDump = new DumpDatabase(this.conn, this.mainWindow, this);
         tabbedPane.addTab("Artikelliste", null, myArtikellisteC, "Artikel bearbeiten/hinzufügen");
         tabbedPane.addTab("Rabatt", null, myRabattaktionen, "Rabattaktionen bearbeiten/hinzufügen");
+        tabbedPane.addTab("DB Import/Export", null, myDump, "Datenbank exportieren/importieren");
 
         this.add(tabbedPane, BorderLayout.CENTER);
     }
