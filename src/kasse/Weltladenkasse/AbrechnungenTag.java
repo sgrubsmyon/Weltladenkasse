@@ -61,107 +61,60 @@ public class AbrechnungenTag extends Abrechnungen {
     }
 
     void queryIncompleteAbrechnung() { // create new abrechnung (for display) from time of last abrechnung until now
+        String date = "";
         try {
             Statement stmt = this.conn.createStatement();
-            // for filling the diplayed table:
-
-            // first, get the totals:
-            // Gesamt Brutto
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT SUM(ges_preis) " +
-                    "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') "
-                    );
-            rs.next(); BigDecimal tagesGesamtBrutto = new BigDecimal(rs.getString(1) == null ? "0" : rs.getString(1)); rs.close();
-            // Gesamt Bar Brutto
-            rs = stmt.executeQuery(
-                    "SELECT NOW(), SUM(ges_preis) AS bar_brutto " +
-                    "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') AND ec_zahlung = FALSE "
-                    );
-            rs.next(); String date = rs.getString(1); BigDecimal tagesGesamtBarBrutto = new BigDecimal(rs.getString(2) == null ? "0" : rs.getString(2)); rs.close();
-            // Gesamt EC Brutto
-            BigDecimal tagesGesamtECBrutto = tagesGesamtBrutto.subtract(tagesGesamtBarBrutto);
-            Vector<BigDecimal> values = new Vector<BigDecimal>();
-            values.add(tagesGesamtBrutto);
-            values.add(tagesGesamtBarBrutto);
-            values.add(tagesGesamtECBrutto);
-            // store in map under date
-            totalsMap.put(date, values);
-
-            // second, get values grouped by mwst
-            HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = getAbrechnungGroupedByMwst(stmt);
-            int rowCount = 0;
-            for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : abrechnungNettoBetrag.entrySet() ){
-                BigDecimal mwst = entry.getKey();
-                Vector<BigDecimal> mwstValues = entry.getValue();
-                if ( abrechnungsMap.containsKey(date) ){ // Abrechnung already exists, only add information
-                    abrechnungsMap.get(date).put(mwst, mwstValues);
-                } else { // start new Abrechnung
-                    HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
-                    abrechnung.put(mwst, mwstValues);
-                    abrechnungsMap.put(date, abrechnung);
-                }
-                mwstSet.add(mwst);
-                rowCount++;
-
-                submitButtonEnabled = true;
-            }
-            if ( rowCount == 0 ){ // empty, there are no verkaeufe!!! Add zeros.
-                HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
-                Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();
-                mwstValues.add(new BigDecimal("0"));
-                mwstValues.add(new BigDecimal("0"));
-                abrechnung.put(new BigDecimal("0.07"), mwstValues);
-                abrechnung.put(new BigDecimal("0.19"), mwstValues);
-                abrechnungsMap.put(date, abrechnung);
-
-                submitButtonEnabled = false;
-            }
+            ResultSet rs = stmt.executeQuery("SELECT NOW()");
+            rs.next(); date = rs.getString(1); rs.close();
             stmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
-    }
 
-    HashMap<BigDecimal, Vector<BigDecimal>> getAbrechnungGroupedByMwst(Statement stmt) {
-        HashMap<BigDecimal, Vector<BigDecimal>> map = new HashMap<BigDecimal, Vector<BigDecimal>>();
-        try {
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT mwst_satz, SUM( ROUND(ges_preis / (1.+mwst_satz), 2) ) AS mwst_netto, " +
-                    "SUM( ROUND(ges_preis / (1. + mwst_satz) * mwst_satz, 2) ) AS mwst_betrag " +
-                    "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') " +
-                    "GROUP BY mwst_satz"
-                    );
-            while (rs.next()) {
-                BigDecimal mwst_satz = rs.getBigDecimal(1);
-                BigDecimal mwst_netto = rs.getBigDecimal(2);
-                BigDecimal mwst_betrag = rs.getBigDecimal(3);
-                Vector<BigDecimal> values = new Vector<BigDecimal>();
-                values.add(mwst_netto);
-                values.add(mwst_betrag);
-                map.put(mwst_satz, values);
+        // for filling the diplayed table:
+        // first, get the totals:
+        Vector<BigDecimal> values = queryIncompleteAbrechnungTag_Totals();
+        // store in map under date
+        totalsMap.put(date, values);
+
+        // second, get values grouped by mwst
+        HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
+        int rowCount = 0;
+        for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : abrechnungNettoBetrag.entrySet() ){
+            BigDecimal mwst = entry.getKey();
+            Vector<BigDecimal> mwstValues = entry.getValue();
+            if ( abrechnungsMap.containsKey(date) ){ // Abrechnung already exists, only add information
+                abrechnungsMap.get(date).put(mwst, mwstValues);
+            } else { // start new Abrechnung
+                HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
+                abrechnung.put(mwst, mwstValues);
+                abrechnungsMap.put(date, abrechnung);
             }
-            rs.close();
-        } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            mwstSet.add(mwst);
+            rowCount++;
+
+            submitButtonEnabled = true;
         }
-        return map;
+        if ( rowCount == 0 ){ // empty, there are no verkaeufe!!! Add zeros.
+            HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
+            Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();
+            mwstValues.add(new BigDecimal("0"));
+            mwstValues.add(new BigDecimal("0"));
+            abrechnung.put(new BigDecimal("0.07"), mwstValues);
+            abrechnung.put(new BigDecimal("0.19"), mwstValues);
+            abrechnungsMap.put(date, abrechnung);
+
+            submitButtonEnabled = false;
+        }
     }
 
     void insertTagesAbrechnung() { // create new abrechnung (and save in DB) from time of last abrechnung until now
         try {
-            Statement stmt = this.conn.createStatement();
             // get netto values grouped by mwst:
-            HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = getAbrechnungGroupedByMwst(stmt);
+            HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
             // get totals (bar brutto):
-            HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = new HashMap<BigDecimal, BigDecimal>();
+            Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
                     "SELECT mwst_satz, SUM(ges_preis) AS bar_brutto " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
@@ -169,6 +122,7 @@ public class AbrechnungenTag extends Abrechnungen {
                     "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') AND ec_zahlung = FALSE " +
                     "GROUP BY mwst_satz"
                     );
+            HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = new HashMap<BigDecimal, BigDecimal>();
             while (rs.next()) {
                 BigDecimal mwst_satz = rs.getBigDecimal(1);
                 BigDecimal bar_brutto = rs.getBigDecimal(2);

@@ -43,8 +43,8 @@ public class AbrechnungenTabbedPane extends TabbedPaneGrundlage {
     /**
      *    The constructor.
      *       */
-    public AbrechnungenTabbedPane(Connection conn, MainWindowGrundlage mw) {
-	super(conn, mw);
+    public AbrechnungenTabbedPane(Connection conn, MainWindowGrundlage mw, TabbedPaneGrundlage ptp) {
+	super(conn, mw, ptp);
     }
 
     @Override

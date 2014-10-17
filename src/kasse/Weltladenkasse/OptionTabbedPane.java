@@ -40,8 +40,8 @@ import WeltladenDB.DumpDatabase;
 public class OptionTabbedPane extends TabbedPaneGrundlage {
 
     // Methoden:
-    public OptionTabbedPane(Connection conn, MainWindowGrundlage mw) {
-	super(conn, mw);
+    public OptionTabbedPane(Connection conn, MainWindowGrundlage mw, TabbedPaneGrundlage ptp) {
+	super(conn, mw, ptp);
     }
 
     @Override

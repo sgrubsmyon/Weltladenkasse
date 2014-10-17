@@ -43,7 +43,7 @@ public class TabbedPane extends TabbedPaneGrundlage {
 
     // Methoden:
     public TabbedPane(Connection conn, MainWindow mw) {
-	super(conn, mw);
+	super(conn, mw, null);
     }
 
     @Override
