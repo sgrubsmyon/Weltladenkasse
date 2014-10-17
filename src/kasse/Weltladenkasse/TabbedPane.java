@@ -45,7 +45,7 @@ public class TabbedPane extends TabbedPaneGrundlage {
 
     // Methoden:
     public TabbedPane(Connection conn, MainWindow mw) {
-	super(conn, mw);
+	super(conn, mw, null);
     }
 
     @Override
@@ -53,10 +53,10 @@ public class TabbedPane extends TabbedPaneGrundlage {
         tabbedPane = new JTabbedPane();
 
         myKassieren = new Kassieren(this.conn, this.mainWindow, this);
-        myRech = new RechnungenTabbedPane(this.conn, this.mainWindow);
-        myAbrech = new AbrechnungenTabbedPane(this.conn, this.mainWindow);
-        myKassenstand = new Kassenstand(this.conn, this.mainWindow);
-        myOptPane = new OptionTabbedPane(this.conn, this.mainWindow);
+        myRech = new RechnungenTabbedPane(this.conn, this.mainWindow, this);
+        myAbrech = new AbrechnungenTabbedPane(this.conn, this.mainWindow, this);
+        myKassenstand = new Kassenstand(this.conn, this.mainWindow, this);
+        myOptPane = new OptionTabbedPane(this.conn, this.mainWindow, this);
         tabbedPane.addTab("Kassieren", null, myKassieren, "Kunden abkassieren");
         tabbedPane.addTab("Rechnungen", null, myRech, "Rechnungen ansehen/stornieren");
         tabbedPane.addTab("Abrechnungen", null, myAbrech, "Tages-/Monats-/Jahresabschluss");

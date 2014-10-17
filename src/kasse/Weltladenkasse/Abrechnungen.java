@@ -96,6 +96,78 @@ public abstract class Abrechnungen extends WindowContent {
 
     abstract void queryAbrechnungenSpecial();
 
+    // since all Abrechnungen need to include the incomplete Tagesabrechnung, include code here to share
+    protected Vector<BigDecimal> queryIncompleteAbrechnungTag_Totals() {
+        Vector<BigDecimal> values = new Vector<BigDecimal>();
+        try {
+            Statement stmt = this.conn.createStatement();
+            // for filling the diplayed table:
+
+            // first, get the totals:
+            // Gesamt Brutto
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT SUM(ges_preis) " +
+                    "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
+                    "WHERE storniert = FALSE AND verkaufsdatum > " +
+                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') "
+                    );
+            rs.next(); BigDecimal tagesGesamtBrutto = new BigDecimal(rs.getString(1) == null ? "0" : rs.getString(1)); rs.close();
+            // Gesamt Bar Brutto
+            rs = stmt.executeQuery(
+                    "SELECT SUM(ges_preis) AS bar_brutto " +
+                    "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
+                    "WHERE storniert = FALSE AND verkaufsdatum > " +
+                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') AND ec_zahlung = FALSE "
+                    );
+            rs.next();
+                BigDecimal tagesGesamtBarBrutto =
+                    new BigDecimal(rs.getString(1) == null ?  "0" : rs.getString(1));
+            rs.close();
+            // Gesamt EC Brutto
+            BigDecimal tagesGesamtECBrutto = tagesGesamtBrutto.subtract(tagesGesamtBarBrutto);
+
+            values.add(tagesGesamtBrutto);
+            values.add(tagesGesamtBarBrutto);
+            values.add(tagesGesamtECBrutto);
+
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return values;
+    }
+    ///////////
+    protected HashMap<BigDecimal, Vector<BigDecimal>> queryIncompleteAbrechnungTag_VATs() {
+        HashMap<BigDecimal, Vector<BigDecimal>> map = new HashMap<BigDecimal, Vector<BigDecimal>>();
+        try {
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT mwst_satz, SUM( ROUND(ges_preis / (1.+mwst_satz), 2) ) AS mwst_netto, " +
+                    "SUM( ROUND(ges_preis / (1. + mwst_satz) * mwst_satz, 2) ) AS mwst_betrag " +
+                    "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
+                    "WHERE storniert = FALSE AND verkaufsdatum > " +
+                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') " +
+                    "GROUP BY mwst_satz"
+                    );
+            while (rs.next()) {
+                BigDecimal mwst_satz = rs.getBigDecimal(1);
+                BigDecimal mwst_netto = rs.getBigDecimal(2);
+                BigDecimal mwst_betrag = rs.getBigDecimal(3);
+                Vector<BigDecimal> values = new Vector<BigDecimal>();
+                values.add(mwst_netto);
+                values.add(mwst_betrag);
+                map.put(mwst_satz, values);
+            }
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return map;
+    }
+
     void queryAbrechnungen() {
         queryAbrechnungenSpecial();
 

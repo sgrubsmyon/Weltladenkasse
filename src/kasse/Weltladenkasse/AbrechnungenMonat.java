@@ -192,6 +192,13 @@ public class AbrechnungenMonat extends Abrechnungen {
             totalsValues.add(new BigDecimal(rs.getString(3) == null ? "0." : rs.getString(3)));
             rs.close();
             pstmt.close();
+
+            // add the incomplete day
+            Vector<BigDecimal> totalsValuesDay = queryIncompleteAbrechnungTag_Totals();
+            totalsValues.set( 0, totalsValues.get(0).add(totalsValuesDay.get(0)) );
+            totalsValues.set( 1, totalsValues.get(1).add(totalsValuesDay.get(1)) );
+            totalsValues.set( 2, totalsValues.get(2).add(totalsValuesDay.get(2)) );
+
             // store in map under date
             totalsMap.put(cur_month, totalsValues);
 
@@ -214,10 +221,35 @@ public class AbrechnungenMonat extends Abrechnungen {
                 }
                 mwstSet.add(mwst_satz);
                 rowCount++;
-
-                System.out.println("Aktuell mwst_satz: "+mwst_satz);
-                System.out.println("Aktuell betraege "+betraege);
             }
+
+            // add the incomplete day
+            HashMap<BigDecimal, Vector<BigDecimal>> sachenTag = queryIncompleteAbrechnungTag_VATs();
+            for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : sachenTag.entrySet() ){
+                BigDecimal mwst_satz = entry.getKey();
+                Vector<BigDecimal> betraege = entry.getValue();
+                Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();
+                mwstValues.add(betraege.get(0)); // mwst_netto
+                mwstValues.add(betraege.get(1)); // mwst_betrag
+
+                if ( abrechnungsMap.containsKey(cur_month) ){ // Abrechnung already exists
+                    if ( abrechnungsMap.get(cur_month).containsKey(mwst_satz) ){ // mwst exists, add numbers
+                        abrechnungsMap.get(cur_month).get(mwst_satz).
+                            set( 0, abrechnungsMap.get(cur_month).get(mwst_satz).get(0).add(mwstValues.get(0)) );
+                        abrechnungsMap.get(cur_month).get(mwst_satz).
+                            set( 1, abrechnungsMap.get(cur_month).get(mwst_satz).get(1).add(mwstValues.get(1)) );
+                    } else { // only add information
+                        abrechnungsMap.get(cur_month).put(mwst_satz, mwstValues);
+                    }
+                } else { // start new Abrechnung
+                    HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
+                    abrechnung.put(mwst_satz, mwstValues);
+                    abrechnungsMap.put(cur_month, abrechnung);
+                }
+                mwstSet.add(mwst_satz);
+                rowCount++;
+            }
+
             if ( rowCount == 0 ){ // empty, there are no verkaeufe!!! Add zeros.
                 HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
                 Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();

@@ -89,14 +89,17 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
     private String kassenstandZahl;
     private int kassenstandZahlInt;
 
+    private TabbedPane tabbedPane;
+
     // Methoden:
 
     /**
      *    The constructor.
      *       */
-    public Kassenstand(Connection conn, MainWindowGrundlage mw)
+    public Kassenstand(Connection conn, MainWindowGrundlage mw, TabbedPane tp)
     {
 	super(conn, mw);
+        tabbedPane = tp;
 
 	fillDataArray(filterStr);
 	queryEarliestKassenstand();
@@ -198,7 +201,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    }
 	    rs.close();
 	    rs = stmt.executeQuery(
-		    "SELECT COUNT(buchungsdatum) FROM kassenstand " +
+		    "SELECT COUNT(buchungsdatum) FROM kassenstand WHERE TRUE " +
 		    filterStr
 		    );
 	    // Now do something with the ResultSet ...
@@ -396,6 +399,130 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	kommentarCol.setPreferredWidth(70);
     }
 
+    void abschicken() {
+        // eigentlich unmoeglich:
+        if (neuerKassenstandField.getText().length() > 0 && differenzField.getText().length() > 0){
+            JOptionPane.showMessageDialog(this, "Sowohl neuer Kassenstand als auch Differenz eingegeben!",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
+            neuerKassenstandField.setText("");
+            differenzField.setText("");
+            kommentarField.setText("");
+        }
+        String kommentar = kommentarField.getText();
+        // neuerKassenstand mode:
+        if (neuerKassenstandField.getText().length() > 0){
+            String text = neuerKassenstandField.getText();
+            if ( ! text.matches(".*[0-9].*") ){ // if contains no digit: throw error
+                JOptionPane.showMessageDialog(this, "Fehlerhafter Betrag eingegeben!",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                neuerKassenstandField.setText("");
+                differenzField.setText("");
+                kommentarField.setText("");
+                return;
+            }
+            text = priceFormatter(text)+" "+currencySymbol;
+            int answer = JOptionPane.showConfirmDialog(this,
+                    "Kassenstand wirklich auf "+text+" setzen "+
+                    "mit Kommentar \n\""+kommentar+"\"?", "Kassenstand ändern",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (answer == JOptionPane.YES_OPTION){
+                BigDecimal newValue = new BigDecimal( priceFormatterIntern(text) );
+                try {
+                    PreparedStatement pstmt = this.conn.prepareStatement(
+                            "INSERT INTO kassenstand SET buchungsdatum = "+
+                            "NOW(), neuer_kassenstand = ?, " +
+                            "manuell = TRUE, kommentar = ?"
+                            );
+                    pstmt.setBigDecimal(1, newValue);
+                    pstmt.setString(2, kommentar);
+                    int result = pstmt.executeUpdate();
+                    if (result != 0){
+                        // update everything
+                        mainWindow.setKassenstand(text);
+                        neuerKassenstandField.setText("");
+                        differenzField.setText("");
+                        kommentarField.setText("");
+                        updateAll(this.filterStr);
+                    }
+                    else {
+                        JOptionPane.showMessageDialog(this,
+                                "Fehler: Kassenstand konnte nicht geändert werden.",
+                                "Fehler", JOptionPane.ERROR_MESSAGE);
+                    }
+                    pstmt.close();
+                } catch (SQLException ex) {
+                    System.out.println("Exception: " + ex.getMessage());
+                    ex.printStackTrace();
+                }
+            }
+            else { return; }
+        }
+        // differenz mode:
+        else if (differenzField.getText().length() > 0){
+            String text = differenzField.getText();
+            if ( ! text.matches(".*[0-9].*") ){ // if contains no digit: throw error
+                JOptionPane.showMessageDialog(this, "Fehlerhafte Differenz eingegeben!",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                neuerKassenstandField.setText("");
+                differenzField.setText("");
+                kommentarField.setText("");
+                return;
+            }
+            text = priceFormatter(text)+" "+currencySymbol;
+            BigDecimal differenz = new BigDecimal( priceFormatterIntern(text) );
+            String erhoehenReduzieren = new String("");
+            if (text.charAt(0) == '-'){
+                erhoehenReduzieren = "reduzieren";
+                text = text.substring(1, text.length()); // strip off the "-"
+            }
+            else erhoehenReduzieren = "erhöhen";
+            int answer = JOptionPane.showConfirmDialog(this,
+                    "Kassenstand wirklich um "+text+" "+erhoehenReduzieren+" "+
+                    "mit Kommentar \n\""+kommentar+"\"?", "Kassenstand ändern",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (answer == JOptionPane.YES_OPTION){
+                BigDecimal oldValue = new BigDecimal( priceFormatterIntern(mainWindow.getKassenstand()) );
+                BigDecimal newValue = oldValue.add(differenz);
+                try {
+                    PreparedStatement pstmt = this.conn.prepareStatement(
+                            "INSERT INTO kassenstand SET buchungsdatum = "+
+                            "NOW(), neuer_kassenstand = ?, " +
+                            "manuell = TRUE, kommentar = ?"
+                            );
+                    pstmt.setBigDecimal(1, newValue);
+                    pstmt.setString(2, kommentar);
+                    int result = pstmt.executeUpdate();
+                    if (result != 0){
+                        // update everything
+                        mainWindow.setKassenstand(text);
+                        neuerKassenstandField.setText("");
+                        differenzField.setText("");
+                        kommentarField.setText("");
+                        updateAll(this.filterStr);
+                    }
+                    else {
+                        JOptionPane.showMessageDialog(this,
+                                "Fehler: Kassenstand konnte nicht geändert werden.",
+                                "Fehler", JOptionPane.ERROR_MESSAGE);
+                    }
+                    pstmt.close();
+                } catch (SQLException ex) {
+                    System.out.println("Exception: " + ex.getMessage());
+                    ex.printStackTrace();
+                }
+            }
+            else { return; }
+        }
+        // eigentlich unmoeglich:
+        else {
+            JOptionPane.showMessageDialog(this, "Kein Betrag eingegeben!",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
+            neuerKassenstandField.setText("");
+            differenzField.setText("");
+            kommentarField.setText("");
+        }
+    }
+
     /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.
@@ -404,127 +531,8 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
      **/
     public void actionPerformed(ActionEvent e) {
 	if (e.getSource() == returnButton){
-	    // eigentlich unmoeglich:
-	    if (neuerKassenstandField.getText().length() > 0 && differenzField.getText().length() > 0){
-		JOptionPane.showMessageDialog(this, "Sowohl neuer Kassenstand als auch Differenz eingegeben!",
-			"Fehler", JOptionPane.ERROR_MESSAGE);
-		neuerKassenstandField.setText("");
-		differenzField.setText("");
-		kommentarField.setText("");
-	    }
-	    String kommentar = kommentarField.getText();
-	    // neuerKassenstand mode:
-	    if (neuerKassenstandField.getText().length() > 0){
-		String text = neuerKassenstandField.getText();
-		if ( ! text.matches(".*[0-9].*") ){ // if contains no digit: throw error
-		    JOptionPane.showMessageDialog(this, "Fehlerhafter Betrag eingegeben!",
-			"Fehler", JOptionPane.ERROR_MESSAGE);
-		    neuerKassenstandField.setText("");
-		    differenzField.setText("");
-		    kommentarField.setText("");
-		    return;
-		}
-		text = priceFormatter(text)+" "+currencySymbol;
-		int answer = JOptionPane.showConfirmDialog(this,
-			"Kassenstand wirklich auf "+text+" setzen "+
-			"mit Kommentar \n\""+kommentar+"\"?", "Kassenstand ändern",
-			JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-		if (answer == JOptionPane.YES_OPTION){
-		    BigDecimal newValue = new BigDecimal( priceFormatterIntern(text) );
-		    try {
-                        PreparedStatement pstmt = this.conn.prepareStatement(
-                                "INSERT INTO kassenstand SET buchungsdatum = "+
-                                "NOW(), neuer_kassenstand = ?, " +
-                                "manuell = TRUE, kommentar = ?"
-				);
-                        pstmt.setBigDecimal(1, newValue);
-                        pstmt.setString(2, kommentar);
-                        int result = pstmt.executeUpdate();
-			if (result != 0){
-			    // update everything
-			    mainWindow.setKassenstand(text);
-			    neuerKassenstandField.setText("");
-			    differenzField.setText("");
-			    kommentarField.setText("");
-			    updateAll(this.filterStr);
-			}
-			else {
-			    JOptionPane.showMessageDialog(this,
-				    "Fehler: Kassenstand konnte nicht geändert werden.",
-				    "Fehler", JOptionPane.ERROR_MESSAGE);
-			}
-			pstmt.close();
-		    } catch (SQLException ex) {
-			System.out.println("Exception: " + ex.getMessage());
-			ex.printStackTrace();
-		    }
-		}
-		else { return; }
-	    }
-	    // differenz mode:
-	    else if (differenzField.getText().length() > 0){
-		String text = differenzField.getText();
-		if ( ! text.matches(".*[0-9].*") ){ // if contains no digit: throw error
-		    JOptionPane.showMessageDialog(this, "Fehlerhafte Differenz eingegeben!",
-			"Fehler", JOptionPane.ERROR_MESSAGE);
-		    neuerKassenstandField.setText("");
-		    differenzField.setText("");
-		    kommentarField.setText("");
-		    return;
-		}
-		text = priceFormatter(text)+" "+currencySymbol;
-		BigDecimal differenz = new BigDecimal( priceFormatterIntern(text) );
-		String erhoehenReduzieren = new String("");
-		if (text.charAt(0) == '-'){
-		    erhoehenReduzieren = "reduzieren";
-		    text = text.substring(1, text.length()); // strip off the "-"
-		}
-		else erhoehenReduzieren = "erhöhen";
-		int answer = JOptionPane.showConfirmDialog(this,
-			"Kassenstand wirklich um "+text+" "+erhoehenReduzieren+" "+
-			"mit Kommentar \n\""+kommentar+"\"?", "Kassenstand ändern",
-			JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-		if (answer == JOptionPane.YES_OPTION){
-		    BigDecimal oldValue = new BigDecimal( priceFormatterIntern(mainWindow.getKassenstand()) );
-		    BigDecimal newValue = oldValue.add(differenz);
-		    try {
-                        PreparedStatement pstmt = this.conn.prepareStatement(
-                                "INSERT INTO kassenstand SET buchungsdatum = "+
-                                "NOW(), neuer_kassenstand = ?, " +
-                                "manuell = TRUE, kommentar = ?"
-				);
-                        pstmt.setBigDecimal(1, newValue);
-                        pstmt.setString(2, kommentar);
-                        int result = pstmt.executeUpdate();
-			if (result != 0){
-			    // update everything
-			    mainWindow.setKassenstand(text);
-			    neuerKassenstandField.setText("");
-			    differenzField.setText("");
-			    kommentarField.setText("");
-			    updateAll(this.filterStr);
-			}
-			else {
-			    JOptionPane.showMessageDialog(this,
-				    "Fehler: Kassenstand konnte nicht geändert werden.",
-				    "Fehler", JOptionPane.ERROR_MESSAGE);
-			}
-			pstmt.close();
-		    } catch (SQLException ex) {
-			System.out.println("Exception: " + ex.getMessage());
-			ex.printStackTrace();
-		    }
-		}
-		else { return; }
-	    }
-	    // eigentlich unmoeglich:
-	    else {
-		JOptionPane.showMessageDialog(this, "Kein Betrag eingegeben!",
-			"Fehler", JOptionPane.ERROR_MESSAGE);
-		neuerKassenstandField.setText("");
-		differenzField.setText("");
-		kommentarField.setText("");
-	    }
+            abschicken();
+            //tabbedPane.recreateTabbedPane();
 	    return;
 	}
 	else if (e.getSource() == changeDateButton){

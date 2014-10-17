@@ -48,6 +48,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private JButton backButton;
     private JCheckBox inaktivCheckBox;
     private boolean showInaktive = false;
+    private JCheckBox sortimentCheckBox;
+    private boolean showOnlySortiment = true;
     private JCheckBox internalCheckBox;
     private boolean showInternals = false;
     private JTextField filterField;
@@ -60,6 +62,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
 
     private String filterStr = "";
     private String aktivFilterStr = " AND artikel.aktiv = TRUE ";
+    private String sortimentFilterStr = " AND artikel.sortiment = TRUE ";
     //private String orderByStr = "artikel_name";
     private String orderByStr = "p.toplevel_id, p.sub_id, p.subsub_id, artikel_name";
 
@@ -153,6 +156,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     "LEFT JOIN mwst USING (mwst_id) "+
                     "WHERE " + filter +
                     aktivFilterStr +
+                    sortimentFilterStr +
                     "ORDER BY " + orderByStr
                     );
             ResultSet rs = pstmt.executeQuery();
@@ -319,6 +323,13 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
           inaktivCheckBox.addItemListener(this);
           inaktivCheckBox.addActionListener(this);
           topLeftPanel.add(inaktivCheckBox);
+
+          sortimentCheckBox = new JCheckBox("nur Sortiment anzeigen");
+          sortimentCheckBox.setMnemonic(KeyEvent.VK_S);
+          sortimentCheckBox.setSelected(showOnlySortiment);
+          sortimentCheckBox.addItemListener(this);
+          sortimentCheckBox.addActionListener(this);
+          topLeftPanel.add(sortimentCheckBox);
 
           // Show internal items as well:
           //internalCheckBox = new JCheckBox("interne anzeigen");
@@ -615,8 +626,6 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     public void itemStateChanged(ItemEvent e) {
         Object source = e.getItemSelectable();
         if (source == inaktivCheckBox) {
-            //Now that we know which button was pushed, find out
-            //whether it was selected or deselected.
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 aktivFilterStr = "";
                 showInaktive = true;
@@ -624,9 +633,15 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 aktivFilterStr = " AND artikel.aktiv = TRUE ";
                 showInaktive = false;
             }
+        } else if (source == sortimentCheckBox) {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                sortimentFilterStr = " AND artikel.sortiment = TRUE ";
+                showOnlySortiment = true;
+            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                sortimentFilterStr = "";
+                showOnlySortiment = false;
+            }
         } else if (source == internalCheckBox) {
-            //Now that we know which button was pushed, find out
-            //whether it was selected or deselected.
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 showInternals = true;
             } else if (e.getStateChange() == ItemEvent.DESELECTED) {
@@ -964,6 +979,19 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     updateAll();
                 } else {
                     inaktivCheckBox.setSelected(!showInaktive);
+                }
+            } else {
+                updateAll();
+            }
+            return;
+        }
+        if (e.getSource() == sortimentCheckBox){
+            if ( editLieferant.size() > 0 ){
+                int answer = changeLossConfirmDialog();
+                if (answer == JOptionPane.YES_OPTION){
+                    updateAll();
+                } else {
+                    sortimentCheckBox.setSelected(!showOnlySortiment);
                 }
             } else {
                 updateAll();
