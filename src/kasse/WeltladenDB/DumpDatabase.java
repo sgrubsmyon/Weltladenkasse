@@ -151,7 +151,7 @@ public class DumpDatabase extends WindowContent {
                     JOptionPane.QUESTION_MESSAGE,
                     JOptionPane.OK_CANCEL_OPTION);
         }
-        JDialog dialog = jop.createDialog("Bitte Kassenadmin-Passwort eingeben");
+        JDialog dialog = jop.createDialog("Bitte Admin-Passwort eingeben");
         dialog.addWindowFocusListener(new WindowAdapter(){
             @Override
             public void windowGainedFocus(WindowEvent e){
