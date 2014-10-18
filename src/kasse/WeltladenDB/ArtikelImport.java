@@ -257,6 +257,12 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
             results.add(rs.getString(8) == null ? "NULL" : rs.getString(8)); // ek_preis
             results.add(rs.getString(9));                                    // variabler_preis
             results.add(rs.getString(10));                                   // sortiment
+            // edit menge:
+            try {
+                results.set(2, new BigDecimal(results.get(2)).stripTrailingZeros().toPlainString());
+            } catch (NumberFormatException ex) {
+                results.set(2, "NULL");
+            }
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
@@ -346,8 +352,8 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
             BigDecimal mengeDecimal = null;
             if (!menge.equals("NULL")){
                 try {
-                    mengeDecimal = new BigDecimal( menge.replace(',', '.') );
-                    menge = mengeDecimal.toString();
+                    mengeDecimal = new BigDecimal( menge.replace(',', '.') ).stripTrailingZeros();
+                    menge = mengeDecimal.toPlainString();
                 } catch (NumberFormatException ex) {
                     logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte E: 'Menge').</div>\n";
                     log.setText(logString+logStringEnd);
