@@ -30,4 +30,6 @@ if [ -e Weltladenkasse_$version.tar.gz ]; then
 fi
 tar -czvf Weltladenkasse_$version.tar.gz Weltladenkasse_$version
 
+cp Weltladenkasse_$version.zip ~/Documents/private/Weltladen/web/datenbank/dump/software
+
 exit 0
