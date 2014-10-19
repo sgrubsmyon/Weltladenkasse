@@ -84,6 +84,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private Vector<String> editArtikelNummer;
     private Vector<String> changedNummer;
     private Vector<String> changedName;
+    private Vector<String> changedKurzname;
     private Vector<BigDecimal> changedMenge;
     private Vector<String> changedBarcode;
     private Vector<String> changedHerkunft;
@@ -116,6 +117,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         columnLabels = new Vector<String>();
         columnLabels.add("Produktgruppe"); columnLabels.add("Lieferant");
         columnLabels.add("Nummer"); columnLabels.add("Name");
+        columnLabels.add("Kurzname");
         columnLabels.add("Menge"); columnLabels.add("Barcode");
         columnLabels.add("Herkunft"); columnLabels.add("VPE");
         columnLabels.add("VK-Preis"); columnLabels.add("EK-Preis");
@@ -146,6 +148,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     "SELECT produktgruppen_id, produktgruppen_name, "+
                     "lieferant_id, lieferant_name, "+
                     "artikel_nr, artikel_name, "+
+                    "kurzname, "+
                     "menge, barcode, "+
                     "herkunft, vpe, "+
                     "vk_preis, ek_preis, variabler_preis, mwst_satz, "+
@@ -167,23 +170,25 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 String lieferant = rs.getString(4);
                 String nr = rs.getString(5);
                 String name = rs.getString(6);
-                String menge = rs.getString(7) == null ? null :
-                    rs.getBigDecimal(7).stripTrailingZeros().toPlainString();
-                String barcode = rs.getString(8);
-                String herkunft = rs.getString(9);
-                String vpe = rs.getString(10);
-                String vkp = rs.getString(11);
-                String ekp = rs.getString(12);
-                Boolean var = rs.getBoolean(13);
-                String mwst = rs.getString(14);
+                String kurzname = rs.getString(7);
+                String menge = rs.getString(8) == null ? null :
+                    rs.getBigDecimal(8).stripTrailingZeros().toPlainString();
+                String barcode = rs.getString(9);
+                String herkunft = rs.getString(10);
+                String vpe = rs.getString(11);
+                String vkp = rs.getString(12);
+                String ekp = rs.getString(13);
+                Boolean var = rs.getBoolean(14);
+                String mwst = rs.getString(15);
                 String mwstBetrag = "";
-                String von = rs.getString(15);
-                String bis = rs.getString(16);
-                Boolean sortimentBool = rs.getBoolean(17);
-                Boolean aktivBool = rs.getBoolean(18);
+                String von = rs.getString(16);
+                String bis = rs.getString(17);
+                Boolean sortimentBool = rs.getBoolean(18);
+                Boolean aktivBool = rs.getBoolean(19);
 
                 if (lieferant_id == null) lieferant_id = 1; // corresponds to "unknown"
                 if (lieferant == null) lieferant = "";
+                if (kurzname == null) kurzname = "";
                 if (menge == null){ menge = ""; }
                 if (barcode == null){ barcode = ""; }
                 if (herkunft == null) herkunft = "";
@@ -206,6 +211,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 Vector<Object> row = new Vector<Object>();
                     row.add(gruppenname); row.add(lieferant);
                     row.add(nr); row.add(name);
+                    row.add(kurzname);
                     row.add(menge.replace('.', ',')); row.add(barcode);
                     row.add(herkunft); row.add(vpe);
                     row.add(vkpOutput); row.add(ekp);
@@ -237,6 +243,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         editArtikelNummer = new Vector<String>();
         changedNummer = new Vector<String>();
         changedName = new Vector<String>();
+        changedKurzname = new Vector<String>();
         changedMenge = new Vector<BigDecimal>();
         changedBarcode = new Vector<String>();
         changedHerkunft = new Vector<String>();
@@ -285,6 +292,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             if ( changedAktiv.get(index) == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
                 result = insertNewItem(prod_id, lief_id,
                         changedNummer.get(index), changedName.get(index),
+                        changedKurzname.get(index),
                         changedMenge.get(index), changedBarcode.get(index),
                         changedHerkunft.get(index), changedVPE.get(index),
                         changedVKP.get(index), changedEKP.get(index),
@@ -437,6 +445,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     }
                     else if (
                             header.equals("Nummer") || header.equals("Name") ||
+                            header.equals("Kurzname") ||
                             header.equals("Menge") || header.equals("Barcode") ||
                             header.equals("Herkunft") || header.equals("VPE") ||
                             header.equals("Sortiment") || header.equals("Aktiv")
@@ -586,6 +595,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         myTable.getColumn("Lieferant").setCellRenderer(linksAusrichter);
         myTable.getColumn("Nummer").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("Name").setCellRenderer(linksAusrichter);
+        myTable.getColumn("Kurzname").setCellRenderer(linksAusrichter);
         myTable.getColumn("Menge").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("Barcode").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("Herkunft").setCellRenderer(linksAusrichter);
@@ -601,6 +611,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         myTable.getColumn("Lieferant").setPreferredWidth(70);
         myTable.getColumn("Nummer").setPreferredWidth(70);
         myTable.getColumn("Name").setPreferredWidth(100);
+        myTable.getColumn("Kurzname").setPreferredWidth(100);
         myTable.getColumn("Menge").setPreferredWidth(30);
         myTable.getColumn("Barcode").setPreferredWidth(70);
         myTable.getColumn("Herkunft").setPreferredWidth(100);
@@ -732,6 +743,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 }
             }
             String artikelName = model.getValueAt(row, model.findColumn("Name")).toString();
+            String kurzname = model.getValueAt(row, model.findColumn("Kurzname")).toString();
             BigDecimal menge;
             try {
                 menge = new BigDecimal( model.getValueAt(row, model.findColumn("Menge")).toString().replace(',', '.') );
@@ -751,6 +763,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             if (nummerIndex == lieferantIndex && nummerIndex != -1){ // this row has been changed before, update the change cache
                 changedNummer.set(nummerIndex, artikelNummer);
                 changedName.set(nummerIndex, artikelName);
+                changedKurzname.set(nummerIndex, kurzname);
                 changedMenge.set(nummerIndex, menge);
                 changedBarcode.set(nummerIndex, barcode);
                 changedHerkunft.set(nummerIndex, herkunft);
@@ -764,6 +777,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 editArtikelNummer.add(origArtikelNummer);
                 changedNummer.add(artikelNummer);
                 changedName.add(artikelName);
+                changedKurzname.add(kurzname);
                 changedMenge.add(menge);
                 changedBarcode.add(barcode);
                 changedHerkunft.add(herkunft);
@@ -780,6 +794,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 editArtikelNummer.remove(nummerIndex);
                 changedNummer.remove(nummerIndex);
                 changedName.remove(nummerIndex);
+                changedKurzname.remove(nummerIndex);
                 changedMenge.remove(nummerIndex);
                 changedBarcode.remove(nummerIndex);
                 changedHerkunft.remove(nummerIndex);

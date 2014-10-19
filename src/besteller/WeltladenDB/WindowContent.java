@@ -268,12 +268,15 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected int insertNewItem(Integer produktgruppen_id, Integer
-            lieferant_id, String nummer, String name, BigDecimal menge, String
-            barcode, String herkunft, Integer vpe, String vkpreis, String
-            ekpreis, Boolean var_preis, Boolean sortiment) {
+            lieferant_id, String nummer, String name, String kurzname,
+            BigDecimal menge, String barcode, String herkunft, Integer vpe,
+            String vkpreis, String ekpreis, Boolean var_preis, Boolean
+            sortiment) {
         // add row for new item (with updated fields)
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
+
+        if (kurzname.equals("") || kurzname.equals("NULL")){ kurzname = null; }
 
         if (barcode.equals("") || barcode.equals("NULL")){ barcode = null; }
 
@@ -301,6 +304,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "INSERT INTO artikel SET "+
                     "produktgruppen_id = ?, lieferant_id = ?, "+
                     "artikel_nr = ?, artikel_name = ?, "+
+                    "kurzname = ?, "+
                     "menge = ?, "+
                     "barcode = ?, "+
                     "herkunft = ?, "+
@@ -313,14 +317,15 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             pstmtSetInteger(pstmt, 2, lieferant_id);
             pstmt.setString(3, nummer);
             pstmt.setString(4, name);
-            pstmt.setBigDecimal(5, menge);
-            pstmt.setString(6, barcode);
-            pstmt.setString(7, herkunft);
-            pstmtSetInteger(pstmt, 8, vpe);
-            pstmt.setBigDecimal(9, vkpDecimal);
-            pstmt.setBigDecimal(10, ekpDecimal);
-            pstmtSetBoolean(pstmt, 11, var_preis);
-            pstmtSetBoolean(pstmt, 12, sortiment);
+            pstmt.setString(5, kurzname);
+            pstmt.setBigDecimal(6, menge);
+            pstmt.setString(7, barcode);
+            pstmt.setString(8, herkunft);
+            pstmtSetInteger(pstmt, 9, vpe);
+            pstmt.setBigDecimal(10, vkpDecimal);
+            pstmt.setBigDecimal(11, ekpDecimal);
+            pstmtSetBoolean(pstmt, 12, var_preis);
+            pstmtSetBoolean(pstmt, 13, sortiment);
             result = pstmt.executeUpdate();
             stmt.close();
         } catch (SQLException ex) {
