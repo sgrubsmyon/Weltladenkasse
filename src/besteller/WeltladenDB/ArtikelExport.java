@@ -70,6 +70,7 @@ public class ArtikelExport extends WindowContent {
         final Vector<String> columns = new Vector<String>();
             columns.add("Produktgruppe"); columns.add("Lieferant");
             columns.add("Artikelnummer"); columns.add("Bezeichnung | Einheit");
+            columns.add("Kurzname");
             columns.add("Menge (kg/l/Stk.)"); columns.add("Barcode");
             columns.add("Herkunftsland"); columns.add("VPE");
             columns.add("VK-Preis"); columns.add("EK-Preis");
@@ -85,18 +86,19 @@ public class ArtikelExport extends WindowContent {
             String lieferant = artikelListe.originalData.get(i).get(1).toString();
             String nummer = artikelListe.originalData.get(i).get(2).toString();
             String name = artikelListe.originalData.get(i).get(3).toString();
+            String kurzname = artikelListe.originalData.get(i).get(4).toString();
             BigDecimal menge;
             try {
                 menge = new BigDecimal(
-                        artikelListe.originalData.get(i).get(4).toString().replace(',','.') );
+                        artikelListe.originalData.get(i).get(5).toString().replace(',','.') );
             } catch (NumberFormatException ex) {
                 menge = null;
             }
-            String barcode = artikelListe.originalData.get(i).get(5).toString();
-            String herkunft = artikelListe.originalData.get(i).get(6).toString();
+            String barcode = artikelListe.originalData.get(i).get(6).toString();
+            String herkunft = artikelListe.originalData.get(i).get(7).toString();
             Integer vpe;
             try {
-                vpe = Integer.parseInt( artikelListe.originalData.get(i).get(7).toString() );
+                vpe = Integer.parseInt( artikelListe.originalData.get(i).get(8).toString() );
             } catch (NumberFormatException ex) {
                 vpe = null;
             }
@@ -106,13 +108,13 @@ public class ArtikelExport extends WindowContent {
             if (!var){
                 try {
                     vkp = new BigDecimal(
-                            priceFormatterIntern(artikelListe.originalData.get(i).get(8).toString()));
+                            priceFormatterIntern(artikelListe.originalData.get(i).get(9).toString()));
                 } catch (NumberFormatException ex) {
                     vkp = null;
                 }
                 try {
                     ekp = new BigDecimal(
-                            priceFormatterIntern(artikelListe.originalData.get(i).get(9).toString()));
+                            priceFormatterIntern(artikelListe.originalData.get(i).get(10).toString()));
                 } catch (NumberFormatException ex) {
                     ekp = null;
                 }

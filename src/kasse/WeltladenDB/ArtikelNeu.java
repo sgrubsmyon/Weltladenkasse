@@ -42,6 +42,7 @@ public class ArtikelNeu extends WindowContent
     public Vector<String> lieferanten;
     public Vector<String> artikelNummern;
     public Vector<String> artikelNamen;
+    public Vector<String> kurznamen;
     public Vector<BigDecimal> mengen;
     public Vector<String> barcodes;
     public Vector<String> herkuenfte;
@@ -67,7 +68,7 @@ public class ArtikelNeu extends WindowContent
     private void initiateTable() {
         columnLabels = new Vector<String>();
         columnLabels.add("Produktgruppe"); columnLabels.add("Lieferant");
-        columnLabels.add("Nummer"); columnLabels.add("Name");
+        columnLabels.add("Nummer"); columnLabels.add("Name"); columnLabels.add("Kurzname");
         columnLabels.add("Menge"); columnLabels.add("Barcode");
         columnLabels.add("Herkunft"); columnLabels.add("VPE");
         columnLabels.add("VK-Preis"); columnLabels.add("EK-Preis");
@@ -83,6 +84,7 @@ public class ArtikelNeu extends WindowContent
         lieferanten = new Vector<String>();
         artikelNummern = new Vector<String>();
         artikelNamen = new Vector<String>();
+        kurznamen = new Vector<String>();
         mengen = new Vector<BigDecimal>();
         barcodes = new Vector<String>();
         herkuenfte = new Vector<String>();
@@ -150,6 +152,7 @@ public class ArtikelNeu extends WindowContent
         table.getColumn("Lieferant").setCellRenderer(linksAusrichter);
         table.getColumn("Nummer").setCellRenderer(rechtsAusrichter);
         table.getColumn("Name").setCellRenderer(linksAusrichter);
+        table.getColumn("Kurzname").setCellRenderer(linksAusrichter);
         table.getColumn("Menge").setCellRenderer(rechtsAusrichter);
         table.getColumn("Barcode").setCellRenderer(linksAusrichter);
         table.getColumn("Herkunft").setCellRenderer(linksAusrichter);
@@ -161,6 +164,7 @@ public class ArtikelNeu extends WindowContent
         table.getColumn("Lieferant").setPreferredWidth(50);
         table.getColumn("Nummer").setPreferredWidth(50);
         table.getColumn("Name").setPreferredWidth(100);
+        table.getColumn("Kurzname").setPreferredWidth(100);
         table.getColumn("Menge").setPreferredWidth(30);
         table.getColumn("Barcode").setPreferredWidth(50);
         table.getColumn("Herkunft").setPreferredWidth(100);
@@ -210,7 +214,7 @@ public class ArtikelNeu extends WindowContent
             }
             int result = insertNewItem(selProduktgruppenIDs.get(i),
                     selLieferantIDs.get(i), artikelNummern.get(i),
-                    artikelNamen.get(i), mengen.get(i), barcodes.get(i),
+                    artikelNamen.get(i), kurznamen.get(i), mengen.get(i), barcodes.get(i),
                     herkuenfte.get(i), vpes.get(i), vkPreise.get(i),
                     ekPreise.get(i), variablePreise.get(i), sortimente.get(i));
             if (result == 0){
@@ -271,6 +275,7 @@ public class ArtikelNeu extends WindowContent
             lieferanten.remove(removeRow);
             artikelNummern.remove(removeRow);
             artikelNamen.remove(removeRow);
+            kurznamen.remove(removeRow);
             mengen.remove(removeRow);
             barcodes.remove(removeRow);
             herkuenfte.remove(removeRow);

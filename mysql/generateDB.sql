@@ -42,6 +42,7 @@ CREATE TABLE artikel (
     lieferant_id int(10) unsigned NOT NULL DEFAULT 1,
     artikel_nr varchar(30) NOT NULL,
     artikel_name varchar(180) NOT NULL,
+    kurzname varchar(50) DEFAULT NULL,
     menge decimal(8,5) DEFAULT NULL,
     barcode varchar(30) DEFAULT NULL,
     herkunft varchar(100) DEFAULT NULL,
