@@ -569,8 +569,14 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     enabled = false; // Artikel hat schon Rabatt, keinen Rabatt mehr erlauben
                     break;
                 }
-                if ( types.get(i).equals("artikel") ) // Artikel hatte wohl noch keinen Rabatt
+                if ( types.get(i).equals("leergut") ){
+                    enabled = false; // Es handelt sich um Leergut, kein Rabatt erlauben
                     break;
+                }
+                if ( types.get(i).equals("artikel") ){
+                    // Artikel hatte wohl noch keinen Rabatt
+                    break;
+                }
             }
         }
         for (JButton rbutton : rabattButtons){
@@ -1343,7 +1349,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             einzelpreise.add(pfand);
             preise.add(gesamtPfand);
             colors.add("green");
-            types.add("artikel");
+            types.add("leergut");
             mwsts.add(new BigDecimal(pfandMwSt));
             removeButtons.add(new JButton("-"));
             removeButtons.lastElement().addActionListener(this);
@@ -1865,7 +1871,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	    }
 	}
         if (rabattIndex > -1){
-            BigDecimal rabattAnteil = (new BigDecimal( rabattButtons.get(rabattIndex).getText().replace("%","").replace(',','.') )).multiply(percent);
+            BigDecimal rabattAnteil = (new BigDecimal(
+                        rabattButtons.get(rabattIndex).getText().replace("%","").replace(',','.').replaceAll(" ","")
+                        )
+                    ).multiply(percent);
             if (barButton.isEnabled()){
                 rechnungRabattierenRelativ(rabattAnteil);
             }
