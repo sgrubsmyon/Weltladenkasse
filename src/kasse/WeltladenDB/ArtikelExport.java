@@ -124,7 +124,7 @@ public class ArtikelExport extends WindowContent {
 
             Vector<Object> row = new Vector<Object>();
                 row.add(produktgruppe); row.add(lieferant); row.add(nummer);
-                row.add(name); row.add(menge); row.add(barcode);
+                row.add(name); row.add(kurzname); row.add(menge); row.add(barcode);
                 row.add(herkunft); row.add(vpe); row.add(vkp); row.add(ekp);
                 row.add(varStr); row.add(sortimentStr);
             data.add(row);
