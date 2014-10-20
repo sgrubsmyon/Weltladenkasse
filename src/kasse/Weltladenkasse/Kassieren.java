@@ -1533,16 +1533,16 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 }
                 artikelIndex = i;
                 rabattCounter = 0;
-            }
-            else if (types.get(i).equals("rabatt"))
+            } else if (types.get(i).equals("rabatt")){
                 rabattCounter++;
+            }
         }
         if (rabattCounter == 0){ // for last artikel
             addToHashMap(rabattArtikelPreise, artikelIndex);
         }
-        for ( Map.Entry<BigDecimal, BigDecimal> entry : rabattArtikelPreise.entrySet() ){
-            System.out.println(entry.getKey() + "  " + entry.getValue());
-        }
+        //for ( Map.Entry<BigDecimal, BigDecimal> entry : rabattArtikelPreise.entrySet() ){
+        //    System.out.println(entry.getKey() + "  " + entry.getValue());
+        //}
 
         String rabattName = getArticleName(rechnungRabattArtikelID)[0];
 
@@ -1576,6 +1576,28 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             showAll();
 
             zwischensumme();
+        }
+    }
+
+    private void removeRabattAufRechnung() {
+        for (int i=types.size()-1; i>=0; i--){
+            if (!types.get(i).equals("rabattrechnung")){
+                break; // stop at first row that is no "Rabatt auf Rechnung"
+            } else { // remove the rabatt row
+                data.remove(i);
+                artikelIDs.remove(i);
+                articleNames.remove(i);
+                rabattIDs.remove(i);
+                einzelpreise.remove(i);
+                preise.remove(i);
+                colors.remove(i);
+                types.remove(i);
+                mwsts.remove(i);
+                stueckzahlen.remove(i);
+                removeButtons.remove(i);
+
+                positions.remove(i);
+            }
         }
     }
 
@@ -1769,14 +1791,17 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             return;
         }
         if (e.getSource() == hinzufuegenButton){
+            removeRabattAufRechnung();
             artikelHinzufuegen();
 	    return;
 	}
         if (e.getSource() == leergutButton){
+            removeRabattAufRechnung();
             leergutHinzufuegen();
 	    return;
 	}
         if (e.getSource() == ruecknahmeButton){
+            removeRabattAufRechnung();
             ruecknahmeHinzufuegen();
 	    return;
 	}
@@ -1916,14 +1941,13 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     positions.set(i, oldVal-1);
                 }
             }
-            refreshPositionsInData();
 
+            removeRabattAufRechnung();
+
+            refreshPositionsInData();
             updateAll();
             return;
         }
     }
-
-
-
 
 }
