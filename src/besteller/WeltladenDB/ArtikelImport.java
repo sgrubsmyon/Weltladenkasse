@@ -250,19 +250,19 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
             results.add(rs.getString(1)); // produktgruppen_id
             results.add(rs.getString(2)); // artikel_name
             results.add(rs.getString(3) == null ? "NULL" : rs.getString(3)); // kurzname
-            results.add(rs.getString(4) == null ? "NULL" : rs.getString(3)); // menge
-            results.add(rs.getString(5) == null ? "NULL" : rs.getString(4)); // barcode
-            results.add(rs.getString(6) == null ? "NULL" : rs.getString(5)); // herkunft
-            results.add(rs.getString(7) == null ? "NULL" : rs.getString(6)); // vpe
-            results.add(rs.getString(8) == null ? "NULL" : rs.getString(7)); // vk_preis
-            results.add(rs.getString(9) == null ? "NULL" : rs.getString(8)); // ek_preis
+            results.add(rs.getString(4) == null ? "NULL" : rs.getString(4)); // menge
+            results.add(rs.getString(5) == null ? "NULL" : rs.getString(5)); // barcode
+            results.add(rs.getString(6) == null ? "NULL" : rs.getString(6)); // herkunft
+            results.add(rs.getString(7) == null ? "NULL" : rs.getString(7)); // vpe
+            results.add(rs.getString(8) == null ? "NULL" : rs.getString(8)); // vk_preis
+            results.add(rs.getString(9) == null ? "NULL" : rs.getString(9)); // ek_preis
             results.add(rs.getString(10));                                   // variabler_preis
             results.add(rs.getString(11));                                   // sortiment
             // edit menge:
             try {
-                results.set(2, new BigDecimal(results.get(2)).stripTrailingZeros().toPlainString());
+                results.set(3, new BigDecimal(results.get(3)).stripTrailingZeros().toPlainString());
             } catch (NumberFormatException ex) {
-                results.set(2, "NULL");
+                results.set(3, "NULL");
             }
             rs.close();
             pstmt.close();
@@ -435,6 +435,8 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                 colors.add(Color.black); // nummer
                 colors.add( name.equals(allFields.get(1)) ? Color.black : Color.red ); // name
                 colors.add( kurzname.equals(allFields.get(2)) ? Color.black : Color.red ); // kurzname
+                    System.out.println(kurzname);
+                    System.out.println(allFields.get(2));
                 colors.add( menge.equals(allFields.get(3)) ? Color.black : Color.red ); // menge
                 colors.add( barcode.equals(allFields.get(4)) ? Color.black : Color.red ); // barcode
                 colors.add( herkunft.equals(allFields.get(5)) ? Color.black : Color.red ); // herkunft
@@ -459,6 +461,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
             for (int i=0; i<colors.size(); i++){
                 if (colors.get(i) == Color.red){
                     itemChanged = true;
+                    System.out.println("Change in column "+i);
                     break;
                 }
             }
