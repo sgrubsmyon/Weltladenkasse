@@ -125,47 +125,47 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
         }
     }
 
-    // From: http://stackoverflow.com/questions/9171258/colored-jcombobox-with-colored-items-and-focus
-    //JList#setSelectionForeground(...) version
-    static class ColoredCellRenderer implements ListCellRenderer {
-        protected DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
-        private final Color selectionBackground = new Color(240,200,200);
-        public Component getListCellRendererComponent(
-                JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-            Color fgc = Color.valueOf((String)value).color;
-            if(index<0) {
-                //comboBox.setForeground(fgc); //Windows, CDE/Motif Look & Feel
-                list.setSelectionForeground(fgc);
-                list.setSelectionBackground(selectionBackground);
-            }
-            JLabel renderer = (JLabel) defaultRenderer.getListCellRendererComponent(
-                    list, value, index, isSelected, cellHasFocus);
-            if (index != -1) {
-                renderer.setForeground(fgc);
-            }
-            return renderer;
-                }
-    }
+    //// From: http://stackoverflow.com/questions/9171258/colored-jcombobox-with-colored-items-and-focus
+    ////JList#setSelectionForeground(...) version
+    //static class ColoredCellRenderer implements ListCellRenderer {
+    //    protected DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
+    //    private final Color selectionBackground = new Color(240,200,200);
+    //    public Component getListCellRendererComponent(
+    //            JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+    //        Color fgc = Color.valueOf((String)value).color;
+    //        if(index<0) {
+    //            //comboBox.setForeground(fgc); //Windows, CDE/Motif Look & Feel
+    //            list.setSelectionForeground(fgc);
+    //            list.setSelectionBackground(selectionBackground);
+    //        }
+    //        JLabel renderer = (JLabel) defaultRenderer.getListCellRendererComponent(
+    //                list, value, index, isSelected, cellHasFocus);
+    //        if (index != -1) {
+    //            renderer.setForeground(fgc);
+    //        }
+    //        return renderer;
+    //            }
+    //}
 
-    //html version
-    static class ComboHtmlRenderer extends DefaultListCellRenderer {
-        private final Color selectionBackground = new Color(240,200,200);
-        @Override public Component getListCellRendererComponent(
-                JList list, Object value, int index, boolean isSelected, boolean hasFocus) {
-            Color fgc = Color.valueOf((String)value).color;
-            if(index<0) {
-                list.setSelectionBackground(selectionBackground);
-            }
-            JLabel l = (JLabel)super.getListCellRendererComponent(
-                    list, value, index, isSelected, hasFocus);
-            l.setText("<html><font color="+hex(fgc)+">"+value);
-            l.setBackground(isSelected?selectionBackground:list.getBackground());
-            return l;
-                }
-        private static String hex(Color c) {
-            return String.format("#%06x", c.getRGB()&0xffffff);
-        }
-    }
+    ////html version
+    //static class ComboHtmlRenderer extends DefaultListCellRenderer {
+    //    private final Color selectionBackground = new Color(240,200,200);
+    //    @Override public Component getListCellRendererComponent(
+    //            JList list, Object value, int index, boolean isSelected, boolean hasFocus) {
+    //        Color fgc = Color.valueOf((String)value).color;
+    //        if(index<0) {
+    //            list.setSelectionBackground(selectionBackground);
+    //        }
+    //        JLabel l = (JLabel)super.getListCellRendererComponent(
+    //                list, value, index, isSelected, hasFocus);
+    //        l.setText("<html><font color="+hex(fgc)+">"+value);
+    //        l.setBackground(isSelected?selectionBackground:list.getBackground());
+    //        return l;
+    //            }
+    //    private static String hex(Color c) {
+    //        return String.format("#%06x", c.getRGB()&0xffffff);
+    //    }
+    //}
 
 }
 

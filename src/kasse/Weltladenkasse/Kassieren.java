@@ -1074,7 +1074,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             rs.next(); String verkaufsdatum = rs.getString(1); rs.close();
             pstmt.close();
             BigDecimal betrag = new BigDecimal( getTotalPrice() );
-            BigDecimal alterKassenstand = new BigDecimal( priceFormatterIntern(mainWindow.getKassenstand()) );
+            BigDecimal alterKassenstand = mainWindow.retrieveKassenstand();
             BigDecimal neuerKassenstand = alterKassenstand.add(betrag);
             pstmt = this.conn.prepareStatement(
                     "INSERT INTO kassenstand SET rechnungs_nr = ?,"+
@@ -1091,7 +1091,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                         "Fehler: Kassenstand konnte nicht geändert werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
             } else {
-                mainWindow.setKassenstand(priceFormatter(neuerKassenstand)+" "+currencySymbol);
+                mainWindow.updateBottomPanel();
             }
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());

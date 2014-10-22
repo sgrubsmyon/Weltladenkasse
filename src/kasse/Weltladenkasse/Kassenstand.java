@@ -231,7 +231,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	kassenstandPanel.add(kassenstandLabel);
 	JTextField kassenstandField = new JTextField("", 10);
         kassenstandField.setHorizontalAlignment(JTextField.RIGHT);
-	kassenstandField.setText(mainWindow.getKassenstand());
+	kassenstandField.setText( priceFormatter(mainWindow.retrieveKassenstand())+this.currencySymbol );
 	kassenstandField.setEditable(false);
 	kassenstandLabel.setLabelFor(kassenstandField);
 	kassenstandPanel.add(kassenstandField);
@@ -438,7 +438,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
                     int result = pstmt.executeUpdate();
                     if (result != 0){
                         // update everything
-                        mainWindow.setKassenstand(text);
+                        mainWindow.updateBottomPanel();
                         neuerKassenstandField.setText("");
                         differenzField.setText("");
                         kommentarField.setText("");
@@ -481,7 +481,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
                     "mit Kommentar \n\""+kommentar+"\"?", "Kassenstand ändern",
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (answer == JOptionPane.YES_OPTION){
-                BigDecimal oldValue = new BigDecimal( priceFormatterIntern(mainWindow.getKassenstand()) );
+                BigDecimal oldValue = mainWindow.retrieveKassenstand();
                 BigDecimal newValue = oldValue.add(differenz);
                 try {
                     PreparedStatement pstmt = this.conn.prepareStatement(
@@ -494,7 +494,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
                     int result = pstmt.executeUpdate();
                     if (result != 0){
                         // update everything
-                        mainWindow.setKassenstand(text);
+                        mainWindow.updateBottomPanel();
                         neuerKassenstandField.setText("");
                         differenzField.setText("");
                         kommentarField.setText("");

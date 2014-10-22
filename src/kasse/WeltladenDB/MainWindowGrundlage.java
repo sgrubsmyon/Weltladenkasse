@@ -4,6 +4,8 @@ package WeltladenDB;
 import java.util.*; // for Vector
 import java.io.InputStream;
 import java.io.FileInputStream;
+import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
+import java.math.RoundingMode;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -43,7 +45,6 @@ public abstract class MainWindowGrundlage extends JFrame {
 
     //variables:
     protected String dateTime;
-    protected String kassenstand;
 
     //Labels:
     protected JLabel dateTimeLabel;
@@ -73,11 +74,17 @@ public abstract class MainWindowGrundlage extends JFrame {
         initiate(password);
     }
 
+    // Needed to copy this from WindowContent:
+    protected String priceFormatter(BigDecimal price) {
+        return priceFormatterIntern(price).replace('.',',');
+    }
+    protected String priceFormatterIntern(BigDecimal price) {
+        return price.setScale(2, RoundingMode.HALF_UP).toString(); // for 2 digits after period sign and "0.5-is-rounded-up" rounding
+    }
+
     public void initiate(String password){
         createConnection(password);
         if (!connectionWorks) return;
-
-        this.kassenstand = retrieveKassenstand();
 
 	holdAll.setLayout(new BorderLayout());
 
@@ -86,7 +93,7 @@ public abstract class MainWindowGrundlage extends JFrame {
 	Date now = new Date();
 	dateTime = now.toString();
 	dateTimeLabel = new JLabel(this.dateTime);
-	kassenstandLabel = new JLabel(this.kassenstand);
+	kassenstandLabel = new JLabel( priceFormatter(retrieveKassenstand())+" "+this.currencySymbol );
 	bottomPanel.add(dateTimeLabel);
 	bottomPanel.add(kassenstandLabel);
 
@@ -110,8 +117,9 @@ public abstract class MainWindowGrundlage extends JFrame {
 	}
     }
 
-    protected String retrieveKassenstand(){
-        String ks = new String("");
+
+    public BigDecimal retrieveKassenstand(){
+        BigDecimal ks = new BigDecimal("0.00");
 	try {
 	    // Create statement for MySQL database
 	    Statement stmt = this.conn.createStatement();
@@ -120,11 +128,8 @@ public abstract class MainWindowGrundlage extends JFrame {
                     "SELECT neuer_kassenstand FROM kassenstand WHERE "+
                     "kassenstand_id = (SELECT MAX(kassenstand_id) FROM kassenstand)"
                     );
-	    if( rs.next() ){ ks = rs.getString(1); }
-            else { ks = "0.00"; }
+	    if ( rs.next() ){ ks = rs.getBigDecimal(1); }
 	    rs.close();
-	    // change dots to commas
-	    ks = ks.replace('.',',')+" "+this.currencySymbol;
 	    stmt.close();
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
@@ -147,21 +152,17 @@ public abstract class MainWindowGrundlage extends JFrame {
 	holdAll.add(this.contentPanel, BorderLayout.CENTER);
     }
 
-    public void setKassenstand(String kassenstand){
+    public void updateBottomPanel(){
 	holdAll.remove(this.bottomPanel);
 	holdAll.revalidate();
 	this.bottomPanel = new JPanel(); // The bottom panel which holds date and kassenstand bar.
 	Date now = new Date();
 	dateTime = now.toString();
 	dateTimeLabel = new JLabel(dateTime);
-	this.kassenstand = kassenstand;
-	kassenstandLabel = new JLabel(kassenstand);
+	kassenstandLabel = new JLabel( priceFormatter(retrieveKassenstand())+" "+this.currencySymbol );
 	this.bottomPanel.add(dateTimeLabel);
 	this.bottomPanel.add(kassenstandLabel);
 	holdAll.add(this.bottomPanel, BorderLayout.SOUTH);
     }
 
-    public String getKassenstand(){
-	return this.kassenstand;
-    }
 }
