@@ -2,12 +2,14 @@ package Weltladenkasse;
 
 // Basic Java stuff:
 import java.util.*; // for Vector
+import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 // GUI stuff:
 import java.awt.event.*;
@@ -66,6 +68,8 @@ public class HeutigeRechnungen extends Rechnungen {
 	    if (result != 0){
 		JOptionPane.showMessageDialog(this, "Rechnung " + rechnungsnummer + " wurde storniert.",
 			"Stornierung ausgeführt", JOptionPane.INFORMATION_MESSAGE);
+
+                insertStornoIntoKassenstand(rechnungsnummer);
 	    }
 	    else {
 		JOptionPane.showMessageDialog(this,
@@ -78,6 +82,40 @@ public class HeutigeRechnungen extends Rechnungen {
 	    ex.printStackTrace();
 	}
 	updateTable();
+    }
+
+    private void insertStornoIntoKassenstand(int rechnungsNr) {
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT SUM(ges_preis) FROM verkauf_details WHERE rechnungs_nr = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, rechnungsNr);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); BigDecimal betrag = rs.getBigDecimal(1); rs.close();
+            pstmt.close();
+            BigDecimal alterKassenstand = mainWindow.retrieveKassenstand();
+            BigDecimal neuerKassenstand = alterKassenstand.subtract(betrag);
+            pstmt = this.conn.prepareStatement(
+                    "INSERT INTO kassenstand SET rechnungs_nr = ?,"+
+                    "buchungsdatum = NOW(), "+
+                    "manuell = FALSE, neuer_kassenstand = ?, kommentar = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, rechnungsNr);
+            pstmt.setBigDecimal(2, neuerKassenstand);
+            pstmt.setString(3, "Storno");
+            int result = pstmt.executeUpdate();
+            pstmt.close();
+            if (result == 0){
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Kassenstand konnte nicht geändert werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+            } else {
+                mainWindow.updateBottomPanel();
+            }
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
     }
 
     /**
