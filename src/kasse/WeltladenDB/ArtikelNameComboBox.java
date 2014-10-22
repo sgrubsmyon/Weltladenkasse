@@ -30,8 +30,11 @@ import javax.swing.DefaultListCellRenderer;
 public class ArtikelNameComboBox extends IncrementalSearchComboBox {
     private Connection conn; // connection to MySQL database
 
+    private Vector<Boolean> sortimentBools;
+
     public ArtikelNameComboBox(Connection conn, String fstr) {
         super(fstr);
+        sortimentBools = new Vector<Boolean>();
         this.setRenderer(new MultiColRenderer());
         this.conn = conn;
     }
@@ -44,6 +47,7 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
 
     public Vector<String[]> doQuery() {
         Vector<String[]> searchResults = new Vector<String[]>();
+        sortimentBools = new Vector<Boolean>();
         try {
             // construct where clause from the textFeld words, separated by spaces:
             String[] words = textFeld.getText().split("\\s+");
@@ -60,7 +64,7 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
                 whereClause += "AND artikel_name LIKE ? ";
             }
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT DISTINCT a.artikel_name, l.lieferant_name FROM artikel AS a " +
+                    "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.sortiment FROM artikel AS a " +
                     "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
                     "WHERE " + whereClause +
@@ -75,6 +79,8 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             while (rs.next()) {
                 String artName = rs.getString(1);
                 String liefName = rs.getString(2) != null ? rs.getString(2) : "";
+                Boolean sortiment = rs.getBoolean(3);
+                sortimentBools.add(sortiment);
                 searchResults.add(new String[]{artName, liefName});
             }
             rs.close();
@@ -117,6 +123,11 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             if (index >= 0 && index < items.size()){
                 column[0].setText(items.get(index)[0]);
                 column[1].setText("   "+items.get(index)[1]);
+                if ( !sortimentBools.get(index) ){
+                    foreground = Color.GRAY;
+                }
+                column[0].setForeground(foreground);
+                column[1].setForeground(foreground);
             } else {
                 column[0].setText("qqqqqqqqqqqqqqqq");
                 column[1].setText("qqqq");
