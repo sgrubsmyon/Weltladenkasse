@@ -1109,7 +1109,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         Vector<String[]> artikelNummern = new Vector<String[]>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.artikel_nr FROM artikel AS a " +
+                    "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.sortiment, "+
+                    "a.artikel_nr FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
                     "WHERE a.barcode = ? " +
                     "AND a.aktiv = TRUE"
@@ -1119,8 +1120,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
                 String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
-                artikelNamen.add( new String[]{rs.getString(1), lieferant} );
-                artikelNummern.add( new String[]{rs.getString(3)} );
+                Boolean sortiment = rs.getBoolean(3);
+                artikelNamen.add( new String[]{rs.getString(1), lieferant, sortiment.toString()} );
+                artikelNummern.add( new String[]{rs.getString(4)} );
             }
             rs.close();
             pstmt.close();
@@ -1155,7 +1157,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         // get artikelName for artikelNummer
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT DISTINCT a.artikel_name, l.lieferant_name FROM artikel AS a " +
+                    "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.sortiment FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
                     "WHERE a.artikel_nr = ? " +
                     "AND a.aktiv = TRUE"
@@ -1165,7 +1167,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
                 String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
-                artikelNamen.add( new String[]{rs.getString(1), lieferant} );
+                Boolean sortiment = rs.getBoolean(3);
+                artikelNamen.add( new String[]{rs.getString(1), lieferant, sortiment.toString()} );
             }
             rs.close();
             pstmt.close();

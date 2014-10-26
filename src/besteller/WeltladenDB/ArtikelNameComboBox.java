@@ -30,11 +30,8 @@ import javax.swing.DefaultListCellRenderer;
 public class ArtikelNameComboBox extends IncrementalSearchComboBox {
     private Connection conn; // connection to MySQL database
 
-    private Vector<Boolean> sortimentBools;
-
     public ArtikelNameComboBox(Connection conn, String fstr) {
         super(fstr);
-        sortimentBools = new Vector<Boolean>();
         this.setRenderer(new MultiColRenderer());
         this.conn = conn;
     }
@@ -47,7 +44,6 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
 
     public Vector<String[]> doQuery() {
         Vector<String[]> searchResults = new Vector<String[]>();
-        sortimentBools = new Vector<Boolean>();
         try {
             // construct where clause from the textFeld words, separated by spaces:
             String[] words = textFeld.getText().split("\\s+");
@@ -80,8 +76,7 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
                 String artName = rs.getString(1);
                 String liefName = rs.getString(2) != null ? rs.getString(2) : "";
                 Boolean sortiment = rs.getBoolean(3);
-                sortimentBools.add(sortiment);
-                searchResults.add(new String[]{artName, liefName});
+                searchResults.add(new String[]{artName, liefName, sortiment.toString()});
             }
             rs.close();
             pstmt.close();
@@ -123,7 +118,7 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             if (index >= 0 && index < items.size()){
                 column[0].setText(items.get(index)[0]);
                 column[1].setText("   "+items.get(index)[1]);
-                if ( !sortimentBools.get(index) ){
+                if ( ! Boolean.parseBoolean(items.get(index)[2]) ){
                     foreground = Color.GRAY;
                 }
                 column[0].setForeground(foreground);
