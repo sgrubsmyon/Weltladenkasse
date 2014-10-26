@@ -238,7 +238,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
         Vector<String> results = new Vector<String>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT produktgruppen_id, artikel_name, menge, barcode, herkunft, "+
+                    "SELECT produktgruppen_id, artikel_name, kurzname, menge, barcode, herkunft, "+
                     "vpe, vk_preis, ek_preis, variabler_preis, sortiment " +
                     "FROM artikel "+
                     "WHERE lieferant_id = ? AND artikel_nr = ? AND aktiv = TRUE"
@@ -249,19 +249,20 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
             rs.next();
             results.add(rs.getString(1)); // produktgruppen_id
             results.add(rs.getString(2)); // artikel_name
-            results.add(rs.getString(3) == null ? "NULL" : rs.getString(3)); // menge
-            results.add(rs.getString(4) == null ? "NULL" : rs.getString(4)); // barcode
-            results.add(rs.getString(5) == null ? "NULL" : rs.getString(5)); // herkunft
-            results.add(rs.getString(6) == null ? "NULL" : rs.getString(6)); // vpe
-            results.add(rs.getString(7) == null ? "NULL" : rs.getString(7)); // vk_preis
-            results.add(rs.getString(8) == null ? "NULL" : rs.getString(8)); // ek_preis
-            results.add(rs.getString(9));                                    // variabler_preis
-            results.add(rs.getString(10));                                   // sortiment
+            results.add(rs.getString(3) == null ? "NULL" : rs.getString(3)); // kurzname
+            results.add(rs.getString(4) == null ? "NULL" : rs.getString(4)); // menge
+            results.add(rs.getString(5) == null ? "NULL" : rs.getString(5)); // barcode
+            results.add(rs.getString(6) == null ? "NULL" : rs.getString(6)); // herkunft
+            results.add(rs.getString(7) == null ? "NULL" : rs.getString(7)); // vpe
+            results.add(rs.getString(8) == null ? "NULL" : rs.getString(8)); // vk_preis
+            results.add(rs.getString(9) == null ? "NULL" : rs.getString(9)); // ek_preis
+            results.add(rs.getString(10));                                   // variabler_preis
+            results.add(rs.getString(11));                                   // sortiment
             // edit menge:
             try {
-                results.set(2, new BigDecimal(results.get(2)).stripTrailingZeros().toPlainString());
+                results.set(3, new BigDecimal(results.get(3)).stripTrailingZeros().toPlainString());
             } catch (NumberFormatException ex) {
-                results.set(2, "NULL");
+                results.set(3, "NULL");
             }
             rs.close();
             pstmt.close();
@@ -317,21 +318,23 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                 log.setText(logString+logStringEnd);
                 continue;
             }
-            String menge = sheet.getValueAt(4, rowIndex).toString();
+            String kurzname = sheet.getValueAt(4, rowIndex).toString();
+            if (kurzname.length() == 0){ kurzname = "NULL"; }
+            String menge = sheet.getValueAt(5, rowIndex).toString();
             if (menge.length() == 0){ menge = "NULL"; }
-            String barcode = sheet.getValueAt(5, rowIndex).toString();
+            String barcode = sheet.getValueAt(6, rowIndex).toString();
             if (barcode.length() == 0){ barcode = "NULL"; }
-            String herkunft = sheet.getValueAt(6, rowIndex).toString();
+            String herkunft = sheet.getValueAt(7, rowIndex).toString();
             if (herkunft.length() == 0){ herkunft = "NULL"; }
-            String vpe = sheet.getValueAt(7, rowIndex).toString();
+            String vpe = sheet.getValueAt(8, rowIndex).toString();
             if (vpe.length() == 0){ vpe = "NULL"; }
-            String vkpreis = sheet.getValueAt(8, rowIndex).toString();
+            String vkpreis = sheet.getValueAt(9, rowIndex).toString();
             if (vkpreis.length() == 0){ vkpreis = "NULL"; }
-            String ekpreis = sheet.getValueAt(9, rowIndex).toString();
+            String ekpreis = sheet.getValueAt(10, rowIndex).toString();
             if (ekpreis.length() == 0){ ekpreis = "NULL"; }
-            String variabel = sheet.getValueAt(10, rowIndex).toString();
+            String variabel = sheet.getValueAt(11, rowIndex).toString();
             if (variabel.length() == 0){ variabel = "false"; }
-            String sortiment = sheet.getValueAt(11, rowIndex).toString();
+            String sortiment = sheet.getValueAt(12, rowIndex).toString();
             if (sortiment.length() == 0){ sortiment = "false"; }
 
             System.out.println(lineCount+" "+gruppenname+" "+name);
@@ -431,23 +434,26 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                 colors.add(Color.black); // lieferant
                 colors.add(Color.black); // nummer
                 colors.add( name.equals(allFields.get(1)) ? Color.black : Color.red ); // name
-                colors.add( menge.equals(allFields.get(2)) ? Color.black : Color.red ); // menge
-                colors.add( barcode.equals(allFields.get(3)) ? Color.black : Color.red ); // barcode
-                colors.add( herkunft.equals(allFields.get(4)) ? Color.black : Color.red ); // herkunft
-                colors.add( vpe.equals(allFields.get(5)) ? Color.black : Color.red ); // vpe
+                colors.add( kurzname.equals(allFields.get(2)) ? Color.black : Color.red ); // kurzname
+                    System.out.println(kurzname);
+                    System.out.println(allFields.get(2));
+                colors.add( menge.equals(allFields.get(3)) ? Color.black : Color.red ); // menge
+                colors.add( barcode.equals(allFields.get(4)) ? Color.black : Color.red ); // barcode
+                colors.add( herkunft.equals(allFields.get(5)) ? Color.black : Color.red ); // herkunft
+                colors.add( vpe.equals(allFields.get(6)) ? Color.black : Color.red ); // vpe
                 if (variabel.equals("0")){ // compare prices:
-                    colors.add( vkpreis.equals(allFields.get(6)) ? Color.black : Color.red ); // vkpreis
-                    colors.add( ekpreis.equals(allFields.get(7)) ? Color.black : Color.red ); // ekpreis
+                    colors.add( vkpreis.equals(allFields.get(7)) ? Color.black : Color.red ); // vkpreis
+                    colors.add( ekpreis.equals(allFields.get(8)) ? Color.black : Color.red ); // ekpreis
                 } else {
                     colors.add(Color.black);
                     colors.add(Color.black);
                 }
-                colors.add( variabel.equals(allFields.get(8)) ? Color.black : Color.red ); // variabel
-                colors.add( sortiment.equals(allFields.get(9)) ? Color.black : Color.red ); // sortiment
+                colors.add( variabel.equals(allFields.get(9)) ? Color.black : Color.red ); // variabel
+                colors.add( sortiment.equals(allFields.get(10)) ? Color.black : Color.red ); // sortiment
                 colors.add(Color.black); // entfernen
             }
             else {
-                for (int i=0; i<13; i++){
+                for (int i=0; i<14; i++){
                     colors.add(Color.black);
                 }
             }
@@ -455,6 +461,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
             for (int i=0; i<colors.size(); i++){
                 if (colors.get(i) == Color.red){
                     itemChanged = true;
+                    System.out.println("Change in column "+i);
                     break;
                 }
             }
@@ -465,6 +472,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                 artikelNeu.lieferanten.add(lieferant);
                 artikelNeu.artikelNummern.add(nummer);
                 artikelNeu.artikelNamen.add(name);
+                artikelNeu.kurznamen.add(kurzname);
                 artikelNeu.mengen.add(mengeDecimal);
                 artikelNeu.barcodes.add(barcode);
                 artikelNeu.herkuenfte.add(herkunft);
@@ -482,6 +490,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
                     row.add(lieferant);
                     row.add(nummer);
                     row.add(name);
+                    row.add( kurzname.equals("NULL") ? "" : kurzname );
                     row.add( menge == "NULL" ? "" : menge.replace('.',',') );
                     row.add( barcode == "NULL" ? "" : barcode );
                     row.add( herkunft.equals("NULL") ? "" : herkunft );

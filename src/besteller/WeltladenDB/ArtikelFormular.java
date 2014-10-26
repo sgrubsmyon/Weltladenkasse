@@ -38,6 +38,7 @@ public class ArtikelFormular extends WindowContent
     public JComboBox lieferantBox;
     public JTextField nummerField;
     public JTextField nameField;
+    public JTextField kurznameField;
     public JTextField mengeField;
     public JTextField barcodeField;
     public JTextField herkunftField;
@@ -146,6 +147,12 @@ public class ArtikelFormular extends WindowContent
             nameField.setColumns(20);
             namePanel.add(nameField);
 
+            JPanel kurznamePanel = new JPanel();
+            kurznamePanel.setBorder(BorderFactory.createTitledBorder("Kurzname"));
+            kurznameField = new JTextField("");
+            kurznameField.setColumns(10);
+            kurznamePanel.add(kurznameField);
+
             JPanel mengePanel = new JPanel();
             mengePanel.setBorder(BorderFactory.createTitledBorder("Menge (Verpackungsgröße)"));
             mengeField = new JTextField("");
@@ -163,6 +170,7 @@ public class ArtikelFormular extends WindowContent
 
         JPanel describePanel = new JPanel();
         describePanel.add(namePanel);
+        describePanel.add(kurznamePanel);
         describePanel.add(mengePanel);
         describePanel.add(herkunftPanel);
         headerPanel.add(describePanel);
