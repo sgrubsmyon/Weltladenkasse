@@ -61,17 +61,16 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     private Vector<Integer> lieferantIDs;
 
     // Vectors storing table edits
-    private Vector<String> editedLieferantIDs;
+    private Vector<Integer> editedLieferantIDs;
     private Vector<String> changedLieferantName;
     private Vector<Boolean> changedAktiv;
 
     // Dialog to read items from file
     private JDialog readFromFileDialog;
-    //private ArtikelImport itemsFromFile;
 
     // Methoden:
-    protected Lieferantliste(Connection conn) {
-        super(conn, ac.getMainWindowPointer());
+    public Lieferantliste(Connection conn, MainWindowGrundlage mw) {
+        super(conn, mw);
 
         fillDataArray();
         showAll();
@@ -85,7 +84,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         lieferantIDs = new Vector<Integer>();
         activeRowBools = new Vector<Boolean>();
 
-        String filter = "";
+        String filter = "TRUE ";
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT lieferant_id, lieferant_name, aktiv "+
@@ -122,7 +121,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         }
         displayData = new Vector< Vector<Object> >(data);
         initiateDisplayIndices();
-        editedLieferantIDs = new Vector<String>();
+        editedLieferantIDs = new Vector<Integer>();
         changedLieferantName = new Vector<String>();
         changedAktiv = new Vector<Boolean>();
     }
@@ -130,29 +129,15 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     private void putChangesIntoDB() {
         for (int index=0; index<editedLieferantIDs.size(); index++){
             Integer lief_id = editedLieferantIDs.get(index);
+            String lieferantName = changedLieferantName.get(index);
+            Boolean aktivBool = changedAktiv.get(index);
 
-            // set old item to inactive:
-            int result = setLieferantInactive(lief_id);
+            int result = updateLieferant(lief_id, lieferantName, aktivBool);
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Lieferant mit Nr. "+lief_id+" konnte nicht geändert werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
                 continue; // continue with next item
-            }
-            if ( changedAktiv.get(index) == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
-                result = insertNewLieferant(lief_id,
-                        changedLieferantName.get(index));
-                if (result == 0){
-                    JOptionPane.showMessageDialog(this,
-                            "Fehler: Lieferant mit Nr. "+lief_id+" konnte nicht geändert werden.",
-                            "Fehler", JOptionPane.ERROR_MESSAGE);
-                    result = setLieferantActive(lief_id);
-                    if (result == 0){
-                        JOptionPane.showMessageDialog(this,
-                                "Fehler: Lieferant mit Nr. "+lief_id+" konnte nicht geändert werden.",
-                                "Fehler", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
             }
         }
     }
@@ -201,7 +186,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
 
           JPanel bottomRightPanel = new JPanel();
           bottomRightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
-            newButton = new JButton("Neue Lieferanten eingeben");
+            newButton = new JButton("Neuen Lieferanten eingeben");
             newButton.setMnemonic(KeyEvent.VK_N);
             newButton.addActionListener(this);
             bottomRightPanel.add(newButton);
@@ -378,7 +363,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         int dataRow = displayIndices.get(row); // convert from displayData index to data index
         int column = e.getColumn();
         AbstractTableModel model = (AbstractTableModel)e.getSource();
-        String origLieferantID = originalData.get(dataRow).get(model.findColumn("Lieferant-Nr.")).toString();
+        Integer origLieferantID = (Integer)originalData.get(dataRow).get(model.findColumn("Lieferant-Nr."));
         String origLieferantName = originalData.get(dataRow).get(model.findColumn("Lieferant-Name")).toString();
 
         // post-edit edited cell
@@ -453,40 +438,10 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         enableButtons();
     }
 
-    private class WindowAdapterArtikelDialog extends WindowAdapter {
-        private ArtikelDialogWindowGrundlage dwindow;
-        private JDialog dialog;
-        private String warnMessage;
-        public WindowAdapterArtikelDialog(ArtikelDialogWindowGrundlage adw, JDialog dia, String wm) {
-            super();
-            this.dwindow = adw;
-            this.dialog = dia;
-            this.warnMessage = wm;
-        }
-        @Override
-        public void windowClosing(WindowEvent we) {
-            if ( this.dwindow.willDataBeLost() ){
-                int answer = JOptionPane.showConfirmDialog(dialog,
-                        warnMessage, "Warnung",
-                        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-                if (answer == JOptionPane.YES_OPTION){
-                    dialog.dispose();
-                } else {
-                    // do nothing
-                }
-            } else {
-                dialog.dispose();
-            }
-        }
-    }
-
     void showNewLieferantDialog() {
-        JDialog newLieferantDialog = new JDialog(this.mainWindow, "Neue Artikel hinzufügen", true);
+        JDialog newLieferantDialog = new JDialog(this.mainWindow, "Neuen Lieferanten hinzufügen", true);
         LieferantNeuEingeben newLieferants = new LieferantNeuEingeben(this.conn, this.mainWindow, this, newLieferantDialog);
         newLieferantDialog.getContentPane().add(newLieferants, BorderLayout.CENTER);
-        newLieferantDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        WindowAdapterArtikelDialog waad = new WindowAdapterArtikelDialog(newLieferants, newLieferantDialog, "Achtung: Neue Artikel gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
-        newLieferantDialog.addWindowListener(waad);
         newLieferantDialog.pack();
         newLieferantDialog.setVisible(true);
     }

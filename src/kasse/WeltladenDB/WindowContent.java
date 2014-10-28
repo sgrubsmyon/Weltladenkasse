@@ -299,7 +299,6 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
 
         try {
-            Statement stmt = this.conn.createStatement();
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "INSERT INTO artikel SET "+
                     "produktgruppen_id = ?, lieferant_id = ?, "+
@@ -327,7 +326,126 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             pstmtSetBoolean(pstmt, 12, var_preis);
             pstmtSetBoolean(pstmt, 13, sortiment);
             result = pstmt.executeUpdate();
-            stmt.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    protected boolean isLieferantAlreadyKnown(String lieferant) {
+        boolean exists = false;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT COUNT(lieferant_id) FROM lieferant "+
+                    "WHERE lieferant_name = ?"
+                    );
+            pstmt.setString(1, lieferant);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            int count = rs.getInt(1);
+            exists = count > 0;
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return exists;
+    }
+
+    protected boolean isLieferantInactive(String lieferant) {
+        boolean inactive = false;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT aktiv FROM lieferant "+
+                    "WHERE lieferant_name = ?"
+                    );
+            pstmt.setString(1, lieferant);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            inactive = !rs.getBoolean(1);
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return inactive;
+    }
+
+    protected int updateLieferant(Integer lieferantid, String lieferant_name, Boolean aktiv) {
+        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        int result = 0;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "UPDATE lieferant SET lieferant_name = ?, aktiv = ? WHERE "+
+                    "lieferant_id = ?"
+                    );
+            pstmt.setString(1, lieferant_name);
+            pstmt.setBoolean(2, aktiv);
+            pstmt.setInt(3, lieferantid);
+            result = pstmt.executeUpdate();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    protected int setLieferantInactive(Integer lieferantid) {
+        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        int result = 0;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "UPDATE lieferant SET aktiv = FALSE WHERE "+
+                    "lieferant_id = ?"
+                    );
+            pstmt.setInt(1, lieferantid);
+            result = pstmt.executeUpdate();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    protected int setLieferantActive(Integer lieferantid) {
+        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        int result = 0;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "UPDATE lieferant SET aktiv = TRUE WHERE "+
+                    "lieferant_id = ?"
+                    );
+            pstmt.setInt(1, lieferantid);
+            result = pstmt.executeUpdate();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    protected int insertNewLieferant(String lieferantName) {
+        // add row for new item (with updated fields)
+        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        int result = 0;
+        if ( isLieferantAlreadyKnown(lieferantName) ) return 0;
+
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "INSERT INTO lieferant SET "+
+                    "lieferant_name = ?, "+
+                    "aktiv = TRUE"
+                    );
+            pstmt.setString(1, lieferantName);
+            result = pstmt.executeUpdate();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
