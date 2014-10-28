@@ -144,7 +144,7 @@ public class ArtikelFormular extends WindowContent
             JPanel namePanel = new JPanel();
             namePanel.setBorder(BorderFactory.createTitledBorder("Artikelname"));
             nameField = new JTextField("");
-            nameField.setColumns(20);
+            nameField.setColumns(30);
             namePanel.add(nameField);
 
             JPanel kurznamePanel = new JPanel();
@@ -165,7 +165,7 @@ public class ArtikelFormular extends WindowContent
             JPanel herkunftPanel = new JPanel();
             herkunftPanel.setBorder(BorderFactory.createTitledBorder("Herkunft"));
             herkunftField = new JTextField("");
-            herkunftField.setColumns(40);
+            herkunftField.setColumns(20);
             herkunftPanel.add(herkunftField);
 
         JPanel describePanel = new JPanel();
