@@ -84,7 +84,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         lieferantIDs = new Vector<Integer>();
         activeRowBools = new Vector<Boolean>();
 
-        String filter = "TRUE ";
+        String filter = "lieferant_id != 1 "; // exclude 'unbekannt'
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT lieferant_id, lieferant_name, aktiv "+

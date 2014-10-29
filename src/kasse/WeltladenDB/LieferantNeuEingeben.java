@@ -87,7 +87,7 @@ public class LieferantNeuEingeben extends DialogWindow
 
     void showFooter() {
         footerPanel = new JPanel();
-        submitButton = new JButton("Abschicken");
+        submitButton = new JButton("Speichern");
         submitButton.setMnemonic(KeyEvent.VK_A);
         submitButton.addActionListener(this);
         submitButton.setEnabled( checkIfFormIsComplete() );
@@ -156,7 +156,7 @@ public class LieferantNeuEingeben extends DialogWindow
             return;
         }
 	if (e.getSource() == deleteButton){
-            closeButton.doClick();
+            lieferantNameField.setText("");
             return;
         }
         super.actionPerformed(e);
