@@ -227,7 +227,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return exists;
     }
 
-    protected int setItemInactive(Integer lieferantid, String nummer) {
+    protected int setItemInactive(Integer lieferant_id, String nummer) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
@@ -236,7 +236,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "lieferant_id = ? AND "+
                     "artikel_nr = ? AND aktiv = TRUE"
                     );
-            pstmt.setInt(1, lieferantid);
+            pstmt.setInt(1, lieferant_id);
             pstmt.setString(2, nummer);
             result = pstmt.executeUpdate();
             pstmt.close();
@@ -247,7 +247,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected int setItemActive(Integer lieferantid, String nummer) {
+    protected int setItemActive(Integer lieferant_id, String nummer) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
@@ -256,7 +256,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "lieferant_id = ? AND "+
                     "artikel_nr = ? AND aktiv = FALSE"
                     );
-            pstmt.setInt(1, lieferantid);
+            pstmt.setInt(1, lieferant_id);
             pstmt.setString(2, nummer);
             result = pstmt.executeUpdate();
             pstmt.close();
@@ -375,7 +375,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return inactive;
     }
 
-    protected int updateLieferant(Integer lieferantid, String lieferant_name, Boolean aktiv) {
+    protected int updateLieferant(Integer lieferant_id, String lieferant_name, Boolean aktiv) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
@@ -385,7 +385,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     );
             pstmt.setString(1, lieferant_name);
             pstmt.setBoolean(2, aktiv);
-            pstmt.setInt(3, lieferantid);
+            pstmt.setInt(3, lieferant_id);
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
@@ -395,7 +395,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected int setLieferantInactive(Integer lieferantid) {
+    protected int setLieferantInactive(Integer lieferant_id) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
@@ -403,7 +403,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "UPDATE lieferant SET aktiv = FALSE WHERE "+
                     "lieferant_id = ?"
                     );
-            pstmt.setInt(1, lieferantid);
+            pstmt.setInt(1, lieferant_id);
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
@@ -413,7 +413,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected int setLieferantActive(Integer lieferantid) {
+    protected int setLieferantActive(Integer lieferant_id) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
@@ -421,7 +421,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "UPDATE lieferant SET aktiv = TRUE WHERE "+
                     "lieferant_id = ?"
                     );
-            pstmt.setInt(1, lieferantid);
+            pstmt.setInt(1, lieferant_id);
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
@@ -444,6 +444,125 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "aktiv = TRUE"
                     );
             pstmt.setString(1, lieferantName);
+            result = pstmt.executeUpdate();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    protected boolean isProduktgruppeAlreadyKnown(String produktgruppe) {
+        boolean exists = false;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT COUNT(produktgruppen_id) FROM produktgruppe "+
+                    "WHERE produktgruppen_name = ?"
+                    );
+            pstmt.setString(1, produktgruppe);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            int count = rs.getInt(1);
+            exists = count > 0;
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return exists;
+    }
+
+    protected boolean isProduktgruppeInactive(String produktgruppe) {
+        boolean inactive = false;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT aktiv FROM produktgruppe "+
+                    "WHERE produktgruppen_name = ?"
+                    );
+            pstmt.setString(1, produktgruppe);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            inactive = !rs.getBoolean(1);
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return inactive;
+    }
+
+    protected int updateProduktgruppe(Integer produktgruppen_id, String produktgruppen_name, Boolean aktiv) {
+        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        int result = 0;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "UPDATE produktgruppe SET produktgruppen_name = ?, aktiv = ? WHERE "+
+                    "produktgruppen_id = ?"
+                    );
+            pstmt.setString(1, produktgruppen_name);
+            pstmt.setBoolean(2, aktiv);
+            pstmt.setInt(3, produktgruppen_id);
+            result = pstmt.executeUpdate();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    protected int setProduktgruppeInactive(Integer produktgruppen_id) {
+        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        int result = 0;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "UPDATE produktgruppe SET aktiv = FALSE WHERE "+
+                    "produktgruppen_id = ?"
+                    );
+            pstmt.setInt(1, produktgruppen_id);
+            result = pstmt.executeUpdate();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    protected int setProduktgruppeActive(Integer produktgruppen_id) {
+        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        int result = 0;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "UPDATE produktgruppe SET aktiv = TRUE WHERE "+
+                    "produktgruppen_id = ?"
+                    );
+            pstmt.setInt(1, produktgruppen_id);
+            result = pstmt.executeUpdate();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    protected int insertNewProduktgruppe(String produktgruppenName) {
+        // add row for new item (with updated fields)
+        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        int result = 0;
+        if ( isProduktgruppeAlreadyKnown(produktgruppenName) ) return 0;
+
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "INSERT INTO produktgruppe SET "+
+                    "produktgruppen_name = ?, "+
+                    "aktiv = TRUE"
+                    );
+            pstmt.setString(1, produktgruppenName);
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {

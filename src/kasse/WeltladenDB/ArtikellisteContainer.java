@@ -34,7 +34,7 @@ import javax.swing.table.*;
 // Klasse, die Produktgruppenliste und Artikelliste speichert und anzeigt
 public class ArtikellisteContainer extends WindowContent {
     // Attribute:
-    private ProduktgruppenlisteArtikelliste prodList;
+    private ProduktgruppenbaumArtikelliste prodList;
     private TreeSet<Integer> sortedExpandedRows; // saves (and thus enables to restore) the expansion state of JTree
     private Artikelliste artList;
 
@@ -42,7 +42,7 @@ public class ArtikellisteContainer extends WindowContent {
     public ArtikellisteContainer(Connection conn, MainWindowGrundlage mw) {
 	super(conn, mw);
 
-        prodList = new ProduktgruppenlisteArtikelliste(conn, mw, this);
+        prodList = new ProduktgruppenbaumArtikelliste(conn, mw, this);
 
         this.add(prodList, BorderLayout.CENTER);
     }
@@ -64,7 +64,7 @@ public class ArtikellisteContainer extends WindowContent {
     public void switchToProduktgruppenliste() {
         this.remove(artList);
         this.revalidate();
-        prodList = new ProduktgruppenlisteArtikelliste(this.conn, this.mainWindow, this);
+        prodList = new ProduktgruppenbaumArtikelliste(this.conn, this.mainWindow, this);
         JTree tree = prodList.getTree();
         for (Integer i : sortedExpandedRows){
             tree.expandRow(i);

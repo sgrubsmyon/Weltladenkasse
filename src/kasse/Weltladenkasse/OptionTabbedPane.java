@@ -35,6 +35,7 @@ import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.TabbedPaneGrundlage;
 import WeltladenDB.ArtikellisteContainer;
 import WeltladenDB.Lieferantliste;
+import WeltladenDB.Produktgruppenliste;
 import WeltladenDB.DumpDatabase;
 
 // Klasse, die Produktgruppenliste und Artikelliste speichert und anzeigt
@@ -52,10 +53,12 @@ public class OptionTabbedPane extends TabbedPaneGrundlage {
         ArtikellisteContainer myArtikellisteC = new ArtikellisteContainer(this.conn, this.mainWindow);
         Rabattaktionen myRabattaktionen = new Rabattaktionen(this.conn, this.mainWindow);
         Lieferantliste myLieferant = new Lieferantliste(this.conn, this.mainWindow);
+        Produktgruppenliste myProduktgruppe = new Produktgruppenliste(this.conn, this.mainWindow);
         DumpDatabase myDump = new DumpDatabase(this.conn, this.mainWindow, this);
         tabbedPane.addTab("Artikelliste", null, myArtikellisteC, "Artikel bearbeiten/hinzufügen");
         tabbedPane.addTab("Rabatt", null, myRabattaktionen, "Rabattaktionen bearbeiten/hinzufügen");
         tabbedPane.addTab("Lieferanten", null, myLieferant, "Lieferanten bearbeiten/hinzufügen");
+        tabbedPane.addTab("Produktgruppen", null, myProduktgruppe, "Produktgruppen bearbeiten/hinzufügen");
         tabbedPane.addTab("DB Import/Export", null, myDump, "Datenbank exportieren/importieren");
 
         this.add(tabbedPane, BorderLayout.CENTER);

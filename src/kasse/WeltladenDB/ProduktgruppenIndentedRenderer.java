@@ -19,9 +19,7 @@ public class ProduktgruppenIndentedRenderer extends DefaultListCellRenderer {
         this.produktgruppenIDsList = idsList;
     }
 
-    public Component getListCellRendererComponent(JList list, Object value,
-            int index, boolean isSelected, boolean cellHasFocus) {
-        JLabel lbl = (JLabel)super.getListCellRendererComponent(list,value,index,isSelected,cellHasFocus);
+    public int getIndent(int index) {
         int indent = 0;
         if (index >= 0){
             Integer tid = produktgruppenIDsList.get(index).get(0); // top level
@@ -35,6 +33,13 @@ public class ProduktgruppenIndentedRenderer extends DefaultListCellRenderer {
             }
             // sonst keine Einrueckung
         }
+        return indent;
+    }
+
+    public Component getListCellRendererComponent(JList list, Object value,
+            int index, boolean isSelected, boolean cellHasFocus) {
+        JLabel lbl = (JLabel)super.getListCellRendererComponent(list,value,index,isSelected,cellHasFocus);
+        int indent = getIndent(index);
         lbl.setBorder(BorderFactory.createEmptyBorder(0,indent,0,0));//5 is the indent, modify to suit
         return lbl;
     }

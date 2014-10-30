@@ -33,7 +33,7 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.*;
 
-public abstract class ProduktgruppenlisteGrundlage extends WindowContent implements TreeSelectionListener {
+public abstract class ProduktgruppenbaumGrundlage extends WindowContent implements TreeSelectionListener {
     // Attribute:
     protected final String titleStr = "Produktgruppen";
     private String aktivFilterStr = " AND aktiv = TRUE ";
@@ -48,7 +48,7 @@ public abstract class ProduktgruppenlisteGrundlage extends WindowContent impleme
     /**
      *    The constructor.
      *       */
-    public ProduktgruppenlisteGrundlage(Connection conn, MainWindowGrundlage mw) {
+    public ProduktgruppenbaumGrundlage(Connection conn, MainWindowGrundlage mw) {
 	super(conn, mw);
 
 	showTree(titleStr);

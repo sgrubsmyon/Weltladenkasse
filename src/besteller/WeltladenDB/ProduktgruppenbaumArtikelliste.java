@@ -32,7 +32,7 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.*;
 
-public class ProduktgruppenlisteArtikelliste extends ProduktgruppenlisteGrundlage {
+public class ProduktgruppenbaumArtikelliste extends ProduktgruppenbaumGrundlage {
     // Attribute:
     private ArtikellisteContainer container;
 
@@ -41,12 +41,12 @@ public class ProduktgruppenlisteArtikelliste extends ProduktgruppenlisteGrundlag
     /**
      *    The constructor.
      *       */
-    public ProduktgruppenlisteArtikelliste(Connection conn, MainWindowGrundlage mw, ArtikellisteContainer ac) {
+    public ProduktgruppenbaumArtikelliste(Connection conn, MainWindowGrundlage mw, ArtikellisteContainer ac) {
 	super(conn, mw);
 
         container = ac;
     }
-    //public ProduktgruppenlisteArtikelliste( ProduktgruppenlisteArtikelliste rhs ) {
+    //public ProduktgruppenbaumArtikelliste( ProduktgruppenbaumArtikelliste rhs ) {
     //    super(rhs);
     //    container = rhs.getContainer();
     //}
