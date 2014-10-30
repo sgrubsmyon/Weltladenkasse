@@ -363,7 +363,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         int dataRow = displayIndices.get(row); // convert from displayData index to data index
         int column = e.getColumn();
         AbstractTableModel model = (AbstractTableModel)e.getSource();
-        Integer origLieferantID = (Integer)originalData.get(dataRow).get(model.findColumn("Lieferant-Nr."));
+        Integer origLieferantID = lieferantIDs.get(dataRow);
         String origLieferantName = originalData.get(dataRow).get(model.findColumn("Lieferant-Name")).toString();
 
         // post-edit edited cell

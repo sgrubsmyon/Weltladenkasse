@@ -33,11 +33,11 @@ import javax.swing.table.*;
 import javax.swing.event.*; // for TableModelListener
 import javax.swing.text.*; // for DocumentFilter
 
-public class Lieferantliste extends WindowContent implements ItemListener, TableModelListener,
+public class Produktgruppenliste extends WindowContent implements ItemListener, TableModelListener,
        ListSelectionListener, DocumentListener {
     // Attribute:
     private JPanel allPanel;
-    private JPanel lieferantListPanel;
+    private JPanel produktgruppenListPanel;
     private JScrollPane scrollPane;
     private JCheckBox inaktivCheckBox;
     private boolean showInaktive = false;
@@ -47,8 +47,8 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     private JButton newButton;
 
     private String filterStr = "";
-    private String aktivFilterStr = " AND lieferant.aktiv = TRUE ";
-    private String orderByStr = "lieferant.lieferant_id";
+    private String aktivFilterStr = " AND p.aktiv = TRUE ";
+    private String orderByStr = "p.toplevel_id, p.sub_id, p.subsub_id";
 
     // The table holding the items
     private JTable myTable;
@@ -58,18 +58,19 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     protected Vector<Integer> displayIndices;
     private Vector<String> columnLabels;
     protected Vector<Boolean> activeRowBools;
-    private Vector<Integer> lieferantIDs;
+    private Vector<Integer> produktgruppenIDs;
+    private Vector< Vector<Integer> > produktgruppenIDsList;
 
     // Vectors storing table edits
-    private Vector<Integer> editedLieferantIDs;
-    private Vector<String> changedLieferantName;
+    private Vector<Integer> editedProduktgruppenIDs;
+    private Vector<String> changedProduktgruppenName;
     private Vector<Boolean> changedAktiv;
 
     // Dialog to read items from file
     private JDialog readFromFileDialog;
 
     // Methoden:
-    public Lieferantliste(Connection conn, MainWindowGrundlage mw) {
+    public Produktgruppenliste(Connection conn, MainWindowGrundlage mw) {
         super(conn, mw);
 
         fillDataArray();
@@ -79,32 +80,53 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     private void fillDataArray() {
         this.data = new Vector< Vector<Object> >();
         columnLabels = new Vector<String>();
-        columnLabels.add("Lieferant-Nr."); columnLabels.add("Lieferant-Name");
+        columnLabels.add("Produktgruppen-Index"); columnLabels.add("Produktgruppen-Name");
+        columnLabels.add("MwSt."); columnLabels.add("Pfand");
         columnLabels.add("Aktiv");
-        lieferantIDs = new Vector<Integer>();
+        produktgruppenIDs = new Vector<Integer>();
+        produktgruppenIDsList = new Vector< Vector<Integer> >();
         activeRowBools = new Vector<Boolean>();
 
-        String filter = "lieferant_id != 1 "; // exclude 'unbekannt'
+        String filter = "p.toplevel_id IS NOT NULL "; // exclude 'unbekannt'
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT lieferant_id, lieferant_name, aktiv "+
-                    "FROM lieferant "+
+                    "SELECT p.produktgruppen_id, p.toplevel_id, p.sub_id, p.subsub_id, "+
+                    "p.produktgruppen_name, p.aktiv, "+
+                    "m.mwst_satz, a.artikel_name "+
+                    "FROM produktgruppe AS p "+
+                    "INNER JOIN mwst AS m USING(mwst_id) "+ // change to
+                                        // LEFT JOIN to allow editing of "Sonstiges" that has no associated VAT
+                    "LEFT JOIN pfand USING(pfand_id) "+
+                    "LEFT JOIN artikel AS a USING(artikel_id) "+
                     "WHERE " + filter +
                     aktivFilterStr +
                     "ORDER BY " + orderByStr
                     );
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                Integer lieferant_id = rs.getInt(1);
-                String lieferant = rs.getString(2);
-                Boolean aktivBool = rs.getBoolean(3);
+                Integer produktgruppen_id = rs.getInt(1);
+                Vector<Integer> ids = new Vector<Integer>();
+                ids.add( rs.getString(2) == null ? null : rs.getInt(2) );
+                ids.add( rs.getString(3) == null ? null : rs.getInt(3) );
+                ids.add( rs.getString(4) == null ? null : rs.getInt(4) );
+                String produktgruppe = rs.getString(5);
+                Boolean aktivBool = rs.getBoolean(6);
+                BigDecimal mwst_satz = rs.getBigDecimal(7);
+                String pfand_name = rs.getString(8) == null ? "" : rs.getString(8);
+                String produktgruppenIndex = "";
+                if (ids.get(0) != null) produktgruppenIndex += ids.get(0).toString();
+                if (ids.get(1) != null) produktgruppenIndex += "."+ids.get(1).toString();
+                if (ids.get(2) != null) produktgruppenIndex += "."+ids.get(2).toString();
 
                 Vector<Object> row = new Vector<Object>();
-                    row.add(lieferant_id);
-                    row.add(lieferant);
+                    row.add(produktgruppenIndex);
+                    row.add(produktgruppe);
+                    row.add( vatFormatter(mwst_satz) );
+                    row.add(pfand_name);
                     row.add(aktivBool);
                 data.add(row);
-                lieferantIDs.add(lieferant_id);
+                produktgruppenIDs.add(produktgruppen_id);
+                produktgruppenIDsList.add(ids);
                 activeRowBools.add(aktivBool);
             }
             rs.close();
@@ -121,21 +143,21 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         }
         displayData = new Vector< Vector<Object> >(data);
         initiateDisplayIndices();
-        editedLieferantIDs = new Vector<Integer>();
-        changedLieferantName = new Vector<String>();
+        editedProduktgruppenIDs = new Vector<Integer>();
+        changedProduktgruppenName = new Vector<String>();
         changedAktiv = new Vector<Boolean>();
     }
 
     private void putChangesIntoDB() {
-        for (int index=0; index<editedLieferantIDs.size(); index++){
-            Integer lief_id = editedLieferantIDs.get(index);
-            String lieferantName = changedLieferantName.get(index);
+        for (int index=0; index<editedProduktgruppenIDs.size(); index++){
+            Integer lief_id = editedProduktgruppenIDs.get(index);
+            String produktgruppenName = changedProduktgruppenName.get(index);
             Boolean aktivBool = changedAktiv.get(index);
 
-            int result = updateLieferant(lief_id, lieferantName, aktivBool);
+            int result = updateProduktgruppe(lief_id, produktgruppenName, aktivBool);
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: Lieferant mit Nr. "+lief_id+" konnte nicht geändert werden.",
+                        "Fehler: Produktgruppen mit Nr. "+lief_id+" konnte nicht geändert werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
                 continue; // continue with next item
             }
@@ -186,7 +208,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
 
           JPanel bottomRightPanel = new JPanel();
           bottomRightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
-            newButton = new JButton("Neuen Lieferanten eingeben");
+            newButton = new JButton("Neue Produktgruppe eingeben");
             newButton.setMnemonic(KeyEvent.VK_N);
             newButton.addActionListener(this);
             bottomRightPanel.add(newButton);
@@ -199,9 +221,9 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     }
 
     void enableButtons() {
-        saveButton.setEnabled(editedLieferantIDs.size() > 0);
-        revertButton.setEnabled(editedLieferantIDs.size() > 0);
-        newButton.setEnabled(editedLieferantIDs.size() == 0);
+        saveButton.setEnabled(editedProduktgruppenIDs.size() > 0);
+        revertButton.setEnabled(editedProduktgruppenIDs.size() > 0);
+        newButton.setEnabled(editedProduktgruppenIDs.size() == 0);
     }
 
     void initiateTable() {
@@ -232,10 +254,10 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
             public boolean isCellEditable(int row, int col) {
                 String header = this.getColumnName(col);
                 if ( activeRowBools.get(row) ){
-                    if ( header.equals("Lieferant-Nr.") ) {
-                        return false;
+                    if ( header.equals("Produktgruppen-Name") || header.equals("Aktiv") ) {
+                        return true;
                     }
-                    return true;
+                    return false;
                 } else {
                     if ( header.equals("Aktiv") ) {
                         return true;
@@ -252,11 +274,12 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
                 fireTableCellUpdated(row, col);
             }
         } ) { // subclass the JTable to set font properties and tool tip text
-            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-                Component c = super.prepareRenderer(renderer, row, column);
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int col) {
+                JComponent c = (JComponent)super.prepareRenderer(renderer, row, col);
                 // add custom rendering here
                 int realRowIndex = convertRowIndexToModel(row);
                 realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
+                int realColIndex = convertColumnIndexToModel(col); // user might have changed column order
                 if ( ! activeRowBools.get(realRowIndex) ){ // for rows with inactive items
                     c.setFont( c.getFont().deriveFont(Font.ITALIC) );
                     c.setForeground(Color.BLUE);
@@ -264,6 +287,12 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
                 else {
                     c.setFont( c.getFont().deriveFont(Font.PLAIN) );
                     c.setForeground(Color.BLACK);
+                }
+                // indent the produktgruppen_name
+                if ( this.getColumnName(realColIndex).equals("Produktgruppen-Name") ) {
+                    ProduktgruppenIndentedRenderer pir = new ProduktgruppenIndentedRenderer(produktgruppenIDsList);
+                    int indent = pir.getIndent(realRowIndex);
+                    c.setBorder(BorderFactory.createEmptyBorder(0,indent,0,0));//5 is the indent, modify to suit
                 }
                 return c;
             }
@@ -302,30 +331,34 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     void showTable() {
         initiateTable();
 
-        lieferantListPanel = new JPanel();
-        lieferantListPanel.setLayout(new BorderLayout());
-        lieferantListPanel.setBorder(BorderFactory.createTitledBorder("Lieferanten"));
+        produktgruppenListPanel = new JPanel();
+        produktgruppenListPanel.setLayout(new BorderLayout());
+        produktgruppenListPanel.setBorder(BorderFactory.createTitledBorder("Produktgruppen"));
 
         scrollPane = new JScrollPane(myTable);
-        lieferantListPanel.add(scrollPane, BorderLayout.CENTER);
-        allPanel.add(lieferantListPanel, BorderLayout.CENTER);
+        produktgruppenListPanel.add(scrollPane, BorderLayout.CENTER);
+        allPanel.add(produktgruppenListPanel, BorderLayout.CENTER);
     }
 
     void updateTable() {
-        lieferantListPanel.remove(scrollPane);
-	lieferantListPanel.revalidate();
+        produktgruppenListPanel.remove(scrollPane);
+	produktgruppenListPanel.revalidate();
         initiateTable();
         scrollPane = new JScrollPane(myTable);
-        lieferantListPanel.add(scrollPane);
+        produktgruppenListPanel.add(scrollPane);
         enableButtons();
     }
 
     void setTableProperties(JTable myTable) {
-        myTable.getColumn("Lieferant-Nr.").setCellRenderer(zentralAusrichter);
-        myTable.getColumn("Lieferant-Name").setCellRenderer(linksAusrichter);
+        myTable.getColumn("Produktgruppen-Index").setCellRenderer(zentralAusrichter);
+        myTable.getColumn("Produktgruppen-Name").setCellRenderer(linksAusrichter);
+        myTable.getColumn("MwSt.").setCellRenderer(rechtsAusrichter);
+        myTable.getColumn("Pfand").setCellRenderer(linksAusrichter);
 
-        myTable.getColumn("Lieferant-Nr.").setPreferredWidth(30);
-        myTable.getColumn("Lieferant-Name").setPreferredWidth(100);
+        myTable.getColumn("Produktgruppen-Index").setPreferredWidth(20);
+        myTable.getColumn("Produktgruppen-Name").setPreferredWidth(100);
+        myTable.getColumn("MwSt.").setPreferredWidth(100);
+        myTable.getColumn("Pfand").setPreferredWidth(100);
         myTable.getColumn("Aktiv").setPreferredWidth(20);
     }
 
@@ -344,7 +377,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
                 aktivFilterStr = "";
                 showInaktive = true;
             } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                aktivFilterStr = " AND lieferant.aktiv = TRUE ";
+                aktivFilterStr = " AND p.aktiv = TRUE ";
                 showInaktive = false;
             }
         }
@@ -363,8 +396,8 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         int dataRow = displayIndices.get(row); // convert from displayData index to data index
         int column = e.getColumn();
         AbstractTableModel model = (AbstractTableModel)e.getSource();
-        Integer origLieferantID = lieferantIDs.get(dataRow);
-        String origLieferantName = originalData.get(dataRow).get(model.findColumn("Lieferant-Name")).toString();
+        Integer origProduktgruppenID = produktgruppenIDs.get(dataRow);
+        String origProduktgruppenName = originalData.get(dataRow).get(model.findColumn("Produktgruppen-Name")).toString();
 
         // post-edit edited cell
         String value = model.getValueAt(row, column).toString().replaceAll("\\s","");
@@ -375,10 +408,10 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
             model.addTableModelListener(this);
         }
         String header = model.getColumnName(column);
-        if ( header.equals("Lieferant-Name") && value.equals("") ){
-            // user tried to delete the lieferant (not allowed)
+        if ( header.equals("Produktgruppen-Name") && value.equals("") ){
+            // user tried to delete the produktgruppe (not allowed)
             // reset to original value
-            model.setValueAt(origLieferantName, row, column);
+            model.setValueAt(origProduktgruppenName, row, column);
         }
 
         // Compare entire row to original data
@@ -393,57 +426,57 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
             }
         }
 
-        int lieferantIndex = editedLieferantIDs.indexOf(origLieferantID); // look up lieferant in change list
+        int produktgruppenIndex = editedProduktgruppenIDs.indexOf(origProduktgruppenID); // look up produktgruppe in change list
         if (changed){
             // get and store all the values of the edited row
-            String lieferant = model.getValueAt(row, model.findColumn("Lieferant-Name")).toString();
-            if ( !lieferant.equals(origLieferantName) ){
-                if ( isLieferantAlreadyKnown(lieferant) ){
-                    // not allowed: changing lieferant to a name that is already registered in DB
-                    if ( isLieferantInactive(lieferant) ){
-                        JOptionPane.showMessageDialog(this, "Fehler: Lieferant "+
-                                lieferant+" bereits vorhanden, aber inaktiv!\n"+
+            String produktgruppe = model.getValueAt(row, model.findColumn("Produktgruppen-Name")).toString();
+            if ( !produktgruppe.equals(origProduktgruppenName) ){
+                if ( isProduktgruppeAlreadyKnown(produktgruppe) ){
+                    // not allowed: changing produktgruppe to a name that is already registered in DB
+                    if ( isProduktgruppeInactive(produktgruppe) ){
+                        JOptionPane.showMessageDialog(this, "Fehler: Produktgruppe "+
+                                produktgruppe+" bereits vorhanden, aber inaktiv!\n"+
                                 "Bei Bedarf wieder auf aktiv setzen.",
                                 "Info", JOptionPane.INFORMATION_MESSAGE);
                     } else {
-                        JOptionPane.showMessageDialog(this, "Fehler: Lieferant "+
-                                lieferant+" bereits vorhanden!\n"+
+                        JOptionPane.showMessageDialog(this, "Fehler: Produktgruppe "+
+                                produktgruppe+" bereits vorhanden!\n"+
                                 "Wird zurückgesetzt.",
                                 "Info", JOptionPane.INFORMATION_MESSAGE);
                     }
-                    model.setValueAt(origLieferantName, row, model.findColumn("Lieferant-Name"));
+                    model.setValueAt(origProduktgruppenName, row, model.findColumn("Produktgruppen-Name"));
                     return;
                 }
             }
             boolean aktiv = model.getValueAt(row, model.findColumn("Aktiv")).toString().equals("true") ? true : false;
 
             // update the vectors caching the changes
-            if (lieferantIndex != -1){ // this row has been changed before, update the change cache
-                changedLieferantName.set(lieferantIndex, lieferant);
-                changedAktiv.set(lieferantIndex, aktiv);
+            if (produktgruppenIndex != -1){ // this row has been changed before, update the change cache
+                changedProduktgruppenName.set(produktgruppenIndex, produktgruppe);
+                changedAktiv.set(produktgruppenIndex, aktiv);
             } else { // an edit occurred in a row that is not in the list of changes yet
-                editedLieferantIDs.add(origLieferantID);
-                changedLieferantName.add(lieferant);
+                editedProduktgruppenIDs.add(origProduktgruppenID);
+                changedProduktgruppenName.add(produktgruppe);
                 changedAktiv.add(aktiv);
             }
         } else if (!changed) {
             // update the vectors caching the changes
-            if (lieferantIndex != -1){ // this row has been changed before, all changes undone
-                editedLieferantIDs.remove(lieferantIndex); // remove item from list of changes
-                changedLieferantName.remove(lieferantIndex);
-                changedAktiv.remove(lieferantIndex);
+            if (produktgruppenIndex != -1){ // this row has been changed before, all changes undone
+                editedProduktgruppenIDs.remove(produktgruppenIndex); // remove item from list of changes
+                changedProduktgruppenName.remove(produktgruppenIndex);
+                changedAktiv.remove(produktgruppenIndex);
             }
         }
 
         enableButtons();
     }
 
-    void showNewLieferantDialog() {
-        JDialog newLieferantDialog = new JDialog(this.mainWindow, "Neuen Lieferanten hinzufügen", true);
-        LieferantNeuEingeben newLieferants = new LieferantNeuEingeben(this.conn, this.mainWindow, this, newLieferantDialog);
-        newLieferantDialog.getContentPane().add(newLieferants, BorderLayout.CENTER);
-        newLieferantDialog.pack();
-        newLieferantDialog.setVisible(true);
+    void showNewProduktgruppenDialog() {
+        JDialog newProduktgruppenDialog = new JDialog(this.mainWindow, "Neue Produktgruppe hinzufügen", true);
+        ProduktgruppeNeuEingeben newProduktgruppe = new ProduktgruppeNeuEingeben(this.conn, this.mainWindow, this, newProduktgruppenDialog);
+        newProduktgruppenDialog.getContentPane().add(newProduktgruppe, BorderLayout.CENTER);
+        newProduktgruppenDialog.pack();
+        newProduktgruppenDialog.setVisible(true);
     }
 
     int changeLossConfirmDialog() {
@@ -526,11 +559,11 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
             return;
         }
         if (e.getSource() == newButton){
-            showNewLieferantDialog();
+            showNewProduktgruppenDialog();
             return;
         }
         if (e.getSource() == inaktivCheckBox){
-            if ( editedLieferantIDs.size() > 0 ){
+            if ( editedProduktgruppenIDs.size() > 0 ){
                 int answer = changeLossConfirmDialog();
                 if (answer == JOptionPane.YES_OPTION){
                     updateAll();
