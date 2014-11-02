@@ -44,6 +44,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
     private JTextField filterField;
     private JButton saveButton;
     private JButton revertButton;
+    private JButton editButton;
     private JButton newButton;
 
     private String filterStr = "";
@@ -204,6 +205,11 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
             revertButton = new JButton("Änderungen verwerfen");
             revertButton.addActionListener(this);
             bottomLeftPanel.add(revertButton);
+
+            editButton = new JButton("Markierte Prod.Gr. bearbeiten");
+            editButton.setMnemonic(KeyEvent.VK_B);
+            editButton.addActionListener(this);
+            bottomLeftPanel.add(editButton);
         bottomPanel.add(bottomLeftPanel);
 
           JPanel bottomRightPanel = new JPanel();
@@ -223,6 +229,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
     void enableButtons() {
         saveButton.setEnabled(editedProduktgruppenIDs.size() > 0);
         revertButton.setEnabled(editedProduktgruppenIDs.size() > 0);
+        editButton.setEnabled(myTable.getSelectedRowCount() > 0);
         newButton.setEnabled(editedProduktgruppenIDs.size() == 0);
     }
 
@@ -350,16 +357,16 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
     }
 
     void setTableProperties(JTable myTable) {
-        myTable.getColumn("Produktgruppen-Index").setCellRenderer(zentralAusrichter);
+        myTable.getColumn("Produktgruppen-Index").setCellRenderer(linksAusrichter);
         myTable.getColumn("Produktgruppen-Name").setCellRenderer(linksAusrichter);
         myTable.getColumn("MwSt.").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("Pfand").setCellRenderer(linksAusrichter);
 
-        myTable.getColumn("Produktgruppen-Index").setPreferredWidth(20);
+        myTable.getColumn("Produktgruppen-Index").setPreferredWidth(5);
         myTable.getColumn("Produktgruppen-Name").setPreferredWidth(100);
-        myTable.getColumn("MwSt.").setPreferredWidth(100);
-        myTable.getColumn("Pfand").setPreferredWidth(100);
-        myTable.getColumn("Aktiv").setPreferredWidth(20);
+        myTable.getColumn("MwSt.").setPreferredWidth(5);
+        myTable.getColumn("Pfand").setPreferredWidth(10);
+        myTable.getColumn("Aktiv").setPreferredWidth(1);
     }
 
     public void updateAll() {
@@ -471,6 +478,28 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
         enableButtons();
     }
 
+    void showEditDialog() {
+        // get data from the selected rows
+        Vector< Vector<Object> > selectedData = new Vector< Vector<Object> >();
+        Vector<Integer> selectedProdGrIDs = new Vector<Integer>();
+        int[] selection = myTable.getSelectedRows();
+        for (int i = 0; i < selection.length; i++) {
+            selection[i] = myTable.convertRowIndexToModel(selection[i]);
+            selection[i] = displayIndices.get(selection[i]); // convert from displayData index to data index
+            selectedData.add( data.get(selection[i]) );
+            selectedProdGrIDs.add( produktgruppenIDs.get(selection[i]) );
+        }
+        JDialog editDialog = new JDialog(this.mainWindow, "Produktgruppe(n) bearbeiten", true);
+        ProduktgruppeBearbeiten bearb = new ProduktgruppeBearbeiten(this.conn, this.mainWindow, this, editDialog,
+                selectedData, selectedProdGrIDs);
+        editDialog.getContentPane().add(bearb, BorderLayout.CENTER);
+        editDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        WindowAdapterDialog wad = new WindowAdapterDialog(bearb, editDialog, "Achtung: Änderungen gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
+        editDialog.addWindowListener(wad);
+        editDialog.pack();
+        editDialog.setVisible(true);
+    }
+
     void showNewProduktgruppenDialog() {
         JDialog newProduktgruppenDialog = new JDialog(this.mainWindow, "Neue Produktgruppe hinzufügen", true);
         ProduktgruppeNeuEingeben newProduktgruppe = new ProduktgruppeNeuEingeben(this.conn, this.mainWindow, this, newProduktgruppenDialog);
@@ -556,6 +585,10 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
         }
         if (e.getSource() == revertButton){
             updateAll();
+            return;
+        }
+        if (e.getSource() == editButton){
+            showEditDialog();
             return;
         }
         if (e.getSource() == newButton){

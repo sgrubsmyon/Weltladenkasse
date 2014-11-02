@@ -809,33 +809,6 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         enableButtons();
     }
 
-    private class WindowAdapterArtikelDialog extends WindowAdapter {
-        private ArtikelDialogWindowGrundlage dwindow;
-        private JDialog dialog;
-        private String warnMessage;
-        public WindowAdapterArtikelDialog(ArtikelDialogWindowGrundlage adw, JDialog dia, String wm) {
-            super();
-            this.dwindow = adw;
-            this.dialog = dia;
-            this.warnMessage = wm;
-        }
-        @Override
-        public void windowClosing(WindowEvent we) {
-            if ( this.dwindow.willDataBeLost() ){
-                int answer = JOptionPane.showConfirmDialog(dialog,
-                        warnMessage, "Warnung",
-                        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-                if (answer == JOptionPane.YES_OPTION){
-                    dialog.dispose();
-                } else {
-                    // do nothing
-                }
-            } else {
-                dialog.dispose();
-            }
-        }
-    }
-
     void showEditDialog() {
         // get data from the selected rows
         Vector< Vector<Object> > selectedData = new Vector< Vector<Object> >();
@@ -856,8 +829,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 selectedData, selectedProdGrIDs, selectedLiefIDs, selectedVarPreisBools);
         editDialog.getContentPane().add(bearb, BorderLayout.CENTER);
         editDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        WindowAdapterArtikelDialog waad = new WindowAdapterArtikelDialog(bearb, editDialog, "Achtung: Änderungen gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
-        editDialog.addWindowListener(waad);
+        WindowAdapterDialog wad = new WindowAdapterDialog(bearb, editDialog, "Achtung: Änderungen gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
+        editDialog.addWindowListener(wad);
         editDialog.pack();
         editDialog.setVisible(true);
     }
@@ -867,8 +840,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         ArtikelNeuEingeben newItems = new ArtikelNeuEingeben(this.conn, this.mainWindow, this, newItemDialog, toplevel_id, sub_id, subsub_id);
         newItemDialog.getContentPane().add(newItems, BorderLayout.CENTER);
         newItemDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        WindowAdapterArtikelDialog waad = new WindowAdapterArtikelDialog(newItems, newItemDialog, "Achtung: Neue Artikel gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
-        newItemDialog.addWindowListener(waad);
+        WindowAdapterDialog wad = new WindowAdapterDialog(newItems, newItemDialog, "Achtung: Neue Artikel gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
+        newItemDialog.addWindowListener(wad);
         newItemDialog.pack();
         newItemDialog.setVisible(true);
     }
@@ -878,8 +851,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         ArtikelImport itemsFromFile = new ArtikelImport(this.conn, this.mainWindow, this, readFromFileDialog);
         readFromFileDialog.getContentPane().add(itemsFromFile, BorderLayout.CENTER);
         readFromFileDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        WindowAdapterArtikelDialog waad = new WindowAdapterArtikelDialog(itemsFromFile, readFromFileDialog, "Achtung: Neue Artikel gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
-        readFromFileDialog.addWindowListener(waad);
+        WindowAdapterDialog wad = new WindowAdapterDialog(itemsFromFile, readFromFileDialog, "Achtung: Neue Artikel gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
+        readFromFileDialog.addWindowListener(wad);
         readFromFileDialog.pack();
         readFromFileDialog.setVisible(true);
     }

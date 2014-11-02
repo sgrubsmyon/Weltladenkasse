@@ -113,6 +113,33 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
     }
 
+    private class WindowAdapterDialog extends WindowAdapter {
+        private DialogWindow dwindow;
+        private JDialog dialog;
+        private String warnMessage;
+        public WindowAdapterDialog(DialogWindow dw, JDialog dia, String wm) {
+            super();
+            this.dwindow = dw;
+            this.dialog = dia;
+            this.warnMessage = wm;
+        }
+        @Override
+        public void windowClosing(WindowEvent we) {
+            if ( this.dwindow.willDataBeLost() ){
+                int answer = JOptionPane.showConfirmDialog(dialog,
+                        warnMessage, "Warnung",
+                        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (answer == JOptionPane.YES_OPTION){
+                    dialog.dispose();
+                } else {
+                    // do nothing
+                }
+            } else {
+                dialog.dispose();
+            }
+        }
+    }
+
     /**
      * Price calculation methods
      */
