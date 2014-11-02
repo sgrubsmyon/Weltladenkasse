@@ -41,4 +41,7 @@ public abstract class DialogWindow extends WindowContent {
             return;
         }
     }
+
+    // will data be lost on close?
+    abstract boolean willDataBeLost();
 }
