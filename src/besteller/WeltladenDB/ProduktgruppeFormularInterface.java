@@ -1,6 +1,6 @@
 package WeltladenDB;
 
-public interface ArtikelFormularInterface {
+public interface ProduktgruppeFormularInterface {
     public void fillComboBoxes();
     public boolean checkIfFormIsComplete();
 }
