@@ -30,75 +30,55 @@ import javax.swing.table.*;
 import javax.swing.event.*; // for DocumentListener
 import javax.swing.text.*; // for DocumentFilter
 
-//public abstract class ArtikelFormular extends ArtikelDialogWindowGrundlage implements ArtikelFormularInterface, DocumentListener, ItemListener {
-public class ArtikelFormular extends WindowContent
-    implements ArtikelFormularInterface {
+public class ProduktgruppeFormular extends WindowContent
+    implements ProduktgruppeFormularInterface {
     // Attribute:
-    public JComboBox produktgruppenBox;
-    public JComboBox lieferantBox;
-    public JTextField nummerField;
+    public JComboBox mwstBox;
+    public JComboBox pfandBox;
     public JTextField nameField;
-    public JTextField kurznameField;
-    public JTextField mengeField;
-    public JTextField barcodeField;
-    public JTextField herkunftField;
-    public JSpinner vpeSpinner;
-    public JTextField vkpreisField;
-    public JTextField ekpreisField;
-    public JCheckBox preisVariabelBox;
-    public JCheckBox sortimentBox;
 
-    private Vector<String> produktgruppenNamen;
-    public Vector<Integer> produktgruppenIDs;
-    private Vector< Vector<Integer> > produktgruppenIDsList;
-    private Vector<String> lieferantNamen;
-    public Vector<Integer> lieferantIDs;
-
-    private NumberDocumentFilter geldFilter = new NumberDocumentFilter(2, 13);
-    private NumberDocumentFilter numFilter = new NumberDocumentFilter(5, 8);
+    private Vector<String> mwsts;
+    public Vector<Integer> mwstIDs;
+    private Vector<String> pfandNamen;
+    public Vector<Integer> pfandIDs;
 
     // Methoden:
-    public ArtikelFormular(Connection conn, MainWindowGrundlage mw) {
+    public ProduktgruppeFormular(Connection conn, MainWindowGrundlage mw) {
 	super(conn, mw);
 
         fillComboBoxes();
     }
 
     public void fillComboBoxes() {
-        produktgruppenNamen = new Vector<String>();
-        produktgruppenIDs = new Vector<Integer>();
-        produktgruppenIDsList = new Vector< Vector<Integer> >();
-        lieferantNamen = new Vector<String>();
-        lieferantIDs = new Vector<Integer>();
+        mwsts = new Vector<String>();
+        mwstIDs = new Vector<Integer>();
+        pfandNamen = new Vector<String>();
+        pfandIDs = new Vector<Integer>();
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT produktgruppen_id, toplevel_id, sub_id, subsub_id, produktgruppen_name "+
-                    "FROM produktgruppe WHERE mwst_id IS NOT NULL AND toplevel_id IS NOT NULL "+
-                    "AND aktiv = TRUE ORDER BY toplevel_id, sub_id, subsub_id"
+                    "SELECT mwst_id, mwst_satz FROM mwst "+
+                    "ORDER BY mwst_id"
                     );
             while (rs.next()) {
                 Integer id = rs.getInt(1);
-                Vector<Integer> ids = new Vector<Integer>();
-                ids.add( rs.getString(2) == null ? null : rs.getInt(2) );
-                ids.add( rs.getString(3) == null ? null : rs.getInt(3) );
-                ids.add( rs.getString(4) == null ? null : rs.getInt(4) );
-                String name = rs.getString(5);
+                BigDecimal satz = rs.getBigDecimal(2);
+                String mwst = vatFormatter(satz);
 
-                produktgruppenIDs.add(id);
-                produktgruppenIDsList.add(ids);
-                produktgruppenNamen.add(name);
+                mwstIDs.add(id);
+                mwsts.add(mwst);
             }
             rs.close();
             rs = stmt.executeQuery(
-                    "SELECT lieferant_name, lieferant_id FROM lieferant ORDER BY lieferant_id"
+                    "SELECT pfand_id, artikel_name FROM pfand "+
+                    "INNER JOIN artikel USING(pfand_id) ORDER BY pfand_id"
                     );
             while (rs.next()) {
-                String name = rs.getString(1);
-                Integer id = rs.getInt(2);
+                Integer id = rs.getInt(1);
+                String name = rs.getString(2);
 
-                lieferantNamen.add(name);
-                lieferantIDs.add(id);
+                pfandIDs.add(id);
+                pfandNamen.add(name);
             }
             rs.close();
             stmt.close();
@@ -111,139 +91,30 @@ public class ArtikelFormular extends WindowContent
     void showHeader(JPanel headerPanel, JPanel allPanel) {
 	headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
 
-            JPanel produktgruppenPanel = new JPanel();// produktgruppenPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-            produktgruppenPanel.setBorder(BorderFactory.createTitledBorder("Produktgruppe"));
-            produktgruppenBox = new JComboBox(produktgruppenNamen);
-            produktgruppenBox.setRenderer(new ProduktgruppenIndentedRenderer(produktgruppenIDsList));
-            produktgruppenPanel.add(produktgruppenBox);
-
-            JPanel lieferantPanel = new JPanel();
-            lieferantPanel.setBorder(BorderFactory.createTitledBorder("Lieferant"));
-            lieferantBox = new JComboBox(lieferantNamen);
-            lieferantPanel.add(lieferantBox);
-
-            JPanel nummerPanel = new JPanel();
-            nummerPanel.setBorder(BorderFactory.createTitledBorder("Artikelnummer"));
-            nummerField = new JTextField("");
-            nummerField.setColumns(10);
-            nummerPanel.add(nummerField);
-
-            JPanel barcodePanel = new JPanel();
-            barcodePanel.setBorder(BorderFactory.createTitledBorder("Barcode"));
-            barcodeField = new JTextField("");
-            barcodeField.setColumns(20);
-            barcodePanel.add(barcodeField);
-
-        JPanel identPanel = new JPanel(); identPanel.setLayout(new FlowLayout());
-        identPanel.add(produktgruppenPanel);
-        identPanel.add(lieferantPanel);
-        identPanel.add(nummerPanel);
-        identPanel.add(barcodePanel);
-        headerPanel.add(identPanel);
-
             JPanel namePanel = new JPanel();
             namePanel.setBorder(BorderFactory.createTitledBorder("Artikelname"));
             nameField = new JTextField("");
             nameField.setColumns(30);
             namePanel.add(nameField);
 
-            JPanel kurznamePanel = new JPanel();
-            kurznamePanel.setBorder(BorderFactory.createTitledBorder("Kurzname"));
-            kurznameField = new JTextField("");
-            kurznameField.setColumns(10);
-            kurznamePanel.add(kurznameField);
-
-            JPanel mengePanel = new JPanel();
-            mengePanel.setBorder(BorderFactory.createTitledBorder("Menge (Verpackungsgröße)"));
-            mengeField = new JTextField("");
-            mengeField.setColumns(6);
-            ((AbstractDocument)mengeField.getDocument()).setDocumentFilter(numFilter);
-            mengeField.setHorizontalAlignment(JTextField.RIGHT);
-            mengePanel.add(mengeField);
-            mengePanel.add(new JLabel("kg/l/Stk."));
-
-            JPanel herkunftPanel = new JPanel();
-            herkunftPanel.setBorder(BorderFactory.createTitledBorder("Herkunft"));
-            herkunftField = new JTextField("");
-            herkunftField.setColumns(20);
-            herkunftPanel.add(herkunftField);
-
         JPanel describePanel = new JPanel();
         describePanel.add(namePanel);
-        describePanel.add(kurznamePanel);
-        describePanel.add(mengePanel);
-        describePanel.add(herkunftPanel);
         headerPanel.add(describePanel);
 
-            JPanel vpePanel = new JPanel();
-            vpePanel.setBorder(BorderFactory.createTitledBorder("VPE (Verpackungseinheit)"));
-            SpinnerNumberModel vpeModel = new SpinnerNumberModel(0, // initial value
-                    0, // min
-                    null, // max (null == no max)
-                    1); // step
-            vpeSpinner = new JSpinner(vpeModel);
-            JSpinner.NumberEditor vpeEditor = new JSpinner.NumberEditor(vpeSpinner, "###");
-            JTextField vpeField = vpeEditor.getTextField();
-                //vpeField.getDocument().addDocumentListener(this);
-                //vpeField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-                //    // remove Ctrl-A key binding
-                //vpeField.addKeyListener(new KeyAdapter() {
-                //    public void keyPressed(KeyEvent e) {
-                //        if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
-                //            if (preisField.isEditable())
-                //                preisField.requestFocus();
-                //            else {
-                //                if (hinzufuegenButton.isEnabled()){
-                //                    vpeSpinner.setValue(Integer.parseInt(vpeField.getText()));
-                //                    hinzufuegenButton.doClick();
-                //                }
-                //            }
-                //        }
-                //    }
-                //});
-            vpeSpinner.setEditor(vpeEditor);
-            ( (NumberFormatter) vpeEditor.getTextField().getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
-            vpeField.setColumns(3);
-            vpePanel.add(vpeSpinner);
-            vpePanel.add(new JLabel("Stück"));
+            JPanel mwstPanel = new JPanel();// mwstPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+            mwstPanel.setBorder(BorderFactory.createTitledBorder("MwSt."));
+            mwstBox = new JComboBox(mwsts);
+            mwstPanel.add(mwstBox);
 
-            JPanel vkpreisPanel = new JPanel();
-            vkpreisPanel.setBorder(BorderFactory.createTitledBorder("VK-Preis"));
-            vkpreisField = new JTextField("");
-            vkpreisField.setColumns(6);
-            ((AbstractDocument)vkpreisField.getDocument()).setDocumentFilter(geldFilter);
-            vkpreisField.setHorizontalAlignment(JTextField.RIGHT);
-            vkpreisPanel.add(vkpreisField);
-            vkpreisPanel.add(new JLabel(currencySymbol));
+            JPanel pfandPanel = new JPanel();
+            pfandPanel.setBorder(BorderFactory.createTitledBorder("Pfand"));
+            pfandBox = new JComboBox(pfandNamen);
+            pfandPanel.add(pfandBox);
 
-            JPanel ekpreisPanel = new JPanel();
-            ekpreisPanel.setBorder(BorderFactory.createTitledBorder("EK-Preis"));
-            ekpreisField = new JTextField("");
-            ekpreisField.setColumns(6);
-            ((AbstractDocument)ekpreisField.getDocument()).setDocumentFilter(geldFilter);
-            ekpreisField.setHorizontalAlignment(JTextField.RIGHT);
-            ekpreisPanel.add(ekpreisField);
-            ekpreisPanel.add(new JLabel(currencySymbol));
-
-            JPanel preisVariabelPanel = new JPanel();
-            //preisVariabelPanel.setBorder(BorderFactory.createTitledBorder("Variabler Preis"));
-            preisVariabelBox = new JCheckBox("Preis variabel");
-            preisVariabelBox.setSelected(false);
-            preisVariabelPanel.add(preisVariabelBox);
-
-            JPanel sortimentPanel = new JPanel();
-            //sortimentPanel.setBorder(BorderFactory.createTitledBorder("Sortiment"));
-            sortimentBox = new JCheckBox("Sortiment");
-            sortimentBox.setSelected(false);
-            sortimentPanel.add(sortimentBox);
-
-        JPanel preisPanel = new JPanel();
-        preisPanel.add(vpePanel);
-        preisPanel.add(vkpreisPanel);
-        preisPanel.add(ekpreisPanel);
-        preisPanel.add(preisVariabelPanel);
-        preisPanel.add(sortimentPanel);
-        headerPanel.add(preisPanel);
+        JPanel propertiesPanel = new JPanel(); propertiesPanel.setLayout(new FlowLayout());
+        propertiesPanel.add(mwstPanel);
+        propertiesPanel.add(pfandPanel);
+        headerPanel.add(propertiesPanel);
 
         allPanel.add(headerPanel);
     }
@@ -251,34 +122,11 @@ public class ArtikelFormular extends WindowContent
     public boolean checkIfFormIsComplete() {
         if ( nameField.isEnabled() && nameField.getText().replaceAll("\\s","").equals("") )
             return false;
-        if ( nummerField.isEnabled() && nummerField.getText().replaceAll("\\s","").equals("") )
-            return false;
-        if ( vkpreisField.isEnabled() && vkpreisField.getText().replaceAll("\\s","").equals("") &&
-                preisVariabelBox.isEnabled() && !preisVariabelBox.isSelected() )
-            return false;
         return true;
-
-        //if (
-        //        nameField.getText().length() > 0 && nummerField.getText().length() > 0 &&
-        //        ( (vkpreisField.getText().length() > 0) || preisVariabelBox.isSelected() )
-        //   ){
-        //    return true;
-        //} else {
-        //    return false;
-        //}
     }
 
     public void itemStateChanged(ItemEvent e) {
         Object source = e.getItemSelectable();
-        if (source == preisVariabelBox) {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                vkpreisField.setEnabled(false);
-                ekpreisField.setEnabled(false);
-            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                vkpreisField.setEnabled(true);
-                ekpreisField.setEnabled(true);
-            }
-        }
     }
 
     /**
