@@ -61,7 +61,7 @@ public class LieferantNeuEingeben extends DialogWindow
 	this.add(allPanel, BorderLayout.CENTER);
     }
 
-    void showHeader() {
+    protected void showHeader() {
         headerPanel = new JPanel();
         JPanel namePanel = new JPanel();
         namePanel.setBorder(BorderFactory.createTitledBorder("Lieferant-Name"));
@@ -85,7 +85,9 @@ public class LieferantNeuEingeben extends DialogWindow
         allPanel.add(headerPanel);
     }
 
-    void showFooter() {
+    protected void showMiddle() { }
+
+    protected void showFooter() {
         footerPanel = new JPanel();
         submitButton = new JButton("Speichern");
         submitButton.setMnemonic(KeyEvent.VK_A);
@@ -160,5 +162,10 @@ public class LieferantNeuEingeben extends DialogWindow
             return;
         }
         super.actionPerformed(e);
+    }
+
+    // will data be lost on close? No.
+    protected boolean willDataBeLost(){
+        return false;
     }
 }

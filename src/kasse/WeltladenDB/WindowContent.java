@@ -57,7 +57,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected DefaultTableCellRenderer linksAusrichter = new DefaultTableCellRenderer();
     protected DefaultTableCellRenderer zentralAusrichter = new DefaultTableCellRenderer();
     // Formats to format and parse numbers
-    protected NumberFormat amountFormat;
+    //protected NumberFormat amountFormat;
     protected NumberFormat vatFormat;
 
     // Methoden:
@@ -82,7 +82,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
      *       */
     public WindowContent(Connection conn, MainWindowGrundlage mw) {
 	this.conn = conn;
-	amountFormat = new DecimalFormat("0.00");
+	//amountFormat = new DecimalFormat("0.00");
 	//amountFormat = NumberFormat.getCurrencyInstance(myLocale);
 	vatFormat = new DecimalFormat("0.####");
 	rechtsAusrichter.setHorizontalAlignment(JLabel.RIGHT);
@@ -113,7 +113,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
     }
 
-    private class WindowAdapterDialog extends WindowAdapter {
+    protected class WindowAdapterDialog extends WindowAdapter {
         private DialogWindow dwindow;
         private JDialog dialog;
         private String warnMessage;
@@ -480,7 +480,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected boolean isProduktgruppeAlreadyKnown(String produktgruppe) {
+    protected boolean isProdGrAlreadyKnown(String produktgruppe) {
         boolean exists = false;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
@@ -501,7 +501,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return exists;
     }
 
-    protected boolean isProduktgruppeInactive(String produktgruppe) {
+    protected boolean isProdGrInactive(String produktgruppe) {
         boolean inactive = false;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
@@ -521,7 +521,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return inactive;
     }
 
-    protected int updateProduktgruppe(Integer produktgruppen_id, String produktgruppen_name, Boolean aktiv) {
+    protected int updateProdGr(Integer produktgruppen_id, String produktgruppen_name, Boolean aktiv) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
@@ -541,7 +541,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected int setProduktgruppeInactive(Integer produktgruppen_id) {
+    protected int setProdGrInactive(Integer produktgruppen_id) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
@@ -559,7 +559,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected int setProduktgruppeActive(Integer produktgruppen_id) {
+    protected int setProdGrActive(Integer produktgruppen_id) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
@@ -577,19 +577,26 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected int insertNewProduktgruppe(String produktgruppenName) {
+    protected int insertNewProdGr(Integer topid, Integer subid, Integer
+            subsubid, String newName, Integer mwst_id, Integer pfand_id) {
         // add row for new item (with updated fields)
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
-        if ( isProduktgruppeAlreadyKnown(produktgruppenName) ) return 0;
+        if ( isProdGrAlreadyKnown(newName) ) return 0;
 
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "INSERT INTO produktgruppe SET "+
-                    "produktgruppen_name = ?, "+
+                    "toplevel_id = ?, sub_id = ?, subsub_id = ?, "+
+                    "produktgruppen_name = ?, mwst_id = ?, pfand_id = ?, "+
                     "aktiv = TRUE"
                     );
-            pstmt.setString(1, produktgruppenName);
+            pstmtSetInteger(pstmt, 1, topid);
+            pstmtSetInteger(pstmt, 2, subid);
+            pstmtSetInteger(pstmt, 3, subsubid);
+            pstmt.setString(4, newName);
+            pstmtSetInteger(pstmt, 5, mwst_id);
+            pstmtSetInteger(pstmt, 6, pfand_id);
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {

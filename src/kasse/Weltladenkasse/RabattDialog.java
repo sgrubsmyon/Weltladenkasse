@@ -309,7 +309,11 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         rabattDropDown.setEnabled(false);
     }
 
-    void showAll(){
+    protected void showHeader() { }
+    protected void showMiddle() { }
+    protected void showFooter() { }
+
+    protected void showAll(){
 	allPanel = new JPanel();
 	allPanel.setLayout(new BoxLayout(allPanel, BoxLayout.Y_AXIS));
 
@@ -1231,5 +1235,12 @@ BigDecimal mengeRelativValue() {
             return;
         }
         super.actionPerformed(e);
+    }
+
+    protected int submit() { return 0; }
+
+    // will data be lost on close? No.
+    protected boolean willDataBeLost(){
+        return false;
     }
 }

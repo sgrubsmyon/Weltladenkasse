@@ -37,8 +37,9 @@ import javax.swing.table.*;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-public class ArtikelImport extends ArtikelDialogWindowGrundlage implements ArtikelNeuInterface {
+public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface {
     // Attribute:
+    protected Artikelliste artikelListe;
     protected ArtikelNeu artikelNeu;
     protected UpdateTableFunctor utf;
 
@@ -69,7 +70,8 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
 
     // Methoden:
     public ArtikelImport(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia) {
-	super(conn, mw, pw, dia);
+	super(conn, mw, dia);
+        artikelListe = pw;
         logString = logStringStart;
         //"<style type=\"text/css\" media=\"screen\"> \" font-family: sans-serif; \">\n";
 
@@ -84,7 +86,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
         showAll();
     }
 
-    void showHeader() {
+    protected void showHeader() {
         headerPanel = new JPanel();
 	headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
         //headerPanel.setMinimumSize(minLogDimension);
@@ -133,7 +135,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
         allPanel.add(headerPanel);
     }
 
-    void showMiddle() {
+    protected void showMiddle() {
         artikelNeu.showTable(allPanel);
 
         //splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
@@ -144,7 +146,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
         //allPanel.add(splitPane);
     }
 
-    void showFooter() {
+    protected void showFooter() {
         footerPanel = new JPanel();
         submitButton = new JButton("Abschicken");
         submitButton.setMnemonic(KeyEvent.VK_A);
@@ -177,7 +179,7 @@ public class ArtikelImport extends ArtikelDialogWindowGrundlage implements Artik
     }
 
     // will data be lost on close?
-    boolean willDataBeLost() {
+    protected boolean willDataBeLost() {
         return artikelNeu.willDataBeLost();
     }
 

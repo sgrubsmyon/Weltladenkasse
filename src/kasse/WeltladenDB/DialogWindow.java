@@ -16,11 +16,17 @@ import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.JDialog;
+import javax.swing.JPanel;
 import javax.swing.JButton;
+import javax.swing.BoxLayout;
 
 public abstract class DialogWindow extends WindowContent {
     // Attribute:
     protected JDialog window;
+    protected JPanel allPanel;
+    protected JPanel headerPanel;
+    protected JPanel footerPanel;
+
     protected JButton closeButton;
 
     // Methoden:
@@ -28,6 +34,29 @@ public abstract class DialogWindow extends WindowContent {
 	super(conn, mw);
         this.window = dia;
     }
+
+    protected abstract void showHeader();
+    protected abstract void showMiddle();
+    protected abstract void showFooter();
+
+    protected void showAll() {
+	allPanel = new JPanel();
+	allPanel.setLayout(new BoxLayout(allPanel, BoxLayout.Y_AXIS));
+
+        showHeader();
+        showMiddle();
+        showFooter();
+
+	this.add(allPanel, BorderLayout.CENTER);
+    }
+
+    protected void updateAll(){
+	this.remove(allPanel);
+	this.revalidate();
+	showAll();
+    }
+
+    protected abstract int submit();
 
     /**
      *    * Each non abstract class that implements the ActionListener
@@ -43,5 +72,5 @@ public abstract class DialogWindow extends WindowContent {
     }
 
     // will data be lost on close?
-    abstract boolean willDataBeLost();
+    protected abstract boolean willDataBeLost();
 }

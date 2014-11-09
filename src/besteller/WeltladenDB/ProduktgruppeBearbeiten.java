@@ -8,6 +8,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -33,12 +34,13 @@ import javax.swing.text.*; // for DocumentFilter
 public class ProduktgruppeBearbeiten extends DialogWindow
     implements ProduktgruppeFormularInterface, DocumentListener, ItemListener {
     // Attribute:
+    protected Produktgruppenliste produktgruppenListe;
     protected ProduktgruppeFormular produktgruppeFormular;
     protected Vector< Vector<Object> > originalData;
+    protected Vector<Integer> originalProdGrIDs;
     protected Vector<Integer> originalParentProdGrIDs;
     protected Vector<Integer> originalMwStIDs;
     protected Vector<Integer> originalPfandIDs;
-    protected Produktgruppenliste produktgruppenListe;
 
     protected JCheckBox aktivBox;
     protected JButton submitButton;
@@ -46,20 +48,85 @@ public class ProduktgruppeBearbeiten extends DialogWindow
     // Methoden:
     public ProduktgruppeBearbeiten(Connection conn, MainWindowGrundlage mw, Produktgruppenliste pw, JDialog dia,
             Vector< Vector<Object> > origData,
-            Vector<Integer> origPPGIDs,
+            Vector<Integer> origProdGrIDs,
             Vector<Integer> origMwStIDs,
             Vector<Integer> origPfandIDs) {
 	super(conn, mw, dia);
         produktgruppenListe = pw;
         produktgruppeFormular = new ProduktgruppeFormular(conn, mw);
         originalData = new Vector< Vector<Object> >(origData);
-        originalParentProdGrIDs = new Vector<Integer>(origPPGIDs);
+        originalProdGrIDs = new Vector<Integer>(origProdGrIDs);
+        originalParentProdGrIDs = findParentProdGrIDs(origProdGrIDs);
         originalMwStIDs = new Vector<Integer>(origMwStIDs);
         originalPfandIDs = new Vector<Integer>(origPfandIDs);
         showAll();
     }
 
-    void showHeader() {
+    private Vector<Integer> findParentProdGrIDs(Vector<Integer> prodGrIDs) {
+        Vector<Integer> ppgIDs = new Vector<Integer>();
+        for (Integer id : prodGrIDs){
+            try {
+                // get topid, subid, subsubid
+                PreparedStatement pstmt = this.conn.prepareStatement(
+                        "SELECT toplevel_id FROM produktgruppe WHERE produktgruppen_id = ?"
+                        );
+                pstmtSetInteger(pstmt, 1, id);
+                ResultSet rs = pstmt.executeQuery();
+                rs.next();
+                Integer topid = rs.getString(1) != null ? rs.getInt(1) : null;
+                rs.close();
+                //
+                pstmt = this.conn.prepareStatement(
+                        "SELECT sub_id FROM produktgruppe WHERE produktgruppen_id = ?"
+                        );
+                pstmtSetInteger(pstmt, 1, id);
+                rs = pstmt.executeQuery();
+                rs.next();
+                Integer subid = rs.getString(1) != null ? rs.getInt(1) : null;
+                rs.close();
+                //
+                pstmt = this.conn.prepareStatement(
+                        "SELECT subsub_id FROM produktgruppe WHERE produktgruppen_id = ?"
+                        );
+                pstmtSetInteger(pstmt, 1, id);
+                rs = pstmt.executeQuery();
+                rs.next();
+                Integer subsubid = rs.getString(1) != null ? rs.getInt(1) : null;
+                rs.close();
+                // get the parent group's id
+                String query;
+                if (subsubid != null){
+                    pstmt = this.conn.prepareStatement(
+                            "SELECT produktgruppen_id FROM produktgruppe "+
+                            "WHERE toplevel_id = ? AND sub_id = ? AND subsub_id IS NULL"
+                            );
+                    pstmtSetInteger(pstmt, 1, topid);
+                    pstmtSetInteger(pstmt, 2, subid);
+                    rs = pstmt.executeQuery();
+                    rs.next(); ppgIDs.add(rs.getInt(1)); rs.close();
+                    pstmt.close();
+                } else if (subid != null){
+                    pstmt = this.conn.prepareStatement(
+                            "SELECT produktgruppen_id FROM produktgruppe "+
+                            "WHERE toplevel_id = ? AND sub_id IS NULL AND subsub_id IS NULL"
+                            );
+                    pstmtSetInteger(pstmt, 1, topid);
+                    rs = pstmt.executeQuery();
+                    rs.next(); ppgIDs.add(rs.getInt(1)); rs.close();
+                    pstmt.close();
+                } else {
+                    // has no parent, is at top level
+                    ppgIDs.add(null);
+                }
+            } catch (SQLException ex) {
+                System.out.println("Exception: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
+        return ppgIDs;
+    }
+
+    protected void showHeader() {
         headerPanel = new JPanel();
         produktgruppeFormular.showHeader(headerPanel, allPanel);
 
@@ -89,10 +156,9 @@ public class ProduktgruppeBearbeiten extends DialogWindow
         aktivBox.addItemListener(this);
     }
 
-    void showMiddle() {
-    }
+    protected void showMiddle() { }
 
-    void showFooter() {
+    protected void showFooter() {
         footerPanel = new JPanel();
         submitButton = new JButton("Abschicken");
         submitButton.setMnemonic(KeyEvent.VK_A);
@@ -109,10 +175,10 @@ public class ProduktgruppeBearbeiten extends DialogWindow
 
     private void setOriginalValues() {
         Integer firstParentProdGrID = originalParentProdGrIDs.get(0);
-        String firstName = (String)originalData.get(0).get(3);
+        String firstName = (String)originalData.get(0).get(1);
         Integer firstMwStID = originalMwStIDs.get(0);
         Integer firstPfandID = originalPfandIDs.get(0);
-        Boolean firstAktiv = (Boolean)originalData.get(0).get(15);
+        Boolean firstAktiv = (Boolean)originalData.get(0).get(4);
 
         if ( allElementsEqual(firstParentProdGrID, originalParentProdGrIDs) ){
             int index = produktgruppeFormular.parentProdGrIDs.indexOf(firstParentProdGrID);
@@ -155,7 +221,13 @@ public class ProduktgruppeBearbeiten extends DialogWindow
 
     private <T> boolean allElementsEqual(T element, Vector<T> vector) {
         for (T elem : vector){
-            if ( ! elem.equals(element) ){
+            if (elem == null && element != null){
+                return false;
+            }
+            if (elem != null && element == null){
+                return false;
+            }
+            if ( elem != null && element != null && (!elem.equals(element)) ){
                 return false;
             }
         }
@@ -172,7 +244,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
             }
         }
         if ( produktgruppeFormular.nameField.isEnabled() ){
-            String origName = (String)originalData.get(0).get(3);
+            String origName = (String)originalData.get(0).get(1);
             if ( !origName.equals(produktgruppeFormular.nameField.getText()) ){
                 return true;
             }
@@ -192,7 +264,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
             }
         }
         if ( aktivBox.isEnabled() ){
-            Boolean origAktiv = (Boolean)originalData.get(0).get(15);
+            Boolean origAktiv = (Boolean)originalData.get(0).get(4);
             if ( !origAktiv.equals(aktivBox.isSelected()) ){
                 return true;
             }
@@ -214,11 +286,11 @@ public class ProduktgruppeBearbeiten extends DialogWindow
 
     public int submit() {
         for (int i=0; i<originalData.size(); i++){
-            String origName = (String)originalData.get(i).get(3);
+            String origName = (String)originalData.get(i).get(1);
             String newName = produktgruppeFormular.nameField.isEnabled() ?
                 produktgruppeFormular.nameField.getText() : origName;
             if ( !newName.equals(origName) ){
-                if ( isItemAlreadyKnown(newName) ){
+                if ( isProdGrAlreadyKnown(newName) ){
                     // not allowed: changing name to one that is already registered in DB
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Produktgruppe '"+newName+"' bereits vorhanden! Wird zurückgesetzt.",
@@ -227,6 +299,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
                     return 1;
                 }
             }
+            int origProdGrID = originalProdGrIDs.get(i);
             int ppgID;
             if (produktgruppeFormular.parentProdGrBox.isEnabled()){
                 ppgID = produktgruppeFormular.parentProdGrIDs.get(
@@ -247,10 +320,10 @@ public class ProduktgruppeBearbeiten extends DialogWindow
                 originalPfandIDs.get(i);
             Boolean aktiv = aktivBox.isEnabled() ?
                 aktivBox.isSelected() :
-                (Boolean)originalData.get(i).get(15);
+                (Boolean)originalData.get(i).get(4);
 
             // set old item to inactive:
-            int result = setProdGrInactive(origName);
+            int result = setProdGrInactive(origProdGrID);
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Produktgruppe "+origName+" konnte nicht geändert werden.",
@@ -263,7 +336,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Produktgruppe "+origName+" konnte nicht geändert werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
-                    result = setProdGrActive(origName);
+                    result = setProdGrActive(origProdGrID);
                     if (result == 0){
                         JOptionPane.showMessageDialog(this,
                                 "Fehler: Produktgruppe "+origName+" konnte nicht wieder hergestellt werden. Produktgruppe ist nun gelöscht (inaktiv).",

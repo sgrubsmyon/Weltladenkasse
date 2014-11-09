@@ -30,7 +30,6 @@ import javax.swing.table.*;
 import javax.swing.event.*; // for DocumentListener
 import javax.swing.text.*; // for DocumentFilter
 
-//public abstract class ArtikelFormular extends ArtikelDialogWindowGrundlage implements ArtikelFormularInterface, DocumentListener, ItemListener {
 public class ArtikelFormular extends WindowContent
     implements ArtikelFormularInterface {
     // Attribute:
