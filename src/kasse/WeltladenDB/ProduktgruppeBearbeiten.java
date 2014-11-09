@@ -35,6 +35,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
     // Attribute:
     protected ProduktgruppeFormular produktgruppeFormular;
     protected Vector< Vector<Object> > originalData;
+    protected Vector<Integer> originalParentProdGrIDs;
     protected Vector<Integer> originalMwStIDs;
     protected Vector<Integer> originalPfandIDs;
     protected Produktgruppenliste produktgruppenListe;
@@ -45,12 +46,14 @@ public class ProduktgruppeBearbeiten extends DialogWindow
     // Methoden:
     public ProduktgruppeBearbeiten(Connection conn, MainWindowGrundlage mw, Produktgruppenliste pw, JDialog dia,
             Vector< Vector<Object> > origData,
+            Vector<Integer> origPPGIDs,
             Vector<Integer> origMwStIDs,
             Vector<Integer> origPfandIDs) {
 	super(conn, mw, dia);
         produktgruppenListe = pw;
         produktgruppeFormular = new ProduktgruppeFormular(conn, mw);
         originalData = new Vector< Vector<Object> >(origData);
+        originalParentProdGrIDs = new Vector<Integer>(origPPGIDs);
         originalMwStIDs = new Vector<Integer>(origMwStIDs);
         originalPfandIDs = new Vector<Integer>(origPfandIDs);
         showAll();
@@ -78,10 +81,11 @@ public class ProduktgruppeBearbeiten extends DialogWindow
             }
         };
 
+        produktgruppeFormular.parentProdGrBox.addActionListener(this);
+        produktgruppeFormular.nameField.addKeyListener(enterAdapter);
         produktgruppeFormular.mwstBox.addActionListener(this);
         produktgruppeFormular.pfandBox.addActionListener(this);
         produktgruppeFormular.nameField.getDocument().addDocumentListener(this);
-        produktgruppeFormular.nameField.addKeyListener(enterAdapter);
         aktivBox.addItemListener(this);
     }
 
@@ -104,11 +108,23 @@ public class ProduktgruppeBearbeiten extends DialogWindow
     }
 
     private void setOriginalValues() {
+        Integer firstParentProdGrID = originalParentProdGrIDs.get(0);
+        String firstName = (String)originalData.get(0).get(3);
         Integer firstMwStID = originalMwStIDs.get(0);
         Integer firstPfandID = originalPfandIDs.get(0);
-        String firstName = (String)originalData.get(0).get(3);
         Boolean firstAktiv = (Boolean)originalData.get(0).get(15);
 
+        if ( allElementsEqual(firstParentProdGrID, originalParentProdGrIDs) ){
+            int index = produktgruppeFormular.parentProdGrIDs.indexOf(firstParentProdGrID);
+            produktgruppeFormular.parentProdGrBox.setSelectedIndex(index);
+        } else {
+            produktgruppeFormular.parentProdGrBox.setSelectedIndex(-1);
+        }
+        if ( allRowsEqual(firstName, 3) ){
+            produktgruppeFormular.nameField.setText(firstName);
+        } else {
+            produktgruppeFormular.nameField.setEnabled(false);
+        }
         if ( allElementsEqual(firstMwStID, originalMwStIDs) ){
             int index = produktgruppeFormular.mwstIDs.indexOf(firstMwStID);
             produktgruppeFormular.mwstBox.setSelectedIndex(index);
@@ -120,11 +136,6 @@ public class ProduktgruppeBearbeiten extends DialogWindow
             produktgruppeFormular.pfandBox.setSelectedIndex(index);
         } else {
             produktgruppeFormular.pfandBox.setSelectedIndex(-1);
-        }
-        if ( allRowsEqual(firstName, 3) ){
-            produktgruppeFormular.nameField.setText(firstName);
-        } else {
-            produktgruppeFormular.nameField.setEnabled(false);
         }
         if ( allRowsEqual(firstAktiv, 15) ){
             aktivBox.setSelected(firstAktiv);
@@ -153,6 +164,19 @@ public class ProduktgruppeBearbeiten extends DialogWindow
 
     // will data be lost on close?
     public boolean willDataBeLost() {
+        if ( produktgruppeFormular.parentProdGrBox.isEnabled() ){
+            int selIndex = produktgruppeFormular.parentProdGrBox.getSelectedIndex();
+            Integer selParentProdGrID = produktgruppeFormular.parentProdGrIDs.get(selIndex);
+            if ( !allElementsEqual(selParentProdGrID, originalParentProdGrIDs) ){
+                return true;
+            }
+        }
+        if ( produktgruppeFormular.nameField.isEnabled() ){
+            String origName = (String)originalData.get(0).get(3);
+            if ( !origName.equals(produktgruppeFormular.nameField.getText()) ){
+                return true;
+            }
+        }
         if ( produktgruppeFormular.mwstBox.isEnabled() ){
             int selIndex = produktgruppeFormular.mwstBox.getSelectedIndex();
             Integer selMwStID = produktgruppeFormular.mwstIDs.get(selIndex);
@@ -164,12 +188,6 @@ public class ProduktgruppeBearbeiten extends DialogWindow
             int selIndex = produktgruppeFormular.pfandBox.getSelectedIndex();
             Integer selPfandID = produktgruppeFormular.pfandIDs.get(selIndex);
             if ( !allElementsEqual(selPfandID, originalPfandIDs) ){
-                return true;
-            }
-        }
-        if ( produktgruppeFormular.nameField.isEnabled() ){
-            String origName = (String)originalData.get(0).get(3);
-            if ( !origName.equals(produktgruppeFormular.nameField.getText()) ){
                 return true;
             }
         }
@@ -209,8 +227,18 @@ public class ProduktgruppeBearbeiten extends DialogWindow
                     return 1;
                 }
             }
-            // TODO Add a "parent prod. gr." ComboBox and get topid, subid from the parent
-            // TODO Query current max. subsubid (if subid != null) or max. subid and increment it by one
+            int ppgID;
+            if (produktgruppeFormular.parentProdGrBox.isEnabled()){
+                ppgID = produktgruppeFormular.parentProdGrIDs.get(
+                            produktgruppeFormular.parentProdGrBox.getSelectedIndex()
+                        );
+            } else {
+                ppgID = originalParentProdGrIDs.get(i);
+            }
+            Vector<Integer> ids = produktgruppeFormular.idsOfNewProdGr(ppgID);
+            Integer topid = ids.get(0);
+            Integer subid = ids.get(1);
+            Integer subsubid = ids.get(2);
             Integer mwst_id = produktgruppeFormular.mwstBox.isEnabled() ?
                 produktgruppeFormular.mwstIDs.get( produktgruppeFormular.mwstBox.getSelectedIndex() ) :
                 originalMwStIDs.get(i);
@@ -279,6 +307,10 @@ public class ProduktgruppeBearbeiten extends DialogWindow
      *    @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
+	if (e.getSource() == produktgruppeFormular.parentProdGrBox){
+            submitButton.setEnabled( isSubmittable() );
+            return;
+        }
 	if (e.getSource() == produktgruppeFormular.mwstBox){
             submitButton.setEnabled( isSubmittable() );
             return;
