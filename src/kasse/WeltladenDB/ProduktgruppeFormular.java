@@ -8,6 +8,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
@@ -39,7 +40,7 @@ public class ProduktgruppeFormular extends WindowContent
     public JComboBox pfandBox;
 
     private Vector<String> parentProdGrs;
-    private Vector<Integer> parentProdGrIDs;
+    public Vector<Integer> parentProdGrIDs;
     private Vector<String> mwsts;
     public Vector<Integer> mwstIDs;
     private Vector<String> pfandNamen;
@@ -79,7 +80,7 @@ public class ProduktgruppeFormular extends WindowContent
     }
 
     private int currentMaxTopID() {
-        Integer id = 0;
+        int id = 0;
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MAX(toplevel_id) FROM produktgruppe");
@@ -89,10 +90,11 @@ public class ProduktgruppeFormular extends WindowContent
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+        return id;
     }
 
     private int currentMaxSubID() {
-        Integer id = 0;
+        int id = 0;
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MAX(sub_id) FROM produktgruppe");
@@ -102,10 +104,11 @@ public class ProduktgruppeFormular extends WindowContent
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+        return id;
     }
 
     private int currentMaxSubsubID() {
-        Integer id = 0;
+        int id = 0;
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MAX(subsub_id) FROM produktgruppe");
@@ -115,6 +118,7 @@ public class ProduktgruppeFormular extends WindowContent
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+        return id;
     }
 
     public Vector<Integer> idsOfNewProdGr(int parentProdGrID) {
@@ -180,7 +184,7 @@ public class ProduktgruppeFormular extends WindowContent
             rs.close();
             rs = stmt.executeQuery(
                     "SELECT pfand_id, artikel_name FROM pfand "+
-                    "INNER JOIN artikel USING(pfand_id) ORDER BY pfand_id"
+                    "INNER JOIN artikel USING(artikel_id) ORDER BY pfand_id"
                     );
             while (rs.next()) {
                 Integer id = rs.getInt(1);

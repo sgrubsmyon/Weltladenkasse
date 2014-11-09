@@ -30,9 +30,10 @@ import javax.swing.*;
 import javax.swing.event.*; // for DocumentListener
 import javax.swing.text.*; // for DocumentFilter
 
-public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
+public class ArtikelBearbeiten extends DialogWindow
     implements ArtikelFormularInterface, DocumentListener, ItemListener, ChangeListener {
     // Attribute:
+    protected Artikelliste artikelListe;
     protected ArtikelFormular artikelFormular;
     protected Vector< Vector<Object> > originalData;
     protected Vector<Integer> originalProdGrIDs;
@@ -48,7 +49,8 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
             Vector<Integer> origPrGrIDs,
             Vector<Integer> origLiefIDs,
             Vector<Boolean> origVPBools) {
-	super(conn, mw, pw, dia);
+	super(conn, mw, dia);
+        artikelListe = pw;
         artikelFormular = new ArtikelFormular(conn, mw);
         originalData = new Vector< Vector<Object> >(origData);
         originalProdGrIDs = new Vector<Integer>(origPrGrIDs);
@@ -57,7 +59,7 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         showAll();
     }
 
-    void showHeader() {
+    protected void showHeader() {
         headerPanel = new JPanel();
         artikelFormular.showHeader(headerPanel, allPanel);
 
@@ -103,10 +105,9 @@ public class ArtikelBearbeiten extends ArtikelDialogWindowGrundlage
         aktivBox.addItemListener(this);
     }
 
-    void showMiddle() {
-    }
+    protected void showMiddle() { }
 
-    void showFooter() {
+    protected void showFooter() {
         footerPanel = new JPanel();
         submitButton = new JButton("Abschicken");
         submitButton.setMnemonic(KeyEvent.VK_A);

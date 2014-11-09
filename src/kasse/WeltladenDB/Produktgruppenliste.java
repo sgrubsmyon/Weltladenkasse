@@ -61,6 +61,8 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
     protected Vector<Boolean> activeRowBools;
     private Vector<Integer> produktgruppenIDs;
     private Vector< Vector<Integer> > produktgruppenIDsList;
+    private Vector<Integer> mwstIDs;
+    private Vector<Integer> pfandIDs;
 
     // Vectors storing table edits
     private Vector<Integer> editedProduktgruppenIDs;
@@ -86,6 +88,8 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
         columnLabels.add("Aktiv");
         produktgruppenIDs = new Vector<Integer>();
         produktgruppenIDsList = new Vector< Vector<Integer> >();
+        mwstIDs = new Vector<Integer>();
+        pfandIDs = new Vector<Integer>();
         activeRowBools = new Vector<Boolean>();
 
         String filter = "p.toplevel_id IS NOT NULL "; // exclude 'unbekannt'
@@ -93,7 +97,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT p.produktgruppen_id, p.toplevel_id, p.sub_id, p.subsub_id, "+
                     "p.produktgruppen_name, p.aktiv, "+
-                    "m.mwst_satz, a.artikel_name "+
+                    "p.mwst_id, m.mwst_satz, p.pfand_id, a.artikel_name "+
                     "FROM produktgruppe AS p "+
                     "INNER JOIN mwst AS m USING(mwst_id) "+ // change to
                                         // LEFT JOIN to allow editing of "Sonstiges" that has no associated VAT
@@ -112,15 +116,17 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
                 ids.add( rs.getString(4) == null ? null : rs.getInt(4) );
                 String produktgruppe = rs.getString(5);
                 Boolean aktivBool = rs.getBoolean(6);
-                BigDecimal mwst_satz = rs.getBigDecimal(7);
-                String pfand_name = rs.getString(8) == null ? "" : rs.getString(8);
-                String produktgruppenIndex = "";
-                if (ids.get(0) != null) produktgruppenIndex += ids.get(0).toString();
-                if (ids.get(1) != null) produktgruppenIndex += "."+ids.get(1).toString();
-                if (ids.get(2) != null) produktgruppenIndex += "."+ids.get(2).toString();
+                Integer mwst_id = rs.getInt(7);
+                BigDecimal mwst_satz = rs.getBigDecimal(8);
+                Integer pfand_id = rs.getInt(9);
+                String pfand_name = rs.getString(10) == null ? "" : rs.getString(10);
+                String produktgruppenNumber = "";
+                if (ids.get(0) != null) produktgruppenNumber += ids.get(0).toString();
+                if (ids.get(1) != null) produktgruppenNumber += "."+ids.get(1).toString();
+                if (ids.get(2) != null) produktgruppenNumber += "."+ids.get(2).toString();
 
                 Vector<Object> row = new Vector<Object>();
-                    row.add(produktgruppenIndex);
+                    row.add(produktgruppenNumber);
                     row.add(produktgruppe);
                     row.add( vatFormatter(mwst_satz) );
                     row.add(pfand_name);
@@ -128,6 +134,8 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
                 data.add(row);
                 produktgruppenIDs.add(produktgruppen_id);
                 produktgruppenIDsList.add(ids);
+                mwstIDs.add(mwst_id);
+                pfandIDs.add(pfand_id);
                 activeRowBools.add(aktivBool);
             }
             rs.close();
@@ -151,14 +159,14 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
 
     private void putChangesIntoDB() {
         for (int index=0; index<editedProduktgruppenIDs.size(); index++){
-            Integer lief_id = editedProduktgruppenIDs.get(index);
+            Integer prodgr_id = editedProduktgruppenIDs.get(index);
             String produktgruppenName = changedProduktgruppenName.get(index);
             Boolean aktivBool = changedAktiv.get(index);
 
-            int result = updateProduktgruppe(lief_id, produktgruppenName, aktivBool);
+            int result = updateProdGr(prodgr_id, produktgruppenName, aktivBool);
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: Produktgruppen mit Nr. "+lief_id+" konnte nicht geändert werden.",
+                        "Fehler: Produktgruppen mit Nr. "+prodgr_id+" konnte nicht geändert werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
                 continue; // continue with next item
             }
@@ -438,9 +446,9 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
             // get and store all the values of the edited row
             String produktgruppe = model.getValueAt(row, model.findColumn("Produktgruppen-Name")).toString();
             if ( !produktgruppe.equals(origProduktgruppenName) ){
-                if ( isProduktgruppeAlreadyKnown(produktgruppe) ){
+                if ( isProdGrAlreadyKnown(produktgruppe) ){
                     // not allowed: changing produktgruppe to a name that is already registered in DB
-                    if ( isProduktgruppeInactive(produktgruppe) ){
+                    if ( isProdGrInactive(produktgruppe) ){
                         JOptionPane.showMessageDialog(this, "Fehler: Produktgruppe "+
                                 produktgruppe+" bereits vorhanden, aber inaktiv!\n"+
                                 "Bei Bedarf wieder auf aktiv setzen.",
@@ -482,16 +490,20 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
         // get data from the selected rows
         Vector< Vector<Object> > selectedData = new Vector< Vector<Object> >();
         Vector<Integer> selectedProdGrIDs = new Vector<Integer>();
+        Vector<Integer> selectedMwStIDs = new Vector<Integer>();
+        Vector<Integer> selectedPfandIDs = new Vector<Integer>();
         int[] selection = myTable.getSelectedRows();
         for (int i = 0; i < selection.length; i++) {
             selection[i] = myTable.convertRowIndexToModel(selection[i]);
             selection[i] = displayIndices.get(selection[i]); // convert from displayData index to data index
             selectedData.add( data.get(selection[i]) );
             selectedProdGrIDs.add( produktgruppenIDs.get(selection[i]) );
+            selectedMwStIDs.add( mwstIDs.get(selection[i]) );
+            selectedPfandIDs.add( pfandIDs.get(selection[i]) );
         }
         JDialog editDialog = new JDialog(this.mainWindow, "Produktgruppe(n) bearbeiten", true);
         ProduktgruppeBearbeiten bearb = new ProduktgruppeBearbeiten(this.conn, this.mainWindow, this, editDialog,
-                selectedData, selectedProdGrIDs);
+                selectedData, selectedProdGrIDs, selectedMwStIDs, selectedPfandIDs);
         editDialog.getContentPane().add(bearb, BorderLayout.CENTER);
         editDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         WindowAdapterDialog wad = new WindowAdapterDialog(bearb, editDialog, "Achtung: Änderungen gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");

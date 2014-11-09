@@ -31,9 +31,10 @@ import javax.swing.table.*;
 import javax.swing.event.*; // for DocumentListener
 import javax.swing.text.*; // for DocumentFilter
 
-public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
+public class ArtikelNeuEingeben extends DialogWindow
     implements ArtikelNeuInterface, ArtikelFormularInterface, DocumentListener, ItemListener, ChangeListener {
     // Attribute:
+    protected Artikelliste artikelListe;
     protected ArtikelNeu artikelNeu;
     protected ArtikelFormular artikelFormular;
     private Integer toplevel_id;
@@ -46,10 +47,11 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
 
     // Methoden:
     public ArtikelNeuEingeben(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia, Integer tid, Integer sid, Integer ssid) {
-	super(conn, mw, pw, dia);
-        this.toplevel_id = tid;
-        this.sub_id = sid;
-        this.subsub_id = ssid;
+	super(conn, mw, dia);
+        artikelListe = pw;
+        toplevel_id = tid;
+        sub_id = sid;
+        subsub_id = ssid;
         UpdateTableFunctor utf = new UpdateTableFunctor() {
             public void updateTable() {
                 artikelNeu.updateTable(allPanel);
@@ -95,7 +97,7 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
         return result;
     }
 
-    void showHeader() {
+    protected void showHeader() {
         headerPanel = new JPanel();
         artikelFormular.showHeader(headerPanel, allPanel);
 
@@ -142,11 +144,11 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
         artikelFormular.sortimentBox.addItemListener(this);
     }
 
-    void showMiddle() {
+    protected void showMiddle() {
         artikelNeu.showTable(allPanel);
     }
 
-    void showFooter() {
+    protected void showFooter() {
         footerPanel = new JPanel();
         submitButton = new JButton("Abschicken");
         submitButton.setMnemonic(KeyEvent.VK_A);
@@ -283,7 +285,7 @@ public class ArtikelNeuEingeben extends ArtikelDialogWindowGrundlage
     }
 
     // will data be lost on close?
-    public boolean willDataBeLost() {
+    protected boolean willDataBeLost() {
         return artikelNeu.willDataBeLost();
     }
 
