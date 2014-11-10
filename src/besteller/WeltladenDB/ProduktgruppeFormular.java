@@ -53,7 +53,7 @@ public class ProduktgruppeFormular extends WindowContent
         fillComboBoxes();
     }
 
-    private Vector<Integer> selParentProdGrIDs(int parentProdGrID) {
+    public Vector<Integer> findProdGrIDs(int parentProdGrID) {
         Vector<Integer> ids = new Vector<Integer>();
         if (parentProdGrID < 0){
             ids.add(null); ids.add(null); ids.add(null);
@@ -93,13 +93,16 @@ public class ProduktgruppeFormular extends WindowContent
         return id;
     }
 
-    private int currentMaxSubID() {
+    private int currentMaxSubID(Integer topID) {
         int id = 0;
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT MAX(sub_id) FROM produktgruppe");
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT MAX(sub_id) FROM produktgruppe WHERE toplevel_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, topID);
+            ResultSet rs = pstmt.executeQuery();
             rs.next(); id = rs.getInt(1); rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -107,13 +110,17 @@ public class ProduktgruppeFormular extends WindowContent
         return id;
     }
 
-    private int currentMaxSubsubID() {
+    private int currentMaxSubsubID(Integer topID, Integer subID) {
         int id = 0;
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT MAX(subsub_id) FROM produktgruppe");
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT MAX(subsub_id) FROM produktgruppe WHERE toplevel_id = ? AND sub_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, topID);
+            pstmtSetInteger(pstmt, 2, subID);
+            ResultSet rs = pstmt.executeQuery();
             rs.next(); id = rs.getInt(1); rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -122,7 +129,7 @@ public class ProduktgruppeFormular extends WindowContent
     }
 
     public Vector<Integer> idsOfNewProdGr(int parentProdGrID) {
-        Vector<Integer> parentIDs = selParentProdGrIDs(parentProdGrID);
+        Vector<Integer> parentIDs = findProdGrIDs(parentProdGrID);
         Integer topID = parentIDs.get(0);
         Integer subID = parentIDs.get(1);
         Integer subsubID = parentIDs.get(2);
@@ -133,11 +140,11 @@ public class ProduktgruppeFormular extends WindowContent
             subsubID = null;
         } else if (subID == null){
             // get current max sub_id and increment by one
-            subID = currentMaxSubID() + 1;
+            subID = currentMaxSubID(topID) + 1;
             subsubID = null;
         } else {
             // get current max subsub_id and increment by one
-            subsubID = currentMaxSubsubID() + 1;
+            subsubID = currentMaxSubsubID(topID, subID) + 1;
         }
         Vector<Integer> ids = new Vector<Integer>();
         ids.add(topID);
@@ -156,6 +163,8 @@ public class ProduktgruppeFormular extends WindowContent
 
         parentProdGrs.add("Keiner");
         parentProdGrIDs.add(null);
+        pfandNamen.add("Kein Pfand");
+        pfandIDs.add(null);
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
