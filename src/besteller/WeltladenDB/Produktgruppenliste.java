@@ -116,9 +116,9 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
                 ids.add( rs.getString(4) == null ? null : rs.getInt(4) );
                 String produktgruppe = rs.getString(5);
                 Boolean aktivBool = rs.getBoolean(6);
-                Integer mwst_id = rs.getInt(7);
+                Integer mwst_id = rs.getString(7) == null ? null : rs.getInt(7);
                 BigDecimal mwst_satz = rs.getBigDecimal(8);
-                Integer pfand_id = rs.getInt(9);
+                Integer pfand_id = rs.getString(9) == null ? null : rs.getInt(9);
                 String pfand_name = rs.getString(10) == null ? "" : rs.getString(10);
                 String produktgruppenNumber = "";
                 if (ids.get(0) != null) produktgruppenNumber += ids.get(0).toString();
