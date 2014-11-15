@@ -236,15 +236,14 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         boolean exists = false;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(artikel_id) FROM artikel INNER JOIN lieferant USING (lieferant_id) "+
+                    "SELECT COUNT(artikel_id) > 0 FROM artikel INNER JOIN lieferant USING (lieferant_id) "+
                     "WHERE lieferant_name = ? AND artikel_nr = ? AND artikel.aktiv = TRUE"
                     );
             pstmt.setString(1, lieferant);
             pstmt.setString(2, nummer);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
-            int count = rs.getInt(1);
-            exists = count > 0;
+            exists = rs.getBoolean(1);
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
@@ -365,14 +364,13 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         boolean exists = false;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(lieferant_id) FROM lieferant "+
+                    "SELECT COUNT(lieferant_id) > 0 FROM lieferant "+
                     "WHERE lieferant_name = ?"
                     );
             pstmt.setString(1, lieferant);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
-            int count = rs.getInt(1);
-            exists = count > 0;
+            exists = rs.getBoolean(1);
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
@@ -402,9 +400,39 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return inactive;
     }
 
+    protected boolean thereAreActiveArticlesWithLieferant(Integer lieferant_id) {
+        boolean thereare = false;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT COUNT(artikel_id) > 0 FROM artikel AS a "+
+                    "INNER JOIN lieferant USING (lieferant_id) "+
+                    "WHERE a.lieferant_id = ? AND a.aktiv = TRUE"
+                    );
+            pstmtSetInteger(pstmt, 1, lieferant_id);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            thereare = rs.getBoolean(1);
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return thereare;
+    }
+
     protected int updateLieferant(Integer lieferant_id, String lieferant_name, Boolean aktiv) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
+        if (aktiv == false){
+            // check if there are still active articles with this lieferant
+            if (thereAreActiveArticlesWithLieferant(lieferant_id)){
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Es gibt noch aktive Artikel mit dem Lieferanten "+lieferant_name+".",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                return result;
+            }
+        }
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "UPDATE lieferant SET lieferant_name = ?, aktiv = ? WHERE "+
@@ -425,6 +453,13 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected int setLieferantInactive(Integer lieferant_id) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
+        // check if there are still active articles with this lieferant
+        if (thereAreActiveArticlesWithLieferant(lieferant_id)){
+            JOptionPane.showMessageDialog(this,
+                "Fehler: Es gibt noch aktive Artikel mit dem Lieferanten Nr. "+lieferant_id+".",
+                "Fehler", JOptionPane.ERROR_MESSAGE);
+            return result;
+        }
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "UPDATE lieferant SET aktiv = FALSE WHERE "+
@@ -484,14 +519,13 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         boolean exists = false;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(produktgruppen_id) FROM produktgruppe "+
+                    "SELECT COUNT(produktgruppen_id) > 0 FROM produktgruppe "+
                     "WHERE produktgruppen_name = ?"
                     );
             pstmt.setString(1, produktgruppe);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
-            int count = rs.getInt(1);
-            exists = count > 0;
+            exists = rs.getBoolean(1);
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
@@ -521,9 +555,39 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return inactive;
     }
 
+    protected boolean thereAreActiveArticlesWithProduktgruppe(Integer produktgruppen_id) {
+        boolean thereare = false;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT COUNT(artikel_id) > 0 FROM artikel AS a "+
+                    "INNER JOIN produktgruppe USING (produktgruppen_id) "+
+                    "WHERE a.produktgruppen_id = ? AND a.aktiv = TRUE"
+                    );
+            pstmtSetInteger(pstmt, 1, produktgruppen_id);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            thereare = rs.getBoolean(1);
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return thereare;
+    }
+
     protected int updateProdGr(Integer produktgruppen_id, String produktgruppen_name, Boolean aktiv) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
+        if (aktiv == false){
+            // check if there are still active articles with this lieferant
+            if (thereAreActiveArticlesWithProduktgruppe(produktgruppen_id)){
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Es gibt noch aktive Artikel mit der Produktgruppe "+produktgruppen_name+".",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                return result;
+            }
+        }
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "UPDATE produktgruppe SET produktgruppen_name = ?, aktiv = ? WHERE "+
@@ -545,6 +609,15 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             subsubid, String newName, Integer mwst_id, Integer pfand_id, Boolean aktiv) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
+        if (aktiv == false){
+            // check if there are still active articles with this lieferant
+            if (thereAreActiveArticlesWithProduktgruppe(produktgruppen_id)){
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Es gibt noch aktive Artikel mit der Produktgruppe "+newName+".",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                return result;
+            }
+        }
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "UPDATE produktgruppe SET toplevel_id = ?, sub_id = ?, subsub_id = ?, "+
@@ -571,6 +644,13 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected int setProdGrInactive(Integer produktgruppen_id) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
+        // check if there are still active articles with this lieferant
+        if (thereAreActiveArticlesWithProduktgruppe(produktgruppen_id)){
+            JOptionPane.showMessageDialog(this,
+                "Fehler: Es gibt noch aktive Artikel mit der Produktgruppe Nr. "+produktgruppen_id+".",
+                "Fehler", JOptionPane.ERROR_MESSAGE);
+            return result;
+        }
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "UPDATE produktgruppe SET aktiv = FALSE WHERE "+
