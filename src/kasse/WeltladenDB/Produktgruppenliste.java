@@ -116,9 +116,9 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
                 ids.add( rs.getString(4) == null ? null : rs.getInt(4) );
                 String produktgruppe = rs.getString(5);
                 Boolean aktivBool = rs.getBoolean(6);
-                Integer mwst_id = rs.getInt(7);
+                Integer mwst_id = rs.getString(7) == null ? null : rs.getInt(7);
                 BigDecimal mwst_satz = rs.getBigDecimal(8);
-                Integer pfand_id = rs.getInt(9);
+                Integer pfand_id = rs.getString(9) == null ? null : rs.getInt(9);
                 String pfand_name = rs.getString(10) == null ? "" : rs.getString(10);
                 String produktgruppenNumber = "";
                 if (ids.get(0) != null) produktgruppenNumber += ids.get(0).toString();
@@ -516,6 +516,9 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
         JDialog newProduktgruppenDialog = new JDialog(this.mainWindow, "Neue Produktgruppe hinzufügen", true);
         ProduktgruppeNeuEingeben newProduktgruppe = new ProduktgruppeNeuEingeben(this.conn, this.mainWindow, this, newProduktgruppenDialog);
         newProduktgruppenDialog.getContentPane().add(newProduktgruppe, BorderLayout.CENTER);
+        newProduktgruppenDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        WindowAdapterDialog wad = new WindowAdapterDialog(newProduktgruppe, newProduktgruppenDialog, "Achtung: Änderungen gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
+        newProduktgruppenDialog.addWindowListener(wad);
         newProduktgruppenDialog.pack();
         newProduktgruppenDialog.setVisible(true);
     }

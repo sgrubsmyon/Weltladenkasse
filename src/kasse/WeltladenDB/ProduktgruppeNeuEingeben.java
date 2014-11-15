@@ -32,43 +32,24 @@ import javax.swing.event.*; // for DocumentListener
 import javax.swing.text.*; // for DocumentFilter
 
 public class ProduktgruppeNeuEingeben extends DialogWindow
-    implements DocumentListener {
+    implements ProduktgruppeFormularInterface, DocumentListener, ItemListener {
     // Attribute:
-    protected JButton submitButton;
-    protected JButton deleteButton;
     protected Produktgruppenliste produktgruppenListe;
+    protected ProduktgruppeFormular produktgruppeFormular;
 
-    protected JPanel allPanel;
-    protected JPanel headerPanel;
-    protected JPanel footerPanel;
-
-    private JTextField produktgruppenNameField;
+    protected JButton submitButton;
 
     // Methoden:
     public ProduktgruppeNeuEingeben(Connection conn, MainWindowGrundlage mw, Produktgruppenliste pw, JDialog dia) {
 	super(conn, mw, dia);
-        this.produktgruppenListe = pw;
+        produktgruppenListe = pw;
+        produktgruppeFormular = new ProduktgruppeFormular(conn, mw);
         showAll();
-    }
-
-    protected void showAll() {
-	allPanel = new JPanel();
-	allPanel.setLayout(new BoxLayout(allPanel, BoxLayout.Y_AXIS));
-
-        showHeader();
-        showFooter();
-
-	this.add(allPanel, BorderLayout.CENTER);
     }
 
     protected void showHeader() {
         headerPanel = new JPanel();
-        JPanel namePanel = new JPanel();
-        namePanel.setBorder(BorderFactory.createTitledBorder("Produktgruppen-Name"));
-        produktgruppenNameField = new JTextField("");
-        produktgruppenNameField.setColumns(30);
-        namePanel.add(produktgruppenNameField);
-        headerPanel.add(namePanel);
+        produktgruppeFormular.showHeader(headerPanel, allPanel);
 
         KeyAdapter enterAdapter = new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
@@ -80,25 +61,22 @@ public class ProduktgruppeNeuEingeben extends DialogWindow
             }
         };
 
-        produktgruppenNameField.getDocument().addDocumentListener(this);
-        produktgruppenNameField.addKeyListener(enterAdapter);
-        allPanel.add(headerPanel);
+        produktgruppeFormular.parentProdGrBox.addActionListener(this);
+        produktgruppeFormular.nameField.addKeyListener(enterAdapter);
+        produktgruppeFormular.mwstBox.addActionListener(this);
+        produktgruppeFormular.pfandBox.addActionListener(this);
+        produktgruppeFormular.nameField.getDocument().addDocumentListener(this);
     }
 
     protected void showMiddle() { }
 
     protected void showFooter() {
         footerPanel = new JPanel();
-        submitButton = new JButton("Speichern");
+        submitButton = new JButton("Abschicken");
         submitButton.setMnemonic(KeyEvent.VK_A);
         submitButton.addActionListener(this);
         submitButton.setEnabled( checkIfFormIsComplete() );
         footerPanel.add(submitButton);
-        deleteButton = new JButton("Verwerfen");
-        deleteButton.setMnemonic(KeyEvent.VK_V);
-        deleteButton.addActionListener(this);
-        deleteButton.setEnabled(true);
-        footerPanel.add(deleteButton);
         closeButton = new JButton("Schließen");
         closeButton.setMnemonic(KeyEvent.VK_S);
         closeButton.addActionListener(this);
@@ -107,17 +85,49 @@ public class ProduktgruppeNeuEingeben extends DialogWindow
         allPanel.add(footerPanel);
     }
 
+    public void fillComboBoxes() {
+        produktgruppeFormular.fillComboBoxes();
+    }
+
     public boolean checkIfFormIsComplete() {
-        String produktgruppe = produktgruppenNameField.getText();
-        boolean produktgruppeOK = (produktgruppe.replaceAll("\\s","").length() > 0);
-        if (produktgruppeOK){
-            produktgruppeOK = !isProdGrAlreadyKnown(produktgruppe);
-        }
-        return produktgruppeOK;
+        return produktgruppeFormular.checkIfFormIsComplete();
+    }
+
+    // will data be lost on close?
+    protected boolean willDataBeLost() {
+        return checkIfFormIsComplete();
     }
 
     public int submit() {
-        return insertNewProdGr(0, 0, 0, produktgruppenNameField.getText(), 0, 0);
+        String newName = produktgruppeFormular.nameField.getText();
+        if ( isProdGrAlreadyKnown(newName) ){
+            // not allowed: changing name to one that is already registered in DB
+            JOptionPane.showMessageDialog(this,
+                    "Fehler: Produktgruppe '"+newName+"' bereits vorhanden!",
+                    "Info", JOptionPane.INFORMATION_MESSAGE);
+            produktgruppeFormular.nameField.setText("");
+            return 0;
+        }
+        Integer parentProdGrID = produktgruppeFormular.parentProdGrIDs.get(
+                produktgruppeFormular.parentProdGrBox.getSelectedIndex()
+                );
+        Vector<Integer> idsNew = produktgruppeFormular.idsOfNewProdGr(parentProdGrID);
+        Integer topID = idsNew.get(0);
+        Integer subID = idsNew.get(1);
+        Integer subsubID = idsNew.get(2);
+        Integer mwstID = produktgruppeFormular.mwstIDs.get(
+                produktgruppeFormular.mwstBox.getSelectedIndex()
+                );
+        Integer pfandID = produktgruppeFormular.pfandIDs.get(
+                produktgruppeFormular.pfandBox.getSelectedIndex()
+                );
+        return insertNewProdGr(topID, subID, subsubID, newName, mwstID, pfandID);
+    }
+
+    /** Needed for ItemListener. */
+    public void itemStateChanged(ItemEvent e) {
+        produktgruppeFormular.itemStateChanged(e);
+        submitButton.setEnabled( checkIfFormIsComplete() );
     }
 
     /**
@@ -132,7 +142,7 @@ public class ProduktgruppeNeuEingeben extends DialogWindow
     }
     public void removeUpdate(DocumentEvent e) {
 	// check if form is valid (if item can be added to list)
-	insertUpdate(e);
+        insertUpdate(e);
     }
     public void changedUpdate(DocumentEvent e) {
 	// Plain text components do not fire these events
@@ -149,7 +159,7 @@ public class ProduktgruppeNeuEingeben extends DialogWindow
             int result = submit();
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: Produktgruppe "+produktgruppenNameField.getText()+" konnte nicht eingefügt werden.",
+                        "Fehler: Produktgruppe "+produktgruppeFormular.nameField.getText()+" konnte nicht eingefügt werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
             } else {
                 produktgruppenListe.updateAll();
@@ -157,15 +167,6 @@ public class ProduktgruppeNeuEingeben extends DialogWindow
             }
             return;
         }
-	if (e.getSource() == deleteButton){
-            produktgruppenNameField.setText("");
-            return;
-        }
         super.actionPerformed(e);
-    }
-
-    // will data be lost on close? No.
-    protected boolean willDataBeLost(){
-        return false;
     }
 }

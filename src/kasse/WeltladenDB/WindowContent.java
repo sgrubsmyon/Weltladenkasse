@@ -541,6 +541,33 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
+    protected int updateProdGr(Integer produktgruppen_id, Integer topid, Integer subid, Integer
+            subsubid, String newName, Integer mwst_id, Integer pfand_id, Boolean aktiv) {
+        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        int result = 0;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "UPDATE produktgruppe SET toplevel_id = ?, sub_id = ?, subsub_id = ?, "+
+                    "produktgruppen_name = ?, mwst_id = ?, pfand_id = ?, aktiv = ? WHERE "+
+                    "produktgruppen_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, topid);
+            pstmtSetInteger(pstmt, 2, subid);
+            pstmtSetInteger(pstmt, 3, subsubid);
+            pstmt.setString(4, newName);
+            pstmtSetInteger(pstmt, 5, mwst_id);
+            pstmtSetInteger(pstmt, 6, pfand_id);
+            pstmt.setBoolean(7, aktiv);
+            pstmt.setInt(8, produktgruppen_id);
+            result = pstmt.executeUpdate();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
     protected int setProdGrInactive(Integer produktgruppen_id) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
