@@ -308,8 +308,8 @@ public class ProduktgruppeBearbeiten extends DialogWindow
                     return 1;
                 }
             }
-            int origProdGrID = originalProdGrIDs.get(i);
-            int ppgID = originalParentProdGrIDs.get(i);
+            Integer origProdGrID = originalProdGrIDs.get(i);
+            Integer ppgID = originalParentProdGrIDs.get(i);
             if (produktgruppeFormular.parentProdGrBox.isEnabled()){
                 int selIndex = produktgruppeFormular.parentProdGrBox.getSelectedIndex();
                 // -1 means "no selection done"

@@ -516,6 +516,9 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
         JDialog newProduktgruppenDialog = new JDialog(this.mainWindow, "Neue Produktgruppe hinzufügen", true);
         ProduktgruppeNeuEingeben newProduktgruppe = new ProduktgruppeNeuEingeben(this.conn, this.mainWindow, this, newProduktgruppenDialog);
         newProduktgruppenDialog.getContentPane().add(newProduktgruppe, BorderLayout.CENTER);
+        newProduktgruppenDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        WindowAdapterDialog wad = new WindowAdapterDialog(newProduktgruppe, newProduktgruppenDialog, "Achtung: Änderungen gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
+        newProduktgruppenDialog.addWindowListener(wad);
         newProduktgruppenDialog.pack();
         newProduktgruppenDialog.setVisible(true);
     }

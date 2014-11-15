@@ -41,6 +41,7 @@ public class ProduktgruppeFormular extends WindowContent
 
     private Vector<String> parentProdGrs;
     public Vector<Integer> parentProdGrIDs;
+    private Vector< Vector<Integer> > parentProdGrIDsList;
     private Vector<String> mwsts;
     public Vector<Integer> mwstIDs;
     private Vector<String> pfandNamen;
@@ -53,9 +54,9 @@ public class ProduktgruppeFormular extends WindowContent
         fillComboBoxes();
     }
 
-    private Vector<Integer> selParentProdGrIDs(int parentProdGrID) {
+    public Vector<Integer> findProdGrIDs(Integer parentProdGrID) {
         Vector<Integer> ids = new Vector<Integer>();
-        if (parentProdGrID < 0){
+        if (parentProdGrID == null || parentProdGrID < 0){
             ids.add(null); ids.add(null); ids.add(null);
         } else {
             try {
@@ -93,13 +94,16 @@ public class ProduktgruppeFormular extends WindowContent
         return id;
     }
 
-    private int currentMaxSubID() {
+    private int currentMaxSubID(Integer topID) {
         int id = 0;
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT MAX(sub_id) FROM produktgruppe");
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT MAX(sub_id) FROM produktgruppe WHERE toplevel_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, topID);
+            ResultSet rs = pstmt.executeQuery();
             rs.next(); id = rs.getInt(1); rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -107,13 +111,17 @@ public class ProduktgruppeFormular extends WindowContent
         return id;
     }
 
-    private int currentMaxSubsubID() {
+    private int currentMaxSubsubID(Integer topID, Integer subID) {
         int id = 0;
         try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT MAX(subsub_id) FROM produktgruppe");
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT MAX(subsub_id) FROM produktgruppe WHERE toplevel_id = ? AND sub_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, topID);
+            pstmtSetInteger(pstmt, 2, subID);
+            ResultSet rs = pstmt.executeQuery();
             rs.next(); id = rs.getInt(1); rs.close();
-            stmt.close();
+            pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -121,8 +129,8 @@ public class ProduktgruppeFormular extends WindowContent
         return id;
     }
 
-    public Vector<Integer> idsOfNewProdGr(int parentProdGrID) {
-        Vector<Integer> parentIDs = selParentProdGrIDs(parentProdGrID);
+    public Vector<Integer> idsOfNewProdGr(Integer parentProdGrID) {
+        Vector<Integer> parentIDs = findProdGrIDs(parentProdGrID);
         Integer topID = parentIDs.get(0);
         Integer subID = parentIDs.get(1);
         Integer subsubID = parentIDs.get(2);
@@ -133,11 +141,11 @@ public class ProduktgruppeFormular extends WindowContent
             subsubID = null;
         } else if (subID == null){
             // get current max sub_id and increment by one
-            subID = currentMaxSubID() + 1;
+            subID = currentMaxSubID(topID) + 1;
             subsubID = null;
         } else {
             // get current max subsub_id and increment by one
-            subsubID = currentMaxSubsubID() + 1;
+            subsubID = currentMaxSubsubID(topID, subID) + 1;
         }
         Vector<Integer> ids = new Vector<Integer>();
         ids.add(topID);
@@ -149,6 +157,7 @@ public class ProduktgruppeFormular extends WindowContent
     public void fillComboBoxes() {
         parentProdGrs = new Vector<String>();
         parentProdGrIDs = new Vector<Integer>();
+        parentProdGrIDsList = new Vector< Vector<Integer> >();
         mwsts = new Vector<String>();
         mwstIDs = new Vector<Integer>();
         pfandNamen = new Vector<String>();
@@ -156,17 +165,29 @@ public class ProduktgruppeFormular extends WindowContent
 
         parentProdGrs.add("Keiner");
         parentProdGrIDs.add(null);
+        Vector<Integer> ids = new Vector<Integer>();
+        ids.add(null); ids.add(null); ids.add(null);
+        parentProdGrIDsList.add(ids);
+        pfandNamen.add("Kein Pfand");
+        pfandIDs.add(null);
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT produktgruppen_id, produktgruppen_name FROM produktgruppe "+
+                    "SELECT produktgruppen_id, toplevel_id, sub_id, subsub_id, produktgruppen_name "+
+                    "FROM produktgruppe "+
                     "WHERE toplevel_id IS NOT NULL AND subsub_id IS NULL "+
                     "ORDER BY toplevel_id, sub_id, subsub_id"
                     );
             while (rs.next()) {
                 Integer id = rs.getInt(1);
-                String name = rs.getString(2);
+                ids = new Vector<Integer>();
+                ids.add( rs.getString(2) == null ? null : rs.getInt(2) );
+                ids.add( rs.getString(3) == null ? null : rs.getInt(3) );
+                ids.add( rs.getString(4) == null ? null : rs.getInt(4) );
+                String name = rs.getString(5);
+
                 parentProdGrIDs.add(id);
+                parentProdGrIDsList.add(ids);
                 parentProdGrs.add(name);
             }
             rs.close();
@@ -206,6 +227,7 @@ public class ProduktgruppeFormular extends WindowContent
             JPanel parentProdGrPanel = new JPanel();
             parentProdGrPanel.setBorder(BorderFactory.createTitledBorder("Untergruppe von"));
             parentProdGrBox = new JComboBox(parentProdGrs);
+            parentProdGrBox.setRenderer(new ProduktgruppenIndentedRenderer(parentProdGrIDsList));
             parentProdGrPanel.add(parentProdGrBox);
 
             JPanel namePanel = new JPanel();

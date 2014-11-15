@@ -186,7 +186,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
         } else {
             produktgruppeFormular.parentProdGrBox.setSelectedIndex(-1);
         }
-        if ( allRowsEqual(firstName, 3) ){
+        if ( allRowsEqual(firstName, 1) ){
             produktgruppeFormular.nameField.setText(firstName);
         } else {
             produktgruppeFormular.nameField.setEnabled(false);
@@ -203,7 +203,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
         } else {
             produktgruppeFormular.pfandBox.setSelectedIndex(-1);
         }
-        if ( allRowsEqual(firstAktiv, 15) ){
+        if ( allRowsEqual(firstAktiv, 4) ){
             aktivBox.setSelected(firstAktiv);
         } else {
             aktivBox.setEnabled(false);
@@ -238,9 +238,12 @@ public class ProduktgruppeBearbeiten extends DialogWindow
     public boolean willDataBeLost() {
         if ( produktgruppeFormular.parentProdGrBox.isEnabled() ){
             int selIndex = produktgruppeFormular.parentProdGrBox.getSelectedIndex();
-            Integer selParentProdGrID = produktgruppeFormular.parentProdGrIDs.get(selIndex);
-            if ( !allElementsEqual(selParentProdGrID, originalParentProdGrIDs) ){
-                return true;
+            // -1 means "no selection done"
+            if (selIndex != -1){
+                Integer selParentProdGrID = produktgruppeFormular.parentProdGrIDs.get(selIndex);
+                if ( !allElementsEqual(selParentProdGrID, originalParentProdGrIDs) ){
+                    return true;
+                }
             }
         }
         if ( produktgruppeFormular.nameField.isEnabled() ){
@@ -251,16 +254,22 @@ public class ProduktgruppeBearbeiten extends DialogWindow
         }
         if ( produktgruppeFormular.mwstBox.isEnabled() ){
             int selIndex = produktgruppeFormular.mwstBox.getSelectedIndex();
-            Integer selMwStID = produktgruppeFormular.mwstIDs.get(selIndex);
-            if ( !allElementsEqual(selMwStID, originalMwStIDs) ){
-                return true;
+            // -1 means "no selection done"
+            if (selIndex != -1){
+                Integer selMwStID = produktgruppeFormular.mwstIDs.get(selIndex);
+                if ( !allElementsEqual(selMwStID, originalMwStIDs) ){
+                    return true;
+                }
             }
         }
         if ( produktgruppeFormular.pfandBox.isEnabled() ){
             int selIndex = produktgruppeFormular.pfandBox.getSelectedIndex();
-            Integer selPfandID = produktgruppeFormular.pfandIDs.get(selIndex);
-            if ( !allElementsEqual(selPfandID, originalPfandIDs) ){
-                return true;
+            // -1 means "no selection done"
+            if (selIndex != -1){
+                Integer selPfandID = produktgruppeFormular.pfandIDs.get(selIndex);
+                if ( !allElementsEqual(selPfandID, originalPfandIDs) ){
+                    return true;
+                }
             }
         }
         if ( aktivBox.isEnabled() ){
@@ -299,50 +308,52 @@ public class ProduktgruppeBearbeiten extends DialogWindow
                     return 1;
                 }
             }
-            int origProdGrID = originalProdGrIDs.get(i);
-            int ppgID;
+            Integer origProdGrID = originalProdGrIDs.get(i);
+            Integer ppgID = originalParentProdGrIDs.get(i);
             if (produktgruppeFormular.parentProdGrBox.isEnabled()){
-                ppgID = produktgruppeFormular.parentProdGrIDs.get(
-                            produktgruppeFormular.parentProdGrBox.getSelectedIndex()
-                        );
-            } else {
-                ppgID = originalParentProdGrIDs.get(i);
+                int selIndex = produktgruppeFormular.parentProdGrBox.getSelectedIndex();
+                // -1 means "no selection done"
+                if (selIndex != -1){
+                    ppgID = produktgruppeFormular.parentProdGrIDs.get(selIndex);
+                }
             }
-            Vector<Integer> ids = produktgruppeFormular.idsOfNewProdGr(ppgID);
+            Vector<Integer> ids;
+            if (ppgID == originalParentProdGrIDs.get(i)){
+                // use old ids
+                ids = produktgruppeFormular.findProdGrIDs(origProdGrID);
+            } else {
+                // assign new ids
+                ids = produktgruppeFormular.idsOfNewProdGr(ppgID);
+            }
             Integer topid = ids.get(0);
             Integer subid = ids.get(1);
             Integer subsubid = ids.get(2);
-            Integer mwst_id = produktgruppeFormular.mwstBox.isEnabled() ?
-                produktgruppeFormular.mwstIDs.get( produktgruppeFormular.mwstBox.getSelectedIndex() ) :
-                originalMwStIDs.get(i);
-            Integer pfand_id = produktgruppeFormular.pfandBox.isEnabled() ?
-                produktgruppeFormular.pfandIDs.get( produktgruppeFormular.pfandBox.getSelectedIndex() ) :
-                originalPfandIDs.get(i);
+            Integer mwst_id = originalMwStIDs.get(i);
+            if (produktgruppeFormular.mwstBox.isEnabled()){
+                int selIndex = produktgruppeFormular.mwstBox.getSelectedIndex();
+                // -1 means "no selection done"
+                if (selIndex != -1){
+                    mwst_id = produktgruppeFormular.mwstIDs.get(selIndex);
+                }
+            }
+            Integer pfand_id = originalPfandIDs.get(i);
+            if (produktgruppeFormular.pfandBox.isEnabled()){
+                int selIndex = produktgruppeFormular.pfandBox.getSelectedIndex();
+                // -1 means "no selection done"
+                if (selIndex != -1){
+                    pfand_id = produktgruppeFormular.pfandIDs.get(selIndex);
+                }
+            }
             Boolean aktiv = aktivBox.isEnabled() ?
                 aktivBox.isSelected() :
                 (Boolean)originalData.get(i).get(4);
 
-            // set old item to inactive:
-            int result = setProdGrInactive(origProdGrID);
+            // update the produktgruppe with new values
+            int result = updateProdGr(origProdGrID, topid, subid, subsubid, newName, mwst_id, pfand_id, aktiv);
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Produktgruppe "+origName+" konnte nicht geändert werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
-                continue; // continue with next item
-            }
-            if ( aktiv == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
-                result = insertNewProdGr(topid, subid, subsubid, newName, mwst_id, pfand_id);
-                if (result == 0){
-                    JOptionPane.showMessageDialog(this,
-                            "Fehler: Produktgruppe "+origName+" konnte nicht geändert werden.",
-                            "Fehler", JOptionPane.ERROR_MESSAGE);
-                    result = setProdGrActive(origProdGrID);
-                    if (result == 0){
-                        JOptionPane.showMessageDialog(this,
-                                "Fehler: Produktgruppe "+origName+" konnte nicht wieder hergestellt werden. Produktgruppe ist nun gelöscht (inaktiv).",
-                                "Fehler", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
             }
         }
         return 0;
