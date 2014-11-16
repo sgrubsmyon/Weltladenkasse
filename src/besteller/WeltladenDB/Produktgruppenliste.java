@@ -376,6 +376,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
 
         myTable.getColumn("Produktgruppen-Index").setPreferredWidth(5);
         myTable.getColumn("Produktgruppen-Name").setPreferredWidth(100);
+        myTable.getColumn("# Artikel").setPreferredWidth(5);
         myTable.getColumn("MwSt.").setPreferredWidth(5);
         myTable.getColumn("Pfand").setPreferredWidth(10);
         myTable.getColumn("Aktiv").setPreferredWidth(1);
