@@ -80,7 +80,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         this.data = new Vector< Vector<Object> >();
         columnLabels = new Vector<String>();
         columnLabels.add("Lieferant-Nr."); columnLabels.add("Lieferant-Name");
-        columnLabels.add("Aktiv");
+        columnLabels.add("# Artikel"); columnLabels.add("Aktiv");
         lieferantIDs = new Vector<Integer>();
         activeRowBools = new Vector<Boolean>();
 
@@ -99,9 +99,12 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
                 String lieferant = rs.getString(2);
                 Boolean aktivBool = rs.getBoolean(3);
 
+                Integer nArticles = howManyActiveArticlesWithLieferant(lieferant_id);
+
                 Vector<Object> row = new Vector<Object>();
                     row.add(lieferant_id);
                     row.add(lieferant);
+                    row.add(nArticles);
                     row.add(aktivBool);
                 data.add(row);
                 lieferantIDs.add(lieferant_id);
@@ -324,9 +327,10 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         myTable.getColumn("Lieferant-Nr.").setCellRenderer(zentralAusrichter);
         myTable.getColumn("Lieferant-Name").setCellRenderer(linksAusrichter);
 
-        myTable.getColumn("Lieferant-Nr.").setPreferredWidth(30);
+        myTable.getColumn("Lieferant-Nr.").setPreferredWidth(20);
         myTable.getColumn("Lieferant-Name").setPreferredWidth(100);
-        myTable.getColumn("Aktiv").setPreferredWidth(20);
+        myTable.getColumn("# Artikel").setPreferredWidth(20);
+        myTable.getColumn("Aktiv").setPreferredWidth(10);
     }
 
     public void updateAll() {
