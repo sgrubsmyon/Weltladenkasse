@@ -147,7 +147,7 @@ public class ArtikelBearbeiten extends DialogWindow
             int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(firstGruppenID);
             artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
         } else {
-            artikelFormular.produktgruppenBox.setEnabled(false);
+            artikelFormular.produktgruppenBox.setSelectedIndex(-1);
         }
         if ( allElementsEqual(firstLieferantID, originalLiefIDs) ){
             int liefIndex = artikelFormular.lieferantIDs.indexOf(firstLieferantID);
@@ -163,33 +163,33 @@ public class ArtikelBearbeiten extends DialogWindow
         if ( allRowsEqual(firstName, 3) ){
             artikelFormular.nameField.setText(firstName);
         } else {
-            artikelFormular.nameField.setEnabled(false);
+            artikelFormular.nameField.setText("");
         }
         if ( allRowsEqual(firstKurzname, 4) ){
             artikelFormular.kurznameField.setText(firstKurzname);
         } else {
-            artikelFormular.kurznameField.setEnabled(false);
+            artikelFormular.kurznameField.setText("");
         }
         if ( allRowsEqual(firstMenge, 5) ){
             artikelFormular.mengeField.setText(firstMenge);
         } else {
-            artikelFormular.mengeField.setEnabled(false);
+            artikelFormular.mengeField.setText("");
         }
         if ( allRowsEqual(firstBarcode, 6) ){
             artikelFormular.barcodeField.setText(firstBarcode);
         } else {
-            artikelFormular.barcodeField.setEnabled(false);
+            artikelFormular.barcodeField.setText("");
         }
         if ( allRowsEqual(firstHerkunft, 7) ){
             artikelFormular.herkunftField.setText(firstHerkunft);
         } else {
-            artikelFormular.herkunftField.setEnabled(false);
+            artikelFormular.herkunftField.setText("");
         }
         if ( allRowsEqual(firstVPE, 8) ){
             //if ( firstVPE.equals("") ){ firstVPE = "0"; }
             artikelFormular.vpeSpinner.setValue(firstVPE);
         } else {
-            artikelFormular.vpeSpinner.setEnabled(false);
+            artikelFormular.vpeSpinner.setValue(null);
         }
         if ( allElementsEqual(firstVarPreis, originalVarPreisBools) ){
             artikelFormular.preisVariabelBox.setSelected(firstVarPreis);
@@ -197,12 +197,12 @@ public class ArtikelBearbeiten extends DialogWindow
                 if ( allRowsEqual(firstVKP, 9) ){
                     artikelFormular.vkpreisField.setText( priceFormatter(firstVKP) );
                 } else {
-                    artikelFormular.vkpreisField.setEnabled(false);
+                    artikelFormular.vkpreisField.setText("");
                 }
                 if ( allRowsEqual(firstEKP, 10) ){
                     artikelFormular.ekpreisField.setText( priceFormatter(firstEKP) );
                 } else {
-                    artikelFormular.ekpreisField.setEnabled(false);
+                    artikelFormular.ekpreisField.setText("");
                 }
             } else { // if all items have variable prices
                 artikelFormular.vkpreisField.setEnabled(false);
@@ -246,19 +246,23 @@ public class ArtikelBearbeiten extends DialogWindow
     // will data be lost on close?
     public boolean willDataBeLost() {
         if ( artikelFormular.produktgruppenBox.isEnabled() ){
-            Integer origGruppenID = originalProdGrIDs.get(0);
-            int selProdIndex = artikelFormular.produktgruppenBox.getSelectedIndex();
-            Integer selProdID = artikelFormular.produktgruppenIDs.get(selProdIndex);
-            if ( !origGruppenID.equals(selProdID) ){
-                return true;
+            int selIndex = artikelFormular.produktgruppenBox.getSelectedIndex();
+            // -1 means "no selection done"
+            if (selIndex != -1){
+                Integer selProdGrID = artikelFormular.produktgruppenIDs.get(selIndex);
+                if ( !allElementsEqual(selProdGrID, originalProdGrIDs) ){
+                    return true;
+                }
             }
         }
         if ( artikelFormular.lieferantBox.isEnabled() ){
-            Integer origLieferantID = originalLiefIDs.get(0);
-            int selLiefIndex = artikelFormular.lieferantBox.getSelectedIndex();
-            Integer selLiefID = artikelFormular.lieferantIDs.get(selLiefIndex);
-            if ( !origLieferantID.equals(selLiefID) ){
-                return true;
+            int selIndex = artikelFormular.lieferantBox.getSelectedIndex();
+            // -1 means "no selection done"
+            if (selIndex != -1){
+                Integer selLiefID = artikelFormular.lieferantIDs.get(selIndex);
+                if ( !allElementsEqual(selLiefID, originalLiefIDs) ){
+                    return true;
+                }
             }
         }
         if ( artikelFormular.nummerField.isEnabled() ){
@@ -268,18 +272,33 @@ public class ArtikelBearbeiten extends DialogWindow
             }
         }
         if ( artikelFormular.nameField.isEnabled() ){
-            String origName = (String)originalData.get(0).get(3);
-            if ( !origName.equals(artikelFormular.nameField.getText()) ){
-                return true;
+            String name = artikelFormular.nameField.getText()
+            // "" means "not edited"
+            if (name != ""){
+                Vector<String> origNames = new Vector<String>();
+                for (Vector<String> v : originalData){
+                    origNames.add(v.get(3));
+                }
+                if ( !allElementsEqual(name, origNames) ){
+                    return true;
+                }
             }
         }
         if ( artikelFormular.kurznameField.isEnabled() ){
-            String origKurzname = (String)originalData.get(0).get(4);
-            if ( !origKurzname.equals(artikelFormular.kurznameField.getText()) ){
-                return true;
+            String kurzname = artikelFormular.kurznameField.getText()
+            // "" means "not edited"
+            if (kurzname != ""){
+                Vector<String> origKurznames = new Vector<String>();
+                for (Vector<String> v : originalData){
+                    origKurznames.add(v.get(4));
+                }
+                if ( !allElementsEqual(kurzname, origKurznames) ){
+                    return true;
+                }
             }
         }
         if ( artikelFormular.mengeField.isEnabled() ){
+            // TODO
             String origMengeStr = originalData.get(0).get(5).toString().replace(',','.');
             String newMengeStr = artikelFormular.mengeField.getText().replace(',','.');
             BigDecimal origMenge;
@@ -299,9 +318,16 @@ public class ArtikelBearbeiten extends DialogWindow
             }
         }
         if ( artikelFormular.barcodeField.isEnabled() ){
-            String origBarcode = (String)originalData.get(0).get(6);
-            if ( !origBarcode.equals(artikelFormular.barcodeField.getText()) ){
-                return true;
+            String barcode = artikelFormular.barcodeField.getText()
+            // "" means "not edited"
+            if (barcode != ""){
+                Vector<String> origBarcodes = new Vector<String>();
+                for (Vector<String> v : originalData){
+                    origBarcodes.add(v.get(6));
+                }
+                if ( !allElementsEqual(barcode, origBarcodes) ){
+                    return true;
+                }
             }
         }
         if ( artikelFormular.herkunftField.isEnabled() ){
@@ -309,8 +335,20 @@ public class ArtikelBearbeiten extends DialogWindow
             if ( !origHerkunft.equals(artikelFormular.herkunftField.getText()) ){
                 return true;
             }
+            String herkunft = artikelFormular.herkunftField.getText()
+            // "" means "not edited"
+            if (herkunft != ""){
+                Vector<String> origHerkunft = new Vector<String>();
+                for (Vector<String> v : originalData){
+                    origHerkunft.add(v.get(6));
+                }
+                if ( !allElementsEqual(herkunft, origHerkunft) ){
+                    return true;
+                }
+            }
         }
         if ( artikelFormular.vpeSpinner.isEnabled() ){
+            // TODO
             String origVPEStr = (String)originalData.get(0).get(8);
             if ( origVPEStr.equals("") ){ origVPEStr = "0"; }
             Integer origVPE = Integer.parseInt(origVPEStr);
@@ -319,6 +357,7 @@ public class ArtikelBearbeiten extends DialogWindow
             }
         }
         if ( artikelFormular.vkpreisField.isEnabled() ){
+            // TODO
             String origVKP = priceFormatterIntern( (String)originalData.get(0).get(9) );
             String newVKP = priceFormatterIntern( artikelFormular.vkpreisField.getText() );
             if ( !origVKP.equals(newVKP) ){
@@ -326,6 +365,7 @@ public class ArtikelBearbeiten extends DialogWindow
             }
         }
         if ( artikelFormular.ekpreisField.isEnabled() ){
+            // TODO
             String origEKP = priceFormatterIntern( (String)originalData.get(0).get(10) );
             String newEKP = priceFormatterIntern( artikelFormular.ekpreisField.getText() );
             if ( !origEKP.equals(newEKP) ){
