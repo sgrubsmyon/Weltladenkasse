@@ -84,7 +84,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
         this.data = new Vector< Vector<Object> >();
         columnLabels = new Vector<String>();
         columnLabels.add("Produktgruppen-Index"); columnLabels.add("Produktgruppen-Name");
-        columnLabels.add("MwSt."); columnLabels.add("Pfand");
+        columnLabels.add("# Artikel"); columnLabels.add("MwSt."); columnLabels.add("Pfand");
         columnLabels.add("Aktiv");
         produktgruppenIDs = new Vector<Integer>();
         produktgruppenIDsList = new Vector< Vector<Integer> >();
@@ -96,7 +96,8 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT p.produktgruppen_id, p.toplevel_id, p.sub_id, p.subsub_id, "+
-                    "p.produktgruppen_name, p.aktiv, "+
+                    "p.produktgruppen_name, "+
+                    "p.aktiv, "+
                     "p.mwst_id, m.mwst_satz, p.pfand_id, a.artikel_name "+
                     "FROM produktgruppe AS p "+
                     "INNER JOIN mwst AS m USING(mwst_id) "+ // change to
@@ -125,9 +126,12 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
                 if (ids.get(1) != null) produktgruppenNumber += "."+ids.get(1).toString();
                 if (ids.get(2) != null) produktgruppenNumber += "."+ids.get(2).toString();
 
+                Integer nArticles = howManyActiveArticlesWithProduktgruppe(produktgruppen_id);
+
                 Vector<Object> row = new Vector<Object>();
                     row.add(produktgruppenNumber);
                     row.add(produktgruppe);
+                    row.add(nArticles);
                     row.add( vatFormatter(mwst_satz) );
                     row.add(pfand_name);
                     row.add(aktivBool);

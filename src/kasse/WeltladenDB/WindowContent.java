@@ -400,25 +400,29 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return inactive;
     }
 
-    protected boolean thereAreActiveArticlesWithLieferant(Integer lieferant_id) {
-        boolean thereare = false;
+    protected int howManyActiveArticlesWithLieferant(Integer lieferant_id) {
+        int nArticles = 0;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(artikel_id) > 0 FROM artikel AS a "+
+                    "SELECT COUNT(a.artikel_id) FROM artikel AS a "+
                     "INNER JOIN lieferant USING (lieferant_id) "+
                     "WHERE a.lieferant_id = ? AND a.aktiv = TRUE"
                     );
             pstmtSetInteger(pstmt, 1, lieferant_id);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
-            thereare = rs.getBoolean(1);
+            nArticles = rs.getInt(1);
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
-        return thereare;
+        return nArticles;
+    }
+
+    protected boolean thereAreActiveArticlesWithLieferant(Integer lieferant_id) {
+        return howManyActiveArticlesWithLieferant(lieferant_id) > 0;
     }
 
     protected int updateLieferant(Integer lieferant_id, String lieferant_name, Boolean aktiv) {
@@ -555,25 +559,29 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return inactive;
     }
 
-    protected boolean thereAreActiveArticlesWithProduktgruppe(Integer produktgruppen_id) {
-        boolean thereare = false;
+    protected int howManyActiveArticlesWithProduktgruppe(Integer produktgruppen_id) {
+        int nArticles = 0;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(artikel_id) > 0 FROM artikel AS a "+
+                    "SELECT COUNT(a.artikel_id) FROM artikel AS a "+
                     "INNER JOIN produktgruppe USING (produktgruppen_id) "+
                     "WHERE a.produktgruppen_id = ? AND a.aktiv = TRUE"
                     );
             pstmtSetInteger(pstmt, 1, produktgruppen_id);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
-            thereare = rs.getBoolean(1);
+            nArticles = rs.getInt(1);
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
-        return thereare;
+        return nArticles;
+    }
+
+    protected boolean thereAreActiveArticlesWithProduktgruppe(Integer produktgruppen_id) {
+        return howManyActiveArticlesWithProduktgruppe(produktgruppen_id) > 0;
     }
 
     protected int updateProdGr(Integer produktgruppen_id, String produktgruppen_name, Boolean aktiv) {

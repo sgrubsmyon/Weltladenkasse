@@ -178,7 +178,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
         String firstName = (String)originalData.get(0).get(1);
         Integer firstMwStID = originalMwStIDs.get(0);
         Integer firstPfandID = originalPfandIDs.get(0);
-        Boolean firstAktiv = (Boolean)originalData.get(0).get(4);
+        Boolean firstAktiv = (Boolean)originalData.get(0).get(5);
 
         if ( allElementsEqual(firstParentProdGrID, originalParentProdGrIDs) ){
             int index = produktgruppeFormular.parentProdGrIDs.indexOf(firstParentProdGrID);
@@ -273,7 +273,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
             }
         }
         if ( aktivBox.isEnabled() ){
-            Boolean origAktiv = (Boolean)originalData.get(0).get(4);
+            Boolean origAktiv = (Boolean)originalData.get(0).get(5);
             if ( !origAktiv.equals(aktivBox.isSelected()) ){
                 return true;
             }
@@ -346,7 +346,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
             }
             Boolean aktiv = aktivBox.isEnabled() ?
                 aktivBox.isSelected() :
-                (Boolean)originalData.get(i).get(4);
+                (Boolean)originalData.get(i).get(5);
 
             // update the produktgruppe with new values
             int result = updateProdGr(origProdGrID, topid, subid, subsubid, newName, mwst_id, pfand_id, aktiv);
