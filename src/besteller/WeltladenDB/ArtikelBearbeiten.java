@@ -51,7 +51,7 @@ public class ArtikelBearbeiten extends DialogWindow
             Vector<Boolean> origVPBools) {
 	super(conn, mw, dia);
         artikelListe = pw;
-        artikelFormular = new ArtikelFormular(conn, mw);
+        artikelFormular = new ArtikelFormular(conn, mw, true, true, true);
         originalData = new Vector< Vector<Object> >(origData);
         originalProdGrIDs = new Vector<Integer>(origPrGrIDs);
         originalLiefIDs = new Vector<Integer>(origLiefIDs);
