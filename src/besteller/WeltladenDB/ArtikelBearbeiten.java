@@ -227,7 +227,6 @@ public class ArtikelBearbeiten extends DialogWindow
 
     private boolean allRowsEqual(Object value, int colIndex) {
         for (int i=0; i<originalData.size(); i++){
-            System.out.println(originalData.get(i).get(colIndex)+" "+value);
             if ( ! originalData.get(i).get(colIndex).equals(value) ){
                 return false;
             }
