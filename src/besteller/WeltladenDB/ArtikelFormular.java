@@ -47,6 +47,10 @@ public class ArtikelFormular extends WindowContent
     public JCheckBox preisVariabelBox;
     public JCheckBox sortimentBox;
 
+    private boolean hasOriginalName = false;
+    private boolean hasOriginalNummer = false;
+    private boolean hasOriginalVKP = false;
+
     private Vector<String> produktgruppenNamen;
     public Vector<Integer> produktgruppenIDs;
     private Vector< Vector<Integer> > produktgruppenIDsList;
@@ -59,8 +63,13 @@ public class ArtikelFormular extends WindowContent
     // Methoden:
     public ArtikelFormular(Connection conn, MainWindowGrundlage mw) {
 	super(conn, mw);
-
         fillComboBoxes();
+    }
+    public ArtikelFormular(Connection conn, MainWindowGrundlage mw, boolean hon, boolean honr, boolean hov) {
+        this(conn, mw);
+        hasOriginalName = hon;
+        hasOriginalNummer = honr;
+        hasOriginalVKP = hov;
     }
 
     public void fillComboBoxes() {
@@ -248,13 +257,19 @@ public class ArtikelFormular extends WindowContent
     }
 
     public boolean checkIfFormIsComplete() {
-        if ( nameField.isEnabled() && nameField.getText().replaceAll("\\s","").equals("") )
-            return false;
-        if ( nummerField.isEnabled() && nummerField.getText().replaceAll("\\s","").equals("") )
-            return false;
+        if ( nameField.isEnabled() && nameField.getText().replaceAll("\\s","").equals("") ){
+            if (!hasOriginalName)
+                return false;
+        }
+        if ( nummerField.isEnabled() && nummerField.getText().replaceAll("\\s","").equals("") ){
+            if (!hasOriginalNummer)
+                return false;
+        }
         if ( vkpreisField.isEnabled() && vkpreisField.getText().replaceAll("\\s","").equals("") &&
-                preisVariabelBox.isEnabled() && !preisVariabelBox.isSelected() )
-            return false;
+                preisVariabelBox.isEnabled() && !preisVariabelBox.isSelected() ){
+            if (!hasOriginalVKP)
+                return false;
+        }
         return true;
 
         //if (
