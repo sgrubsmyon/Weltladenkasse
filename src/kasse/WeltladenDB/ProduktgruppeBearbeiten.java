@@ -203,7 +203,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
         } else {
             produktgruppeFormular.pfandBox.setSelectedIndex(-1);
         }
-        if ( allRowsEqual(firstAktiv, 4) ){
+        if ( allRowsEqual(firstAktiv, 5) ){
             aktivBox.setSelected(firstAktiv);
         } else {
             aktivBox.setEnabled(false);
