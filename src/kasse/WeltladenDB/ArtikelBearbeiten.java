@@ -51,7 +51,7 @@ public class ArtikelBearbeiten extends DialogWindow
             Vector<Boolean> origVPBools) {
 	super(conn, mw, dia);
         artikelListe = pw;
-        artikelFormular = new ArtikelFormular(conn, mw);
+        artikelFormular = new ArtikelFormular(conn, mw, true, true, true);
         originalData = new Vector< Vector<Object> >(origData);
         originalProdGrIDs = new Vector<Integer>(origPrGrIDs);
         originalLiefIDs = new Vector<Integer>(origLiefIDs);
@@ -131,12 +131,7 @@ public class ArtikelBearbeiten extends DialogWindow
         String firstMenge = (String)originalData.get(0).get(5);
         String firstBarcode = (String)originalData.get(0).get(6);
         String firstHerkunft = (String)originalData.get(0).get(7);
-        Integer firstVPE;
-        try {
-            firstVPE = Integer.parseInt( (String)originalData.get(0).get(8) );
-        } catch (NumberFormatException ex) {
-            firstVPE = null;
-        }
+        String firstVPE = (String)originalData.get(0).get(8);
         String firstVKP = (String)originalData.get(0).get(9);
         String firstEKP = (String)originalData.get(0).get(10);
         Boolean firstVarPreis = originalVarPreisBools.get(0);
@@ -147,7 +142,7 @@ public class ArtikelBearbeiten extends DialogWindow
             int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(firstGruppenID);
             artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
         } else {
-            artikelFormular.produktgruppenBox.setEnabled(false);
+            artikelFormular.produktgruppenBox.setSelectedIndex(-1);
         }
         if ( allElementsEqual(firstLieferantID, originalLiefIDs) ){
             int liefIndex = artikelFormular.lieferantIDs.indexOf(firstLieferantID);
@@ -163,33 +158,38 @@ public class ArtikelBearbeiten extends DialogWindow
         if ( allRowsEqual(firstName, 3) ){
             artikelFormular.nameField.setText(firstName);
         } else {
-            artikelFormular.nameField.setEnabled(false);
+            artikelFormular.nameField.setText("");
         }
         if ( allRowsEqual(firstKurzname, 4) ){
             artikelFormular.kurznameField.setText(firstKurzname);
         } else {
-            artikelFormular.kurznameField.setEnabled(false);
+            artikelFormular.kurznameField.setText("");
         }
         if ( allRowsEqual(firstMenge, 5) ){
             artikelFormular.mengeField.setText(firstMenge);
         } else {
-            artikelFormular.mengeField.setEnabled(false);
+            artikelFormular.mengeField.setText("");
         }
         if ( allRowsEqual(firstBarcode, 6) ){
             artikelFormular.barcodeField.setText(firstBarcode);
         } else {
-            artikelFormular.barcodeField.setEnabled(false);
+            artikelFormular.barcodeField.setText("");
         }
         if ( allRowsEqual(firstHerkunft, 7) ){
             artikelFormular.herkunftField.setText(firstHerkunft);
         } else {
-            artikelFormular.herkunftField.setEnabled(false);
+            artikelFormular.herkunftField.setText("");
         }
         if ( allRowsEqual(firstVPE, 8) ){
-            //if ( firstVPE.equals("") ){ firstVPE = "0"; }
-            artikelFormular.vpeSpinner.setValue(firstVPE);
+            Integer firstVPEInt;
+            try {
+                firstVPEInt = Integer.parseInt(firstVPE);
+            } catch (NumberFormatException ex) {
+                firstVPEInt = 0;
+            }
+            artikelFormular.vpeSpinner.setValue(firstVPEInt);
         } else {
-            artikelFormular.vpeSpinner.setEnabled(false);
+            artikelFormular.vpeSpinner.setValue(0);
         }
         if ( allElementsEqual(firstVarPreis, originalVarPreisBools) ){
             artikelFormular.preisVariabelBox.setSelected(firstVarPreis);
@@ -197,12 +197,12 @@ public class ArtikelBearbeiten extends DialogWindow
                 if ( allRowsEqual(firstVKP, 9) ){
                     artikelFormular.vkpreisField.setText( priceFormatter(firstVKP) );
                 } else {
-                    artikelFormular.vkpreisField.setEnabled(false);
+                    artikelFormular.vkpreisField.setText("");
                 }
                 if ( allRowsEqual(firstEKP, 10) ){
                     artikelFormular.ekpreisField.setText( priceFormatter(firstEKP) );
                 } else {
-                    artikelFormular.ekpreisField.setEnabled(false);
+                    artikelFormular.ekpreisField.setText("");
                 }
             } else { // if all items have variable prices
                 artikelFormular.vkpreisField.setEnabled(false);
@@ -246,19 +246,23 @@ public class ArtikelBearbeiten extends DialogWindow
     // will data be lost on close?
     public boolean willDataBeLost() {
         if ( artikelFormular.produktgruppenBox.isEnabled() ){
-            Integer origGruppenID = originalProdGrIDs.get(0);
-            int selProdIndex = artikelFormular.produktgruppenBox.getSelectedIndex();
-            Integer selProdID = artikelFormular.produktgruppenIDs.get(selProdIndex);
-            if ( !origGruppenID.equals(selProdID) ){
-                return true;
+            int selIndex = artikelFormular.produktgruppenBox.getSelectedIndex();
+            // -1 means "no selection done"
+            if (selIndex != -1){
+                Integer selProdGrID = artikelFormular.produktgruppenIDs.get(selIndex);
+                if ( !allElementsEqual(selProdGrID, originalProdGrIDs) ){
+                    return true;
+                }
             }
         }
         if ( artikelFormular.lieferantBox.isEnabled() ){
-            Integer origLieferantID = originalLiefIDs.get(0);
-            int selLiefIndex = artikelFormular.lieferantBox.getSelectedIndex();
-            Integer selLiefID = artikelFormular.lieferantIDs.get(selLiefIndex);
-            if ( !origLieferantID.equals(selLiefID) ){
-                return true;
+            int selIndex = artikelFormular.lieferantBox.getSelectedIndex();
+            // -1 means "no selection done"
+            if (selIndex != -1){
+                Integer selLiefID = artikelFormular.lieferantIDs.get(selIndex);
+                if ( !allElementsEqual(selLiefID, originalLiefIDs) ){
+                    return true;
+                }
             }
         }
         if ( artikelFormular.nummerField.isEnabled() ){
@@ -268,68 +272,122 @@ public class ArtikelBearbeiten extends DialogWindow
             }
         }
         if ( artikelFormular.nameField.isEnabled() ){
-            String origName = (String)originalData.get(0).get(3);
-            if ( !origName.equals(artikelFormular.nameField.getText()) ){
-                return true;
+            String name = artikelFormular.nameField.getText();
+            // "" means "not edited"
+            if (!name.equals("")){
+                Vector<String> origNames = new Vector<String>();
+                for (Vector<Object> v : originalData){
+                    origNames.add((String)v.get(3));
+                }
+                if ( !allElementsEqual(name, origNames) ){
+                    return true;
+                }
             }
         }
         if ( artikelFormular.kurznameField.isEnabled() ){
-            String origKurzname = (String)originalData.get(0).get(4);
-            if ( !origKurzname.equals(artikelFormular.kurznameField.getText()) ){
-                return true;
+            String kurzname = artikelFormular.kurznameField.getText();
+            // "" means "not edited"
+            if (!kurzname.equals("")){
+                Vector<String> origKurznames = new Vector<String>();
+                for (Vector<Object> v : originalData){
+                    origKurznames.add((String)v.get(4));
+                }
+                if ( !allElementsEqual(kurzname, origKurznames) ){
+                    return true;
+                }
             }
         }
         if ( artikelFormular.mengeField.isEnabled() ){
-            String origMengeStr = originalData.get(0).get(5).toString().replace(',','.');
             String newMengeStr = artikelFormular.mengeField.getText().replace(',','.');
-            BigDecimal origMenge;
-            try {
-                origMenge = new BigDecimal(origMengeStr).stripTrailingZeros();
-            } catch (NumberFormatException ex) {
-                origMenge = new BigDecimal("0");
-            }
             BigDecimal newMenge;
             try {
                 newMenge = new BigDecimal(newMengeStr).stripTrailingZeros();
             } catch (NumberFormatException ex) {
                 newMenge = new BigDecimal("0");
             }
-            if ( !origMenge.equals(newMenge) ){
-                return true;
+            if ( !newMenge.equals(new BigDecimal("0")) ){ // means not edited (alt. if !newMengeStr.equals(""))
+                Vector<BigDecimal> origMengen = new Vector<BigDecimal>();
+                for (Vector<Object> v : originalData){
+                    try {
+                        String origMengeStr = ((String)v.get(5)).replace(',','.');
+                        origMengen.add( new BigDecimal(origMengeStr).stripTrailingZeros() );
+                    } catch (NumberFormatException ex) {
+                        origMengen.add( new BigDecimal("0") );
+                    }
+                }
+                if ( !allElementsEqual(newMenge, origMengen) ){
+                    return true;
+                }
             }
         }
         if ( artikelFormular.barcodeField.isEnabled() ){
-            String origBarcode = (String)originalData.get(0).get(6);
-            if ( !origBarcode.equals(artikelFormular.barcodeField.getText()) ){
-                return true;
+            String barcode = artikelFormular.barcodeField.getText();
+            // "" means "not edited"
+            if (!barcode.equals("")){
+                Vector<String> origBarcodes = new Vector<String>();
+                for (Vector<Object> v : originalData){
+                    origBarcodes.add((String)v.get(6));
+                }
+                if ( !allElementsEqual(barcode, origBarcodes) ){
+                    return true;
+                }
             }
         }
         if ( artikelFormular.herkunftField.isEnabled() ){
-            String origHerkunft = (String)originalData.get(0).get(7);
-            if ( !origHerkunft.equals(artikelFormular.herkunftField.getText()) ){
-                return true;
+            String herkunft = artikelFormular.herkunftField.getText();
+            // "" means "not edited"
+            if (!herkunft.equals("")){
+                Vector<String> origHerkunft = new Vector<String>();
+                for (Vector<Object> v : originalData){
+                    origHerkunft.add((String)v.get(7));
+                }
+                if ( !allElementsEqual(herkunft, origHerkunft) ){
+                    return true;
+                }
             }
         }
         if ( artikelFormular.vpeSpinner.isEnabled() ){
-            String origVPEStr = (String)originalData.get(0).get(8);
-            if ( origVPEStr.equals("") ){ origVPEStr = "0"; }
-            Integer origVPE = Integer.parseInt(origVPEStr);
-            if ( !origVPE.equals(artikelFormular.vpeSpinner.getValue()) ){
-                return true;
+            try {
+                Integer newVPE = (Integer)artikelFormular.vpeSpinner.getValue();
+                // 0 means "not edited"
+                if (newVPE != 0){
+                    Vector<Integer> origVPEs = new Vector<Integer>();
+                    for (Vector<Object> v : originalData){
+                        String origVPEStr = (String)v.get(8);
+                        if ( origVPEStr.equals("") ){ origVPEStr = "0"; }
+                        origVPEs.add( Integer.parseInt(origVPEStr) );
+                    }
+                    if ( !allElementsEqual(newVPE, origVPEs) ){
+                        return true;
+                    }
+                }
+            } catch (NumberFormatException ex) {
             }
         }
         if ( artikelFormular.vkpreisField.isEnabled() ){
-            String origVKP = priceFormatterIntern( (String)originalData.get(0).get(9) );
             String newVKP = priceFormatterIntern( artikelFormular.vkpreisField.getText() );
-            if ( !origVKP.equals(newVKP) ){
-                return true;
+            // "" means "not edited"
+            if (!newVKP.equals("")){
+                Vector<String> origVKPs = new Vector<String>();
+                for (Vector<Object> v : originalData){
+                    origVKPs.add( priceFormatterIntern((String)v.get(9)) );
+                }
+                if ( !allElementsEqual(newVKP, origVKPs) ){
+                    return true;
+                }
             }
         }
         if ( artikelFormular.ekpreisField.isEnabled() ){
-            String origEKP = priceFormatterIntern( (String)originalData.get(0).get(10) );
             String newEKP = priceFormatterIntern( artikelFormular.ekpreisField.getText() );
-            if ( !origEKP.equals(newEKP) ){
-                return true;
+            // "" means "not edited"
+            if (!newEKP.equals("")){
+                Vector<String> origEKPs = new Vector<String>();
+                for (Vector<Object> v : originalData){
+                    origEKPs.add( priceFormatterIntern((String)v.get(10)) );
+                }
+                if ( !allElementsEqual(newEKP, origEKPs) ){
+                    return true;
+                }
             }
         }
         if ( artikelFormular.preisVariabelBox.isEnabled() ){
@@ -370,14 +428,27 @@ public class ArtikelBearbeiten extends DialogWindow
             String origLieferant = (String)originalData.get(i).get(1);
             Integer origLieferantID = originalLiefIDs.get(i);
             String origNummer = (String)originalData.get(i).get(2);
-            String newLieferant = artikelFormular.lieferantBox.isEnabled() ?
-                (String)artikelFormular.lieferantBox.getSelectedItem() :
-                origLieferant;
-            Integer newLieferantID = artikelFormular.lieferantBox.isEnabled() ?
-                artikelFormular.lieferantIDs.get( artikelFormular.lieferantBox.getSelectedIndex() ) :
-                origLieferantID;
-            String newNummer = artikelFormular.nummerField.isEnabled() ?
-                artikelFormular.nummerField.getText() : origNummer;
+            /////////
+            String newLieferant = origLieferant;
+            Integer newLieferantID = origLieferantID;
+            if (artikelFormular.lieferantBox.isEnabled()){
+                int selIndex = artikelFormular.lieferantBox.getSelectedIndex();
+                // -1 means "no selection done"
+                if (selIndex != -1){
+                    newLieferant = (String)artikelFormular.lieferantBox.getSelectedItem();
+                    newLieferantID = artikelFormular.lieferantIDs.get(selIndex);
+                }
+            }
+            ////////
+            String newNummer = origNummer;
+            if (artikelFormular.nummerField.isEnabled()){
+                String str = artikelFormular.nummerField.getText();
+                // "" means "no selection done"
+                if (!str.equals("")){
+                    newNummer = str;
+                }
+            }
+            ////////
             if ( (!newLieferant.equals(origLieferant)) || (!newNummer.equals(origNummer)) ){
                 if ( isItemAlreadyKnown(newLieferant, newNummer) ){
                     // not allowed: changing name and nummer to a pair that is already registered in DB
@@ -391,49 +462,101 @@ public class ArtikelBearbeiten extends DialogWindow
                     return 1;
                 }
             }
-            Integer produktgruppen_id = artikelFormular.produktgruppenBox.isEnabled() ?
-                artikelFormular.produktgruppenIDs.get( artikelFormular.produktgruppenBox.getSelectedIndex() ) :
-                originalProdGrIDs.get(i);
+            ////////
+            Integer produktgruppen_id = originalProdGrIDs.get(i);
+            if (artikelFormular.produktgruppenBox.isEnabled()){
+                int selIndex = artikelFormular.produktgruppenBox.getSelectedIndex();
+                // -1 means "no selection done"
+                if (selIndex != -1){
+                    produktgruppen_id = artikelFormular.produktgruppenIDs.get(selIndex);
+                }
+            }
+            ////////
             String origName = (String)originalData.get(i).get(3);
             String origKurzname = (String)originalData.get(i).get(4);
-            String newName = artikelFormular.nameField.isEnabled() ?
-                artikelFormular.nameField.getText() : origName;
-            String newKurzname = artikelFormular.kurznameField.isEnabled() ?
-                artikelFormular.kurznameField.getText() : origKurzname;
-            BigDecimal menge = null;
-            try {
-                menge = artikelFormular.mengeField.isEnabled() ?
-                    new BigDecimal( artikelFormular.mengeField.getText().replace(',', '.') ) :
-                    new BigDecimal( ((String)originalData.get(i).get(5)).replace(',', '.') );
-            } catch (NumberFormatException ex) {
-                menge = null;
+            ////////
+            String newName = origName;
+            if (artikelFormular.nameField.isEnabled()){
+                String str = artikelFormular.nameField.getText();
+                // "" means "no selection done"
+                if (!str.equals("")){
+                    newName = str;
+                }
             }
-            String barcode = artikelFormular.barcodeField.isEnabled() ?
-                artikelFormular.barcodeField.getText() :
-                (String)originalData.get(i).get(6);
-            String herkunft = artikelFormular.herkunftField.isEnabled() ?
-                artikelFormular.herkunftField.getText() :
-                (String)originalData.get(i).get(7);
-            Integer vpe = null;
-            try {
-                vpe = artikelFormular.vpeSpinner.isEnabled() ?
-                    (Integer)artikelFormular.vpeSpinner.getValue() :
-                    Integer.parseInt( (String)originalData.get(i).get(8) );
-            } catch (NumberFormatException ex) {
-                vpe = null;
+            ////////
+            String newKurzname = origKurzname;
+            if (artikelFormular.kurznameField.isEnabled()){
+                String str = artikelFormular.kurznameField.getText();
+                // "" means "no selection done"
+                if (!str.equals("")){
+                    newKurzname = str;
+                }
             }
-            String vkpreis = artikelFormular.vkpreisField.isEnabled() ?
-                artikelFormular.vkpreisField.getText() :
-                (String)originalData.get(i).get(9);
-            String ekpreis = artikelFormular.ekpreisField.isEnabled() ?
-                artikelFormular.ekpreisField.getText() :
-                (String)originalData.get(i).get(10);
+            ////////
+            BigDecimal menge = new BigDecimal( ((String)originalData.get(i).get(5)).replace(',', '.') );
+            if (artikelFormular.mengeField.isEnabled()){
+                try {
+                    menge = new BigDecimal( artikelFormular.mengeField.getText().replace(',', '.') );
+                } catch (NumberFormatException ex) {
+                }
+            }
+            ////////
+            String barcode = (String)originalData.get(i).get(6);
+            if (artikelFormular.barcodeField.isEnabled()){
+                String str = artikelFormular.barcodeField.getText();
+                // "" means "no selection done"
+                if (!str.equals("")){
+                    barcode = str;
+                }
+            }
+            ////////
+            String herkunft = (String)originalData.get(i).get(7);
+            if (artikelFormular.herkunftField.isEnabled()){
+                String str = artikelFormular.herkunftField.getText();
+                // "" means "no selection done"
+                if (!str.equals("")){
+                    herkunft = str;
+                }
+            }
+            ////////
+            Integer vpe = Integer.parseInt( (String)originalData.get(i).get(8) );
+            if (artikelFormular.vpeSpinner.isEnabled()){
+                try {
+                    Integer newVPE = (Integer)artikelFormular.vpeSpinner.getValue();
+                    // 0 means "not edited"
+                    if (newVPE != 0){
+                        vpe = newVPE;
+                    }
+                } catch (NumberFormatException ex) {
+                }
+            }
+            ////////
+            String vkpreis = (String)originalData.get(i).get(9);
+            if (artikelFormular.vkpreisField.isEnabled()){
+                String str = artikelFormular.vkpreisField.getText();
+                // "" means "no selection done"
+                if (!str.equals("")){
+                    vkpreis = str;
+                }
+            }
+            ////////
+            String ekpreis = (String)originalData.get(i).get(10);
+            if (artikelFormular.ekpreisField.isEnabled()){
+                String str = artikelFormular.ekpreisField.getText();
+                // "" means "no selection done"
+                if (!str.equals("")){
+                    ekpreis = str;
+                }
+            }
+            ////////
             Boolean preisVar = artikelFormular.preisVariabelBox.isEnabled() ?
                 artikelFormular.preisVariabelBox.isSelected() :
                 (Boolean)originalVarPreisBools.get(i);
+            ////////
             Boolean sortiment = artikelFormular.sortimentBox.isEnabled() ?
                 artikelFormular.sortimentBox.isSelected() :
                 (Boolean)originalData.get(i).get(14);
+            ////////
             Boolean aktiv = aktivBox.isEnabled() ?
                 aktivBox.isSelected() :
                 (Boolean)originalData.get(i).get(15);
