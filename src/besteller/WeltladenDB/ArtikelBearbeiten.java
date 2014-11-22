@@ -274,7 +274,7 @@ public class ArtikelBearbeiten extends DialogWindow
         if ( artikelFormular.nameField.isEnabled() ){
             String name = artikelFormular.nameField.getText();
             // "" means "not edited"
-            if (name != ""){
+            if (!name.equals("")){
                 Vector<String> origNames = new Vector<String>();
                 for (Vector<Object> v : originalData){
                     origNames.add((String)v.get(3));
@@ -287,7 +287,7 @@ public class ArtikelBearbeiten extends DialogWindow
         if ( artikelFormular.kurznameField.isEnabled() ){
             String kurzname = artikelFormular.kurznameField.getText();
             // "" means "not edited"
-            if (kurzname != ""){
+            if (!kurzname.equals("")){
                 Vector<String> origKurznames = new Vector<String>();
                 for (Vector<Object> v : originalData){
                     origKurznames.add((String)v.get(4));
@@ -305,11 +305,12 @@ public class ArtikelBearbeiten extends DialogWindow
             } catch (NumberFormatException ex) {
                 newMenge = new BigDecimal("0");
             }
-            if ( !newMenge.equals(new BigDecimal("0")) ){ // means not edited (alt. if newMengeStr != "")
+            if ( !newMenge.equals(new BigDecimal("0")) ){ // means not edited (alt. if !newMengeStr.equals(""))
                 Vector<BigDecimal> origMengen = new Vector<BigDecimal>();
                 for (Vector<Object> v : originalData){
                     try {
-                        origMengen.add( new BigDecimal((String)v.get(5)).stripTrailingZeros() );
+                        String origMengeStr = ((String)v.get(5)).replace(',','.');
+                        origMengen.add( new BigDecimal(origMengeStr).stripTrailingZeros() );
                     } catch (NumberFormatException ex) {
                         origMengen.add( new BigDecimal("0") );
                     }
@@ -322,7 +323,7 @@ public class ArtikelBearbeiten extends DialogWindow
         if ( artikelFormular.barcodeField.isEnabled() ){
             String barcode = artikelFormular.barcodeField.getText();
             // "" means "not edited"
-            if (barcode != ""){
+            if (!barcode.equals("")){
                 Vector<String> origBarcodes = new Vector<String>();
                 for (Vector<Object> v : originalData){
                     origBarcodes.add((String)v.get(6));
@@ -335,10 +336,10 @@ public class ArtikelBearbeiten extends DialogWindow
         if ( artikelFormular.herkunftField.isEnabled() ){
             String herkunft = artikelFormular.herkunftField.getText();
             // "" means "not edited"
-            if (herkunft != ""){
+            if (!herkunft.equals("")){
                 Vector<String> origHerkunft = new Vector<String>();
                 for (Vector<Object> v : originalData){
-                    origHerkunft.add((String)v.get(6));
+                    origHerkunft.add((String)v.get(7));
                 }
                 if ( !allElementsEqual(herkunft, origHerkunft) ){
                     return true;
@@ -366,7 +367,7 @@ public class ArtikelBearbeiten extends DialogWindow
         if ( artikelFormular.vkpreisField.isEnabled() ){
             String newVKP = priceFormatterIntern( artikelFormular.vkpreisField.getText() );
             // "" means "not edited"
-            if (newVKP != ""){
+            if (!newVKP.equals("")){
                 Vector<String> origVKPs = new Vector<String>();
                 for (Vector<Object> v : originalData){
                     origVKPs.add( priceFormatterIntern((String)v.get(9)) );
@@ -379,7 +380,7 @@ public class ArtikelBearbeiten extends DialogWindow
         if ( artikelFormular.ekpreisField.isEnabled() ){
             String newEKP = priceFormatterIntern( artikelFormular.ekpreisField.getText() );
             // "" means "not edited"
-            if (newEKP != ""){
+            if (!newEKP.equals("")){
                 Vector<String> origEKPs = new Vector<String>();
                 for (Vector<Object> v : originalData){
                     origEKPs.add( priceFormatterIntern((String)v.get(10)) );
@@ -443,7 +444,7 @@ public class ArtikelBearbeiten extends DialogWindow
             if (artikelFormular.nummerField.isEnabled()){
                 String str = artikelFormular.nummerField.getText();
                 // "" means "no selection done"
-                if (str != ""){
+                if (!str.equals("")){
                     newNummer = str;
                 }
             }
@@ -478,7 +479,7 @@ public class ArtikelBearbeiten extends DialogWindow
             if (artikelFormular.nameField.isEnabled()){
                 String str = artikelFormular.nameField.getText();
                 // "" means "no selection done"
-                if (str != ""){
+                if (!str.equals("")){
                     newName = str;
                 }
             }
@@ -487,7 +488,7 @@ public class ArtikelBearbeiten extends DialogWindow
             if (artikelFormular.kurznameField.isEnabled()){
                 String str = artikelFormular.kurznameField.getText();
                 // "" means "no selection done"
-                if (str != ""){
+                if (!str.equals("")){
                     newKurzname = str;
                 }
             }
@@ -504,7 +505,7 @@ public class ArtikelBearbeiten extends DialogWindow
             if (artikelFormular.barcodeField.isEnabled()){
                 String str = artikelFormular.barcodeField.getText();
                 // "" means "no selection done"
-                if (str != ""){
+                if (!str.equals("")){
                     barcode = str;
                 }
             }
@@ -513,7 +514,7 @@ public class ArtikelBearbeiten extends DialogWindow
             if (artikelFormular.herkunftField.isEnabled()){
                 String str = artikelFormular.herkunftField.getText();
                 // "" means "no selection done"
-                if (str != ""){
+                if (!str.equals("")){
                     herkunft = str;
                 }
             }
@@ -534,7 +535,7 @@ public class ArtikelBearbeiten extends DialogWindow
             if (artikelFormular.vkpreisField.isEnabled()){
                 String str = artikelFormular.vkpreisField.getText();
                 // "" means "no selection done"
-                if (str != ""){
+                if (!str.equals("")){
                     vkpreis = str;
                 }
             }
@@ -543,7 +544,7 @@ public class ArtikelBearbeiten extends DialogWindow
             if (artikelFormular.ekpreisField.isEnabled()){
                 String str = artikelFormular.ekpreisField.getText();
                 // "" means "no selection done"
-                if (str != ""){
+                if (!str.equals("")){
                     ekpreis = str;
                 }
             }
