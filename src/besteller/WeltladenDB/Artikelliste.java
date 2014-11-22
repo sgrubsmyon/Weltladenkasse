@@ -737,6 +737,9 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     // not allowed: changing name and nummer to a pair that is already registered in DB
                     JOptionPane.showMessageDialog(this, "Fehler: Kombination Lieferant/Nummer bereits vorhanden! Wird zurückgesetzt.",
                             "Info", JOptionPane.INFORMATION_MESSAGE);
+                    System.out.println("I am here, l. 740.");
+                    System.out.println("Set origLieferant to: "+origLieferant);
+                    System.out.println("Set origArtikelNummer to: "+origArtikelNummer);
                     model.setValueAt(origLieferant, row, model.findColumn("Lieferant"));
                     model.setValueAt(origArtikelNummer, row, model.findColumn("Nummer"));
                     return;
