@@ -553,16 +553,16 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 ((AbstractDocument)textField.getDocument()).setDocumentFilter(geldFilter);
             }
 
-            //Override to invoke setText on the document filtered text field.
-            @Override
-            public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected,
-                    int row, int column) {
-                this.textField.setText(""); // delete history of the (old) text field, maybe from a different cell
-                JTextField newTextField = (JTextField)super.getTableCellEditorComponent(table, value, isSelected, row, column);
-                //newTextField.setText(value.toString()); // if this line is present, then the
-                                                // DocumentFilter is called twice (not good)
-                return newTextField;
-            }
+            ////Override to invoke setText on the document filtered text field.
+            //@Override
+            //public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected,
+            //        int row, int column) {
+            //    this.textField.setText(""); // delete history of the (old) text field, maybe from a different cell
+            //    JTextField newTextField = (JTextField)super.getTableCellEditorComponent(table, value, isSelected, row, column);
+            //    //newTextField.setText(value.toString()); // if this line is present, then the
+            //                                    // DocumentFilter is called twice (not good)
+            //    return newTextField;
+            //}
         }
         GeldEditor geldEditor = new GeldEditor();
         myTable.getColumn("VK-Preis").setCellEditor(geldEditor);
@@ -684,19 +684,23 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         if ( value.equals("") ){
             // replace whitespace only entries with nothing
             model.removeTableModelListener(this); // remove listener before doing changes
-            model.setValueAt(value, row, column);
+                model.setValueAt(value, row, column);
             model.addTableModelListener(this);
         }
         String header = model.getColumnName(column);
         if ( header.equals("Lieferant") && value.equals("") ){
             // user tried to delete the lieferant (not allowed)
             // reset to original value
-            model.setValueAt(origLieferant, row, column);
+            model.removeTableModelListener(this); // remove listener before doing changes
+                model.setValueAt(origLieferant, row, column);
+            model.addTableModelListener(this);
         }
         if ( header.equals("Nummer") && value.equals("") ){
             // user tried to delete the nummer (not allowed)
             // reset to original value
-            model.setValueAt(origArtikelNummer, row, column);
+            model.removeTableModelListener(this); // remove listener before doing changes
+                model.setValueAt(origArtikelNummer, row, column);
+            model.addTableModelListener(this);
         }
         value = model.getValueAt(row, column).toString().replace(currencySymbol,"")
             .replaceAll("\\s","").replace(',','.');
@@ -705,13 +709,15 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 // format the entered money value appropriately
                 value = priceFormatter(value)+" "+currencySymbol;
                 model.removeTableModelListener(this); // remove listener before doing changes
-                model.setValueAt(value, row, column); // update table cell with currency symbol
+                    model.setValueAt(value, row, column); // update table cell with currency symbol
                 model.addTableModelListener(this);
             } else {
                 if ( header.equals("VK-Preis") ){
                     // user tried to delete the vkpreis (not allowed)
                     // reset to original value
-                    model.setValueAt(originalData.get(dataRow).get(column).toString(), row, column);
+                    model.removeTableModelListener(this); // remove listener before doing changes
+                        model.setValueAt(originalData.get(dataRow).get(column).toString(), row, column);
+                    model.addTableModelListener(this);
                 }
             }
         }
@@ -737,11 +743,11 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     // not allowed: changing name and nummer to a pair that is already registered in DB
                     JOptionPane.showMessageDialog(this, "Fehler: Kombination Lieferant/Nummer bereits vorhanden! Wird zurückgesetzt.",
                             "Info", JOptionPane.INFORMATION_MESSAGE);
-                    System.out.println("I am here, l. 740.");
-                    System.out.println("Set origLieferant to: "+origLieferant);
-                    System.out.println("Set origArtikelNummer to: "+origArtikelNummer);
-                    model.setValueAt(origLieferant, row, model.findColumn("Lieferant"));
-                    model.setValueAt(origArtikelNummer, row, model.findColumn("Nummer"));
+                    model.removeTableModelListener(this); // remove listener before doing changes
+                        model.setValueAt(origLieferant, row, model.findColumn("Lieferant"));
+                        model.setValueAt(origArtikelNummer, row, model.findColumn("Nummer"));
+                    model.addTableModelListener(this);
+                    tableChanged(e);
                     return;
                 }
             }
