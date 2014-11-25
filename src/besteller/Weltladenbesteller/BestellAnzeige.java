@@ -515,11 +515,12 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         // Load the template file
         final Sheet sheet;
         try {
-            File infile = new File("Bestellvorlage_"+typ+".ods");
+            String filename = "vorlagen"+fileSep+"Bestellvorlage_"+typ+".ods";
+            File infile = new File(filename);
             if (!infile.exists()){
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Zum Bestell-Typ '"+typ+"' gibt es keine Bestellvorlage "+
-                        "'Bestellvorlage_"+typ+".ods'.",
+                        "'"+filename+"'.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
                 return;
             }
