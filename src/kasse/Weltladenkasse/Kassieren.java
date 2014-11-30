@@ -1852,14 +1852,22 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	    return;
 	}
 	if (e.getSource() == quittungsButton){
+            HashMap<Integer, BigDecimal> vatMap = retrieveVATs();
             HashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
                 new HashMap< BigDecimal, Vector<BigDecimal> >();
-            Vector<BigDecimal> values = new Vector<BigDecimal>();
-            values.add(new BigDecimal(5607.49)); // Netto
-            values.add(new BigDecimal(1234.56)); // Steuer
-            values.add(new BigDecimal(6500.00)); // Umsatz
-            mwstsAndTheirValues.put(new BigDecimal("0.07").stripTrailingZeros(), values);
-            mwstsAndTheirValues.put(new BigDecimal("0.19").stripTrailingZeros(), values);
+            for ( Map.Entry<Integer, BigDecimal> v : vatMap.entrySet() ){
+                BigDecimal vat = v.getValue().stripTrailingZeros();
+                //if (vat.signum() != 0){
+                    Vector<BigDecimal> values = new Vector<BigDecimal>();
+                    BigDecimal brutto = calculateTotalVATUmsatz(vat);
+                    BigDecimal steuer = calculateTotalVATAmount(vat);
+                    BigDecimal netto = brutto.subtract(steuer);
+                    values.add(netto); // Netto
+                    values.add(steuer); // Steuer
+                    values.add(brutto); // Umsatz
+                    mwstsAndTheirValues.put(vat, values);
+                //}
+            }
             BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
             Quittung myQuittung = new Quittung(this.conn, this.mainWindow,
                     "2014-11-30", "18:42", articleNames, stueckzahlen,
