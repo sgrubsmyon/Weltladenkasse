@@ -1853,8 +1853,19 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	    return;
 	}
 	if (e.getSource() == quittungsButton){
-            Quittung myQuittung = new Quittung();
-            myQuittung.printReceipt(positions, articleNames, stueckzahlen, einzelpreise, preise);
+            HashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
+                new HashMap< BigDecimal, Vector<BigDecimal> >();
+            Vector<BigDecimal> values = new Vector<BigDecimal>();
+            values.add(new BigDecimal(5607.49)); // Netto
+            values.add(new BigDecimal(1234.56)); // Steuer
+            values.add(new BigDecimal(6500.00)); // Umsatz
+            mwstsAndTheirValues.put(new BigDecimal("0.07").stripTrailingZeros(), values);
+            mwstsAndTheirValues.put(new BigDecimal("0.19").stripTrailingZeros(), values);
+            BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
+            Quittung myQuittung = new Quittung(this.conn, this.mainWindow,
+                    "2014-11-30", "18:42", articleNames, stueckzahlen,
+                    einzelpreise, preise, mwsts, mwstsAndTheirValues, totalPrice);
+            myQuittung.printReceipt();
 	    return;
 	}
 	if (e.getSource() == neuerKundeButton){
