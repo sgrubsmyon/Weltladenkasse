@@ -42,7 +42,6 @@ import WeltladenDB.NumberDocumentFilter;
 import WeltladenDB.JComponentCellRenderer;
 import WeltladenDB.JComponentCellEditor;
 import WeltladenDB.BoundsPopupMenuListener;
-import WeltladenDB.Quittung;
 
 public class Kassieren extends RechnungsGrundlage implements ItemListener, DocumentListener {
     // Attribute:

@@ -1,4 +1,4 @@
-package WeltladenDB;
+package Weltladenkasse;
 
 // Basic Java stuff:
 import java.util.*; // for Vector
@@ -22,6 +22,9 @@ import java.sql.SQLException;
 import org.jopendocument.dom.spreadsheet.Sheet;
 import org.jopendocument.dom.spreadsheet.SpreadSheet;
 import org.jopendocument.dom.OOUtils;
+
+import WeltladenDB.WindowContent;
+import WeltladenDB.MainWindowGrundlage;
 
 public class Quittung extends WindowContent {
     private String date;
