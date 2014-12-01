@@ -1852,20 +1852,22 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	    return;
 	}
 	if (e.getSource() == quittungsButton){
-            HashMap<Integer, BigDecimal> vatMap = retrieveVATs();
+            Vector<BigDecimal> vats = retrieveVATs();
             HashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
                 new HashMap< BigDecimal, Vector<BigDecimal> >();
-            for ( Map.Entry<Integer, BigDecimal> v : vatMap.entrySet() ){
-                BigDecimal vat = v.getValue().stripTrailingZeros();
+            for ( BigDecimal vat : vats ){
                 //if (vat.signum() != 0){
-                    Vector<BigDecimal> values = new Vector<BigDecimal>();
-                    BigDecimal brutto = calculateTotalVATUmsatz(vat);
-                    BigDecimal steuer = calculateTotalVATAmount(vat);
-                    BigDecimal netto = brutto.subtract(steuer);
-                    values.add(netto); // Netto
-                    values.add(steuer); // Steuer
-                    values.add(brutto); // Umsatz
-                    mwstsAndTheirValues.put(vat, values);
+                    if ( mwsts.contains(vat) ){
+                        System.out.println(vat);
+                        Vector<BigDecimal> values = new Vector<BigDecimal>();
+                        BigDecimal brutto = calculateTotalVATUmsatz(vat);
+                        BigDecimal steuer = calculateTotalVATAmount(vat);
+                        BigDecimal netto = new BigDecimal( priceFormatterIntern(brutto.subtract(steuer)) );
+                        values.add(netto); // Netto
+                        values.add(steuer); // Steuer
+                        values.add(brutto); // Umsatz
+                        mwstsAndTheirValues.put(vat, values);
+                    }
                 //}
             }
             BigDecimal totalPrice = new BigDecimal( getTotalPrice() );

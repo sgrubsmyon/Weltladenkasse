@@ -63,15 +63,15 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     //////////////////////////////////
     // DB query functions:
     //////////////////////////////////
-    protected HashMap<Integer, BigDecimal> retrieveVATs() {
-        HashMap<Integer, BigDecimal> vatMap = new HashMap<Integer, BigDecimal>();
+    protected Vector<BigDecimal> retrieveVATs() {
+        Vector<BigDecimal> vats = new Vector<BigDecimal>();
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT mwst_id, mwst_satz FROM mwst"
+                    "SELECT mwst_satz FROM mwst ORDER BY mwst_id"
                     );
 	    while (rs.next()) {
-                vatMap.put(rs.getInt(1), rs.getBigDecimal(2));
+                vats.add(rs.getBigDecimal(1));
             }
             rs.close();
             stmt.close();
@@ -79,7 +79,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
-        return vatMap;
+        return vats;
     }
 
     //////////////////////////////////
@@ -111,7 +111,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         /** Returns the total amount of VAT tax that is included in Rechnung
          *  (MwSt.-Betrag). */
         BigDecimal priceForVAT = calculateTotalVATUmsatz(vat);
-        BigDecimal totalVAT = calculateVAT(priceForVAT, vat);
+        BigDecimal totalVAT = new BigDecimal( priceFormatterIntern(calculateVAT(priceForVAT, vat)) );
         return totalVAT;
     }
 
@@ -127,13 +127,12 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         totalPricePanel.add(totalPriceField);
 
         totalPricePanel.add(new JLabel("   inkl.: "));
-        HashMap<Integer, BigDecimal> vatMap = retrieveVATs();
-        for ( Map.Entry<Integer, BigDecimal> v : vatMap.entrySet() ){
-            BigDecimal vatValue = v.getValue();
-            if (vatValue.signum() != 0){
-                String vatPercent = vatFormatter(vatValue);
+        Vector<BigDecimal> vats = retrieveVATs();
+        for ( BigDecimal vat : vats ){
+            if (vat.signum() != 0){
+                String vatPercent = vatFormatter(vat);
                 totalPricePanel.add(new JLabel("   "+vatPercent+" MwSt.: "));
-                JTextField vatField = new JTextField(priceFormatter(calculateTotalVATAmount(vatValue))+" "+currencySymbol);
+                JTextField vatField = new JTextField(priceFormatter(calculateTotalVATAmount(vat))+" "+currencySymbol);
                 vatField.setEditable(false);
                 vatField.setColumns(7);
                 vatField.setHorizontalAlignment(JTextField.RIGHT);

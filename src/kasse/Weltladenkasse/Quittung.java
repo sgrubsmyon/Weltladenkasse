@@ -105,7 +105,7 @@ public class Quittung extends WindowContent {
             }
             sheet.setValueAt(articleNames.get(i), 0, row);
             sheet.setValueAt(preise.get(i), 3, row);
-            Integer mwstIndex = mwstList.indexOf(mwsts.get(i).stripTrailingZeros())+1;
+            Integer mwstIndex = mwstList.indexOf(mwsts.get(i))+1;
             sheet.setValueAt(mwstIndex, 4, row);
             row++;
             artikelIndex = i+1; // index of next item
