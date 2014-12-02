@@ -34,6 +34,9 @@ import javax.swing.event.*;
 //import java.beans.PropertyChangeEvent;
 //import java.beans.PropertyChangeListener;
 
+// DateTime from date4j (http://www.date4j.net/javadoc/index.html)
+import hirondelle.date4j.DateTime;
+
 import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.BarcodeComboBox;
 import WeltladenDB.ArtikelNameComboBox;
@@ -1853,8 +1856,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	}
 	if (e.getSource() == quittungsButton){
             Vector<BigDecimal> vats = retrieveVATs();
-            HashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
-                new HashMap< BigDecimal, Vector<BigDecimal> >();
+            // LinkedHashMap preserves insertion order
+            LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
+                new LinkedHashMap< BigDecimal, Vector<BigDecimal> >();
             for ( BigDecimal vat : vats ){
                 //if (vat.signum() != 0){
                     if ( mwsts.contains(vat) ){
@@ -1872,7 +1876,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             }
             BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
             Quittung myQuittung = new Quittung(this.conn, this.mainWindow,
-                    "2014-11-30", "18:42", articleNames, stueckzahlen,
+                    DateTime.now(TimeZone.getDefault()), articleNames, stueckzahlen,
                     einzelpreise, preise, mwsts, mwstsAndTheirValues, totalPrice);
             myQuittung.printReceipt();
 	    return;

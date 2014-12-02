@@ -18,6 +18,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+// DateTime from date4j (http://www.date4j.net/javadoc/index.html)
+import hirondelle.date4j.DateTime;
+
 // OpenDocument stuff:
 import org.jopendocument.dom.spreadsheet.Sheet;
 import org.jopendocument.dom.spreadsheet.SpreadSheet;
@@ -27,14 +30,13 @@ import WeltladenDB.WindowContent;
 import WeltladenDB.MainWindowGrundlage;
 
 public class Quittung extends WindowContent {
-    private String date;
-    private String time;
+    private DateTime datetime;
     private Vector<String> articleNames;
     private Vector<Integer> stueckzahlen;
     private Vector<BigDecimal> einzelpreise;
     private Vector<BigDecimal> preise;
     private Vector<BigDecimal> mwsts;
-    private HashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues;
+    private LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues;
     private BigDecimal totalPrice;
 
     private int artikelIndex = 0;
@@ -45,14 +47,14 @@ public class Quittung extends WindowContent {
      *    The constructor.
      *       */
     public Quittung(Connection conn, MainWindowGrundlage mw,
-            String d, String t,
+            DateTime dt,
             Vector<String> an, Vector<Integer> sz,
             Vector<BigDecimal> ep, Vector<BigDecimal> p,
             Vector<BigDecimal> m,
-            HashMap< BigDecimal, Vector<BigDecimal> > matv,
+            LinkedHashMap< BigDecimal, Vector<BigDecimal> > matv,
             BigDecimal tp) {
 	super(conn, mw);
-        date = d; time = t;
+        datetime = dt;
         articleNames = an; stueckzahlen = sz;
         einzelpreise = ep; preise = p;
         mwsts = m; mwstsAndTheirValues = matv;
@@ -89,8 +91,8 @@ public class Quittung extends WindowContent {
             rowOffset = 0;
         } else {
             // Fill header
-            sheet.getCellAt("A5").setValue(date);
-            sheet.getCellAt("C5").setValue(time);
+            sheet.getCellAt("A5").setValue(datetime.format(dateFormatDate4j));
+            //sheet.getCellAt("C5").setValue(datetime.format('hh:mm'));
             rowOffset = 6;
         }
     }

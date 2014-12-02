@@ -48,6 +48,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected String mysqlPath;
     protected String dateFormatSQL;
     protected String dateFormatJava;
+    protected String dateFormatDate4j;
     protected String delimiter; // for CSV export/import
     protected final String fileSep = System.getProperty("file.separator");
     protected final String lineSep = System.getProperty("line.separator");
@@ -103,12 +104,14 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             this.mysqlPath = props.getProperty("mysqlPath"); // path where mysql and mysqldump lie around
             this.dateFormatSQL = props.getProperty("dateFormatSQL");
             this.dateFormatJava = props.getProperty("dateFormatJava");
+            this.dateFormatDate4j = props.getProperty("dateFormatDate4j");
             this.delimiter = props.getProperty("delimiter"); // for CSV export/import
         } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
             this.mysqlPath = "";
             this.dateFormatSQL = "%d.%m.%Y, %H:%i Uhr";
             this.dateFormatJava = "dd.MM.yyyy, HH:mm 'Uhr'";
+            this.dateFormatDate4j = "DD.MM.YYYY, hh:mm |Uhr|";
             this.delimiter = ";"; // for CSV export/import
         }
     }
