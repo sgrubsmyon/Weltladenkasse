@@ -25,6 +25,8 @@ import hirondelle.date4j.DateTime;
 import org.jopendocument.dom.spreadsheet.Sheet;
 import org.jopendocument.dom.spreadsheet.SpreadSheet;
 import org.jopendocument.dom.OOUtils;
+import org.jopendocument.model.OpenDocument;
+import org.jopendocument.print.DefaultDocumentPrinter;
 
 import WeltladenDB.WindowContent;
 import WeltladenDB.MainWindowGrundlage;
@@ -40,7 +42,7 @@ public class Quittung extends WindowContent {
     private BigDecimal totalPrice;
 
     private int artikelIndex = 0;
-    private int rowOffset = 6;
+    private int rowOffset = 7;
     private Vector<BigDecimal> mwstList;
 
     /**
@@ -84,16 +86,16 @@ public class Quittung extends WindowContent {
 
     private void editHeader(Sheet sheet) {
         // if this is not the first page:
-        rowOffset = 6;
+        rowOffset = 7;
         if (artikelIndex > 0){
             // Delete header
-            sheet.removeRows(0, 6); // last row is exclusive
+            sheet.removeRows(0, rowOffset); // last row is exclusive
             rowOffset = 0;
         } else {
             // Fill header
             sheet.getCellAt("A5").setValue(datetime.format(dateFormatDate4j));
             //sheet.getCellAt("C5").setValue(datetime.format('hh:mm'));
-            rowOffset = 6;
+            rowOffset = 7;
         }
     }
 
@@ -171,9 +173,15 @@ public class Quittung extends WindowContent {
             sheet.removeRows(startRemRow, endRemRow); // last row is exclusive
 
             try {
-                // Save to file and open it.
-                File file = new File("test.ods");
-                OOUtils.open(sheet.getSpreadSheet().saveAs(file));
+                // Save to temp file.
+                File tmpFile = File.createTempFile("Quittung", ".ods");
+                //OOUtils.open(sheet.getSpreadSheet().saveAs(tmpFile));
+                OpenDocument doc = new OpenDocument(sheet.getSpreadSheet().saveAs(tmpFile));
+                // Print.
+                DefaultDocumentPrinter printer = new DefaultDocumentPrinter();
+                printer.print(doc);
+                tmpFile.deleteOnExit();
+                //tmpFile.delete();
             } catch (FileNotFoundException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
@@ -181,6 +189,15 @@ public class Quittung extends WindowContent {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
             }
+
+            //} catch (FileNotFoundException ex) {
+            //    System.out.println("Exception: " + ex.getMessage());
+            //    ex.printStackTrace();
+            //} catch (IOException ex) {
+            //    System.out.println("Exception: " + ex.getMessage());
+            //    ex.printStackTrace();
+            //}
+
         }
     }
 
