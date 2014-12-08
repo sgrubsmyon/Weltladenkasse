@@ -10,6 +10,12 @@ import java.io.IOException;
 // GUI stuff:
 import java.awt.event.ActionEvent;
 import javax.swing.JOptionPane;
+import java.awt.print.*;
+import javax.print.PrintService;
+import javax.print.PrintServiceLookup;
+import javax.print.attribute.PrintServiceAttributeSet;
+import javax.print.attribute.HashPrintServiceAttributeSet;
+import javax.print.attribute.standard.PrinterName;
 
 // MySQL Connector/J stuff:
 import java.sql.Connection;
@@ -27,6 +33,7 @@ import org.jopendocument.dom.spreadsheet.SpreadSheet;
 import org.jopendocument.dom.OOUtils;
 import org.jopendocument.model.OpenDocument;
 import org.jopendocument.print.DefaultDocumentPrinter;
+import org.jopendocument.print.ODTPrinter;
 
 import WeltladenDB.WindowContent;
 import WeltladenDB.MainWindowGrundlage;
@@ -177,9 +184,54 @@ public class Quittung extends WindowContent {
                 File tmpFile = File.createTempFile("Quittung", ".ods");
                 //OOUtils.open(sheet.getSpreadSheet().saveAs(tmpFile));
                 OpenDocument doc = new OpenDocument(sheet.getSpreadSheet().saveAs(tmpFile));
+
                 // Print.
-                DefaultDocumentPrinter printer = new DefaultDocumentPrinter();
-                printer.print(doc);
+                ODTPrinter printer = new ODTPrinter(doc);
+                //PrinterJob job = PrinterJob.getPrinterJob();
+                //job.setPrintable(printer);
+                //boolean doPrint = job.printDialog();
+                //if (doPrint){
+                //    try {
+                //        job.print();
+                //    } catch (PrinterException ex) {
+                //        System.out.println("The job did not successfully complete. Exception: " + ex.getMessage());
+                //        ex.printStackTrace();
+                //    }
+                //}
+
+                PrinterJob printerjob = PrinterJob.getPrinterJob();
+
+                String printerName = "epson_tmu220";
+
+                PrintServiceAttributeSet printServiceAttributeSet = new HashPrintServiceAttributeSet();
+                printServiceAttributeSet.add(new PrinterName(printerName, null));
+                PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, printServiceAttributeSet);
+                System.out.println("PrintServices: "+printServices);
+                PrintService printService;
+                PageFormat pageFormat;
+                try {
+                    printService = printServices[0];
+                    printerjob.setPrintService(printService);   // Try setting the printer you want
+                } catch (ArrayIndexOutOfBoundsException e){
+                    System.err.println("Error: No printer named '"+printerName+"', using default printer.");
+                    //pageFormat = printerjob.defaultPage();  // Set the default printer instead.
+                } catch (PrinterException exception) {
+                    System.err.println("Printing error: " + exception);
+                }
+                //pageFormat = new PageFormat();    // If you want to adjust heigh and width etc. of your paper.
+                pageFormat = printerjob.defaultPage();
+                System.out.println("pageFormat height: "+pageFormat.getHeight());
+                System.out.println("pageFormat widtth: "+pageFormat.getWidth());
+
+                printerjob.setPrintable(printer, pageFormat);
+
+                try {
+                    printerjob.print();   // Actual print command
+                } catch (PrinterException exception) {
+                    System.err.println("Printing error: " + exception);
+                }
+
+                //printer.print(doc);
                 tmpFile.deleteOnExit();
                 //tmpFile.delete();
             } catch (FileNotFoundException ex) {
