@@ -13,9 +13,8 @@ import javax.swing.JOptionPane;
 import java.awt.print.*;
 import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
-import javax.print.attribute.PrintServiceAttributeSet;
-import javax.print.attribute.HashPrintServiceAttributeSet;
-import javax.print.attribute.standard.PrinterName;
+import javax.print.attribute.*;
+import javax.print.attribute.standard.*;
 
 // MySQL Connector/J stuff:
 import java.sql.Connection;
@@ -183,7 +182,9 @@ public class Quittung extends WindowContent {
                 // Save to temp file.
                 File tmpFile = File.createTempFile("Quittung", ".ods");
                 //OOUtils.open(sheet.getSpreadSheet().saveAs(tmpFile));
-                OpenDocument doc = new OpenDocument(sheet.getSpreadSheet().saveAs(tmpFile));
+                sheet.getSpreadSheet().saveAs(tmpFile);
+                OOUtils.open(tmpFile);
+                OpenDocument doc = new OpenDocument(tmpFile);
 
                 // Print.
                 ODTPrinter printer = new ODTPrinter(doc);
@@ -199,34 +200,44 @@ public class Quittung extends WindowContent {
                 //    }
                 //}
 
-                PrinterJob printerjob = PrinterJob.getPrinterJob();
-
+                PrinterJob job = PrinterJob.getPrinterJob();
                 String printerName = "epson_tmu220";
 
-                PrintServiceAttributeSet printServiceAttributeSet = new HashPrintServiceAttributeSet();
-                printServiceAttributeSet.add(new PrinterName(printerName, null));
-                PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, printServiceAttributeSet);
-                System.out.println("PrintServices: "+printServices);
-                PrintService printService;
+                PrintServiceAttributeSet attrSet = new HashPrintServiceAttributeSet();
+                attrSet.add(new PrinterName(printerName, null));
+                //attrSet.add(MediaSizeName.ISO_A4);
+                //attrSet.add(new MediaPrintableArea(2, 2, 60, 80, MediaPrintableArea.MM));
+                PrintService[] pservices = PrintServiceLookup.lookupPrintServices(null, attrSet);
+                System.out.println("PrintServices: "+pservices);
+                PrintService ps;
                 PageFormat pageFormat;
                 try {
-                    printService = printServices[0];
-                    printerjob.setPrintService(printService);   // Try setting the printer you want
+                    ps = pservices[0];
+                    job.setPrintService(ps);   // Try setting the printer you want
                 } catch (ArrayIndexOutOfBoundsException e){
                     System.err.println("Error: No printer named '"+printerName+"', using default printer.");
-                    //pageFormat = printerjob.defaultPage();  // Set the default printer instead.
+                    //pageFormat = job.defaultPage();  // Set the default printer instead.
                 } catch (PrinterException exception) {
                     System.err.println("Printing error: " + exception);
                 }
                 //pageFormat = new PageFormat();    // If you want to adjust heigh and width etc. of your paper.
-                pageFormat = printerjob.defaultPage();
+                pageFormat = job.defaultPage();
+                Paper paper = pageFormat.getPaper();
+                paper.setSize(64. / 25.4 * 72., 80. / 25.4 * 72.);
+                paper.setImageableArea(0. / 25.4 * 72., 0. / 25.4 * 72., 62. / 25.4 * 72., 80. / 25.4 * 72.);
+                pageFormat.setPaper(paper);
                 System.out.println("pageFormat height: "+pageFormat.getHeight());
-                System.out.println("pageFormat widtth: "+pageFormat.getWidth());
+                System.out.println("pageFormat width: "+pageFormat.getWidth());
 
-                printerjob.setPrintable(printer, pageFormat);
+                //job.setPrintable(printer, pageFormat);
+                Book book = new Book();//java.awt.print.Book
+                book.append(new HelloWorldPrinter(), pageFormat);
+                book.append(printer, pageFormat);
+                job.setPageable(book);
+                //job.setPrintable(new HelloWorldPrinter(), pageFormat);
 
                 try {
-                    printerjob.print();   // Actual print command
+                    job.print();   // Actual print command
                 } catch (PrinterException exception) {
                     System.err.println("Printing error: " + exception);
                 }
