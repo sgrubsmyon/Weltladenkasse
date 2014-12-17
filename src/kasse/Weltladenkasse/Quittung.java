@@ -10,6 +10,7 @@ import java.io.IOException;
 // GUI stuff:
 import java.awt.event.ActionEvent;
 import javax.swing.JOptionPane;
+import javax.swing.JFrame;
 import java.awt.print.*;
 import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
@@ -33,6 +34,7 @@ import org.jopendocument.dom.OOUtils;
 import org.jopendocument.model.OpenDocument;
 import org.jopendocument.print.DefaultDocumentPrinter;
 import org.jopendocument.print.ODTPrinter;
+import org.jopendocument.panel.ODSViewerPanel;
 
 import WeltladenDB.WindowContent;
 import WeltladenDB.MainWindowGrundlage;
@@ -183,9 +185,20 @@ public class Quittung extends WindowContent {
                 File tmpFile = File.createTempFile("Quittung", ".ods");
                 //OOUtils.open(sheet.getSpreadSheet().saveAs(tmpFile));
                 sheet.getSpreadSheet().saveAs(tmpFile);
-                OOUtils.open(tmpFile);
-                OpenDocument doc = new OpenDocument(tmpFile);
+                final OpenDocument doc = new OpenDocument();
+                doc.loadFrom(tmpFile);
 
+                // Show time !
+                final JFrame mainFrame = new JFrame("Viewer");
+                DefaultDocumentPrinter printer = new DefaultDocumentPrinter();
+                ODSViewerPanel viewerPanel = new ODSViewerPanel(doc, printer, true);
+                mainFrame.setContentPane(viewerPanel);
+                mainFrame.pack();
+                mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                mainFrame.setLocation(10, 10);
+                mainFrame.setVisible(true);
+
+                /*
                 // Print.
                 ODTPrinter printer = new ODTPrinter(doc);
                 //PrinterJob job = PrinterJob.getPrinterJob();
@@ -241,6 +254,7 @@ public class Quittung extends WindowContent {
                 } catch (PrinterException exception) {
                     System.err.println("Printing error: " + exception);
                 }
+                */
 
                 //printer.print(doc);
                 tmpFile.deleteOnExit();
