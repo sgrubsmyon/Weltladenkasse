@@ -35,7 +35,7 @@ Auf Windows-System installieren:
   * "Development Machine" auswählen
 
   * Root-Passwort setzen und 2 User erstellen (Passwörter merken oder notieren):
-  Die Usernamen müssen *EXAKT* stimmen!
+  Die Usernamen müssen **EXAKT** stimmen!
     1. Username: mitarbeiter (klein geschrieben), Host: localhost, Role: Backup Admin
     2. Username: kassenadmin (klein geschrieben), Host: localhost, Role: DB Admin
 
@@ -85,7 +85,7 @@ ant && java -jar Weltladenkasse_v0.9.3.jar
 ant && java -jar Weltladenbesteller_v0.9.3.jar
 ```
 
-Compile and make release:
+Compile and make release (**CAUTION:** default release dir is `../releases`, adjust to your needs):
 ```
 ant && ./make_release.sh
 ```
