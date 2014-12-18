@@ -2,9 +2,9 @@
 
 version=v0.9.3
 
-releasedir=../../releases/Weltladenkasse_$version
+releasedir=../releases/Weltladenkasse_$version
 if [ ! -e $releasedir ]; then
-    mkdir $releasedir
+    mkdir -p $releasedir
 fi
 rsync -aPvci Weltladenkasse_$version.jar $releasedir
 rsync -aPvci Weltladenbesteller_$version.jar $releasedir
