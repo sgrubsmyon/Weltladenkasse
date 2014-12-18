@@ -73,11 +73,14 @@ For Developers:
 ---------------
 
 Compile:
+
    ant
 
 Compile and run locally:
+
    ant && java -jar Weltladenkasse_v0.9.3.jar
    ant && java -jar Weltladenbesteller_v0.9.3.jar
 
 Compile and make release:
+
    ant && ./make_release.sh
