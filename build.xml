@@ -63,8 +63,11 @@
             <manifest>
                 <attribute name="Main-Class" value="Weltladenkasse.Kasse"/>
             </manifest>
-            <!-- with this solution, the external jars in lib are unzipped and included in the
+            <!-- with this solution, the external jars in lib are (unzipped? and?) included in the
                  program's jar http://stackoverflow.com/questions/183292/classpath-including-jar-within-a-jar -->
+            <!-- might need to unjar (jar xvf file.jar), delete all
+                 META-INF/*.SF, META-INF/*.DSA, META-INF/*.RSA files (or
+                 META-INF dir entirely) and recreate jar (jar cvf file.jar *) -->
             <zipgroupfileset dir="${lib}"/>
         </jar>
         <jar destfile="${jarfile-besteller}" basedir="${build-besteller}">
