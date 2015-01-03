@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--<project name="Weltladenkasse" default="jar" basedir=".">-->
 <project name="Weltladenkasse" default="debug-jar" basedir=".">
     <property name="src-kasse" location="src/kasse"/>
     <property name="src-besteller" location="src/besteller"/>
@@ -50,7 +51,7 @@
             classpathref="classpath"/>
     </target>
 
-    <target name="debug-compile" depends="copy" description="compile the source in debugging mode">
+    <target name="debug-compile" depends="convert" description="compile the source in debugging mode">
         <javac srcdir="${src-kasse}" destdir="${build-kasse}" debug="on" debuglevel="lines,vars,source"
             includeantruntime="false" classpathref="classpath"/>
         <javac srcdir="${src-besteller}" destdir="${build-besteller}" debug="on" debuglevel="lines,vars,source"
@@ -79,6 +80,9 @@
     </target>
 
     <target name="debug-jar" depends="debug-compile,jar" description="generate the distribution .jar file, with debug compile">
+    </target>
+
+    <target name="develop" depends="debug-compile" description="for development (faster): only debug compile, no jar creation">
     </target>
 
     <target name="clean">

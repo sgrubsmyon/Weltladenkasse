@@ -89,3 +89,9 @@ Compile and make release (**CAUTION:** default release dir is `../releases`, adj
 ```
 ant && ./make_release.sh
 ```
+
+Compile without jar creation (much faster) and run locally:
+```
+ant develop && ./run_kasse.sh
+ant develop && ./run_besteller.sh
+```

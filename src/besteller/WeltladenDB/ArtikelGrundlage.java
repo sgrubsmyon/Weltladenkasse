@@ -21,23 +21,21 @@ public abstract class ArtikelGrundlage extends WindowContent {
     //////////////////////////////////
     // DB query functions:
     //////////////////////////////////
-    public int getArticleID(String artikelName, String lieferant, String artikelNummer) {
-        // get artikelID for artikelName and artikelNummer
+    public int getArticleID(String lieferant, String artikelNummer) {
+        // get artikelID for lieferant and artikelNummer
         int artikelID = -1;
         String lieferantQuery = lieferant.equals("") ? "IS NULL" : "= ?";
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT a.artikel_id FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.artikel_name = ? " +
-                    "AND l.lieferant_name "+lieferantQuery+" " +
+                    "WHERE l.lieferant_name "+lieferantQuery+" " +
                     "AND a.artikel_nr = ? " +
                     "AND a.aktiv = TRUE"
                     );
-            pstmt.setString(1, artikelName);
-            int artikelNrIndex = 2;
+            int artikelNrIndex = 1;
             if (!lieferant.equals("")){
-                pstmt.setString(2, lieferant);
+                pstmt.setString(artikelNrIndex, lieferant);
                 artikelNrIndex++;
             }
             pstmt.setString(artikelNrIndex, artikelNummer);
