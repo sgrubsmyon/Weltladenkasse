@@ -840,7 +840,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             String artikelName = an[0];
             String lieferant = an[1];
             String artikelNummer = (String)nummerBox.getSelectedItem();
-            selectedArtikelID = getArticleID(artikelName, lieferant, artikelNummer); // get the internal artikelID from the DB
+            selectedArtikelID = getArticleID(lieferant, artikelNummer); // get the internal artikelID from the DB
             String vpe = getVPE(selectedArtikelID);
             Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
             if (vpeInt > 0){

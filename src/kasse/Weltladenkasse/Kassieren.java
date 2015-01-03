@@ -1264,7 +1264,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             String artikelName = an[0];
             String lieferant = an[1];
             String artikelNummer = (String)nummerBox.getSelectedItem();
-            selectedArtikelID = getArticleID(artikelName, lieferant, artikelNummer); // get the internal artikelID from the DB
+            selectedArtikelID = getArticleID(lieferant, artikelNummer); // get the internal artikelID from the DB
             setPriceField();
             anzahlField.requestFocus();
             SwingUtilities.invokeLater(new Runnable() {

@@ -68,8 +68,6 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
     protected JTextField nameField;
     protected JComboBox produktDropDown;
     protected JPanel produktCards;
-    //protected IncrementalSearchComboBox artikelBox;
-    //protected AutoCompleteComboBox_Old nummerBox;
     protected BarcodeComboBox barcodeBox;
     protected ArtikelNameComboBox artikelBox;
     protected ArtikelNummerComboBox nummerBox;
@@ -562,554 +560,606 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
 	showAll();
     }
 
-protected void retrieveValuesFromForm(StringBuffer aktname, StringBuffer von, StringBuffer bis,
-        StringBuffer artName, StringBuffer lieferant, StringBuffer artNummer,
-        Integer artikelID, Integer prodGrID,
-        BigDecimal absolutValue, BigDecimal relativValue,
-        Integer schwelle, Integer mengeKostenlos, BigDecimal mengeRel) {
-    aktname.replace(0, aktname.length(), nameValue());
+    protected Object[] retrieveValuesFromForm() {
+        String aktname = null, von = null, bis = null,
+               artName = null, lieferant = null, artNummer = null;
+        Integer artikelID = null, prodGrID = null;
+        BigDecimal absolutValue = null, relativValue = null;
+        Integer schwelle = null, mengeKostenlos = null;
+        BigDecimal mengeRel = null;
 
-    String vonDate = vonValue();
-    String bisDate = bisValue();
-    String today = this.sdf.format(now);
-    if ( vonDate.equals(today) )
-        von.replace(0, von.length(), "NOW()");
-    else
-        von.replace(0, von.length(), "\'" + vonDate + " 00:00:00\'");
-    if ( unlimitedValue() )
-        bis.replace(0, bis.length(), "NULL");
-    else
-        bis.replace(0, bis.length(), "\'" + bisDate + " 23:59:59\'");
+        aktname = nameValue();
 
-    if (rabattModus == rabattDropDownOptions[0]){ // Einzelrabatt
-        absolutValue = absolutValue();
-        relativValue = relativValue();
+        String vonDate = vonValue();
+        String bisDate = bisValue();
+        String today = this.sdf.format(now);
+        if ( vonDate.equals(today) )
+            von = "NOW()";
+        else
+            von = "\'" + vonDate + " 00:00:00\'";
+        if ( unlimitedValue() )
+            bis = "NULL";
+        else
+            bis = "\'" + bisDate + " 23:59:59\'";
+
+        if (rabattModus == rabattDropDownOptions[0]){ // Einzelrabatt
+            absolutValue = absolutValue();
+            relativValue = relativValue();
+        }
+
+        if (rabattModus == rabattDropDownOptions[1]){ // Mengenrabatt
+            schwelle = schwelleValue();
+            mengeKostenlos = kostenlosValue();
+            mengeKostenlos = mengeKostenlos <= 0 ? null : mengeKostenlos;
+            mengeRel = mengeRelativValue();
+            mengeRel = mengeRel.signum() <= 0 ? null : mengeRel;
+        }
+
+        if (produktModus == produktDropDownOptions[0]){ // Einzelprodukt
+            artName = artNameValue()[0];
+            lieferant = artNameValue()[1];
+            artNummer = artNummerValue();
+            artikelID = this.rabattaktionen.getArticleID(lieferant, artNummer); // get the internal artikelID from the DB
+        }
+
+        if (produktModus == produktDropDownOptions[1]){ // Produktgruppe
+            prodGrID = produktgruppenValue();
+        }
+
+        return new Object[]{aktname, von, bis,
+            artName, lieferant, artNummer,
+            artikelID, prodGrID,
+            absolutValue, relativValue,
+            schwelle, mengeKostenlos, mengeRel};
     }
 
-    if (rabattModus == rabattDropDownOptions[1]){ // Mengenrabatt
-        schwelle = schwelleValue();
-        mengeKostenlos = kostenlosValue();
-        mengeKostenlos = mengeKostenlos <= 0 ? null : mengeKostenlos;
-        mengeRel = mengeRelativValue();
-        mengeRel = mengeRel.signum() <= 0 ? null : mengeRel;
+    protected void insertRabattaktion() {
+        Object[] values = retrieveValuesFromForm();
+        String aktname = (String)values[0];
+        String von = (String)values[1];
+        String bis = (String)values[2];
+        String artName = (String)values[3];
+        String lieferant = (String)values[4];
+        String artNummer = (String)values[5];
+        Integer artikelID = (Integer)values[6];
+        Integer prodGrID = (Integer)values[7];
+        BigDecimal absolutValue = (BigDecimal)values[8];
+        BigDecimal relativValue = (BigDecimal)values[9];
+        Integer schwelle = (Integer)values[10];
+        Integer mengeKostenlos = (Integer)values[11];
+        BigDecimal mengeRel = (BigDecimal)values[12];
+        System.out.println(
+                "aktname: " + aktname + "\n" +
+                "absolutValue: " + absolutValue + "\n" +
+                "relativValue: " + relativValue + "\n" +
+                "schwelle: " + schwelle + "\n" +
+                "mengeKostenlos: " + mengeKostenlos + "\n" +
+                "mengeRel: " + mengeRel + "\n" +
+                "von: " + von + "\n" +
+                "bis: " + bis + "\n" +
+                "prodGrID: " + prodGrID + "\n" +
+                "artikelID: " + artikelID + "\n" +
+                "artName: " + artName + "\n" +
+                "lieferant: " + lieferant + "\n" +
+                "artNummer: " + artNummer);
+        int answer = JOptionPane.showConfirmDialog(this,
+                "Rabattaktion \""+aktname+"\" in Datenbank eingeben?",
+                "Rabattaktion speichern",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (answer == JOptionPane.YES_OPTION){
+            try {
+                PreparedStatement pstmt = this.conn.prepareStatement(
+                        "INSERT INTO rabattaktion SET aktionsname = ?, "+
+                        "rabatt_relativ = ?, "+
+                        "rabatt_absolut = ?, "+
+                        "mengenrabatt_schwelle = ?, "+
+                        "mengenrabatt_anzahl_kostenlos = ?, "+
+                        "mengenrabatt_relativ = ?, "+
+                        "von = "+von+", "+"bis = "+bis+", "+
+                        "produktgruppen_id = ?, "+
+                        "artikel_id = ?"
+                        );
+                pstmt.setString(1, aktname);
+                pstmt.setBigDecimal(2, relativValue);
+                pstmt.setBigDecimal(3, absolutValue);
+                pstmtSetInteger(pstmt, 4, schwelle);
+                pstmtSetInteger(pstmt, 5, mengeKostenlos);
+                pstmt.setBigDecimal(6, mengeRel);
+                pstmtSetInteger(pstmt, 7, prodGrID);
+                pstmtSetInteger(pstmt, 8, artikelID);
+                int result = pstmt.executeUpdate();
+                if (result != 0){
+                    // update everything
+                    JOptionPane.showMessageDialog(this, "Rabattaktion wurde in Datenbank eingetragen!",
+                            "Info", JOptionPane.INFORMATION_MESSAGE);
+                    this.rabattaktionen.initiateSpinners();
+                    this.rabattaktionen.updateAll();
+                    updateAll();
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Rabattaktion konnte nicht in Datenbank eingetragen werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+                pstmt.close();
+            } catch (SQLException ex) {
+                System.out.println("Exception: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        } else { // NO_OPTION
+            JOptionPane.showMessageDialog(this, "Datenbank unverändert!",
+                    "Info", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 
-    if (produktModus == produktDropDownOptions[0]){ // Einzelprodukt
-        artName.replace(0, artName.length(), artNameValue()[0]);
-        lieferant.replace(0, lieferant.length(), artNameValue()[1]);
-        artNummer.replace(0, artNummer.length(), artNummerValue());
-        artikelID = this.rabattaktionen.getArticleID(artName.toString(), lieferant.toString(), artNummer.toString()); // get the internal artikelID from the DB
+    protected void updateRabattaktion() {
+        Object[] values = retrieveValuesFromForm();
+        String aktname = (String)values[0];
+        String von = (String)values[1];
+        String bis = (String)values[2];
+        String artName = (String)values[3];
+        String lieferant = (String)values[4];
+        String artNummer = (String)values[5];
+        Integer artikelID = (Integer)values[6];
+        Integer prodGrID = (Integer)values[7];
+        BigDecimal absolutValue = (BigDecimal)values[8];
+        BigDecimal relativValue = (BigDecimal)values[9];
+        Integer schwelle = (Integer)values[10];
+        Integer mengeKostenlos = (Integer)values[11];
+        BigDecimal mengeRel = (BigDecimal)values[12];
+        System.out.println(
+                "aktname: " + aktname + "\n" +
+                "absolutValue: " + absolutValue + "\n" +
+                "relativValue: " + relativValue + "\n" +
+                "schwelle: " + schwelle + "\n" +
+                "mengeKostenlos: " + mengeKostenlos + "\n" +
+                "mengeRel: " + mengeRel + "\n" +
+                "von: " + von + "\n" +
+                "bis: " + bis + "\n" +
+                "prodGrID: " + prodGrID + "\n" +
+                "artikelID: " + artikelID);
+        int answer = JOptionPane.showConfirmDialog(this,
+                "Rabattaktion \""+this.aktionsname+"\" wirklich verändern?",
+                "Rabattaktion ändern",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (answer == JOptionPane.YES_OPTION){
+            try {
+                // Create statement for MySQL database
+                Statement stmt = this.conn.createStatement();
+                // Run MySQL command
+                PreparedStatement pstmt = this.conn.prepareStatement(
+                        "UPDATE rabattaktion SET aktionsname = ?, rabatt_relativ = ?, "+
+                        "rabatt_absolut = ?, "+ "mengenrabatt_schwelle = ?, "+
+                        "mengenrabatt_anzahl_kostenlos = ?, mengenrabatt_relativ = ?, "+
+                        "bis = "+bis+", "+
+                        "produktgruppen_id = ?, artikel_id = ? WHERE rabatt_id = ?"
+                        );
+                pstmt.setString(1, aktname);
+                pstmt.setBigDecimal(2, relativValue);
+                pstmt.setBigDecimal(3, absolutValue);
+                pstmtSetInteger(pstmt, 4, schwelle);
+                pstmtSetInteger(pstmt, 5, mengeKostenlos);
+                pstmt.setBigDecimal(6, mengeRel);
+                pstmtSetInteger(pstmt, 7, prodGrID);
+                pstmtSetInteger(pstmt, 8, artikelID);
+                pstmtSetInteger(pstmt, 9, this.presetRabattID);
+                int result = pstmt.executeUpdate();
+                if (result != 0){
+                    // update everything
+                    JOptionPane.showMessageDialog(this, "Änderungen wurden gespeichert!",
+                            "Info", JOptionPane.INFORMATION_MESSAGE);
+                    this.rabattaktionen.initiateSpinners();
+                    this.rabattaktionen.updateAll();
+                    this.window.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Änderungen konnten nicht gespeichert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+                pstmt.close();
+            } catch (SQLException ex) {
+                System.out.println("Exception: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        } else { // NO_OPTION
+            JOptionPane.showMessageDialog(this, "Datenbank unverändert!",
+                    "Info", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 
-    if (produktModus == produktDropDownOptions[1]){ // Produktgruppe
-        prodGrID = produktgruppenValue();
+    protected void updateBisDate() {
+        if ( bisDateModel.getDate().before(vonDateModel.getDate()) ){
+            bisDateModel.setValue(vonDateModel.getDate()); // JCalendarButton updated automatically
+        }
     }
-}
 
-protected void insertRabattaktion() {
-    StringBuffer aktname = new StringBuffer(""), von = new StringBuffer(""), bis = new StringBuffer(""),
-                 artName = new StringBuffer(""), lieferant = new StringBuffer(""),
-                 artNummer = new StringBuffer("");
-    Integer artikelID = new Integer(0), prodGrID = new Integer(0), schwelle = new Integer(0),
-            mengeKostenlos = new Integer(0);
-    BigDecimal relativValue = null, mengeRel = null;
-    BigDecimal absolutValue = null;
-    retrieveValuesFromForm(aktname, von, bis, artName, lieferant, artNummer, artikelID, prodGrID, absolutValue, relativValue, schwelle, mengeKostenlos, mengeRel);
-    System.out.println(
-            "aktname: " + aktname + "\n" +
-            "absolutValue: " + absolutValue + "\n" +
-            "relativValue: " + relativValue + "\n" +
-            "schwelle: " + schwelle + "\n" +
-            "mengeKostenlos: " + mengeKostenlos + "\n" +
-            "mengeRel: " + mengeRel + "\n" +
-            "von: " + von + "\n" +
-            "bis: " + bis + "\n" +
-            "prodGrID: " + prodGrID + "\n" +
-            "artikelID: " + artikelID);
-    int answer = JOptionPane.showConfirmDialog(this,
-            "Rabattaktion \""+aktname+"\" in Datenbank eingeben?",
-            "Rabattaktion speichern",
-            JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-    if (answer == JOptionPane.YES_OPTION){
+    /**
+     *    * Each non abstract class that implements the ChangeListener
+     *      must have this method.
+     *
+     *    @param e the change event.
+     **/
+    public void stateChanged(ChangeEvent e) {
+        if (e.getSource() == vonSpinner){
+            calButtVon.removeChangeListener(this);
+            setCalButtFromSpinner(vonDateModel, calButtVon);
+            calButtVon.addChangeListener(this);
+            updateBisDate();
+        }
+        else if (e.getSource() == bisSpinner){
+            calButtBis.removeChangeListener(this);
+            setCalButtFromSpinner(bisDateModel, calButtBis);
+            calButtBis.addChangeListener(this);
+        }
+        else if (e.getSource() == calButtVon){
+            vonSpinner.removeChangeListener(this);
+            setSpinnerFromCalButt(vonDateModel, calButtVon, now, null);
+            vonSpinner.addChangeListener(this);
+        }
+        else if (e.getSource() == calButtBis){
+            bisSpinner.removeChangeListener(this);
+            setSpinnerFromCalButt(bisDateModel, calButtBis, vonDateModel.getDate(), null);
+            bisSpinner.addChangeListener(this);
+        }
+        if (this.editMode){
+            checkIfChangesCanBeSaved();
+        }
+    }
+
+
+    void setOtherFieldEditable(DocumentEvent e) {
+        JTextField thisFieldPointer = null;
+        JTextField otherFieldPointer = null;
+        if ( e.getDocument() == absolutField.getDocument() ){
+            thisFieldPointer = absolutField;
+            otherFieldPointer = relativField;
+        }
+        else if ( e.getDocument() == relativField.getDocument() ){
+            thisFieldPointer = relativField;
+            otherFieldPointer = absolutField;
+        }
+        else if ( e.getDocument() == kostenlosField.getDocument() ){
+            mengenrabattRelativField.setEditable( (Integer)kostenlosSpinner.getValue() <= 0 );
+            return;
+        }
+        else if ( e.getDocument() == mengenrabattRelativField.getDocument() ){
+            kostenlosSpinner.setEnabled( mengenrabattRelativField.getText().length() <= 0 );
+            return;
+        }
+        else {
+            return;
+        }
+        otherFieldPointer.setEditable( thisFieldPointer.getText().length() <= 0 );
+    }
+
+    private void setArtikelNameAndNummerForBarcode() {
+        String barcode = (String)barcodeBox.getSelectedItem();
+        Vector<String[]> artikelNamen = new Vector<String[]>();
+        Vector<String[]> artikelNummern = new Vector<String[]>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "INSERT INTO rabattaktion SET aktionsname = ?, "+
-                    "rabatt_relativ = ?, "+
-                    "rabatt_absolut = ?, "+
-                    "mengenrabatt_schwelle = ?, "+
-                    "mengenrabatt_anzahl_kostenlos = ?, "+
-                    "mengenrabatt_relativ = ?, "+
-                    "von = "+von+", "+"bis = "+bis+", "+
-                    "produktgruppen_id = ?, "+
-                    "artikel_id = ?"
+                    "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.artikel_nr FROM artikel AS a " +
+                    "LEFT JOIN lieferant AS l USING (lieferant_id) " +
+                    "WHERE a.barcode = ? " +
+                    "AND a.aktiv = TRUE"
                     );
-            pstmt.setString(1, aktname.toString());
-            pstmt.setBigDecimal(2, relativValue);
-            pstmt.setBigDecimal(3, absolutValue);
-            pstmtSetInteger(pstmt, 4, schwelle);
-            pstmtSetInteger(pstmt, 5, mengeKostenlos);
-            pstmt.setBigDecimal(6, mengeRel);
-            pstmtSetInteger(pstmt, 7, prodGrID);
-            pstmtSetInteger(pstmt, 8, artikelID);
-            int result = pstmt.executeUpdate();
-            if (result != 0){
-                // update everything
-                JOptionPane.showMessageDialog(this, "Rabattaktion wurde in Datenbank eingetragen!",
-                        "Info", JOptionPane.INFORMATION_MESSAGE);
-                this.rabattaktionen.initiateSpinners();
-                this.rabattaktionen.updateAll();
-                updateAll();
-            } else {
-                JOptionPane.showMessageDialog(this,
-                        "Fehler: Rabattaktion konnte nicht in Datenbank eingetragen werden.",
-                        "Fehler", JOptionPane.ERROR_MESSAGE);
+            pstmt.setString(1, barcode);
+            ResultSet rs = pstmt.executeQuery();
+            // Now do something with the ResultSet, should be only one result ...
+            while ( rs.next() ){
+                String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
+                artikelNamen.add( new String[]{rs.getString(1), lieferant} );
+                artikelNummern.add( new String[]{rs.getString(3)} );
             }
+            rs.close();
             pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
-    } else { // NO_OPTION
-        JOptionPane.showMessageDialog(this, "Datenbank unverändert!",
-                "Info", JOptionPane.INFORMATION_MESSAGE);
+        if (artikelBox.getItemCount() != 1){
+            //artikelBox.removeActionListener(this);
+            ////if (artikelNamen.size() == 1){
+            ////    // update internal cache string before changing name in text field (otherwise document listener causes problems)
+            ////    artikelNameText = artikelNamen.get(0)[0];
+            ////}
+            artikelBox.setItems(artikelNamen);
+            //artikelBox.addActionListener(this);
+        }
+        if (nummerBox.getItemCount() != 1){
+            //nummerBox.removeActionListener(this);
+            ////if (artikelNummern.size() == 1){
+            ////    // update internal cache string before changing name in text field (otherwise document listener causes problems)
+            ////    artikelNummerText = artikelNummern.get(0)[0];
+            ////}
+            nummerBox.setItems(artikelNummern);
+            //nummerBox.addActionListener(this);
+        }
+        if ( artikelBox.getItemCount() > 1 ){ artikelBox.requestFocus(); artikelBox.showPopup(); }
+        else { artikelBox.hidePopup(); }
+        //if ( nummerBox.getItemCount() > 1 ){ nummerBox.showPopup(); }
+        //else { nummerBox.hidePopup(); }
     }
-}
 
-protected void updateRabattaktion() {
-    StringBuffer aktname = new StringBuffer(""), von = new StringBuffer(""), bis = new StringBuffer(""),
-                 artName = new StringBuffer(""), lieferant = new StringBuffer(""),
-                 artNummer = new StringBuffer("");
-    Integer artikelID = new Integer(0), prodGrID = new Integer(0), schwelle = new Integer(0),
-            mengeKostenlos = new Integer(0);
-    BigDecimal relativValue = null, mengeRel = null;
-    BigDecimal absolutValue = null;
-    retrieveValuesFromForm(aktname, von, bis, artName, lieferant, artNummer, artikelID, prodGrID, absolutValue, relativValue, schwelle, mengeKostenlos, mengeRel);
-    System.out.println(
-            "aktname: " + aktname + "\n" +
-            "absolutValue: " + absolutValue + "\n" +
-            "relativValue: " + relativValue + "\n" +
-            "schwelle: " + schwelle + "\n" +
-            "mengeKostenlos: " + mengeKostenlos + "\n" +
-            "mengeRel: " + mengeRel + "\n" +
-            "von: " + von + "\n" +
-            "bis: " + bis + "\n" +
-            "prodGrID: " + prodGrID + "\n" +
-            "artikelID: " + artikelID);
-    int answer = JOptionPane.showConfirmDialog(this,
-            "Rabattaktion \""+this.aktionsname+"\" wirklich verändern?",
-            "Rabattaktion ändern",
-            JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-    if (answer == JOptionPane.YES_OPTION){
+    private void setArtikelNummerForName() {
+        // get artikelName
+        String[] an = artikelBox.parseArtikelName();
+        String artikelName = an[0];
+        String artikelNummer = an[1];
+        String lieferantQuery = artikelNummer.equals("") ? "IS NULL" : "= ?";
+        Vector<String[]> artikelNummern = new Vector<String[]>();
+        // get artikelNummer for artikelName
         try {
-            // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
-            // Run MySQL command
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "UPDATE rabattaktion SET aktionsname = ?, rabatt_relativ = ?, "+
-                    "rabatt_absolut = ?, "+ "mengenrabatt_schwelle = ?, "+
-                    "mengenrabatt_anzahl_kostenlos = ?, mengenrabatt_relativ = ?, "+
-                    "von = "+von+", bis = "+bis+", "+
-                    "produktgruppen_id = ?, artikel_id = ? WHERE rabatt_id = ?"
+                    "SELECT DISTINCT a.artikel_nr FROM artikel AS a " +
+                    "LEFT JOIN lieferant AS l USING (lieferant_id) " +
+                    "WHERE a.artikel_name = ? AND l.lieferant_name "+lieferantQuery+" " +
+                    "AND a.aktiv = TRUE"
                     );
-            pstmt.setString(1, aktname.toString());
-            pstmt.setBigDecimal(2, relativValue);
-            pstmt.setBigDecimal(3, absolutValue);
-            pstmtSetInteger(pstmt, 4, schwelle);
-            pstmtSetInteger(pstmt, 5, mengeKostenlos);
-            pstmt.setBigDecimal(6, mengeRel);
-            pstmtSetInteger(pstmt, 7, prodGrID);
-            pstmtSetInteger(pstmt, 8, artikelID);
-            pstmtSetInteger(pstmt, 9, this.presetRabattID);
-            int result = pstmt.executeUpdate();
-            if (result != 0){
-                // update everything
-                JOptionPane.showMessageDialog(this, "Änderungen wurden gespeichert!",
-                        "Info", JOptionPane.INFORMATION_MESSAGE);
-                this.rabattaktionen.initiateSpinners();
-                this.rabattaktionen.updateAll();
-                this.window.dispose();
-            } else {
-                JOptionPane.showMessageDialog(this,
-                        "Fehler: Änderungen konnten nicht gespeichert werden.",
-                        "Fehler", JOptionPane.ERROR_MESSAGE);
+            pstmt.setString(1, artikelName);
+            if (!artikelNummer.equals("")){
+                pstmt.setString(2, artikelNummer);
             }
+            ResultSet rs = pstmt.executeQuery();
+            // Now do something with the ResultSet, should be only one result ...
+            while ( rs.next() ){
+                artikelNummern.add( new String[]{rs.getString(1)} );
+            }
+            rs.close();
             pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
-    } else { // NO_OPTION
-        JOptionPane.showMessageDialog(this, "Datenbank unverändert!",
-                "Info", JOptionPane.INFORMATION_MESSAGE);
-    }
-}
-
-protected void updateBisDate() {
-    if ( bisDateModel.getDate().before(vonDateModel.getDate()) ){
-        bisDateModel.setValue(vonDateModel.getDate()); // JCalendarButton updated automatically
-    }
-}
-
-/**
- *    * Each non abstract class that implements the ChangeListener
- *      must have this method.
- *
- *    @param e the change event.
- **/
-public void stateChanged(ChangeEvent e) {
-    if (e.getSource() == vonSpinner){
-        calButtVon.removeChangeListener(this);
-        setCalButtFromSpinner(vonDateModel, calButtVon);
-        calButtVon.addChangeListener(this);
-        updateBisDate();
-    }
-    else if (e.getSource() == bisSpinner){
-        calButtBis.removeChangeListener(this);
-        setCalButtFromSpinner(bisDateModel, calButtBis);
-        calButtBis.addChangeListener(this);
-    }
-    else if (e.getSource() == calButtVon){
-        vonSpinner.removeChangeListener(this);
-        setSpinnerFromCalButt(vonDateModel, calButtVon, now, null);
-        vonSpinner.addChangeListener(this);
-    }
-    else if (e.getSource() == calButtBis){
-        bisSpinner.removeChangeListener(this);
-        setSpinnerFromCalButt(bisDateModel, calButtBis, vonDateModel.getDate(), null);
-        bisSpinner.addChangeListener(this);
-    }
-    if (this.editMode){
-        checkIfChangesCanBeSaved();
-    }
-}
-
-
-void setOtherFieldEditable(DocumentEvent e) {
-    JTextField thisFieldPointer = null;
-    JTextField otherFieldPointer = null;
-    if ( e.getDocument() == absolutField.getDocument() ){
-        thisFieldPointer = absolutField;
-        otherFieldPointer = relativField;
-    }
-    else if ( e.getDocument() == relativField.getDocument() ){
-        thisFieldPointer = relativField;
-        otherFieldPointer = absolutField;
-    }
-    else if ( e.getDocument() == kostenlosField.getDocument() ){
-        mengenrabattRelativField.setEditable( (Integer)kostenlosSpinner.getValue() <= 0 );
-        return;
-    }
-    else if ( e.getDocument() == mengenrabattRelativField.getDocument() ){
-        kostenlosSpinner.setEnabled( mengenrabattRelativField.getText().length() <= 0 );
-        return;
-    }
-    else {
-        return;
-    }
-    otherFieldPointer.setEditable( thisFieldPointer.getText().length() <= 0 );
-}
-
-private void setArtikelNameAndNummerForBarcode() {
-    String barcode = (String)barcodeBox.getSelectedItem();
-    Vector<String[]> artikelNamen = new Vector<String[]>();
-    Vector<String[]> artikelNummern = new Vector<String[]>();
-    try {
-        PreparedStatement pstmt = this.conn.prepareStatement(
-                "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.artikel_nr FROM artikel AS a " +
-                "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                "WHERE a.barcode = ? " +
-                "AND a.aktiv = TRUE"
-                );
-        pstmt.setString(1, barcode);
-        ResultSet rs = pstmt.executeQuery();
-        // Now do something with the ResultSet, should be only one result ...
-        while ( rs.next() ){
-            String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
-            artikelNamen.add( new String[]{rs.getString(1), lieferant} );
-            artikelNummern.add( new String[]{rs.getString(3)} );
-        }
-        rs.close();
-        pstmt.close();
-    } catch (SQLException ex) {
-        System.out.println("Exception: " + ex.getMessage());
-        ex.printStackTrace();
-    }
-    if (artikelBox.getItemCount() != 1){
-        //artikelBox.removeActionListener(this);
-            ////if (artikelNamen.size() == 1){
-            ////    // update internal cache string before changing name in text field (otherwise document listener causes problems)
-            ////    artikelNameText = artikelNamen.get(0)[0];
-            ////}
-            artikelBox.setItems(artikelNamen);
-        //artikelBox.addActionListener(this);
-    }
-    if (nummerBox.getItemCount() != 1){
-        //nummerBox.removeActionListener(this);
+        if (nummerBox.getItemCount() != 1){
+            //nummerBox.removeActionListener(this);
             ////if (artikelNummern.size() == 1){
             ////    // update internal cache string before changing name in text field (otherwise document listener causes problems)
             ////    artikelNummerText = artikelNummern.get(0)[0];
             ////}
             nummerBox.setItems(artikelNummern);
-        //nummerBox.addActionListener(this);
+            //nummerBox.addActionListener(this);
+        }
+        if ( nummerBox.getItemCount() > 1 ){ nummerBox.requestFocus(); nummerBox.showPopup(); }
+        else { nummerBox.hidePopup(); }
     }
-    if ( artikelBox.getItemCount() > 1 ){ artikelBox.requestFocus(); artikelBox.showPopup(); }
-    else { artikelBox.hidePopup(); }
-    //if ( nummerBox.getItemCount() > 1 ){ nummerBox.showPopup(); }
-    //else { nummerBox.hidePopup(); }
-}
 
-private void setArtikelNummerForName() {
-    // get artikelName
-    String[] an = artikelBox.parseArtikelName();
-    String artikelName = an[0];
-    String artikelNummer = an[1];
-    String lieferantQuery = artikelNummer.equals("") ? "IS NULL" : "= ?";
-    Vector<String[]> artikelNummern = new Vector<String[]>();
-    // get artikelNummer for artikelName
-    try {
-        PreparedStatement pstmt = this.conn.prepareStatement(
-                "SELECT DISTINCT a.artikel_nr FROM artikel AS a " +
-                "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                "WHERE a.artikel_name = ? AND l.lieferant_name "+lieferantQuery+" " +
-                "AND a.aktiv = TRUE"
-                );
-        pstmt.setString(1, artikelName);
-        if (!artikelNummer.equals("")){
-            pstmt.setString(2, artikelNummer);
+    private void setArtikelNameForNummer() {
+        // get artikelNummer
+        String artikelNummer = (String)nummerBox.getSelectedItem();
+        Vector<String[]> artikelNamen = new Vector<String[]>();
+        // get artikelName for artikelNummer
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT DISTINCT a.artikel_name, l.lieferant_name FROM artikel AS a " +
+                    "LEFT JOIN lieferant AS l USING (lieferant_id) " +
+                    "WHERE a.artikel_nr = ? " +
+                    "AND a.aktiv = TRUE"
+                    );
+            pstmt.setString(1, artikelNummer);
+            ResultSet rs = pstmt.executeQuery();
+            // Now do something with the ResultSet, should be only one result ...
+            while ( rs.next() ){
+                String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
+                artikelNamen.add( new String[]{rs.getString(1), lieferant} );
+            }
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
         }
-        ResultSet rs = pstmt.executeQuery();
-        // Now do something with the ResultSet, should be only one result ...
-        while ( rs.next() ){
-            artikelNummern.add( new String[]{rs.getString(1)} );
-        }
-        rs.close();
-        pstmt.close();
-    } catch (SQLException ex) {
-        System.out.println("Exception: " + ex.getMessage());
-        ex.printStackTrace();
-    }
-    if (nummerBox.getItemCount() != 1){
-        //nummerBox.removeActionListener(this);
-            ////if (artikelNummern.size() == 1){
-            ////    // update internal cache string before changing name in text field (otherwise document listener causes problems)
-            ////    artikelNummerText = artikelNummern.get(0)[0];
-            ////}
-            nummerBox.setItems(artikelNummern);
-        //nummerBox.addActionListener(this);
-    }
-    if ( nummerBox.getItemCount() > 1 ){ nummerBox.requestFocus(); nummerBox.showPopup(); }
-    else { nummerBox.hidePopup(); }
-}
-
-private void setArtikelNameForNummer() {
-    // get artikelNummer
-    String artikelNummer = (String)nummerBox.getSelectedItem();
-    Vector<String[]> artikelNamen = new Vector<String[]>();
-    // get artikelName for artikelNummer
-    try {
-        PreparedStatement pstmt = this.conn.prepareStatement(
-                "SELECT DISTINCT a.artikel_name, l.lieferant_name FROM artikel AS a " +
-                "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                "WHERE a.artikel_nr = ? " +
-                "AND a.aktiv = TRUE"
-                );
-        pstmt.setString(1, artikelNummer);
-        ResultSet rs = pstmt.executeQuery();
-        // Now do something with the ResultSet, should be only one result ...
-        while ( rs.next() ){
-            String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
-            artikelNamen.add( new String[]{rs.getString(1), lieferant} );
-        }
-        rs.close();
-        pstmt.close();
-    } catch (SQLException ex) {
-        System.out.println("Exception: " + ex.getMessage());
-        ex.printStackTrace();
-    }
-    if (artikelBox.getItemCount() != 1){
-        //artikelBox.removeActionListener(this);
+        if (artikelBox.getItemCount() != 1){
+            //artikelBox.removeActionListener(this);
             ////if (artikelNamen.size() == 1){
             ////    // update internal cache string before changing name in text field (otherwise document listener causes problems)
             ////    artikelNameText = artikelNamen.get(0)[0];
             ////}
             artikelBox.setItems(artikelNamen);
-        //artikelBox.addActionListener(this);
+            //artikelBox.addActionListener(this);
+        }
+        if ( artikelBox.getItemCount() > 1 ){ artikelBox.requestFocus(); artikelBox.showPopup(); }
+        else { artikelBox.hidePopup(); }
     }
-    if ( artikelBox.getItemCount() > 1 ){ artikelBox.requestFocus(); artikelBox.showPopup(); }
-    else { artikelBox.hidePopup(); }
-}
 
 
-private void resetFormFromBarcodeBox() {
-    artikelBox.emptyBox();
-    nummerBox.emptyBox();
-}
-private void resetFormFromArtikelBox() {
-    barcodeBox.emptyBox();
-    nummerBox.emptyBox();
-}
-private void resetFormFromNummerBox() {
-    barcodeBox.emptyBox();
-    artikelBox.emptyBox();
-}
+    private void resetFormFromBarcodeBox() {
+        artikelBox.emptyBox();
+        nummerBox.emptyBox();
+    }
+    private void resetFormFromArtikelBox() {
+        barcodeBox.emptyBox();
+        nummerBox.emptyBox();
+    }
+    private void resetFormFromNummerBox() {
+        barcodeBox.emptyBox();
+        artikelBox.emptyBox();
+    }
 
-private void checkBarcodeBox(ActionEvent e) {
-    if ( e.getActionCommand().equals("comboBoxEdited") || // if enter was pressed
-            ( e.getActionCommand().equals("comboBoxChanged") && e.getModifiers() == 16 ) // if mouse button was clicked
-       ){
-        if ( barcodeBox.getItemCount() == 1 ){ // if selection is correct and unique
-            setArtikelNameAndNummerForBarcode();
-        } else {
+    private void checkBarcodeBox(ActionEvent e) {
+        if ( e.getActionCommand().equals("comboBoxEdited") || // if enter was pressed
+                ( e.getActionCommand().equals("comboBoxChanged") && e.getModifiers() == 16 ) // if mouse button was clicked
+           ){
+            if ( barcodeBox.getItemCount() == 1 ){ // if selection is correct and unique
+                setArtikelNameAndNummerForBarcode();
+            } else {
+                resetFormFromBarcodeBox();
+            }
+        } else if ( e.getActionCommand().equals("comboBoxChanged") ){ // all other changes (either removal or up/down key etc.)
             resetFormFromBarcodeBox();
         }
-    } else if ( e.getActionCommand().equals("comboBoxChanged") ){ // all other changes (either removal or up/down key etc.)
-        resetFormFromBarcodeBox();
-    }
-    if (!this.editMode){
-        checkIfFormIsComplete();
-    } else {
-        checkIfChangesCanBeSaved();
-    }
-}
-protected void checkArtikelBox(ActionEvent e) {
-    if ( e.getActionCommand().equals("comboBoxEdited") || // if enter was pressed
-            ( e.getActionCommand().equals("comboBoxChanged") && e.getModifiers() == 16 ) // if mouse button was clicked
-       ){
-        if ( artikelBox.getItemCount() == 1 ){ // if selection is correct and unique
-            setArtikelNummerForName();
+        if (!this.editMode){
+            checkIfFormIsComplete();
         } else {
+            checkIfChangesCanBeSaved();
+        }
+    }
+    protected void checkArtikelBox(ActionEvent e) {
+        if ( e.getActionCommand().equals("comboBoxEdited") || // if enter was pressed
+                ( e.getActionCommand().equals("comboBoxChanged") && e.getModifiers() == 16 ) // if mouse button was clicked
+           ){
+            if ( artikelBox.getItemCount() == 1 ){ // if selection is correct and unique
+                setArtikelNummerForName();
+            } else {
+                resetFormFromArtikelBox();
+            }
+        } else if ( e.getActionCommand().equals("comboBoxChanged") ){ // all other changes (either removal or up/down key etc.)
             resetFormFromArtikelBox();
         }
-    } else if ( e.getActionCommand().equals("comboBoxChanged") ){ // all other changes (either removal or up/down key etc.)
-        resetFormFromArtikelBox();
-    }
-    if (!this.editMode){
-        checkIfFormIsComplete();
-    } else {
-        checkIfChangesCanBeSaved();
-    }
-}
-protected void checkNummerBox(ActionEvent e) {
-    if ( e.getActionCommand().equals("comboBoxEdited") || // if enter was pressed
-            ( e.getActionCommand().equals("comboBoxChanged") && e.getModifiers() == 16 ) // if mouse button was clicked
-       ){
-        if ( nummerBox.getItemCount() == 1 ){ // if selection is correct and unique
-            setArtikelNameForNummer();
+        if (!this.editMode){
+            checkIfFormIsComplete();
         } else {
+            checkIfChangesCanBeSaved();
+        }
+    }
+    protected void checkNummerBox(ActionEvent e) {
+        if ( e.getActionCommand().equals("comboBoxEdited") || // if enter was pressed
+                ( e.getActionCommand().equals("comboBoxChanged") && e.getModifiers() == 16 ) // if mouse button was clicked
+           ){
+            if ( nummerBox.getItemCount() == 1 ){ // if selection is correct and unique
+                setArtikelNameForNummer();
+            } else {
+                resetFormFromNummerBox();
+            }
+        } else if ( e.getActionCommand().equals("comboBoxChanged") ){ // all other changes (either removal or up/down key etc.)
             resetFormFromNummerBox();
         }
-    } else if ( e.getActionCommand().equals("comboBoxChanged") ){ // all other changes (either removal or up/down key etc.)
-        resetFormFromNummerBox();
-    }
-    if (!this.editMode){
-        checkIfFormIsComplete();
-    } else {
-        checkIfChangesCanBeSaved();
-    }
-}
-
-
-
-boolean checkProductSelection() {
-    boolean conditionsFulfilled = true;
-    if ( produktModus == produktDropDownOptions[0] ){ // Einzelprodukt
-        int nummerNumber = nummerBox.getItemCount();
-        int artikelNumber = artikelBox.getItemCount();
-        if ( ! (artikelNumber == 1 && nummerNumber == 1) ){
-            conditionsFulfilled = false;
-        }
-    } else if ( produktModus == produktDropDownOptions[1] ){ // Produktgruppe
-        if ( produktgruppenBox.getSelectedItem().equals("") ){
-            conditionsFulfilled = false;
+        if (!this.editMode){
+            checkIfFormIsComplete();
+        } else {
+            checkIfChangesCanBeSaved();
         }
     }
-    return conditionsFulfilled;
-}
 
-boolean checkRabattSelection() {
-    boolean conditionsFulfilled = true;
-    if ( rabattModus == rabattDropDownOptions[0] ){ // Einzelrabatt
-        if ( (absolutField.getText().length() == 0 && relativField.getText().length() == 0) ||
-                (absolutField.getText().length() > 0 && relativField.getText().length() > 0) ){
-            conditionsFulfilled = false;
+
+
+    boolean checkProductSelection() {
+        boolean conditionsFulfilled = true;
+        if ( produktModus == produktDropDownOptions[0] ){ // Einzelprodukt
+            int nummerNumber = nummerBox.getItemCount();
+            int artikelNumber = artikelBox.getItemCount();
+            if ( ! (artikelNumber == 1 && nummerNumber == 1) ){
+                conditionsFulfilled = false;
+            }
+        } else if ( produktModus == produktDropDownOptions[1] ){ // Produktgruppe
+            if ( produktgruppenBox.getSelectedItem().equals("") ){
+                conditionsFulfilled = false;
+            }
         }
-    } else if ( rabattModus == rabattDropDownOptions[1] ){ // Mengenrabatt
-        if ( ((Integer)kostenlosSpinner.getValue() <= 0 && mengenrabattRelativField.getText().length() == 0) ||
-                ((Integer)kostenlosSpinner.getValue() > 0 && mengenrabattRelativField.getText().length() > 0) ){
-            conditionsFulfilled = false;
-        }
+        return conditionsFulfilled;
     }
-    return conditionsFulfilled;
-}
 
-boolean isFormComplete() {
-    boolean conditionsFulfilled = true; // start with conditions fulfilled, set to false if *any* condition is not fulfilled
-    // check aktionsname
-    if ( nameField.getText().length() == 0) conditionsFulfilled = false;
-    // check product selection
-    if (conditionsFulfilled) conditionsFulfilled = checkProductSelection();
-    // check rabatt selection
-    if (conditionsFulfilled) conditionsFulfilled = checkRabattSelection();
-    // are conditions fulfilled?
-    return conditionsFulfilled;
-}
+    boolean checkRabattSelection() {
+        boolean conditionsFulfilled = true;
+        if ( rabattModus == rabattDropDownOptions[0] ){ // Einzelrabatt
+            if ( (absolutField.getText().length() == 0 && relativField.getText().length() == 0) ||
+                    (absolutField.getText().length() > 0 && relativField.getText().length() > 0) ){
+                conditionsFulfilled = false;
+                    }
+        } else if ( rabattModus == rabattDropDownOptions[1] ){ // Mengenrabatt
+            if ( ((Integer)kostenlosSpinner.getValue() <= 0 && mengenrabattRelativField.getText().length() == 0) ||
+                    ((Integer)kostenlosSpinner.getValue() > 0 && mengenrabattRelativField.getText().length() > 0) ){
+                conditionsFulfilled = false;
+                    }
+        }
+        return conditionsFulfilled;
+    }
 
-String nameValue() { return nameField.getText(); }
-String vonValue() { return this.sdf.format(vonDateModel.getDate()); }
+    boolean isFormComplete() {
+        boolean conditionsFulfilled = true; // start with conditions fulfilled, set to false if *any* condition is not fulfilled
+        // check aktionsname
+        if ( nameField.getText().length() == 0) conditionsFulfilled = false;
+        // check product selection
+        if (conditionsFulfilled) conditionsFulfilled = checkProductSelection();
+        // check rabatt selection
+        if (conditionsFulfilled) conditionsFulfilled = checkRabattSelection();
+        // are conditions fulfilled?
+        return conditionsFulfilled;
+    }
+
+    String nameValue() { return nameField.getText(); }
+    String vonValue() { return this.sdf.format(vonDateModel.getDate()); }
     // alternative:
     //String vonDate = (new java.sql.Date( vonDateModel.getDate().getTime() )).toString();
-boolean unlimitedValue() { return unlimitedCheckBox.isSelected(); }
-String bisValue() {
-    if ( unlimitedValue() )
-        return "NULL";
-    else
-        return this.sdf.format(bisDateModel.getDate());
-}
-String[] artNameValue() { return artikelBox.parseArtikelName(); }
-String artNummerValue() { return (String)nummerBox.getSelectedItem(); }
-Integer produktgruppenValue() { return produktgruppenIDs.get(produktgruppenBox.getSelectedIndex()); }
-BigDecimal absolutValue() {
-    if (absolutField.getText().equals("")) return null;
-    return new BigDecimal(absolutField.getText().replace(',','.'));
-}
-BigDecimal relativValue() {
-    if (relativField.getText().equals("")) return null;
-    return new BigDecimal(relativField.getText().replace(',','.')).multiply(percent);
-}
-Integer schwelleValue() { return (Integer)mengenrabattSchwelleSpinner.getValue(); }
-Integer kostenlosValue() { return (Integer)kostenlosSpinner.getValue(); }
-BigDecimal mengeRelativValue() {
-    if (mengenrabattRelativField.getText().equals("")) return null;
-    return new BigDecimal(mengenrabattRelativField.getText().replace(',','.')).multiply(percent);
-}
+    boolean unlimitedValue() { return unlimitedCheckBox.isSelected(); }
+    String bisValue() {
+        if ( unlimitedValue() )
+            return "NULL";
+        else
+            return this.sdf.format(bisDateModel.getDate());
+    }
+    String[] artNameValue() { return artikelBox.parseArtikelName(); }
+    String artNummerValue() { return (String)nummerBox.getSelectedItem(); }
+    Integer produktgruppenValue() { return produktgruppenIDs.get(produktgruppenBox.getSelectedIndex()); }
+    BigDecimal absolutValue() {
+        if (absolutField.getText().equals("")) return null;
+        return new BigDecimal(absolutField.getText().replace(',','.'));
+    }
+    BigDecimal relativValue() {
+        if (relativField.getText().equals("")) return null;
+        return new BigDecimal(relativField.getText().replace(',','.')).multiply(percent);
+    }
+    Integer schwelleValue() { return (Integer)mengenrabattSchwelleSpinner.getValue(); }
+    Integer kostenlosValue() { return (Integer)kostenlosSpinner.getValue(); }
+    BigDecimal mengeRelativValue() {
+        if (mengenrabattRelativField.getText().equals("")) return null;
+        return new BigDecimal(mengenrabattRelativField.getText().replace(',','.')).multiply(percent);
+    }
 
     boolean areThereChanges() {
         boolean changes = false;
         if (!changes) changes = !nameValue().equals(this.aktionsname);
+        System.out.println("\nchanges 1: "+changes);
         if (!changes) changes = !vonValue().equals(this.von);
+        System.out.println("changes 2: "+changes);
         if ( this.unlimited ){
             if (!changes) changes = unlimitedValue() != this.unlimited;
         } else {
             if (!changes) changes = !bisValue().equals(this.bis);
         }
+        System.out.println("changes 3: "+changes);
         if (!changes) changes = !produktModus.equals(this.presetProduktModus);
+        System.out.println("changes 4: "+changes);
         if (!changes) changes = !rabattModus.equals(this.presetRabattModus);
+        System.out.println("changes 5: "+changes);
         if (!changes && produktModus == produktDropDownOptions[0])
             changes = !artNameValue()[0].equals(this.artikelName);
+        System.out.println("changes 6: "+changes);
         if (!changes && produktModus == produktDropDownOptions[0])
             changes = !artNummerValue().equals(this.artikelNummer);
+        System.out.println("changes 7: "+changes);
         if (!changes && produktModus == produktDropDownOptions[1])
             changes = !produktgruppenValue().equals(this.produktgruppenID);
-        if (!changes && rabattModus == rabattDropDownOptions[0])
-            changes = !absolutValue().equals(this.rabattAbsolut);
-        if (!changes && rabattModus == rabattDropDownOptions[0])
-            changes = !relativValue().equals(this.rabattRelativ);
+        System.out.println("changes 8: "+changes);
+
+        if (this.rabattAbsolut == null && absolutValue() != null)
+            changes = true;
+        if (absolutValue() == null && this.rabattAbsolut != null)
+            changes = true;
+        if (this.rabattAbsolut != null){
+            if (!changes && rabattModus == rabattDropDownOptions[0])
+                changes = !absolutValue().equals(this.rabattAbsolut);
+        }
+        System.out.println("changes 9: "+changes);
+
+        if (this.rabattRelativ == null && relativValue() != null)
+            changes = true;
+        if (relativValue() == null && this.rabattRelativ != null)
+            changes = true;
+        if (this.rabattRelativ != null){
+            if (!changes && rabattModus == rabattDropDownOptions[0])
+                changes = !relativValue().equals(this.rabattRelativ);
+        }
+        System.out.println("changes 10: "+changes);
+
         if (!changes && rabattModus == rabattDropDownOptions[1])
             changes = !schwelleValue().equals(this.mengenrabattSchwelle);
+        System.out.println("changes 11: "+changes);
         if (!changes && rabattModus == rabattDropDownOptions[1])
             changes = !kostenlosValue().equals(this.mengenrabattAnzahl);
+        System.out.println("changes 12: "+changes);
         if (!changes && rabattModus == rabattDropDownOptions[1])
             changes = !mengeRelativValue().equals(this.mengenrabattRelativ);
+        System.out.println("changes 13: "+changes);
         return changes;
     }
 
@@ -1133,7 +1183,7 @@ BigDecimal mengeRelativValue() {
      *    @param e the document event.
      **/
     public void insertUpdate(DocumentEvent e) {
-	setOtherFieldEditable(e);
+        setOtherFieldEditable(e);
         if (!this.editMode){
             checkIfFormIsComplete();
         } else {
@@ -1141,7 +1191,7 @@ BigDecimal mengeRelativValue() {
         }
     }
     public void removeUpdate(DocumentEvent e) {
-	setOtherFieldEditable(e);
+        setOtherFieldEditable(e);
         if (!this.editMode){
             checkIfFormIsComplete();
         } else {
@@ -1149,7 +1199,7 @@ BigDecimal mengeRelativValue() {
         }
     }
     public void changedUpdate(DocumentEvent e) {
-	//Plain text components do not fire these events
+        //Plain text components do not fire these events
     }
 
 
@@ -1206,25 +1256,25 @@ BigDecimal mengeRelativValue() {
             checkNummerBox(e);
             return;
         }
-	if (e.getSource() == closeButton){
+        if (e.getSource() == closeButton){
             WindowAdapter adapter = (WindowAdapter)this.window.getWindowListeners()[0];
             adapter.windowClosing(new WindowEvent((Window)this.window, WindowEvent.WINDOW_CLOSING));
-	    return;
+            return;
         }
         if (e.getSource() == emptyBarcodeButton){
             barcodeBox.emptyBox();
             barcodeBox.requestFocus();
-	    return;
-	}
-	if (e.getSource() == emptyArtikelButton){
+            return;
+        }
+        if (e.getSource() == emptyArtikelButton){
             artikelBox.emptyBox();
             artikelBox.requestFocus();
-	    return;
+            return;
         }
         if (e.getSource() == emptyNummerButton){
             nummerBox.emptyBox();
             nummerBox.requestFocus();
-	    return;
+            return;
         }
         if (e.getSource() == insertButton){
             insertRabattaktion();
