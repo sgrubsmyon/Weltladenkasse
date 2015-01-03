@@ -33,8 +33,6 @@ import javax.swing.table.*;
 
 import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.AnyJComponentJTable;
-import WeltladenDB.JComponentCellRenderer;
-import WeltladenDB.JComponentCellEditor;
 
 public abstract class Rechnungen extends RechnungsGrundlage {
     // Attribute:
@@ -162,8 +160,6 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	tablePanel.add(pageChangePanel);
 
 	addButtonsToTable();
-	myTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
-	myTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
 //	myTable.setBounds(71,53,150,100);
 //	myTable.setToolTipText("Tabelle kann nur gelesen werden.");
 	setOverviewTableProperties(myTable);
@@ -215,8 +211,6 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	removeDetailButton.addActionListener(this);
 	overviewTable.setValueAt( removeDetailButton, 0, 0 );
 	overviewTable.setValueAt( myTable.getValueAt(detailRow,overviewLabels.size()-1), 0, overviewLabels.size()-1 );
-	overviewTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
-	overviewTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
 	setOverviewTableProperties(overviewTable);
         if ( overviewTable.getValueAt(0, 0) instanceof JButton )
             overviewTable.setColEditableTrue(0); // here is the remove detail button
@@ -317,8 +311,6 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	}
 
 	RechnungsTable detailTable = new RechnungsTable(detailData, columnLabels);
-	detailTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
-	detailTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
 	setTableProperties(detailTable);
 
 	JScrollPane detailScrollPane = new JScrollPane(detailTable);

@@ -134,8 +134,6 @@ public class ArtikelNeu extends WindowContent
             }
         };
         myTable.setColEditableTrue(columnLabels.size()-1); // last column has buttons
-	myTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
-	myTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
         setTableProperties(myTable);
 
 	tablePanel = new JPanel();

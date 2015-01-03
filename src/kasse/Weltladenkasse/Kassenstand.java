@@ -43,8 +43,6 @@ import WeltladenDB.WindowContent;
 import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.AnyJComponentJTable;
 import WeltladenDB.NumberDocumentFilter;
-import WeltladenDB.JComponentCellRenderer;
-import WeltladenDB.JComponentCellEditor;
 
 public class Kassenstand extends WindowContent implements ChangeListener, DocumentListener, ItemListener {
     // Attribute:
@@ -296,8 +294,6 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
     }
 
     void showTable(){
-	myTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
-	myTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
         myTable.setAutoCreateRowSorter(true);
 //	myTable.setBounds(71,53,150,100);
 //	myTable.setToolTipText("Tabelle kann nur gelesen werden.");

@@ -43,9 +43,6 @@ import WeltladenDB.WindowContent;
 import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.ArtikelGrundlage;
 import WeltladenDB.AnyJComponentJTable;
-import WeltladenDB.JComponentCellRenderer;
-import WeltladenDB.JComponentCellRenderer;
-import WeltladenDB.JComponentCellEditor;
 
 public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, TableModelListener {
     // Attribute:
@@ -330,8 +327,6 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 
     void showTable(){
         myTable.getModel().addTableModelListener(this);
-	myTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
-	myTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
         myTable.setAutoCreateRowSorter(true);
 //	myTable.setBounds(71,53,150,100);
 //	myTable.setToolTipText("Tabelle kann nur gelesen werden.");

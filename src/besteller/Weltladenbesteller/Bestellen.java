@@ -41,8 +41,6 @@ import WeltladenDB.ArtikelNameComboBox;
 import WeltladenDB.ArtikelNummerComboBox;
 import WeltladenDB.NumberDocumentFilter;
 import WeltladenDB.StringDocumentFilter;
-import WeltladenDB.JComponentCellRenderer;
-import WeltladenDB.JComponentCellEditor;
 import WeltladenDB.BoundsPopupMenuListener;
 
 public class Bestellen extends BestellungsGrundlage implements ItemListener, DocumentListener {
@@ -418,8 +416,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     void initiateTable() {
 	orderTable = new BestellungsTable(displayData, columnLabels, displayIndices, sortimentBools);
         orderTable.setColEditableTrue(columnLabels.size()-1); // last column has buttons
-	orderTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
-	orderTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
 //	orderTable.setBounds(71,53,150,100);
 //	orderTable.setToolTipText("Tabelle kann nur gelesen werden.");
 	setTableProperties(orderTable);

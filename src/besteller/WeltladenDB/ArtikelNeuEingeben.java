@@ -54,7 +54,9 @@ public class ArtikelNeuEingeben extends DialogWindow
         subsub_id = ssid;
         UpdateTableFunctor utf = new UpdateTableFunctor() {
             public void updateTable() {
+                allPanel.remove(footerPanel);
                 artikelNeu.updateTable(allPanel);
+                showFooter();
             }
         };
         artikelNeu = new ArtikelNeu(conn, mw, utf);
@@ -129,6 +131,8 @@ public class ArtikelNeuEingeben extends DialogWindow
         artikelFormular.nummerField.addKeyListener(enterAdapter);
         artikelFormular.nameField.getDocument().addDocumentListener(this);
         artikelFormular.nameField.addKeyListener(enterAdapter);
+        artikelFormular.kurznameField.getDocument().addDocumentListener(this);
+        artikelFormular.kurznameField.addKeyListener(enterAdapter);
         artikelFormular.mengeField.getDocument().addDocumentListener(this);
         artikelFormular.mengeField.addKeyListener(enterAdapter);
         artikelFormular.barcodeField.getDocument().addDocumentListener(this);
@@ -207,6 +211,7 @@ public class ArtikelNeuEingeben extends DialogWindow
             return 1;
         }
         String name = artikelFormular.nameField.getText();
+        String kurzname = artikelFormular.kurznameField.getText();
         BigDecimal menge;
         try {
             menge = new BigDecimal(artikelFormular.mengeField.getText().replace(',','.'));
@@ -227,6 +232,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         artikelNeu.lieferanten.add(lieferant);
         artikelNeu.artikelNummern.add(nummer);
         artikelNeu.artikelNamen.add(name);
+        artikelNeu.kurznamen.add(kurzname);
         artikelNeu.mengen.add(menge);
         artikelNeu.barcodes.add(barcode.length() == 0 ? "NULL" : barcode);
         artikelNeu.herkuenfte.add(herkunft);
@@ -251,6 +257,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         colors.add(Color.black); // lieferant
         colors.add(Color.black); // nummer
         colors.add(Color.black); // name
+        colors.add(Color.black); // kurzname
         colors.add(Color.black); // menge
         colors.add(Color.black); // barcode
         colors.add(Color.black); // herkunft
@@ -267,6 +274,7 @@ public class ArtikelNeuEingeben extends DialogWindow
             row.add(lieferant);
             row.add(nummer);
             row.add(name);
+            row.add(kurzname);
             row.add( menge == null ? "" : menge.toString() );
             row.add(barcode);
             row.add(herkunft);

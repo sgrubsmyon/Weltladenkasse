@@ -42,8 +42,6 @@ import WeltladenDB.BarcodeComboBox;
 import WeltladenDB.ArtikelNameComboBox;
 import WeltladenDB.ArtikelNummerComboBox;
 import WeltladenDB.NumberDocumentFilter;
-import WeltladenDB.JComponentCellRenderer;
-import WeltladenDB.JComponentCellEditor;
 import WeltladenDB.BoundsPopupMenuListener;
 
 public class Kassieren extends RechnungsGrundlage implements ItemListener, DocumentListener {
@@ -634,8 +632,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     void showTable(){
 	myTable = new RechnungsTable(data, columnLabels);
         myTable.setColEditableTrue(columnLabels.size()-1); // last column has buttons
-	myTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
-	myTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
 //	myTable.setBounds(71,53,150,100);
 //	myTable.setToolTipText("Tabelle kann nur gelesen werden.");
 	setTableProperties(myTable);

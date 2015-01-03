@@ -49,8 +49,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.ArtikelGrundlage;
 import WeltladenDB.AnyJComponentJTable;
-import WeltladenDB.JComponentCellRenderer;
-import WeltladenDB.JComponentCellEditor;
 import WeltladenDB.FileExistsAwareFileChooser;
 
 public class BestellAnzeige extends BestellungsGrundlage implements DocumentListener {
