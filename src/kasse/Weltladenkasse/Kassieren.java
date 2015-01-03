@@ -34,6 +34,9 @@ import javax.swing.event.*;
 //import java.beans.PropertyChangeEvent;
 //import java.beans.PropertyChangeListener;
 
+// DateTime from date4j (http://www.date4j.net/javadoc/index.html)
+import hirondelle.date4j.DateTime;
+
 import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.BarcodeComboBox;
 import WeltladenDB.ArtikelNameComboBox;
@@ -42,7 +45,6 @@ import WeltladenDB.NumberDocumentFilter;
 import WeltladenDB.JComponentCellRenderer;
 import WeltladenDB.JComponentCellEditor;
 import WeltladenDB.BoundsPopupMenuListener;
-import WeltladenDB.Quittung;
 
 public class Kassieren extends RechnungsGrundlage implements ItemListener, DocumentListener {
     // Attribute:
@@ -1853,8 +1855,30 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	    return;
 	}
 	if (e.getSource() == quittungsButton){
-            Quittung myQuittung = new Quittung();
-            myQuittung.printReceipt(positions, articleNames, stueckzahlen, einzelpreise, preise);
+            Vector<BigDecimal> vats = retrieveVATs();
+            // LinkedHashMap preserves insertion order
+            LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
+                new LinkedHashMap< BigDecimal, Vector<BigDecimal> >();
+            for ( BigDecimal vat : vats ){
+                //if (vat.signum() != 0){
+                    if ( mwsts.contains(vat) ){
+                        System.out.println(vat);
+                        Vector<BigDecimal> values = new Vector<BigDecimal>();
+                        BigDecimal brutto = calculateTotalVATUmsatz(vat);
+                        BigDecimal steuer = calculateTotalVATAmount(vat);
+                        BigDecimal netto = new BigDecimal( priceFormatterIntern(brutto.subtract(steuer)) );
+                        values.add(netto); // Netto
+                        values.add(steuer); // Steuer
+                        values.add(brutto); // Umsatz
+                        mwstsAndTheirValues.put(vat, values);
+                    }
+                //}
+            }
+            BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
+            Quittung myQuittung = new Quittung(this.conn, this.mainWindow,
+                    DateTime.now(TimeZone.getDefault()), articleNames, stueckzahlen,
+                    einzelpreise, preise, mwsts, mwstsAndTheirValues, totalPrice);
+            myQuittung.printReceipt();
 	    return;
 	}
 	if (e.getSource() == neuerKundeButton){
