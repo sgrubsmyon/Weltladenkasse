@@ -510,8 +510,6 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         myTable.setAutoCreateRowSorter(true);
         myTable.getModel().addTableModelListener(this);
         myTable.getSelectionModel().addListSelectionListener(this);
-        //myTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
-        //myTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
         setTableProperties(myTable);
 
         // extra cell editor that has the NumberDocumentFilter

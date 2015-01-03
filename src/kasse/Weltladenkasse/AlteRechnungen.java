@@ -37,8 +37,6 @@ import java.util.Date;
 
 import WeltladenDB.WindowContent;
 import WeltladenDB.MainWindowGrundlage;
-import WeltladenDB.JComponentCellRenderer;
-import WeltladenDB.JComponentCellEditor;
 
 public class AlteRechnungen extends Rechnungen implements ChangeListener {
     // Attribute:
@@ -132,8 +130,6 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
 	tablePanel.setBorder(BorderFactory.createTitledBorder(titleStr));
 
 	addButtonsToTable();
-	myTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
-	myTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
 	setOverviewTableProperties(myTable);
 
 	JPanel datePanel = new JPanel();
