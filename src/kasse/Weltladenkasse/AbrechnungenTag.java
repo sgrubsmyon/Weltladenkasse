@@ -96,14 +96,15 @@ public class AbrechnungenTag extends Abrechnungen {
 
             submitButtonEnabled = true;
         }
-        if ( rowCount == 0 ){ // empty, there are no verkaeufe!!! Add zeros.
-            HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
-            Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();
-            mwstValues.add(new BigDecimal("0"));
-            mwstValues.add(new BigDecimal("0"));
-            abrechnung.put(new BigDecimal("0.07"), mwstValues);
-            abrechnung.put(new BigDecimal("0.19"), mwstValues);
-            abrechnungsMap.put(date, abrechnung);
+        if ( rowCount == 0 ){ // empty, there are no verkaeufe!!!
+            // bad practice: need to hard-code VATs
+            //HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
+            //Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();
+            //mwstValues.add(new BigDecimal("0"));
+            //mwstValues.add(new BigDecimal("0"));
+            //abrechnung.put(new BigDecimal("0.07"), mwstValues);
+            //abrechnung.put(new BigDecimal("0.19"), mwstValues);
+            //abrechnungsMap.put(date, abrechnung);
 
             submitButtonEnabled = false;
         }
