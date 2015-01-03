@@ -4,6 +4,7 @@ import java.util.Vector;
 import java.util.Set;
 import java.util.HashSet;
 import java.lang.IllegalArgumentException;
+import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableCellRenderer;
@@ -47,6 +48,11 @@ public class AnyJComponentJTable extends JTable {
 
 
     public TableCellRenderer getCellRenderer(int row, int column) {
+        // always return button-capable renderer if this is a JComponent
+        // (otherwise custom renderer that was set manually)
+        if ( getValueAt(row, column) instanceof JComponent ){
+            return new JComponentCellRenderer();
+        }
         TableColumn tableColumn = getColumnModel().getColumn(column);
         TableCellRenderer renderer = tableColumn.getCellRenderer();
         if (renderer == null) {
@@ -62,6 +68,11 @@ public class AnyJComponentJTable extends JTable {
         return renderer;
     }
     public TableCellEditor getCellEditor(int row, int column) {
+        // always return button-capable editor if this is a JComponent
+        // (otherwise custom editor that was set manually)
+        if ( getValueAt(row, column) instanceof JComponent ){
+            return new JComponentCellEditor();
+        }
         TableColumn tableColumn = getColumnModel().getColumn(column);
         TableCellEditor editor = tableColumn.getCellEditor();
         if (editor == null) {

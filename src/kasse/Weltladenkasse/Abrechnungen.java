@@ -36,8 +36,6 @@ import javax.swing.table.*;
 import WeltladenDB.WindowContent;
 import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.AnyJComponentJTable;
-import WeltladenDB.JComponentCellRenderer;
-import WeltladenDB.JComponentCellEditor;
 
 public abstract class Abrechnungen extends WindowContent {
     // Attribute:
@@ -61,6 +59,7 @@ public abstract class Abrechnungen extends WindowContent {
     protected JButton freiButton = new JButton("Frei");
     protected JButton prevButton;
     protected JButton nextButton;
+    protected Vector<JButton> exportButtons;
 
     protected TreeMap< String, HashMap<BigDecimal, Vector<BigDecimal>> > abrechnungsMap;
     protected TreeMap< String, Vector<BigDecimal> > totalsMap;
@@ -278,8 +277,9 @@ public abstract class Abrechnungen extends WindowContent {
             data.add(new Vector<String>()); data.lastElement().add(vatFormatter(mwst)+" MwSt. Netto");
             data.add(new Vector<String>()); data.lastElement().add(vatFormatter(mwst)+" MwSt. Betrag");
         }
+        data.add(new Vector<String>()); data.lastElement().add(""); // row for exportButton
         // fill data columns
-        int count = 0;
+        //int count = 0;
         for ( Map.Entry< String, HashMap<BigDecimal, Vector<BigDecimal>> > entry : abrechnungsMap.descendingMap().entrySet() ){
             String date = entry.getKey();
             SimpleDateFormat sdfIn = new SimpleDateFormat(dateInFormat);
@@ -292,7 +292,6 @@ public abstract class Abrechnungen extends WindowContent {
                 ex.printStackTrace();
             }
             //if (currentPage == 1 && count == 0) formattedDate = "Jetzt (neu)";
-            count++;
             columnLabels.add(formattedDate);
             System.out.println(date);
             System.out.println(entry.getValue());
@@ -303,23 +302,40 @@ public abstract class Abrechnungen extends WindowContent {
             data.get(1).add( priceFormatter( totalsMap.get(date).get(1) )+" "+currencySymbol );
             // add Gesamt EC Brutto
             data.get(2).add( priceFormatter( totalsMap.get(date).get(2) )+" "+currencySymbol );
+            // add VATs
             HashMap<BigDecimal, Vector<BigDecimal>> valueMap = entry.getValue(); // map with values for each mwst
-            int dataIndex = 3;
+            int rowIndex = 3;
             for (BigDecimal mwst : mwstSet){
                 for (int i=0; i<2; i++){
                     if (valueMap.containsKey(mwst)){
                         BigDecimal bd = valueMap.get(mwst).get(i);
-                        data.get(dataIndex).add( priceFormatter(bd)+" "+currencySymbol );
+                        data.get(rowIndex).add( priceFormatter(bd)+" "+currencySymbol );
                     } else {
-                        data.get(dataIndex).add("");
+                        data.get(rowIndex).add("");
                     }
-                    dataIndex++;
+                    rowIndex++;
                 }
             }
+            // add space for export button
+            data.get(rowIndex).add("");
+            rowIndex++;
         }
         myTable = new AbrechnungsTable(data, columnLabels);
         //	myTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
         //	myTable.setFillsViewportHeight(true);
+
+        // add export buttons in last row:
+        exportButtons = new Vector<JButton>();
+        int count = 0;
+        for ( Map.Entry< String, HashMap<BigDecimal, Vector<BigDecimal>> > entry : abrechnungsMap.descendingMap().entrySet() ){
+            // add export button
+            if (count > 0){ // not for first column
+                exportButtons.add(new JButton("Exportieren"));
+                exportButtons.lastElement().addActionListener(this);
+                myTable.setValueAt( exportButtons.lastElement(), myTable.getRowCount()-1, count+1 );
+            }
+            count++;
+        }
     }
 
     abstract void addOtherStuff();
@@ -352,8 +368,6 @@ public abstract class Abrechnungen extends WindowContent {
 
         addOtherStuff();
 
-        myTable.setDefaultRenderer( JComponent.class, new JComponentCellRenderer() );
-        myTable.setDefaultEditor( JComponent.class, new JComponentCellEditor() );
         //	myTable.setBounds(71,53,150,100);
         //	myTable.setToolTipText("Tabelle kann nur gelesen werden.");
         setTableProperties(myTable);
@@ -378,50 +392,50 @@ public abstract class Abrechnungen extends WindowContent {
             super(data, columns);
         }
         @Override
-            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-                Component c = super.prepareRenderer(renderer, row, column);
-                int realColIndex = convertColumnIndexToModel(column); // user might have changed column order
-                // add custom rendering here
-                if (realColIndex == 0){
-                    c.setFont( c.getFont().deriveFont(Font.BOLD) );
-                }
-                if (currentPage == 1 && realColIndex == 1){
-                    c.setForeground(Color.red);
-                }
-                else {
-                    c.setForeground(Color.black);
-                }
-                //c.setBackground(Color.LIGHT_GRAY);
-                return c;
+        public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+            Component c = super.prepareRenderer(renderer, row, column);
+            int realColIndex = convertColumnIndexToModel(column); // user might have changed column order
+            // add custom rendering here
+            if (realColIndex == 0){
+                c.setFont( c.getFont().deriveFont(Font.BOLD) );
             }
-            // Implement table cell tool tips.
+            if (currentPage == 1 && realColIndex == 1){
+                c.setForeground(Color.red);
+            }
+            else {
+                c.setForeground(Color.black);
+            }
+            //c.setBackground(Color.LIGHT_GRAY);
+            return c;
+        }
+        // Implement table cell tool tips.
         @Override
-            public String getToolTipText(MouseEvent e) {
-                Point p = e.getPoint();
-                int rowIndex = rowAtPoint(p);
-                int colIndex = columnAtPoint(p);
-                int realRowIndex = convertRowIndexToModel(rowIndex); // user might have changed row order
-                int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
-                String tip = this.getModel().getValueAt(realRowIndex, realColIndex).toString();
-                return tip;
-            }
-            // Implement table header tool tips.
+        public String getToolTipText(MouseEvent e) {
+            Point p = e.getPoint();
+            int rowIndex = rowAtPoint(p);
+            int colIndex = columnAtPoint(p);
+            int realRowIndex = convertRowIndexToModel(rowIndex); // user might have changed row order
+            int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
+            String tip = this.getModel().getValueAt(realRowIndex, realColIndex).toString();
+            return tip;
+        }
+        // Implement table header tool tips.
         @Override
-            protected JTableHeader createDefaultTableHeader() {
-                return new JTableHeader(columnModel) {
-                    public String getToolTipText(MouseEvent e) {
-                        String tip = null;
-                        Point p = e.getPoint();
-                        int colIndex = columnAtPoint(p);
-                        int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
-                        tip = columnLabels.get(realColIndex);
-                        return tip;
-                    }
-                };
-            }
+        protected JTableHeader createDefaultTableHeader() {
+            return new JTableHeader(columnModel) {
+                public String getToolTipText(MouseEvent e) {
+                    String tip = null;
+                    Point p = e.getPoint();
+                    int colIndex = columnAtPoint(p);
+                    int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
+                    tip = columnLabels.get(realColIndex);
+                    return tip;
+                }
+            };
+        }
     }
 
-    protected void setTableProperties(AbrechnungsTable table) {
+    protected void setTableProperties(AnyJComponentJTable table) {
 	// Spalteneigenschaften:
         for (int i=0; i<table.getColumnCount(); i++){
             TableColumn column = table.getColumnModel().getColumn(i);
