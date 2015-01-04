@@ -4,8 +4,11 @@ import java.util.Vector;
 import java.util.Set;
 import java.util.HashSet;
 import java.lang.IllegalArgumentException;
+import java.awt.Point;
+import java.awt.event.MouseEvent;
 import javax.swing.JComponent;
 import javax.swing.JTable;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableCellEditor;
@@ -92,5 +95,36 @@ public class AnyJComponentJTable extends JTable {
             return true;
         else
             return false;
+    }
+
+    // Implement table header tool tips.
+    protected JTableHeader createDefaultTableHeader() {
+        return new JTableHeader(columnModel) {
+            public String getToolTipText(MouseEvent e) {
+                Point p = e.getPoint();
+                int colIndex = columnAtPoint(p);
+                String tip = null;
+                //int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
+                try { tip = getColumnName(colIndex); }
+                catch (Exception ex) { } // e.g. catch if cell contains NullPointer
+                return tip;
+            }
+        };
+    }
+    // Implement table cell tool tips.
+    public String getToolTipText(MouseEvent e) {
+        Point p = e.getPoint();
+        int rowIndex = rowAtPoint(p);
+        int colIndex = columnAtPoint(p);
+        //int realRowIndex = convertRowIndexToModel(rowIndex); // user might have changed row order
+        //int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
+        String tip = null;
+        if ( getValueAt(rowIndex, colIndex) instanceof JComponent ){
+            // no tool tip for Components
+            return tip;
+        }
+        try { tip = getValueAt(rowIndex, colIndex).toString(); }
+        catch (Exception ex) { } // e.g. catch if cell contains NullPointer
+        return tip;
     }
 }

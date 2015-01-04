@@ -98,32 +98,7 @@ public class ArtikelNeu extends WindowContent
     }
 
     public void showTable(JPanel allPanel) {
-        myTable = new AnyJComponentJTable(data, columnLabels){ // subclass the JTable to set font properties and tool tip text
-            // Implement table cell tool tips.
-            public String getToolTipText(MouseEvent e) {
-                Point p = e.getPoint();
-                int rowIndex = rowAtPoint(p);
-                int colIndex = columnAtPoint(p);
-                int realRowIndex = convertRowIndexToModel(rowIndex); // user might have changed row order
-                int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
-                String tip = "";
-                if (realColIndex < columnLabels.size()-1) // prevent tool tip in button row
-                    tip = this.getModel().getValueAt(realRowIndex, realColIndex).toString();
-                return tip;
-            }
-            // Implement table header tool tips.
-            protected JTableHeader createDefaultTableHeader() {
-                return new JTableHeader(columnModel) {
-                    public String getToolTipText(MouseEvent e) {
-                        String tip = null;
-                        Point p = e.getPoint();
-                        int colIndex = columnAtPoint(p);
-                        int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
-                        tip = columnLabels.get(realColIndex);
-                        return tip;
-                    }
-                };
-            }
+        myTable = new AnyJComponentJTable(data, columnLabels){ // subclass the JTable to set font properties
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component c = super.prepareRenderer(renderer, row, column);
                 // add custom rendering here

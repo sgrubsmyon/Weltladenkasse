@@ -134,33 +134,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         orderLabels.add("KW");
         orderLabels.add("Datum");
         retrieveOrderData();
-        orderTable = new AnyJComponentJTable(orderData, orderLabels){
-            // Implement table cell tool tips.
-            @Override
-            public String getToolTipText(MouseEvent e) {
-                Point p = e.getPoint();
-                int rowIndex = rowAtPoint(p);
-                int colIndex = columnAtPoint(p);
-                String tip = "";
-                try { tip = getValueAt(rowIndex, colIndex).toString(); }
-                catch (ArrayIndexOutOfBoundsException ex) { }
-                return tip;
-            }
-            // Implement table header tool tips.
-            @Override
-            protected JTableHeader createDefaultTableHeader() {
-                return new JTableHeader(columnModel) {
-                    public String getToolTipText(MouseEvent e) {
-                        Point p = e.getPoint();
-                        int colIndex = columnAtPoint(p);
-                        String tip = null;
-                        try { tip = getColumnName(colIndex); }
-                        catch (Exception ex) { }
-                        return tip;
-                    }
-                };
-            }
-        };
+        orderTable = new AnyJComponentJTable(orderData, orderLabels);
         // selection listener:
         //orderTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
         orderTable.setFillsViewportHeight(true);

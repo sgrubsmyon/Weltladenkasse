@@ -59,32 +59,4 @@ public class BestellungsTable extends AnyJComponentJTable {
             //c.setBackground(Color.LIGHT_GRAY);
             return c;
         }
-
-    // Implement table cell tool tips.
-    @Override
-        public String getToolTipText(MouseEvent e) {
-            Point p = e.getPoint();
-            int rowIndex = rowAtPoint(p);
-            int colIndex = columnAtPoint(p);
-            String tip = null;
-            if ( !getColumnName(colIndex).equals("Entfernen") ){ // exclude column with buttons
-                try { tip = getValueAt(rowIndex, colIndex).toString(); }
-                catch (Exception ex) { } // e.g. catch if cell contains NullPointer
-            }
-            return tip;
-        }
-    // Implement table header tool tips.
-    @Override
-        protected JTableHeader createDefaultTableHeader() {
-            return new JTableHeader(columnModel) {
-                public String getToolTipText(MouseEvent e) {
-                    Point p = e.getPoint();
-                    int colIndex = columnAtPoint(p);
-                    String tip = null;
-                    try { tip = getColumnName(colIndex); }
-                    catch (Exception ex) { }
-                    return tip;
-                }
-            };
-        }
 }
