@@ -272,34 +272,6 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
                 //c.setForeground(Color.BLACK);
                 return c;
             }
-            // Implement table cell tool tips.
-            public String getToolTipText(MouseEvent e) {
-                Point p = e.getPoint();
-                int rowIndex = rowAtPoint(p);
-                int colIndex = columnAtPoint(p);
-                int realRowIndex = convertRowIndexToModel(rowIndex); // user might have changed row order
-                int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
-                String tip = "";
-                if ( colIndex != columnLabels.size()-1 && colIndex != columnLabels.size()-2 ){ // the buttons make too long tool tip
-                    tip = this.getModel().getValueAt(realRowIndex, realColIndex).toString();
-                }
-                return tip;
-            }
-            // Implement table header tool tips.
-            protected JTableHeader createDefaultTableHeader() {
-                return new JTableHeader(columnModel) {
-                    public String getToolTipText(MouseEvent e) {
-                        String tip = null;
-                        Point p = e.getPoint();
-                        int colIndex = columnAtPoint(p);
-                        int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
-                        //if (columnLabels.get(realColIndex).equals("Betrag MwSt.")){
-                        tip = columnLabels.get(realColIndex);
-                        //}
-                        return tip;
-                    }
-                };
-            }
         };
         myTable.setColEditableTrue(columnLabels.size()-1); // last column has buttons
         myTable.setColEditableTrue(columnLabels.size()-2); // next-to-last column has buttons

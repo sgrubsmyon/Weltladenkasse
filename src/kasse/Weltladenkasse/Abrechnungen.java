@@ -280,7 +280,7 @@ public abstract class Abrechnungen extends WindowContent {
         data.add(new Vector<String>()); data.lastElement().add(""); // row for exportButton
         // fill data columns
         //int count = 0;
-        for ( Map.Entry< String, HashMap<BigDecimal, Vector<BigDecimal>> > entry : abrechnungsMap.descendingMap().entrySet() ){
+        for ( Map.Entry< String, Vector<BigDecimal> > entry : totalsMap.descendingMap().entrySet() ){
             String date = entry.getKey();
             SimpleDateFormat sdfIn = new SimpleDateFormat(dateInFormat);
             SimpleDateFormat sdfOut = new SimpleDateFormat(dateOutFormat);
@@ -295,23 +295,23 @@ public abstract class Abrechnungen extends WindowContent {
             columnLabels.add(formattedDate);
             System.out.println(date);
             System.out.println(entry.getValue());
-            System.out.println(totalsMap.get(date));
+            System.out.println(abrechnungsMap.get(date));
             // add Gesamt Brutto
-            data.get(0).add( priceFormatter( totalsMap.get(date).get(0) )+" "+currencySymbol );
+            data.get(0).add( priceFormatter( entry.getValue().get(0) )+" "+currencySymbol );
             // add Gesamt Bar Brutto
-            data.get(1).add( priceFormatter( totalsMap.get(date).get(1) )+" "+currencySymbol );
+            data.get(1).add( priceFormatter( entry.getValue().get(1) )+" "+currencySymbol );
             // add Gesamt EC Brutto
-            data.get(2).add( priceFormatter( totalsMap.get(date).get(2) )+" "+currencySymbol );
+            data.get(2).add( priceFormatter( entry.getValue().get(2) )+" "+currencySymbol );
             // add VATs
-            HashMap<BigDecimal, Vector<BigDecimal>> valueMap = entry.getValue(); // map with values for each mwst
+            HashMap<BigDecimal, Vector<BigDecimal>> valueMap = abrechnungsMap.get(date); // map with values for each mwst
             int rowIndex = 3;
             for (BigDecimal mwst : mwstSet){
                 for (int i=0; i<2; i++){
-                    if (valueMap.containsKey(mwst)){
+                    if (valueMap != null && valueMap.containsKey(mwst)){
                         BigDecimal bd = valueMap.get(mwst).get(i);
                         data.get(rowIndex).add( priceFormatter(bd)+" "+currencySymbol );
                     } else {
-                        data.get(rowIndex).add("");
+                        data.get(rowIndex).add( priceFormatter("0")+" "+currencySymbol );
                     }
                     rowIndex++;
                 }
@@ -327,7 +327,7 @@ public abstract class Abrechnungen extends WindowContent {
         // add export buttons in last row:
         exportButtons = new Vector<JButton>();
         int count = 0;
-        for ( Map.Entry< String, HashMap<BigDecimal, Vector<BigDecimal>> > entry : abrechnungsMap.descendingMap().entrySet() ){
+        for ( Map.Entry< String, Vector<BigDecimal> > entry : totalsMap.descendingMap().entrySet() ){
             // add export button
             if (count > 0){ // not for first column
                 exportButtons.add(new JButton("Exportieren"));
@@ -369,7 +369,6 @@ public abstract class Abrechnungen extends WindowContent {
         addOtherStuff();
 
         //	myTable.setBounds(71,53,150,100);
-        //	myTable.setToolTipText("Tabelle kann nur gelesen werden.");
         setTableProperties(myTable);
         //	myTable.setAutoResizeMode(5);
 
@@ -407,31 +406,6 @@ public abstract class Abrechnungen extends WindowContent {
             }
             //c.setBackground(Color.LIGHT_GRAY);
             return c;
-        }
-        // Implement table cell tool tips.
-        @Override
-        public String getToolTipText(MouseEvent e) {
-            Point p = e.getPoint();
-            int rowIndex = rowAtPoint(p);
-            int colIndex = columnAtPoint(p);
-            int realRowIndex = convertRowIndexToModel(rowIndex); // user might have changed row order
-            int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
-            String tip = this.getModel().getValueAt(realRowIndex, realColIndex).toString();
-            return tip;
-        }
-        // Implement table header tool tips.
-        @Override
-        protected JTableHeader createDefaultTableHeader() {
-            return new JTableHeader(columnModel) {
-                public String getToolTipText(MouseEvent e) {
-                    String tip = null;
-                    Point p = e.getPoint();
-                    int colIndex = columnAtPoint(p);
-                    int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
-                    tip = columnLabels.get(realColIndex);
-                    return tip;
-                }
-            };
         }
     }
 

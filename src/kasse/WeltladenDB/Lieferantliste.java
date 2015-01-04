@@ -208,7 +208,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     }
 
     void initiateTable() {
-        myTable = new JTable( new AbstractTableModel() { // subclass the AbstractTableModel to set editable cells etc.
+        myTable = new AnyJComponentJTable( new AbstractTableModel() { // subclass the AbstractTableModel to set editable cells etc.
             public String getColumnName(int col) {
                 return columnLabels.get(col);
             }
@@ -269,29 +269,6 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
                     c.setForeground(Color.BLACK);
                 }
                 return c;
-            }
-            // Implement table cell tool tips.
-            public String getToolTipText(MouseEvent e) {
-                Point p = e.getPoint();
-                int rowIndex = rowAtPoint(p);
-                int colIndex = columnAtPoint(p);
-                int realRowIndex = convertRowIndexToModel(rowIndex); // user might have changed row order
-                int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
-                String tip = this.getModel().getValueAt(realRowIndex, realColIndex).toString();
-                return tip;
-            }
-            // Implement table header tool tips.
-            protected JTableHeader createDefaultTableHeader() {
-                return new JTableHeader(columnModel) {
-                    public String getToolTipText(MouseEvent e) {
-                        String tip = null;
-                        Point p = e.getPoint();
-                        int colIndex = columnAtPoint(p);
-                        int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
-                        tip = columnLabels.get(realColIndex);
-                        return tip;
-                    }
-                };
             }
         };
         myTable.setAutoCreateRowSorter(true);

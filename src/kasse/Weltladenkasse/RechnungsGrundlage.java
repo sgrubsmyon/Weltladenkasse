@@ -151,48 +151,19 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         }
 
         @Override
-            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-                Component c = super.prepareRenderer(renderer, row, column);
-                // add custom rendering here
-                c.setFont( c.getFont().deriveFont(Font.BOLD) );
-                String color = colors.get(row);
-                if (color.equals("red")){ c.setForeground(Color.RED); }
-                else if (color.equals("blue")){ c.setForeground(Color.BLUE); }
-                else if (color.equals("green")){ c.setForeground(Color.GREEN.darker().darker()); }
-                else if (color.equals("gray")){ c.setForeground(Color.GRAY); }
-                else { c.setForeground(Color.BLACK); }
-                //c.setBackground(Color.LIGHT_GRAY);
-                return c;
-            }
-
-        // Implement table cell tool tips.
-        @Override
-            public String getToolTipText(MouseEvent e) {
-                Point p = e.getPoint();
-                int rowIndex = rowAtPoint(p);
-                int colIndex = columnAtPoint(p);
-                int realRowIndex = convertRowIndexToModel(rowIndex); // user might have changed row order
-                int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
-                String tip = "";
-                if ( !columnLabels.get(realColIndex).equals("Entfernen") ){ // exclude column with buttons
-                    tip = this.getModel().getValueAt(realRowIndex, realColIndex).toString();
-                }
-                return tip;
-            }
-        // Implement table header tool tips.
-        @Override
-            protected JTableHeader createDefaultTableHeader() {
-                return new JTableHeader(columnModel) {
-                    public String getToolTipText(MouseEvent e) {
-                        String tip = null;
-                        Point p = e.getPoint();
-                        int colIndex = columnAtPoint(p);
-                        int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
-                        tip = columnLabels.get(realColIndex);
-                        return tip;
-                    }
-                };
-            }
+        public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+            Component c = super.prepareRenderer(renderer, row, column);
+            // add custom rendering here
+            c.setFont( c.getFont().deriveFont(Font.BOLD) );
+            String color = colors.get(row);
+            if (color.equals("red")){ c.setForeground(Color.RED); }
+            else if (color.equals("blue")){ c.setForeground(Color.BLUE); }
+            else if (color.equals("green")){ c.setForeground(Color.GREEN.darker().darker()); }
+            else if (color.equals("gray")){ c.setForeground(Color.GRAY); }
+            else { c.setForeground(Color.BLACK); }
+            //c.setBackground(Color.LIGHT_GRAY);
+            return c;
+        }
     }
 
     protected void setTableProperties(RechnungsTable table) {
