@@ -273,8 +273,6 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
                 return c;
             }
         };
-        myTable.setColEditableTrue(columnLabels.size()-1); // last column has buttons
-        myTable.setColEditableTrue(columnLabels.size()-2); // next-to-last column has buttons
 //	myTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
 //	myTable.setFillsViewportHeight(true);
     }

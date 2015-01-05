@@ -108,7 +108,6 @@ public class ArtikelNeu extends WindowContent
                 return c;
             }
         };
-        myTable.setColEditableTrue(columnLabels.size()-1); // last column has buttons
         setTableProperties(myTable);
 
 	tablePanel = new JPanel();

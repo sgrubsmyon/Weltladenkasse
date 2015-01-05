@@ -631,7 +631,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
     void showTable(){
 	myTable = new RechnungsTable(data, columnLabels);
-        myTable.setColEditableTrue(columnLabels.size()-1); // last column has buttons
 //	myTable.setBounds(71,53,150,100);
 //	myTable.setToolTipText("Tabelle kann nur gelesen werden.");
 	setTableProperties(myTable);

@@ -212,10 +212,6 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	overviewTable.setValueAt( removeDetailButton, 0, 0 );
 	overviewTable.setValueAt( myTable.getValueAt(detailRow,overviewLabels.size()-1), 0, overviewLabels.size()-1 );
 	setOverviewTableProperties(overviewTable);
-        if ( overviewTable.getValueAt(0, 0) instanceof JButton )
-            overviewTable.setColEditableTrue(0); // here is the remove detail button
-        if ( overviewTable.getValueAt(0, overviewLabels.size()-1) instanceof JButton )
-            overviewTable.setColEditableTrue(overviewLabels.size()-1);
 
 	tablePanel.setBorder(BorderFactory.createTitledBorder(detailTitleStr));
 	tablePanel.add(overviewTable.getTableHeader());
