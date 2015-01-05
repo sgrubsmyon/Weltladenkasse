@@ -18,7 +18,7 @@ import java.awt.*;
 //import java.awt.event.ActionEvent;
 //import java.awt.event.ActionListener;
 import java.awt.event.*;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -65,7 +65,7 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
 	initiateSpinners();
 	showTable();
     }
-    
+
     private void queryEarliestRechnung(){
 	int day = 0;
         int month = 0;
@@ -171,7 +171,7 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
 	int currentPageMin = (currentPage-1)*rechnungenProSeite + 1;
 	int currentPageMax = rechnungenProSeite*currentPage;
 	currentPageMax = (currentPageMax <= rechnungsZahlInt) ? currentPageMax : rechnungsZahlInt;
-	JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Rechnungen "+ 
+	JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Rechnungen "+
 	    currentPageMin + " bis "+ currentPageMax +" von "+ rechnungsZahlInt);
 	pageChangePanel.add(header);
 	tablePanel.add(pageChangePanel);
@@ -190,7 +190,6 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
 	    detailButtons.get(i).addActionListener(this);
 	    myTable.setValueAt( detailButtons.get(i), i, 0 );
 	}
-        myTable.setColEditableTrue(0); // first column has buttons
     }
 
     /**

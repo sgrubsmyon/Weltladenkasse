@@ -8,7 +8,7 @@ import java.sql.Connection;
 
 // GUI stuff:
 import java.awt.event.*;
- 
+
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
 //import javax.swing.JScrollPane;
@@ -42,7 +42,6 @@ public class StornierteRechnungen extends Rechnungen {
 	    detailButtons.get(i).addActionListener(this);
 	    myTable.setValueAt( detailButtons.get(i), i, 0 );
 	}
-        myTable.setColEditableTrue(0); // first column has buttons
     }
 
     /**

@@ -415,7 +415,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
     void initiateTable() {
 	orderTable = new BestellungsTable(displayData, columnLabels, displayIndices, sortimentBools);
-        orderTable.setColEditableTrue(columnLabels.size()-1); // last column has buttons
 //	orderTable.setBounds(71,53,150,100);
 //	orderTable.setToolTipText("Tabelle kann nur gelesen werden.");
 	setTableProperties(orderTable);

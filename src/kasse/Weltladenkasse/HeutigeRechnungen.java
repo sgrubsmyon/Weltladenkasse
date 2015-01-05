@@ -53,8 +53,6 @@ public class HeutigeRechnungen extends Rechnungen {
 	    stornoButtons.get(i).addActionListener(this);
 	    myTable.setValueAt( stornoButtons.get(i), i, overviewLabels.size()-1 );
 	}
-        myTable.setColEditableTrue(0); // first column has buttons
-        myTable.setColEditableTrue(overviewLabels.size()-1); // last column has buttons
     }
 
     private void stornieren(int stornoRow) {

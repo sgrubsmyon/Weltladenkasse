@@ -7,6 +7,7 @@ import java.lang.IllegalArgumentException;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import javax.swing.JComponent;
+import javax.swing.JButton;
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableModel;
@@ -91,7 +92,7 @@ public class AnyJComponentJTable extends JTable {
         return editor;
     }
     public boolean isCellEditable(int row, int col){
-        if (editableCols.contains(col) || getValueAt(row, col) instanceof JComponent)
+        if (editableCols.contains(col) || getValueAt(row, col) instanceof JButton)
             return true;
         else
             return false;
