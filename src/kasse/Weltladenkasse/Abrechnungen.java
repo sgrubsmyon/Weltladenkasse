@@ -36,6 +36,7 @@ import javax.swing.table.*;
 import WeltladenDB.WindowContent;
 import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.AnyJComponentJTable;
+import WeltladenDB.FileExistsAwareFileChooser;
 
 public abstract class Abrechnungen extends WindowContent {
     // Attribute:
@@ -60,9 +61,11 @@ public abstract class Abrechnungen extends WindowContent {
     protected JButton prevButton;
     protected JButton nextButton;
     protected Vector<JButton> exportButtons;
+    private FileExistsAwareFileChooser odsChooser;
 
     protected TreeMap< String, HashMap<BigDecimal, Vector<BigDecimal>> > abrechnungsMap;
     protected TreeMap< String, Vector<BigDecimal> > totalsMap;
+    protected Vector<String> abrechnungsDates;
     protected TreeSet<BigDecimal> mwstSet;
     protected Vector< Vector<String> > data;
     protected Vector<String> columnLabels;
@@ -173,6 +176,7 @@ public abstract class Abrechnungen extends WindowContent {
         abrechnungsMap = new TreeMap< String, HashMap<BigDecimal, Vector<BigDecimal>> >();
         mwstSet = new TreeSet<BigDecimal>();
         totalsMap = new TreeMap< String, Vector<BigDecimal> >();
+        abrechnungsDates = new Vector<String>();
 
         if (currentPage == 1){
             queryIncompleteAbrechnung();
@@ -220,6 +224,7 @@ public abstract class Abrechnungen extends WindowContent {
                 values.add(rs.getBigDecimal(4));
                 // store in map under date
                 totalsMap.put(date, values);
+                abrechnungsDates.add(date);
             }
             rs.close();
             // third, get the actual abrechnungen:
@@ -329,7 +334,7 @@ public abstract class Abrechnungen extends WindowContent {
         int count = 0;
         for ( Map.Entry< String, Vector<BigDecimal> > entry : totalsMap.descendingMap().entrySet() ){
             // add export button
-            if (count > 0){ // not for first column
+            if (this.currentPage > 1 || count > 0){ // not for first column on first page
                 exportButtons.add(new JButton("Exportieren"));
                 exportButtons.lastElement().addActionListener(this);
                 myTable.setValueAt( exportButtons.lastElement(), myTable.getRowCount()-1, count+1 );
@@ -429,5 +434,36 @@ public abstract class Abrechnungen extends WindowContent {
      *    @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
+	int exportIndex = -1;
+	for (int i=0; i<exportButtons.size(); i++){
+	    if (e.getSource() == exportButtons.get(i) ){
+		exportIndex = i;
+		break;
+	    }
+	}
+        if (exportIndex > -1){
+            String date = abrechnungsDates.get(exportIndex);
+            Vector<BigDecimal> totals = totalsMap.get(date);
+            HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsMap.get(date); // map with values for each mwst
+
+            System.out.println("Abrechnung "+abrechnungTableName+":");
+            System.out.println("-----------");
+            System.out.println(date);
+            System.out.println(totals);
+            System.out.println(vats);
+
+            //odsChooser.setSelectedFile(new File("Bestellung_WL_Bonn_"+typ+"_KW"+kw+".ods"));
+            //int returnVal = odsChooser.showSaveDialog(this);
+            //if (returnVal == JFileChooser.APPROVE_OPTION){
+            //    File file = odsChooser.getSelectedFile();
+
+            //    writeSpreadSheet(file);
+
+            //    System.out.println("Written to " + file.getName());
+            //} else {
+            //    System.out.println("Save command cancelled by user.");
+            //}
+            return;
+	}
     }
 }
