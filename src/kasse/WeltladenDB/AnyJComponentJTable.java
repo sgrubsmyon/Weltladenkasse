@@ -91,7 +91,7 @@ public class AnyJComponentJTable extends JTable {
         return editor;
     }
     public boolean isCellEditable(int row, int col){
-        if (editableCols.contains(col))
+        if (editableCols.contains(col) || getValueAt(row, col) instanceof JComponent)
             return true;
         else
             return false;
