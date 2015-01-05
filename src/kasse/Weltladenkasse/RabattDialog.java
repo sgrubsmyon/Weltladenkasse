@@ -730,7 +730,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                         "UPDATE rabattaktion SET aktionsname = ?, rabatt_relativ = ?, "+
                         "rabatt_absolut = ?, "+ "mengenrabatt_schwelle = ?, "+
                         "mengenrabatt_anzahl_kostenlos = ?, mengenrabatt_relativ = ?, "+
-                        "bis = "+bis+", "+
+                        "von = "+von+", bis = "+bis+", "+
                         "produktgruppen_id = ?, artikel_id = ? WHERE rabatt_id = ?"
                         );
                 pstmt.setString(1, aktname);
