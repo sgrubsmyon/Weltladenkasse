@@ -145,8 +145,20 @@ public abstract class Abrechnungen extends WindowContent {
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT mwst_satz, SUM( ROUND(ges_preis / (1.+mwst_satz), 2) ) AS mwst_netto, " +
-                    "SUM( ROUND(ges_preis / (1. + mwst_satz) * mwst_satz, 2) ) AS mwst_betrag " +
+                // OLD: SUM OF ROUND in MySQL (MySQL's round is ROUND_HALF_UP
+                // as in Java (away from zero), "kaufmännisches Runden", see
+                // http://dev.mysql.com/doc/refman/5.0/en/precision-math-rounding.html,
+                // https://en.wikipedia.org/wiki/Rounding,
+                // https://de.wikipedia.org/wiki/Rundung)
+                    //"SELECT mwst_satz, SUM( ROUND(ges_preis / (1.+mwst_satz), 2) ) AS mwst_netto, " +
+                    //"SUM( ROUND(ges_preis / (1. + mwst_satz) * mwst_satz, 2) ) AS mwst_betrag " +
+                    //"FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
+                    //"WHERE storniert = FALSE AND verkaufsdatum > " +
+                    //"IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') " +
+                    //"GROUP BY mwst_satz"
+                // NEW: ROUND OF SUM
+                    "SELECT mwst_satz, SUM( ges_preis / (1.+mwst_satz) ) AS mwst_netto, " +
+                    "SUM( ges_preis / (1. + mwst_satz) * mwst_satz ) AS mwst_betrag " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
                     "WHERE storniert = FALSE AND verkaufsdatum > " +
                     "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') " +
@@ -154,8 +166,12 @@ public abstract class Abrechnungen extends WindowContent {
                     );
             while (rs.next()) {
                 BigDecimal mwst_satz = rs.getBigDecimal(1);
-                BigDecimal mwst_netto = rs.getBigDecimal(2);
-                BigDecimal mwst_betrag = rs.getBigDecimal(3);
+            // OLD: SUM OF ROUND (see above, rounding in MySQL)
+                //BigDecimal mwst_netto = rs.getBigDecimal(2);
+                //BigDecimal mwst_betrag = rs.getBigDecimal(3);
+            // NEW: ROUND OF SUM (rounding in Java)
+                BigDecimal mwst_netto = new BigDecimal( priceFormatterIntern(rs.getBigDecimal(2)) );
+                BigDecimal mwst_betrag = new BigDecimal( priceFormatterIntern(rs.getBigDecimal(3)) );
                 Vector<BigDecimal> values = new Vector<BigDecimal>();
                 values.add(mwst_netto);
                 values.add(mwst_betrag);
