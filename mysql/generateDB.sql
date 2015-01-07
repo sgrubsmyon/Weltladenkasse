@@ -85,6 +85,14 @@ CREATE TABLE verkauf (
     ec_zahlung BOOL NOT NULL DEFAULT FALSE,
     PRIMARY KEY (rechnungs_nr)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+CREATE TABLE verkauf_mwst (
+    rechnungs_nr int(10) unsigned NOT NULL,
+    mwst_satz decimal(6,5) NOT NULL,
+    mwst_netto decimal(13,2) NOT NULL,
+    mwst_betrag decimal(13,2) NOT NULL,
+    PRIMARY KEY (rechnungs_nr, mwst_satz),
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE verkauf_details (
     vd_id int(10) unsigned NOT NULL AUTO_INCREMENT,
     rechnungs_nr int(10) unsigned NOT NULL,
@@ -98,7 +106,7 @@ CREATE TABLE verkauf_details (
     FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr),
     FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id),
     FOREIGN KEY (rabatt_id) REFERENCES rabattaktion(rabatt_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE kassenstand (
     kassenstand_id int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -112,32 +120,29 @@ CREATE TABLE kassenstand (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE abrechnung_tag (
-    id int(10) unsigned NOT NULL AUTO_INCREMENT,
     zeitpunkt DATETIME NOT NULL,
     mwst_satz decimal(6,5) NOT NULL,
     mwst_netto decimal(13,2) NOT NULL,
     mwst_betrag decimal(13,2) NOT NULL,
     bar_brutto decimal(13,2) NOT NULL,
-    PRIMARY KEY (id)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+    PRIMARY KEY (zeitpunkt, mwst_satz)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_monat (
-    id int(10) unsigned NOT NULL AUTO_INCREMENT,
     monat DATE NOT NULL,
     mwst_satz decimal(6,5) NOT NULL,
     mwst_netto decimal(13,2) NOT NULL,
     mwst_betrag decimal(13,2) NOT NULL,
     bar_brutto decimal(13,2) NOT NULL,
-    PRIMARY KEY (id)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+    PRIMARY KEY (monat, mwst_satz)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_jahr (
-    id int(10) unsigned NOT NULL AUTO_INCREMENT,
     jahr YEAR NOT NULL,
     mwst_satz decimal(6,5) NOT NULL,
     mwst_netto decimal(13,2) NOT NULL,
     mwst_betrag decimal(13,2) NOT NULL,
     bar_brutto decimal(13,2) NOT NULL,
-    PRIMARY KEY (id)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+    PRIMARY KEY (jahr, mwst_satz)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE bestellung (
     bestell_nr int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -165,6 +170,7 @@ GRANT INSERT, UPDATE ON kasse.mwst TO 'mitarbeiter'@'localhost';
 GRANT INSERT, UPDATE ON kasse.lieferant TO 'mitarbeiter'@'localhost';
 GRANT INSERT, UPDATE ON kasse.produktgruppe TO 'mitarbeiter'@'localhost';
 GRANT INSERT, UPDATE ON kasse.verkauf TO 'mitarbeiter'@'localhost';
+GRANT INSERT ON kasse.verkauf_mwst TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.verkauf_details TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.kassenstand TO 'mitarbeiter'@'localhost';
 GRANT INSERT, UPDATE ON kasse.rabattaktion TO 'mitarbeiter'@'localhost';

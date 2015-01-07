@@ -1032,6 +1032,24 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     );
             rs.next(); rechnungsNr = rs.getInt(1); rs.close();
             stmt.close();
+            System.out.println("vatMap: "+vatMap);
+            for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : this.vatMap.entrySet() ){
+                pstmt = this.conn.prepareStatement(
+                        "INSERT INTO verkauf_mwst SET rechnungs_nr = ?, mwst_satz = ?, "+
+                        "mwst_netto = ?, mwst_betrag = ?"
+                        );
+                pstmtSetInteger(pstmt, 1, rechnungsNr);
+                pstmt.setBigDecimal(2, entry.getKey());
+                pstmt.setBigDecimal(3, entry.getValue().get(0));
+                pstmt.setBigDecimal(4, entry.getValue().get(1));
+                result = pstmt.executeUpdate();
+                pstmt.close();
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: MwSt.-Information für Rechnung konnte nicht abgespeichert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+            }
             for (int i=0; i<artikelIDs.size(); i++){
                 pstmt = this.conn.prepareStatement(
                         "INSERT INTO verkauf_details SET rechnungs_nr = ?, position = ?, "+
