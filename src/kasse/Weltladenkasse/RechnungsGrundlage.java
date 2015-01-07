@@ -38,6 +38,8 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
 
     protected Vector<String> columnLabels;
 
+    protected HashMap< BigDecimal, Vector<BigDecimal> > vatMap;
+
     // Die Ausrichter:
     protected final String einrueckung = "      ";
 
@@ -128,11 +130,18 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
 
         totalPricePanel.add(new JLabel("   inkl.: "));
         Vector<BigDecimal> vats = retrieveVATs();
+        this.vatMap = new HashMap< BigDecimal, Vector<BigDecimal> >();
         for ( BigDecimal vat : vats ){
             if (vat.signum() != 0){
+                BigDecimal vatAmount = calculateTotalVATAmount(vat);
+                BigDecimal vatBrutto = calculateTotalVATUmsatz(vat);
+                BigDecimal vatNetto = vatBrutto.subtract(vatAmount);
+                Vector<BigDecimal> vatVec = new Vector<BigDecimal>();
+                vatVec.add(vatNetto); vatVec.add(vatAmount);
+                this.vatMap.put(vat, vatVec);
                 String vatPercent = vatFormatter(vat);
                 totalPricePanel.add(new JLabel("   "+vatPercent+" MwSt.: "));
-                JTextField vatField = new JTextField(priceFormatter(calculateTotalVATAmount(vat))+" "+currencySymbol);
+                JTextField vatField = new JTextField(priceFormatter(vatAmount)+" "+currencySymbol);
                 vatField.setEditable(false);
                 vatField.setColumns(7);
                 vatField.setHorizontalAlignment(JTextField.RIGHT);
