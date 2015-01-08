@@ -8,19 +8,19 @@ CREATE TABLE lieferant (
     lieferant_name varchar(50) NOT NULL,
     aktiv BOOL NOT NULL DEFAULT TRUE,
     PRIMARY KEY (lieferant_id)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE mwst (
     mwst_id int(10) unsigned NOT NULL AUTO_INCREMENT,
     mwst_satz decimal(6,5) NOT NULL,
     PRIMARY KEY (mwst_id)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE pfand (
     pfand_id int(10) unsigned NOT NULL AUTO_INCREMENT,
     artikel_id int(10) unsigned NOT NULL,
     PRIMARY KEY (pfand_id)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE produktgruppe (
     produktgruppen_id int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -34,7 +34,7 @@ CREATE TABLE produktgruppe (
     PRIMARY KEY (produktgruppen_id),
     FOREIGN KEY (mwst_id) REFERENCES mwst(mwst_id),
     FOREIGN KEY (pfand_id) REFERENCES pfand(pfand_id)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE artikel (
     artikel_id int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -58,7 +58,7 @@ CREATE TABLE artikel (
     PRIMARY KEY (artikel_id),
     FOREIGN KEY (lieferant_id) REFERENCES lieferant(lieferant_id),
     FOREIGN KEY (produktgruppen_id) REFERENCES produktgruppe(produktgruppen_id)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ALTER TABLE pfand ADD FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id);
 
 CREATE TABLE rabattaktion (
@@ -76,7 +76,7 @@ CREATE TABLE rabattaktion (
     PRIMARY KEY (rabatt_id),
     FOREIGN KEY (produktgruppen_id) REFERENCES produktgruppe(produktgruppen_id),
     FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE verkauf (
     rechnungs_nr int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -84,7 +84,7 @@ CREATE TABLE verkauf (
     storniert BOOL NOT NULL DEFAULT FALSE,
     ec_zahlung BOOL NOT NULL DEFAULT FALSE,
     PRIMARY KEY (rechnungs_nr)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE verkauf_mwst (
     rechnungs_nr int(10) unsigned NOT NULL,
     mwst_satz decimal(6,5) NOT NULL,
@@ -106,7 +106,7 @@ CREATE TABLE verkauf_details (
     FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr),
     FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id),
     FOREIGN KEY (rabatt_id) REFERENCES rabattaktion(rabatt_id)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE kassenstand (
     kassenstand_id int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -117,7 +117,7 @@ CREATE TABLE kassenstand (
     kommentar varchar(70),
     PRIMARY KEY (kassenstand_id),
     FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE abrechnung_tag (
     zeitpunkt DATETIME NOT NULL,
@@ -151,7 +151,7 @@ CREATE TABLE bestellung (
     jahr YEAR NOT NULL DEFAULT 2000,
     kw tinyint(2) NOT NULL DEFAULT 1,
     PRIMARY KEY (bestell_nr, typ)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE bestellung_details (
     bestell_nr int(10) unsigned NOT NULL,
     typ varchar(12) NOT NULL DEFAULT "",

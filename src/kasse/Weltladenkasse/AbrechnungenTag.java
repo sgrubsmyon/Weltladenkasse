@@ -60,7 +60,7 @@ public class AbrechnungenTag extends Abrechnungen {
         tablePanel.add(otherPanel);
     }
 
-    void queryIncompleteAbrechnung() { // create new abrechnung (for display) from time of last abrechnung until now
+    String now() {
         String date = "";
         try {
             Statement stmt = this.conn.createStatement();
@@ -71,12 +71,20 @@ public class AbrechnungenTag extends Abrechnungen {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+        return date;
+    }
+
+    void queryIncompleteAbrechnung() { // create new abrechnung (for display) from time of last abrechnung until now
+        System.out.println("queryIncompleteAbrechnung()");
+        String date = now();
 
         // for filling the diplayed table:
         // first, get the totals:
         Vector<BigDecimal> values = queryIncompleteAbrechnungTag_Totals();
         // store in map under date
-        totalsMap.put(date, values);
+        abrechnungsDates.add(date);
+        abrechnungsTotals.add(values);
+        abrechnungsVATs.add(new HashMap<BigDecimal, Vector<BigDecimal>>());
 
         // second, get values grouped by mwst
         HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
@@ -84,43 +92,29 @@ public class AbrechnungenTag extends Abrechnungen {
         for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : abrechnungNettoBetrag.entrySet() ){
             BigDecimal mwst = entry.getKey();
             Vector<BigDecimal> mwstValues = entry.getValue();
-            if ( abrechnungsMap.containsKey(date) ){ // Abrechnung already exists, only add information
-                abrechnungsMap.get(date).put(mwst, mwstValues);
-            } else { // start new Abrechnung
-                HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
-                abrechnung.put(mwst, mwstValues);
-                abrechnungsMap.put(date, abrechnung);
-            }
+            abrechnungsVATs.lastElement().put(mwst, mwstValues);
             mwstSet.add(mwst);
             rowCount++;
 
             submitButtonEnabled = true;
         }
         if ( rowCount == 0 ){ // empty, there are no verkaeufe!!!
-            // bad practice: need to hard-code VATs
-            //HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
-            //Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();
-            //mwstValues.add(new BigDecimal("0"));
-            //mwstValues.add(new BigDecimal("0"));
-            //abrechnung.put(new BigDecimal("0.07"), mwstValues);
-            //abrechnung.put(new BigDecimal("0.19"), mwstValues);
-            //abrechnungsMap.put(date, abrechnung);
-
             submitButtonEnabled = false;
         }
     }
 
     void insertTagesAbrechnung() { // create new abrechnung (and save in DB) from time of last abrechnung until now
         try {
+            String date = now();
             // get netto values grouped by mwst:
             HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
-            // get totals (bar brutto):
+            // get totals (bar brutto) grouped by mwst:
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
                     "SELECT mwst_satz, SUM(ges_preis) AS bar_brutto " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
                     "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') AND ec_zahlung = FALSE " +
+                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag), '0001-01-01') AND ec_zahlung = FALSE " +
                     "GROUP BY mwst_satz"
                     );
             HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = new HashMap<BigDecimal, BigDecimal>();
@@ -145,14 +139,15 @@ public class AbrechnungenTag extends Abrechnungen {
                 }
                 System.out.println(mwst_satz+"  "+mwst_netto+"  "+mwst_betrag+"   "+bar_brutto);
                 PreparedStatement pstmt = this.conn.prepareStatement(
-                        "INSERT INTO abrechnung_tag SET zeitpunkt = NOW(), mwst_satz = ?, " +
+                        "INSERT INTO abrechnung_tag SET zeitpunkt = ?, mwst_satz = ?, " +
                         "mwst_netto = ?, mwst_betrag = ?, "+
                         "bar_brutto = ?"
                         );
-                pstmt.setBigDecimal(1, mwst_satz);
-                pstmt.setBigDecimal(2, mwst_netto);
-                pstmt.setBigDecimal(3, mwst_betrag);
-                pstmt.setBigDecimal(4, bar_brutto);
+                pstmt.setString(1, date);
+                pstmt.setBigDecimal(2, mwst_satz);
+                pstmt.setBigDecimal(3, mwst_netto);
+                pstmt.setBigDecimal(4, mwst_betrag);
+                pstmt.setBigDecimal(5, bar_brutto);
                 int result = pstmt.executeUpdate();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
@@ -191,8 +186,8 @@ public class AbrechnungenTag extends Abrechnungen {
 	}
 	if (e.getSource() == submitButton){
             insertTagesAbrechnung();
+            //tabbedPane.recreateTabbedPane();
             updateTable();
-            tabbedPane.recreateTabbedPane();
 	    return;
 	}
     }

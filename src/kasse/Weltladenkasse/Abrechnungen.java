@@ -63,11 +63,11 @@ public abstract class Abrechnungen extends WindowContent {
     protected Vector<JButton> exportButtons;
     private FileExistsAwareFileChooser odsChooser;
 
-    protected TreeMap< String, HashMap<BigDecimal, Vector<BigDecimal>> > abrechnungsMap;
-    protected TreeMap< String, Vector<BigDecimal> > totalsMap;
     protected Vector<String> abrechnungsDates;
+    protected Vector< HashMap<BigDecimal, Vector<BigDecimal>> > abrechnungsVATs;
+    protected Vector< Vector<BigDecimal> > abrechnungsTotals;
     protected TreeSet<BigDecimal> mwstSet;
-    protected Vector< Vector<String> > data;
+    protected Vector< Vector<Object> > data;
     protected Vector<String> columnLabels;
     protected int abrechnungsZahl;
 
@@ -113,7 +113,10 @@ public abstract class Abrechnungen extends WindowContent {
                     "WHERE storniert = FALSE AND verkaufsdatum > " +
                     "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') "
                     );
-            rs.next(); BigDecimal tagesGesamtBrutto = new BigDecimal(rs.getString(1) == null ? "0" : rs.getString(1)); rs.close();
+            rs.next();
+                BigDecimal tagesGesamtBrutto =
+                    new BigDecimal(rs.getString(1) == null ? "0" : rs.getString(1));
+            rs.close();
             // Gesamt Bar Brutto
             rs = stmt.executeQuery(
                     "SELECT SUM(ges_preis) AS bar_brutto " +
@@ -141,6 +144,7 @@ public abstract class Abrechnungen extends WindowContent {
     }
     ///////////
     protected HashMap<BigDecimal, Vector<BigDecimal>> queryIncompleteAbrechnungTag_VATs() {
+        System.out.println("queryIncompleteAbrechnungTag_VATs()");
         HashMap<BigDecimal, Vector<BigDecimal>> map = new HashMap<BigDecimal, Vector<BigDecimal>>();
         try {
             Statement stmt = this.conn.createStatement();
@@ -157,21 +161,33 @@ public abstract class Abrechnungen extends WindowContent {
                     //"IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') " +
                     //"GROUP BY mwst_satz"
                 // NEW: ROUND OF SUM
-                    "SELECT mwst_satz, SUM( ges_preis / (1.+mwst_satz) ) AS mwst_netto, " +
-                    "SUM( ges_preis / (1. + mwst_satz) * mwst_satz ) AS mwst_betrag " +
-                    "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') " +
+                    //"SELECT mwst_satz, SUM( ges_preis / (1.+mwst_satz) ) AS mwst_netto, " +
+                    //"SUM( ges_preis / (1. + mwst_satz) * mwst_satz ) AS mwst_betrag " +
+                    //"FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
+                    //"WHERE storniert = FALSE AND verkaufsdatum > " +
+                    //"IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') " +
+                    //"GROUP BY mwst_satz"
+                // NEWER: Da für jede Rechnung einzeln summiert (und dann gerundet) werden müsste,
+                // ist es einfacher (und auch sicherer), die gerundete MwSt.-Information separat für jede
+                // Rechnung zu speichern (in Tabelle `verkauf_mwst`) und nur noch darüber zu summieren
+                    "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag) "+
+                    "FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) "+
+                    "WHERE storniert = FALSE AND verkaufsdatum > "+
+                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag), '0001-01-01') " +
                     "GROUP BY mwst_satz"
                     );
             while (rs.next()) {
+                System.out.println(rs.getBigDecimal(1));
                 BigDecimal mwst_satz = rs.getBigDecimal(1);
             // OLD: SUM OF ROUND (see above, rounding in MySQL)
                 //BigDecimal mwst_netto = rs.getBigDecimal(2);
                 //BigDecimal mwst_betrag = rs.getBigDecimal(3);
             // NEW: ROUND OF SUM (rounding in Java)
-                BigDecimal mwst_netto = new BigDecimal( priceFormatterIntern(rs.getBigDecimal(2)) );
-                BigDecimal mwst_betrag = new BigDecimal( priceFormatterIntern(rs.getBigDecimal(3)) );
+                //BigDecimal mwst_netto = new BigDecimal( priceFormatterIntern(rs.getBigDecimal(2)) );
+                //BigDecimal mwst_betrag = new BigDecimal( priceFormatterIntern(rs.getBigDecimal(3)) );
+            // NEWER: Rounding was already done when Rechnung was saved, not necessary here
+                BigDecimal mwst_netto = rs.getBigDecimal(2);
+                BigDecimal mwst_betrag = rs.getBigDecimal(3);
                 Vector<BigDecimal> values = new Vector<BigDecimal>();
                 values.add(mwst_netto);
                 values.add(mwst_betrag);
@@ -189,20 +205,20 @@ public abstract class Abrechnungen extends WindowContent {
     void queryAbrechnungen() {
         queryAbrechnungenSpecial();
 
-        abrechnungsMap = new TreeMap< String, HashMap<BigDecimal, Vector<BigDecimal>> >();
-        mwstSet = new TreeSet<BigDecimal>();
-        totalsMap = new TreeMap< String, Vector<BigDecimal> >();
         abrechnungsDates = new Vector<String>();
+        abrechnungsTotals = new Vector< Vector<BigDecimal> >();
+        abrechnungsVATs = new Vector< HashMap<BigDecimal, Vector<BigDecimal>> >();
+        mwstSet = new TreeSet<BigDecimal>();
 
-        if (currentPage == 1){
+        if (this.currentPage == 1){
             queryIncompleteAbrechnung();
         }
 
         try {
             Statement stmt = this.conn.createStatement();
-            // first, derive the limits of the real query from the number of lines that belong to
+            // first, derive the limits of the real query from the number of rows that belong to
             // the desired abrechnung range:
-            int offset = ((currentPage-1)*abrechnungenProSeite-1); // "-1" because of one red column
+            int offset = ((currentPage-1)*abrechnungenProSeite-1); // "-1" because of one red column on 1st page
             offset = offset < 0 ? 0 : offset;
             int noOfColumns = currentPage > 1 ? abrechnungenProSeite : abrechnungenProSeite-1; // "-1" on first page only (because red column needs space too)
             ResultSet rs = stmt.executeQuery(
@@ -238,9 +254,10 @@ public abstract class Abrechnungen extends WindowContent {
                 values.add(rs.getBigDecimal(2));
                 values.add(rs.getBigDecimal(3));
                 values.add(rs.getBigDecimal(4));
-                // store in map under date
-                totalsMap.put(date, values);
+                // store in vectors
                 abrechnungsDates.add(date);
+                abrechnungsTotals.add(values);
+                abrechnungsVATs.add(new HashMap<BigDecimal, Vector<BigDecimal>>());
             }
             rs.close();
             // third, get the actual abrechnungen:
@@ -257,14 +274,10 @@ public abstract class Abrechnungen extends WindowContent {
                 Vector<BigDecimal> values = new Vector<BigDecimal>();
                 values.add(rs.getBigDecimal(3));
                 values.add(rs.getBigDecimal(4));
-                if ( abrechnungsMap.containsKey(date) ){ // Abrechnung already exists, only add information
-                    abrechnungsMap.get(date).put(mwst, values);
-                } else { // start new Abrechnung
-                    HashMap<BigDecimal, Vector<BigDecimal>> abrechnung =
-                        new HashMap<BigDecimal, Vector<BigDecimal>>();
-                    abrechnung.put(mwst, values);
-                    abrechnungsMap.put(date, abrechnung);
-                }
+                // TODO How to do this with a Vector?
+                // store the values at the positions that match abrechnungsDates and abrechnungsTotals:
+                int index = abrechnungsDates.indexOf(date);
+                abrechnungsVATs.get(index).put(mwst, values);
                 mwstSet.add(mwst);
             }
             rs.close();
@@ -288,21 +301,22 @@ public abstract class Abrechnungen extends WindowContent {
     void fillDataArray(){
         queryAbrechnungen();
         columnLabels = new Vector<String>();
-        data = new Vector< Vector<String> >();
+        data = new Vector< Vector<Object> >();
+        exportButtons = new Vector<JButton>();
         columnLabels.add("");
         // fill header column
-        data.add(new Vector<String>()); data.lastElement().add("Gesamt Brutto");
-        data.add(new Vector<String>()); data.lastElement().add("Gesamt Bar Brutto");
-        data.add(new Vector<String>()); data.lastElement().add("Gesamt EC Brutto");
+        data.add(new Vector<Object>()); data.lastElement().add("Gesamt Brutto");
+        data.add(new Vector<Object>()); data.lastElement().add("Gesamt Bar Brutto");
+        data.add(new Vector<Object>()); data.lastElement().add("Gesamt EC Brutto");
         for (BigDecimal mwst : mwstSet){
-            data.add(new Vector<String>()); data.lastElement().add(vatFormatter(mwst)+" MwSt. Netto");
-            data.add(new Vector<String>()); data.lastElement().add(vatFormatter(mwst)+" MwSt. Betrag");
+            data.add(new Vector<Object>()); data.lastElement().add(vatFormatter(mwst)+" MwSt. Netto");
+            data.add(new Vector<Object>()); data.lastElement().add(vatFormatter(mwst)+" MwSt. Betrag");
         }
-        data.add(new Vector<String>()); data.lastElement().add(""); // row for exportButton
+        data.add(new Vector<Object>()); data.lastElement().add(""); // row for exportButtons
         // fill data columns
         //int count = 0;
-        for ( Map.Entry< String, Vector<BigDecimal> > entry : totalsMap.descendingMap().entrySet() ){
-            String date = entry.getKey();
+        for (int colIndex=0; colIndex<abrechnungsDates.size(); colIndex++){
+            String date = abrechnungsDates.get(colIndex);
             SimpleDateFormat sdfIn = new SimpleDateFormat(dateInFormat);
             SimpleDateFormat sdfOut = new SimpleDateFormat(dateOutFormat);
             String formattedDate = "";
@@ -315,16 +329,16 @@ public abstract class Abrechnungen extends WindowContent {
             //if (currentPage == 1 && count == 0) formattedDate = "Jetzt (neu)";
             columnLabels.add(formattedDate);
             System.out.println(date);
-            System.out.println(entry.getValue());
-            System.out.println(abrechnungsMap.get(date));
+            System.out.println(abrechnungsTotals.get(colIndex));
+            System.out.println(abrechnungsVATs.get(colIndex));
             // add Gesamt Brutto
-            data.get(0).add( priceFormatter( entry.getValue().get(0) )+" "+currencySymbol );
+            data.get(0).add( priceFormatter( abrechnungsTotals.get(colIndex).get(0) )+" "+currencySymbol );
             // add Gesamt Bar Brutto
-            data.get(1).add( priceFormatter( entry.getValue().get(1) )+" "+currencySymbol );
+            data.get(1).add( priceFormatter( abrechnungsTotals.get(colIndex).get(1) )+" "+currencySymbol );
             // add Gesamt EC Brutto
-            data.get(2).add( priceFormatter( entry.getValue().get(2) )+" "+currencySymbol );
+            data.get(2).add( priceFormatter( abrechnungsTotals.get(colIndex).get(2) )+" "+currencySymbol );
             // add VATs
-            HashMap<BigDecimal, Vector<BigDecimal>> valueMap = abrechnungsMap.get(date); // map with values for each mwst
+            HashMap<BigDecimal, Vector<BigDecimal>> valueMap = abrechnungsVATs.get(colIndex); // map with values for each mwst
             int rowIndex = 3;
             for (BigDecimal mwst : mwstSet){
                 for (int i=0; i<2; i++){
@@ -333,35 +347,32 @@ public abstract class Abrechnungen extends WindowContent {
                         data.get(rowIndex).add( priceFormatter(bd)+" "+currencySymbol );
                     } else {
                         data.get(rowIndex).add( priceFormatter("0")+" "+currencySymbol );
+                        System.out.println("Adding 0.00 "+currencySymbol);
                     }
                     rowIndex++;
                 }
             }
-            // add space for export button
-            data.get(rowIndex).add("");
+            // add export buttons in last row:
+            if (this.currentPage > 1 || colIndex > 0){ // not for first column on first page
+                exportButtons.add(new JButton("Exportieren"));
+                exportButtons.lastElement().addActionListener(this);
+                data.get(rowIndex).add(exportButtons.lastElement());
+            } else {
+                data.get(rowIndex).add("");
+            }
             rowIndex++;
         }
         myTable = new AbrechnungsTable(data, columnLabels);
         //	myTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
         //	myTable.setFillsViewportHeight(true);
-
-        // add export buttons in last row:
-        exportButtons = new Vector<JButton>();
-        int count = 0;
-        for ( Map.Entry< String, Vector<BigDecimal> > entry : totalsMap.descendingMap().entrySet() ){
-            // add export button
-            if (this.currentPage > 1 || count > 0){ // not for first column on first page
-                exportButtons.add(new JButton("Exportieren"));
-                exportButtons.lastElement().addActionListener(this);
-                myTable.setValueAt( exportButtons.lastElement(), myTable.getRowCount()-1, count+1 );
-            }
-            count++;
-        }
     }
 
     abstract void addOtherStuff();
 
     void showTable(){
+        System.out.println("SHOW TABLE WIRD JETZT AUFGERUFEN.");
+        System.out.println("data.get(0).get(1): "+data.get(0).get(1));
+        System.out.println("myTable.getValueAt(0, 1): "+myTable.getValueAt(0, 1));
         tablePanel = new JPanel();
         tablePanel.setLayout(new BoxLayout(tablePanel, BoxLayout.Y_AXIS));
         tablePanel.setBorder(BorderFactory.createTitledBorder(titleStr));
@@ -398,6 +409,9 @@ public abstract class Abrechnungen extends WindowContent {
         tablePanel.add(scrollPane);
 
         this.add(tablePanel, BorderLayout.CENTER);
+
+        System.out.println("data.get(0).get(1): "+data.get(0).get(1));
+        System.out.println("myTable.getValueAt(0, 1): "+myTable.getValueAt(0, 1));
     }
 
     protected void updateTable(){
@@ -408,7 +422,7 @@ public abstract class Abrechnungen extends WindowContent {
     }
 
     protected class AbrechnungsTable extends AnyJComponentJTable {
-        public AbrechnungsTable(Vector< Vector<String> > data, Vector<String> columns) {
+        public AbrechnungsTable(Vector< Vector<Object> > data, Vector<String> columns) {
             super(data, columns);
         }
         @Override
@@ -454,13 +468,14 @@ public abstract class Abrechnungen extends WindowContent {
 	for (int i=0; i<exportButtons.size(); i++){
 	    if (e.getSource() == exportButtons.get(i) ){
 		exportIndex = i;
+                System.out.println("exportIndex: "+exportIndex);
 		break;
 	    }
 	}
         if (exportIndex > -1){
             String date = abrechnungsDates.get(exportIndex);
-            Vector<BigDecimal> totals = totalsMap.get(date);
-            HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsMap.get(date); // map with values for each mwst
+            Vector<BigDecimal> totals = abrechnungsTotals.get(exportIndex);
+            HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(exportIndex); // map with values for each mwst
 
             System.out.println("Abrechnung "+abrechnungTableName+":");
             System.out.println("-----------");
