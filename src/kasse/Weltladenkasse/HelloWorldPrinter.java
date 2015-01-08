@@ -23,7 +23,7 @@ public class HelloWorldPrinter
     g2d.translate(pf.getImageableX(), pf.getImageableY());
 
     // Now we perform our rendering
-    g.drawString("Hello world!", 50, 100);
+    g.drawString("Hello world!", 0, 100);
 
     // tell the caller that this page is part
     // of the printed document

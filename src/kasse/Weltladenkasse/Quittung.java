@@ -186,8 +186,10 @@ public class Quittung extends WindowContent {
                 //OOUtils.open(sheet.getSpreadSheet().saveAs(tmpFile));
                 sheet.getSpreadSheet().saveAs(tmpFile);
                 final OpenDocument doc = new OpenDocument();
-                doc.loadFrom(tmpFile);
+                //doc.loadFrom(tmpFile);
+                doc.loadFrom(new File("/tmp/Untitled.ods"));
 
+                /*
                 // Show time !
                 final JFrame mainFrame = new JFrame("Viewer");
                 DefaultDocumentPrinter printer = new DefaultDocumentPrinter();
@@ -197,22 +199,25 @@ public class Quittung extends WindowContent {
                 mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 mainFrame.setLocation(10, 10);
                 mainFrame.setVisible(true);
+                */
 
-                /*
                 // Print.
+                /*
                 ODTPrinter printer = new ODTPrinter(doc);
-                //PrinterJob job = PrinterJob.getPrinterJob();
-                //job.setPrintable(printer);
-                //boolean doPrint = job.printDialog();
-                //if (doPrint){
-                //    try {
-                //        job.print();
-                //    } catch (PrinterException ex) {
-                //        System.out.println("The job did not successfully complete. Exception: " + ex.getMessage());
-                //        ex.printStackTrace();
-                //    }
-                //}
+                PrinterJob job = PrinterJob.getPrinterJob();
+                job.setPrintable(printer);
+                boolean doPrint = job.printDialog();
+                if (doPrint){
+                    try {
+                        job.print();
+                    } catch (PrinterException ex) {
+                        System.out.println("The job did not successfully complete. Exception: " + ex.getMessage());
+                        ex.printStackTrace();
+                    }
+                }
+                */
 
+                ODTPrinter printer = new ODTPrinter(doc);
                 PrinterJob job = PrinterJob.getPrinterJob();
                 String printerName = "epson_tmu220";
 
@@ -223,38 +228,37 @@ public class Quittung extends WindowContent {
                 PrintService[] pservices = PrintServiceLookup.lookupPrintServices(null, attrSet);
                 System.out.println("PrintServices: "+pservices);
                 PrintService ps;
-                PageFormat pageFormat;
                 try {
                     ps = pservices[0];
                     job.setPrintService(ps);   // Try setting the printer you want
                 } catch (ArrayIndexOutOfBoundsException e){
                     System.err.println("Error: No printer named '"+printerName+"', using default printer.");
-                    //pageFormat = job.defaultPage();  // Set the default printer instead.
                 } catch (PrinterException exception) {
                     System.err.println("Printing error: " + exception);
                 }
                 //pageFormat = new PageFormat();    // If you want to adjust heigh and width etc. of your paper.
-                pageFormat = job.defaultPage();
+                PageFormat pageFormat = job.defaultPage();
                 Paper paper = pageFormat.getPaper();
-                paper.setSize(64. / 25.4 * 72., 80. / 25.4 * 72.);
-                paper.setImageableArea(0. / 25.4 * 72., 0. / 25.4 * 72., 62. / 25.4 * 72., 80. / 25.4 * 72.);
+                paper.setSize(76. / 25.4 * 72., 279.4 / 25.4 * 72.);
+                paper.setImageableArea(8. / 25.4 * 72., 3. / 25.4 * 72., 68. / 25.4 * 72., 259.4 / 25.4 * 72.);
                 pageFormat.setPaper(paper);
                 System.out.println("pageFormat height: "+pageFormat.getHeight());
                 System.out.println("pageFormat width: "+pageFormat.getWidth());
 
+                //job.setPrintable(new HelloWorldPrinter(), pageFormat);
                 //job.setPrintable(printer, pageFormat);
+                // Book with setPageable instead of setPrintable
                 Book book = new Book();//java.awt.print.Book
-                book.append(new HelloWorldPrinter(), pageFormat);
+                //book.append(new HelloWorldPrinter(), pageFormat);
                 book.append(printer, pageFormat);
                 job.setPageable(book);
-                //job.setPrintable(new HelloWorldPrinter(), pageFormat);
 
                 try {
                     job.print();   // Actual print command
+                    System.out.println("Done.");
                 } catch (PrinterException exception) {
                     System.err.println("Printing error: " + exception);
                 }
-                */
 
                 //printer.print(doc);
                 tmpFile.deleteOnExit();
