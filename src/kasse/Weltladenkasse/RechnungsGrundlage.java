@@ -136,9 +136,11 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
                 BigDecimal vatAmount = calculateTotalVATAmount(vat);
                 BigDecimal vatBrutto = calculateTotalVATUmsatz(vat);
                 BigDecimal vatNetto = vatBrutto.subtract(vatAmount);
-                Vector<BigDecimal> vatVec = new Vector<BigDecimal>();
-                vatVec.add(vatNetto); vatVec.add(vatAmount);
-                this.vatMap.put(vat, vatVec);
+                if (vatBrutto.signum() != 0){ // exclude 0 amounts
+                    Vector<BigDecimal> vatVec = new Vector<BigDecimal>();
+                    vatVec.add(vatNetto); vatVec.add(vatAmount);
+                    this.vatMap.put(vat, vatVec);
+                }
                 String vatPercent = vatFormatter(vat);
                 totalPricePanel.add(new JLabel("   "+vatPercent+" MwSt.: "));
                 JTextField vatField = new JTextField(priceFormatter(vatAmount)+" "+currencySymbol);
@@ -197,5 +199,4 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
 	mwst.setCellRenderer(rechtsAusrichter);
 	mwst.setPreferredWidth(5);
     }
-
 }
