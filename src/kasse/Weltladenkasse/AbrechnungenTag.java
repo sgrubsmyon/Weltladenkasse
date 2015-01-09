@@ -186,8 +186,8 @@ public class AbrechnungenTag extends Abrechnungen {
 	}
 	if (e.getSource() == submitButton){
             insertTagesAbrechnung();
-            //tabbedPane.recreateTabbedPane();
             updateTable();
+            tabbedPane.recreateTabbedPane();
 	    return;
 	}
     }
