@@ -82,9 +82,9 @@ public class AbrechnungenTag extends Abrechnungen {
         // first, get the totals:
         Vector<BigDecimal> values = queryIncompleteAbrechnungTag_Totals();
         // store in map under date
-        abrechnungsDates.add(date);
-        abrechnungsTotals.add(values);
-        abrechnungsVATs.add(new HashMap<BigDecimal, Vector<BigDecimal>>());
+        incompleteAbrechnungsDate = date;
+        incompleteAbrechnungsTotals = values;
+        incompleteAbrechnungsVATs = new HashMap<BigDecimal, Vector<BigDecimal>>();
 
         // second, get values grouped by mwst
         HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
@@ -92,7 +92,7 @@ public class AbrechnungenTag extends Abrechnungen {
         for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : abrechnungNettoBetrag.entrySet() ){
             BigDecimal mwst = entry.getKey();
             Vector<BigDecimal> mwstValues = entry.getValue();
-            abrechnungsVATs.lastElement().put(mwst, mwstValues);
+            incompleteAbrechnungsVATs.put(mwst, mwstValues);
             mwstSet.add(mwst);
             rowCount++;
 
