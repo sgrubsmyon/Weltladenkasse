@@ -64,8 +64,11 @@ public abstract class Abrechnungen extends WindowContent {
     private FileExistsAwareFileChooser odsChooser;
 
     protected Vector<String> abrechnungsDates;
-    protected Vector< HashMap<BigDecimal, Vector<BigDecimal>> > abrechnungsVATs;
     protected Vector< Vector<BigDecimal> > abrechnungsTotals;
+    protected Vector< HashMap<BigDecimal, Vector<BigDecimal>> > abrechnungsVATs;
+    protected String incompleteAbrechnungsDate;
+    protected Vector<BigDecimal> incompleteAbrechnungsTotals;
+    protected HashMap<BigDecimal, Vector<BigDecimal>> incompleteAbrechnungsVATs;
     protected TreeSet<BigDecimal> mwstSet;
     protected Vector< Vector<Object> > data;
     protected Vector<String> columnLabels;
@@ -297,14 +300,22 @@ public abstract class Abrechnungen extends WindowContent {
         }
     }
 
+    String formatDate(String date) {
+        SimpleDateFormat sdfIn = new SimpleDateFormat(this.dateInFormat);
+        SimpleDateFormat sdfOut = new SimpleDateFormat(this.dateOutFormat);
+        String formattedDate = "";
+        try {
+            formattedDate = sdfOut.format( sdfIn.parse(date) );
+        } catch (ParseException ex) {
+            System.out.println("ParseException: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return formattedDate;
+    }
 
-    void fillDataArray(){
-        queryAbrechnungen();
-        columnLabels = new Vector<String>();
-        data = new Vector< Vector<Object> >();
-        exportButtons = new Vector<JButton>();
-        columnLabels.add("");
+    void fillHeaderColumn() {
         // fill header column
+        columnLabels.add("");
         data.add(new Vector<Object>()); data.lastElement().add("Gesamt Brutto");
         data.add(new Vector<Object>()); data.lastElement().add("Gesamt Bar Brutto");
         data.add(new Vector<Object>()); data.lastElement().add("Gesamt EC Brutto");
@@ -313,54 +324,69 @@ public abstract class Abrechnungen extends WindowContent {
             data.add(new Vector<Object>()); data.lastElement().add(vatFormatter(mwst)+" MwSt. Betrag");
         }
         data.add(new Vector<Object>()); data.lastElement().add(""); // row for exportButtons
-        // fill data columns
-        //int count = 0;
+    }
+
+    int fillDataArrayColumn(String date, Vector<BigDecimal> totals, HashMap<BigDecimal, Vector<BigDecimal>> vats) {
+        String formattedDate = formatDate(date);
+        columnLabels.add(formattedDate);
+        // add Gesamt Brutto
+        data.get(0).add( priceFormatter( totals.get(0) )+" "+currencySymbol );
+        // add Gesamt Bar Brutto
+        data.get(1).add( priceFormatter( totals.get(1) )+" "+currencySymbol );
+        // add Gesamt EC Brutto
+        data.get(2).add( priceFormatter( totals.get(2) )+" "+currencySymbol );
+        // add VATs
+        int rowIndex = 3;
+        for (BigDecimal mwst : mwstSet){
+            for (int i=0; i<2; i++){
+                if (vats != null && vats.containsKey(mwst)){
+                    BigDecimal bd = vats.get(mwst).get(i);
+                    data.get(rowIndex).add( priceFormatter(bd)+" "+currencySymbol );
+                } else {
+                    data.get(rowIndex).add( priceFormatter("0")+" "+currencySymbol );
+                    System.out.println("Adding 0.00 "+currencySymbol);
+                }
+                rowIndex++;
+            }
+        }
+        return rowIndex;
+    }
+
+    void addExportButton(int rowIndex) {
+        // add export buttons in last row:
+        exportButtons.add(new JButton("Exportieren"));
+        exportButtons.lastElement().addActionListener(this);
+        data.get(rowIndex).add(exportButtons.lastElement());
+    }
+
+    void fillDataArray(){
+        queryAbrechnungen();
+
+        columnLabels = new Vector<String>();
+        data = new Vector< Vector<Object> >();
+        exportButtons = new Vector<JButton>();
+
+        fillHeaderColumn();
+
+        if (currentPage == 1){
+            // fill red (incomplete, so unsaved) data column
+            System.out.println("incomplete: "+incompleteAbrechnungsDate);
+            System.out.println("incomplete: "+incompleteAbrechnungsTotals);
+            System.out.println("incomplete: "+incompleteAbrechnungsVATs);
+            int rowIndex = fillDataArrayColumn(incompleteAbrechnungsDate, incompleteAbrechnungsTotals, incompleteAbrechnungsVATs);
+            data.get(rowIndex).add(""); // instead of exportButton
+        }
+
+        // fill data columns with black (already saved in DB) abrechnungen
         for (int colIndex=0; colIndex<abrechnungsDates.size(); colIndex++){
             String date = abrechnungsDates.get(colIndex);
-            SimpleDateFormat sdfIn = new SimpleDateFormat(dateInFormat);
-            SimpleDateFormat sdfOut = new SimpleDateFormat(dateOutFormat);
-            String formattedDate = "";
-            try {
-                formattedDate = sdfOut.format( sdfIn.parse(date) );
-            } catch (ParseException ex) {
-                System.out.println("ParseException: " + ex.getMessage());
-                ex.printStackTrace();
-            }
-            //if (currentPage == 1 && count == 0) formattedDate = "Jetzt (neu)";
-            columnLabels.add(formattedDate);
+            Vector<BigDecimal> totals = abrechnungsTotals.get(colIndex);
+            HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(colIndex); // map with values for each mwst
             System.out.println(date);
-            System.out.println(abrechnungsTotals.get(colIndex));
-            System.out.println(abrechnungsVATs.get(colIndex));
-            // add Gesamt Brutto
-            data.get(0).add( priceFormatter( abrechnungsTotals.get(colIndex).get(0) )+" "+currencySymbol );
-            // add Gesamt Bar Brutto
-            data.get(1).add( priceFormatter( abrechnungsTotals.get(colIndex).get(1) )+" "+currencySymbol );
-            // add Gesamt EC Brutto
-            data.get(2).add( priceFormatter( abrechnungsTotals.get(colIndex).get(2) )+" "+currencySymbol );
-            // add VATs
-            HashMap<BigDecimal, Vector<BigDecimal>> valueMap = abrechnungsVATs.get(colIndex); // map with values for each mwst
-            int rowIndex = 3;
-            for (BigDecimal mwst : mwstSet){
-                for (int i=0; i<2; i++){
-                    if (valueMap != null && valueMap.containsKey(mwst)){
-                        BigDecimal bd = valueMap.get(mwst).get(i);
-                        data.get(rowIndex).add( priceFormatter(bd)+" "+currencySymbol );
-                    } else {
-                        data.get(rowIndex).add( priceFormatter("0")+" "+currencySymbol );
-                        System.out.println("Adding 0.00 "+currencySymbol);
-                    }
-                    rowIndex++;
-                }
-            }
-            // add export buttons in last row:
-            if (this.currentPage > 1 || colIndex > 0){ // not for first column on first page
-                exportButtons.add(new JButton("Exportieren"));
-                exportButtons.lastElement().addActionListener(this);
-                data.get(rowIndex).add(exportButtons.lastElement());
-            } else {
-                data.get(rowIndex).add("");
-            }
-            rowIndex++;
+            System.out.println(totals);
+            System.out.println(vats);
+            int rowIndex = fillDataArrayColumn(date, totals, vats);
+            addExportButton(rowIndex);
         }
         myTable = new AbrechnungsTable(data, columnLabels);
         //	myTable.setPreferredScrollableViewportSize(new Dimension(500, 70));

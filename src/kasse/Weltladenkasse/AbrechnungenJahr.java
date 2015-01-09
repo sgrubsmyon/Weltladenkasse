@@ -201,9 +201,9 @@ public class AbrechnungenJahr extends Abrechnungen {
             totalsValues.set( 2, totalsValues.get(2).add(totalsValuesDay.get(2)) );
 
             // store in vectors
-            abrechnungsDates.add(cur_year);
-            abrechnungsTotals.add(totalsValues);
-            abrechnungsVATs.add(new HashMap<BigDecimal, Vector<BigDecimal>>());
+            incompleteAbrechnungsDate = cur_year;
+            incompleteAbrechnungsTotals = totalsValues;
+            incompleteAbrechnungsVATs = new HashMap<BigDecimal, Vector<BigDecimal>>();
 
             // grouped by mwst
             HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryJahresAbrechnung(cur_year);
@@ -213,7 +213,7 @@ public class AbrechnungenJahr extends Abrechnungen {
                 Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();
                 mwstValues.add(betraege.get(0)); // mwst_netto
                 mwstValues.add(betraege.get(1)); // mwst_betrag
-                abrechnungsVATs.lastElement().put(mwst_satz, mwstValues);
+                incompleteAbrechnungsVATs.put(mwst_satz, mwstValues);
                 mwstSet.add(mwst_satz);
             }
 
@@ -226,13 +226,13 @@ public class AbrechnungenJahr extends Abrechnungen {
                 mwstValues.add(betraege.get(0)); // mwst_netto
                 mwstValues.add(betraege.get(1)); // mwst_betrag
 
-                if ( abrechnungsVATs.lastElement().containsKey(mwst_satz) ){ // mwst exists, add numbers
-                    abrechnungsVATs.lastElement().get(mwst_satz).
-                        set( 0, abrechnungsVATs.lastElement().get(mwst_satz).get(0).add(mwstValues.get(0)) );
-                    abrechnungsVATs.lastElement().get(mwst_satz).
-                        set( 1, abrechnungsVATs.lastElement().get(mwst_satz).get(1).add(mwstValues.get(1)) );
+                if ( incompleteAbrechnungsVATs.containsKey(mwst_satz) ){ // mwst exists, add numbers
+                    incompleteAbrechnungsVATs.get(mwst_satz).
+                        set( 0, incompleteAbrechnungsVATs.get(mwst_satz).get(0).add(mwstValues.get(0)) );
+                    incompleteAbrechnungsVATs.get(mwst_satz).
+                        set( 1, incompleteAbrechnungsVATs.get(mwst_satz).get(1).add(mwstValues.get(1)) );
                 } else { // only add information
-                    abrechnungsVATs.lastElement().put(mwst_satz, mwstValues);
+                    incompleteAbrechnungsVATs.put(mwst_satz, mwstValues);
                 }
                 mwstSet.add(mwst_satz);
             }
