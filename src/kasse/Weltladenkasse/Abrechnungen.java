@@ -9,6 +9,7 @@ import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 import java.text.SimpleDateFormat;
@@ -224,29 +225,15 @@ public abstract class Abrechnungen extends WindowContent {
             int offset = ((currentPage-1)*abrechnungenProSeite-1); // "-1" because of one red column on 1st page
             offset = offset < 0 ? 0 : offset;
             int noOfColumns = currentPage > 1 ? abrechnungenProSeite : abrechnungenProSeite-1; // "-1" on first page only (because red column needs space too)
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT SUM(count) FROM " +
-                    "(SELECT COUNT("+timeName+") AS count FROM "+abrechnungTableName+" GROUP BY "+timeName+" " +
-                    "ORDER BY "+timeName+" DESC "+
-                    "LIMIT 0," + offset + ") AS t"
-                    );
-            rs.next(); int lowerLimit = rs.getInt(1); rs.close();
-            System.out.println("lowerLimit: "+lowerLimit);
-            rs = stmt.executeQuery(
-                    "SELECT SUM(count) FROM " +
-                    "(SELECT COUNT("+timeName+") AS count FROM "+abrechnungTableName+" GROUP BY "+timeName+" " +
-                    "ORDER BY "+timeName+" DESC "+
-                    "LIMIT " + offset + "," + noOfColumns + ") AS t"
-                    );
-            rs.next(); int upperLimit = rs.getInt(1); rs.close();
-            //System.out.println("Found limits: "+lowerLimit+" , "+upperLimit);
+
             // second, get the total amounts
-            rs = stmt.executeQuery(
+            ResultSet rs = stmt.executeQuery(
                     "SELECT "+timeName+", SUM(mwst_netto + mwst_betrag), " +
                                        // ^^^ Gesamt Brutto
                     "SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) " +
                   // ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
                     "FROM "+abrechnungTableName+" " +
+                    "WHERE TRUE " +
                     filterStr +
                     "GROUP BY "+timeName+" ORDER BY "+timeName+" DESC " +
                     "LIMIT " + offset + "," + noOfColumns
@@ -263,30 +250,35 @@ public abstract class Abrechnungen extends WindowContent {
                 abrechnungsVATs.add(new HashMap<BigDecimal, Vector<BigDecimal>>());
             }
             rs.close();
-            // third, get the actual abrechnungen:
-            rs = stmt.executeQuery(
-                    "SELECT "+timeName+", mwst_satz, mwst_netto, mwst_betrag " +
-                    " FROM "+abrechnungTableName+" " +
-                    filterStr +
-                    "ORDER BY "+timeName+" DESC, mwst_satz " +
-                    "LIMIT " + lowerLimit + "," + upperLimit
-                    );
-            while (rs.next()) {
-                String date = rs.getString(1);
-                BigDecimal mwst = rs.getBigDecimal(2);
-                Vector<BigDecimal> values = new Vector<BigDecimal>();
-                values.add(rs.getBigDecimal(3));
-                values.add(rs.getBigDecimal(4));
-                // TODO How to do this with a Vector?
-                // store the values at the positions that match abrechnungsDates and abrechnungsTotals:
-                int index = abrechnungsDates.indexOf(date);
-                abrechnungsVATs.get(index).put(mwst, values);
-                mwstSet.add(mwst);
+
+            // third, get the actual abrechnungen (for each date):
+            for (String date : abrechnungsDates){
+                PreparedStatement pstmt = this.conn.prepareStatement(
+                        "SELECT mwst_satz, mwst_netto, mwst_betrag " +
+                        "FROM "+abrechnungTableName+" " +
+                        "WHERE "+timeName+" = ? " +
+                        filterStr +
+                        "ORDER BY mwst_satz "
+                        );
+                pstmt.setString(1, date);
+                rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    BigDecimal mwst = rs.getBigDecimal(1);
+                    Vector<BigDecimal> values = new Vector<BigDecimal>();
+                    values.add(rs.getBigDecimal(2));
+                    values.add(rs.getBigDecimal(3));
+                    // store the values at the positions that match abrechnungsDates and abrechnungsTotals:
+                    int index = abrechnungsDates.indexOf(date);
+                    abrechnungsVATs.get(index).put(mwst, values);
+                    mwstSet.add(mwst);
+                }
+                rs.close();
             }
-            rs.close();
+
             // fourth, get total number of abrechnungen:
             rs = stmt.executeQuery(
                     "SELECT COUNT(DISTINCT "+timeName+") FROM "+abrechnungTableName+" " +
+                    "WHERE TRUE " +
                     filterStr
                     );
             rs.next();
