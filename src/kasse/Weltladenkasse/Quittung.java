@@ -189,44 +189,14 @@ public class Quittung extends WindowContent {
                 //doc.loadFrom(tmpFile);
                 doc.loadFrom(new File("/tmp/Untitled.ods"));
 
-                /*
-                // Show time !
-                final JFrame mainFrame = new JFrame("Viewer");
-                DefaultDocumentPrinter printer = new DefaultDocumentPrinter();
-                ODSViewerPanel viewerPanel = new ODSViewerPanel(doc, printer, true);
-                mainFrame.setContentPane(viewerPanel);
-                mainFrame.pack();
-                mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                mainFrame.setLocation(10, 10);
-                mainFrame.setVisible(true);
-                */
-
                 // Print.
-                /*
-                ODTPrinter printer = new ODTPrinter(doc);
-                PrinterJob job = PrinterJob.getPrinterJob();
-                job.setPrintable(printer);
-                boolean doPrint = job.printDialog();
-                if (doPrint){
-                    try {
-                        job.print();
-                    } catch (PrinterException ex) {
-                        System.out.println("The job did not successfully complete. Exception: " + ex.getMessage());
-                        ex.printStackTrace();
-                    }
-                }
-                */
-
                 ODTPrinter printer = new ODTPrinter(doc);
                 PrinterJob job = PrinterJob.getPrinterJob();
                 String printerName = "epson_tmu220";
 
                 PrintServiceAttributeSet attrSet = new HashPrintServiceAttributeSet();
                 attrSet.add(new PrinterName(printerName, null));
-                //attrSet.add(MediaSizeName.ISO_A4);
-                //attrSet.add(new MediaPrintableArea(2, 2, 60, 80, MediaPrintableArea.MM));
                 PrintService[] pservices = PrintServiceLookup.lookupPrintServices(null, attrSet);
-                System.out.println("PrintServices: "+pservices);
                 PrintService ps;
                 try {
                     ps = pservices[0];
@@ -236,33 +206,25 @@ public class Quittung extends WindowContent {
                 } catch (PrinterException exception) {
                     System.err.println("Printing error: " + exception);
                 }
-                //pageFormat = new PageFormat();    // If you want to adjust heigh and width etc. of your paper.
                 PageFormat pageFormat = job.defaultPage();
                 Paper paper = pageFormat.getPaper();
                 paper.setSize(76. / 25.4 * 72., 279.4 / 25.4 * 72.);
                 paper.setImageableArea(8. / 25.4 * 72., 3. / 25.4 * 72., 68. / 25.4 * 72., 259.4 / 25.4 * 72.);
                 pageFormat.setPaper(paper);
-                System.out.println("pageFormat height: "+pageFormat.getHeight());
-                System.out.println("pageFormat width: "+pageFormat.getWidth());
 
-                //job.setPrintable(new HelloWorldPrinter(), pageFormat);
-                //job.setPrintable(printer, pageFormat);
                 // Book with setPageable instead of setPrintable
                 Book book = new Book();//java.awt.print.Book
-                //book.append(new HelloWorldPrinter(), pageFormat);
                 book.append(printer, pageFormat);
                 job.setPageable(book);
 
                 try {
                     job.print();   // Actual print command
-                    System.out.println("Done.");
                 } catch (PrinterException exception) {
                     System.err.println("Printing error: " + exception);
                 }
 
-                //printer.print(doc);
-                tmpFile.deleteOnExit();
-                //tmpFile.delete();
+                //tmpFile.deleteOnExit();
+                tmpFile.delete();
             } catch (FileNotFoundException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
@@ -270,15 +232,6 @@ public class Quittung extends WindowContent {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
             }
-
-            //} catch (FileNotFoundException ex) {
-            //    System.out.println("Exception: " + ex.getMessage());
-            //    ex.printStackTrace();
-            //} catch (IOException ex) {
-            //    System.out.println("Exception: " + ex.getMessage());
-            //    ex.printStackTrace();
-            //}
-
         }
     }
 
