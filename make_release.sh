@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=v0.9.3
+version=v0.9.4
 
 releasedir=../releases/Weltladenkasse_$version
 if [ ! -e $releasedir ]; then
