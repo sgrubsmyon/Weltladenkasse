@@ -41,7 +41,8 @@ public class AbrechnungenMonat extends Abrechnungen {
      *    The constructor.
      *       */
     public AbrechnungenMonat(Connection conn, MainWindowGrundlage mw){
-	super(conn, mw, "", "Monatsabrechnungen", "yyyy-MM-dd", "MMM yyyy", "monat", "abrechnung_monat");
+	super(conn, mw, "", "Monatsabrechnung", "yyyy-MM-dd", "MMM yyyy",
+                "MMMM yyyy", "monat", "abrechnung_monat");
 	showTable();
     }
 
@@ -104,6 +105,7 @@ public class AbrechnungenMonat extends Abrechnungen {
             while (rs.next()){
                 BigDecimal mwst_satz = rs.getBigDecimal(1);
                 Vector<BigDecimal> betraege = new Vector<BigDecimal>();
+                betraege.add( rs.getBigDecimal(2).add(rs.getBigDecimal(3)) ); // mwst_netto+mwst_betrag (=brutto)
                 betraege.add(rs.getBigDecimal(2)); // mwst_netto
                 betraege.add(rs.getBigDecimal(3)); // mwst_betrag
                 betraege.add(rs.getBigDecimal(4)); // bar_brutto
@@ -121,6 +123,7 @@ public class AbrechnungenMonat extends Abrechnungen {
     void insertNewMonths(Vector<String> months) { // all months to be put into the db (abrechnung_monat table)
         try {
             for (String month : months){
+                Integer id = id();
                 System.out.println("new month: "+month);
                 PreparedStatement pstmt = this.conn.prepareStatement(
                         "SELECT ? < DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')"
@@ -128,6 +131,7 @@ public class AbrechnungenMonat extends Abrechnungen {
                 pstmt.setString(1, month);
                 ResultSet rs = pstmt.executeQuery();
                 rs.next(); boolean doIt = rs.getBoolean(1); rs.close();
+                pstmt.close();
                 if (doIt){
                     HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryMonatsAbrechnung(month);
                     for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : sachen.entrySet() ){
@@ -136,17 +140,18 @@ public class AbrechnungenMonat extends Abrechnungen {
                         System.out.println("mwst_satz: "+mwst_satz);
                         System.out.println("betraege "+betraege);
                         pstmt = this.conn.prepareStatement(
-                                "INSERT INTO abrechnung_monat SET monat = ?, "+
+                                "INSERT INTO abrechnung_monat SET id = ?, monat = ?, "+
                                 "mwst_satz = ?, "+
                                 "mwst_netto = ?, "+
                                 "mwst_betrag = ?, "+
                                 "bar_brutto = ?"
                                 );
-                        pstmt.setString(1, month);
-                        pstmt.setBigDecimal(2, mwst_satz);
-                        pstmt.setBigDecimal(3, betraege.get(0));
+                        pstmt.setInt(1, id);
+                        pstmt.setString(2, month);
+                        pstmt.setBigDecimal(3, mwst_satz);
                         pstmt.setBigDecimal(4, betraege.get(1));
                         pstmt.setBigDecimal(5, betraege.get(2));
+                        pstmt.setBigDecimal(6, betraege.get(3));
                         int result = pstmt.executeUpdate();
                         pstmt.close();
                         if (result != 0){
@@ -210,8 +215,9 @@ public class AbrechnungenMonat extends Abrechnungen {
                 BigDecimal mwst_satz = entry.getKey();
                 Vector<BigDecimal> betraege = entry.getValue();
                 Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();
-                mwstValues.add(betraege.get(0)); // mwst_netto
-                mwstValues.add(betraege.get(1)); // mwst_betrag
+                mwstValues.add(betraege.get(0)); // mwst_netto+mwst_betrag (=brutto)
+                mwstValues.add(betraege.get(1)); // mwst_netto
+                mwstValues.add(betraege.get(2)); // mwst_betrag
                 incompleteAbrechnungsVATs.put(mwst_satz, mwstValues);
                 mwstSet.add(mwst_satz);
             }
@@ -220,16 +226,20 @@ public class AbrechnungenMonat extends Abrechnungen {
             HashMap<BigDecimal, Vector<BigDecimal>> sachenTag = queryIncompleteAbrechnungTag_VATs();
             for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : sachenTag.entrySet() ){
                 BigDecimal mwst_satz = entry.getKey();
-                Vector<BigDecimal> betraege = entry.getValue();
-                Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();
-                mwstValues.add(betraege.get(0)); // mwst_netto
-                mwstValues.add(betraege.get(1)); // mwst_betrag
+                Vector<BigDecimal> mwstValues = entry.getValue();
+                //Vector<BigDecimal> betraege = entry.getValue();
+                //Vector<BigDecimal> mwstValues = new Vector<BigDecimal>();
+                //mwstValues.add(betraege.get(0)); // mwst_netto+mwst_betrag (=brutto)
+                //mwstValues.add(betraege.get(1)); // mwst_netto
+                //mwstValues.add(betraege.get(2)); // mwst_betrag
 
                 if ( incompleteAbrechnungsVATs.containsKey(mwst_satz) ){ // mwst exists, add numbers
                     incompleteAbrechnungsVATs.get(mwst_satz).
                         set( 0, incompleteAbrechnungsVATs.get(mwst_satz).get(0).add(mwstValues.get(0)) );
                     incompleteAbrechnungsVATs.get(mwst_satz).
                         set( 1, incompleteAbrechnungsVATs.get(mwst_satz).get(1).add(mwstValues.get(1)) );
+                    incompleteAbrechnungsVATs.get(mwst_satz).
+                        set( 2, incompleteAbrechnungsVATs.get(mwst_satz).get(2).add(mwstValues.get(2)) );
                 } else { // only add information
                     incompleteAbrechnungsVATs.put(mwst_satz, mwstValues);
                 }

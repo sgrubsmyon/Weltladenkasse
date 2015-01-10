@@ -45,7 +45,8 @@ public class AbrechnungenTag extends Abrechnungen {
      *    The constructor.
      *       */
     public AbrechnungenTag(Connection conn, MainWindowGrundlage mw, AbrechnungenTabbedPane tp){
-	super(conn, mw, "", "Tagesabrechnungen", "yyyy-MM-dd HH:mm:ss", "dd.MM. (E)", "zeitpunkt", "abrechnung_tag");
+        super(conn, mw, "", "Tagesabrechnung", "yyyy-MM-dd HH:mm:ss", "dd.MM. (E)",
+                "dd.MM.yyyy HH:mm:ss (E)", "zeitpunkt", "abrechnung_tag");
         tabbedPane = tp;
 	showTable();
     }
@@ -105,6 +106,7 @@ public class AbrechnungenTag extends Abrechnungen {
 
     void insertTagesAbrechnung() { // create new abrechnung (and save in DB) from time of last abrechnung until now
         try {
+            Integer id = id();
             String date = now();
             // get netto values grouped by mwst:
             HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
@@ -131,24 +133,28 @@ public class AbrechnungenTag extends Abrechnungen {
             for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : abrechnungNettoBetrag.entrySet() ){
                 BigDecimal mwst_satz = entry.getKey();
                 Vector<BigDecimal> values = entry.getValue();
-                BigDecimal mwst_netto = values.get(0);
-                BigDecimal mwst_betrag = values.get(1);
+                BigDecimal mwst_netto = values.get(1);
+                BigDecimal mwst_betrag = values.get(2);
                 BigDecimal bar_brutto = new BigDecimal("0.00");
                 if ( abrechnungBarBrutto.containsKey(mwst_satz) ){
                     bar_brutto = abrechnungBarBrutto.get(mwst_satz);
                 }
                 System.out.println(mwst_satz+"  "+mwst_netto+"  "+mwst_betrag+"   "+bar_brutto);
                 PreparedStatement pstmt = this.conn.prepareStatement(
-                        "INSERT INTO abrechnung_tag SET zeitpunkt = ?, mwst_satz = ?, " +
-                        "mwst_netto = ?, mwst_betrag = ?, "+
+                        "INSERT INTO abrechnung_tag SET id = ?, zeitpunkt = ?, "+
+                        "mwst_satz = ?, "+
+                        "mwst_netto = ?, "+
+                        "mwst_betrag = ?, "+
                         "bar_brutto = ?"
                         );
-                pstmt.setString(1, date);
-                pstmt.setBigDecimal(2, mwst_satz);
-                pstmt.setBigDecimal(3, mwst_netto);
-                pstmt.setBigDecimal(4, mwst_betrag);
-                pstmt.setBigDecimal(5, bar_brutto);
+                pstmt.setInt(1, id);
+                pstmt.setString(2, date);
+                pstmt.setBigDecimal(3, mwst_satz);
+                pstmt.setBigDecimal(4, mwst_netto);
+                pstmt.setBigDecimal(5, mwst_betrag);
+                pstmt.setBigDecimal(6, bar_brutto);
                 int result = pstmt.executeUpdate();
+                pstmt.close();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Tagesabrechnung konnte nicht gespeichert werden.",

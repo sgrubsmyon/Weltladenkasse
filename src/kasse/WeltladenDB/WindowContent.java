@@ -192,7 +192,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         vat = vat.replace(',','.');
         String vatFormatted = "";
         try {
-            vatFormatted = vatFormat.format( (new BigDecimal(vat)).multiply(new BigDecimal("100.")) ).replace('.',',') + " %";
+            vatFormatted = vatFormat.format( (new BigDecimal(vat)).multiply(new BigDecimal("100.")) ).replace('.',',') + "%";
         } catch (NumberFormatException nfe) {
             System.out.println("vat = "+vat);
             System.out.println("Exception: " + nfe.getMessage());

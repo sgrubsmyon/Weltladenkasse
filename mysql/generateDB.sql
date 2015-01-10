@@ -4,32 +4,32 @@ CREATE DATABASE kasse CHARACTER SET utf8 COLLATE utf8_general_ci;
 USE kasse;
 
 CREATE TABLE lieferant (
-    lieferant_id int(10) unsigned NOT NULL AUTO_INCREMENT,
-    lieferant_name varchar(50) NOT NULL,
+    lieferant_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    lieferant_name VARCHAR(50) NOT NULL,
     aktiv BOOL NOT NULL DEFAULT TRUE,
     PRIMARY KEY (lieferant_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE mwst (
-    mwst_id int(10) unsigned NOT NULL AUTO_INCREMENT,
-    mwst_satz decimal(6,5) NOT NULL,
+    mwst_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    mwst_satz DECIMAL(6,5) NOT NULL,
     PRIMARY KEY (mwst_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE pfand (
-    pfand_id int(10) unsigned NOT NULL AUTO_INCREMENT,
-    artikel_id int(10) unsigned NOT NULL,
+    pfand_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    artikel_id INTEGER(10) UNSIGNED NOT NULL,
     PRIMARY KEY (pfand_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE produktgruppe (
-    produktgruppen_id int(10) unsigned NOT NULL AUTO_INCREMENT,
-    toplevel_id int(10) unsigned DEFAULT 1,
-    sub_id int(10) unsigned DEFAULT NULL,
-    subsub_id int(10) unsigned DEFAULT NULL,
-    produktgruppen_name varchar(50) NOT NULL,
-    mwst_id int(10) unsigned DEFAULT NULL,
-    pfand_id int(10) unsigned DEFAULT NULL,
+    produktgruppen_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    toplevel_id INTEGER(10) UNSIGNED DEFAULT 1,
+    sub_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    subsub_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    produktgruppen_name VARCHAR(50) NOT NULL,
+    mwst_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    pfand_id INTEGER(10) UNSIGNED DEFAULT NULL,
     aktiv BOOL NOT NULL DEFAULT TRUE,
     PRIMARY KEY (produktgruppen_id),
     FOREIGN KEY (mwst_id) REFERENCES mwst(mwst_id),
@@ -37,21 +37,23 @@ CREATE TABLE produktgruppe (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE artikel (
-    artikel_id int(10) unsigned NOT NULL AUTO_INCREMENT,
-    produktgruppen_id int(10) unsigned NOT NULL DEFAULT 8,
-    lieferant_id int(10) unsigned NOT NULL DEFAULT 1,
-    artikel_nr varchar(30) NOT NULL,
-    artikel_name varchar(180) NOT NULL,
-    kurzname varchar(50) DEFAULT NULL,
-    menge decimal(8,5) DEFAULT NULL,
-    barcode varchar(30) DEFAULT NULL,
-    herkunft varchar(100) DEFAULT NULL,
-    vpe smallint(10) unsigned DEFAULT NULL,
-    vk_preis decimal(13,2),
-    ek_preis decimal(13,2),
+    artikel_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    produktgruppen_id INTEGER(10) UNSIGNED NOT NULL DEFAULT 8,
+    lieferant_id INTEGER(10) UNSIGNED NOT NULL DEFAULT 1,
+    artikel_nr VARCHAR(30) NOT NULL,
+    artikel_name VARCHAR(180) NOT NULL,
+    kurzname VARCHAR(50) DEFAULT NULL,
+    menge DECIMAL(8,5) DEFAULT NULL,
+    barcode VARCHAR(30) DEFAULT NULL,
+    herkunft VARCHAR(100) DEFAULT NULL,
+    vpe SMALLINT(10) UNSIGNED DEFAULT NULL,
+    vk_preis DECIMAL(13,2),
+    empf_vk_preis DECIMAL(13,2),
+    ek_preis DECIMAL(13,2),
+    ek_rabatt DECIMAL(5,4),
     variabler_preis BOOL NOT NULL DEFAULT FALSE,
     sortiment BOOL NOT NULL DEFAULT FALSE,
-    bestand int(5) DEFAULT NULL,
+    bestand INTEGER(5) DEFAULT NULL,
     von DATETIME DEFAULT NULL,
     bis DATETIME DEFAULT NULL,
     aktiv BOOL NOT NULL DEFAULT TRUE,
@@ -62,46 +64,46 @@ CREATE TABLE artikel (
 ALTER TABLE pfand ADD FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id);
 
 CREATE TABLE rabattaktion (
-    rabatt_id int(10) unsigned NOT NULL AUTO_INCREMENT,
-    aktionsname varchar(50) DEFAULT NULL,
-    rabatt_relativ decimal(6,5) DEFAULT NULL,
-    rabatt_absolut decimal(13,2) DEFAULT NULL,
-    mengenrabatt_schwelle int(10) unsigned DEFAULT NULL,
-    mengenrabatt_anzahl_kostenlos int(10) unsigned DEFAULT NULL,
-    mengenrabatt_relativ decimal(6,5) DEFAULT NULL,
+    rabatt_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    aktionsname VARCHAR(50) DEFAULT NULL,
+    rabatt_relativ DECIMAL(6,5) DEFAULT NULL,
+    rabatt_absolut DECIMAL(13,2) DEFAULT NULL,
+    mengenrabatt_schwelle INTEGER(10) UNSIGNED DEFAULT NULL,
+    mengenrabatt_anzahl_kostenlos INTEGER(10) UNSIGNED DEFAULT NULL,
+    mengenrabatt_relativ DECIMAL(6,5) DEFAULT NULL,
     von DATETIME NOT NULL,
     bis DATETIME,
-    produktgruppen_id int(10) unsigned DEFAULT NULL,
-    artikel_id int(10) unsigned DEFAULT NULL,
+    produktgruppen_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    artikel_id INTEGER(10) UNSIGNED DEFAULT NULL,
     PRIMARY KEY (rabatt_id),
     FOREIGN KEY (produktgruppen_id) REFERENCES produktgruppe(produktgruppen_id),
     FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE verkauf (
-    rechnungs_nr int(10) unsigned NOT NULL AUTO_INCREMENT,
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     verkaufsdatum DATETIME NOT NULL,
     storniert BOOL NOT NULL DEFAULT FALSE,
     ec_zahlung BOOL NOT NULL DEFAULT FALSE,
     PRIMARY KEY (rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE verkauf_mwst (
-    rechnungs_nr int(10) unsigned NOT NULL,
-    mwst_satz decimal(6,5) NOT NULL,
-    mwst_netto decimal(13,2) NOT NULL,
-    mwst_betrag decimal(13,2) NOT NULL,
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
     PRIMARY KEY (rechnungs_nr, mwst_satz),
     FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE verkauf_details (
-    vd_id int(10) unsigned NOT NULL AUTO_INCREMENT,
-    rechnungs_nr int(10) unsigned NOT NULL,
-    position smallint(5) unsigned DEFAULT NULL,
-    artikel_id int(10) unsigned DEFAULT NULL,
-    rabatt_id int(10) unsigned DEFAULT NULL,
-    stueckzahl smallint(5) NOT NULL DEFAULT 1,
-    ges_preis decimal(13,2) NOT NULL,
-    mwst_satz decimal(6,5) NOT NULL,
+    vd_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL,
+    position SMALLINT(5) UNSIGNED DEFAULT NULL,
+    artikel_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    rabatt_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    stueckzahl SMALLINT(5) NOT NULL DEFAULT 1,
+    ges_preis DECIMAL(13,2) NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
     PRIMARY KEY (vd_id),
     FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr),
     FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id),
@@ -109,55 +111,58 @@ CREATE TABLE verkauf_details (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE kassenstand (
-    kassenstand_id int(10) unsigned NOT NULL AUTO_INCREMENT,
+    kassenstand_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     buchungsdatum DATETIME NOT NULL,
-    neuer_kassenstand decimal(13,2) NOT NULL,
+    neuer_kassenstand DECIMAL(13,2) NOT NULL,
     manuell BOOL NOT NULL DEFAULT FALSE,
-    rechnungs_nr int(10) unsigned DEFAULT NULL,
-    kommentar varchar(70),
+    rechnungs_nr INTEGER(10) UNSIGNED DEFAULT NULL,
+    kommentar VARCHAR(70),
     PRIMARY KEY (kassenstand_id),
     FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE abrechnung_tag (
+    id INTEGER(10) NOT NULL, 
     zeitpunkt DATETIME NOT NULL,
-    mwst_satz decimal(6,5) NOT NULL,
-    mwst_netto decimal(13,2) NOT NULL,
-    mwst_betrag decimal(13,2) NOT NULL,
-    bar_brutto decimal(13,2) NOT NULL,
-    PRIMARY KEY (zeitpunkt, mwst_satz)
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
+    bar_brutto DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id, mwst_satz)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_monat (
+    id INTEGER(10) NOT NULL, 
     monat DATE NOT NULL,
-    mwst_satz decimal(6,5) NOT NULL,
-    mwst_netto decimal(13,2) NOT NULL,
-    mwst_betrag decimal(13,2) NOT NULL,
-    bar_brutto decimal(13,2) NOT NULL,
-    PRIMARY KEY (monat, mwst_satz)
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
+    bar_brutto DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id, mwst_satz)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_jahr (
+    id INTEGER(10) NOT NULL, 
     jahr YEAR NOT NULL,
-    mwst_satz decimal(6,5) NOT NULL,
-    mwst_netto decimal(13,2) NOT NULL,
-    mwst_betrag decimal(13,2) NOT NULL,
-    bar_brutto decimal(13,2) NOT NULL,
-    PRIMARY KEY (jahr, mwst_satz)
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
+    bar_brutto DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id, mwst_satz)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE bestellung (
-    bestell_nr int(10) unsigned NOT NULL AUTO_INCREMENT,
-    typ varchar(12) NOT NULL DEFAULT "",
+    bestell_nr INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    typ VARCHAR(12) NOT NULL DEFAULT "",
     bestell_datum DATETIME NOT NULL,
     jahr YEAR NOT NULL DEFAULT 2000,
-    kw tinyint(2) NOT NULL DEFAULT 1,
+    kw TINYINT(2) NOT NULL DEFAULT 1,
     PRIMARY KEY (bestell_nr, typ)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE bestellung_details (
-    bestell_nr int(10) unsigned NOT NULL,
-    typ varchar(12) NOT NULL DEFAULT "",
-    position smallint(5) unsigned NOT NULL,
-    artikel_id int(10) unsigned NOT NULL,
-    stueckzahl smallint(5) NOT NULL DEFAULT 1,
+    bestell_nr INTEGER(10) UNSIGNED NOT NULL,
+    typ VARCHAR(12) NOT NULL DEFAULT "",
+    position SMALLINT(5) UNSIGNED NOT NULL,
+    artikel_id INTEGER(10) UNSIGNED NOT NULL,
+    stueckzahl SMALLINT(5) NOT NULL DEFAULT 1,
     PRIMARY KEY (bestell_nr, typ, position),
     FOREIGN KEY (bestell_nr) REFERENCES bestellung(bestell_nr),
     FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id)
