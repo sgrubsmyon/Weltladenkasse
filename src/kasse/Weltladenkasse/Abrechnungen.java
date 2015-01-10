@@ -4,6 +4,16 @@ package Weltladenkasse;
 import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 import java.math.RoundingMode;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
+
+// OpenDocument stuff:
+import org.jopendocument.dom.spreadsheet.Sheet;
+import org.jopendocument.dom.spreadsheet.SpreadSheet;
+import org.jopendocument.dom.OOUtils;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -11,9 +21,6 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -33,6 +40,7 @@ import java.awt.event.*;
 //import javax.swing.JCheckBox;
 import javax.swing.*;
 import javax.swing.table.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import WeltladenDB.WindowContent;
 import WeltladenDB.MainWindowGrundlage;
@@ -49,8 +57,9 @@ public abstract class Abrechnungen extends WindowContent {
     protected String titleStr;
     protected String dateInFormat;
     protected String dateOutFormat;
+    protected String dateOutFormat_Export;
     protected String timeName;
-    protected String abrechnungTableName;
+    protected String abrechnungsTableName;
 
     // The bottom panel which holds button.
     protected JPanel bottomPanel;
@@ -65,6 +74,7 @@ public abstract class Abrechnungen extends WindowContent {
     private FileExistsAwareFileChooser odsChooser;
 
     protected Vector<String> abrechnungsDates;
+    protected Vector<Integer> abrechnungsIDs;
     protected Vector< Vector<BigDecimal> > abrechnungsTotals;
     protected Vector< HashMap<BigDecimal, Vector<BigDecimal>> > abrechnungsVATs;
     protected String incompleteAbrechnungsDate;
@@ -80,15 +90,17 @@ public abstract class Abrechnungen extends WindowContent {
     /**
      *    The constructor.
      *       */
-    public Abrechnungen(Connection conn, MainWindowGrundlage mw, String fs, String ts, String dif, String dof, String tn, String atn)
+    public Abrechnungen(Connection conn, MainWindowGrundlage mw, String fs, String ts, String dif, String dof,
+            String dofe, String tn, String atn)
     {
 	super(conn, mw);
         filterStr = fs;
         titleStr = ts;
         dateInFormat = dif;
         dateOutFormat = dof;
+        dateOutFormat_Export = dofe;
         timeName = tn;
-        abrechnungTableName = atn;
+        abrechnungsTableName = atn;
 
 	bottomPanel = new JPanel();
 	bottomPanel.setLayout(new FlowLayout());
@@ -96,6 +108,27 @@ public abstract class Abrechnungen extends WindowContent {
 	this.add(bottomPanel, BorderLayout.SOUTH);
 
 	fillDataArray();
+
+        odsChooser = new FileExistsAwareFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "ODS Spreadsheet-Dokumente", "ods");
+        odsChooser.setFileFilter(filter);
+    }
+
+    Integer id() {
+        Integer id = new Integer(-1);
+        try {
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT IFNULL("+
+                    "(SELECT MAX(id) FROM "+abrechnungsTableName+"), "+
+                    "1)");
+            rs.next(); id = rs.getInt(1); rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return id;
     }
 
     abstract void queryIncompleteAbrechnung();
@@ -148,7 +181,6 @@ public abstract class Abrechnungen extends WindowContent {
     }
     ///////////
     protected HashMap<BigDecimal, Vector<BigDecimal>> queryIncompleteAbrechnungTag_VATs() {
-        System.out.println("queryIncompleteAbrechnungTag_VATs()");
         HashMap<BigDecimal, Vector<BigDecimal>> map = new HashMap<BigDecimal, Vector<BigDecimal>>();
         try {
             Statement stmt = this.conn.createStatement();
@@ -193,6 +225,7 @@ public abstract class Abrechnungen extends WindowContent {
                 BigDecimal mwst_netto = rs.getBigDecimal(2);
                 BigDecimal mwst_betrag = rs.getBigDecimal(3);
                 Vector<BigDecimal> values = new Vector<BigDecimal>();
+                values.add( mwst_netto.add(mwst_betrag) ); // = brutto
                 values.add(mwst_netto);
                 values.add(mwst_betrag);
                 map.put(mwst_satz, values);
@@ -210,6 +243,7 @@ public abstract class Abrechnungen extends WindowContent {
         queryAbrechnungenSpecial();
 
         abrechnungsDates = new Vector<String>();
+        abrechnungsIDs = new Vector<Integer>();
         abrechnungsTotals = new Vector< Vector<BigDecimal> >();
         abrechnungsVATs = new Vector< HashMap<BigDecimal, Vector<BigDecimal>> >();
         mwstSet = new TreeSet<BigDecimal>();
@@ -228,14 +262,15 @@ public abstract class Abrechnungen extends WindowContent {
 
             // second, get the total amounts
             ResultSet rs = stmt.executeQuery(
-                    "SELECT "+timeName+", SUM(mwst_netto + mwst_betrag), " +
+                    "SELECT "+timeName+", SUM(mwst_netto + mwst_betrag), "+
                                        // ^^^ Gesamt Brutto
-                    "SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) " +
+                    "SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto), "+
                   // ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
-                    "FROM "+abrechnungTableName+" " +
-                    "WHERE TRUE " +
+                    "id "+
+                    "FROM "+abrechnungsTableName+" "+
+                    "WHERE TRUE "+
                     filterStr +
-                    "GROUP BY "+timeName+" ORDER BY "+timeName+" DESC " +
+                    "GROUP BY "+timeName+" ORDER BY "+timeName+" DESC "+
                     "LIMIT " + offset + "," + noOfColumns
                     );
             while (rs.next()) {
@@ -246,6 +281,7 @@ public abstract class Abrechnungen extends WindowContent {
                 values.add(rs.getBigDecimal(4));
                 // store in vectors
                 abrechnungsDates.add(date);
+                abrechnungsIDs.add(rs.getInt(5));
                 abrechnungsTotals.add(values);
                 abrechnungsVATs.add(new HashMap<BigDecimal, Vector<BigDecimal>>());
             }
@@ -255,7 +291,7 @@ public abstract class Abrechnungen extends WindowContent {
             for (String date : abrechnungsDates){
                 PreparedStatement pstmt = this.conn.prepareStatement(
                         "SELECT mwst_satz, mwst_netto, mwst_betrag " +
-                        "FROM "+abrechnungTableName+" " +
+                        "FROM "+abrechnungsTableName+" " +
                         "WHERE "+timeName+" = ? " +
                         filterStr +
                         "ORDER BY mwst_satz "
@@ -265,8 +301,9 @@ public abstract class Abrechnungen extends WindowContent {
                 while (rs.next()) {
                     BigDecimal mwst = rs.getBigDecimal(1);
                     Vector<BigDecimal> values = new Vector<BigDecimal>();
-                    values.add(rs.getBigDecimal(2));
-                    values.add(rs.getBigDecimal(3));
+                    values.add( rs.getBigDecimal(2).add(rs.getBigDecimal(3)) ); // brutto: sum of the two
+                    values.add(rs.getBigDecimal(2)); // netto
+                    values.add(rs.getBigDecimal(3)); // betrag (amount)
                     // store the values at the positions that match abrechnungsDates and abrechnungsTotals:
                     int index = abrechnungsDates.indexOf(date);
                     abrechnungsVATs.get(index).put(mwst, values);
@@ -277,7 +314,7 @@ public abstract class Abrechnungen extends WindowContent {
 
             // fourth, get total number of abrechnungen:
             rs = stmt.executeQuery(
-                    "SELECT COUNT(DISTINCT "+timeName+") FROM "+abrechnungTableName+" " +
+                    "SELECT COUNT(DISTINCT "+timeName+") FROM "+abrechnungsTableName+" " +
                     "WHERE TRUE " +
                     filterStr
                     );
@@ -292,9 +329,9 @@ public abstract class Abrechnungen extends WindowContent {
         }
     }
 
-    String formatDate(String date) {
+    String formatDate(String date, String dateFormat) {
         SimpleDateFormat sdfIn = new SimpleDateFormat(this.dateInFormat);
-        SimpleDateFormat sdfOut = new SimpleDateFormat(this.dateOutFormat);
+        SimpleDateFormat sdfOut = new SimpleDateFormat(dateFormat);
         String formattedDate = "";
         try {
             formattedDate = sdfOut.format( sdfIn.parse(date) );
@@ -305,6 +342,10 @@ public abstract class Abrechnungen extends WindowContent {
         return formattedDate;
     }
 
+    String dateForFilename(String date) {
+        return date.replaceAll(" ", "_").replaceAll(":", "");
+    }
+
     void fillHeaderColumn() {
         // fill header column
         columnLabels.add("");
@@ -312,6 +353,7 @@ public abstract class Abrechnungen extends WindowContent {
         data.add(new Vector<Object>()); data.lastElement().add("Gesamt Bar Brutto");
         data.add(new Vector<Object>()); data.lastElement().add("Gesamt EC Brutto");
         for (BigDecimal mwst : mwstSet){
+            data.add(new Vector<Object>()); data.lastElement().add(vatFormatter(mwst)+" MwSt. Brutto");
             data.add(new Vector<Object>()); data.lastElement().add(vatFormatter(mwst)+" MwSt. Netto");
             data.add(new Vector<Object>()); data.lastElement().add(vatFormatter(mwst)+" MwSt. Betrag");
         }
@@ -319,7 +361,7 @@ public abstract class Abrechnungen extends WindowContent {
     }
 
     int fillDataArrayColumn(String date, Vector<BigDecimal> totals, HashMap<BigDecimal, Vector<BigDecimal>> vats) {
-        String formattedDate = formatDate(date);
+        String formattedDate = formatDate(date, this.dateOutFormat);
         columnLabels.add(formattedDate);
         // add Gesamt Brutto
         data.get(0).add( priceFormatter( totals.get(0) )+" "+currencySymbol );
@@ -330,13 +372,12 @@ public abstract class Abrechnungen extends WindowContent {
         // add VATs
         int rowIndex = 3;
         for (BigDecimal mwst : mwstSet){
-            for (int i=0; i<2; i++){
+            for (int i=0; i<3; i++){
                 if (vats != null && vats.containsKey(mwst)){
                     BigDecimal bd = vats.get(mwst).get(i);
                     data.get(rowIndex).add( priceFormatter(bd)+" "+currencySymbol );
                 } else {
                     data.get(rowIndex).add( priceFormatter("0")+" "+currencySymbol );
-                    System.out.println("Adding 0.00 "+currencySymbol);
                 }
                 rowIndex++;
             }
@@ -475,6 +516,89 @@ public abstract class Abrechnungen extends WindowContent {
         }
     }
 
+    void writeSpreadSheet(File file, int exportIndex) {
+        // Get data
+        String date = abrechnungsDates.get(exportIndex);
+        Integer id = abrechnungsIDs.get(exportIndex);
+        String formattedDate = formatDate(date, this.dateOutFormat_Export);
+        Vector<BigDecimal> totals = abrechnungsTotals.get(exportIndex);
+        HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(exportIndex); // map with values for each mwst
+
+        // Load the template file
+        final Sheet sheet;
+        try {
+            String filename = "vorlagen"+fileSep+titleStr+".ods";
+            File infile = new File(filename);
+            if (!infile.exists()){
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Zur '"+titleStr+"' gibt es keine Vorlage "+
+                        "'"+filename+"'.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            sheet = SpreadSheet.createFromFile(infile).getSheet(0);
+        } catch (IOException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+            return;
+        }
+
+        // Change date
+        sheet.getCellAt("B7").setValue(formattedDate);
+        // Laufende Nummer:
+        sheet.getCellAt("B8").setValue(id);
+
+        // Set Totals:
+        int rowIndex = 9;
+        for (BigDecimal total : totals){
+            sheet.setValueAt(total, 1, rowIndex);
+            rowIndex++;
+        }
+        rowIndex++; // empty row
+
+        // Set VATs:
+        for (BigDecimal mwst : mwstSet){
+            sheet.setValueAt(vatFormatter(mwst)+" MwSt. Brutto", 0, rowIndex);
+            sheet.setValueAt(vatFormatter(mwst)+" MwSt. Netto", 0, rowIndex+1);
+            sheet.setValueAt(vatFormatter(mwst)+" MwSt. Betrag", 0, rowIndex+2);
+            for (int i=0; i<3; i++){
+                if (vats.containsKey(mwst)){
+                    sheet.setValueAt(vats.get(mwst).get(i), 1, rowIndex);
+                } else {
+                    sheet.setValueAt(0., 1, rowIndex);
+                }
+                rowIndex++;
+            }
+            rowIndex++; // empty row
+        }
+
+        try {
+            // Save to file and open it.
+            OOUtils.open(sheet.getSpreadSheet().saveAs(file));
+        } catch (FileNotFoundException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    void export(int exportIndex){
+        String date = abrechnungsDates.get(exportIndex);
+        odsChooser.setSelectedFile(new File(titleStr+"_WL_Bonn_"+dateForFilename(date)+".ods"));
+        int returnVal = odsChooser.showSaveDialog(this);
+        if (returnVal == JFileChooser.APPROVE_OPTION){
+            File file = odsChooser.getSelectedFile();
+
+            writeSpreadSheet(file, exportIndex);
+
+            System.out.println("Written to " + file.getName());
+        } else {
+            System.out.println("Save command cancelled by user.");
+        }
+    }
+
     /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.
@@ -491,27 +615,7 @@ public abstract class Abrechnungen extends WindowContent {
 	    }
 	}
         if (exportIndex > -1){
-            String date = abrechnungsDates.get(exportIndex);
-            Vector<BigDecimal> totals = abrechnungsTotals.get(exportIndex);
-            HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(exportIndex); // map with values for each mwst
-
-            System.out.println("Abrechnung "+abrechnungTableName+":");
-            System.out.println("-----------");
-            System.out.println(date);
-            System.out.println(totals);
-            System.out.println(vats);
-
-            //odsChooser.setSelectedFile(new File("Bestellung_WL_Bonn_"+typ+"_KW"+kw+".ods"));
-            //int returnVal = odsChooser.showSaveDialog(this);
-            //if (returnVal == JFileChooser.APPROVE_OPTION){
-            //    File file = odsChooser.getSelectedFile();
-
-            //    writeSpreadSheet(file);
-
-            //    System.out.println("Written to " + file.getName());
-            //} else {
-            //    System.out.println("Save command cancelled by user.");
-            //}
+            export(exportIndex);
             return;
 	}
     }
