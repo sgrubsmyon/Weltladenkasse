@@ -115,6 +115,11 @@ public abstract class Abrechnungen extends WindowContent {
         odsChooser.setFileFilter(filter);
     }
 
+    public boolean isThereIncompleteAbrechnung() {
+        BigDecimal totalBrutto = incompleteAbrechnungsTotals.get(0);
+        return totalBrutto.signum() > 0;
+    }
+
     Integer id() {
         Integer id = new Integer(-1);
         try {
@@ -429,9 +434,6 @@ public abstract class Abrechnungen extends WindowContent {
     abstract void addOtherStuff();
 
     void showTable(){
-        System.out.println("SHOW TABLE WIRD JETZT AUFGERUFEN.");
-        System.out.println("data.get(0).get(1): "+data.get(0).get(1));
-        System.out.println("myTable.getValueAt(0, 1): "+myTable.getValueAt(0, 1));
         tablePanel = new JPanel();
         tablePanel.setLayout(new BoxLayout(tablePanel, BoxLayout.Y_AXIS));
         tablePanel.setBorder(BorderFactory.createTitledBorder(titleStr));
@@ -468,9 +470,6 @@ public abstract class Abrechnungen extends WindowContent {
         tablePanel.add(scrollPane);
 
         this.add(tablePanel, BorderLayout.CENTER);
-
-        System.out.println("data.get(0).get(1): "+data.get(0).get(1));
-        System.out.println("myTable.getValueAt(0, 1): "+myTable.getValueAt(0, 1));
     }
 
     protected void updateTable(){
