@@ -53,6 +53,10 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
 	//holdAll.add(topPanel, BorderLayout.NORTH);
     }
 
+    public boolean isThereIncompleteAbrechnungTag() {
+        return myTabbedPane.isThereIncompleteAbrechnungTag();
+    }
+
     /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.

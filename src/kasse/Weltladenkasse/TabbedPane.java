@@ -66,6 +66,10 @@ public class TabbedPane extends TabbedPaneGrundlage {
         this.add(tabbedPane, BorderLayout.CENTER);
     }
 
+    public boolean isThereIncompleteAbrechnungTag() {
+        return myAbrech.isThereIncompleteAbrechnungTag();
+    }
+
     /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.

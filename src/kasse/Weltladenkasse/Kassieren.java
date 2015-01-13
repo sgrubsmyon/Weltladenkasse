@@ -93,8 +93,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private JButton stornoButton;
     private JButton gutscheinButton;
     private JLabel zahlungsLabel;
-    private JButton quittungsButton;
     private JButton neuerKundeButton;
+    private JButton quittungsButton;
     private JButton individuellRabattRelativButton;
     private JButton individuellRabattAbsolutButton;
     private JButton mitarbeiterRabattButton;
@@ -452,18 +452,24 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             zahlungsLabel = new JLabel(" ");
             zahlungsLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
             neuerKundePanel.add(zahlungsLabel);
-            neuerKundePanel.add(Box.createRigidArea(new Dimension(0,5)));
+            neuerKundePanel.add(Box.createRigidArea(new Dimension(0,5))); // add vertical space
             JPanel buttonPanel = new JPanel();
-                quittungsButton = new JButton("Quittung");
-                quittungsButton.setEnabled(false);
-                quittungsButton.addActionListener(this);
-                quittungsButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-                buttonPanel.add(quittungsButton);
-                neuerKundeButton = new JButton("Fertig/Nächster Kunde");
-                neuerKundeButton.setEnabled(false);
-                neuerKundeButton.addActionListener(this);
-                neuerKundeButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-                buttonPanel.add(neuerKundeButton);
+            buttonPanel.setLayout(new BorderLayout());
+                // center
+                JPanel centerPanel = new JPanel();
+                    neuerKundeButton = new JButton("Fertig/Nächster Kunde");
+                    neuerKundeButton.setEnabled(false);
+                    neuerKundeButton.addActionListener(this);
+                    centerPanel.add(neuerKundeButton);
+                buttonPanel.add(centerPanel, BorderLayout.CENTER);
+                // right
+                JPanel rightPanel = new JPanel();
+                rightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
+                    quittungsButton = new JButton("Quittung");
+                    quittungsButton.setEnabled(false);
+                    quittungsButton.addActionListener(this);
+                    rightPanel.add(quittungsButton);
+                buttonPanel.add(rightPanel, BorderLayout.EAST);
             neuerKundePanel.add(buttonPanel);
         allPanel.add(neuerKundePanel);
 
