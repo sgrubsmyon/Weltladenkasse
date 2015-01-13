@@ -3,7 +3,6 @@ package Weltladenkasse;
 // Basic Java stuff:
 import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
-import java.math.RoundingMode;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;

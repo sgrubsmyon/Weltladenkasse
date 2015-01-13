@@ -3,7 +3,6 @@ package Weltladenkasse;
 // Basic Java stuff:
 import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
-import java.math.RoundingMode;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -30,6 +29,9 @@ import java.awt.event.*;
 //import javax.swing.JCheckBox;
 import javax.swing.*;
 import javax.swing.table.*;
+
+// DateTime from date4j (http://www.date4j.net/javadoc/index.html)
+import hirondelle.date4j.DateTime;
 
 import WeltladenDB.MainWindowGrundlage;
 
@@ -59,6 +61,22 @@ public class AbrechnungenTag extends Abrechnungen {
         otherPanel.add(submitButton);
         otherPanel.add(new JLabel("(Zahlen in rot werden als neue Tagesabrechnung gespeichert.)"));
         tablePanel.add(otherPanel);
+    }
+
+    String queryEarliestVerkauf() {
+        String date = "";
+        try {
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT MIN(verkaufsdatum) "+
+                    "FROM verkauf WHERE storniert = FALSE AND verkaufsdatum > "+
+                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01')");
+            rs.next(); date = rs.getString(1); rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return date;
     }
 
     String now() {
@@ -104,13 +122,9 @@ public class AbrechnungenTag extends Abrechnungen {
         }
     }
 
-    void insertTagesAbrechnung() { // create new abrechnung (and save in DB) from time of last abrechnung until now
+    HashMap<BigDecimal, BigDecimal> queryIncompleteAbrechnung_BarBruttoVATs() {
+        HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = new HashMap<BigDecimal, BigDecimal>();
         try {
-            Integer id = id();
-            String date = now();
-            // get netto values grouped by mwst:
-            HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
-            // get totals (bar brutto) grouped by mwst:
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
                     "SELECT mwst_satz, SUM(ges_preis) AS bar_brutto " +
@@ -119,17 +133,48 @@ public class AbrechnungenTag extends Abrechnungen {
                     "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag), '0001-01-01') AND ec_zahlung = FALSE " +
                     "GROUP BY mwst_satz"
                     );
-            HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = new HashMap<BigDecimal, BigDecimal>();
             while (rs.next()) {
                 BigDecimal mwst_satz = rs.getBigDecimal(1);
                 BigDecimal bar_brutto = rs.getBigDecimal(2);
                 abrechnungBarBrutto.put(mwst_satz, bar_brutto);
-                System.out.println(mwst_satz+"  "+bar_brutto);
+                //System.out.println(mwst_satz+"  "+bar_brutto);
             }
             rs.close();
             stmt.close();
-            System.out.println("mwst_satz  mwst_netto  mwst_betrag  bar_brutto");
-            System.out.println("----------------------------------------------");
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return abrechnungBarBrutto;
+    }
+
+    String decideOnZeitpunkt(String firstDate, String lastDate) {
+        DateTime firstD = new DateTime(firstDate);
+        DateTime lastD = new DateTime(lastDate);
+        if ( firstD.isSameDayAs(lastD) ){
+            // everything is as it should be:
+            // all purchases from this abrechnung on the same day
+            // simply use the lastDate (now) as zeitpunkt for abrechnung
+            return lastDate;
+        }
+        // if abrechnung spans more than one day:
+        // show dialog window telling user about first and last date and
+        // asking her to specify the desired zeitpunkt of abrechnung
+        return lastDate;
+    }
+
+    void insertTagesAbrechnung() { // create new abrechnung (and save in DB) from time of last abrechnung until now
+        try {
+            Integer id = id();
+            String firstDate = queryEarliestVerkauf();
+            String lastDate = now();
+            String zeitpunkt = decideOnZeitpunkt(firstDate, lastDate);
+            // get netto values grouped by mwst:
+            HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
+            // get totals (bar brutto) grouped by mwst:
+            HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = queryIncompleteAbrechnung_BarBruttoVATs();
+            //System.out.println("mwst_satz  mwst_netto  mwst_betrag  bar_brutto");
+            //System.out.println("----------------------------------------------");
             for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : abrechnungNettoBetrag.entrySet() ){
                 BigDecimal mwst_satz = entry.getKey();
                 Vector<BigDecimal> values = entry.getValue();
@@ -148,7 +193,7 @@ public class AbrechnungenTag extends Abrechnungen {
                         "bar_brutto = ?"
                         );
                 pstmt.setInt(1, id);
-                pstmt.setString(2, date);
+                pstmt.setString(2, zeitpunkt);
                 pstmt.setBigDecimal(3, mwst_satz);
                 pstmt.setBigDecimal(4, mwst_netto);
                 pstmt.setBigDecimal(5, mwst_betrag);
