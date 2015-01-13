@@ -3,7 +3,6 @@ package Weltladenkasse;
 // Basic Java stuff:
 import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
-import java.math.RoundingMode;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -150,7 +149,7 @@ public abstract class Abrechnungen extends WindowContent {
             // first, get the totals:
             // Gesamt Brutto
             ResultSet rs = stmt.executeQuery(
-                    "SELECT SUM(ges_preis) " +
+                    "SELECT SUM(ges_preis) AS ges_brutto " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
                     "WHERE storniert = FALSE AND verkaufsdatum > " +
                     "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') "
@@ -161,7 +160,7 @@ public abstract class Abrechnungen extends WindowContent {
             rs.close();
             // Gesamt Bar Brutto
             rs = stmt.executeQuery(
-                    "SELECT SUM(ges_preis) AS bar_brutto " +
+                    "SELECT SUM(ges_preis) AS ges_bar_brutto " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
                     "WHERE storniert = FALSE AND verkaufsdatum > " +
                     "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') AND ec_zahlung = FALSE "

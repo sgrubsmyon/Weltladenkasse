@@ -41,14 +41,6 @@ public class Kasse {
                 final MainWindow myWindow = new MainWindow(password);
 
                 if (myWindow.connectionWorks){
-                    // Check if there is an incomplete Tagesabrechnung from the start!
-                    if ( myWindow.isThereIncompleteAbrechnungTag() ){
-                        JOptionPane.showMessageDialog(myWindow,
-                                "Hinweis: Es gibt eine offene Tagesabrechnung.\n"+
-                                "Wurde vergessen, Tagesabrechnung zu machen (unter 'Abrechnungen')?",
-                                "Ausstehende Abrechnung", JOptionPane.WARNING_MESSAGE);
-                    }
-
                     //myWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     //myWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // (maybe better)
                     myWindow.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); // (first check if Tagesabrechnung has been done:)
@@ -85,6 +77,14 @@ public class Kasse {
                     // Show it!
                     myWindow.setVisible(true);
                     System.out.println("Password was correct.");
+
+                    // Check if there is an incomplete Tagesabrechnung from the start!
+                    if ( myWindow.isThereIncompleteAbrechnungTag() ){
+                        JOptionPane.showMessageDialog(myWindow,
+                                "Hinweis: Es gibt eine offene Tagesabrechnung.\n"+
+                                "Wurde vergessen, die Tagesabrechnung zu machen (unter 'Abrechnungen')?",
+                                "Ausstehende Abrechnung", JOptionPane.WARNING_MESSAGE);
+                    }
                     return;
                 } else {
                     passwdIncorrect = true;
