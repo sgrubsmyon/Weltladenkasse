@@ -44,8 +44,10 @@ import WeltladenDB.MainWindowGrundlage;
 public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
     implements DocumentListener, ItemListener, ChangeListener {
     // Attribute:
-    private DateTime firstDate;
-    private DateTime lastDate;
+    private DateTime firstDateTime;
+    private DateTime lastDateTime;
+    private Date firstDate;
+    private Date lastDate;
 
     private JSpinner dateSpinner;
     private SpinnerDateModel dateModel;
@@ -58,8 +60,10 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
     public SelectZeitpunktForAbrechnungDialog(Connection conn, MainWindowGrundlage mw, JDialog dia,
             DateTime fd, DateTime ld) {
 	super(conn, mw, dia);
-        this.firstDate = fd;
-        this.lastDate = ld;
+        this.firstDateTime = fd;
+        this.lastDateTime = ld;
+        this.firstDate = new Date( firstDateTime.getMilliseconds(TimeZone.getDefault()) );
+        this.lastDate = new Date( lastDateTime.getMilliseconds(TimeZone.getDefault()) );
         showAll();
     }
 
@@ -70,19 +74,19 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
 
     protected void showMiddle() {
         JPanel middlePanel = new JPanel();
-        Date initialValue = new Date( firstDate.getMilliseconds(TimeZone.getDefault()) );
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(Calendar.YEAR, firstDate.getYear());
-            calendar.set(Calendar.MONTH, firstDate.getMonth()-1);
-            calendar.set(Calendar.DAY_OF_MONTH, firstDate.getDay()-1); // for strange reasons, we need day-1
-            Date oneDayBeforeEarliestDate = calendar.getTime();
-            //DateTime oneDBefEearD = firstDate.minusDays(1);
-            //Date oneDayBeforeEarliestDate = new Date( oneDBefEearD.getMilliseconds(TimeZone.getDefault()) );
-	//calendar.set(Calendar.DAY_OF_MONTH, firstDate.getDay());
-	//initialValue = calendar.getTime();
-        Date endValue = new Date( lastDate.getMilliseconds(TimeZone.getDefault()) );
+            //Calendar calendar = Calendar.getInstance();
+            //calendar.set(Calendar.YEAR, firstDateTime.getYear());
+            //calendar.set(Calendar.MONTH, firstDateTime.getMonth()-1);
+            //calendar.set(Calendar.DAY_OF_MONTH, firstDateTime.getDay()-1); // for strange reasons, we need day-1
+            //Date oneDayBeforeStartValue = calendar.getTime();
+            //calendar.set(Calendar.DAY_OF_MONTH, lastDateTime.getDay());
+            //initialValue = calendar.getTime();
+        Date initialValue = lastDate;
+        DateTime oneDBefFirst = firstDateTime.minusDays(1); // for strange reasons, we need day-1
+        Date oneDayBeforeStartValue = new Date( oneDBefFirst.getMilliseconds(TimeZone.getDefault()) );
+        Date endValue = lastDate;
         dateModel = new SpinnerDateModel(initialValue, // Startwert
-                                     initialValue, // kleinster Wert
+                                     oneDayBeforeStartValue, // kleinster Wert
                                      endValue, // groesster Wert
                                      Calendar.YEAR);//ignored for user input
         dateSpinner = new JSpinner(dateModel);
@@ -114,6 +118,29 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
 
     /** Needed for ChangeListener. */
     public void stateChanged(ChangeEvent e) {
+	if (e.getSource() == dateSpinner){
+	    SpinnerModel dateModel = dateSpinner.getModel();
+	    if (dateModel instanceof SpinnerDateModel) {
+		calButt.setTargetDate(((SpinnerDateModel)dateModel).getDate());
+	    }
+	}
+	if (e.getSource() == calButt){
+	    SpinnerModel dateModel = dateSpinner.getModel();
+	    Date newDate = calButt.getTargetDate();
+	    if ( newDate.before(firstDate) ){
+		newDate = firstDate;
+		calButt.setTargetDate(newDate);
+	    }
+	    if ( newDate.after(lastDate) ){
+		newDate = lastDate;
+		calButt.setTargetDate(newDate);
+	    }
+	    if (dateModel instanceof SpinnerDateModel) {
+		if (newDate != null){
+		    ((SpinnerDateModel)dateModel).setValue(newDate);
+		}
+	    }
+	}
     }
 
     /** Needed for ItemListener. */
