@@ -51,6 +51,9 @@ public class AbrechnungenTag extends Abrechnungen {
                 "dd.MM.yyyy HH:mm:ss (E)", "zeitpunkt", "abrechnung_tag");
         tabbedPane = tp;
 	showTable();
+        // just for testing:
+        showSelectZeitpunktDialog(new DateTime("2015-01-13 20:01:32"),
+                new DateTime("2015-01-14 18:00:00"));
     }
 
     void addOtherStuff() {
@@ -148,6 +151,17 @@ public class AbrechnungenTag extends Abrechnungen {
         return abrechnungBarBrutto;
     }
 
+    void showSelectZeitpunktDialog(DateTime firstDate, DateTime lastDate) {
+        JDialog dialog = new JDialog(this.mainWindow, "Zeitpunkt manuell auswählen", true);
+        SelectZeitpunktForAbrechnungDialog selZeitpunkt = new SelectZeitpunktForAbrechnungDialog(this.conn, this.mainWindow, dialog, firstDate, lastDate);
+        dialog.getContentPane().add(selZeitpunkt, BorderLayout.CENTER);
+        dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        //WindowAdapterDialog wad = new WindowAdapterDialog(selZeitpunkt, dialog, "Achtung: Neue Artikel gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
+        //dialog.addWindowListener(wad);
+        dialog.pack();
+        dialog.setVisible(true);
+    }
+
     String decideOnZeitpunkt(String firstDate, String lastDate) {
         DateTime firstD = new DateTime(firstDate);
         DateTime lastD = new DateTime(lastDate);
@@ -160,6 +174,7 @@ public class AbrechnungenTag extends Abrechnungen {
         // if abrechnung spans more than one day:
         // show dialog window telling user about first and last date and
         // asking her to specify the desired zeitpunkt of abrechnung
+        showSelectZeitpunktDialog(firstD, lastD);
         return lastDate;
     }
 
