@@ -193,6 +193,61 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
     }
 
     /**
+     *    * Each non abstract class that implements the ChangeListener
+     *      must have this method.
+     *
+     *    @param e the change event.
+     **/
+    public void stateChanged(ChangeEvent e) {
+	if (e.getSource() == startSpinner){
+	    SpinnerModel dateModel = startSpinner.getModel();
+	    if (dateModel instanceof SpinnerDateModel) {
+		calButtStart.setTargetDate(((SpinnerDateModel)dateModel).getDate());
+	    }
+	}
+	if (e.getSource() == endSpinner){
+	    SpinnerModel dateModel = endSpinner.getModel();
+	    if (dateModel instanceof SpinnerDateModel) {
+		calButtEnd.setTargetDate(((SpinnerDateModel)dateModel).getDate());
+	    }
+	}
+	if (e.getSource() == calButtStart){
+	    SpinnerModel dateModel = startSpinner.getModel();
+	    Date newDate = calButtStart.getTargetDate();
+	    if ( newDate.before(earliestDate) ){
+		newDate = earliestDate;
+		calButtStart.setTargetDate(newDate);
+	    }
+	    if ( newDate.after(latestDate) ){
+		newDate = latestDate;
+		calButtStart.setTargetDate(newDate);
+	    }
+	    if (dateModel instanceof SpinnerDateModel) {
+		if (newDate != null){
+		    ((SpinnerDateModel)dateModel).setValue(newDate);
+		}
+	    }
+	}
+	if (e.getSource() == calButtEnd){
+	    SpinnerModel dateModel = endSpinner.getModel();
+	    Date newDate = calButtEnd.getTargetDate();
+	    if ( newDate.before(earliestDate) ){
+		newDate = earliestDate;
+		calButtEnd.setTargetDate(newDate);
+	    }
+	    if ( newDate.after(latestDate) ){
+		newDate = latestDate;
+		calButtEnd.setTargetDate(newDate);
+	    }
+	    if (dateModel instanceof SpinnerDateModel) {
+		if (newDate != null){
+		    ((SpinnerDateModel)dateModel).setValue(newDate);
+		}
+	    }
+	}
+    }
+
+    /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.
      *
@@ -253,61 +308,6 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
 	if (detailRow != -1){
 	    showDetailTable(detailRow, this.titleStr);
 	    return;
-	}
-    }
-
-    /**
-     *    * Each non abstract class that implements the ChangeListener
-     *      must have this method.
-     *
-     *    @param e the change event.
-     **/
-    public void stateChanged(ChangeEvent e) {
-	if (e.getSource() == startSpinner){
-	    SpinnerModel dateModel = startSpinner.getModel();
-	    if (dateModel instanceof SpinnerDateModel) {
-		calButtStart.setTargetDate(((SpinnerDateModel)dateModel).getDate());
-	    }
-	}
-	if (e.getSource() == endSpinner){
-	    SpinnerModel dateModel = endSpinner.getModel();
-	    if (dateModel instanceof SpinnerDateModel) {
-		calButtEnd.setTargetDate(((SpinnerDateModel)dateModel).getDate());
-	    }
-	}
-	if (e.getSource() == calButtStart){
-	    SpinnerModel dateModel = startSpinner.getModel();
-	    Date newDate = calButtStart.getTargetDate();
-	    if ( newDate.before(earliestDate) ){
-		newDate = earliestDate;
-		calButtStart.setTargetDate(newDate);
-	    }
-	    if ( newDate.after(latestDate) ){
-		newDate = latestDate;
-		calButtStart.setTargetDate(newDate);
-	    }
-	    if (dateModel instanceof SpinnerDateModel) {
-		if (newDate != null){
-		    ((SpinnerDateModel)dateModel).setValue(newDate);
-		}
-	    }
-	}
-	if (e.getSource() == calButtEnd){
-	    SpinnerModel dateModel = endSpinner.getModel();
-	    Date newDate = calButtEnd.getTargetDate();
-	    if ( newDate.before(earliestDate) ){
-		newDate = earliestDate;
-		calButtEnd.setTargetDate(newDate);
-	    }
-	    if ( newDate.after(latestDate) ){
-		newDate = latestDate;
-		calButtEnd.setTargetDate(newDate);
-	    }
-	    if (dateModel instanceof SpinnerDateModel) {
-		if (newDate != null){
-		    ((SpinnerDateModel)dateModel).setValue(newDate);
-		}
-	    }
 	}
     }
 }
