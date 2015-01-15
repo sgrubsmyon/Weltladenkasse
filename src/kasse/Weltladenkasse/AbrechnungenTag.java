@@ -153,7 +153,9 @@ public class AbrechnungenTag extends Abrechnungen {
 
     void showSelectZeitpunktDialog(DateTime firstDate, DateTime lastDate) {
         JDialog dialog = new JDialog(this.mainWindow, "Zeitpunkt manuell auswählen", true);
-        SelectZeitpunktForAbrechnungDialog selZeitpunkt = new SelectZeitpunktForAbrechnungDialog(this.conn, this.mainWindow, dialog, firstDate, lastDate);
+        SelectZeitpunktForAbrechnungDialog selZeitpunkt = 
+            new SelectZeitpunktForAbrechnungDialog(this.conn, this.mainWindow,
+                    this, dialog, firstDate, lastDate);
         dialog.getContentPane().add(selZeitpunkt, BorderLayout.CENTER);
         dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         //WindowAdapterDialog wad = new WindowAdapterDialog(selZeitpunkt, dialog, "Achtung: Neue Artikel gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
