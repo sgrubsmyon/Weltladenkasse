@@ -53,7 +53,7 @@ public class AbrechnungenTag extends Abrechnungen {
 	showTable();
         // just for testing:
         showSelectZeitpunktDialog(new DateTime("2015-01-13 20:01:32"),
-                new DateTime("2015-01-14 18:00:00"));
+                new DateTime("2015-01-15 18:00:00"));
     }
 
     void addOtherStuff() {
