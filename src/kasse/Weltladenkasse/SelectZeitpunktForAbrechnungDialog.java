@@ -48,18 +48,21 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
     implements DocumentListener, ItemListener, ChangeListener {
     // Attribute:
     private AbrechnungenTag parentWindow;
-    private DateTime firstDateTime;
-    private DateTime lastDateTime;
-    private Date firstDate;
-    private Date lastDate;
+    private final DateTime firstDateTime;
+    private final DateTime lastDateTime;
+    private final Date firstDateWithTime;
+    private final Date lastDateWithTime;
+    private final Date firstDate;
+    private final Date lastDate;
 
+    private JDateChooser dateChooser;
     private JSpinner dateSpinner;
+    private JSpinner timeSpinner;
+    private SpinnerDateModel timeModel;
     private JSpinner hourSpinner;
     private JSpinner minuteSpinner;
-    private SpinnerDateModel dateModel;
     private SpinnerNumberModel hourModel;
     private SpinnerNumberModel minuteModel;
-    private JCalendarButton calButt;
 
     private JButton okButton;
     private JButton cancelButton;
@@ -72,8 +75,14 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
         this.parentWindow = at;
         this.firstDateTime = fd;
         this.lastDateTime = ld;
+        this.lastDateWithTime = new Date( lastDateTime.getMilliseconds(TimeZone.getDefault()) );
+        this.firstDateWithTime = new Date( firstDateTime.getMilliseconds(TimeZone.getDefault()) );
         this.firstDate = new Date( firstDateTime.getStartOfDay().getMilliseconds(TimeZone.getDefault()) );
-        this.lastDate = new Date( lastDateTime.getEndOfDay().getMilliseconds(TimeZone.getDefault()) );
+        this.lastDate = new Date( lastDateTime.getStartOfDay().getMilliseconds(TimeZone.getDefault()) );
+        System.out.println("First Date: "+this.firstDate);
+        System.out.println("Last Date: "+this.lastDate);
+        System.out.println("First Date With Time: "+this.firstDateWithTime);
+        System.out.println("Last Date With Time: "+this.lastDateWithTime);
         showAll();
     }
 
@@ -85,39 +94,40 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
     protected void showMiddle() {
         JPanel middlePanel = new JPanel();
 
-        Date initialValue = lastDate;
-        DateTime oneDBefFirst = firstDateTime.getStartOfDay().minusDays(1); // for strange reasons, we need day-1
-        Date oneDayBeforeStartValue = new Date( oneDBefFirst.getMilliseconds(TimeZone.getDefault()) );
-        Date endValue = lastDate;
-        dateModel = new SpinnerDateModel(initialValue, // Startwert
-                                     oneDayBeforeStartValue, // kleinster Wert
-                                     endValue, // groesster Wert
-                                     Calendar.YEAR);//ignored for user input
-        dateSpinner = new JSpinner(dateModel);
-        //dateSpinner.setEditor(new JSpinner.DateEditor(dateSpinner, "dd.MM.yyyy, HH:mm 'Uhr'"));
+        JSpinnerDateEditor sdEdit = new JSpinnerDateEditor();
+        dateSpinner = (JSpinner)sdEdit.getUiComponent();
+        dateChooser = new JDateChooser((Date)lastDate.clone(), null, sdEdit);
+        dateChooser.setMinSelectableDate((Date)firstDate.clone());
+        dateChooser.setMaxSelectableDate((Date)lastDate.clone());
+        dateChooser.setLocale(myLocale);
         dateSpinner.setEditor(new JSpinner.DateEditor(dateSpinner, "dd.MM.yyyy"));
 	dateSpinner.addChangeListener(this);
-        middlePanel.add(dateSpinner);
-
-	calButt = new JCalendarButton(initialValue);
-	calButt.addChangeListener(this);
-        middlePanel.add(calButt);
-
-        JDateChooser dateChooser = new JDateChooser(initialValue, null, new JSpinnerDateEditor());
-        dateChooser.setMinSelectableDate(firstDate);
-        dateChooser.setMaxSelectableDate(lastDate);
         middlePanel.add(dateChooser);
 
+        DateTime oneDBefFirst = firstDateTime.getStartOfDay().minusDays(1); // for strange reasons, we need day-1
+        Date oneDayBeforeStartValue = new Date( oneDBefFirst.getMilliseconds(TimeZone.getDefault()) );
+
+        timeModel = new SpinnerDateModel();
+        timeModel.setValue(lastDateWithTime);
+        timeModel.setStart(lastDate);
+        timeModel.setEnd(lastDateWithTime);
+        timeSpinner = new JSpinner(timeModel);
+        JSpinner.DateEditor timeEditor = new JSpinner.DateEditor(timeSpinner, "HH:mm");
+        timeSpinner.setEditor(timeEditor);
+        middlePanel.add(timeSpinner);
+
+        /*
         hourModel = new SpinnerNumberModel(
                 lastDateTime.getHour(), // initial value
                 new Integer(0), // min
                 lastDateTime.getHour(), // max (null == no max)
                 new Integer(1)); // step
         hourSpinner = new JSpinner(hourModel);
-        JSpinner.NumberEditor hourEditor = new JSpinner.NumberEditor(hourSpinner, "###");
+        JSpinner.NumberEditor hourEditor = new JSpinner.NumberEditor(hourSpinner, "00");
         hourEditor.getTextField().setColumns(2);
         ( (NumberFormatter) hourEditor.getTextField().getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
         hourSpinner.setEditor(hourEditor);
+	hourSpinner.addChangeListener(this);
         middlePanel.add(hourSpinner);
 
         middlePanel.add(new JLabel(":"));
@@ -128,11 +138,13 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
                 lastDateTime.getMinute(), // max (null == no max)
                 new Integer(1)); // step
         minuteSpinner = new JSpinner(minuteModel);
-        JSpinner.NumberEditor minuteEditor = new JSpinner.NumberEditor(minuteSpinner, "###");
+        JSpinner.NumberEditor minuteEditor = new JSpinner.NumberEditor(minuteSpinner, "00");
         minuteEditor.getTextField().setColumns(2);
         ( (NumberFormatter) minuteEditor.getTextField().getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
         minuteSpinner.setEditor(minuteEditor);
+	minuteSpinner.addChangeListener(this);
         middlePanel.add(minuteSpinner);
+        */
 
         allPanel.add(middlePanel);
     }
@@ -154,32 +166,99 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
         return 0;
     }
 
+    void setMinimumHour(Integer minHour) {
+        /*
+        if ((Integer)hourSpinner.getValue() < minHour){
+            hourSpinner.setValue(minHour);
+        }
+        hourModel.setMinimum(minHour);
+        */
+    }
+
+    void setMinimumMinute(Integer minMinute) {
+        /*
+        if ((Integer)minuteSpinner.getValue() < minMinute){
+            minuteSpinner.setValue(minMinute);
+        }
+        minuteModel.setMinimum(minMinute);
+        */
+    }
+
+    void setMaximumHour(Integer maxHour) {
+        /*
+        if ((Integer)hourSpinner.getValue() > maxHour){
+            hourSpinner.setValue(maxHour);
+        }
+        hourModel.setMaximum(maxHour);
+        */
+    }
+
+    void setMaximumMinute(Integer maxMinute) {
+        /*
+        if ((Integer)minuteSpinner.getValue() > maxMinute){
+            minuteSpinner.setValue(maxMinute);
+        }
+        minuteModel.setMaximum(maxMinute);
+        */
+    }
+
     /** Needed for ChangeListener. */
     public void stateChanged(ChangeEvent e) {
 	if (e.getSource() == dateSpinner){
-	    SpinnerModel dateModel = dateSpinner.getModel();
-	    if (dateModel instanceof SpinnerDateModel) {
-		System.out.println( ((SpinnerDateModel)dateModel).getDate() );
-		calButt.setTargetDate(((SpinnerDateModel)dateModel).getDate());
-	    }
+            System.out.println("date chooser: "+dateChooser.getDate());
+            if ( dateChooser.getDate().equals(this.lastDate) ){
+                System.out.println("lastDate selected: "+this.lastDate+".");
+                setMinimumHour(new Integer(0));
+                setMinimumMinute(new Integer(0));
+                setMaximumHour(lastDateTime.getHour());
+                if ( ((Integer)hourSpinner.getValue()).equals(lastDateTime.getHour()) ){
+                    // if last hour is selected: restrict minute
+                    setMaximumMinute(lastDateTime.getMinute());
+                }
+            }
+            else if ( dateChooser.getDate().equals(this.firstDate) ){
+                System.out.println("firstDate selected: "+this.firstDate+".");
+                setMinimumHour(firstDateTime.getHour());
+                if ( ((Integer)hourSpinner.getValue()).equals(firstDateTime.getHour()) ){
+                    // if first hour is selected: restrict minute
+                    setMinimumMinute(firstDateTime.getMinute());
+                }
+                setMaximumHour(new Integer(23));
+                setMaximumMinute(new Integer(59));
+            }
+            else {
+                System.out.println("middle date selected.");
+                setMinimumHour(new Integer(0));
+                setMinimumMinute(new Integer(0));
+                setMaximumHour(new Integer(23));
+                setMaximumMinute(new Integer(59));
+            }
+            return;
 	}
-	if (e.getSource() == calButt){
-	    SpinnerModel dateModel = dateSpinner.getModel();
-	    Date newDate = calButt.getTargetDate();
-	    if ( newDate.before(firstDate) ){
-		newDate = firstDate;
-		calButt.setTargetDate(newDate);
-	    }
-	    if ( newDate.after(lastDate) ){
-		newDate = lastDate;
-		calButt.setTargetDate(newDate);
-	    }
-	    if (dateModel instanceof SpinnerDateModel) {
-		if (newDate != null){
-		    ((SpinnerDateModel)dateModel).setValue(newDate);
-		}
-	    }
-	}
+	if (e.getSource() == hourSpinner){
+            // update minute's maximum
+            if ( dateChooser.getDate().equals(this.lastDate) &&
+                   ((Integer)hourSpinner.getValue()).equals(lastDateTime.getHour()) ){
+                // if we are on last day and in last hour: restrict minute
+                setMaximumMinute(lastDateTime.getMinute());
+            } else {
+                // in all other cases: no restriction
+                setMaximumMinute(new Integer(59));
+            }
+            // update minute's minimum
+            if ( dateChooser.getDate().equals(this.firstDate) &&
+                   ((Integer)hourSpinner.getValue()).equals(firstDateTime.getHour()) ){
+                // if we are on first day and in first hour: restrict minute
+                setMinimumMinute(firstDateTime.getMinute());
+            } else {
+                // in all other cases: no restriction
+                setMinimumMinute(new Integer(0));
+            }
+            return;
+        }
+	if (e.getSource() == minuteSpinner){
+            return;
+        }
     }
 
     /** Needed for ItemListener. */
