@@ -102,7 +102,6 @@ public class Quittung extends WindowContent {
         } else {
             // Fill header
             sheet.getCellAt("A5").setValue(datetime.format(dateFormatDate4j));
-            //sheet.getCellAt("C5").setValue(datetime.format('hh:mm'));
             rowOffset = 7;
         }
     }
