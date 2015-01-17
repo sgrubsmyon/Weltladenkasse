@@ -8,19 +8,29 @@ $ jar cfe Weltladenkasse_v0.9.4.jar Weltladenkasse.Kasse icons/ jcalendarbutton/
 
 Download most recent MySQL Connector:
 http://dev.mysql.com/downloads/connector/j/
+jOpenDocument library from:
+http://www.jopendocument.org/downloads.html
 
-Download one-jar-appgen-X.XX.jar:
-http://one-jar.sourceforge.net/index.php?page=downloads&file=downloads
-Build:
-    $ java -jar one-jar-appgen-0.97.jar
-        Enter project path (project name is last segment): c:/tmp/test-one-jar
-        Enter java package name: com.example.onejar
-    $ cd c:/tmp/test-one-jar
-    $ ant
-    $ cd build
-    $ java -jar test-one-jar.jar
-        test_one_jar main entry point, args=[]
-        test_one_jar main is running
-        test_one_jar OK.
-    Add source code to the src directory, library jars to the lib directory, and rebuild.
+Export Artikelliste.ods to .csv file:
+   File -> Save As -> .csv file
+   Choose "Field delimiter: ;", "Text delimiter: " (nothing)
+In vim on .csv file:
+Replace newlines with commas:
+    :%s/\([^;]\)$\n/\1, /
+Find erroneous substitutions:
+    1st line
+    'Ja's at the end
+    /Libera, Terra
+    /PFAND-, KISTE
+Merge 250g etc. with artikelname (insert a "|"):
+    :%s/;\([^;]*\);\([^;]*\)\(;[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;[^;]*$\)/ | \1 \2\3/
+Find and delete unnecessary fields:
+    "/ |  "
+Delete VPE unit:
+    :%s/\([0-9]*\)[^;]*\(;[^;]*;[^;]*;[^;]*;[^;]*$\)/\1\2/
 
+DB dump:
+mysqldump -u kassenadmin -p kasse > testdump.sql
+
+DB import:
+mysql -u kassenadmin -p kasse < testdump.sql

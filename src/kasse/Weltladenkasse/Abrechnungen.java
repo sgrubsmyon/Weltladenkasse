@@ -125,8 +125,8 @@ public abstract class Abrechnungen extends WindowContent {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT IFNULL("+
                     "(SELECT MAX(id) FROM "+abrechnungsTableName+"), "+
-                    "1)");
-            rs.next(); id = rs.getInt(1); rs.close();
+                    "0)");
+            rs.next(); id = rs.getInt(1)+1; rs.close();
             stmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
@@ -217,7 +217,7 @@ public abstract class Abrechnungen extends WindowContent {
                     "GROUP BY mwst_satz"
                     );
             while (rs.next()) {
-                System.out.println(rs.getBigDecimal(1));
+                //System.out.println(rs.getBigDecimal(1));
                 BigDecimal mwst_satz = rs.getBigDecimal(1);
             // OLD: SUM OF ROUND (see above, rounding in MySQL)
                 //BigDecimal mwst_netto = rs.getBigDecimal(2);
@@ -407,9 +407,9 @@ public abstract class Abrechnungen extends WindowContent {
 
         if (currentPage == 1){
             // fill red (incomplete, so unsaved) data column
-            System.out.println("incomplete: "+incompleteAbrechnungsDate);
-            System.out.println("incomplete: "+incompleteAbrechnungsTotals);
-            System.out.println("incomplete: "+incompleteAbrechnungsVATs);
+            //System.out.println("incomplete: "+incompleteAbrechnungsDate);
+            //System.out.println("incomplete: "+incompleteAbrechnungsTotals);
+            //System.out.println("incomplete: "+incompleteAbrechnungsVATs);
             int rowIndex = fillDataArrayColumn(incompleteAbrechnungsDate, incompleteAbrechnungsTotals, incompleteAbrechnungsVATs);
             data.get(rowIndex).add(""); // instead of exportButton
         }
@@ -419,9 +419,9 @@ public abstract class Abrechnungen extends WindowContent {
             String date = abrechnungsDates.get(colIndex);
             Vector<BigDecimal> totals = abrechnungsTotals.get(colIndex);
             HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(colIndex); // map with values for each mwst
-            System.out.println(date);
-            System.out.println(totals);
-            System.out.println(vats);
+            //System.out.println(date);
+            //System.out.println(totals);
+            //System.out.println(vats);
             int rowIndex = fillDataArrayColumn(date, totals, vats);
             addExportButton(rowIndex);
         }

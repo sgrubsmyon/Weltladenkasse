@@ -22,11 +22,19 @@ public abstract class TabbedPaneGrundlage extends WindowContent {
     protected abstract void createTabbedPane();
 
     public void recreateTabbedPane() {
+        recreateTabbedPane(true);
+    }
+
+    public void recreateTabbedPane(boolean switchBack) {
+        int selIndex = tabbedPane.getSelectedIndex();
         this.remove(tabbedPane);
 	this.revalidate();
-        if (parentTabbedPane != null){
-            parentTabbedPane.recreateTabbedPane();
-        }
         createTabbedPane();
+        if (switchBack){
+            tabbedPane.setSelectedIndex(selIndex);
+        }
+        if (parentTabbedPane != null){
+            parentTabbedPane.recreateTabbedPane(switchBack);
+        }
     }
 }

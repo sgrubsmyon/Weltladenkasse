@@ -42,6 +42,8 @@ public class AbrechnungenTag extends Abrechnungen {
     private JButton submitButton;
     private boolean submitButtonEnabled;
 
+    private String selectedZeitpunkt = null;
+
     // Methoden:
     /**
      *    The constructor.
@@ -49,14 +51,12 @@ public class AbrechnungenTag extends Abrechnungen {
     public AbrechnungenTag(Connection conn, MainWindowGrundlage mw, AbrechnungenTabbedPane tp){
         super(conn, mw, "", "Tagesabrechnung", "yyyy-MM-dd HH:mm:ss", "dd.MM. (E)",
                 "dd.MM.yyyy HH:mm:ss (E)", "zeitpunkt", "abrechnung_tag");
-        tabbedPane = tp;
+        this.tabbedPane = tp;
 	showTable();
-        // just for testing:
-        showSelectZeitpunktDialog(new DateTime("2015-01-13 20:01:32"),
-                new DateTime("2015-01-15 18:00:05"));
-        // test Daylight Saving Time:
-        //showSelectZeitpunktDialog(new DateTime("2015-08-13 20:01:32"),
-        //        new DateTime("2015-08-15 18:00:00"));
+    }
+
+    void setSelectedZeitpunkt(String zp) {
+        this.selectedZeitpunkt = zp;
     }
 
     void addOtherStuff() {
@@ -85,6 +85,22 @@ public class AbrechnungenTag extends Abrechnungen {
         return date;
     }
 
+    String queryLatestVerkauf() {
+        String date = "";
+        try {
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT MAX(verkaufsdatum) "+
+                    "FROM verkauf WHERE storniert = FALSE AND verkaufsdatum > "+
+                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01')");
+            rs.next(); date = rs.getString(1); rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return date;
+    }
+
     String now() {
         String date = "";
         try {
@@ -100,7 +116,6 @@ public class AbrechnungenTag extends Abrechnungen {
     }
 
     void queryIncompleteAbrechnung() { // create new abrechnung (for display) from time of last abrechnung until now
-        System.out.println("queryIncompleteAbrechnung()");
         String date = now();
 
         // for filling the diplayed table:
@@ -154,41 +169,47 @@ public class AbrechnungenTag extends Abrechnungen {
         return abrechnungBarBrutto;
     }
 
-    void showSelectZeitpunktDialog(DateTime firstDate, DateTime lastDate) {
+    void showSelectZeitpunktDialog(DateTime firstDate, DateTime lastDate, DateTime nowDate) {
         JDialog dialog = new JDialog(this.mainWindow, "Zeitpunkt manuell auswählen", true);
         SelectZeitpunktForAbrechnungDialog selZeitpunkt = 
             new SelectZeitpunktForAbrechnungDialog(this.conn, this.mainWindow,
-                    this, dialog, firstDate, lastDate);
+                    this, dialog, firstDate, lastDate, nowDate);
         dialog.getContentPane().add(selZeitpunkt, BorderLayout.CENTER);
-        dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        //WindowAdapterDialog wad = new WindowAdapterDialog(selZeitpunkt, dialog, "Achtung: Neue Artikel gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
-        //dialog.addWindowListener(wad);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.pack();
         dialog.setVisible(true);
     }
 
-    String decideOnZeitpunkt(String firstDate, String lastDate) {
+    String decideOnZeitpunkt(String firstDate, String lastDate, String nowDate) {
         DateTime firstD = new DateTime(firstDate);
         DateTime lastD = new DateTime(lastDate);
-        if ( firstD.isSameDayAs(lastD) ){
+        DateTime nowD = new DateTime(nowDate);
+        if ( firstD.isSameDayAs(nowD) ){
             // everything is as it should be:
             // all purchases from this abrechnung on the same day
-            // simply use the lastDate (now) as zeitpunkt for abrechnung
-            return lastDate;
+            // simply use now as zeitpunkt for abrechnung
+            return nowDate;
+        } else {
+            // if abrechnung spans more than one day:
+            // show dialog window telling user about first and last date and
+            // asking her to specify the desired zeitpunkt of abrechnung
+            showSelectZeitpunktDialog(firstD, lastD, nowD);
+            return this.selectedZeitpunkt;
         }
-        // if abrechnung spans more than one day:
-        // show dialog window telling user about first and last date and
-        // asking her to specify the desired zeitpunkt of abrechnung
-        showSelectZeitpunktDialog(firstD, lastD);
-        return lastDate;
     }
 
     void insertTagesAbrechnung() { // create new abrechnung (and save in DB) from time of last abrechnung until now
         try {
             Integer id = id();
             String firstDate = queryEarliestVerkauf();
-            String lastDate = now();
-            String zeitpunkt = decideOnZeitpunkt(firstDate, lastDate);
+            String lastDate = queryEarliestVerkauf();
+            String nowDate = now();
+            String zeitpunkt = decideOnZeitpunkt(firstDate, lastDate, nowDate);
+            System.out.println("Selected Zeitpunkt: "+zeitpunkt);
+            if (zeitpunkt == null){
+                System.out.println("insertTagesAbrechnung was cancelled!");
+                return; // don't do anything, user cancelled (or did not select date properly)
+            }
             // get netto values grouped by mwst:
             HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
             // get totals (bar brutto) grouped by mwst:
@@ -204,7 +225,9 @@ public class AbrechnungenTag extends Abrechnungen {
                 if ( abrechnungBarBrutto.containsKey(mwst_satz) ){
                     bar_brutto = abrechnungBarBrutto.get(mwst_satz);
                 }
-                System.out.println(mwst_satz+"  "+mwst_netto+"  "+mwst_betrag+"   "+bar_brutto);
+                System.out.println("INSERT INTO abrechnung_tag: id: "+id+
+                        "  "+mwst_satz+"  "+mwst_netto+"  "+mwst_betrag+
+                        "   "+bar_brutto);
                 PreparedStatement pstmt = this.conn.prepareStatement(
                         "INSERT INTO abrechnung_tag SET id = ?, zeitpunkt = ?, "+
                         "mwst_satz = ?, "+
@@ -230,6 +253,7 @@ public class AbrechnungenTag extends Abrechnungen {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+        //// TODO NEED TO REDO Monats/Jahresabrechnung if needed (check if zeitpunkt lies in old month/year)!!!
     }
 
     void queryAbrechnungenSpecial() {

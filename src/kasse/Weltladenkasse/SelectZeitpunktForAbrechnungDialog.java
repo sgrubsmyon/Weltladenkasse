@@ -2,14 +2,11 @@ package Weltladenkasse;
 
 // Basic Java stuff:
 import java.util.*; // for Vector, Collections
+import java.text.SimpleDateFormat;
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
-import java.sql.SQLException;
 import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -36,7 +33,7 @@ import hirondelle.date4j.DateTime;
 // JCalendarButton
 import jcalendarbutton.org.JCalendarButton;
 //import java.util.Calendar;
-//import java.util.Date;
+import java.util.Date;
 // JCalendar
 import com.toedter.calendar.JDateChooser;
 import com.toedter.calendar.JSpinnerDateEditor;
@@ -45,18 +42,19 @@ import WeltladenDB.DialogWindow;
 import WeltladenDB.MainWindowGrundlage;
 
 public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
-    implements DocumentListener, ItemListener, ChangeListener {
+    implements ChangeListener {
     // Attribute:
-    private AbrechnungenTag parentWindow;
+    private AbrechnungenTag abrechnungen;
     private final DateTime firstDateTime;
     private final DateTime lastDateTime;
+    private final DateTime nowDateTime;
     private final Date firstDate;
-    private final Date lastDate;
+    private final Date nowDate;
     // time of day, but since the epoch (needed by JSpinner showing time only):
-    private final Date firstDayTime;
-    private final Date lastDayTime;
-    private final Date startOfDay;
-    private final Date endOfDay;
+    private final Date firstDayTimeAfterEpoch;
+    private final Date nowDayTimeAfterEpoch;
+    private final Date startOfDayAfterEpoch;
+    private final Date endOfDayAfterEpoch;
 
     private JDateChooser dateChooser;
     private JSpinner dateSpinner;
@@ -69,115 +67,128 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
     // Methoden:
     public SelectZeitpunktForAbrechnungDialog(Connection conn, MainWindowGrundlage mw,
             AbrechnungenTag at, JDialog dia,
-            DateTime fd, DateTime ld) {
+            DateTime fd, DateTime ld, DateTime nd) {
 	super(conn, mw, dia);
-        this.parentWindow = at;
+        this.abrechnungen = at;
         // make second = 0, because seconds cause problems:
         this.firstDateTime = fd.minus(0, 0, 0, 0, 0, fd.getSecond(), 0, DateTime.DayOverflow.LastDay);
         // make second = 0, because seconds cause problems:
         this.lastDateTime = ld.minus(0, 0, 0, 0, 0, ld.getSecond(), 0, DateTime.DayOverflow.LastDay);
-        this.firstDate = new Date( firstDateTime.getStartOfDay().getMilliseconds(TimeZone.getDefault()) );
-        this.lastDate = new Date( lastDateTime.getStartOfDay().getMilliseconds(TimeZone.getDefault()) );
+        // make second = 0, because seconds cause problems:
+        this.nowDateTime = nd.minus(0, 0, 0, 0, 0, nd.getSecond(), 0, DateTime.DayOverflow.LastDay);
+        this.firstDate = dateFromDateTime( firstDateTime.getStartOfDay() );
+        this.nowDate = dateFromDateTime( nowDateTime.getStartOfDay() );
 
         // following are times since the epoch (needed for JSpinner with time only):
-        long timeZoneOffset = TimeZone.getDefault().getOffset(0); // offset of
-                                        // this PC's time zone to UTC (at time of the epoch, i.e. long = 0
-            // this offset is automatically added by Java to display a time in
-            // the local time zone, so we need to subtract it to have a time as
-            // in UTC, but displayed in the local time zone (it's ugly, I
-            // know, but I also don't want to change the Spinner's Locale to
-            // UK!), otherwise: e.g. 18:00 after epoch is displayed as 19:00
-            // after epoch if we are in CET
-            // The whole problem is this one: http://stackoverflow.com/questions/13741371/jspinner-with-spinnerdatemodel-weird-behaviour
-        this.firstDayTime = new Date( firstDateTime.getMilliseconds(TimeZone.getDefault()) -
-                firstDateTime.getStartOfDay().getMilliseconds(TimeZone.getDefault()) -
-                timeZoneOffset);
-        this.lastDayTime = new Date( lastDateTime.getMilliseconds(TimeZone.getDefault()) -
-                lastDateTime.getStartOfDay().getMilliseconds(TimeZone.getDefault()) -
-                timeZoneOffset);
-        this.startOfDay = new Date(0 - timeZoneOffset); // THE EPOCH!
-        this.endOfDay = new Date( firstDateTime.getEndOfDay().getMilliseconds(TimeZone.getDefault()) -
-                firstDateTime.getStartOfDay().getMilliseconds(TimeZone.getDefault()) -
-                timeZoneOffset);
+        // (2nd argument of dateFromDateTime() is zero point, which is subtracted)
+        this.firstDayTimeAfterEpoch = dateFromDateTime( firstDateTime, firstDateTime.getStartOfDay() );
+        this.nowDayTimeAfterEpoch = dateFromDateTime( nowDateTime, nowDateTime.getStartOfDay() );
+        this.startOfDayAfterEpoch = new Date(0); // THE EPOCH ITSELF!
+        this.endOfDayAfterEpoch = dateFromDateTime( nowDateTime.getEndOfDay(), nowDateTime.getStartOfDay() );
 
         //System.out.println("First DateTime: "+this.firstDateTime);
-        //System.out.println("Last DateTime: "+this.lastDateTime);
+        //System.out.println("Last DateTime: "+this.nowDateTime);
         //System.out.println("First Date: "+this.firstDate);
-        //System.out.println("Last Date: "+this.lastDate);
-        //System.out.println("First Day's Time: "+this.firstDayTime);
-        //System.out.println("Last Day's Time: "+this.lastDayTime);
-        //System.out.println("Start of Day: "+this.startOfDay);
-        //System.out.println("End of Day: "+this.endOfDay);
+        //System.out.println("Last Date: "+this.nowDate);
+        //System.out.println("First Day's Time: "+this.firstDayTimeAfterEpoch);
+        //System.out.println("Last Day's Time: "+this.nowDayTimeAfterEpoch);
+        //System.out.println("Start of Day: "+this.startOfDayAfterEpoch);
+        //System.out.println("End of Day: "+this.endOfDayAfterEpoch);
         showAll();
     }
 
     protected void showHeader() {
+        /**
+         * Informations-Panel
+         * */
         headerPanel = new JPanel();
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
-            JLabel erklaerText = new JLabel("Die Rechnungen dieser Abrechnung "+
-                    "umfassen mehr als einen Tag:");
-            erklaerText.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-            headerPanel.add(erklaerText);
-            JPanel zeitraumPanel = new JPanel();
-            zeitraumPanel.setLayout(new BoxLayout(zeitraumPanel, BoxLayout.Y_AXIS));
-            zeitraumPanel.setBorder(BorderFactory.createTitledBorder("Zeitraum der Abrechnung"));
-                JPanel zeitraumGridPanel = new JPanel();
-                    zeitraumGridPanel.setLayout(new GridLayout(2, 2)); // 2 rows, 2 columns
-                    JLabel fruehLabel = new JLabel("Früheste Rechnung: ");
-                    JLabel fruehZeitLabel = new JLabel(firstDateTime.format(dateFormatDate4j));
-                    JLabel spaetLabel = new JLabel("Späteste Rechnung: ");
-                    JLabel spaetZeitLabel = new JLabel(lastDateTime.format(dateFormatDate4j));
-                    fruehLabel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-                    fruehZeitLabel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-                    spaetLabel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-                    spaetZeitLabel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-                    zeitraumGridPanel.add(fruehLabel);
-                    zeitraumGridPanel.add(fruehZeitLabel);
-                    zeitraumGridPanel.add(spaetLabel);
-                    zeitraumGridPanel.add(spaetZeitLabel);
-                zeitraumPanel.add(zeitraumGridPanel);
-            headerPanel.add(zeitraumPanel);
-            JLabel[] wasTunText = new JLabel[]{
-                new JLabel("Der Zeitpunkt der Abrechnung muss manuell gewählt werden."),
-                new JLabel("Bitte versuche, den geeignetsten Zeitpunkt für diese "+
-                "Abrechnung zu benutzen."),
-                new JLabel("(z.B. Ende des Tages, zu dem diese Abrechnung hauptsächlich gehört.)")
-            };
-            for (JLabel text : wasTunText){
-                text.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-                headerPanel.add(text);
-            }
+
+        // borders:
+        int top = 10, left = 10, bottom = 10, right = 10;
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
+
+        JTextArea erklaerText = new JTextArea(2, 30);
+        erklaerText.append("Die Rechnungen dieser Abrechnung "+
+                "umfassen mehr als einen Tag:");
+        erklaerText = makeLabelStyle(erklaerText);
+        erklaerText.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
+        headerPanel.add(erklaerText);
+
+        JPanel zeitraumPanel = new JPanel();
+        zeitraumPanel.setBorder(BorderFactory.createTitledBorder("Zeitraum der Abrechnung"));
+        zeitraumPanel.setLayout(new GridLayout(3, 2)); // 3 rows, 2 columns
+            JLabel fruehLabel = new JLabel("Früheste Rechnung: ");
+            JLabel fruehZeitLabel = new JLabel(firstDateTime.format(dateFormatDate4j));
+            JLabel spaetLabel = new JLabel("Späteste Rechnung: ");
+            JLabel spaetZeitLabel = new JLabel(lastDateTime.format(dateFormatDate4j));
+            JLabel nowLabel = new JLabel("Jetzt: ");
+            JLabel nowZeitLabel = new JLabel(nowDateTime.format(dateFormatDate4j));
+            zeitraumPanel.add(fruehLabel);
+            zeitraumPanel.add(fruehZeitLabel);
+            zeitraumPanel.add(spaetLabel);
+            zeitraumPanel.add(spaetZeitLabel);
+            zeitraumPanel.add(nowLabel);
+            zeitraumPanel.add(nowZeitLabel);
+        headerPanel.add(zeitraumPanel);
+
+        JTextArea wasTunText = new JTextArea(7, 30);
+        wasTunText.append("Der Zeitpunkt der Abrechnung muss manuell gewählt werden!\n\n"+
+                "Bitte versuche, den geeignetsten Zeitpunkt für diese "+
+                "Abrechnung zu benutzen (z.B. Ende des Tages, zu dem diese "+
+                "Abrechnung hauptsächlich gehört)."
+                );
+        wasTunText = makeLabelStyle(wasTunText);
+        wasTunText.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
+        headerPanel.add(wasTunText);
+
         allPanel.add(headerPanel);
     }
 
     protected void showMiddle() {
+        /**
+         * Spinner-Panel
+         * */
         JPanel middlePanel = new JPanel();
 
         JSpinnerDateEditor sdEdit = new JSpinnerDateEditor();
         dateSpinner = (JSpinner)sdEdit.getUiComponent();
-        dateChooser = new JDateChooser((Date)lastDate.clone(), null, sdEdit);
+        dateChooser = new JDateChooser((Date)nowDate.clone(), null, sdEdit);
         dateChooser.setMinSelectableDate((Date)firstDate.clone());
-        dateChooser.setMaxSelectableDate((Date)lastDate.clone());
+        dateChooser.setMaxSelectableDate((Date)nowDate.clone());
         dateChooser.setLocale(myLocale);
         dateSpinner.setEditor(new JSpinner.DateEditor(dateSpinner, "dd.MM.yyyy"));
 	dateSpinner.addChangeListener(this);
         middlePanel.add(dateChooser);
 
         timeModel = new SpinnerDateModel();
-        timeModel.setValue(lastDayTime);
-        timeModel.setStart(startOfDay); // no constraint
-        timeModel.setEnd(lastDayTime);
         timeSpinner = new JSpinner(timeModel);
         JSpinner.DateEditor timeEditor = new JSpinner.DateEditor(timeSpinner, "HH:mm");
+        SimpleDateFormat format = timeEditor.getFormat();
+        format.setTimeZone(TimeZone.getTimeZone("GMT")); // this spinner only
+                            // works on first day after epoch (which is in UTC),
+                            // so set its time zone to UTC
+                            // Otherwise: e.g. 18:00 after epoch is displayed as 19:00
+                            // if we are in CET
+                            // The whole problem is this one:
+                            // http://stackoverflow.com/questions/13741371/jspinner-with-spinnerdatemodel-weird-behaviour
         timeSpinner.setEditor(timeEditor);
-	timeSpinner.addChangeListener(this);
+        timeModel.setValue(nowDayTimeAfterEpoch);
+        timeModel.setStart(startOfDayAfterEpoch); // no constraint
+        timeModel.setEnd(nowDayTimeAfterEpoch);
         middlePanel.add(timeSpinner);
         middlePanel.add(new JLabel("Uhr"));
 
+        //System.out.println("timeSpinner getValue: "+timeSpinner.getValue());
+        //System.out.println("timeSpinner getStart: "+timeModel.getStart());
+        //System.out.println("timeSpinner getEnd: "+timeModel.getEnd());
         allPanel.add(middlePanel);
     }
 
     protected void showFooter() {
+        /**
+         * Button-Panel
+         * */
         footerPanel = new JPanel();
         okButton = new JButton("OK");
         okButton.setMnemonic(KeyEvent.VK_O);
@@ -188,10 +199,6 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
         cancelButton.addActionListener(this);
         footerPanel.add(cancelButton);
         allPanel.add(footerPanel);
-    }
-
-    public int submit() {
-        return 0;
     }
 
     void setStartTime(Date minTime) {
@@ -213,45 +220,31 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
     /** Needed for ChangeListener. */
     public void stateChanged(ChangeEvent e) {
 	if (e.getSource() == dateSpinner){
-            System.out.println("date chooser: "+dateChooser.getDate());
-            if ( dateChooser.getDate().equals(this.lastDate) ){
-                System.out.println("lastDate selected: "+this.lastDate+".");
-                setStartTime(startOfDay); // no constraint
-                setEndTime(lastDayTime);
+            //System.out.println("date chooser: "+dateChooser.getDate());
+            if ( dateChooser.getDate().equals(this.nowDate) ){
+                //System.out.println("nowDate selected: "+this.nowDate+".");
+                setStartTime(startOfDayAfterEpoch); // no constraint
+                setEndTime(nowDayTimeAfterEpoch);
             }
             else if ( dateChooser.getDate().equals(this.firstDate) ){
-                System.out.println("firstDate selected: "+this.firstDate+".");
-                setStartTime(firstDayTime);
-                setEndTime(endOfDay); // no constraint
+                //System.out.println("firstDate selected: "+this.firstDate+".");
+                setStartTime(firstDayTimeAfterEpoch);
+                setEndTime(endOfDayAfterEpoch); // no constraint
             }
             else {
-                System.out.println("middle date selected.");
-                setStartTime(startOfDay); // no constraint
-                setEndTime(endOfDay); // no constraint
+                //System.out.println("middle date selected.");
+                setStartTime(startOfDayAfterEpoch); // no constraint
+                setEndTime(endOfDayAfterEpoch); // no constraint
             }
             return;
 	}
-	if (e.getSource() == timeSpinner){
-            System.out.println("time spinner: "+timeSpinner.getValue());
-            return;
-        }
     }
 
-    /** Needed for ItemListener. */
-    public void itemStateChanged(ItemEvent e) {
-    }
-
-    /**
-     *    * Each non abstract class that implements the DocumentListener
-     *      must have these methods.
-     *
-     *    @param e the document event.
-     **/
-    public void insertUpdate(DocumentEvent e) {
-    }
-    public void removeUpdate(DocumentEvent e) {
-    }
-    public void changedUpdate(DocumentEvent e) {
+    protected int submit() {
+        java.sql.Timestamp selectedTimestamp = new java.sql.Timestamp( dateChooser.getDate().getTime() +
+                timeModel.getDate().getTime() );
+        this.abrechnungen.setSelectedZeitpunkt( selectedTimestamp.toString() );
+        return 0;
     }
 
     /**
@@ -267,7 +260,8 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
             return;
         }
 	if (e.getSource() == cancelButton){
-            // communicate that insert abrechnung was canceled
+            // communicate that insert abrechnung was canceled:
+            this.abrechnungen.setSelectedZeitpunkt( null );
             this.window.dispose();
             return;
         }

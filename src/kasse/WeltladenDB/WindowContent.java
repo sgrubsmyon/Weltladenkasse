@@ -4,6 +4,7 @@ package WeltladenDB;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.Locale;
 import java.util.Properties;
 import java.text.NumberFormat;
@@ -22,6 +23,7 @@ import java.sql.Types;
 // GUI stuff:
 import java.awt.event.*;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
@@ -34,6 +36,9 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerDateModel;
+
+// DateTime from date4j (http://www.date4j.net/javadoc/index.html)
+import hirondelle.date4j.DateTime;
 
 // JCalendarButton
 import jcalendarbutton.org.JCalendarButton;
@@ -141,6 +146,38 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                 dialog.dispose();
             }
         }
+    }
+
+    /**
+     * General useful helper functions.
+     */
+
+    protected Date dateFromDateTime(DateTime dt) {
+        /** Returns Date constructed from this DateTime */
+        return new Date( dt.getMilliseconds(TimeZone.getDefault()) );
+    }
+
+    protected Date dateFromDateTime(DateTime dt, DateTime zeroPoint) {
+        /** Returns Date constructed from this DateTime, relative to zeroPoint */
+        return new Date( dt.getMilliseconds(TimeZone.getDefault()) -
+                zeroPoint.getMilliseconds(TimeZone.getDefault()) );
+    }
+
+    protected JTextArea makeLabelStyle(JTextArea textArea) {
+        /** Make a JTextArea able to be used as a multi-line label */
+        if (textArea == null)
+            return null;
+        textArea.setFont(UIManager.getFont("Label.font"));
+        textArea.setEditable(false);
+        textArea.setCursor(null);
+        textArea.setOpaque(false);
+        textArea.setFocusable(false);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        // important so that with LineWrap, textArea doesn't become huge:
+        //    (set it to sth. small, it will expand as much as needed)
+        textArea.setPreferredSize(new Dimension(10, 10));
+        return textArea;
     }
 
     /**
