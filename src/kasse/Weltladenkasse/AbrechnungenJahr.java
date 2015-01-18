@@ -74,7 +74,7 @@ public class AbrechnungenJahr extends Abrechnungen {
         Vector<String> result = new Vector<String>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT DISTINCT DATE_FORMAT(monat,'%Y-01-01') FROM abrechnung_monat "+
+                    "SELECT DISTINCT DATE_FORMAT(monat, '%Y-01-01') FROM abrechnung_monat "+
                     "WHERE monat >= (? + INTERVAL 1 YEAR)"
                     );
             pstmt.setString(1, maxDate);
