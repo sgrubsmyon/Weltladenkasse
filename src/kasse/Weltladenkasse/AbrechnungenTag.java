@@ -198,27 +198,30 @@ public class AbrechnungenTag extends Abrechnungen {
         }
     }
 
-    /*
-    void deleteMonatsAbrechnungIfNeedBe(String zeitpunkt) { // create new abrechnung (and save in DB) from time of last abrechnung until now
+    void deleteAbrechnungIfNeedBe(String abrechnungsName, String timeName,
+            String zeitpunktParsing, String zeitpunkt) {
+        /** Delete Monats-/Jahresabrechnung if there was already one for the given zeitpunkt */
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "DELETE FROM abrechnung_monat "+
-                    "WHERE zeitpunkt = ?"+
+                    "SELECT COUNT(*) FROM "+abrechnungsName+" "+
+                    "WHERE "+timeName+" = "+zeitpunktParsing
                     );
             pstmt.setString(1, zeitpunkt);
             ResultSet rs = pstmt.executeQuery();
-            rs.next(); rs.close();
-            if (){
+            rs.next(); int count = rs.getInt(1); rs.close();
+            pstmt.close();
+            if (count > 0){
                 pstmt = this.conn.prepareStatement(
-                        "DELETE FROM abrechnung_monat "+
-                        "WHERE zeitpunkt = ?"+
+                        "DELETE FROM "+abrechnungsName+" "+
+                        "WHERE "+timeName+" = "+zeitpunktParsing
                         );
                 pstmt.setString(1, zeitpunkt);
                 int result = pstmt.executeUpdate();
                 pstmt.close();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Alte Monatsabrechnung konnte nicht gelöscht werden.",
+                            "Fehler: Alte Abrechnung konnte nicht aus Tabelle "+
+                            "'"+abrechnungsName+"' gelöscht werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
@@ -227,9 +230,9 @@ public class AbrechnungenTag extends Abrechnungen {
             ex.printStackTrace();
         }
     }
-    */
 
-    void insertTagesAbrechnung() { // create new abrechnung (and save in DB) from time of last abrechnung until now
+    void insertTagesAbrechnung() {
+        /** create new abrechnung (and save in DB) from time of last abrechnung until now */
         try {
             Integer id = id();
             String firstDate = queryEarliestVerkauf();
@@ -283,13 +286,13 @@ public class AbrechnungenTag extends Abrechnungen {
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
+            // NEED TO REDO Monats/Jahresabrechnung if needed (check if zeitpunkt lies in old month/year)!!!
+            deleteAbrechnungIfNeedBe("abrechnung_monat", "monat", "DATE_FORMAT(?, '%Y-%m-01')", zeitpunkt);
+            deleteAbrechnungIfNeedBe("abrechnung_jahr", "jahr", "YEAR(?)", zeitpunkt);
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
-        //// TODO NEED TO REDO Monats/Jahresabrechnung if needed (check if zeitpunkt lies in old month/year)!!!
-        //deleteMonatsAbrechnungIfNeedBe(zeitpunkt);
-        //deleteJahresAbrechnungIfNeedBe(zeitpunkt);
     }
 
     void queryAbrechnungenSpecial() {
