@@ -122,8 +122,9 @@ CREATE TABLE kassenstand (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE abrechnung_tag (
-    id INTEGER(10) NOT NULL, 
+    id INTEGER(10) NOT NULL,
     zeitpunkt DATETIME NOT NULL,
+    zeitpunkt_real DATETIME NOT NULL,
     mwst_satz DECIMAL(6,5) NOT NULL,
     mwst_netto DECIMAL(13,2) NOT NULL,
     mwst_betrag DECIMAL(13,2) NOT NULL,
@@ -131,7 +132,7 @@ CREATE TABLE abrechnung_tag (
     PRIMARY KEY (id, mwst_satz)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_monat (
-    id INTEGER(10) NOT NULL, 
+    id INTEGER(10) NOT NULL,
     monat DATE NOT NULL,
     mwst_satz DECIMAL(6,5) NOT NULL,
     mwst_netto DECIMAL(13,2) NOT NULL,
@@ -140,7 +141,7 @@ CREATE TABLE abrechnung_monat (
     PRIMARY KEY (id, mwst_satz)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_jahr (
-    id INTEGER(10) NOT NULL, 
+    id INTEGER(10) NOT NULL,
     jahr YEAR NOT NULL,
     mwst_satz DECIMAL(6,5) NOT NULL,
     mwst_netto DECIMAL(13,2) NOT NULL,

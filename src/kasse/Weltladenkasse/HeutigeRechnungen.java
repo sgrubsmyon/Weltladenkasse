@@ -35,7 +35,7 @@ public class HeutigeRechnungen extends Rechnungen {
      *       */
     public HeutigeRechnungen(Connection conn, MainWindowGrundlage mw, RechnungenTabbedPane tp){
 	super(conn, mw, "WHERE verkauf.verkaufsdatum > " +
-                "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') AND "+
+                "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag),'0001-01-01') AND "+
                 "verkauf.storniert = FALSE ", "Heutige Rechnungen");
         tabbedPane = tp;
 	showTable();

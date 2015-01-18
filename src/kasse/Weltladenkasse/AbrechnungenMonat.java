@@ -51,7 +51,7 @@ public class AbrechnungenMonat extends Abrechnungen {
         tablePanel.add(otherPanel);
     }
 
-    String returnMaxAbechnungDate() {
+    String returnMaxAbrechnungDate() {
         String result = "";
         try {
             Statement stmt = this.conn.createStatement();
@@ -74,7 +74,7 @@ public class AbrechnungenMonat extends Abrechnungen {
         Vector<String> result = new Vector<String>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT DISTINCT DATE_FORMAT(zeitpunkt,'%Y-%m-01') FROM abrechnung_tag "+
+                    "SELECT DISTINCT DATE_FORMAT(zeitpunkt, '%Y-%m-01') FROM abrechnung_tag "+
                     "WHERE zeitpunkt >= (? + INTERVAL 1 MONTH)"
                     );
             pstmt.setString(1, maxDate);
@@ -251,7 +251,7 @@ public class AbrechnungenMonat extends Abrechnungen {
     }
 
     void queryAbrechnungenSpecial() {
-        String maxDate = returnMaxAbechnungDate();
+        String maxDate = returnMaxAbrechnungDate();
         Vector<String> months = returnAllNewMonths(maxDate);
         System.out.println("max date is: "+maxDate);
         System.out.println("new months are: "+months);
