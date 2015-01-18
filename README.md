@@ -74,6 +74,15 @@ Datenbank-Daten im-/exportieren:
 For Developers:
 ---------------
 
+Dependencies:
+
+Download and put into the folder `lib` the following jars:
+
+* date4j.jar: http://www.date4j.net
+* jOpenDocument-1.3.jar: http://www.jopendocument.org/downloads.html
+* jcalendar-1.4.jar: http://toedter.com/jcalendar/
+* mysql-connector-java-5.1.25-bin.jar: http://dev.mysql.com/downloads/connector/j/
+
 Compile:
 ```
 ant

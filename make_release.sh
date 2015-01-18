@@ -13,8 +13,7 @@ rsync -aPvci Weltladenbesteller.bat $releasedir
 rsync -aPvci config.properties $releasedir
 rsync -aPvci config_Windows.properties $releasedir
 rsync -aPvci --delete --exclude=".*" vorlagen $releasedir
-rsync -aPvci README.txt $releasedir
-rsync -aPvci README_Windows.txt $releasedir
+rsync -aPvci README.md $releasedir
 rsync -aPvci install-ubuntu.sh $releasedir
 rsync -aPvci --delete --exclude=".*" mysql $releasedir
 
