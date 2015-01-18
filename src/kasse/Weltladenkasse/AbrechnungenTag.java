@@ -75,7 +75,7 @@ public class AbrechnungenTag extends Abrechnungen {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MIN(verkaufsdatum) "+
                     "FROM verkauf WHERE storniert = FALSE AND verkaufsdatum > "+
-                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01')");
+                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag),'0001-01-01')");
             rs.next(); date = rs.getString(1); rs.close();
             stmt.close();
         } catch (SQLException ex) {
@@ -91,7 +91,7 @@ public class AbrechnungenTag extends Abrechnungen {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MAX(verkaufsdatum) "+
                     "FROM verkauf WHERE storniert = FALSE AND verkaufsdatum > "+
-                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01')");
+                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01')");
             rs.next(); date = rs.getString(1); rs.close();
             stmt.close();
         } catch (SQLException ex) {
@@ -151,7 +151,7 @@ public class AbrechnungenTag extends Abrechnungen {
                     "SELECT mwst_satz, SUM(ges_preis) AS bar_brutto " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
                     "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag), '0001-01-01') AND ec_zahlung = FALSE " +
+                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01') AND ec_zahlung = FALSE " +
                     "GROUP BY mwst_satz"
                     );
             while (rs.next()) {
@@ -187,7 +187,7 @@ public class AbrechnungenTag extends Abrechnungen {
         if ( firstD.isSameDayAs(nowD) ){
             // everything is as it should be:
             // all purchases from this abrechnung on the same day
-            // simply use now as zeitpunkt for abrechnung
+            // simply use now as zeitpunkt of abrechnung
             return nowDate;
         } else {
             // if abrechnung spans more than one day:
@@ -198,11 +198,42 @@ public class AbrechnungenTag extends Abrechnungen {
         }
     }
 
+    /*
+    void deleteMonatsAbrechnungIfNeedBe(String zeitpunkt) { // create new abrechnung (and save in DB) from time of last abrechnung until now
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "DELETE FROM abrechnung_monat "+
+                    "WHERE zeitpunkt = ?"+
+                    );
+            pstmt.setString(1, zeitpunkt);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); rs.close();
+            if (){
+                pstmt = this.conn.prepareStatement(
+                        "DELETE FROM abrechnung_monat "+
+                        "WHERE zeitpunkt = ?"+
+                        );
+                pstmt.setString(1, zeitpunkt);
+                int result = pstmt.executeUpdate();
+                pstmt.close();
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Alte Monatsabrechnung konnte nicht gelöscht werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+    */
+
     void insertTagesAbrechnung() { // create new abrechnung (and save in DB) from time of last abrechnung until now
         try {
             Integer id = id();
             String firstDate = queryEarliestVerkauf();
-            String lastDate = queryEarliestVerkauf();
+            String lastDate = queryLatestVerkauf();
             String nowDate = now();
             String zeitpunkt = decideOnZeitpunkt(firstDate, lastDate, nowDate);
             System.out.println("Selected Zeitpunkt: "+zeitpunkt);
@@ -225,11 +256,13 @@ public class AbrechnungenTag extends Abrechnungen {
                 if ( abrechnungBarBrutto.containsKey(mwst_satz) ){
                     bar_brutto = abrechnungBarBrutto.get(mwst_satz);
                 }
-                System.out.println("INSERT INTO abrechnung_tag: id: "+id+
-                        "  "+mwst_satz+"  "+mwst_netto+"  "+mwst_betrag+
-                        "   "+bar_brutto);
+                //System.out.println("INSERT INTO abrechnung_tag: id: "+id+
+                //        "  "+mwst_satz+"  "+mwst_netto+"  "+mwst_betrag+
+                //        "   "+bar_brutto);
                 PreparedStatement pstmt = this.conn.prepareStatement(
-                        "INSERT INTO abrechnung_tag SET id = ?, zeitpunkt = ?, "+
+                        "INSERT INTO abrechnung_tag SET id = ?, "+
+                        "zeitpunkt = ?, "+
+                        "zeitpunkt_real = ?, "+
                         "mwst_satz = ?, "+
                         "mwst_netto = ?, "+
                         "mwst_betrag = ?, "+
@@ -237,10 +270,11 @@ public class AbrechnungenTag extends Abrechnungen {
                         );
                 pstmt.setInt(1, id);
                 pstmt.setString(2, zeitpunkt);
-                pstmt.setBigDecimal(3, mwst_satz);
-                pstmt.setBigDecimal(4, mwst_netto);
-                pstmt.setBigDecimal(5, mwst_betrag);
-                pstmt.setBigDecimal(6, bar_brutto);
+                pstmt.setString(3, nowDate);
+                pstmt.setBigDecimal(4, mwst_satz);
+                pstmt.setBigDecimal(5, mwst_netto);
+                pstmt.setBigDecimal(6, mwst_betrag);
+                pstmt.setBigDecimal(7, bar_brutto);
                 int result = pstmt.executeUpdate();
                 pstmt.close();
                 if (result == 0){
@@ -254,6 +288,8 @@ public class AbrechnungenTag extends Abrechnungen {
             ex.printStackTrace();
         }
         //// TODO NEED TO REDO Monats/Jahresabrechnung if needed (check if zeitpunkt lies in old month/year)!!!
+        //deleteMonatsAbrechnungIfNeedBe(zeitpunkt);
+        //deleteJahresAbrechnungIfNeedBe(zeitpunkt);
     }
 
     void queryAbrechnungenSpecial() {

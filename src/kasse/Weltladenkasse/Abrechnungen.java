@@ -66,7 +66,6 @@ public abstract class Abrechnungen extends WindowContent {
     // The table holding the invoices. This is "anonymously subclassed" and two method are overridden
     protected AbrechnungsTable myTable;
 
-    protected JButton freiButton = new JButton("Frei");
     protected JButton prevButton;
     protected JButton nextButton;
     protected Vector<JButton> exportButtons;
@@ -152,7 +151,7 @@ public abstract class Abrechnungen extends WindowContent {
                     "SELECT SUM(ges_preis) AS ges_brutto " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
                     "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') "
+                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag),'0001-01-01') "
                     );
             rs.next();
                 BigDecimal tagesGesamtBrutto =
@@ -163,7 +162,7 @@ public abstract class Abrechnungen extends WindowContent {
                     "SELECT SUM(ges_preis) AS ges_bar_brutto " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
                     "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') AND ec_zahlung = FALSE "
+                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag),'0001-01-01') AND ec_zahlung = FALSE "
                     );
             rs.next();
                 BigDecimal tagesGesamtBarBrutto =
@@ -213,7 +212,7 @@ public abstract class Abrechnungen extends WindowContent {
                     "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag) "+
                     "FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) "+
                     "WHERE storniert = FALSE AND verkaufsdatum > "+
-                    "IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag), '0001-01-01') " +
+                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01') " +
                     "GROUP BY mwst_satz"
                     );
             while (rs.next()) {
@@ -274,7 +273,7 @@ public abstract class Abrechnungen extends WindowContent {
                     "FROM "+abrechnungsTableName+" "+
                     "WHERE TRUE "+
                     filterStr +
-                    "GROUP BY "+timeName+" ORDER BY "+timeName+" DESC "+
+                    "GROUP BY id ORDER BY id DESC "+
                     "LIMIT " + offset + "," + noOfColumns
                     );
             while (rs.next()) {
@@ -318,7 +317,7 @@ public abstract class Abrechnungen extends WindowContent {
 
             // fourth, get total number of abrechnungen:
             rs = stmt.executeQuery(
-                    "SELECT COUNT(DISTINCT "+timeName+") FROM "+abrechnungsTableName+" " +
+                    "SELECT COUNT(DISTINCT id) FROM "+abrechnungsTableName+" " +
                     "WHERE TRUE " +
                     filterStr
                     );

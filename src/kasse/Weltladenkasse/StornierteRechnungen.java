@@ -29,7 +29,7 @@ public class StornierteRechnungen extends Rechnungen {
      *       */
     public StornierteRechnungen(Connection conn, MainWindowGrundlage mw){
 	super(conn, mw, "WHERE verkauf.storniert = TRUE AND " +
-                "verkauf.verkaufsdatum > IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') ",
+                "verkauf.verkaufsdatum > IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01') ",
                 "Stornierte Rechnungen");
 	showTable();
     }
