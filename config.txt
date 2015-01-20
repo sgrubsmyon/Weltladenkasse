@@ -1,4 +1,6 @@
 mysqlPath =
+sofficePath =
+printerName = epson_tmu220
 dateFormatSQL = %d.%m.%Y, %H:%i Uhr
 dateFormatJava = dd.MM.yyyy, HH:mm 'Uhr'
 dateFormatDate4j = DD.MM.YYYY, hh:mm |Uhr|

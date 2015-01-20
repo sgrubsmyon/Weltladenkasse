@@ -6,6 +6,10 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.lang.Process; // for executing system commands
+import java.lang.Runtime; // for executing system commands
 
 // GUI stuff:
 import java.awt.event.ActionEvent;
@@ -47,7 +51,10 @@ public class Quittung extends WindowContent {
     private Vector<BigDecimal> preise;
     private Vector<BigDecimal> mwsts;
     private LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues;
+    private String zahlungsModus;
     private BigDecimal totalPrice;
+    private BigDecimal kundeGibt;
+    private BigDecimal rueckgeld;
 
     private int artikelIndex = 0;
     private int rowOffset = 7;
@@ -62,13 +69,15 @@ public class Quittung extends WindowContent {
             Vector<BigDecimal> ep, Vector<BigDecimal> p,
             Vector<BigDecimal> m,
             LinkedHashMap< BigDecimal, Vector<BigDecimal> > matv,
-            BigDecimal tp) {
+            String zm, BigDecimal tp, BigDecimal kgb, BigDecimal rg) {
 	super(conn, mw);
-        datetime = dt;
-        articleNames = an; stueckzahlen = sz;
-        einzelpreise = ep; preise = p;
-        mwsts = m; mwstsAndTheirValues = matv;
-        totalPrice = tp;
+        this.datetime = dt;
+        this.articleNames = an; this.stueckzahlen = sz;
+        this.einzelpreise = ep; this.preise = p;
+        this.mwsts = m; this.mwstsAndTheirValues = matv;
+        this.zahlungsModus = zm;
+        this.totalPrice = tp;
+        this.kundeGibt = kgb; this.rueckgeld = rg;
     }
 
     private Sheet createSheetFromTemplate() {
@@ -135,6 +144,17 @@ public class Quittung extends WindowContent {
             sheet.removeRow(215+rowOffset);
         } else {
             // Fill footer
+            if (zahlungsModus == "bar"){
+                sheet.setValueAt("Bar", 0, 215+rowOffset);
+                if (kundeGibt != null && rueckgeld != null){
+                    sheet.setValueAt("Kunde gibt", 0, 217+rowOffset);
+                    sheet.setValueAt("Rückgeld", 0, 218+rowOffset);
+                    sheet.setValueAt(kundeGibt, 3, 217+rowOffset);
+                    sheet.setValueAt(rueckgeld, 3, 218+rowOffset);
+                }
+            } else if (zahlungsModus == "ec"){
+                sheet.setValueAt("Karte", 0, 215+rowOffset);
+            }
             sheet.setValueAt(totalPrice, 2, 215+rowOffset);
             // fill mwst values
             int row = 213+rowOffset-mwstList.size(); // now at header of mwst values
@@ -158,6 +178,84 @@ public class Quittung extends WindowContent {
         }
     }
 
+    void printQuittungFromJava(File tmpFile) {
+        /** Complicated method: printing from Java (doesn't work) */
+        final OpenDocument doc = new OpenDocument();
+        doc.loadFrom(tmpFile);
+        //doc.loadFrom(new File("/tmp/Untitled.ods"));
+
+        // Print.
+        ODTPrinter printer = new ODTPrinter(doc);
+        PrinterJob job = PrinterJob.getPrinterJob();
+
+        // Get a handle on the printer, by requiring a printer with the given name
+        PrintServiceAttributeSet attrSet = new HashPrintServiceAttributeSet();
+        attrSet.add(new PrinterName(this.printerName, null));
+        PrintService[] pservices = PrintServiceLookup.lookupPrintServices(null, attrSet);
+        PrintService ps;
+        try {
+            ps = pservices[0];
+            job.setPrintService(ps);   // Try setting the printer you want
+        } catch (ArrayIndexOutOfBoundsException e){
+            System.err.println("Error: No printer named '"+this.printerName+"', using default printer.");
+        } catch (PrinterException exception) {
+            System.err.println("Printing error: " + exception);
+        }
+        PageFormat pageFormat = job.defaultPage();
+        Paper paper = pageFormat.getPaper();
+        paper.setSize(76. / 25.4 * 72., 279.4 / 25.4 * 72.);
+        paper.setImageableArea(8. / 25.4 * 72., 3. / 25.4 * 72., 68. / 25.4 * 72., 259.4 / 25.4 * 72.);
+        pageFormat.setPaper(paper);
+
+        // Book with setPageable instead of setPrintable
+        Book book = new Book();//java.awt.print.Book
+        book.append(printer, pageFormat);
+        job.setPageable(book);
+
+        try {
+            job.print();   // Actual print command
+        } catch (PrinterException exception) {
+            System.err.println("Printing error: " + exception);
+        }
+    }
+
+    private void printQuittungWithSoffice(String filename) {
+        /** Simple method: printing with openoffice command line tool 'soffice' */
+        String program = constructProgramPath(this.sofficePath, "soffice");
+        String[] executeCmd = new String[] {program, "--headless",
+            "-pt", this.printerName, filename};
+        //for (String s : executeCmd){
+        //    System.out.println(s);
+        //}
+        try {
+            Runtime shell = Runtime.getRuntime();
+            Process proc = shell.exec(executeCmd);
+            /*
+            BufferedReader stdInput = new BufferedReader(new
+                    InputStreamReader(proc.getInputStream()));
+            BufferedReader stdError = new BufferedReader(new
+                    InputStreamReader(proc.getErrorStream()));
+            System.out.println("Here is the standard output of the soffice print command (if any):");
+            String s = null;
+            while ((s = stdInput.readLine()) != null) {
+                System.out.println(s);
+            }
+            System.out.println("Here is the standard error of the command (if any):");
+            while ((s = stdError.readLine()) != null) {
+                System.out.println(s);
+            }
+            */
+            int processComplete = proc.waitFor();
+            if (processComplete == 0) {
+                System.out.println("Printing of file '"+filename+"' with soffice was successful");
+            } else {
+                System.out.println("Could not print file '"+filename+"' with soffice");
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public void printReceipt() {
         // Create a list from the set of mwst values
         mwstList = new Vector<BigDecimal>(mwstsAndTheirValues.keySet());
@@ -173,7 +271,6 @@ public class Quittung extends WindowContent {
             int startRemRow = insertItems(sheet);
             int endRemRow = 213+rowOffset-mwstList.size()-1; // two rows above header of mwst values (one row of
                                                             // empty space)
-
             editFooter(sheet);
 
             // Remove all empty rows between item list and footer
@@ -182,48 +279,17 @@ public class Quittung extends WindowContent {
             try {
                 // Save to temp file.
                 File tmpFile = File.createTempFile("Quittung", ".ods");
-                //OOUtils.open(sheet.getSpreadSheet().saveAs(tmpFile));
+                //OOUtils.open(sheet.getSpreadSheet().saveAs(tmpFile)); // for testing
                 sheet.getSpreadSheet().saveAs(tmpFile);
-                final OpenDocument doc = new OpenDocument();
-                //doc.loadFrom(tmpFile);
-                doc.loadFrom(new File("/tmp/Untitled.ods"));
 
-                // Print.
-                ODTPrinter printer = new ODTPrinter(doc);
-                PrinterJob job = PrinterJob.getPrinterJob();
-                String printerName = "epson_tmu220";
+                // Complicated method: printing from Java (doesn't work)
+                //printQuittungFromJava(tmpFile);
 
-                PrintServiceAttributeSet attrSet = new HashPrintServiceAttributeSet();
-                attrSet.add(new PrinterName(printerName, null));
-                PrintService[] pservices = PrintServiceLookup.lookupPrintServices(null, attrSet);
-                PrintService ps;
-                try {
-                    ps = pservices[0];
-                    job.setPrintService(ps);   // Try setting the printer you want
-                } catch (ArrayIndexOutOfBoundsException e){
-                    System.err.println("Error: No printer named '"+printerName+"', using default printer.");
-                } catch (PrinterException exception) {
-                    System.err.println("Printing error: " + exception);
-                }
-                PageFormat pageFormat = job.defaultPage();
-                Paper paper = pageFormat.getPaper();
-                paper.setSize(76. / 25.4 * 72., 279.4 / 25.4 * 72.);
-                paper.setImageableArea(8. / 25.4 * 72., 3. / 25.4 * 72., 68. / 25.4 * 72., 259.4 / 25.4 * 72.);
-                pageFormat.setPaper(paper);
+                // Simple method: printing with openoffice command line tool 'soffice'
+                printQuittungWithSoffice(tmpFile.getAbsolutePath());
 
-                // Book with setPageable instead of setPrintable
-                Book book = new Book();//java.awt.print.Book
-                book.append(printer, pageFormat);
-                job.setPageable(book);
-
-                try {
-                    job.print();   // Actual print command
-                } catch (PrinterException exception) {
-                    System.err.println("Printing error: " + exception);
-                }
-
-                //tmpFile.deleteOnExit();
-                tmpFile.delete();
+                tmpFile.deleteOnExit();
+                //tmpFile.delete();
             } catch (FileNotFoundException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
