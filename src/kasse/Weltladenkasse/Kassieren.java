@@ -466,6 +466,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 JPanel rightPanel = new JPanel();
                 rightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
                     quittungsButton = new JButton("Quittung");
+                    quittungsButton.setMnemonic(KeyEvent.VK_Q);
                     quittungsButton.setEnabled(false);
                     quittungsButton.addActionListener(this);
                     rightPanel.add(quittungsButton);
@@ -715,7 +716,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             //neuerKundeButton.setEnabled(false);
         } else {
             BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
-            BigDecimal kundeGibt = new BigDecimal(kundeGibtField.getText().replace(',','.'));
+            BigDecimal kundeGibt = new BigDecimal( getKundeGibt() );
             BigDecimal rueckgeld = kundeGibt.subtract(totalPrice);
             if (rueckgeld.signum() < 0){
                 rueckgeldField.setForeground(Color.red);
@@ -730,6 +731,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
     String getTotalPrice() {
         return priceFormatterIntern( totalPriceField.getText() );
+    }
+
+    String getKundeGibt() {
+        return priceFormatterIntern( kundeGibtField.getText() );
     }
 
     //////////////////////////////////
@@ -1297,6 +1302,16 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             });
         }
         setButtonsEnabled();
+    }
+
+    private boolean checkKundeGibtField() {
+        if ( kundeGibtField.getDocument().getLength() == 0 ){
+            JOptionPane.showMessageDialog(this,
+                    "Bitte Betrag bei 'Kunde gibt:' eintragen!",
+                    "Fehlender Kundenbetrag", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        return true;
     }
 
     private void hinzufuegen(Integer stueck, String color) {
@@ -1874,6 +1889,12 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	    return;
 	}
 	if (e.getSource() == quittungsButton){
+            if (zahlungsModus == "bar"){
+                boolean ok = checkKundeGibtField();
+                if (!ok){
+                    return;
+                }
+            }
             Vector<BigDecimal> vats = retrieveVATs();
             // LinkedHashMap preserves insertion order
             LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
@@ -1894,13 +1915,25 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 //}
             }
             BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
+            BigDecimal kundeGibt = null, rueckgeld = null;
+            if (kundeGibtField.getDocument().getLength() > 0){
+                kundeGibt = new BigDecimal( getKundeGibt() );
+                rueckgeld = kundeGibt.subtract(totalPrice);
+            }
             Quittung myQuittung = new Quittung(this.conn, this.mainWindow,
                     DateTime.now(TimeZone.getDefault()), articleNames, stueckzahlen,
-                    einzelpreise, preise, mwsts, mwstsAndTheirValues, totalPrice);
+                    einzelpreise, preise, mwsts, mwstsAndTheirValues, zahlungsModus,
+                    totalPrice, kundeGibt, rueckgeld);
             myQuittung.printReceipt();
 	    return;
 	}
 	if (e.getSource() == neuerKundeButton){
+            if (zahlungsModus == "bar"){
+                boolean ok = checkKundeGibtField();
+                if (!ok){
+                    return;
+                }
+            }
             neuerKunde();
             tabbedPane.recreateTabbedPane();
 	    return;

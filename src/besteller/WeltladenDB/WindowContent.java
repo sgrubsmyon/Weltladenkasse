@@ -4,6 +4,7 @@ package WeltladenDB;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.Locale;
 import java.util.Properties;
 import java.text.NumberFormat;
@@ -22,6 +23,7 @@ import java.sql.Types;
 // GUI stuff:
 import java.awt.event.*;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
@@ -35,6 +37,9 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerDateModel;
 
+// DateTime from date4j (http://www.date4j.net/javadoc/index.html)
+import hirondelle.date4j.DateTime;
+
 // JCalendarButton
 import jcalendarbutton.org.JCalendarButton;
 
@@ -46,6 +51,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected String currencySymbol;
     protected Locale myLocale = Locale.GERMAN;
     protected String mysqlPath;
+    protected String sofficePath;
+    protected String printerName;
     protected String dateFormatSQL;
     protected String dateFormatJava;
     protected String dateFormatDate4j;
@@ -102,6 +109,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             props.load(fis);
 
             this.mysqlPath = props.getProperty("mysqlPath"); // path where mysql and mysqldump lie around
+            this.sofficePath = props.getProperty("sofficePath"); // path where soffice lies around
+            this.printerName = props.getProperty("printerName"); // name of receipt printer
             this.dateFormatSQL = props.getProperty("dateFormatSQL");
             this.dateFormatJava = props.getProperty("dateFormatJava");
             this.dateFormatDate4j = props.getProperty("dateFormatDate4j");
@@ -109,11 +118,14 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
             this.mysqlPath = "";
+            this.sofficePath = "";
+            this.printerName = "epson_tmu220";
             this.dateFormatSQL = "%d.%m.%Y, %H:%i Uhr";
             this.dateFormatJava = "dd.MM.yyyy, HH:mm 'Uhr'";
             this.dateFormatDate4j = "DD.MM.YYYY, hh:mm |Uhr|";
             this.delimiter = ";"; // for CSV export/import
         }
+        this.printerName = this.printerName.replaceAll("\"","");
     }
 
     protected class WindowAdapterDialog extends WindowAdapter {
@@ -141,6 +153,52 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                 dialog.dispose();
             }
         }
+    }
+
+    /**
+     * General useful helper functions.
+     */
+
+    protected Date dateFromDateTime(DateTime dt) {
+        /** Returns Date constructed from this DateTime */
+        return new Date( dt.getMilliseconds(TimeZone.getDefault()) );
+    }
+
+    protected Date dateFromDateTime(DateTime dt, DateTime zeroPoint) {
+        /** Returns Date constructed from this DateTime, relative to zeroPoint */
+        return new Date( dt.getMilliseconds(TimeZone.getDefault()) -
+                zeroPoint.getMilliseconds(TimeZone.getDefault()) );
+    }
+
+    protected JTextArea makeLabelStyle(JTextArea textArea) {
+        /** Make a JTextArea able to be used as a multi-line label */
+        if (textArea == null)
+            return null;
+        textArea.setFont(UIManager.getFont("Label.font"));
+        textArea.setEditable(false);
+        textArea.setCursor(null);
+        textArea.setOpaque(false);
+        textArea.setFocusable(false);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        // important so that with LineWrap, textArea doesn't become huge:
+        //    (set it to sth. small, it will expand as much as needed)
+        textArea.setPreferredSize(new Dimension(10, 10));
+        return textArea;
+    }
+
+    protected String constructProgramPath(String dir, String program) {
+        String path = "";
+        if (dir.length() == 0){
+            path = program;
+        } else {
+            if ( dir.endsWith("\"") ){
+                path = dir.substring(0, dir.length()-1)+fileSep+program+"\"";
+            } else {
+                path = dir+fileSep+program;
+            }
+        }
+        return path;
     }
 
     /**
@@ -192,7 +250,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         vat = vat.replace(',','.');
         String vatFormatted = "";
         try {
-            vatFormatted = vatFormat.format( (new BigDecimal(vat)).multiply(new BigDecimal("100.")) ).replace('.',',') + " %";
+            vatFormatted = vatFormat.format( (new BigDecimal(vat)).multiply(new BigDecimal("100.")) ).replace('.',',') + "%";
         } catch (NumberFormatException nfe) {
             System.out.println("vat = "+vat);
             System.out.println("Exception: " + nfe.getMessage());

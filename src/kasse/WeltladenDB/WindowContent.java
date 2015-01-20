@@ -51,6 +51,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected String currencySymbol;
     protected Locale myLocale = Locale.GERMAN;
     protected String mysqlPath;
+    protected String sofficePath;
+    protected String printerName;
     protected String dateFormatSQL;
     protected String dateFormatJava;
     protected String dateFormatDate4j;
@@ -107,6 +109,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             props.load(fis);
 
             this.mysqlPath = props.getProperty("mysqlPath"); // path where mysql and mysqldump lie around
+            this.sofficePath = props.getProperty("sofficePath"); // path where soffice lies around
+            this.printerName = props.getProperty("printerName"); // name of receipt printer
             this.dateFormatSQL = props.getProperty("dateFormatSQL");
             this.dateFormatJava = props.getProperty("dateFormatJava");
             this.dateFormatDate4j = props.getProperty("dateFormatDate4j");
@@ -114,11 +118,14 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
             this.mysqlPath = "";
+            this.sofficePath = "";
+            this.printerName = "epson_tmu220";
             this.dateFormatSQL = "%d.%m.%Y, %H:%i Uhr";
             this.dateFormatJava = "dd.MM.yyyy, HH:mm 'Uhr'";
             this.dateFormatDate4j = "DD.MM.YYYY, hh:mm |Uhr|";
             this.delimiter = ";"; // for CSV export/import
         }
+        this.printerName = this.printerName.replaceAll("\"","");
     }
 
     protected class WindowAdapterDialog extends WindowAdapter {
@@ -178,6 +185,20 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         //    (set it to sth. small, it will expand as much as needed)
         textArea.setPreferredSize(new Dimension(10, 10));
         return textArea;
+    }
+
+    protected String constructProgramPath(String dir, String program) {
+        String path = "";
+        if (dir.length() == 0){
+            path = program;
+        } else {
+            if ( dir.endsWith("\"") ){
+                path = dir.substring(0, dir.length()-1)+fileSep+program+"\"";
+            } else {
+                path = dir+fileSep+program;
+            }
+        }
+        return path;
     }
 
     /**

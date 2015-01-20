@@ -12,6 +12,8 @@ cd Pfad/zu/meinem/Verzeichnis
 ./install-ubuntu.sh
 ```
 
+3. Bei Bedarf Namen des Quittungsdruckers in Datei `config.properties` anpassen
+
 Software auf Ubuntu ausführen:
 ------------------------------
 ```
@@ -54,6 +56,12 @@ Auf Windows-System installieren:
 
 5. Ggf. Pfad zu MySQL in `config.properties` anpassen (muss auf Verzeichnis mit `mysql.exe` und
       `mysqldump.exe` verweisen).
+
+6. Ggf. Pfad zu soffice (LibreOffice/OpenOffice) in `config.properties`
+   anpassen (muss auf Verzeichnis mit `soffice.exe` verweisen). Dies wird
+   nur benörigt, wenn man Quittungen drucken möchte.
+
+7. Bei Bedarf Namen des Quittungsdruckers in Datei `config.properties` anpassen
 
 Software auf Windows ausführen:
 -------------------------------

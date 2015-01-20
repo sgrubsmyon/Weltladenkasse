@@ -74,7 +74,7 @@ public class DumpDatabase extends WindowContent {
         int returnVal = sqlSaveChooser.showSaveDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION){
             File file = sqlSaveChooser.getSelectedFile();
-            System.out.println("Selected dump file "+file.getName());
+            System.out.println("Selected dump file "+file.getAbsolutePath());
             //return file.getName();
             return file.getAbsolutePath();
         } else {
@@ -87,7 +87,7 @@ public class DumpDatabase extends WindowContent {
         int returnVal = sqlLoadChooser.showOpenDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION){
             File file = sqlLoadChooser.getSelectedFile();
-            System.out.println("Selected read file "+file.getName());
+            System.out.println("Selected read file "+file.getAbsolutePath());
             //return file.getName();
             return file.getAbsolutePath();
         } else {
@@ -182,23 +182,9 @@ public class DumpDatabase extends WindowContent {
         return okPassword;
     }
 
-    private String constructProgramString(String cmd, String path) {
-        String program = "";
-        if (path.length() == 0){
-            program = cmd;
-        } else {
-            if ( path.endsWith("\"") ){
-                program = path.substring(0, path.length()-1)+fileSep+cmd+"\"";
-            } else {
-                program = path+fileSep+cmd;
-            }
-        }
-        return program;
-    }
-
     void dumpDatabase(String password, String filename) {
         // From: http://www.jvmhost.com/articles/mysql-postgresql-dump-restore-java-jsp-code#sthash.6M0ty78M.dpuf
-        String program = constructProgramString("mysqldump", this.mysqlPath);
+        String program = constructProgramPath(this.mysqlPath, "mysqldump");
         System.out.println("MySQL path from config.properties: *"+program+"*");
         // 'destructive' dump, resulting in exact copy of DB:
         String[] executeCmd = new String[] {program,
@@ -248,7 +234,7 @@ public class DumpDatabase extends WindowContent {
         // Use mysqlimport
         //String executeCmd = "mysql -u kassenadmin -p"+password+" kasse < "+filename;
         //String[] executeCmd = new String[] {"/bin/sh", "-c", "mysql -u kassenadmin -p"+password+" kasse < "+filename};
-        String program = constructProgramString("mysql", this.mysqlPath);
+        String program = constructProgramPath(this.mysqlPath, "mysql");
         System.out.println("MySQL path from config.properties: *"+program+"*");
         String[] executeCmd = new String[] {program, "--local-infile",
             "-hlocalhost", "-ukassenadmin", "-p"+password,
@@ -260,12 +246,12 @@ public class DumpDatabase extends WindowContent {
                                      InputStreamReader(proc.getInputStream()));
             BufferedReader stdError = new BufferedReader(new
                                      InputStreamReader(proc.getErrorStream()));
-            System.out.println("Here is the standard output of the command "+executeCmd+":\n");
+            System.out.println("Here is the standard output of the mysql read-in command (if any):");
             String s = null;
             while ((s = stdInput.readLine()) != null) {
                 System.out.println(s);
             }
-            System.out.println("Here is the standard error of the command (if any):\n");
+            System.out.println("Here is the standard error of the mysql read-in command (if any):");
             while ((s = stdError.readLine()) != null) {
                 System.out.println(s);
             }
