@@ -6,12 +6,10 @@ diese Datei `README.md` befindet):
 ```
 cd Pfad/zu/meinem/Verzeichnis
 ```
-
 2. Skript install-ubuntu.sh ausführen:
 ```
 ./install-ubuntu.sh
 ```
-
 3. Bei Bedarf Namen des Quittungsdruckers in Datei `config.properties` anpassen
 
 Software auf Ubuntu ausführen:
