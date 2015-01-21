@@ -41,7 +41,7 @@ import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.BarcodeComboBox;
 import WeltladenDB.ArtikelNameComboBox;
 import WeltladenDB.ArtikelNummerComboBox;
-import WeltladenDB.NumberDocumentFilter;
+import WeltladenDB.PositiveNumberDocumentFilter;
 import WeltladenDB.BoundsPopupMenuListener;
 
 public class Kassieren extends RechnungsGrundlage implements ItemListener, DocumentListener {
@@ -121,7 +121,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private Vector<Integer> stueckzahlen;
     private Vector<BigDecimal> einzelpreise;
 
-    private NumberDocumentFilter geldFilter = new NumberDocumentFilter(2, 13);
+    private PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
 
     // Methoden:
 
@@ -266,6 +266,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     emptyNummerButton.addActionListener(this);
                     barcodePanel.add(emptyNummerButton);
                 comboBoxPanel.add(barcodePanel);
+
+                comboBoxPanel.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
 
                 JPanel artikelNamePanel = new JPanel();
                     JLabel artikelLabel = new JLabel("Artikelname: ");
@@ -584,8 +586,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     // Plain text components do not fire these events
                 }
             });
-            FloatDocumentFilter fdf = new FloatDocumentFilter();
-            ((AbstractDocument)individuellRabattRelativField.getDocument()).setDocumentFilter(fdf);
+            PositiveNumberDocumentFilter df = new PositiveNumberDocumentFilter(4, 5);
+            ((AbstractDocument)individuellRabattRelativField.getDocument()).setDocumentFilter(df);
             individuellRabattRelativField.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) {
                     if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
@@ -930,7 +932,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             int rabattID = (Integer) vector.get(0);
             String aktionsname = (String) vector.get(1);
             BigDecimal einzelRelRabatt = (BigDecimal) vector.get(2);
-            BigDecimal reduktion = stueck.multiply(einzelRelRabatt).multiply(einzelpreis).multiply(minusOne);
+            BigDecimal reduktion = new BigDecimal(
+                    priceFormatterIntern( stueck.multiply(einzelRelRabatt).multiply(einzelpreis).multiply(minusOne) )
+                    );
             einzelpreis = einzelpreis.subtract( einzelRelRabatt.multiply(einzelpreis) );
 
             addRabattRow(rabattID, aktionsname, reduktion, stueck);
@@ -954,7 +958,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             BigDecimal mengenSchwelle = (BigDecimal) vector.get(2);
             BigDecimal mengenRelRabatt = (BigDecimal) vector.get(3);
             if ( stueck.compareTo(mengenSchwelle) >= 0 ){ // if stueck >= mengenSchwelle
-                BigDecimal reduktion = stueck.multiply(mengenRelRabatt).multiply(einzelpreis).multiply(minusOne);
+                BigDecimal reduktion = new BigDecimal(
+                        priceFormatterIntern( stueck.multiply(mengenRelRabatt).multiply(einzelpreis).multiply(minusOne) )
+                        );
                 einzelpreis = einzelpreis.subtract( mengenRelRabatt.multiply(einzelpreis) );
 
                 addRabattRow(rabattID, aktionsname, reduktion, stueck);
@@ -1380,6 +1386,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             JOptionPane.showMessageDialog(this,
                     "Bitte Betrag bei 'Kunde gibt:' eintragen!",
                     "Fehlender Kundenbetrag", JOptionPane.WARNING_MESSAGE);
+            kundeGibtField.requestFocus();
             return false;
         }
         return true;
@@ -1553,7 +1560,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
         // Now i points to the Artikel that gets the Rabatt
         BigDecimal gesPreis = preise.get(i);
-        BigDecimal reduktion = rabattRelativ.multiply(gesPreis).multiply(minusOne);
+        BigDecimal reduktion = new BigDecimal(
+                priceFormatterIntern( rabattRelativ.multiply(gesPreis).multiply(minusOne) )
+                );
         BigDecimal artikelMwSt = mwsts.get(i);
         positions.add(i+1, null);
         artikelIDs.add(i+1, artikelRabattArtikelID);
@@ -1665,7 +1674,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             artikelIDs.add(rechnungRabattArtikelID);
             articleNames.add(rabattName);
             rabattIDs.add(null);
-            BigDecimal reduktion = rabattRelativ.multiply(entry.getValue()).multiply(minusOne);
+            BigDecimal reduktion = new BigDecimal(
+                    priceFormatterIntern( rabattRelativ.multiply(entry.getValue()).multiply(minusOne) )
+                    );
             einzelpreise.add(null);
             preise.add(reduktion);
             colors.add("red");

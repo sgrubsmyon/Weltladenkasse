@@ -20,8 +20,7 @@ public class NumberDocumentFilter extends DocumentFilter {
         }
         try {
             BigDecimal bd = new BigDecimal(text.replace(',', '.'));
-            if (bd.signum() >= 0 && bd.scale() <= scale &&
-                    bd.precision() <= precision){
+            if (bd.scale() <= scale && bd.precision() <= precision){
                 return true;
             } else {
                 return false;

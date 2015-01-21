@@ -42,7 +42,9 @@ import jcalendarbutton.org.JCalendarButton;
 import WeltladenDB.WindowContent;
 import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.AnyJComponentJTable;
+import WeltladenDB.PositiveNumberDocumentFilter;
 import WeltladenDB.NumberDocumentFilter;
+import WeltladenDB.StringDocumentFilter;
 
 public class Kassenstand extends WindowContent implements ChangeListener, DocumentListener, ItemListener {
     // Attribute:
@@ -248,8 +250,8 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    neuerKassenstandField.setColumns(10);
             neuerKassenstandField.setHorizontalAlignment(JTextField.RIGHT);
 	    neuerKassenstandField.getDocument().addDocumentListener(this);
-            NumberDocumentFilter df = new NumberDocumentFilter(2, 13);
-	    ((AbstractDocument)neuerKassenstandField.getDocument()).setDocumentFilter(df);
+            PositiveNumberDocumentFilter pdf = new PositiveNumberDocumentFilter(2, 13);
+	    ((AbstractDocument)neuerKassenstandField.getDocument()).setDocumentFilter(pdf);
 	    neuerKassenstandLabel.setLabelFor(neuerKassenstandField);
 	    kassenstandAendernPanel.add(neuerKassenstandField);
 	    kassenstandAendernPanel.add(new JLabel(currencySymbol));
@@ -263,6 +265,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    differenzField.setColumns(10);
             differenzField.setHorizontalAlignment(JTextField.RIGHT);
 	    differenzField.getDocument().addDocumentListener(this);
+            NumberDocumentFilter df = new NumberDocumentFilter(2, 13);
 	    ((AbstractDocument)differenzField.getDocument()).setDocumentFilter(df);
 	    differenzLabel.setLabelFor(differenzField);
 	    kassenstandAendernPanel.add(differenzField);
@@ -275,8 +278,8 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    kommentarPanel.add(kommentarLabel);
 	    kommentarField = new JTextField("", 25);
 	    kommentarField.getDocument().addDocumentListener(this);
-	    DocumentSizeFilter dsf = new DocumentSizeFilter(70);
-	    ((AbstractDocument)kommentarField.getDocument()).setDocumentFilter(dsf);
+	    StringDocumentFilter sdf = new StringDocumentFilter(70);
+	    ((AbstractDocument)kommentarField.getDocument()).setDocumentFilter(sdf);
 	    kommentarLabel.setLabelFor(kommentarField);
 	    kommentarPanel.add(kommentarField);
 	    //
