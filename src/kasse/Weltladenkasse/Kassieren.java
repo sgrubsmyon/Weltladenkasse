@@ -70,6 +70,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     protected String barcodeText = "";
     private int selectedArtikelID;
     private int selectedStueck;
+    private JButton sonstigesButton;
+    private JButton sevenPercentButton;
+    private JButton nineteenPercentButton;
     private JSpinner anzahlSpinner;
     private JTextField anzahlField;
     private JTextField preisField;
@@ -215,73 +218,103 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	allPanel = new JPanel();
 	allPanel.setLayout(new BoxLayout(allPanel, BoxLayout.Y_AXIS));
 
-        JPanel barcodePanel = new JPanel();
-	barcodePanel.setLayout(new FlowLayout());
-	    JLabel barcodeLabel = new JLabel("Barcode: ");
-            barcodeLabel.setLabelFor(barcodeBox);
-            barcodeLabel.setDisplayedMnemonic(KeyEvent.VK_C);
-            barcodePanel.add(barcodeLabel);
-            String filterStr = " AND (toplevel_id IS NOT NULL OR sub_id = 2) ";
-                   // show all 'normal' items (toplevel_id IS NOT NULL), and in addition Gutscheine (where toplevel_id is NULL and sub_id is 2)
-            barcodeBox = new BarcodeComboBox(this.conn, filterStr);
-            barcodeBox.addActionListener(this);
-            //barcodeBox.addItemListener(this);
-            barcodeBox.addPopupMouseListener(new MouseListenerBarcodeBox());
-            barcodeField = (JTextComponent)barcodeBox.getEditor().getEditorComponent();
-            barcodeField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-                // remove Ctrl-A key binding
-	    barcodeField.getDocument().addDocumentListener(this);
-            barcodePanel.add(barcodeBox);
-	    emptyBarcodeButton = new JButton("x");
-	    emptyBarcodeButton.addActionListener(this);
-	    barcodePanel.add(emptyBarcodeButton);
-        allPanel.add(barcodePanel);
+        JPanel articleSelectPanel = new JPanel();
+        articleSelectPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
 
-	JPanel chooseArticlePanel1 = new JPanel();
-	chooseArticlePanel1.setLayout(new FlowLayout());
-	    JLabel artikelLabel = new JLabel("Artikelname: ");
-            artikelLabel.setLabelFor(artikelBox);
-            artikelLabel.setDisplayedMnemonic(KeyEvent.VK_A);
-            chooseArticlePanel1.add(artikelLabel);
-            artikelBox = new ArtikelNameComboBox(this.conn, filterStr);
-            artikelBox.addActionListener(this);
-            //artikelBox.addItemListener(this);
-            artikelBox.addPopupMouseListener(new MouseListenerArtikelBox());
-            // set preferred width etc.:
-            artikelBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 50, false));
-            artikelBox.setPrototypeDisplayValue("qqqqqqqqqqqqqqqqqqqq");
-            artikelField = (JTextComponent)artikelBox.getEditor().getEditorComponent();
-	    artikelField.getDocument().addDocumentListener(this);
-            chooseArticlePanel1.add(artikelBox);
-	    emptyArtikelButton = new JButton("x");
-	    emptyArtikelButton.addActionListener(this);
-	    chooseArticlePanel1.add(emptyArtikelButton);
+            JPanel comboBoxPanel = new JPanel();
+            comboBoxPanel.setLayout(new BoxLayout(comboBoxPanel, BoxLayout.Y_AXIS));
 
-	    JLabel nummerLabel = new JLabel("Artikelnr.: ");
-            nummerLabel.setLabelFor(nummerBox);
-            nummerLabel.setDisplayedMnemonic(KeyEvent.VK_N);
-            chooseArticlePanel1.add(nummerLabel);
-            nummerBox = new ArtikelNummerComboBox(this.conn, filterStr);
-            nummerBox.addActionListener(this);
-            //nummerBox.addItemListener(this);
-            nummerBox.addPopupMouseListener(new MouseListenerNummerBox());
-            // set preferred width etc.:
-            nummerBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 30, false));
-            nummerBox.setPrototypeDisplayValue("qqqqqqq");
-            nummerField = (JTextComponent)nummerBox.getEditor().getEditorComponent();
-            nummerField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-                // remove Ctrl-A key binding
-	    nummerField.getDocument().addDocumentListener(this);
-            chooseArticlePanel1.add(nummerBox);
-	    emptyNummerButton = new JButton("x");
-	    emptyNummerButton.addActionListener(this);
-	    chooseArticlePanel1.add(emptyNummerButton);
-        allPanel.add(chooseArticlePanel1);
+                JPanel barcodePanel = new JPanel();
+                barcodePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
+                    JLabel barcodeLabel = new JLabel("Barcode: ");
+                    barcodeLabel.setLabelFor(barcodeBox);
+                    barcodeLabel.setDisplayedMnemonic(KeyEvent.VK_C);
+                    barcodePanel.add(barcodeLabel);
+                    String filterStr = " AND (toplevel_id IS NOT NULL OR sub_id = 2) ";
+                           // show all 'normal' items (toplevel_id IS NOT NULL), and in addition Gutscheine (where toplevel_id is NULL and sub_id is 2)
+                    barcodeBox = new BarcodeComboBox(this.conn, filterStr);
+                    barcodeBox.addActionListener(this);
+                    //barcodeBox.addItemListener(this);
+                    barcodeBox.addPopupMouseListener(new MouseListenerBarcodeBox());
+                    barcodeBox.setPrototypeDisplayValue("qqqqqqqqqqqqqq");
+                    barcodeField = (JTextComponent)barcodeBox.getEditor().getEditorComponent();
+                    barcodeField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
+                        // remove Ctrl-A key binding
+                    barcodeField.getDocument().addDocumentListener(this);
+                    barcodePanel.add(barcodeBox);
+                    emptyBarcodeButton = new JButton("x");
+                    emptyBarcodeButton.addActionListener(this);
+                    barcodePanel.add(emptyBarcodeButton);
 
-	JPanel chooseArticlePanel2 = new JPanel();
-	chooseArticlePanel2.setLayout(new FlowLayout());
+                    JLabel nummerLabel = new JLabel("Artikelnr.: ");
+                    nummerLabel.setLabelFor(nummerBox);
+                    nummerLabel.setDisplayedMnemonic(KeyEvent.VK_N);
+                    barcodePanel.add(nummerLabel);
+                    nummerBox = new ArtikelNummerComboBox(this.conn, filterStr);
+                    nummerBox.addActionListener(this);
+                    //nummerBox.addItemListener(this);
+                    nummerBox.addPopupMouseListener(new MouseListenerNummerBox());
+                    // set preferred width etc.:
+                    nummerBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 30, false));
+                    nummerBox.setPrototypeDisplayValue("qqqqqqq");
+                    nummerField = (JTextComponent)nummerBox.getEditor().getEditorComponent();
+                    nummerField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
+                        // remove Ctrl-A key binding
+                    nummerField.getDocument().addDocumentListener(this);
+                    barcodePanel.add(nummerBox);
+                    emptyNummerButton = new JButton("x");
+                    emptyNummerButton.addActionListener(this);
+                    barcodePanel.add(emptyNummerButton);
+                comboBoxPanel.add(barcodePanel);
+
+                JPanel artikelNamePanel = new JPanel();
+                    JLabel artikelLabel = new JLabel("Artikelname: ");
+                    artikelLabel.setLabelFor(artikelBox);
+                    artikelLabel.setDisplayedMnemonic(KeyEvent.VK_A);
+                    artikelNamePanel.add(artikelLabel);
+                    artikelBox = new ArtikelNameComboBox(this.conn, filterStr);
+                    artikelBox.addActionListener(this);
+                    //artikelBox.addItemListener(this);
+                    artikelBox.addPopupMouseListener(new MouseListenerArtikelBox());
+                    // set preferred width etc.:
+                    artikelBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 50, false));
+                    artikelBox.setPrototypeDisplayValue("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
+                    artikelField = (JTextComponent)artikelBox.getEditor().getEditorComponent();
+                    artikelField.getDocument().addDocumentListener(this);
+                    artikelNamePanel.add(artikelBox);
+                    emptyArtikelButton = new JButton("x");
+                    emptyArtikelButton.addActionListener(this);
+                    artikelNamePanel.add(emptyArtikelButton);
+                comboBoxPanel.add(artikelNamePanel);
+
+            articleSelectPanel.add(comboBoxPanel);
+
+            JPanel sonstigesPanel = new JPanel();
+            sonstigesPanel.setLayout(new BoxLayout(sonstigesPanel, BoxLayout.Y_AXIS));
+            sonstigesPanel.setBorder(BorderFactory.createTitledBorder("Variabler Preis"));
+                sonstigesButton = new JButton("Sonstiges...");
+                sevenPercentButton = new JButton("7% MwSt.");
+                nineteenPercentButton = new JButton("19% MwSt.");
+                sonstigesButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+                sevenPercentButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+                nineteenPercentButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+                sonstigesButton.addActionListener(this);
+                sevenPercentButton.addActionListener(this);
+                nineteenPercentButton.addActionListener(this);
+                sonstigesPanel.add(sonstigesButton);
+                sonstigesPanel.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
+                sonstigesPanel.add(sevenPercentButton);
+                sonstigesPanel.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
+                sonstigesPanel.add(nineteenPercentButton);
+                sonstigesPanel.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
+            articleSelectPanel.add(sonstigesPanel);
+
+        allPanel.add(articleSelectPanel);
+
+	JPanel spinnerPanel = new JPanel();
+	spinnerPanel.setLayout(new FlowLayout());
 	    JLabel anzahlLabel = new JLabel("Anzahl: ");
-            chooseArticlePanel2.add(anzahlLabel);
+            spinnerPanel.add(anzahlLabel);
             SpinnerNumberModel anzahlModel = new SpinnerNumberModel(1, // initial value
                                                                     1, // min
                                                                     null, // max (null == no max)
@@ -309,10 +342,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             ( (NumberFormatter) anzahlEditor.getTextField().getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
             anzahlField.setColumns(3);
 	    anzahlLabel.setLabelFor(anzahlSpinner);
-            chooseArticlePanel2.add(anzahlSpinner);
+            spinnerPanel.add(anzahlSpinner);
 
 	    JLabel preisLabel = new JLabel("Preis: ");
-            chooseArticlePanel2.add(preisLabel);
+            spinnerPanel.add(preisLabel);
             preisField = new JTextField("");
             preisField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
                 // remove Ctrl-A key binding
@@ -328,32 +361,32 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             preisField.setEditable(false);
             preisField.setColumns(6);
             preisField.setHorizontalAlignment(JTextField.RIGHT);
-            chooseArticlePanel2.add(preisField);
-            chooseArticlePanel2.add(new JLabel(currencySymbol));
+            spinnerPanel.add(preisField);
+            spinnerPanel.add(new JLabel(currencySymbol));
 
 	    hinzufuegenButton = new JButton("Hinzufügen");
             hinzufuegenButton.setMnemonic(KeyEvent.VK_H);
 	    hinzufuegenButton.addActionListener(this);
 	    hinzufuegenButton.setEnabled(false);
-	    chooseArticlePanel2.add(hinzufuegenButton);
+	    spinnerPanel.add(hinzufuegenButton);
 
 	    leergutButton = new JButton("Als Leergut");
             leergutButton.setMnemonic(KeyEvent.VK_L);
 	    leergutButton.addActionListener(this);
 	    leergutButton.setEnabled(false);
-	    chooseArticlePanel2.add(leergutButton);
+	    spinnerPanel.add(leergutButton);
 
 	    ruecknahmeButton = new JButton("Rückgabe");
             ruecknahmeButton.setMnemonic(KeyEvent.VK_R);
 	    ruecknahmeButton.addActionListener(this);
 	    ruecknahmeButton.setEnabled(false);
-	    chooseArticlePanel2.add(ruecknahmeButton);
-        allPanel.add(chooseArticlePanel2);
+	    spinnerPanel.add(ruecknahmeButton);
+        allPanel.add(spinnerPanel);
 
 	showTable();
 
         JPanel zwischensummePanel = new JPanel();
-        zwischensummePanel.setLayout(new FlowLayout());
+        zwischensummePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
             barButton = new JButton("Bar");
             barButton.setMnemonic(KeyEvent.VK_B);
             barButton.setEnabled(false);
@@ -370,9 +403,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             stornoButton.addActionListener(this);
             zwischensummePanel.add(stornoButton);
 
-            JPanel kundeGibtRueckgeldPanel = new JPanel();
-            kundeGibtRueckgeldPanel.setLayout(new GridLayout(0,2));
-                kundeGibtRueckgeldPanel.add(new JLabel("Kunde gibt:"));
+            JPanel gridPanel = new JPanel();
+            gridPanel.setLayout(new GridLayout(0, 2));
+                JLabel kundeGibtLabel = new JLabel("Kunde gibt:");
                 kundeGibtField = new JTextField("");
                 kundeGibtField.setEditable(false);
                 kundeGibtField.setColumns(7);
@@ -395,12 +428,12 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 });
                 ((AbstractDocument)kundeGibtField.getDocument()).setDocumentFilter(geldFilter);
                 JPanel kundeGibtPanel = new JPanel();
-                kundeGibtPanel.setLayout(new FlowLayout());
+                kundeGibtPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
                 kundeGibtPanel.add(kundeGibtField);
                 kundeGibtPanel.add(new JLabel(currencySymbol));
-            kundeGibtPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-            kundeGibtRueckgeldPanel.add(kundeGibtPanel);
-                kundeGibtRueckgeldPanel.add(new JLabel("Gutschein:"));
+                kundeGibtPanel.add(Box.createRigidArea(new Dimension(40, 0)));
+
+                JLabel gutscheinLabel = new JLabel("Gutschein:");
                 gutscheinField = new JTextField("");
                 gutscheinField.setEditable(false);
                 gutscheinField.setColumns(7);
@@ -415,18 +448,18 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 ((AbstractDocument)gutscheinField.getDocument()).setDocumentFilter(geldFilter);
                 gutscheinField.getDocument().addDocumentListener(this);
                 JPanel gutscheinPanel = new JPanel();
-                gutscheinPanel.setLayout(new FlowLayout());
+                gutscheinPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
                 gutscheinPanel.add(gutscheinField);
                 gutscheinPanel.add(new JLabel(currencySymbol));
                 gutscheinButton = new JButton("OK");
                 gutscheinButton.setEnabled(false);
                 gutscheinButton.addActionListener(this);
                 gutscheinPanel.add(gutscheinButton);
-            gutscheinPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-            kundeGibtRueckgeldPanel.add(gutscheinPanel);
-                kundeGibtRueckgeldPanel.add(new JLabel("Rückgeld:"));
+                gutscheinPanel.add(Box.createHorizontalGlue());
+
+                JLabel rueckgeldLabel = new JLabel("Rückgeld:");
                 JPanel rueckgeldPanel = new JPanel();
-                rueckgeldPanel.setLayout(new FlowLayout());
+                rueckgeldPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
                 rueckgeldField = new JTextField("");
                 rueckgeldField.setEditable(false);
                 rueckgeldField.setColumns(7);
@@ -434,10 +467,46 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 rueckgeldField.setFont(new Font("Tahoma", Font.BOLD, 12));
                 rueckgeldPanel.add(rueckgeldField);
                 rueckgeldPanel.add(new JLabel(currencySymbol));
-            rueckgeldPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-            kundeGibtRueckgeldPanel.add(rueckgeldPanel);
+                rueckgeldPanel.add(Box.createRigidArea(new Dimension(40, 0)));
 
-            zwischensummePanel.add(kundeGibtRueckgeldPanel);
+                /*
+                GroupLayout layout = new GroupLayout(gridPanel);
+                gridPanel.setLayout(layout);
+                layout.setAutoCreateGaps(true);
+                layout.setAutoCreateContainerGaps(true);
+
+                layout.setHorizontalGroup(
+                        layout.createSequentialGroup()
+                            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.TRAILING)
+                                .addComponent(kundeGibtLabel)
+                                .addComponent(gutscheinLabel)
+                                .addComponent(rueckgeldLabel))
+                            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.TRAILING)
+                                .addComponent(kundeGibtPanel)
+                                .addComponent(gutscheinPanel)
+                                .addComponent(rueckgeldPanel))
+                        );
+                layout.setVerticalGroup(
+                        layout.createSequentialGroup()
+                            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                                .addComponent(kundeGibtLabel)
+                                .addComponent(kundeGibtPanel))
+                            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                                .addComponent(gutscheinLabel)
+                                .addComponent(gutscheinPanel))
+                            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                                .addComponent(rueckgeldLabel)
+                                .addComponent(rueckgeldPanel))
+                        );
+                        */
+                gridPanel.add(kundeGibtLabel);
+                gridPanel.add(kundeGibtPanel);
+                gridPanel.add(gutscheinLabel);
+                gridPanel.add(gutscheinPanel);
+                gridPanel.add(rueckgeldLabel);
+                gridPanel.add(rueckgeldPanel);
+
+            zwischensummePanel.add(gridPanel);
 
             bigPriceField = new JTextField("");
             bigPriceField.setEditable(false);
@@ -452,7 +521,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             zahlungsLabel = new JLabel(" ");
             zahlungsLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
             neuerKundePanel.add(zahlungsLabel);
-            neuerKundePanel.add(Box.createRigidArea(new Dimension(0,5))); // add vertical space
             JPanel buttonPanel = new JPanel();
             buttonPanel.setLayout(new BorderLayout());
                 // center
@@ -485,11 +553,14 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             rbutton.addActionListener(this);
             rbutton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
             rabattPanel.add(rbutton);
+            rabattPanel.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
         }
         mitarbeiterRabattButton = new JButton("Mitarbeiter");
         mitarbeiterRabattButton.addActionListener(this);
         mitarbeiterRabattButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         rabattPanel.add(mitarbeiterRabattButton);
+        rabattPanel.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
+
         JPanel individuellRabattPanel = new JPanel();
             individuellRabattPanel.setBorder(BorderFactory.createTitledBorder("individuell"));
             individuellRabattPanel.setLayout(new BoxLayout(individuellRabattPanel, BoxLayout.Y_AXIS));
@@ -1421,9 +1492,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         updateRabattButtonsZwischensumme();
 
         barButton.setEnabled(true);
-        if ( ( new BigDecimal(getTotalPrice()) ).compareTo(ecSchwelle) >= 0 ){
-            ecButton.setEnabled(true);
-        }
+        ecButton.setEnabled(true);
         stornoButton.setEnabled(true);
     }
 
@@ -1835,6 +1904,18 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             checkNummerBox(e);
             return;
         }
+        if (e.getSource() == sonstigesButton){
+            artikelField.setText("Sonstige");
+            return;
+        }
+        if (e.getSource() == sevenPercentButton){
+            artikelField.setText("Variabler Preis 7%");
+            return;
+        }
+        if (e.getSource() == nineteenPercentButton){
+            artikelField.setText("Variabler Preis 19%");
+            return;
+        }
         if (e.getSource() == hinzufuegenButton){
             removeRabattAufRechnung();
             artikelHinzufuegen();
@@ -1877,6 +1958,15 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	    return;
 	}
 	if (e.getSource() == ecButton){
+            if ( ( new BigDecimal(getTotalPrice()) ).compareTo(ecSchwelle) < 0 ){
+                int answer = JOptionPane.showConfirmDialog(this,
+                        "ACHTUNG: Gesamtbetrag unter "+priceFormatter(ecSchwelle)+" "+currencySymbol+" !\n"+
+                        "Wirklich EC-Zahlung erlauben?", "Warnung",
+                        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (answer == JOptionPane.NO_OPTION){
+                    return;
+                }
+            }
             ec();
 	    return;
 	}
