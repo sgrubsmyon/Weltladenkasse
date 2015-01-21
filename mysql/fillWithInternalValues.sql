@@ -14,3 +14,5 @@ INSERT INTO pfand SET artikel_id=4;
 INSERT INTO pfand SET artikel_id=5;
 INSERT INTO pfand SET artikel_id=6;
 INSERT INTO pfand SET artikel_id=7;
+INSERT INTO pfand SET artikel_id=8;
+INSERT INTO pfand SET artikel_id=9;
