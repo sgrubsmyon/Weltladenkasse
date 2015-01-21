@@ -240,12 +240,11 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	JPanel manuellAendernPanel = new JPanel();
 	manuellAendernPanel.setLayout(new BoxLayout(manuellAendernPanel, BoxLayout.Y_AXIS));
 	manuellAendernPanel.setBorder(BorderFactory.createTitledBorder("Kassenstand manuell ändern"));
-	//
+
 	JPanel kassenstandAendernPanel = new JPanel();
 	kassenstandAendernPanel.setLayout(new FlowLayout());
 	    JLabel neuerKassenstandLabel = new JLabel("Neuer Kassenstand:");
 	    kassenstandAendernPanel.add(neuerKassenstandLabel);
-//	    neuerKassenstandField = new JFormattedTextField(amountFormat);
 	    neuerKassenstandField = new JTextField();
 	    neuerKassenstandField.setColumns(10);
             neuerKassenstandField.setHorizontalAlignment(JTextField.RIGHT);
@@ -255,13 +254,15 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    neuerKassenstandLabel.setLabelFor(neuerKassenstandField);
 	    kassenstandAendernPanel.add(neuerKassenstandField);
 	    kassenstandAendernPanel.add(new JLabel(currencySymbol));
-	    //
+
 	    kassenstandAendernPanel.add(Box.createRigidArea(new Dimension(12,0)));
-	    //
-	    JLabel differenzLabel = new JLabel("ODER Differenz:");
+
+            /*
+	    JLabel differenzLabel = new JLabel("ODER zu addierender Betrag:");
 	    kassenstandAendernPanel.add(differenzLabel);
-//	    differenzField = new JFormattedTextField(amountFormat);
+            */
 	    differenzField = new JTextField();
+            /*
 	    differenzField.setColumns(10);
             differenzField.setHorizontalAlignment(JTextField.RIGHT);
 	    differenzField.getDocument().addDocumentListener(this);
@@ -270,6 +271,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    differenzLabel.setLabelFor(differenzField);
 	    kassenstandAendernPanel.add(differenzField);
 	    kassenstandAendernPanel.add(new JLabel(currencySymbol));
+            */
 	manuellAendernPanel.add(kassenstandAendernPanel);
 	//
 	JPanel kommentarPanel = new JPanel();
@@ -401,7 +403,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
     void abschicken() {
         // eigentlich unmoeglich:
         if (neuerKassenstandField.getText().length() > 0 && differenzField.getText().length() > 0){
-            JOptionPane.showMessageDialog(this, "Sowohl neuer Kassenstand als auch Differenz eingegeben!",
+            JOptionPane.showMessageDialog(this, "Sowohl neuer Kassenstand als auch Additionsbetrag eingegeben!",
                     "Fehler", JOptionPane.ERROR_MESSAGE);
             neuerKassenstandField.setText("");
             differenzField.setText("");
@@ -460,7 +462,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
         else if (differenzField.getText().length() > 0){
             String text = differenzField.getText();
             if ( ! text.matches(".*[0-9].*") ){ // if contains no digit: throw error
-                JOptionPane.showMessageDialog(this, "Fehlerhafte Differenz eingegeben!",
+                JOptionPane.showMessageDialog(this, "Fehlerhafter Additionsbetrag eingegeben!",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
                 neuerKassenstandField.setText("");
                 differenzField.setText("");

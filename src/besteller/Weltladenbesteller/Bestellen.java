@@ -39,7 +39,7 @@ import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.BarcodeComboBox;
 import WeltladenDB.ArtikelNameComboBox;
 import WeltladenDB.ArtikelNummerComboBox;
-import WeltladenDB.NumberDocumentFilter;
+import WeltladenDB.PositiveNumberDocumentFilter;
 import WeltladenDB.StringDocumentFilter;
 import WeltladenDB.BoundsPopupMenuListener;
 
@@ -107,7 +107,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private Vector<Integer> stueckzahlen;
     private Vector<Integer> positions;
 
-    private NumberDocumentFilter geldFilter = new NumberDocumentFilter(2, 13);
+    private PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
 
     private String filterStr = "";
 
