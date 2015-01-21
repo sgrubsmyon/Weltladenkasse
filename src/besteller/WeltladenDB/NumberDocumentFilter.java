@@ -18,6 +18,10 @@ public class NumberDocumentFilter extends DocumentFilter {
         if ( text.equals("") ){
             return true;
         }
+        // also allow only minus sign:
+        if ( text.equals("-") ){
+            return true;
+        }
         try {
             BigDecimal bd = new BigDecimal(text.replace(',', '.'));
             if (bd.scale() <= scale && bd.precision() <= precision){

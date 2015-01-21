@@ -57,8 +57,8 @@ public class ArtikelFormular extends WindowContent
     private Vector<String> lieferantNamen;
     public Vector<Integer> lieferantIDs;
 
-    private NumberDocumentFilter geldFilter = new NumberDocumentFilter(2, 13);
-    private NumberDocumentFilter numFilter = new NumberDocumentFilter(5, 8);
+    private PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
+    private PositiveNumberDocumentFilter numFilter = new PositiveNumberDocumentFilter(5, 8);
 
     // Methoden:
     public ArtikelFormular(Connection conn, MainWindowGrundlage mw) {

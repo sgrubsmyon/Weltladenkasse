@@ -489,14 +489,14 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         myTable.getSelectionModel().addListSelectionListener(this);
         setTableProperties(myTable);
 
-        // extra cell editor that has the NumberDocumentFilter
+        // extra cell editor that has the PositiveNumberDocumentFilter
         class NumberEditor extends DefaultCellEditor {
             JTextField textField;
 
             public NumberEditor() {
                 super(new JTextField()); // call to super must be first statement in constructor
                 textField = (JTextField)getComponent();
-                NumberDocumentFilter numFilter = new NumberDocumentFilter(5, 8);
+                PositiveNumberDocumentFilter numFilter = new PositiveNumberDocumentFilter(5, 8);
                 ((AbstractDocument)textField.getDocument()).setDocumentFilter(numFilter);
             }
         }
@@ -524,7 +524,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             public GeldEditor() {
                 super(new JTextField()); // call to super must be first statement in constructor
                 textField = (JTextField)getComponent();
-                NumberDocumentFilter geldFilter = new NumberDocumentFilter(2, 13);
+                PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
                 ((AbstractDocument)textField.getDocument()).setDocumentFilter(geldFilter);
             }
 
