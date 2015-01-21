@@ -68,6 +68,10 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     //protected NumberFormat amountFormat;
     protected NumberFormat vatFormat;
 
+    protected PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
+    protected PositiveNumberDocumentFilter relFilter = new PositiveNumberDocumentFilter(3, 6);
+    protected PositiveNumberDocumentFilter mengeFilter = new PositiveNumberDocumentFilter(5, 8);
+
     // Methoden:
     // Setter:
     void setConnection(Connection conn){

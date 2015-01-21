@@ -57,9 +57,6 @@ public class ArtikelFormular extends WindowContent
     private Vector<String> lieferantNamen;
     public Vector<Integer> lieferantIDs;
 
-    private PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
-    private PositiveNumberDocumentFilter numFilter = new PositiveNumberDocumentFilter(5, 8);
-
     // Methoden:
     public ArtikelFormular(Connection conn, MainWindowGrundlage mw) {
 	super(conn, mw);
@@ -165,7 +162,7 @@ public class ArtikelFormular extends WindowContent
             mengePanel.setBorder(BorderFactory.createTitledBorder("Menge (Verpackungsgröße)"));
             mengeField = new JTextField("");
             mengeField.setColumns(6);
-            ((AbstractDocument)mengeField.getDocument()).setDocumentFilter(numFilter);
+            ((AbstractDocument)mengeField.getDocument()).setDocumentFilter(mengeFilter);
             mengeField.setHorizontalAlignment(JTextField.RIGHT);
             mengePanel.add(mengeField);
             mengePanel.add(new JLabel("kg/l/Stk."));

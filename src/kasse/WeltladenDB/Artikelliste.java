@@ -496,8 +496,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             public NumberEditor() {
                 super(new JTextField()); // call to super must be first statement in constructor
                 textField = (JTextField)getComponent();
-                PositiveNumberDocumentFilter numFilter = new PositiveNumberDocumentFilter(5, 8);
-                ((AbstractDocument)textField.getDocument()).setDocumentFilter(numFilter);
+                ((AbstractDocument)textField.getDocument()).setDocumentFilter(mengeFilter);
             }
         }
         NumberEditor numberEditor = new NumberEditor();
@@ -524,7 +523,6 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             public GeldEditor() {
                 super(new JTextField()); // call to super must be first statement in constructor
                 textField = (JTextField)getComponent();
-                PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
                 ((AbstractDocument)textField.getDocument()).setDocumentFilter(geldFilter);
             }
 
