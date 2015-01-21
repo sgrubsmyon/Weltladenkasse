@@ -26,7 +26,7 @@ import javax.swing.text.*;
 public class IncrementalSearchComboBox_Old extends JComboBox {
     ComboBoxModel model;
     JTextComponent editor;
-    private String internalFilterStr = " AND (toplevel_id IS NOT NULL OR sub_id = 2) "; 
+    private String internalFilterStr = " AND (toplevel_id IS NOT NULL OR sub_id = 2) ";
               // show all 'normal' items (toplevel_id IS NOT NULL), and in addition Gutscheine (where toplevel_id is NULL and sub_id is 2)
     // flag to indicate if setModel has been called
     // subsequent calls to remove/insertString should be ignored
@@ -36,10 +36,10 @@ public class IncrementalSearchComboBox_Old extends JComboBox {
     boolean keepText=false;
     boolean onlySetText=false;
     boolean hitUpDownArrow=false;
-    
+
     KeyListener editorKeyListener;
     FocusListener editorFocusListener;
-    
+
     private Connection conn; // connection to MySQL database
     private Vector<String> searchCache = new Vector<String>();
 
@@ -90,7 +90,7 @@ public class IncrementalSearchComboBox_Old extends JComboBox {
                     // only enter selStr if one of the strings in serchCache match the selStr: (don't enter bullshit,
                     // prevent exceptions)
                     for (String s : searchCache){
-                        if ( selectedString.equals(s) ){ 
+                        if ( selectedString.equals(s) ){
                             collapseToSelectedString(selectedString);
                             return;
                         }
@@ -107,7 +107,7 @@ public class IncrementalSearchComboBox_Old extends JComboBox {
 
         editorFocusListener = new FocusAdapter() {
             public void focusGained(FocusEvent e) {
-                if (isDisplayable()){ 
+                if (isDisplayable()){
                     setPopupVisible(true);
                     showPopup();
                 }
@@ -124,7 +124,7 @@ public class IncrementalSearchComboBox_Old extends JComboBox {
     public void setConnection(Connection conn){
         this.conn = conn;
     }
-    
+
     public void setSearchCache(Vector<String> cache){
         this.searchCache = cache;
         model = new DefaultComboBoxModel(searchCache);
@@ -133,25 +133,25 @@ public class IncrementalSearchComboBox_Old extends JComboBox {
         setModelBool = false;
         setText( searchCache.size() > 0 ? searchCache.firstElement() : "");
     }
-    
+
     public Vector<String> getSearchCache(){
         return searchCache;
     }
-    
+
     public int getNumberOfSearchCacheStrings(){
         return searchCache.size();
     }
-    
+
     public JTextComponent getEditorComponent(){
         return editor;
     }
-    
+
     void configureEditor(ComboBoxEditor newEditor) {
         if (editor != null) {
             editor.removeKeyListener(editorKeyListener);
             editor.removeFocusListener(editorFocusListener);
         }
-        
+
         if (newEditor != null) {
             editor = (JTextComponent)newEditor.getEditorComponent();
             editor.addKeyListener(editorKeyListener);
@@ -244,5 +244,5 @@ public class IncrementalSearchComboBox_Old extends JComboBox {
             throw new RuntimeException(e.toString());
         }
     }
-    
+
 }

@@ -46,7 +46,8 @@ import WeltladenDB.BarcodeComboBox;
 import WeltladenDB.ArtikelNameComboBox;
 import WeltladenDB.ArtikelNummerComboBox;
 import WeltladenDB.ProduktgruppenIndentedRenderer;
-import WeltladenDB.NumberDocumentFilter;
+import WeltladenDB.PositiveNumberDocumentFilter;
+import WeltladenDB.StringDocumentFilter;
 import WeltladenDB.BoundsPopupMenuListener;
 
 public class RabattDialog extends DialogWindow implements ChangeListener, DocumentListener, ItemListener {
@@ -326,8 +327,8 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                 namePanel.setBorder(BorderFactory.createTitledBorder("Aktionsname"));
                 nameField = new JTextField("", 25);
                 nameField.getDocument().addDocumentListener(this);
-                DocumentSizeFilter dsf = new DocumentSizeFilter(50);
-                ((AbstractDocument)nameField.getDocument()).setDocumentFilter(dsf);
+                StringDocumentFilter sdf = new StringDocumentFilter(50);
+                ((AbstractDocument)nameField.getDocument()).setDocumentFilter(sdf);
                 namePanel.add(nameField);
             generalPanel.add(namePanel);
             JPanel vonPanel = new JPanel();
@@ -447,7 +448,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                     absolutField.setColumns(10);
                     absolutField.setHorizontalAlignment(JTextField.RIGHT);
                     absolutField.getDocument().addDocumentListener(this);
-                    NumberDocumentFilter cdf = new NumberDocumentFilter(2, 13);
+                    PositiveNumberDocumentFilter cdf = new PositiveNumberDocumentFilter(2, 13);
                     ((AbstractDocument)absolutField.getDocument()).setDocumentFilter(cdf);
                     absolutPanel.add(absolutField);
                     absolutPanel.add(new JLabel(currencySymbol));
@@ -462,8 +463,8 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                     relativField.setColumns(10);
                     relativField.setHorizontalAlignment(JTextField.RIGHT);
                     relativField.getDocument().addDocumentListener(this);
-                    FloatDocumentFilter fdf = new FloatDocumentFilter();
-                    ((AbstractDocument)relativField.getDocument()).setDocumentFilter(fdf);
+                    PositiveNumberDocumentFilter df = new PositiveNumberDocumentFilter(4, 5);
+                    ((AbstractDocument)relativField.getDocument()).setDocumentFilter(df);
                     relativPanel.add(relativField);
                     relativPanel.add(new JLabel("%"));
                     einzelCard.add(relativPanel);
@@ -511,7 +512,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                     mengenrabattRelativField.setColumns(10);
                     mengenrabattRelativField.setHorizontalAlignment(JTextField.RIGHT);
                     mengenrabattRelativField.getDocument().addDocumentListener(this);
-                    ((AbstractDocument)mengenrabattRelativField.getDocument()).setDocumentFilter(fdf);
+                    ((AbstractDocument)mengenrabattRelativField.getDocument()).setDocumentFilter(df);
                     mengenrabattRelativPanel.add(mengenrabattRelativField);
                     mengenrabattRelativPanel.add(new JLabel("%"));
                     mengenCard.add(mengenrabattRelativPanel);

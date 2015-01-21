@@ -3,11 +3,11 @@ package WeltladenDB;
 import javax.swing.text.*; // for DocumentFilter, AbstractDocument, JTextComponent
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
-public class NumberDocumentFilter extends DocumentFilter {
+public class PositiveNumberDocumentFilter extends DocumentFilter {
     private int scale = 5;
     private int precision = 8;
 
-    public NumberDocumentFilter(int theScale, int thePrecision) {
+    public PositiveNumberDocumentFilter(int theScale, int thePrecision) {
         super();
         scale = theScale;
         precision = thePrecision;
@@ -20,7 +20,8 @@ public class NumberDocumentFilter extends DocumentFilter {
         }
         try {
             BigDecimal bd = new BigDecimal(text.replace(',', '.'));
-            if (bd.scale() <= scale && bd.precision() <= precision){
+            if (bd.signum() >= 0 && bd.scale() <= scale &&
+                    bd.precision() <= precision){
                 return true;
             } else {
                 return false;

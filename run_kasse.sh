@@ -2,7 +2,6 @@
 
 build_dir=build/kasse
 lib_dir=../../lib
-#classpath=$lib_dir/mysql-connector-java-5.1.25-bin.jar:$lib_dir/jOpenDocument-1.3.jar:$lib_dir/date4j.jar:.
 main_class=Weltladenkasse.Kasse
 
 cp config.properties $build_dir
