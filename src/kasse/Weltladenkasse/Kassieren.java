@@ -41,7 +41,6 @@ import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.BarcodeComboBox;
 import WeltladenDB.ArtikelNameComboBox;
 import WeltladenDB.ArtikelNummerComboBox;
-import WeltladenDB.PositiveNumberDocumentFilter;
 import WeltladenDB.BoundsPopupMenuListener;
 
 public class Kassieren extends RechnungsGrundlage implements ItemListener, DocumentListener {
@@ -120,8 +119,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private Vector<Integer> rabattIDs;
     private Vector<Integer> stueckzahlen;
     private Vector<BigDecimal> einzelpreise;
-
-    private PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
 
     // Methoden:
 
@@ -586,8 +583,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     // Plain text components do not fire these events
                 }
             });
-            PositiveNumberDocumentFilter df = new PositiveNumberDocumentFilter(4, 5);
-            ((AbstractDocument)individuellRabattRelativField.getDocument()).setDocumentFilter(df);
+            ((AbstractDocument)individuellRabattRelativField.getDocument()).setDocumentFilter(relFilter);
             individuellRabattRelativField.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) {
                     if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
