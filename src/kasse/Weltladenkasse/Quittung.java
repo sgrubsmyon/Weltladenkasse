@@ -153,7 +153,7 @@ public class Quittung extends WindowContent {
                     sheet.setValueAt(rueckgeld, 3, 218+rowOffset);
                 }
             } else if (zahlungsModus == "ec"){
-                sheet.setValueAt("Karte", 0, 215+rowOffset);
+                sheet.setValueAt("EC", 0, 215+rowOffset);
             }
             sheet.setValueAt(totalPrice, 2, 215+rowOffset);
             // fill mwst values
