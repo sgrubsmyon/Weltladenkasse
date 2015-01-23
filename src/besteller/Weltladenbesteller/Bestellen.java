@@ -40,6 +40,7 @@ import WeltladenDB.BarcodeComboBox;
 import WeltladenDB.ArtikelNameComboBox;
 import WeltladenDB.ArtikelNummerComboBox;
 import WeltladenDB.StringDocumentFilter;
+import WeltladenDB.IntegerDocumentFilter;
 import WeltladenDB.BoundsPopupMenuListener;
 
 public class Bestellen extends BestellungsGrundlage implements ItemListener, DocumentListener {
@@ -317,6 +318,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	    anzahlSpinner = new JSpinner(anzahlModel);
             JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(anzahlSpinner, "###");
             anzahlField = anzahlEditor.getTextField();
+            IntegerDocumentFilter preventOverflowFilter = new IntegerDocumentFilter(-smallintMax, smallintMax, "Anzahl", this);
+	    ((AbstractDocument)anzahlField.getDocument()).setDocumentFilter(preventOverflowFilter);
             anzahlField.getDocument().addDocumentListener(this);
             anzahlField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
                 // remove Ctrl-A key binding
@@ -808,7 +811,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     }
 
     private void updateAnzahlSpinner(Integer vpe) {
-        System.out.println("updateAnzahlSpinner: "+vpe);
         if (vpe > 0){
             Integer vpes = (Integer)vpeSpinner.getValue();
             Integer stueck = new Integer(vpes*vpe);
