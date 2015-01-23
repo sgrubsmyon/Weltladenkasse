@@ -59,6 +59,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected String delimiter; // for CSV export/import
     protected final String fileSep = System.getProperty("file.separator");
     protected final String lineSep = System.getProperty("line.separator");
+    protected final int smallintMax = 32767;
 
     // Die Ausrichter:
     protected DefaultTableCellRenderer rechtsAusrichter = new DefaultTableCellRenderer();
