@@ -171,6 +171,20 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         }
     }
 
+    void preventSpinnerOverflow(JSpinner.NumberEditor editor) {
+        AbstractDocument doc = new PlainDocument() {
+            @Override
+            public void setDocumentFilter(DocumentFilter filter) {
+                if (filter instanceof IntegerDocumentFilter) {
+                    super.setDocumentFilter(filter);
+                }
+            }
+        };
+        doc.setDocumentFilter(new IntegerDocumentFilter(-smallintMax,
+                    smallintMax, "Anzahl", this));
+        editor.getTextField().setDocument(doc);
+    }
+
     void showAll(){
 	allPanel = new JPanel();
 	allPanel.setLayout(new BoxLayout(allPanel, BoxLayout.Y_AXIS));
@@ -318,8 +332,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	    anzahlSpinner = new JSpinner(anzahlModel);
             JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(anzahlSpinner, "###");
             anzahlField = anzahlEditor.getTextField();
-            IntegerDocumentFilter preventOverflowFilter = new IntegerDocumentFilter(-smallintMax, smallintMax, "Anzahl", this);
-	    ((AbstractDocument)anzahlField.getDocument()).setDocumentFilter(preventOverflowFilter);
             anzahlField.getDocument().addDocumentListener(this);
             anzahlField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
                 // remove Ctrl-A key binding
@@ -338,7 +350,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 }
             });
             anzahlSpinner.setEditor(anzahlEditor);
-            ( (NumberFormatter) anzahlEditor.getTextField().getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
+            //( (NumberFormatter) anzahlEditor.getTextField().getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
+            preventSpinnerOverflow(anzahlEditor);
             anzahlField.setColumns(3);
 	    anzahlLabel.setLabelFor(anzahlSpinner);
             chooseArticlePanel2.add(anzahlSpinner);

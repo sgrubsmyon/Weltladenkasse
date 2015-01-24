@@ -20,10 +20,14 @@ public class IntegerDocumentFilter extends DocumentFilter {
     public IntegerDocumentFilter(Integer theMinValue, Integer theMaxValue, String theValueName,
             WindowContent theWC) {
         super();
+        System.out.println("constructor in IntegerDocumentFilter.");
         minValue = theMinValue;
         maxValue = theMaxValue;
         valueName = theValueName;
         parentWindow = theWC;
+        System.out.println("minValue: "+minValue);
+        System.out.println("maxValue: "+maxValue);
+        System.out.println("valueName "+valueName);
     }
 
     private boolean test(String text) {
@@ -40,6 +44,7 @@ public class IntegerDocumentFilter extends DocumentFilter {
     }
 
     private String rangeCheck(String text) {
+        System.out.println("rangeCheck in IntegerDocumentFilter.");
         Integer value = Integer.parseInt(text);
         if (maxValue != null && value > maxValue){
             JOptionPane.showMessageDialog(parentWindow,
@@ -60,6 +65,7 @@ public class IntegerDocumentFilter extends DocumentFilter {
     @Override
     public void insertString(FilterBypass fb, int offset, String newText,
             AttributeSet attr) throws BadLocationException {
+        System.out.println("insertString in IntegerDocumentFilter.");
         Document doc = fb.getDocument();
         StringBuilder sb = new StringBuilder();
         sb.append(doc.getText(0, doc.getLength()));
@@ -81,13 +87,20 @@ public class IntegerDocumentFilter extends DocumentFilter {
     @Override
     public void replace(FilterBypass fb, int offset, int length, String newText,
             AttributeSet attrs) throws BadLocationException {
+        System.out.println("replace in IntegerDocumentFilter.");
         Document doc = fb.getDocument();
         StringBuilder sb = new StringBuilder();
         sb.append(doc.getText(0, doc.getLength()));
         sb.replace(offset, offset + length, newText);
 
-        if (test(sb.toString())) {
-            super.replace(fb, offset, length, newText, attrs);
+        String origString = sb.toString();
+        if (test(origString)) {
+            String newString = rangeCheck(origString);
+            if (newString.equals(origString)){
+                super.replace(fb, offset, length, newText, attrs);
+            } else {
+                super.replace(fb, 0, length, newString, attrs);
+            }
         } else {
             // warn the user and don't allow the insert
         }
@@ -96,6 +109,7 @@ public class IntegerDocumentFilter extends DocumentFilter {
     @Override
     public void remove(FilterBypass fb, int offset, int length) throws
             BadLocationException {
+        System.out.println("remove in IntegerDocumentFilter.");
         Document doc = fb.getDocument();
         StringBuilder sb = new StringBuilder();
         sb.append(doc.getText(0, doc.getLength()));
