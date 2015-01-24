@@ -66,19 +66,21 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     protected String artikelNameText = "";
     protected String artikelNummerText = "";
     protected String barcodeText = "";
+
     private int selectedArtikelID;
-    private int selectedStueck;
+    private int selectedNumberOfVPEs = 1;
+
     private JSpinner anzahlSpinner;
     private JSpinner vpeSpinner;
-    private JTextField anzahlField;
-    private JTextField vpeSpinnerField;
+    private JFormattedTextField anzahlField;
+    private JFormattedTextField vpeSpinnerField;
     private boolean vpeOrAnzahlIsChanged = false;
     private JTextField vpeField;
     private JTextField preisField;
     private JSpinner jahrSpinner;
-    private JTextField jahrField;
+    private JFormattedTextField jahrField;
     private JSpinner kwSpinner;
-    private JTextField kwField;
+    private JFormattedTextField kwField;
     private JTextField typField;
     private JTextField filterField;
     // Buttons
@@ -175,13 +177,14 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         AbstractDocument doc = new PlainDocument() {
             @Override
             public void setDocumentFilter(DocumentFilter filter) {
-                if (filter instanceof IntegerDocumentFilter) {
+                if (filter instanceof IntegerDocumentFilter) { // w/o this if, it's not working
+                                // maybe the DocumentFilter is reset to a default filter for Spinners
                     super.setDocumentFilter(filter);
                 }
             }
         };
         doc.setDocumentFilter(new IntegerDocumentFilter(-smallintMax,
-                    smallintMax, "Anzahl", this));
+                    100, "Anzahl", this));
         editor.getTextField().setDocument(doc);
     }
 
@@ -206,10 +209,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                                                                   1); // step
 	    jahrSpinner = new JSpinner(jahrModel);
             JSpinner.NumberEditor jahrEditor = new JSpinner.NumberEditor(jahrSpinner, "####");
-            jahrField = jahrEditor.getTextField();
-            jahrField.getDocument().addDocumentListener(this);
             jahrSpinner.setEditor(jahrEditor);
-            ( (NumberFormatter) jahrEditor.getTextField().getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
+            jahrField = jahrEditor.getTextField();
+            ( (NumberFormatter) jahrField.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
+            jahrField.getDocument().addDocumentListener(this);
             jahrField.setColumns(4);
 	    jahrLabel.setLabelFor(jahrSpinner);
             datePanel.add(jahrSpinner);
@@ -226,10 +229,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                                                                 1); // step
 	    kwSpinner = new JSpinner(kwModel);
             JSpinner.NumberEditor kwEditor = new JSpinner.NumberEditor(kwSpinner, "##");
-            kwField = kwEditor.getTextField();
-            kwField.getDocument().addDocumentListener(this);
             kwSpinner.setEditor(kwEditor);
-            ( (NumberFormatter) kwEditor.getTextField().getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
+            kwField = kwEditor.getTextField();
+            ( (NumberFormatter) kwField.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
+            kwField.getDocument().addDocumentListener(this);
             kwField.setColumns(2);
 	    kwLabel.setLabelFor(kwSpinner);
             datePanel.add(kwSpinner);
@@ -331,7 +334,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                                                                     1); // step
 	    anzahlSpinner = new JSpinner(anzahlModel);
             JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(anzahlSpinner, "###");
+            anzahlSpinner.setEditor(anzahlEditor);
+            preventSpinnerOverflow(anzahlEditor);
             anzahlField = anzahlEditor.getTextField();
+            ( (NumberFormatter) anzahlField.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
             anzahlField.getDocument().addDocumentListener(this);
             anzahlField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
                 // remove Ctrl-A key binding
@@ -349,9 +355,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                     }
                 }
             });
-            anzahlSpinner.setEditor(anzahlEditor);
-            //( (NumberFormatter) anzahlEditor.getTextField().getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
-            preventSpinnerOverflow(anzahlEditor);
             anzahlField.setColumns(3);
 	    anzahlLabel.setLabelFor(anzahlSpinner);
             chooseArticlePanel2.add(anzahlSpinner);
@@ -362,7 +365,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                                                                     1); // step
 	    vpeSpinner = new JSpinner(vpeModel);
             JSpinner.NumberEditor vpeEditor = new JSpinner.NumberEditor(vpeSpinner, "###");
+            vpeSpinner.setEditor(vpeEditor);
             vpeSpinnerField = vpeEditor.getTextField();
+            ( (NumberFormatter) vpeSpinnerField.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
             vpeSpinnerField.getDocument().addDocumentListener(this);
             vpeSpinnerField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
                 // remove Ctrl-A key binding
@@ -380,8 +385,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                     }
                 }
             });
-            vpeSpinner.setEditor(vpeEditor);
-            ( (NumberFormatter) vpeEditor.getTextField().getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
             vpeSpinnerField.setColumns(3);
             chooseArticlePanel2.add(vpeSpinner);
 
@@ -825,6 +828,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
     private void updateAnzahlSpinner(Integer vpe) {
         if (vpe > 0){
+            System.out.println("updateAnzahlSpinner at work.");
             Integer vpes = (Integer)vpeSpinner.getValue();
             Integer stueck = new Integer(vpes*vpe);
             this.vpeOrAnzahlIsChanged = true;
@@ -835,11 +839,16 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
     private void updateVPESpinner(Integer vpe) {
         if (vpe > 0){
+            System.out.println("updateVPESpinner at work.");
             Integer stueck = (Integer)anzahlSpinner.getValue();
+            System.out.println("updateVPESpinner found anzahl: "+stueck);
             Integer vpes = new Integer(stueck/vpe);
             this.vpeOrAnzahlIsChanged = true;
+            System.out.println("updateVPESpinner: vpeOrAnzahlIsChanged = "+vpeOrAnzahlIsChanged);
             vpeSpinner.setValue(vpes);
+            System.out.println("updateVPESpinner: vpeOrAnzahlIsChanged = "+vpeOrAnzahlIsChanged);
             this.vpeOrAnzahlIsChanged = false;
+            System.out.println("updateVPESpinner: vpeOrAnzahlIsChanged = "+vpeOrAnzahlIsChanged);
         }
     }
 
@@ -909,7 +918,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         String artikelName = an[0];
         String lieferant = an[1];
         String artikelNummer = (String)nummerBox.getSelectedItem();
-        selectedStueck = stueck;
         String vpe = vpeField.getText();
         Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
         String artikelPreis = priceFormatterIntern(new BigDecimal( preisField.getText().replace(',','.') ));
@@ -1125,6 +1133,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         }
         if (e.getDocument() == anzahlField.getDocument()){
             if (this.vpeOrAnzahlIsChanged) return;
+            System.out.println("anzahlField DocumentListener fired.");
+            System.out.println("anzahlField.getText(): "+anzahlField.getText());
+            System.out.println("anzahlSpinner.getValue(): "+anzahlSpinner.getValue());
             String vpe = getVPE(selectedArtikelID);
             Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
             updateAnzahlColor(vpeInt);
@@ -1133,6 +1144,15 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         }
         if (e.getDocument() == vpeSpinnerField.getDocument()){
             if (this.vpeOrAnzahlIsChanged) return;
+            if ( (Integer)vpeSpinner.getValue() == selectedNumberOfVPEs ){
+                return; // return if there was no change (e.g. only focus on spinner)
+            } else {
+                selectedNumberOfVPEs = (Integer)vpeSpinner.getValue();
+            }
+            System.out.println("vpeSpinnerField DocumentListener fired.");
+            System.out.println("vpeSpinnerField DocumentListener: vpeOrAnzahlIsChanged = "+vpeOrAnzahlIsChanged);
+            System.out.println("anzahlField.getText(): "+anzahlField.getText());
+            System.out.println("anzahlSpinner.getValue(): "+anzahlSpinner.getValue());
             String vpe = getVPE(selectedArtikelID);
             Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
             updateAnzahlSpinner(vpeInt);
