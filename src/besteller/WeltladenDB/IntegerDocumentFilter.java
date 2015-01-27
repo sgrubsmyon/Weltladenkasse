@@ -43,46 +43,39 @@ public class IntegerDocumentFilter extends DocumentFilter {
         }
     }
 
-    private String rangeCheck(String text) {
+    private boolean rangeCheck(String text) {
         System.out.println("rangeCheck in IntegerDocumentFilter.");
         Integer value = Integer.parseInt(text);
         if (maxValue != null && value > maxValue){
             JOptionPane.showMessageDialog(parentWindow,
-                    valueName+" übersteigt den maximal erlaubten Wert von "+maxValue+"!\n"+
-                    "Wird auf "+maxValue+" reduziert.",
+                    valueName+" von "+value+" übersteigt den maximal erlaubten Wert von "+maxValue+"!",
                     valueName+" zu groß", JOptionPane.WARNING_MESSAGE);
-            value = maxValue;
+            return false;
         } if (minValue != null && value < minValue){
             JOptionPane.showMessageDialog(parentWindow,
-                    valueName+" unterschreitet den minimal erlaubten Wert von "+minValue+"!\n"+
-                    "Wird auf "+minValue+" erhöht.",
+                    valueName+" von "+value+" unterschreitet den minimal erlaubten Wert von "+minValue+"!",
                     valueName+" zu klein", JOptionPane.WARNING_MESSAGE);
-            value = minValue;
+            return false;
         }
-        return value.toString();
+        return true;
     }
 
     @Override
     public void insertString(FilterBypass fb, int offset, String newText,
-            AttributeSet attr) throws BadLocationException {
+            AttributeSet attrs) throws BadLocationException {
         System.out.println("insertString in IntegerDocumentFilter.");
         Document doc = fb.getDocument();
         StringBuilder sb = new StringBuilder();
         sb.append(doc.getText(0, doc.getLength()));
         sb.insert(offset, newText);
 
-        String origString = sb.toString();
-        if (test(origString)) {
-            String newString = rangeCheck(origString);
-            if (newString.equals(origString)){
-                super.insertString(fb, offset, newText, attr);
+        String newString = sb.toString();
+        if ( test(newString) ) {
+            if ( rangeCheck(newString) ){
+                super.insertString(fb, offset, newText, attrs);
             } else {
-                // TODO Check if this does what it should
-                // but it seems as if this method is never called
-                super.insertString(fb, 0, newString, attr);
+                // warn the user and don't allow the insert
             }
-        } else {
-            // warn the user and don't allow the insert
         }
     }
 
@@ -95,16 +88,13 @@ public class IntegerDocumentFilter extends DocumentFilter {
         sb.append(doc.getText(0, doc.getLength()));
         sb.replace(offset, offset + length, newText);
 
-        String origString = sb.toString();
-        if (test(origString)) {
-            String newString = rangeCheck(origString);
-            if (newString.equals(origString)){
+        String newString = sb.toString();
+        if ( test(newString) ) {
+            if ( rangeCheck(newString) ){
                 super.replace(fb, offset, length, newText, attrs);
             } else {
-                super.replace(fb, 0, newString.length(), newString, attrs);
+                // warn the user and don't allow the insert
             }
-        } else {
-            // warn the user and don't allow the insert
         }
     }
 
@@ -117,7 +107,7 @@ public class IntegerDocumentFilter extends DocumentFilter {
         sb.append(doc.getText(0, doc.getLength()));
         sb.delete(offset, offset + length);
 
-        if (test(sb.toString())) {
+        if ( test(sb.toString()) ) {
             super.remove(fb, offset, length);
         } else {
             // warn the user and don't allow the insert
