@@ -183,8 +183,12 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 }
             }
         };
-        doc.setDocumentFilter(new IntegerDocumentFilter(-smallintMax,
-                    100, "Anzahl", this));
+        doc.setDocumentFilter(
+                new IntegerDocumentFilter(
+                    (Integer)((SpinnerNumberModel)anzahlSpinner.getModel()).getMinimum(),
+                    (Integer)((SpinnerNumberModel)anzahlSpinner.getModel()).getMaximum(), "Anzahl", this
+                    )
+                );
         editor.getTextField().setDocument(doc);
     }
 
@@ -330,7 +334,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             chooseArticlePanel2.add(anzahlLabel);
             SpinnerNumberModel anzahlModel = new SpinnerNumberModel(1, // initial value
                                                                     1, // min
-                                                                    null, // max (null == no max)
+                                                                    smallintMax, // max (null == no max)
                                                                     1); // step
 	    anzahlSpinner = new JSpinner(anzahlModel);
             JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(anzahlSpinner, "###");
@@ -355,14 +359,14 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                     }
                 }
             });
-            anzahlField.setColumns(3);
+            anzahlField.setColumns(4);
 	    anzahlLabel.setLabelFor(anzahlSpinner);
             chooseArticlePanel2.add(anzahlSpinner);
 
             SpinnerNumberModel vpeModel = new SpinnerNumberModel(1, // initial value
-                                                                    0, // min
-                                                                    null, // max (null == no max)
-                                                                    1); // step
+                                                                 0, // min
+                                                                 null, // max (null == no max)
+                                                                 1); // step
 	    vpeSpinner = new JSpinner(vpeModel);
             JSpinner.NumberEditor vpeEditor = new JSpinner.NumberEditor(vpeSpinner, "###");
             vpeSpinner.setEditor(vpeEditor);
@@ -831,9 +835,14 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             System.out.println("updateAnzahlSpinner at work.");
             Integer vpes = (Integer)vpeSpinner.getValue();
             Integer stueck = new Integer(vpes*vpe);
-            this.vpeOrAnzahlIsChanged = true;
-            anzahlSpinner.setValue(stueck);
-            this.vpeOrAnzahlIsChanged = false;
+            if (
+                    stueck >= (Integer)((SpinnerNumberModel)anzahlSpinner.getModel()).getMinimum() &&
+                    stueck <= (Integer)((SpinnerNumberModel)anzahlSpinner.getModel()).getMaximum()
+               ){
+                this.vpeOrAnzahlIsChanged = true;
+                anzahlSpinner.setValue(stueck);
+                this.vpeOrAnzahlIsChanged = false;
+            }
         }
     }
 
