@@ -158,15 +158,15 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     // listener for keyboard shortcuts
     private class ShortcutListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            if (e.getActionCommand() == "barcode"){
+            if (e.getActionCommand().equals("barcode")){
                 barcodeBox.requestFocus();
                 return;
             }
-            if (e.getActionCommand() == "name"){
+            if (e.getActionCommand().equals("name")){
                 artikelBox.requestFocus();
                 return;
             }
-            if (e.getActionCommand() == "nummer"){
+            if (e.getActionCommand().equals("nummer")){
                 nummerBox.requestFocus();
                 return;
             }
@@ -550,7 +550,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
         String fileStr = "";
         // general infos:
-        fileStr += "#bestellNr;Jahr;KW"+lineSep;
+        fileStr += "#BestellNr;Typ;Jahr;KW"+lineSep;
         fileStr += selBestellNr + delimiter;
         fileStr += selTyp + delimiter;
         fileStr += selJahr + delimiter;
@@ -640,7 +640,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 String vkp = fields[3];
                 String vpe = fields[4];
                 String stueck = fields[5];
-                Boolean sortimentBool = fields[6] == "true" ? true : false;
+                Boolean sortimentBool = fields[6].equals("true") ? true : false;
                 Integer artikelID = Integer.parseInt(fields[7]);
 
                 hinzufuegen(artikelID, lieferant, nummer, name,
@@ -840,7 +840,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                     stueck <= (Integer)((SpinnerNumberModel)anzahlSpinner.getModel()).getMaximum()
                ){
                 this.vpeOrAnzahlIsChanged = true;
-                anzahlSpinner.setValue(stueck);
+                    anzahlSpinner.setValue(stueck);
                 this.vpeOrAnzahlIsChanged = false;
             }
         }
@@ -850,14 +850,11 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         if (vpe > 0){
             System.out.println("updateVPESpinner at work.");
             Integer stueck = (Integer)anzahlSpinner.getValue();
-            System.out.println("updateVPESpinner found anzahl: "+stueck);
             Integer vpes = new Integer(stueck/vpe);
             this.vpeOrAnzahlIsChanged = true;
-            System.out.println("updateVPESpinner: vpeOrAnzahlIsChanged = "+vpeOrAnzahlIsChanged);
-            vpeSpinner.setValue(vpes);
-            System.out.println("updateVPESpinner: vpeOrAnzahlIsChanged = "+vpeOrAnzahlIsChanged);
+                vpeSpinner.setValue(vpes);
+                selectedNumberOfVPEs = (Integer)vpeSpinner.getValue();
             this.vpeOrAnzahlIsChanged = false;
-            System.out.println("updateVPESpinner: vpeOrAnzahlIsChanged = "+vpeOrAnzahlIsChanged);
         }
     }
 
@@ -998,6 +995,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Fehler: Bestellung konnte nicht vollständig abgespeichert werden.\n"+
+                    "Fehlermeldung: "+ex.getMessage(),
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
             bestellNr = -1;
         }
         Vector<Object> bestNrUndTyp = new Vector<Object>();
