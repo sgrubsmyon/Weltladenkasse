@@ -77,6 +77,8 @@ public class IntegerDocumentFilter extends DocumentFilter {
             if (newString.equals(origString)){
                 super.insertString(fb, offset, newText, attr);
             } else {
+                // TODO Check if this does what it should
+                // but it seems as if this method is never called
                 super.insertString(fb, 0, newString, attr);
             }
         } else {
@@ -99,7 +101,7 @@ public class IntegerDocumentFilter extends DocumentFilter {
             if (newString.equals(origString)){
                 super.replace(fb, offset, length, newText, attrs);
             } else {
-                super.replace(fb, 0, length, newString, attrs);
+                super.replace(fb, 0, newString.length(), newString, attrs);
             }
         } else {
             // warn the user and don't allow the insert
