@@ -173,7 +173,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         }
     }
 
-    void preventSpinnerOverflow(JSpinner.NumberEditor editor) {
+    void preventSpinnerOverflow(JFormattedTextField spinnerField) {
         AbstractDocument doc = new PlainDocument() {
             @Override
             public void setDocumentFilter(DocumentFilter filter) {
@@ -189,7 +189,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                     (Integer)((SpinnerNumberModel)anzahlSpinner.getModel()).getMaximum(), "Anzahl", this
                     )
                 );
-        editor.getTextField().setDocument(doc);
+        spinnerField.setDocument(doc);
     }
 
     void showAll(){
@@ -339,8 +339,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	    anzahlSpinner = new JSpinner(anzahlModel);
             JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(anzahlSpinner, "###");
             anzahlSpinner.setEditor(anzahlEditor);
-            preventSpinnerOverflow(anzahlEditor);
             anzahlField = anzahlEditor.getTextField();
+            preventSpinnerOverflow(anzahlField);
             ( (NumberFormatter) anzahlField.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
             anzahlField.getDocument().addDocumentListener(this);
             anzahlField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");

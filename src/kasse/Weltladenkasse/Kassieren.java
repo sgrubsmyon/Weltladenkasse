@@ -41,6 +41,7 @@ import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.BarcodeComboBox;
 import WeltladenDB.ArtikelNameComboBox;
 import WeltladenDB.ArtikelNummerComboBox;
+import WeltladenDB.IntegerDocumentFilter;
 import WeltladenDB.BoundsPopupMenuListener;
 
 public class Kassieren extends RechnungsGrundlage implements ItemListener, DocumentListener {
@@ -73,7 +74,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private JButton sevenPercentButton;
     private JButton nineteenPercentButton;
     private JSpinner anzahlSpinner;
-    private JTextField anzahlField;
+    private JFormattedTextField anzahlField;
     private JTextField preisField;
     private JTextField kundeGibtField;
     private JTextField rueckgeldField;
@@ -209,6 +210,25 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
     }
 
+    void preventSpinnerOverflow(JFormattedTextField spinnerField) {
+        AbstractDocument doc = new PlainDocument() {
+            @Override
+            public void setDocumentFilter(DocumentFilter filter) {
+                if (filter instanceof IntegerDocumentFilter) { // w/o this if, it's not working
+                                // maybe the DocumentFilter is reset to a default filter for Spinners
+                    super.setDocumentFilter(filter);
+                }
+            }
+        };
+        doc.setDocumentFilter(
+                new IntegerDocumentFilter(
+                    (Integer)((SpinnerNumberModel)anzahlSpinner.getModel()).getMinimum(),
+                    (Integer)((SpinnerNumberModel)anzahlSpinner.getModel()).getMaximum(), "Anzahl", this
+                    )
+                );
+        spinnerField.setDocument(doc);
+    }
+
     void showAll(){
         updateRabattButtons();
 
@@ -316,11 +336,15 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             spinnerPanel.add(anzahlLabel);
             SpinnerNumberModel anzahlModel = new SpinnerNumberModel(1, // initial value
                                                                     1, // min
-                                                                    null, // max (null == no max)
+                                                                    smallintMax, // max (null == no max)
                                                                     1); // step
 	    anzahlSpinner = new JSpinner(anzahlModel);
             JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(anzahlSpinner, "###");
+            anzahlSpinner.setEditor(anzahlEditor);
             anzahlField = anzahlEditor.getTextField();
+            preventSpinnerOverflow(anzahlField);
+            ( (NumberFormatter) anzahlField.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
+            //anzahlField.getDocument().addDocumentListener(this);
             anzahlField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
                 // remove Ctrl-A key binding
             anzahlField.addKeyListener(new KeyAdapter() {
@@ -337,9 +361,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     }
                 }
             });
-            anzahlSpinner.setEditor(anzahlEditor);
-            ( (NumberFormatter) anzahlEditor.getTextField().getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
-            anzahlField.setColumns(3);
+            anzahlField.setColumns(4);
 	    anzahlLabel.setLabelFor(anzahlSpinner);
             spinnerPanel.add(anzahlSpinner);
 
