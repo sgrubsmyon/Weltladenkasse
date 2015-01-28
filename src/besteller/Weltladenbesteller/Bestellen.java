@@ -818,10 +818,13 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     }
 
     private void updateAnzahlColor(Integer vpe) {
+        if (anzahlField.getText().length() == 0){
+            return;
+        }
         if (vpe <= 0){
             anzahlField.setForeground(Color.black);
         } else {
-            Integer stueck = (Integer)anzahlSpinner.getValue();
+            Integer stueck = Integer.parseInt(anzahlField.getText());
             if (stueck < vpe){
                 anzahlField.setForeground(Color.red);
             } else {
