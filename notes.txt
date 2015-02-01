@@ -1,3 +1,9 @@
+Download JavaPOS code from:
+http://www.javapos.com/samplecode.html
+Create docs from src:
+Go into directory src, then:
+$ javadoc -d ../docs jpos
+
 Batch-create PDF from Open/LibreOffice Document:
 $ soffice --headless --convert-to pdf file.ods
 Headless printing:
