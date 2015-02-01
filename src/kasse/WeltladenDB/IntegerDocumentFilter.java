@@ -10,6 +10,10 @@ public class IntegerDocumentFilter extends DocumentFilter {
     private String valueName = null;
     private WindowContent parentWindow = null;
 
+    public IntegerDocumentFilter() {
+        super();
+    }
+
     public IntegerDocumentFilter(Integer theMaxValue, String theValueName, WindowContent theWC) {
         super();
         maxValue = theMaxValue;
@@ -25,9 +29,6 @@ public class IntegerDocumentFilter extends DocumentFilter {
         maxValue = theMaxValue;
         valueName = theValueName;
         parentWindow = theWC;
-        System.out.println("minValue: "+minValue);
-        System.out.println("maxValue: "+maxValue);
-        System.out.println("valueName "+valueName);
     }
 
     private boolean test(String text) {
