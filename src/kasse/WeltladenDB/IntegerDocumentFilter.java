@@ -24,7 +24,6 @@ public class IntegerDocumentFilter extends DocumentFilter {
     public IntegerDocumentFilter(Integer theMinValue, Integer theMaxValue, String theValueName,
             WindowContent theWC) {
         super();
-        System.out.println("constructor in IntegerDocumentFilter.");
         minValue = theMinValue;
         maxValue = theMaxValue;
         valueName = theValueName;

@@ -84,10 +84,15 @@ Dependencies:
 
 Download and put into the folder `lib` the following jars:
 
-* date4j.jar: http://www.date4j.net
-* jOpenDocument-1.3.jar: http://www.jopendocument.org/downloads.html
-* jcalendar-1.4.jar: http://toedter.com/jcalendar/
 * mysql-connector-java-5.1.25-bin.jar: http://dev.mysql.com/downloads/connector/j/
+* jOpenDocument-1.3.jar: http://www.jopendocument.org/downloads.html
+* date4j.jar: http://www.date4j.net
+* jcalendar-1.4.jar: http://toedter.com/jcalendar/
+* hidapi-1.1.jar: https://code.google.com/p/javahidapi/
+
+Unjar the hidapi-1.1.jar (with `jar -xvf hidapi-1.1.jar`) and copy the content
+of the `native/*` folders (files ending with `.so`, `.dll` or `.jnilib`) into
+folder `resources/natives`.
 
 Compile:
 ```

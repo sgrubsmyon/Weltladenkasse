@@ -140,6 +140,9 @@ public class Kasse {
         return okPassword;
     }
 
+    /**
+     * @param args input strings value.
+     */
     public static void main(String[] args) {
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.

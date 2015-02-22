@@ -121,6 +121,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private Vector<Integer> stueckzahlen;
     private Vector<BigDecimal> einzelpreise;
 
+    // class to talk to Kundendisplay
+    private Kundendisplay display;
+
     // Methoden:
 
     /**
@@ -170,6 +173,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         emptyTable();
 	showAll();
         barcodeBox.requestFocus();
+
+        display = new Kundendisplay();
     }
 
     // listener for keyboard shortcuts

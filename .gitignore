@@ -4,3 +4,6 @@ build
 Artikelliste_Oktober2014*
 *.properties
 upload_software.sh
+*.dll
+*.so
+*.jnilib
