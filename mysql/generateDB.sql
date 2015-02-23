@@ -6,7 +6,7 @@ USE kasse;
 CREATE TABLE lieferant (
     lieferant_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     lieferant_name VARCHAR(50) NOT NULL,
-    aktiv BOOL NOT NULL DEFAULT TRUE,
+    aktiv BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY (lieferant_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -30,7 +30,7 @@ CREATE TABLE produktgruppe (
     produktgruppen_name VARCHAR(50) NOT NULL,
     mwst_id INTEGER(10) UNSIGNED DEFAULT NULL,
     pfand_id INTEGER(10) UNSIGNED DEFAULT NULL,
-    aktiv BOOL NOT NULL DEFAULT TRUE,
+    aktiv BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY (produktgruppen_id),
     FOREIGN KEY (mwst_id) REFERENCES mwst(mwst_id),
     FOREIGN KEY (pfand_id) REFERENCES pfand(pfand_id)
@@ -46,17 +46,20 @@ CREATE TABLE artikel (
     menge DECIMAL(8,5) DEFAULT NULL,
     barcode VARCHAR(30) DEFAULT NULL,
     herkunft VARCHAR(100) DEFAULT NULL,
-    vpe SMALLINT(10) UNSIGNED DEFAULT NULL,
+    vpe SMALLINT(5) UNSIGNED DEFAULT NULL,
+    setgroesse SMALLINT(5) UNSIGNED NOT NULL DEFAULT 1,
     vk_preis DECIMAL(13,2) DEFAULT NULL,
     empf_vk_preis DECIMAL(13,2) DEFAULT NULL,
+    ek_rabatt DECIMAL(6,5) DEFAULT NULL,
     ek_preis DECIMAL(13,2) DEFAULT NULL,
-    ek_rabatt DECIMAL(5,4) DEFAULT NULL,
-    variabler_preis BOOL NOT NULL DEFAULT FALSE,
-    sortiment BOOL NOT NULL DEFAULT FALSE,
-    bestand INTEGER(5) DEFAULT NULL,
+    variabler_preis BOOLEAN NOT NULL DEFAULT FALSE,
+    sortiment BOOLEAN NOT NULL DEFAULT FALSE,
+    lieferbar BOOLEAN DEFAULT NULL,
+    beliebtheit TINYINT(1) UNSIGNED DEFAULT 2,
+    bestand SMALLINT(5) DEFAULT NULL,
     von DATETIME DEFAULT NULL,
     bis DATETIME DEFAULT NULL,
-    aktiv BOOL NOT NULL DEFAULT TRUE,
+    aktiv BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY (artikel_id),
     FOREIGN KEY (lieferant_id) REFERENCES lieferant(lieferant_id),
     FOREIGN KEY (produktgruppen_id) REFERENCES produktgruppe(produktgruppen_id)
@@ -83,8 +86,8 @@ CREATE TABLE rabattaktion (
 CREATE TABLE verkauf (
     rechnungs_nr INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     verkaufsdatum DATETIME NOT NULL,
-    storniert BOOL NOT NULL DEFAULT FALSE,
-    ec_zahlung BOOL NOT NULL DEFAULT FALSE,
+    storniert BOOLEAN NOT NULL DEFAULT FALSE,
+    ec_zahlung BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE verkauf_mwst (
@@ -114,7 +117,7 @@ CREATE TABLE kassenstand (
     kassenstand_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     buchungsdatum DATETIME NOT NULL,
     neuer_kassenstand DECIMAL(13,2) NOT NULL,
-    manuell BOOL NOT NULL DEFAULT FALSE,
+    manuell BOOLEAN NOT NULL DEFAULT FALSE,
     rechnungs_nr INTEGER(10) UNSIGNED DEFAULT NULL,
     kommentar VARCHAR(70),
     PRIMARY KEY (kassenstand_id),
@@ -155,7 +158,7 @@ CREATE TABLE bestellung (
     typ VARCHAR(12) NOT NULL DEFAULT "",
     bestell_datum DATETIME NOT NULL,
     jahr YEAR NOT NULL DEFAULT 2000,
-    kw TINYINT(2) NOT NULL DEFAULT 1,
+    kw TINYINT(2) UNSIGNED NOT NULL DEFAULT 1,
     PRIMARY KEY (bestell_nr, typ)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE bestellung_details (

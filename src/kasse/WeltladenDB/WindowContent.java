@@ -1,41 +1,21 @@
 package WeltladenDB;
 
 // Basic Java stuff:
-import java.io.InputStream;
-import java.io.FileInputStream;
+import java.io.*; // for InputStream
+import java.util.*; // for Vector, Collections
 import java.util.Date;
-import java.util.TimeZone;
-import java.util.Locale;
-import java.util.Properties;
-import java.text.NumberFormat;
-import java.text.DecimalFormat;
-import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
-import java.math.RoundingMode;
+import java.text.*; // for NumberFormat
+import java.math.*; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Types;
+import java.sql.*;
 
 // GUI stuff:
 import java.awt.event.*;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
+import java.awt.*;
 
-//import javax.swing.JFrame;
-//import javax.swing.JPanel;
-//import javax.swing.JScrollPane;
-//import javax.swing.JTable;
-//import javax.swing.JTextArea;
-//import javax.swing.JButton;
-//import javax.swing.JCheckBox;
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.SpinnerModel;
-import javax.swing.SpinnerDateModel;
+import javax.swing.table.*;
 
 // DateTime from date4j (http://www.date4j.net/javadoc/index.html)
 import hirondelle.date4j.DateTime;
@@ -60,6 +40,9 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected final String fileSep = System.getProperty("file.separator");
     protected final String lineSep = System.getProperty("line.separator");
     protected final int smallintMax = 32767;
+    protected final BigDecimal one = new BigDecimal("1");
+    protected final BigDecimal minusOne = new BigDecimal("-1");
+    protected final BigDecimal percent = new BigDecimal("0.01");
 
     // Die Ausrichter:
     protected DefaultTableCellRenderer rechtsAusrichter = new DefaultTableCellRenderer();
@@ -72,6 +55,9 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
     protected PositiveNumberDocumentFilter relFilter = new PositiveNumberDocumentFilter(3, 6);
     protected PositiveNumberDocumentFilter mengeFilter = new PositiveNumberDocumentFilter(5, 8);
+
+    public Vector<String> beliebtNamen;
+    public Vector<Integer> beliebtWerte;
 
     // Methoden:
     // Setter:
@@ -131,7 +117,17 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             this.delimiter = ";"; // for CSV export/import
         }
         this.printerName = this.printerName.replaceAll("\"","");
+        fillBeliebtWerte();
     }
+
+    private void fillBeliebtWerte() {
+        beliebtNamen = new Vector<String>();
+        beliebtWerte = new Vector<Integer>();
+        beliebtWerte.add(1); beliebtNamen.add("niedrig");
+        beliebtWerte.add(2); beliebtNamen.add("mittel");
+        beliebtWerte.add(3); beliebtNamen.add("hoch");
+    }
+
 
     protected class WindowAdapterDialog extends WindowAdapter {
         private DialogWindow dwindow;
@@ -211,9 +207,32 @@ public abstract class WindowContent extends JPanel implements ActionListener {
      */
 
     protected BigDecimal calculateVAT(BigDecimal totalPrice, BigDecimal mwst){
-        BigDecimal one = new BigDecimal(1);
         //return totalPrice.multiply( one.subtract( one.divide(one.add(mwst), 10, RoundingMode.HALF_UP) ) ); // VAT = bruttoPreis * ( 1. - 1./(1.+mwst) );
         return totalPrice.divide(one.add(mwst), 10, RoundingMode.HALF_UP).multiply(mwst); // VAT = bruttoPreis / (1.+mwst) * mwst;
+    }
+
+    protected BigDecimal calculateEKP(BigDecimal empfVKPreis, BigDecimal ekRabatt){
+        return ( one.subtract(ekRabatt) ).multiply(empfVKPreis); // Einkaufspreis = (1 - rabatt) * Empf. VK-Preis
+    }
+
+    protected BigDecimal calculateEKP(String empfVKPreis, BigDecimal ekRabatt){
+        BigDecimal empfvkpDecimal;
+        try {
+            empfvkpDecimal = new BigDecimal(priceFormatterIntern(empfVKPreis));
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+        return calculateEKP(empfvkpDecimal, ekRabatt);
+    }
+
+    protected BigDecimal calculateEKP(String empfVKPreis, String ekRabatt){
+        BigDecimal rabatt;
+        try {
+            rabatt = (new BigDecimal( ekRabatt.replace(',','.') )).multiply(percent);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+        return calculateEKP(empfVKPreis, rabatt);
     }
 
     /**
@@ -243,11 +262,17 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected String priceFormatterIntern(BigDecimal price) {
-        //return amountFormat.format( price.setScale(2, RoundingMode.HALF_UP) ).replace(',','.'); // for 2 digits after period sign and "0.5-is-rounded-up" rounding
-        return price.setScale(2, RoundingMode.HALF_UP).toString(); // for 2 digits after period sign and "0.5-is-rounded-up" rounding
+        if (price == null){
+            return "";
+        }
+        // for 2 digits after period sign and "0.5-is-rounded-up" rounding:
+        return price.setScale(2, RoundingMode.HALF_UP).toString();
     }
 
     protected String vatFormatter(BigDecimal vat) {
+        if (vat == null){
+            return "";
+        }
         return vatFormatter(vat.toString());
     }
 
@@ -362,18 +387,16 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected int insertNewItem(Integer produktgruppen_id, Integer
             lieferant_id, String nummer, String name, String kurzname,
             BigDecimal menge, String barcode, String herkunft, Integer vpe,
-            String vkpreis, String ekpreis, Boolean var_preis, Boolean
-            sortiment) {
+            Integer setgroesse, String vkpreis, String empfvkpreis,
+            String ekrabatt, String ekpreis, Boolean var_preis, Boolean sortiment,
+            Boolean lieferbar, Integer beliebt) {
         // add row for new item (with updated fields)
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
 
         if (kurzname.equals("") || kurzname.equals("NULL")){ kurzname = null; }
-
         if (barcode.equals("") || barcode.equals("NULL")){ barcode = null; }
-
         if (herkunft.equals("") || herkunft.equals("NULL")){ herkunft = null; }
-
         if ( vpe == null || vpe.equals(0) ){ vpe = null; }
 
         BigDecimal vkpDecimal;
@@ -381,6 +404,20 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             vkpDecimal = new BigDecimal(priceFormatterIntern(vkpreis));
         } catch (NumberFormatException ex) {
             vkpDecimal = null;
+        }
+
+        BigDecimal empfvkpDecimal;
+        try {
+            empfvkpDecimal = new BigDecimal(priceFormatterIntern(empfvkpreis));
+        } catch (NumberFormatException ex) {
+            empfvkpDecimal = null;
+        }
+
+        BigDecimal ekrabattDecimal;
+        try {
+            ekrabattDecimal = (new BigDecimal( ekrabatt.replace(',','.') )).multiply(percent);
+        } catch (NumberFormatException ex) {
+            ekrabattDecimal = null;
         }
 
         BigDecimal ekpDecimal;
@@ -400,8 +437,11 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "barcode = ?, "+
                     "herkunft = ?, "+
                     "vpe = ?, "+
-                    "vk_preis = ?, ek_preis = ?, "+
+                    "setgroesse = ?, "+
+                    "vk_preis = ?, empf_vk_preis = ?, "+
+                    "ek_rabatt = ?, ek_preis = ?, "+
                     "variabler_preis = ?, sortiment = ?, "+
+                    "lieferbar = ?, beliebtheit = ?, "+
                     "von = NOW(), aktiv = TRUE"
                     );
             pstmtSetInteger(pstmt, 1, produktgruppen_id);
@@ -413,10 +453,15 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             pstmt.setString(7, barcode);
             pstmt.setString(8, herkunft);
             pstmtSetInteger(pstmt, 9, vpe);
-            pstmt.setBigDecimal(10, vkpDecimal);
-            pstmt.setBigDecimal(11, ekpDecimal);
-            pstmtSetBoolean(pstmt, 12, var_preis);
-            pstmtSetBoolean(pstmt, 13, sortiment);
+            pstmtSetInteger(pstmt, 10, setgroesse);
+            pstmt.setBigDecimal(11, vkpDecimal);
+            pstmt.setBigDecimal(12, empfvkpDecimal);
+            pstmt.setBigDecimal(13, ekrabattDecimal);
+            pstmt.setBigDecimal(14, ekpDecimal);
+            pstmtSetBoolean(pstmt, 15, var_preis);
+            pstmtSetBoolean(pstmt, 16, sortiment);
+            pstmtSetBoolean(pstmt, 17, lieferbar);
+            pstmtSetInteger(pstmt, 18, beliebt);
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {

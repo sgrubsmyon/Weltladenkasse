@@ -73,8 +73,12 @@ public class ArtikelExport extends WindowContent {
             columns.add("Kurzname");
             columns.add("Menge (kg/l/Stk.)"); columns.add("Barcode");
             columns.add("Herkunftsland"); columns.add("VPE");
-            columns.add("VK-Preis"); columns.add("EK-Preis");
-            columns.add("Variabel"); columns.add("Sortiment");
+            columns.add("Setgröße");
+            columns.add("VK-Preis"); columns.add("Empf. VK-Preis");
+            columns.add("EK-Rabatt"); columns.add("EK-Preis");
+            columns.add("Variabel");
+            columns.add("Sortiment"); columns.add("Sofort lieferbar");
+            columns.add("Beliebtheit"); columns.add("Bestand");
         // table rows
         final Vector< Vector<Object> > data = new Vector< Vector<Object> >();
         for (int i=0; i<artikelListe.originalData.size(); i++){
