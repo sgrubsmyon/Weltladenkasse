@@ -47,10 +47,15 @@ public class ArtikelNeu extends WindowContent
     public Vector<String> barcodes;
     public Vector<String> herkuenfte;
     public Vector<Integer> vpes;
+    public Vector<Integer> sets; // the set size (how many articles in one set)
     public Vector<String> vkPreise;
+    public Vector<String> empfvkPreise;
+    public Vector<String> ekRabatte;
     public Vector<String> ekPreise;
     public Vector<Boolean> variablePreise;
     public Vector<Boolean> sortimente;
+    public Vector<Boolean> lieferbarBools;
+    public Vector<Integer> beliebtWerte;
     public Vector<JButton> removeButtons;
     public Vector< Vector<Color> > colorMatrix;
 
@@ -70,9 +75,11 @@ public class ArtikelNeu extends WindowContent
         columnLabels.add("Produktgruppe"); columnLabels.add("Lieferant");
         columnLabels.add("Nummer"); columnLabels.add("Name"); columnLabels.add("Kurzname");
         columnLabels.add("Menge"); columnLabels.add("Barcode");
-        columnLabels.add("Herkunft"); columnLabels.add("VPE");
-        columnLabels.add("VK-Preis"); columnLabels.add("EK-Preis");
+        columnLabels.add("Herkunft"); columnLabels.add("VPE"); columnLabels.add("Setgr.");
+        columnLabels.add("VK-Preis"); columnLabels.add("Empf. VK-Preis");
+        columnLabels.add("EK-Rabatt"); columnLabels.add("EK-Preis");
         columnLabels.add("Variabel"); columnLabels.add("Sortiment");
+        columnLabels.add("Lieferbar"); columnLabels.add("Beliebtheit");
         columnLabels.add("Entf.");
     }
 
@@ -89,10 +96,15 @@ public class ArtikelNeu extends WindowContent
         barcodes = new Vector<String>();
         herkuenfte = new Vector<String>();
         vpes = new Vector<Integer>();
+        sets = new Vector<Integer>();
         vkPreise = new Vector<String>();
+        empfvkPreise = new Vector<String>();
+        ekRabatte = new Vector<String>();
         ekPreise = new Vector<String>();
         variablePreise = new Vector<Boolean>();
         sortimente = new Vector<Boolean>();
+        lieferbarBools = new Vector<Boolean>();
+        beliebtWerte = new Vector<Integer>();
         removeButtons = new Vector<JButton>();
         colorMatrix = new Vector< Vector<Color> >();
     }
@@ -129,8 +141,11 @@ public class ArtikelNeu extends WindowContent
         table.getColumn("Barcode").setCellRenderer(linksAusrichter);
         table.getColumn("Herkunft").setCellRenderer(linksAusrichter);
         table.getColumn("VPE").setCellRenderer(rechtsAusrichter);
+        table.getColumn("Setgr.").setCellRenderer(rechtsAusrichter);
         table.getColumn("VK-Preis").setCellRenderer(rechtsAusrichter);
+        table.getColumn("Empf. VK-Preis").setCellRenderer(rechtsAusrichter);
         table.getColumn("EK-Preis").setCellRenderer(rechtsAusrichter);
+        table.getColumn("Beliebtheit").setCellRenderer(linksAusrichter);
 
         table.getColumn("Produktgruppe").setPreferredWidth(70);
         table.getColumn("Lieferant").setPreferredWidth(50);
@@ -141,10 +156,14 @@ public class ArtikelNeu extends WindowContent
         table.getColumn("Barcode").setPreferredWidth(50);
         table.getColumn("Herkunft").setPreferredWidth(100);
         table.getColumn("VPE").setPreferredWidth(30);
+        table.getColumn("Setgr.").setPreferredWidth(30);
         table.getColumn("VK-Preis").setPreferredWidth(50);
+        table.getColumn("Empf. VK-Preis").setPreferredWidth(50);
         table.getColumn("EK-Preis").setPreferredWidth(50);
         table.getColumn("Variabel").setPreferredWidth(30);
         table.getColumn("Sortiment").setPreferredWidth(30);
+        table.getColumn("Lieferbar").setPreferredWidth(30);
+        table.getColumn("Beliebtheit").setPreferredWidth(30);
         table.getColumn("Entf.").setPreferredWidth(30);
     }
 
@@ -187,8 +206,9 @@ public class ArtikelNeu extends WindowContent
             int result = insertNewItem(selProduktgruppenIDs.get(i),
                     selLieferantIDs.get(i), artikelNummern.get(i),
                     artikelNamen.get(i), kurznamen.get(i), mengen.get(i), barcodes.get(i),
-                    herkuenfte.get(i), vpes.get(i), vkPreise.get(i),
-                    ekPreise.get(i), variablePreise.get(i), sortimente.get(i));
+                    herkuenfte.get(i), vpes.get(i), sets.get(i), vkPreise.get(i), empfvkPreise.get(i),
+                    ekRabatte.get(i), ekPreise.get(i), variablePreise.get(i),
+                    sortimente.get(i), lieferbarBools.get(i), beliebtWerte.get(i));
             if (result == 0){
                 if (itemChanged){
                     JOptionPane.showMessageDialog(this,
@@ -252,10 +272,15 @@ public class ArtikelNeu extends WindowContent
             barcodes.remove(removeRow);
             herkuenfte.remove(removeRow);
             vpes.remove(removeRow);
+            sets.remove(removeRow);
             vkPreise.remove(removeRow);
+            empfvkPreise.remove(removeRow);
+            ekRabatte.remove(removeRow);
             ekPreise.remove(removeRow);
             variablePreise.remove(removeRow);
             sortimente.remove(removeRow);
+            lieferbarBools.remove(removeRow);
+            beliebtWerte.remove(removeRow);
             removeButtons.remove(removeRow);
             colorMatrix.remove(removeRow);
 

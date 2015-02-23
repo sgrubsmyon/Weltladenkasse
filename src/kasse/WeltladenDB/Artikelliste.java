@@ -89,9 +89,12 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private Vector<String> changedBarcode;
     private Vector<String> changedHerkunft;
     private Vector<Integer> changedVPE;
+    private Vector<Integer> changedSetgroesse;
     private Vector<String> changedVKP;
-    private Vector<String> changedEKP;
+    private Vector<String> changedEmpfVKP;
+    private Vector<String> changedEKRabatt;
     private Vector<Boolean> changedSortiment;
+    private Vector<Boolean> changedLieferbar;
     private Vector<Boolean> changedAktiv;
 
     // Dialog to read items from file
@@ -120,10 +123,14 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         columnLabels.add("Kurzname");
         columnLabels.add("Menge"); columnLabels.add("Barcode");
         columnLabels.add("Herkunft"); columnLabels.add("VPE");
-        columnLabels.add("VK-Preis"); columnLabels.add("EK-Preis");
+        columnLabels.add("Setgröße");
+        columnLabels.add("VK-Preis"); columnLabels.add("Empf. VK-Preis");
+        columnLabels.add("EK-Rabatt"); columnLabels.add("EK-Preis");
         columnLabels.add("MwSt."); //columnLabels.add("Betrag MwSt.");
+        columnLabels.add("Sortiment"); columnLabels.add("Sofort lieferbar");
+        columnLabels.add("Beliebtheit"); columnLabels.add("Bestand");
         columnLabels.add("Ab/Seit"); columnLabels.add("Bis");
-        columnLabels.add("Sortiment"); columnLabels.add("Aktiv");
+        columnLabels.add("Aktiv");
         sortimentBools = new Vector<Boolean>();
         activeRowBools = new Vector<Boolean>();
         varPreisBools = new Vector<Boolean>();
@@ -151,9 +158,12 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     "kurzname, "+
                     "menge, barcode, "+
                     "herkunft, vpe, "+
-                    "vk_preis, ek_preis, variabler_preis, mwst_satz, "+
+                    "setgroesse, "+
+                    "vk_preis, empf_vk_preis, ek_rabatt, ek_preis, variabler_preis, mwst_satz, "+
+                    "sortiment, lieferbar, "+
+                    "beliebtheit, bestand, "+
                     "DATE_FORMAT(von, '"+dateFormatSQL+"'), DATE_FORMAT(bis, '"+dateFormatSQL+"'), "+
-                    "sortiment, artikel.aktiv "+
+                    "artikel.aktiv "+
                     "FROM artikel LEFT JOIN lieferant USING (lieferant_id) "+
                     "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
                     "LEFT JOIN mwst USING (mwst_id) "+
@@ -176,15 +186,21 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 String barcode = rs.getString(9);
                 String herkunft = rs.getString(10);
                 String vpe = rs.getString(11);
-                String vkp = rs.getString(12);
-                String ekp = rs.getString(13);
-                Boolean var = rs.getBoolean(14);
-                String mwst = rs.getString(15);
+                Integer setgroesse = rs.getInt(12);
+                String vkp = rs.getString(13);
+                String empf_vkp = rs.getString(14);
+                String ek_rabatt = rs.getString(15);
+                String ekp = rs.getString(16);
+                Boolean var = rs.getBoolean(17);
+                String mwst = rs.getString(18);
                 String mwstBetrag = "";
-                String von = rs.getString(16);
-                String bis = rs.getString(17);
-                Boolean sortimentBool = rs.getBoolean(18);
-                Boolean aktivBool = rs.getBoolean(19);
+                Boolean sortimentBool = rs.getBoolean(19);
+                Boolean lieferbarBool = rs.getBoolean(20);
+                String beliebtWert = rs.getString(21);
+                String bestand = rs.getString(22);
+                String von = rs.getString(23);
+                String bis = rs.getString(24);
+                Boolean aktivBool = rs.getBoolean(25);
 
                 if (lieferant_id == null) lieferant_id = 1; // corresponds to "unknown"
                 if (lieferant == null) lieferant = "";
@@ -195,6 +211,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 if (vpe == null){ vpe = ""; }
                 String vkpOutput = "";
                 if (vkp != null){ vkpOutput = priceFormatter(vkp)+" "+currencySymbol; }
+                if (empf_vkp == null){ empf_vkp = ""; }
+                else { empf_vkp = priceFormatter(empf_vkp)+" "+currencySymbol; }
+                if (ek_rabatt == null){ ek_rabatt = ""; }
+                else { ek_rabatt = vatFormatter(ek_rabatt); }
                 if (ekp == null){ ekp = ""; }
                 else { ekp = priceFormatter(ekp)+" "+currencySymbol; }
                 String mwstOutput = "";
@@ -205,6 +225,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     mwstBetrag = priceFormatter( calculateVAT(new BigDecimal(vkp), new BigDecimal(mwst)) )+" "+currencySymbol;
                 }
                 if (var == true){ vkpOutput = "variabel"; ekp = "variabel"; mwstBetrag = "variabel"; }
+                String beliebt = "";
+                if (beliebtWert == null){ beliebt = ""; }
+                else { beliebt = beliebtNamen.get(beliebtWerte.indexOf(beliebtWert)); }
+                if (bestand == null){ bestand = ""; }
                 if (von == null) von = "";
                 if (bis == null) bis = "";
 
@@ -214,10 +238,14 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     row.add(kurzname);
                     row.add(menge.replace('.', ',')); row.add(barcode);
                     row.add(herkunft); row.add(vpe);
-                    row.add(vkpOutput); row.add(ekp);
+                    row.add(setgroesse);
+                    row.add(vkpOutput); row.add(empf_vkp);
+                    row.add(ek_rabatt); row.add(ekp);
                     row.add(mwstOutput); //row.add(mwstBetrag);
+                    row.add(sortimentBool); row.add(lieferbarBool);
+                    row.add(beliebt); row.add(bestand);
                     row.add(von); row.add(bis);
-                    row.add(sortimentBool); row.add(aktivBool);
+                    row.add(aktivBool);
                 data.add(row);
                 produktGruppeIDs.add(produktgruppen_id);
                 lieferantIDs.add(lieferant_id);
@@ -248,9 +276,12 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         changedBarcode = new Vector<String>();
         changedHerkunft = new Vector<String>();
         changedVPE = new Vector<Integer>();
+        changedSetgroesse = new Vector<Integer>();
         changedVKP = new Vector<String>();
-        changedEKP = new Vector<String>();
+        changedEmpfVKP = new Vector<String>();
+        changedEKRabatt = new Vector<String>();
         changedSortiment = new Vector<Boolean>();
+        changedLieferbar = new Vector<Boolean>();
         changedAktiv = new Vector<Boolean>();
     }
 
@@ -259,9 +290,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             Integer prod_id = null;
             Integer lief_id = null;
             Boolean var_preis = null;
+            Integer beliebt = null;
             try {
                 PreparedStatement pstmt = this.conn.prepareStatement(
-                        "SELECT produktgruppen_id, lieferant_id, variabler_preis FROM artikel "+
+                        "SELECT produktgruppen_id, lieferant_id, variabler_preis, beliebtheit FROM artikel "+
                         "LEFT JOIN lieferant USING (lieferant_id) WHERE "+
                         "lieferant_name = ? AND "+
                         "artikel_nr = ? AND artikel.aktiv = TRUE"
@@ -274,6 +306,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 prod_id = rs.getInt(1);
                 lief_id = rs.getInt(2);
                 var_preis = rs.getBoolean(3);
+                beliebt = rs.getInt(4);
                 rs.close();
                 pstmt.close();
             } catch (SQLException ex) {
@@ -290,13 +323,18 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 continue; // continue with next item
             }
             if ( changedAktiv.get(index) == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
+                BigDecimal ekpreis = calculateEKP(changedEmpfVKP.get(index), changedEKRabatt.get(index));
                 result = insertNewItem(prod_id, lief_id,
                         changedNummer.get(index), changedName.get(index),
                         changedKurzname.get(index),
                         changedMenge.get(index), changedBarcode.get(index),
                         changedHerkunft.get(index), changedVPE.get(index),
-                        changedVKP.get(index), changedEKP.get(index),
-                        var_preis, changedSortiment.get(index));
+                        changedSetgroesse.get(index),
+                        changedVKP.get(index), changedEmpfVKP.get(index),
+                        changedEKRabatt.get(index),
+                        priceFormatterIntern(ekpreis),
+                        var_preis, changedSortiment.get(index),
+                        changedLieferbar.get(index), beliebt);
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Artikel von "+editLieferant.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht geändert werden.",
@@ -412,10 +450,14 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     }
 
     void initiateTable() {
-        myTable = new AnyJComponentJTable( new AbstractTableModel() { // subclass the AbstractTableModel to set editable cells etc.
+        myTable = new AnyJComponentJTable( new AbstractTableModel() {
+            // Subclass the AbstractTableModel to set display data and
+            // synchronize underlying data Vector.
+            // Needed to prevent exception "java.lang.IllegalArgumentException: Identifier not found"
             public String getColumnName(int col) {
                 return columnLabels.get(col);
             }
+            // Needed to prevent exception "java.lang.IllegalArgumentException: Identifier not found"
             public int findColumn(String name) {
                 int col=0;
                 for (String s : columnLabels){
@@ -431,11 +473,15 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             public Object getValueAt(int row, int col) {
                 return displayData.get(row).get(col);
             }
-            public Class getColumnClass(int c) { // JTable uses this method to determine the default renderer/editor for each cell.
-                                                 // If we didn't implement this method, then the last column would contain text ("true"/"false"),
-                                                 // rather than a check box.
-                return getValueAt(0, c).getClass();
+            public void setValueAt(Object value, int row, int col) {
+                Vector<Object> rowentries = displayData.get(row);
+                rowentries.set(col, value);
+                displayData.set(row, rowentries);
+                int dataRow = displayIndices.get(row); // convert from displayData index to data index
+                data.set(dataRow, rowentries);
+                fireTableCellUpdated(row, col);
             }
+        } ) { // Subclass the JTable to set editable cells, font properties and tool tip text.
             public boolean isCellEditable(int row, int col) {
                 String header = this.getColumnName(col);
                 if ( activeRowBools.get(row) ){
@@ -455,15 +501,6 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 }
                 return false;
             }
-            public void setValueAt(Object value, int row, int col) {
-                Vector<Object> rowentries = displayData.get(row);
-                rowentries.set(col, value);
-                displayData.set(row, rowentries);
-                int dataRow = displayIndices.get(row); // convert from displayData index to data index
-                data.set(dataRow, rowentries);
-                fireTableCellUpdated(row, col);
-            }
-        } ) { // subclass the JTable to set font properties and tool tip text
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component c = super.prepareRenderer(renderer, row, column);
                 // add custom rendering here
@@ -736,9 +773,15 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             try {
                 vpe = Integer.parseInt( model.getValueAt(row, model.findColumn("VPE")).toString() );
             } catch (NumberFormatException ex){ vpe = null; }
+            Integer setgroesse;
+            try {
+                setgroesse = Integer.parseInt( model.getValueAt(row, model.findColumn("Setgröße")).toString() );
+            } catch (NumberFormatException ex){ setgroesse = null; }
             String vkpreis = model.getValueAt(row, model.findColumn("VK-Preis")).toString();
-            String ekpreis = model.getValueAt(row, model.findColumn("EK-Preis")).toString();
+            String empfvkpreis = model.getValueAt(row, model.findColumn("Empf. VK-Preis")).toString();
+            String ekrabatt = model.getValueAt(row, model.findColumn("EK-Rabatt")).toString();
             boolean sortiment = model.getValueAt(row, model.findColumn("Sortiment")).toString().equals("true") ? true : false;
+            boolean lieferbar = model.getValueAt(row, model.findColumn("Lieferbar")).toString().equals("true") ? true : false;
             boolean aktiv = model.getValueAt(row, model.findColumn("Aktiv")).toString().equals("true") ? true : false;
 
             // update the vectors caching the changes
@@ -750,9 +793,12 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 changedBarcode.set(nummerIndex, barcode);
                 changedHerkunft.set(nummerIndex, herkunft);
                 changedVPE.set(nummerIndex, vpe);
+                changedSetgroesse.set(nummerIndex, setgroesse);
                 changedVKP.set(nummerIndex, vkpreis);
-                changedEKP.set(nummerIndex, ekpreis);
+                changedEmpfVKP.set(nummerIndex, empfvkpreis);
+                changedEKRabatt.set(nummerIndex, ekrabatt);
                 changedSortiment.set(nummerIndex, sortiment);
+                changedLieferbar.set(nummerIndex, lieferbar);
                 changedAktiv.set(nummerIndex, aktiv);
             } else { // an edit occurred in a row that is not in the list of changes yet
                 editLieferant.add(origLieferant);
@@ -764,9 +810,12 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 changedBarcode.add(barcode);
                 changedHerkunft.add(herkunft);
                 changedVPE.add(vpe);
+                changedSetgroesse.add(setgroesse);
                 changedVKP.add(vkpreis);
-                changedEKP.add(ekpreis);
+                changedEmpfVKP.add(empfvkpreis);
+                changedEKRabatt.add(ekrabatt);
                 changedSortiment.add(sortiment);
+                changedLieferbar.add(lieferbar);
                 changedAktiv.add(aktiv);
             }
         } else if (!changed) {
@@ -781,9 +830,12 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 changedBarcode.remove(nummerIndex);
                 changedHerkunft.remove(nummerIndex);
                 changedVPE.remove(nummerIndex);
+                changedSetgroesse.remove(nummerIndex);
                 changedVKP.remove(nummerIndex);
-                changedEKP.remove(nummerIndex);
+                changedEmpfVKP.remove(nummerIndex);
+                changedEKRabatt.remove(nummerIndex);
                 changedSortiment.remove(nummerIndex);
+                changedLieferbar.remove(nummerIndex);
                 changedAktiv.remove(nummerIndex);
             }
         }

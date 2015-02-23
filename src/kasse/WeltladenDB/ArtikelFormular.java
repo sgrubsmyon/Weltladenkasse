@@ -36,16 +36,20 @@ public class ArtikelFormular extends WindowContent
     public JComboBox produktgruppenBox;
     public JComboBox lieferantBox;
     public JTextField nummerField;
+    public JTextField barcodeField;
     public JTextField nameField;
     public JTextField kurznameField;
     public JTextField mengeField;
-    public JTextField barcodeField;
     public JTextField herkunftField;
     public JSpinner vpeSpinner;
-    public JTextField vkpreisField;
-    public JTextField ekpreisField;
-    public JCheckBox preisVariabelBox;
+    public JSpinner setSpinner;
     public JCheckBox sortimentBox;
+    public JCheckBox lieferbarBox;
+    public JComboBox beliebtBox;
+    public JTextField vkpreisField;
+    public JTextField empfvkpreisField;
+    public JTextField ekrabattField;
+    public JCheckBox preisVariabelBox;
 
     private boolean hasOriginalName = false;
     private boolean hasOriginalNummer = false;
@@ -159,7 +163,7 @@ public class ArtikelFormular extends WindowContent
             kurznamePanel.add(kurznameField);
 
             JPanel mengePanel = new JPanel();
-            mengePanel.setBorder(BorderFactory.createTitledBorder("Menge (Verpackungsgröße)"));
+            mengePanel.setBorder(BorderFactory.createTitledBorder("Menge (pro Artikel)"));
             mengeField = new JTextField("");
             mengeField.setColumns(6);
             ((AbstractDocument)mengeField.getDocument()).setDocumentFilter(mengeFilter);
@@ -184,51 +188,83 @@ public class ArtikelFormular extends WindowContent
             vpePanel.setBorder(BorderFactory.createTitledBorder("VPE (Verpackungseinheit)"));
             SpinnerNumberModel vpeModel = new SpinnerNumberModel(0, // initial value
                     0, // min
-                    null, // max (null == no max)
+                    smallintMax, // max (null == no max)
                     1); // step
             vpeSpinner = new JSpinner(vpeModel);
             JSpinner.NumberEditor vpeEditor = new JSpinner.NumberEditor(vpeSpinner, "###");
-            JTextField vpeField = vpeEditor.getTextField();
-                //vpeField.getDocument().addDocumentListener(this);
-                //vpeField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-                //    // remove Ctrl-A key binding
-                //vpeField.addKeyListener(new KeyAdapter() {
-                //    public void keyPressed(KeyEvent e) {
-                //        if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
-                //            if (preisField.isEditable())
-                //                preisField.requestFocus();
-                //            else {
-                //                if (hinzufuegenButton.isEnabled()){
-                //                    vpeSpinner.setValue(Integer.parseInt(vpeField.getText()));
-                //                    hinzufuegenButton.doClick();
-                //                }
-                //            }
-                //        }
-                //    }
-                //});
             vpeSpinner.setEditor(vpeEditor);
-            ( (NumberFormatter) vpeEditor.getTextField().getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
+            JFormattedTextField vpeField = vpeEditor.getTextField();
+            ( (NumberFormatter) vpeField.getFormatter() )
+                .setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
             vpeField.setColumns(3);
             vpePanel.add(vpeSpinner);
-            vpePanel.add(new JLabel("Stück"));
+            vpePanel.add(new JLabel("Artikel/Sets pro Packung"));
+
+            JPanel setPanel = new JPanel();
+            setPanel.setBorder(BorderFactory.createTitledBorder("Setgröße"));
+            SpinnerNumberModel setModel = new SpinnerNumberModel(1, // initial value
+                    1, // min
+                    smallintMax, // max (null == no max)
+                    1); // step
+            setSpinner = new JSpinner(setModel);
+            JSpinner.NumberEditor setEditor = new JSpinner.NumberEditor(setSpinner, "###");
+            setSpinner.setEditor(setEditor);
+            JFormattedTextField setField = setEditor.getTextField();
+            ( (NumberFormatter) setField.getFormatter() )
+                .setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
+            setField.setColumns(3);
+            setPanel.add(setSpinner);
+            setPanel.add(new JLabel("Artikel pro Set"));
+
+            JPanel sortimentPanel = new JPanel();
+            sortimentBox = new JCheckBox("Sortiment");
+            sortimentBox.setSelected(false);
+            sortimentPanel.add(sortimentBox);
+
+            JPanel lieferbarPanel = new JPanel();
+            lieferbarBox = new JCheckBox("sof. lieferbar");
+            lieferbarBox.setSelected(false);
+            lieferbarPanel.add(lieferbarBox);
+
+            JPanel beliebtPanel = new JPanel();
+            beliebtPanel.setBorder(BorderFactory.createTitledBorder("Beliebtheit"));
+            beliebtBox = new JComboBox(beliebtNamen);
+            beliebtPanel.add(beliebtBox);
+
+        JPanel detailsPanel = new JPanel();
+        detailsPanel.add(vpePanel);
+        detailsPanel.add(setPanel);
+        detailsPanel.add(sortimentPanel);
+        detailsPanel.add(lieferbarPanel);
+        detailsPanel.add(beliebtPanel);
+        headerPanel.add(detailsPanel);
 
             JPanel vkpreisPanel = new JPanel();
-            vkpreisPanel.setBorder(BorderFactory.createTitledBorder("VK-Preis"));
+            vkpreisPanel.setBorder(BorderFactory.createTitledBorder("VK-Preis (für Artikel)"));
             vkpreisField = new JTextField("");
-            vkpreisField.setColumns(6);
+            vkpreisField.setColumns(12);
             ((AbstractDocument)vkpreisField.getDocument()).setDocumentFilter(geldFilter);
             vkpreisField.setHorizontalAlignment(JTextField.RIGHT);
             vkpreisPanel.add(vkpreisField);
             vkpreisPanel.add(new JLabel(currencySymbol));
 
-            JPanel ekpreisPanel = new JPanel();
-            ekpreisPanel.setBorder(BorderFactory.createTitledBorder("EK-Preis"));
-            ekpreisField = new JTextField("");
-            ekpreisField.setColumns(6);
-            ((AbstractDocument)ekpreisField.getDocument()).setDocumentFilter(geldFilter);
-            ekpreisField.setHorizontalAlignment(JTextField.RIGHT);
-            ekpreisPanel.add(ekpreisField);
-            ekpreisPanel.add(new JLabel(currencySymbol));
+            JPanel empfvkpreisPanel = new JPanel();
+            empfvkpreisPanel.setBorder(BorderFactory.createTitledBorder("Empf. VK-Preis (für Set)"));
+            empfvkpreisField = new JTextField("");
+            empfvkpreisField.setColumns(12);
+            ((AbstractDocument)empfvkpreisField.getDocument()).setDocumentFilter(geldFilter);
+            empfvkpreisField.setHorizontalAlignment(JTextField.RIGHT);
+            empfvkpreisPanel.add(empfvkpreisField);
+            empfvkpreisPanel.add(new JLabel(currencySymbol));
+
+            JPanel ekrabattPanel = new JPanel();
+            ekrabattPanel.setBorder(BorderFactory.createTitledBorder("EK-Rabatt"));
+            ekrabattField = new JTextField("");
+            ekrabattField.setColumns(6);
+            ((AbstractDocument)ekrabattField.getDocument()).setDocumentFilter(relFilter);
+            ekrabattField.setHorizontalAlignment(JTextField.RIGHT);
+            ekrabattPanel.add(ekrabattField);
+            ekrabattPanel.add(new JLabel("%"));
 
             JPanel preisVariabelPanel = new JPanel();
             //preisVariabelPanel.setBorder(BorderFactory.createTitledBorder("Variabler Preis"));
@@ -236,18 +272,11 @@ public class ArtikelFormular extends WindowContent
             preisVariabelBox.setSelected(false);
             preisVariabelPanel.add(preisVariabelBox);
 
-            JPanel sortimentPanel = new JPanel();
-            //sortimentPanel.setBorder(BorderFactory.createTitledBorder("Sortiment"));
-            sortimentBox = new JCheckBox("Sortiment");
-            sortimentBox.setSelected(false);
-            sortimentPanel.add(sortimentBox);
-
         JPanel preisPanel = new JPanel();
-        preisPanel.add(vpePanel);
         preisPanel.add(vkpreisPanel);
-        preisPanel.add(ekpreisPanel);
+        preisPanel.add(empfvkpreisPanel);
+        preisPanel.add(ekrabattPanel);
         preisPanel.add(preisVariabelPanel);
-        preisPanel.add(sortimentPanel);
         headerPanel.add(preisPanel);
 
         allPanel.add(headerPanel);
@@ -262,8 +291,8 @@ public class ArtikelFormular extends WindowContent
             if (!hasOriginalNummer)
                 return false;
         }
-        if ( vkpreisField.isEnabled() && vkpreisField.getText().replaceAll("\\s","").equals("") &&
-                preisVariabelBox.isEnabled() && !preisVariabelBox.isSelected() ){
+        if ( preisVariabelBox.isEnabled() && !preisVariabelBox.isSelected() &&
+                vkpreisField.isEnabled() && vkpreisField.getText().replaceAll("\\s","").equals("") ){
             if (!hasOriginalVKP)
                 return false;
         }
@@ -284,10 +313,12 @@ public class ArtikelFormular extends WindowContent
         if (source == preisVariabelBox) {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 vkpreisField.setEnabled(false);
-                ekpreisField.setEnabled(false);
+                empfvkpreisField.setEnabled(false);
+                ekrabattField.setEnabled(false);
             } else if (e.getStateChange() == ItemEvent.DESELECTED) {
                 vkpreisField.setEnabled(true);
-                ekpreisField.setEnabled(true);
+                empfvkpreisField.setEnabled(true);
+                ekrabattField.setEnabled(true);
             }
         }
     }

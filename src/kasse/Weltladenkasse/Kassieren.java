@@ -49,8 +49,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private final BigDecimal mitarbeiterRabatt = new BigDecimal("0.1");
     private final boolean allowMitarbeiterRabatt = true;
     private final BigDecimal ecSchwelle = new BigDecimal("20.00");
-    private final BigDecimal minusOne = new BigDecimal(-1);
-    private final BigDecimal percent = new BigDecimal("0.01");
     private int artikelRabattArtikelID = 1;
     private int rechnungRabattArtikelID = 2;
     private String zahlungsModus = "unbekannt";

@@ -46,7 +46,8 @@ public class ArtikelNeuEingeben extends DialogWindow
     protected JButton deleteButton;
 
     // Methoden:
-    public ArtikelNeuEingeben(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia, Integer tid, Integer sid, Integer ssid) {
+    public ArtikelNeuEingeben(Connection conn, MainWindowGrundlage mw,
+            Artikelliste pw, JDialog dia, Integer tid, Integer sid, Integer ssid) {
 	super(conn, mw, dia);
         artikelListe = pw;
         toplevel_id = tid;
@@ -115,6 +116,8 @@ public class ArtikelNeuEingeben extends DialogWindow
         int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(gruppenID);
         artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
 
+        artikelFormular.beliebtBox.setSelectedIndex(artikelFormular.beliebtNamen.indexOf("mittel"));
+
         KeyAdapter enterAdapter = new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
                 if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
@@ -140,12 +143,17 @@ public class ArtikelNeuEingeben extends DialogWindow
         artikelFormular.herkunftField.getDocument().addDocumentListener(this);
         artikelFormular.herkunftField.addKeyListener(enterAdapter);
         artikelFormular.vpeSpinner.addChangeListener(this);
+        artikelFormular.setSpinner.addChangeListener(this);
         artikelFormular.vkpreisField.addKeyListener(enterAdapter);
         artikelFormular.vkpreisField.getDocument().addDocumentListener(this);
-        artikelFormular.ekpreisField.addKeyListener(enterAdapter);
-        artikelFormular.ekpreisField.getDocument().addDocumentListener(this);
+        artikelFormular.empfvkpreisField.addKeyListener(enterAdapter);
+        artikelFormular.empfvkpreisField.getDocument().addDocumentListener(this);
+        artikelFormular.ekrabattField.addKeyListener(enterAdapter);
+        artikelFormular.ekrabattField.getDocument().addDocumentListener(this);
         artikelFormular.preisVariabelBox.addItemListener(this);
         artikelFormular.sortimentBox.addItemListener(this);
+        artikelFormular.lieferbarBox.addItemListener(this);
+        artikelFormular.beliebtBox.addActionListener(this);
     }
 
     protected void showMiddle() {
@@ -222,10 +230,15 @@ public class ArtikelNeuEingeben extends DialogWindow
         String herkunft = artikelFormular.herkunftField.getText();
         Integer vpe = (Integer)artikelFormular.vpeSpinner.getValue();
         vpe = vpe == 0 ? null : vpe;
+        Integer set = (Integer)artikelFormular.setSpinner.getValue();
         String vkpreis = artikelFormular.vkpreisField.getText();
-        String ekpreis = artikelFormular.ekpreisField.getText();
+        String empfvkpreis = artikelFormular.empfvkpreisField.getText();
+        String ekrabatt = artikelFormular.ekrabattField.getText();
         Boolean var = artikelFormular.preisVariabelBox.isSelected();
         Boolean sortiment = artikelFormular.sortimentBox.isSelected();
+        Boolean lieferbar = artikelFormular.lieferbarBox.isSelected();
+        Integer beliebtWert = artikelFormular.beliebtWerte.get(artikelFormular.beliebtBox.getSelectedIndex());
+        String beliebt = artikelFormular.beliebtBox.getSelectedItem().toString();
 
         artikelNeu.selProduktgruppenIDs.add(prodgrID);
         artikelNeu.selLieferantIDs.add(lieferantID);
@@ -237,19 +250,36 @@ public class ArtikelNeuEingeben extends DialogWindow
         artikelNeu.barcodes.add(barcode.length() == 0 ? "NULL" : barcode);
         artikelNeu.herkuenfte.add(herkunft);
         artikelNeu.vpes.add(vpe);
+        artikelNeu.sets.add(set);
         if (var){
             artikelNeu.variablePreise.add(true);
             artikelNeu.vkPreise.add("NULL");
+            artikelNeu.empfvkPreise.add("NULL");
+            artikelNeu.ekRabatte.add("NULL");
             artikelNeu.ekPreise.add("NULL");
         } else {
             artikelNeu.variablePreise.add(false);
             artikelNeu.vkPreise.add( priceFormatterIntern(vkpreis) );
-            if ( ekpreis.length() == 0 )
+            if ( empfvkpreis.length() > 0 ){
+                artikelNeu.empfvkPreise.add( priceFormatterIntern(empfvkpreis) );
+                if ( ekrabatt.length() > 0 ){
+                    artikelNeu.ekRabatte.add(ekrabatt);
+                    // calculate ekp using ekrabatt
+                    BigDecimal ekpreis = calculateEKP(empfvkpreis, ekrabatt);
+                    artikelNeu.ekPreise.add( priceFormatterIntern(ekpreis) );
+                } else {
+                    artikelNeu.ekRabatte.add("NULL");
+                    artikelNeu.ekPreise.add("NULL");
+                }
+            } else {
+                artikelNeu.empfvkPreise.add("NULL");
+                artikelNeu.ekRabatte.add("NULL");
                 artikelNeu.ekPreise.add("NULL");
-            else
-                artikelNeu.ekPreise.add( priceFormatterIntern(ekpreis) );
+            }
         }
         artikelNeu.sortimente.add(sortiment);
+        artikelNeu.lieferbarBools.add(lieferbar);
+        artikelNeu.beliebtWerte.add(beliebtWert);
         artikelNeu.removeButtons.add(new JButton("-"));
         artikelNeu.removeButtons.lastElement().addActionListener(this);
         Vector<Color> colors = new Vector<Color>();
@@ -262,10 +292,15 @@ public class ArtikelNeuEingeben extends DialogWindow
         colors.add(Color.black); // barcode
         colors.add(Color.black); // herkunft
         colors.add(Color.black); // vpe
+        colors.add(Color.black); // set
         colors.add(Color.black); // vkpreis
+        colors.add(Color.black); // empfvkpreis
+        colors.add(Color.black); // ekrabatt
         colors.add(Color.black); // ekpreis
         colors.add(Color.black); // variabel
         colors.add(Color.black); // sortiment
+        colors.add(Color.black); // lieferbar
+        colors.add(Color.black); // beliebt
         colors.add(Color.black); // entfernen
         artikelNeu.colorMatrix.add(colors);
 
@@ -279,14 +314,22 @@ public class ArtikelNeuEingeben extends DialogWindow
             row.add(barcode);
             row.add(herkunft);
             row.add( vpe == null ? "" : vpe.toString() );
-                String vkp = priceFormatter(vkpreis);
+            row.add(set);
+                String vkp = priceFormatter(artikelNeu.vkPreise.lastElement());
                 if (vkp.length() > 0) vkp += " "+currencySymbol;
-                String ekp = priceFormatter(ekpreis);
+                String empfvkp = priceFormatter(artikelNeu.empfvkPreise.lastElement());
+                if (empfvkp.length() > 0) empfvkp += " "+currencySymbol;
+                String rabatt = vatFormatter(artikelNeu.ekRabatte.lastElement());
+                String ekp = priceFormatter(artikelNeu.ekPreise.lastElement());
                 if (ekp.length() > 0) ekp += " "+currencySymbol;
-            row.add(vkp);
-            row.add(ekp);
+                row.add(vkp);
+                row.add(empfvkp);
+                row.add(rabatt);
+                row.add(ekp);
             row.add(var);
             row.add(sortiment);
+            row.add(lieferbar);
+            row.add(beliebt);
             row.add( artikelNeu.removeButtons.lastElement() );
         artikelNeu.data.add(row);
         return 0;
