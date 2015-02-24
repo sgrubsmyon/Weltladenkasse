@@ -106,31 +106,61 @@ public class ArtikelExport extends WindowContent {
             } catch (NumberFormatException ex) {
                 vpe = null;
             }
+            Integer setgroesse;
+            try {
+                setgroesse = Integer.parseInt( artikelListe.originalData.get(i).get(9).toString() );
+            } catch (NumberFormatException ex) {
+                setgroesse = null;
+            }
             Boolean var = artikelListe.varPreisBools.get(i);
             BigDecimal vkp = null;
+            BigDecimal empf_vkp = null;
+            BigDecimal ekrabatt = null;
             BigDecimal ekp = null;
             if (!var){
                 try {
                     vkp = new BigDecimal(
-                            priceFormatterIntern(artikelListe.originalData.get(i).get(9).toString()));
+                            priceFormatterIntern(artikelListe.originalData.get(i).get(10).toString()));
                 } catch (NumberFormatException ex) {
                     vkp = null;
                 }
                 try {
+                    empf_vkp = new BigDecimal(
+                            priceFormatterIntern(artikelListe.originalData.get(i).get(11).toString()));
+                } catch (NumberFormatException ex) {
+                    empf_vkp = null;
+                }
+                try {
+                    ekrabatt = new BigDecimal(
+                            priceFormatterIntern(artikelListe.originalData.get(i).get(12).toString()));
+                } catch (NumberFormatException ex) {
+                    ekrabatt = null;
+                }
+                try {
                     ekp = new BigDecimal(
-                            priceFormatterIntern(artikelListe.originalData.get(i).get(10).toString()));
+                            priceFormatterIntern(artikelListe.originalData.get(i).get(13).toString()));
                 } catch (NumberFormatException ex) {
                     ekp = null;
                 }
             }
             String varStr = var ? "Ja" : "Nein";
             String sortimentStr = artikelListe.sortimentBools.get(i) ? "Ja" : "Nein";
+            String lieferbarStr = artikelListe.lieferbarBools.get(i) ? "Ja" : "Nein";
+            String beliebtheit = artikelListe.originalData.get(i).get(17).toString();
+            Integer bestand;
+            try {
+                bestand = Integer.parseInt( artikelListe.originalData.get(i).get(18).toString() );
+            } catch (NumberFormatException ex) {
+                bestand = null;
+            }
 
             Vector<Object> row = new Vector<Object>();
                 row.add(produktgruppe); row.add(lieferant); row.add(nummer);
                 row.add(name); row.add(kurzname); row.add(menge); row.add(barcode);
-                row.add(herkunft); row.add(vpe); row.add(vkp); row.add(ekp);
-                row.add(varStr); row.add(sortimentStr);
+                row.add(herkunft); row.add(vpe); row.add(setgroesse);
+                row.add(vkp); row.add(empf_vkp); row.add(ekrabatt); row.add(ekp);
+                row.add(varStr); row.add(sortimentStr); row.add(lieferbarStr);
+                row.add(beliebtheit); row.add(bestand);
             data.add(row);
         }
 
@@ -156,6 +186,5 @@ public class ArtikelExport extends WindowContent {
      *    @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
-        //super.actionPerformed(e);
     }
 }

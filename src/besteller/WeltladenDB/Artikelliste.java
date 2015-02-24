@@ -74,6 +74,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     protected Vector<Integer> displayIndices;
     private Vector<String> columnLabels;
     protected Vector<Boolean> sortimentBools;
+    protected Vector<Boolean> lieferbarBools;
     protected Vector<Boolean> activeRowBools;
     protected Vector<Boolean> varPreisBools;
     private Vector<Integer> produktGruppeIDs;
@@ -127,11 +128,12 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         columnLabels.add("VK-Preis"); columnLabels.add("Empf. VK-Preis");
         columnLabels.add("EK-Rabatt"); columnLabels.add("EK-Preis");
         columnLabels.add("MwSt."); //columnLabels.add("Betrag MwSt.");
-        columnLabels.add("Sortiment"); columnLabels.add("Sofort lieferbar");
+        columnLabels.add("Sortiment"); columnLabels.add("Lieferbar");
         columnLabels.add("Beliebtheit"); columnLabels.add("Bestand");
         columnLabels.add("Ab/Seit"); columnLabels.add("Bis");
         columnLabels.add("Aktiv");
         sortimentBools = new Vector<Boolean>();
+        lieferbarBools = new Vector<Boolean>();
         activeRowBools = new Vector<Boolean>();
         varPreisBools = new Vector<Boolean>();
         produktGruppeIDs = new Vector<Integer>();
@@ -224,7 +226,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 else if (vkp != null && mwst != null) {
                     mwstBetrag = priceFormatter( calculateVAT(new BigDecimal(vkp), new BigDecimal(mwst)) )+" "+currencySymbol;
                 }
-                if (var == true){ vkpOutput = "variabel"; ekp = "variabel"; mwstBetrag = "variabel"; }
+                if (var == true){ vkpOutput = "variabel"; empf_vkp = "variabel";
+                    ek_rabatt = "variabel"; ekp = "variabel"; mwstBetrag = "variabel"; }
                 String beliebt = "";
                 if (beliebtWert == null){ beliebt = ""; }
                 else { beliebt = beliebtNamen.get(beliebtWerte.indexOf(beliebtWert)); }
@@ -250,6 +253,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 produktGruppeIDs.add(produktgruppen_id);
                 lieferantIDs.add(lieferant_id);
                 sortimentBools.add(sortimentBool);
+                lieferbarBools.add(lieferbarBool);
                 activeRowBools.add(aktivBool);
                 varPreisBools.add(var);
             }
@@ -485,7 +489,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             public boolean isCellEditable(int row, int col) {
                 String header = this.getColumnName(col);
                 if ( activeRowBools.get(row) ){
-                    if ( header.equals("VK-Preis") || header.equals("EK-Preis") ) {
+                    if ( header.equals("VK-Preis") || header.equals("Empf. VK-Preis") ||
+                            header.equals("EK-Rabatt") || header.equals("EK-Preis") ) {
                         if ( ! displayData.get(row).get(col).equals("variabel") )
                             return true;
                     }
@@ -494,7 +499,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                             header.equals("Kurzname") ||
                             header.equals("Menge") || header.equals("Barcode") ||
                             header.equals("Herkunft") || header.equals("VPE") ||
-                            header.equals("Sortiment") || header.equals("Aktiv")
+                            header.equals("Setgröße") ||
+                            header.equals("Sortiment") || header.equals("Lieferbar") ||
+                            header.equals("Bestand") ||
+                            header.equals("Aktiv")
                             ){
                         return true;
                     }
@@ -556,13 +564,11 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         // extra cell editor that has the CurrencyDocumentFilter
         class GeldEditor extends DefaultCellEditor {
             JTextField textField;
-
             public GeldEditor() {
                 super(new JTextField()); // call to super must be first statement in constructor
                 textField = (JTextField)getComponent();
                 ((AbstractDocument)textField.getDocument()).setDocumentFilter(geldFilter);
             }
-
             ////Override to invoke setText on the document filtered text field.
             //@Override
             //public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected,
@@ -574,8 +580,21 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             //    return newTextField;
             //}
         }
+
+        class RelEditor extends DefaultCellEditor {
+            JTextField textField;
+            public RelEditor() {
+                super(new JTextField()); // call to super must be first statement in constructor
+                textField = (JTextField)getComponent();
+                ((AbstractDocument)textField.getDocument()).setDocumentFilter(relFilter);
+            }
+        }
+
         GeldEditor geldEditor = new GeldEditor();
+        RelEditor relEditor = new RelEditor();
         myTable.getColumn("VK-Preis").setCellEditor(geldEditor);
+        myTable.getColumn("Empf. VK-Preis").setCellEditor(geldEditor);
+        myTable.getColumn("EK-Rabatt").setCellEditor(relEditor);
         myTable.getColumn("EK-Preis").setCellEditor(geldEditor);
     }
 
@@ -610,10 +629,14 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         myTable.getColumn("Barcode").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("Herkunft").setCellRenderer(linksAusrichter);
         myTable.getColumn("VPE").setCellRenderer(rechtsAusrichter);
+        myTable.getColumn("Setgröße").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("VK-Preis").setCellRenderer(rechtsAusrichter);
+        myTable.getColumn("Empf. VK-Preis").setCellRenderer(rechtsAusrichter);
+        myTable.getColumn("EK-Rabatt").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("EK-Preis").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("MwSt.").setCellRenderer(rechtsAusrichter);
-        //myTable.getColumn("Betrag MwSt.").setCellRenderer(rechtsAusrichter);
+        myTable.getColumn("Beliebtheit").setCellRenderer(zentralAusrichter);
+        myTable.getColumn("Bestand").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("Ab/Seit").setCellRenderer(rechtsAusrichter);
         myTable.getColumn("Bis").setCellRenderer(rechtsAusrichter);
 
@@ -626,13 +649,18 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         myTable.getColumn("Barcode").setPreferredWidth(70);
         myTable.getColumn("Herkunft").setPreferredWidth(100);
         myTable.getColumn("VPE").setPreferredWidth(10);
-        myTable.getColumn("VK-Preis").setPreferredWidth(30);
-        myTable.getColumn("EK-Preis").setPreferredWidth(30);
+        myTable.getColumn("Setgröße").setPreferredWidth(10);
+        myTable.getColumn("VK-Preis").setPreferredWidth(50);
+        myTable.getColumn("Empf. VK-Preis").setPreferredWidth(50);
+        myTable.getColumn("EK-Rabatt").setPreferredWidth(50);
+        myTable.getColumn("EK-Preis").setPreferredWidth(50);
         myTable.getColumn("MwSt.").setPreferredWidth(20);
-        //myTable.getColumn("Betrag MwSt.").setPreferredWidth(30);
+        myTable.getColumn("Sortiment").setPreferredWidth(20);
+        myTable.getColumn("Lieferbar").setPreferredWidth(20);
+        myTable.getColumn("Beliebtheit").setPreferredWidth(30);
+        myTable.getColumn("Bestand").setPreferredWidth(30);
         myTable.getColumn("Ab/Seit").setPreferredWidth(70);
         myTable.getColumn("Bis").setPreferredWidth(70);
-        myTable.getColumn("Sortiment").setPreferredWidth(20);
         myTable.getColumn("Aktiv").setPreferredWidth(20);
     }
 
