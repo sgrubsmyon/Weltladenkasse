@@ -56,8 +56,10 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected PositiveNumberDocumentFilter relFilter = new PositiveNumberDocumentFilter(3, 6);
     protected PositiveNumberDocumentFilter mengeFilter = new PositiveNumberDocumentFilter(5, 8);
 
-    public Vector<String> beliebtNamen;
-    public Vector<Integer> beliebtWerte;
+    protected Vector<Integer> beliebtWerte;
+    protected Vector<String> beliebtNamen;
+    protected Vector<String> beliebtKuerzel;
+    protected Vector<Color> beliebtFarben;
 
     // Methoden:
     // Setter:
@@ -120,12 +122,15 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         fillBeliebtWerte();
     }
 
-    private void fillBeliebtWerte() {
-        beliebtNamen = new Vector<String>();
+    protected void fillBeliebtWerte() {
         beliebtWerte = new Vector<Integer>();
-        beliebtWerte.add(1); beliebtNamen.add("niedrig");
-        beliebtWerte.add(2); beliebtNamen.add("mittel");
-        beliebtWerte.add(3); beliebtNamen.add("hoch");
+        beliebtNamen = new Vector<String>();
+        beliebtKuerzel = new Vector<String>();
+        beliebtFarben = new Vector<Color>();
+        beliebtWerte.add(0); beliebtNamen.add("keine Angabe"); beliebtKuerzel.add("●"); beliebtFarben.add(Color.GRAY);
+        beliebtWerte.add(1); beliebtNamen.add("niedrig");      beliebtKuerzel.add("●");  beliebtFarben.add(Color.RED);
+        beliebtWerte.add(2); beliebtNamen.add("mittel");       beliebtKuerzel.add("●");  beliebtFarben.add(Color.YELLOW);
+        beliebtWerte.add(3); beliebtNamen.add("hoch");         beliebtKuerzel.add("●");  beliebtFarben.add(Color.GREEN);
     }
 
 
@@ -228,16 +233,49 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected BigDecimal calculateEKP(String empfVKPreis, String ekRabatt){
         BigDecimal rabatt;
         try {
-            rabatt = (new BigDecimal( ekRabatt.replace(',','.') )).multiply(percent);
+            rabatt = new BigDecimal( vatParser(ekRabatt) );
         } catch (NumberFormatException ex) {
             return null;
         }
         return calculateEKP(empfVKPreis, rabatt);
     }
 
+    protected String figureOutEKP(String empfVKPreis, String ekRabatt, String ekPreis){
+        /** If empfVKPreis and ekRabatt are both valid numbers, calculate EK-Preis
+         *  from them and return it. Otherwise, fall back to using ekPreis.
+         */
+        BigDecimal preis = calculateEKP(empfVKPreis, ekRabatt);
+        if (preis != null){
+            return priceFormatterIntern(preis);
+        } else {
+            return priceFormatterIntern(ekPreis);
+        }
+    }
+
     /**
      * Number formatting methods
      */
+
+    protected String priceFormatterIntern(BigDecimal price) {
+        if (price == null){
+            return "";
+        }
+        // for 2 digits after period sign and "0.5-is-rounded-up" rounding:
+        return price.setScale(2, RoundingMode.HALF_UP).toString();
+    }
+
+    protected String priceFormatter(BigDecimal price) {
+        return priceFormatterIntern(price).replace('.',',');
+    }
+
+    protected String priceFormatterIntern(String priceStr) {
+        try {
+            BigDecimal price = new BigDecimal( priceStr.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') );
+            return priceFormatterIntern(price);
+        } catch (NumberFormatException nfe) {
+            return "";
+        }
+    }
 
     protected String priceFormatter(String priceStr) {
         try {
@@ -248,46 +286,38 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
     }
 
-    protected String priceFormatterIntern(String priceStr) {
+    protected String vatFormatter(String vat) {
+        /** Input `vat` is e.g. "0.01"
+         *  Returns "1%" */
+        vat = vat.replace(',','.');
         try {
-            BigDecimal price = new BigDecimal( priceStr.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.'));
-            return priceFormatterIntern(price);
+            String vatFormatted = vatFormat.format( (new BigDecimal(vat)).multiply(new BigDecimal("100.")) ).replace('.',',') + "%";
+            return vatFormatted;
         } catch (NumberFormatException nfe) {
             return "";
         }
     }
 
-    protected String priceFormatter(BigDecimal price) {
-        return priceFormatterIntern(price).replace('.',',');
-    }
-
-    protected String priceFormatterIntern(BigDecimal price) {
-        if (price == null){
-            return "";
-        }
-        // for 2 digits after period sign and "0.5-is-rounded-up" rounding:
-        return price.setScale(2, RoundingMode.HALF_UP).toString();
-    }
-
     protected String vatFormatter(BigDecimal vat) {
+        /** Input `vat` is e.g. 0.01
+         *  Returns "1%" */
         if (vat == null){
             return "";
         }
         return vatFormatter(vat.toString());
     }
 
-    protected String vatFormatter(String vat) {
-        vat = vat.replace(',','.');
-        String vatFormatted = "";
+    protected String vatParser(String vat) {
+        /** Input `vat` is e.g. "1 %"
+         *  Returns "0.01" */
         try {
-            vatFormatted = vatFormat.format( (new BigDecimal(vat)).multiply(new BigDecimal("100.")) ).replace('.',',') + "%";
+            BigDecimal vatDecimal = new BigDecimal( vat.replace("%","").replaceAll("\\s","").replace(',','.') ).multiply(percent);
+            return vatDecimal.toString();
         } catch (NumberFormatException nfe) {
-            System.out.println("vat = "+vat);
-            System.out.println("Exception: " + nfe.getMessage());
-            nfe.printStackTrace();
+            return "";
         }
-        return vatFormatted;
     }
+
 
     /**
      * DB methods
@@ -415,7 +445,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
         BigDecimal ekrabattDecimal;
         try {
-            ekrabattDecimal = (new BigDecimal( ekrabatt.replace(',','.') )).multiply(percent);
+            ekrabattDecimal = new BigDecimal( vatParser(ekrabatt) );
         } catch (NumberFormatException ex) {
             ekrabattDecimal = null;
         }
