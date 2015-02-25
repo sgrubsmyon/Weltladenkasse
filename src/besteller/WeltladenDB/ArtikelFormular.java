@@ -49,6 +49,7 @@ public class ArtikelFormular extends WindowContent
     public JTextField vkpreisField;
     public JTextField empfvkpreisField;
     public JTextField ekrabattField;
+    public JTextField ekpreisField;
     public JCheckBox preisVariabelBox;
 
     private boolean hasOriginalName = false;
@@ -151,7 +152,7 @@ public class ArtikelFormular extends WindowContent
         headerPanel.add(identPanel);
 
             JPanel namePanel = new JPanel();
-            namePanel.setBorder(BorderFactory.createTitledBorder("Artikelname"));
+            namePanel.setBorder(BorderFactory.createTitledBorder("Bezeichnung | Einheit"));
             nameField = new JTextField("");
             nameField.setColumns(30);
             namePanel.add(nameField);
@@ -266,6 +267,15 @@ public class ArtikelFormular extends WindowContent
             ekrabattPanel.add(ekrabattField);
             ekrabattPanel.add(new JLabel("%"));
 
+            JPanel ekpreisPanel = new JPanel();
+            ekpreisPanel.setBorder(BorderFactory.createTitledBorder("EK-Preis (für Set)"));
+            ekpreisField = new JTextField("");
+            ekpreisField.setColumns(12);
+            ((AbstractDocument)ekpreisField.getDocument()).setDocumentFilter(geldFilter);
+            ekpreisField.setHorizontalAlignment(JTextField.RIGHT);
+            ekpreisPanel.add(ekpreisField);
+            ekpreisPanel.add(new JLabel(currencySymbol));
+
             JPanel preisVariabelPanel = new JPanel();
             //preisVariabelPanel.setBorder(BorderFactory.createTitledBorder("Variabler Preis"));
             preisVariabelBox = new JCheckBox("Preis variabel");
@@ -276,6 +286,7 @@ public class ArtikelFormular extends WindowContent
         preisPanel.add(vkpreisPanel);
         preisPanel.add(empfvkpreisPanel);
         preisPanel.add(ekrabattPanel);
+        preisPanel.add(ekpreisPanel);
         preisPanel.add(preisVariabelPanel);
         headerPanel.add(preisPanel);
 
@@ -297,15 +308,26 @@ public class ArtikelFormular extends WindowContent
                 return false;
         }
         return true;
+    }
 
-        //if (
-        //        nameField.getText().length() > 0 && nummerField.getText().length() > 0 &&
-        //        ( (vkpreisField.getText().length() > 0) || preisVariabelBox.isSelected() )
-        //   ){
-        //    return true;
-        //} else {
-        //    return false;
-        //}
+    public void updateEKPreisField() {
+        /** If both empfvkpreisField and ekrabattField are filled, then
+         *  ekpreisField is disabled and displays the resulting calculated
+         *  EK-Preis. Otherwise, it can be edited. If it is edited, both
+         *  empfvkpreisField and ekrabattField are cleared.
+         */
+        if ( preisVariabelBox.isSelected() ){
+            // we have a variable price, don't touch it!
+            return;
+        }
+        if ( !empfvkpreisField.getText().replaceAll("\\s","").equals("") &&
+             !ekrabattField.getText().replaceAll("\\s","").equals("") ){
+            ekpreisField.setEnabled(false);
+            BigDecimal ekpreis = calculateEKP(empfvkpreisField.getText(), ekrabattField.getText());
+            ekpreisField.setText( priceFormatter(ekpreis) );
+        } else {
+            ekpreisField.setEnabled(true);
+        }
     }
 
     public void itemStateChanged(ItemEvent e) {

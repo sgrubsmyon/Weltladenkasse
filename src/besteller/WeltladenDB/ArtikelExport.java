@@ -146,7 +146,7 @@ public class ArtikelExport extends WindowContent {
             String varStr = var ? "Ja" : "Nein";
             String sortimentStr = artikelListe.sortimentBools.get(i) ? "Ja" : "Nein";
             String lieferbarStr = artikelListe.lieferbarBools.get(i) ? "Ja" : "Nein";
-            String beliebtheit = artikelListe.originalData.get(i).get(17).toString();
+            String beliebtheit = beliebtNamen.get(artikelListe.beliebtIndices.get(i));
             Integer bestand;
             try {
                 bestand = Integer.parseInt( artikelListe.originalData.get(i).get(18).toString() );
