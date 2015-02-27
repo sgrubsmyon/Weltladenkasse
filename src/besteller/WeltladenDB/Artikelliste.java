@@ -81,6 +81,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     protected Vector<Boolean> varPreisBools;
     protected Vector<Integer> beliebtIndices;
 
+    protected Vector<String> moneyColumns;
+    protected Vector<String> decimalColumns;
+    protected Vector<String> editableColumns;
+
     // Vectors storing table edits
     private Vector<String> editLieferant;
     private Vector<String> editArtikelNummer;
@@ -98,6 +102,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private Vector<String> changedEKP;
     private Vector<Boolean> changedSortiment;
     private Vector<Boolean> changedLieferbar;
+    private Vector<Integer> changedBestand;
     private Vector<Boolean> changedAktiv;
 
     // Dialog to read items from file
@@ -141,6 +146,19 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         activeRowBools = new Vector<Boolean>();
         varPreisBools = new Vector<Boolean>();
         beliebtIndices = new Vector<Integer>();
+
+        moneyColumns = new Vector<String>();
+        moneyColumns.add("VK-Preis"); moneyColumns.add("Empf. VK-Preis");
+        moneyColumns.add("EK-Preis");
+        decimalColumns = new Vector<String>(moneyColumns);
+        decimalColumns.add("Menge"); decimalColumns.add("EK-Rabatt");
+        editableColumns = new Vector<String>();
+        editableColumns.add("Nummer"); editableColumns.add("Name");
+        editableColumns.add("Kurzname"); editableColumns.add("Menge");
+        editableColumns.add("Barcode"); editableColumns.add("Herkunft");
+        editableColumns.add("VPE"); editableColumns.add("Setgröße");
+        editableColumns.add("Sortiment"); editableColumns.add("Lieferbar");
+        editableColumns.add("Bestand"); editableColumns.add("Aktiv");
 
         String filter = "";
         if (toplevel_id == null){ // if user clicked on "Alle Artikel"
@@ -186,8 +204,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 String nr = rs.getString(5);
                 String name = rs.getString(6);
                 String kurzname = rs.getString(7);
-                String menge = rs.getString(8) == null ? null :
-                    rs.getBigDecimal(8).stripTrailingZeros().toPlainString();
+                String menge = rs.getString(8);
                 String barcode = rs.getString(9);
                 String herkunft = rs.getString(10);
                 String vpe = rs.getString(11);
@@ -198,7 +215,6 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 String ekp = rs.getString(16);
                 Boolean var = rs.getBoolean(17);
                 String mwst = rs.getString(18);
-                String mwstBetrag = "";
                 Boolean sortimentBool = rs.getBoolean(19);
                 Boolean lieferbarBool = rs.getBoolean(20);
                 Integer beliebtWert = rs.getInt(21);
@@ -211,26 +227,24 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 if (lieferant == null) lieferant = "";
                 if (kurzname == null) kurzname = "";
                 if (menge == null){ menge = ""; }
+                else { menge = unifyDecimal(menge); }
                 if (barcode == null){ barcode = ""; }
                 if (herkunft == null) herkunft = "";
                 if (vpe == null){ vpe = ""; }
                 String vkpOutput = "";
-                if (vkp != null){ vkpOutput = priceFormatter(vkp)+" "+currencySymbol; }
+                if (vkp != null){ vkpOutput = priceFormatter(vkp); }
                 if (empf_vkp == null){ empf_vkp = ""; }
-                else { empf_vkp = priceFormatter(empf_vkp)+" "+currencySymbol; }
+                else { empf_vkp = priceFormatter(empf_vkp); }
                 if (ek_rabatt == null){ ek_rabatt = ""; }
-                else { ek_rabatt = vatFormatter(ek_rabatt); }
+                else { ek_rabatt = vatPercentRemover( vatFormatter(ek_rabatt) ); }
                 if (ekp == null){ ekp = ""; }
-                else { ekp = priceFormatter(ekp)+" "+currencySymbol; }
+                else { ekp = priceFormatter(ekp); }
                 String mwstOutput = "";
                 if (mwst != null){ mwstOutput = vatFormatter(mwst); }
-                if (vkp == null){ vkpOutput = ""; mwstBetrag = ""; }
-                if (mwst == null){ mwstOutput = ""; mwstBetrag = ""; }
-                else if (vkp != null && mwst != null) {
-                    mwstBetrag = priceFormatter( calculateVAT(new BigDecimal(vkp), new BigDecimal(mwst)) )+" "+currencySymbol;
-                }
+                if (vkp == null){ vkpOutput = ""; }
+                if (mwst == null){ mwstOutput = ""; }
                 if (var == true){ vkpOutput = "variabel"; empf_vkp = "variabel";
-                    ek_rabatt = "variabel"; ekp = "variabel"; mwstBetrag = "variabel"; }
+                    ek_rabatt = "variabel"; ekp = "variabel"; }
                 String beliebt = "";
                 Integer beliebtIndex = -1;
                 if (beliebtWert != null){
@@ -249,12 +263,12 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     row.add(gruppenname); row.add(lieferant);
                     row.add(nr); row.add(name);
                     row.add(kurzname);
-                    row.add(menge.replace('.', ',')); row.add(barcode);
+                    row.add(menge); row.add(barcode);
                     row.add(herkunft); row.add(vpe);
                     row.add(setgroesse);
                     row.add(vkpOutput); row.add(empf_vkp);
                     row.add(ek_rabatt); row.add(ekp);
-                    row.add(mwstOutput); //row.add(mwstBetrag);
+                    row.add(mwstOutput);
                     row.add(sortimentBool); row.add(lieferbarBool);
                     row.add(beliebt); row.add(bestand);
                     row.add(von); row.add(bis);
@@ -298,6 +312,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         changedEKP = new Vector<String>();
         changedSortiment = new Vector<Boolean>();
         changedLieferbar = new Vector<Boolean>();
+        changedBestand = new Vector<Integer>();
         changedAktiv = new Vector<Boolean>();
     }
 
@@ -340,8 +355,6 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             }
             if ( changedAktiv.get(index) == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
                 String ekpreis = figureOutEKP(changedEmpfVKP.get(index), changedEKRabatt.get(index), changedEKP.get(index));
-                System.out.println(changedEmpfVKP.get(index)+" "+changedEKRabatt.get(index)+" "+changedEKP.get(index));
-                System.out.println("neuer ekpreis: "+ekpreis);
                 result = insertNewItem(prod_id, lief_id,
                         changedNummer.get(index), changedName.get(index),
                         changedKurzname.get(index),
@@ -351,7 +364,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                         changedVKP.get(index), changedEmpfVKP.get(index),
                         changedEKRabatt.get(index), ekpreis,
                         var_preis, changedSortiment.get(index),
-                        changedLieferbar.get(index), beliebt);
+                        changedLieferbar.get(index), beliebt, changedBestand.get(index));
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Artikel von "+editLieferant.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht geändert werden.",
@@ -502,21 +515,11 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             public boolean isCellEditable(int row, int col) {
                 String header = this.getColumnName(col);
                 if ( activeRowBools.get(row) ){
-                    if ( header.equals("VK-Preis") || header.equals("Empf. VK-Preis") ||
-                            header.equals("EK-Rabatt") || header.equals("EK-Preis") ) {
+                    if ( moneyColumns.contains(header) || header.equals("EK-Rabatt") ) {
                         if ( ! displayData.get(row).get(col).equals("variabel") )
                             return true;
                     }
-                    else if (
-                            header.equals("Nummer") || header.equals("Name") ||
-                            header.equals("Kurzname") ||
-                            header.equals("Menge") || header.equals("Barcode") ||
-                            header.equals("Herkunft") || header.equals("VPE") ||
-                            header.equals("Setgröße") ||
-                            header.equals("Sortiment") || header.equals("Lieferbar") ||
-                            header.equals("Bestand") ||
-                            header.equals("Aktiv")
-                            ){
+                    else if ( editableColumns.contains(header) ){
                         return true;
                     }
                 }
@@ -567,6 +570,61 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         myTable.getSelectionModel().addListSelectionListener(this);
         setTableProperties(myTable);
 
+    // Table Cell Renderers: (how cell content is displayed)
+        class GeldRenderer extends DefaultTableCellRenderer {
+            public GeldRenderer() { super(); }
+
+            public void setValue(Object value) {
+                String valueStr = "";
+                if (value != null){
+                    valueStr = value.toString();
+                    if ( !valueStr.equals("variabel") ){
+                        valueStr = priceFormatter(valueStr);
+                        if ( !valueStr.equals("") ){
+                            valueStr += " "+currencySymbol;
+                        }
+                    }
+                }
+                setText(valueStr);
+            }
+        }
+        GeldRenderer geldRenderer = new GeldRenderer();
+        for (String c : moneyColumns) {
+            myTable.getColumn(c).setCellRenderer(geldRenderer);
+        }
+
+        class RelRenderer extends DefaultTableCellRenderer {
+            public RelRenderer() { super(); }
+
+            public void setValue(Object value) {
+                String valueStr = "";
+                if (value != null){
+                    valueStr = value.toString();
+                    if ( !valueStr.equals("variabel") && !valueStr.equals("") ){
+                        BigDecimal fracValue = new BigDecimal(
+                                vatParser(vatFormatter(valueStr))
+                                ).multiply(percent);
+                        valueStr = vatFormatter(fracValue);
+                    }
+                }
+                setText(valueStr);
+            }
+        }
+        RelRenderer relRenderer = new RelRenderer();
+        myTable.getColumn("EK-Rabatt").setCellRenderer(relRenderer);
+
+        class BeliebtRenderer extends DefaultTableCellRenderer {
+            public BeliebtRenderer() { super(); }
+
+            public void setValue(Object value) {
+                String valueStr = "";
+                setText(valueStr);
+            }
+        }
+        BeliebtRenderer belRenderer = new BeliebtRenderer();
+        //myTable.getColumn("Beliebtheit").setCellRenderer(belRenderer);
+
+    // Table Cell Editors: (how content can be edited)
         // extra cell editor that has the PositiveNumberDocumentFilter
         class NumberEditor extends DefaultCellEditor {
             JTextField textField;
@@ -587,13 +645,13 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             public AnzahlEditor() {
                 super(new JTextField()); // call to super must be first statement in constructor
                 textField = (JTextField)getComponent();
-                IntegerDocumentFilter intFilter = new IntegerDocumentFilter();
                 ((AbstractDocument)textField.getDocument()).setDocumentFilter(intFilter);
             }
         }
         AnzahlEditor anzahlEditor = new AnzahlEditor();
         myTable.getColumn("VPE").setCellEditor(anzahlEditor);
         myTable.getColumn("Setgröße").setCellEditor(anzahlEditor);
+        myTable.getColumn("Bestand").setCellEditor(anzahlEditor);
 
         // extra cell editor that has the CurrencyDocumentFilter
         class GeldEditor extends DefaultCellEditor {
@@ -605,9 +663,9 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             }
         }
         GeldEditor geldEditor = new GeldEditor();
-        myTable.getColumn("VK-Preis").setCellEditor(geldEditor);
-        myTable.getColumn("Empf. VK-Preis").setCellEditor(geldEditor);
-        myTable.getColumn("EK-Preis").setCellEditor(geldEditor);
+        for (String c : moneyColumns) {
+            myTable.getColumn(c).setCellEditor(geldEditor);
+        }
 
         class RelEditor extends DefaultCellEditor {
             JTextField textField;
@@ -740,7 +798,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         int nummerIndex = editArtikelNummer.indexOf(origArtikelNummer); // look up artikelNummer in change list
         int lieferantIndex = editLieferant.indexOf(origLieferant); // look up lieferant in change list
 
-        // post-edit edited cell
+        // post-edit edited cell (parse bad mistakes)
         String value = model.getValueAt(row, column).toString().replaceAll("\\s","");
         if ( value.equals("") ){
             // replace whitespace only entries with nothing
@@ -763,24 +821,23 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 model.setValueAt(origArtikelNummer, row, column);
             model.addTableModelListener(this);
         }
-        value = model.getValueAt(row, column).toString().replace(currencySymbol,"")
-            .replaceAll("\\s","").replace(',','.');
-        if ( header.equals("VK-Preis") || header.equals("EK-Preis") ){
-            if ( !value.equals("") ){
-                // format the entered money value appropriately
-                value = priceFormatter(value)+" "+currencySymbol;
-                model.removeTableModelListener(this); // remove listener before doing changes
-                    model.setValueAt(value, row, column); // update table cell with currency symbol
-                model.addTableModelListener(this);
-            } else {
-                if ( header.equals("VK-Preis") ){
-                    // user tried to delete the vkpreis (not allowed)
-                    // reset to original value
-                    model.removeTableModelListener(this); // remove listener before doing changes
-                        model.setValueAt(originalData.get(dataRow).get(column).toString(), row, column);
-                    model.addTableModelListener(this);
-                }
-            }
+        if ( header.equals("VK-Preis") && value.equals("") ){
+            // user tried to delete the vkpreis (not allowed)
+            // reset to original value
+            model.removeTableModelListener(this); // remove listener before doing changes
+                model.setValueAt(originalData.get(dataRow).get(column).toString(), row, column);
+            model.addTableModelListener(this);
+        }
+        // get uniform formatting (otherwise e.g. change of only decimal symbol isn't ignored)
+        if ( moneyColumns.contains(header) ){
+            model.removeTableModelListener(this); // remove listener before doing changes
+                model.setValueAt(priceFormatter(value), row, column);
+            model.addTableModelListener(this);
+        } else if ( decimalColumns.contains(header) ){
+            value = unifyDecimal( model.getValueAt(row, column).toString() ); // uniformify decimal number
+            model.removeTableModelListener(this); // remove listener before doing changes
+                model.setValueAt(value, row, column);
+            model.addTableModelListener(this);
         }
 
         // Compare entire row to original data
@@ -816,7 +873,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             String kurzname = model.getValueAt(row, model.findColumn("Kurzname")).toString();
             BigDecimal menge;
             try {
-                menge = new BigDecimal( model.getValueAt(row, model.findColumn("Menge")).toString().replace(',', '.') );
+                menge = new BigDecimal(model.getValueAt(row, model.findColumn("Menge")).toString().replace(',','.'));
             } catch (NumberFormatException ex){ menge = null; }
             String barcode = model.getValueAt(row, model.findColumn("Barcode")).toString();
             String herkunft = model.getValueAt(row, model.findColumn("Herkunft")).toString();
@@ -834,6 +891,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             String ekpreis = model.getValueAt(row, model.findColumn("EK-Preis")).toString();
             boolean sortiment = model.getValueAt(row, model.findColumn("Sortiment")).toString().equals("true") ? true : false;
             boolean lieferbar = model.getValueAt(row, model.findColumn("Lieferbar")).toString().equals("true") ? true : false;
+            Integer bestand;
+            try {
+                bestand = Integer.parseInt( model.getValueAt(row, model.findColumn("Bestand")).toString() );
+            } catch (NumberFormatException ex){ bestand = null; }
             boolean aktiv = model.getValueAt(row, model.findColumn("Aktiv")).toString().equals("true") ? true : false;
 
             // update the vectors caching the changes
@@ -852,6 +913,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 changedEKP.set(nummerIndex, ekpreis);
                 changedSortiment.set(nummerIndex, sortiment);
                 changedLieferbar.set(nummerIndex, lieferbar);
+                changedBestand.set(nummerIndex, bestand);
                 changedAktiv.set(nummerIndex, aktiv);
             } else { // an edit occurred in a row that is not in the list of changes yet
                 editLieferant.add(origLieferant);
@@ -870,6 +932,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 changedEKP.add(ekpreis);
                 changedSortiment.add(sortiment);
                 changedLieferbar.add(lieferbar);
+                changedBestand.add(bestand);
                 changedAktiv.add(aktiv);
             }
         } else if (!changed) {
@@ -891,6 +954,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 changedEKP.remove(nummerIndex);
                 changedSortiment.remove(nummerIndex);
                 changedLieferbar.remove(nummerIndex);
+                changedBestand.remove(nummerIndex);
                 changedAktiv.remove(nummerIndex);
             }
         }

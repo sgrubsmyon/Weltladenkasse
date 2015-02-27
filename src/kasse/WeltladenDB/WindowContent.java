@@ -43,6 +43,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected final BigDecimal one = new BigDecimal("1");
     protected final BigDecimal minusOne = new BigDecimal("-1");
     protected final BigDecimal percent = new BigDecimal("0.01");
+    protected final BigDecimal hundred = new BigDecimal("100.");
 
     // Die Ausrichter:
     protected DefaultTableCellRenderer rechtsAusrichter = new DefaultTableCellRenderer();
@@ -55,6 +56,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
     protected PositiveNumberDocumentFilter relFilter = new PositiveNumberDocumentFilter(3, 6);
     protected PositiveNumberDocumentFilter mengeFilter = new PositiveNumberDocumentFilter(5, 8);
+    protected IntegerDocumentFilter intFilter = new IntegerDocumentFilter(smallintMax, "Wert", this);
 
     protected Vector<Integer> beliebtWerte;
     protected Vector<String> beliebtNamen;
@@ -256,6 +258,26 @@ public abstract class WindowContent extends JPanel implements ActionListener {
      * Number formatting methods
      */
 
+    protected String decimalMark(String value) {
+        /** Use uniform decimal mark */
+        return value.replace('.',',');
+    }
+
+    protected String unifyDecimal(BigDecimal value) {
+        /** Strip trailing zeros and use uniform decimal mark */
+        return decimalMark( value.stripTrailingZeros().toPlainString() );
+    }
+
+    protected String unifyDecimal(String value) {
+        /** Strip trailing zeros and use uniform decimal mark */
+        try {
+            BigDecimal val = new BigDecimal( value.replaceAll("\\s","").replace(',','.') );
+            return unifyDecimal(val);
+        } catch (NumberFormatException nfe) {
+            return "";
+        }
+    }
+
     protected String priceFormatterIntern(BigDecimal price) {
         if (price == null){
             return "";
@@ -265,7 +287,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected String priceFormatter(BigDecimal price) {
-        return priceFormatterIntern(price).replace('.',',');
+        return decimalMark( priceFormatterIntern(price) );
     }
 
     protected String priceFormatterIntern(String priceStr) {
@@ -291,7 +313,9 @@ public abstract class WindowContent extends JPanel implements ActionListener {
          *  Returns "1%" */
         vat = vat.replace(',','.');
         try {
-            String vatFormatted = vatFormat.format( (new BigDecimal(vat)).multiply(new BigDecimal("100.")) ).replace('.',',') + "%";
+            String vatFormatted = unifyDecimal(
+                    vatFormat.format( new BigDecimal(vat).multiply(hundred) )
+                    ) + "%";
             return vatFormatted;
         } catch (NumberFormatException nfe) {
             return "";
@@ -307,11 +331,15 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return vatFormatter(vat.toString());
     }
 
+    protected String vatPercentRemover(String vat) {
+        return vat.replace("%","").replaceAll("\\s","");
+    }
+
     protected String vatParser(String vat) {
-        /** Input `vat` is e.g. "1 %"
+        /** Input `vat` is e.g. "1%"
          *  Returns "0.01" */
         try {
-            BigDecimal vatDecimal = new BigDecimal( vat.replace("%","").replaceAll("\\s","").replace(',','.') ).multiply(percent);
+            BigDecimal vatDecimal = new BigDecimal( vatPercentRemover(vat).replace(',','.') ).multiply(percent);
             return vatDecimal.toString();
         } catch (NumberFormatException nfe) {
             return "";
@@ -419,7 +447,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             BigDecimal menge, String barcode, String herkunft, Integer vpe,
             Integer setgroesse, String vkpreis, String empfvkpreis,
             String ekrabatt, String ekpreis, Boolean var_preis, Boolean sortiment,
-            Boolean lieferbar, Integer beliebt) {
+            Boolean lieferbar, Integer beliebt, Integer bestand) {
         // add row for new item (with updated fields)
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
@@ -472,6 +500,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "ek_rabatt = ?, ek_preis = ?, "+
                     "variabler_preis = ?, sortiment = ?, "+
                     "lieferbar = ?, beliebtheit = ?, "+
+                    "bestand = ?, "+
                     "von = NOW(), aktiv = TRUE"
                     );
             pstmtSetInteger(pstmt, 1, produktgruppen_id);
@@ -492,6 +521,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             pstmtSetBoolean(pstmt, 16, sortiment);
             pstmtSetBoolean(pstmt, 17, lieferbar);
             pstmtSetInteger(pstmt, 18, beliebt);
+            pstmtSetInteger(pstmt, 19, bestand);
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
