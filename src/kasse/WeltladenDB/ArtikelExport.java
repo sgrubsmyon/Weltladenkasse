@@ -131,8 +131,7 @@ public class ArtikelExport extends WindowContent {
                     empf_vkp = null;
                 }
                 try {
-                    ekrabatt = new BigDecimal(
-                            priceFormatterIntern(artikelListe.originalData.get(i).get(12).toString()));
+                    ekrabatt = new BigDecimal( vatParser(artikelListe.originalData.get(i).get(12).toString()) );
                 } catch (NumberFormatException ex) {
                     ekrabatt = null;
                 }
