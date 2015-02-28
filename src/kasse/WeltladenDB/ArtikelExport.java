@@ -68,17 +68,25 @@ public class ArtikelExport extends WindowContent {
     void writeToODSFile(File file) {
         // table header
         final Vector<String> columns = new Vector<String>();
-            columns.add("Produktgruppe"); columns.add("Lieferant");
-            columns.add("Artikelnummer"); columns.add("Bezeichnung | Einheit");
+            columns.add("Produktgruppe");
+            columns.add("Lieferant");
+            columns.add("Artikelnummer");
+            columns.add("Bezeichnung | Einheit");
             columns.add("Kurzname");
-            columns.add("Menge (kg/l/Stk.)"); columns.add("Barcode");
-            columns.add("Herkunftsland"); columns.add("VPE");
+            columns.add("Menge (kg/l/Stk.)");
+            columns.add("Sortiment");
+            columns.add("Sofort lieferbar");
+            columns.add("Beliebtheit");
+            columns.add("Barcode");
+            columns.add("VPE");
             columns.add("Setgröße");
-            columns.add("VK-Preis"); columns.add("Empf. VK-Preis");
-            columns.add("EK-Rabatt"); columns.add("EK-Preis");
+            columns.add("VK-Preis");
+            columns.add("Empf. VK-Preis");
+            columns.add("EK-Rabatt");
+            columns.add("EK-Preis");
             columns.add("Variabel");
-            columns.add("Sortiment"); columns.add("Sofort lieferbar");
-            columns.add("Beliebtheit"); columns.add("Bestand");
+            columns.add("Herkunftsland");
+            columns.add("Bestand");
         // table rows
         final Vector< Vector<Object> > data = new Vector< Vector<Object> >();
         for (int i=0; i<artikelListe.originalData.size(); i++){
@@ -98,17 +106,19 @@ public class ArtikelExport extends WindowContent {
             } catch (NumberFormatException ex) {
                 menge = null;
             }
-            String barcode = artikelListe.originalData.get(i).get(6).toString();
-            String herkunft = artikelListe.originalData.get(i).get(7).toString();
+            String sortimentStr = artikelListe.sortimentBools.get(i) ? "Ja" : "Nein";
+            String lieferbarStr = artikelListe.lieferbarBools.get(i) ? "Ja" : "Nein";
+            String beliebtheit = beliebtNamen.get(artikelListe.beliebtIndices.get(i));
+            String barcode = artikelListe.originalData.get(i).get(10).toString();
             Integer vpe;
             try {
-                vpe = Integer.parseInt( artikelListe.originalData.get(i).get(8).toString() );
+                vpe = Integer.parseInt( artikelListe.originalData.get(i).get(11).toString() );
             } catch (NumberFormatException ex) {
                 vpe = null;
             }
             Integer setgroesse;
             try {
-                setgroesse = Integer.parseInt( artikelListe.originalData.get(i).get(9).toString() );
+                setgroesse = Integer.parseInt( artikelListe.originalData.get(i).get(12).toString() );
             } catch (NumberFormatException ex) {
                 setgroesse = null;
             }
@@ -120,32 +130,30 @@ public class ArtikelExport extends WindowContent {
             if (!var){
                 try {
                     vkp = new BigDecimal(
-                            priceFormatterIntern(artikelListe.originalData.get(i).get(10).toString()));
+                            priceFormatterIntern(artikelListe.originalData.get(i).get(6).toString()));
                 } catch (NumberFormatException ex) {
                     vkp = null;
                 }
                 try {
                     empf_vkp = new BigDecimal(
-                            priceFormatterIntern(artikelListe.originalData.get(i).get(11).toString()));
+                            priceFormatterIntern(artikelListe.originalData.get(i).get(13).toString()));
                 } catch (NumberFormatException ex) {
                     empf_vkp = null;
                 }
                 try {
-                    ekrabatt = new BigDecimal( vatParser(artikelListe.originalData.get(i).get(12).toString()) );
+                    ekrabatt = new BigDecimal( vatParser(artikelListe.originalData.get(i).get(14).toString()) );
                 } catch (NumberFormatException ex) {
                     ekrabatt = null;
                 }
                 try {
                     ekp = new BigDecimal(
-                            priceFormatterIntern(artikelListe.originalData.get(i).get(13).toString()));
+                            priceFormatterIntern(artikelListe.originalData.get(i).get(15).toString()));
                 } catch (NumberFormatException ex) {
                     ekp = null;
                 }
             }
             String varStr = var ? "Ja" : "Nein";
-            String sortimentStr = artikelListe.sortimentBools.get(i) ? "Ja" : "Nein";
-            String lieferbarStr = artikelListe.lieferbarBools.get(i) ? "Ja" : "Nein";
-            String beliebtheit = beliebtNamen.get(artikelListe.beliebtIndices.get(i));
+            String herkunft = artikelListe.originalData.get(i).get(17).toString();
             Integer bestand;
             try {
                 bestand = Integer.parseInt( artikelListe.originalData.get(i).get(18).toString() );
@@ -155,11 +163,11 @@ public class ArtikelExport extends WindowContent {
 
             Vector<Object> row = new Vector<Object>();
                 row.add(produktgruppe); row.add(lieferant); row.add(nummer);
-                row.add(name); row.add(kurzname); row.add(menge); row.add(barcode);
-                row.add(herkunft); row.add(vpe); row.add(setgroesse);
+                row.add(name); row.add(kurzname); row.add(menge); row.add(sortimentStr); row.add(lieferbarStr);
+                row.add(beliebtheit); row.add(barcode);
+                row.add(vpe); row.add(setgroesse);
                 row.add(vkp); row.add(empf_vkp); row.add(ekrabatt); row.add(ekp);
-                row.add(varStr); row.add(sortimentStr); row.add(lieferbarStr);
-                row.add(beliebtheit); row.add(bestand);
+                row.add(varStr); row.add(herkunft); row.add(bestand);
             data.add(row);
         }
 
