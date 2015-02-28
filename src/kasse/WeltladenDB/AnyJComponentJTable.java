@@ -10,26 +10,39 @@ import javax.swing.table.*;
 // for putting any JComponent (e.g. JButton) into a JTable: Code from http://www.codeguru.com/java/articles/162.shtml
 public class AnyJComponentJTable extends JTable {
     // attributes:
-    private HashSet<Integer> editableCols;
+    private HashSet<Integer> editableCols = new HashSet<Integer>();
 
     // methods:
     public AnyJComponentJTable(){
         super();
-        editableCols = new HashSet<Integer>();
     }
 
     public AnyJComponentJTable(TableModel m){
         super(m);
-        editableCols = new HashSet<Integer>();
     }
 
-    public AnyJComponentJTable(Vector v, Vector l){
-        super(v, l);
-        editableCols = new HashSet<Integer>();
+    public AnyJComponentJTable(TableModel m, Integer columnMargin,
+            Integer minColumnWidth, Integer maxColumnWidth){
+        super(m);
+        for (int colIndex=0; colIndex<this.getColumnCount(); colIndex++){
+            resizeColumnToFitContent(colIndex, columnMargin, minColumnWidth, maxColumnWidth);
+        }
     }
 
-    public AnyJComponentJTable(Vector v, Vector l, Set<Integer> edCol){
-        super(v, l);
+    public AnyJComponentJTable(Vector data, Vector labels){
+        super(data, labels);
+    }
+
+    public AnyJComponentJTable(Vector data, Vector labels, Integer
+            columnMargin, Integer minColumnWidth, Integer maxColumnWidth){
+        super(data, labels);
+        for (int colIndex=0; colIndex<this.getColumnCount(); colIndex++){
+            resizeColumnToFitContent(colIndex, columnMargin, minColumnWidth, maxColumnWidth);
+        }
+    }
+
+    public AnyJComponentJTable(Vector data, Vector labels, Set<Integer> edCol){
+        super(data, labels);
         editableCols = new HashSet<Integer>(edCol);
     }
 
@@ -44,8 +57,6 @@ public class AnyJComponentJTable extends JTable {
             throw new IllegalArgumentException();
         editableCols.remove(colNumber);
     }
-
-
 
     public TableCellRenderer getCellRenderer(int row, int column) {
         // always return button-capable renderer if this is a JComponent
@@ -126,21 +137,39 @@ public class AnyJComponentJTable extends JTable {
         return tip;
     }
 
-    public void resizeColumnToFitContent(int columnIndex, int margin){
+    public void resizeColumnToFitContent(TableColumn column, Integer margin,
+            Integer minColumnWidth, Integer maxColumnWidth){
         /** Found on http://www.programcreek.com/java-api-examples/index.php?api=javax.swing.table.TableCellRenderer */
-        TableColumn column = getColumnModel().getColumn(columnIndex);
+        int columnIndex = column.getModelIndex();
         TableCellRenderer renderer = column.getHeaderRenderer();
         if (renderer == null) {
             renderer = getTableHeader().getDefaultRenderer();
         }
         Component c = renderer.getTableCellRendererComponent(this, column.getHeaderValue(), false, false, 0, 0);
-        int maxWidth = c.getPreferredSize().width;
+        // start with header width:
+        //int maxWidth = c.getPreferredSize().width;
+        // or ignore header width:
+        int maxWidth = 0;
+        if (minColumnWidth != null){
+            maxWidth = minColumnWidth;
+        }
         for (int row=0; row < getRowCount(); row++) {
-            renderer = getCellRenderer(row,columnIndex);
+            renderer = getCellRenderer(row, columnIndex);
             c = renderer.getTableCellRendererComponent(this,
                     getValueAt(row, columnIndex), false, false, row, columnIndex);
             maxWidth = Math.max(maxWidth, c.getPreferredSize().width);
         }
+        if ( maxColumnWidth != null && maxWidth > maxColumnWidth){
+            //System.out.println("column: "+column.getHeaderValue().toString()+"; maxWidth = "+
+            //        maxWidth+" > "+maxColumnWidth+" = maxColumnWidth");
+            maxWidth = maxColumnWidth;
+        }
         column.setPreferredWidth(maxWidth + margin);
+    }
+
+    public void resizeColumnToFitContent(int columnIndex, Integer margin,
+            Integer minColumnWidth, Integer maxColumnWidth){
+        TableColumn column = getColumnModel().getColumn(columnIndex);
+        resizeColumnToFitContent(column, margin, minColumnWidth, maxColumnWidth);
     }
 }

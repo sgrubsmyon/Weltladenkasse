@@ -65,9 +65,13 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     protected Vector<Boolean> varPreisBools;
     protected Vector<Integer> beliebtIndices;
 
+    protected Vector<String> linksColumns;
+    protected Vector<String> rechtsColumns;
+    protected Vector<String> zentralColumns;
+    protected Vector<String> smallColumns;
+    protected Vector<String> editableColumns;
     protected Vector<String> moneyColumns;
     protected Vector<String> decimalColumns;
-    protected Vector<String> editableColumns;
 
     // Vectors storing table edits
     private Vector<String> editLieferant;
@@ -111,19 +115,27 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private void fillDataArray() {
         this.data = new Vector< Vector<Object> >();
         columnLabels = new Vector<String>();
-        columnLabels.add("Produktgruppe"); columnLabels.add("Lieferant");
-        columnLabels.add("Nummer"); columnLabels.add("Name");
+        columnLabels.add("Produktgruppe");
+        columnLabels.add("Lieferant");
+        columnLabels.add("Nummer");
+        columnLabels.add("Name");
         columnLabels.add("Kurzname");
-        columnLabels.add("Menge"); columnLabels.add("Barcode");
-        columnLabels.add("Herkunft"); columnLabels.add("VPE");
+        columnLabels.add("Menge");
+        columnLabels.add("VK-Preis");
+        columnLabels.add("Sortiment");
+        columnLabels.add("Lieferbar");
+        columnLabels.add("Beliebtheit");
+        columnLabels.add("Barcode");
+        columnLabels.add("VPE");
         columnLabels.add("Setgröße");
-        columnLabels.add("VK-Preis"); columnLabels.add("Empf. VK-Preis");
-        columnLabels.add("EK-Rabatt"); columnLabels.add("EK-Preis");
-        columnLabels.add("MwSt."); //columnLabels.add("Betrag MwSt.");
-        columnLabels.add("Sortiment"); columnLabels.add("Lieferbar");
-        columnLabels.add("Beliebtheit"); columnLabels.add("Bestand");
-        columnLabels.add("Ab/Seit"); columnLabels.add("Bis");
-        columnLabels.add("Aktiv");
+        columnLabels.add("Empf. VK-Preis");
+        columnLabels.add("EK-Rabatt");
+        columnLabels.add("EK-Preis");
+        columnLabels.add("MwSt.");
+        columnLabels.add("Herkunft");
+        columnLabels.add("Bestand");
+        columnLabels.add("Ab/Seit");
+        columnLabels.add("Bis"); columnLabels.add("Aktiv");
         produktGruppeIDs = new Vector<Integer>();
         lieferantIDs = new Vector<Integer>();
         sortimentBools = new Vector<Boolean>();
@@ -132,19 +144,41 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         varPreisBools = new Vector<Boolean>();
         beliebtIndices = new Vector<Integer>();
 
-        moneyColumns = new Vector<String>();
-        moneyColumns.add("VK-Preis"); moneyColumns.add("Empf. VK-Preis");
-        moneyColumns.add("EK-Preis");
-        decimalColumns = new Vector<String>(moneyColumns);
-        decimalColumns.add("Menge"); decimalColumns.add("EK-Rabatt");
+        linksColumns = new Vector<String>();
+        linksColumns.add("Produktgruppe"); linksColumns.add("Lieferant");
+        linksColumns.add("Name"); linksColumns.add("Kurzname");
+        linksColumns.add("Herkunft"); linksColumns.add("Ab/Seit");
+        linksColumns.add("Bis");
+        //
+        rechtsColumns = new Vector<String>();
+        rechtsColumns.add("Nummer"); rechtsColumns.add("Menge");
+        rechtsColumns.add("Barcode"); rechtsColumns.add("VPE");
+        rechtsColumns.add("Setgröße"); rechtsColumns.add("VK-Preis");
+        rechtsColumns.add("Empf. VK-Preis"); rechtsColumns.add("EK-Rabatt");
+        rechtsColumns.add("EK-Preis"); rechtsColumns.add("MwSt.");
+        rechtsColumns.add("Bestand");
+        //
+        zentralColumns = new Vector<String>();
+        zentralColumns.add("Beliebtheit");
+        //
+        smallColumns = new Vector<String>();
+        smallColumns.add("Ab/Seit"); smallColumns.add("Bis");
+
         editableColumns = new Vector<String>();
         editableColumns.add("Nummer"); editableColumns.add("Name");
         editableColumns.add("Kurzname"); editableColumns.add("Menge");
         editableColumns.add("Barcode"); editableColumns.add("Herkunft");
         editableColumns.add("VPE"); editableColumns.add("Setgröße");
         editableColumns.add("Sortiment"); editableColumns.add("Lieferbar");
-        editableColumns.add("Beliebtheit");
-        editableColumns.add("Bestand"); editableColumns.add("Aktiv");
+        editableColumns.add("Beliebtheit"); editableColumns.add("Bestand");
+        editableColumns.add("Aktiv");
+        //
+        moneyColumns = new Vector<String>();
+        moneyColumns.add("VK-Preis"); moneyColumns.add("Empf. VK-Preis");
+        moneyColumns.add("EK-Preis");
+        //
+        decimalColumns = new Vector<String>(moneyColumns);
+        decimalColumns.add("Menge"); decimalColumns.add("EK-Rabatt");
 
         String filter = "";
         if (toplevel_id == null){ // if user clicked on "Alle Artikel"
@@ -244,17 +278,17 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 if (bis == null) bis = "";
 
                 Vector<Object> row = new Vector<Object>();
-                    row.add(gruppenname); row.add(lieferant);
-                    row.add(nr); row.add(name);
-                    row.add(kurzname);
-                    row.add(menge); row.add(barcode);
-                    row.add(herkunft); row.add(vpe);
-                    row.add(setgroesse);
-                    row.add(vkpOutput); row.add(empf_vkp);
-                    row.add(ek_rabatt); row.add(ekp);
-                    row.add(mwstOutput);
-                    row.add(sortimentBool); row.add(lieferbarBool);
-                    row.add(beliebtIndex); row.add(bestand);
+                    row.add(gruppenname);
+                    row.add(lieferant); row.add(nr);
+                    row.add(name); row.add(kurzname);
+                    row.add(menge); row.add(vkpOutput);
+                    row.add(sortimentBool);
+                    row.add(lieferbarBool);
+                    row.add(beliebtIndex); row.add(barcode);
+                    row.add(vpe); row.add(setgroesse);
+                    row.add(empf_vkp); row.add(ek_rabatt);
+                    row.add(ekp); row.add(mwstOutput);
+                    row.add(herkunft); row.add(bestand);
                     row.add(von); row.add(bis);
                     row.add(aktivBool);
                 data.add(row);
@@ -462,174 +496,183 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         exportButton.setEnabled(editLieferant.size() == 0);
     }
 
-    void initiateTable() {
-        myTable = new AnyJComponentJTable( new AbstractTableModel() {
-            // Subclass the AbstractTableModel to set display data and
-            // synchronize underlying data Vector.
-            // Needed to prevent exception "java.lang.IllegalArgumentException: Identifier not found"
-            public String getColumnName(int col) {
-                return columnLabels.get(col);
-            }
-            // Needed to prevent exception "java.lang.IllegalArgumentException: Identifier not found"
-            public int findColumn(String name) {
-                int col=0;
-                for (String s : columnLabels){
-                    if (s.equals(name)){
-                        return col;
-                    }
-                    col++;
+    class ArtikellisteTableModel extends AbstractTableModel {
+        // Subclass the AbstractTableModel to set display data and
+        // synchronize underlying data Vector.
+        // Needed to prevent exception "java.lang.IllegalArgumentException: Identifier not found"
+        public String getColumnName(int col) {
+            return columnLabels.get(col);
+        }
+        // Needed to prevent exception "java.lang.IllegalArgumentException: Identifier not found"
+        public int findColumn(String name) {
+            int col=0;
+            for (String s : columnLabels){
+                if (s.equals(name)){
+                    return col;
                 }
-                return -1;
+                col++;
             }
-            public int getRowCount() { return displayData.size(); }
-            public int getColumnCount() { return columnLabels.size(); }
-            public Object getValueAt(int row, int col) {
-                return displayData.get(row).get(col);
-            }
-            public void setValueAt(Object value, int row, int col) {
-                Vector<Object> rowentries = displayData.get(row);
-                rowentries.set(col, value);
-                displayData.set(row, rowentries);
-                int dataRow = displayIndices.get(row); // convert from displayData index to data index
-                data.set(dataRow, rowentries);
-                fireTableCellUpdated(row, col);
-            }
-        } ) { // Subclass the AnyJComponentJTable to set editable cells, font properties and tool tip text.
-            public boolean isCellEditable(int row, int col) {
-                String header = this.getColumnName(col);
-                if ( activeRowBools.get(row) ){
-                    if ( moneyColumns.contains(header) || header.equals("EK-Rabatt") ) {
-                        if ( ! displayData.get(row).get(col).equals("variabel") )
-                            return true;
-                    }
-                    else if ( editableColumns.contains(header) ){
+            return -1;
+        }
+        public int getRowCount() { return displayData.size(); }
+        public int getColumnCount() { return columnLabels.size(); }
+        public Object getValueAt(int row, int col) {
+            return displayData.get(row).get(col);
+        }
+        public void setValueAt(Object value, int row, int col) {
+            Vector<Object> rowentries = displayData.get(row);
+            rowentries.set(col, value);
+            displayData.set(row, rowentries);
+            int dataRow = displayIndices.get(row); // convert from displayData index to data index
+            data.set(dataRow, rowentries);
+            fireTableCellUpdated(row, col);
+        }
+    }
+
+    class ArtikellisteTable extends AnyJComponentJTable {
+        public ArtikellisteTable(TableModel m, Integer columnMargin,
+                Integer minColumnWidth, Integer maxColumnWidth){
+            super(m, columnMargin, minColumnWidth, maxColumnWidth);
+        }
+
+        // Subclass the AnyJComponentJTable to set editable cells, font properties and tool tip text.
+        public boolean isCellEditable(int row, int col) {
+            String header = this.getColumnName(col);
+            if ( activeRowBools.get(row) ){
+                if ( moneyColumns.contains(header) || header.equals("EK-Rabatt") ) {
+                    if ( ! displayData.get(row).get(col).equals("variabel") )
                         return true;
-                    }
                 }
-                return false;
+                else if ( editableColumns.contains(header) ){
+                    return true;
+                }
             }
+            return false;
+        }
 
-            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-                // custom rendering
-                Component c = super.prepareRenderer(renderer, row, column);
-                Object value = this.getValueAt(row, column);
-                int realRowIndex = row;
-                //realRowIndex = convertRowIndexToModel(realRowIndex);
-                realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
-                 // for rows with inactive items, set color:
-                if ( ! activeRowBools.get(realRowIndex) ){
-                    c.setFont( c.getFont().deriveFont(Font.ITALIC) );
-                    c.setForeground(Color.BLUE);
-                }
-                // for articles not in sortiment, set color:
-                else if ( ! sortimentBools.get(realRowIndex) ){
-                    c.setFont( c.getFont().deriveFont(Font.PLAIN) );
-                    c.setForeground(Color.GRAY);
-                }
-                else {
-                    c.setFont( c.getFont().deriveFont(Font.PLAIN) );
-                    c.setForeground(Color.BLACK);
-                }
-                // override the above if this is the "Beliebtheit" column:
-                if ( this.getColumnName(column).equals("Beliebtheit") ){
-                    Integer index = Integer.parseInt(value.toString());
-                    c.setFont( c.getFont().deriveFont(Font.PLAIN) );
-                    c.setForeground( beliebtFarben.get(index) );
-                }
-                // now, render the text:
-                if (c instanceof JLabel){
-                    JLabel label = (JLabel)c;
-                    String cname = this.getColumnName(column);
-                    String valueStr = "";
-                    if ( cname.equals("Beliebtheit") ){
-                        // BeliebtRenderer:
-                        //Integer index = beliebtIndices.get(realRowIndex);
-                        Integer index = Integer.parseInt(value.toString());
-                        label.setText( beliebtKuerzel.get(index) );
-                    }
-                    if ( moneyColumns.contains(cname) ){
-                        // GeldRenderer:
-                        if (value != null){
-                            valueStr = value.toString();
-                            if ( !valueStr.equals("variabel") ){
-                                valueStr = priceFormatter(valueStr);
-                                if ( !valueStr.equals("") ){
-                                    valueStr += " "+currencySymbol;
-                                }
-                            }
-                        }
-                        label.setText(valueStr);
-                    }
-                    if ( cname.equals("EK-Rabatt") ){
-                        // PercentRenderer:
-                        if (value != null){
-                            valueStr = value.toString();
-                            if ( !valueStr.equals("variabel") && !valueStr.equals("") ){
-                                BigDecimal fracValue = new BigDecimal(
-                                        vatParser(vatFormatter(valueStr))
-                                        ).multiply(percent);
-                                valueStr = vatFormatter(fracValue);
-                            }
-                        }
-                        label.setText(valueStr);
-                    }
-                }
-                return c;
+        public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+            // custom rendering
+            Component c = super.prepareRenderer(renderer, row, column);
+            Object value = this.getValueAt(row, column);
+            int realRowIndex = row;
+            //realRowIndex = convertRowIndexToModel(realRowIndex);
+            realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
+            // for rows with inactive items, set color:
+            if ( ! activeRowBools.get(realRowIndex) ){
+                c.setFont( c.getFont().deriveFont(Font.ITALIC) );
+                c.setForeground(Color.BLUE);
             }
-
-            public Component prepareEditor(TableCellEditor editor, int row, int column) {
-                Component c = super.prepareEditor(editor, row, column);
-                if (c instanceof JTextField){
-                    JTextField textField = (JTextField)c;
-                    String cname = this.getColumnName(column);
-                    if ( cname.equals("Menge") ){
-                        ((AbstractDocument)textField.getDocument()).setDocumentFilter(mengeFilter);
-                    }
-                    Vector<String> columns = new Vector<String>();
-                    columns.add("VPE"); columns.add("Setgröße"); columns.add("Bestand");
-                    if ( columns.contains(cname) ){
-                        ((AbstractDocument)textField.getDocument()).setDocumentFilter(intFilter);
-                    }
-                    if ( moneyColumns.contains(cname) ){
-                        ((AbstractDocument)textField.getDocument()).setDocumentFilter(geldFilter);
-                    }
-                    if ( cname.equals("EK-Rabatt") ){
-                        ((AbstractDocument)textField.getDocument()).setDocumentFilter(relFilter);
-                    }
-                    if ( cname.equals("Beliebtheit") ){
-                        Integer minBeliebt = Collections.min(beliebtWerte);
-                        Integer maxBeliebt = Collections.max(beliebtWerte);
-                        IntegerDocumentFilter beliebtFilter =
-                            new IntegerDocumentFilter(minBeliebt, maxBeliebt, container);
-                        ((AbstractDocument)textField.getDocument()).setDocumentFilter(beliebtFilter);
-                    }
-                }
-                return c;
+            // for articles not in sortiment, set color:
+            else if ( ! sortimentBools.get(realRowIndex) ){
+                c.setFont( c.getFont().deriveFont(Font.PLAIN) );
+                c.setForeground(Color.GRAY);
             }
-
-            public String getToolTipText(MouseEvent e) {
-                String defaultTip = super.getToolTipText(e);
-                Point p = e.getPoint();
-                int colIndex = columnAtPoint(p);
-                // override the default tool tip if this is the "Beliebtheit" column:
-                if ( this.getColumnName(colIndex).equals("Beliebtheit") ){
-                    int rowIndex = rowAtPoint(p);
-                    //int realRowIndex = rowIndex;
-                    //realRowIndex = convertRowIndexToModel(realRowIndex);
-                    //realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
+            else {
+                c.setFont( c.getFont().deriveFont(Font.PLAIN) );
+                c.setForeground(Color.BLACK);
+            }
+            // override the above if this is the "Beliebtheit" column:
+            if ( this.getColumnName(column).equals("Beliebtheit") ){
+                Integer index = Integer.parseInt(value.toString());
+                c.setFont( c.getFont().deriveFont(Font.PLAIN) );
+                c.setForeground( beliebtFarben.get(index) );
+            }
+            // now, render the text:
+            if (c instanceof JLabel){
+                JLabel label = (JLabel)c;
+                String cname = this.getColumnName(column);
+                String valueStr = "";
+                if ( cname.equals("Beliebtheit") ){
+                    // BeliebtRenderer:
                     //Integer index = beliebtIndices.get(realRowIndex);
-                    Integer index = Integer.parseInt(this.getValueAt(rowIndex, colIndex).toString());
-                    String name = beliebtNamen.get(index);
-                    return name+" ("+index+")";
+                    Integer index = Integer.parseInt(value.toString());
+                    label.setText( beliebtKuerzel.get(index) );
                 }
-                return defaultTip;
+                if ( moneyColumns.contains(cname) ){
+                    // GeldRenderer:
+                    if (value != null){
+                        valueStr = value.toString();
+                        if ( !valueStr.equals("variabel") ){
+                            valueStr = priceFormatter(valueStr);
+                            if ( !valueStr.equals("") ){
+                                valueStr += " "+currencySymbol;
+                            }
+                        }
+                    }
+                    label.setText(valueStr);
+                }
+                if ( cname.equals("EK-Rabatt") ){
+                    // PercentRenderer:
+                    if (value != null){
+                        valueStr = value.toString();
+                        if ( !valueStr.equals("variabel") && !valueStr.equals("") ){
+                            BigDecimal fracValue = new BigDecimal(
+                                    vatParser(vatFormatter(valueStr))
+                                    ).multiply(percent);
+                            valueStr = vatFormatter(fracValue);
+                        }
+                    }
+                    label.setText(valueStr);
+                }
             }
-        };
+            return c;
+        }
+
+        public Component prepareEditor(TableCellEditor editor, int row, int column) {
+            Component c = super.prepareEditor(editor, row, column);
+            if (c instanceof JTextField){
+                JTextField textField = (JTextField)c;
+                String cname = this.getColumnName(column);
+                if ( cname.equals("Menge") ){
+                    ((AbstractDocument)textField.getDocument()).setDocumentFilter(mengeFilter);
+                }
+                Vector<String> columns = new Vector<String>();
+                columns.add("VPE"); columns.add("Setgröße"); columns.add("Bestand");
+                if ( columns.contains(cname) ){
+                    ((AbstractDocument)textField.getDocument()).setDocumentFilter(intFilter);
+                }
+                if ( moneyColumns.contains(cname) ){
+                    ((AbstractDocument)textField.getDocument()).setDocumentFilter(geldFilter);
+                }
+                if ( cname.equals("EK-Rabatt") ){
+                    ((AbstractDocument)textField.getDocument()).setDocumentFilter(relFilter);
+                }
+                if ( cname.equals("Beliebtheit") ){
+                    Integer minBeliebt = Collections.min(beliebtWerte);
+                    Integer maxBeliebt = Collections.max(beliebtWerte);
+                    IntegerDocumentFilter beliebtFilter =
+                        new IntegerDocumentFilter(minBeliebt, maxBeliebt, container);
+                    ((AbstractDocument)textField.getDocument()).setDocumentFilter(beliebtFilter);
+                }
+            }
+            return c;
+        }
+
+        public String getToolTipText(MouseEvent e) {
+            String defaultTip = super.getToolTipText(e);
+            Point p = e.getPoint();
+            int colIndex = columnAtPoint(p);
+            // override the default tool tip if this is the "Beliebtheit" column:
+            if ( this.getColumnName(colIndex).equals("Beliebtheit") ){
+                int rowIndex = rowAtPoint(p);
+                //int realRowIndex = rowIndex;
+                //realRowIndex = convertRowIndexToModel(realRowIndex);
+                //realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
+                //Integer index = beliebtIndices.get(realRowIndex);
+                Integer index = Integer.parseInt(this.getValueAt(rowIndex, colIndex).toString());
+                String name = beliebtNamen.get(index);
+                return name+" ("+index+")";
+            }
+            return defaultTip;
+        }
+    }
+
+    void initiateTable() {
+        myTable = new ArtikellisteTable(new ArtikellisteTableModel(), columnMargin, minColumnWidth, maxColumnWidth);
         myTable.setAutoCreateRowSorter(true);
         myTable.getModel().addTableModelListener(this);
         myTable.getSelectionModel().addListSelectionListener(this);
         setTableProperties(myTable);
-        myTable.resizeColumnToFitContent(myTable.getColumn("VPE").getModelIndex(), 10);
     }
 
     void showTable() {
@@ -640,6 +683,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         artikelListPanel.setBorder(BorderFactory.createTitledBorder(this.gruppenname));
 
         scrollPane = new JScrollPane(myTable);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        myTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         artikelListPanel.add(scrollPane, BorderLayout.CENTER);
         allPanel.add(artikelListPanel, BorderLayout.CENTER);
     }
@@ -649,53 +694,26 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
 	artikelListPanel.revalidate();
         initiateTable();
         scrollPane = new JScrollPane(myTable);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        myTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         artikelListPanel.add(scrollPane);
         enableButtons();
     }
 
     void setTableProperties(AnyJComponentJTable myTable) {
-        myTable.getColumn("Produktgruppe").setCellRenderer(linksAusrichter);
-        myTable.getColumn("Lieferant").setCellRenderer(linksAusrichter);
-        myTable.getColumn("Nummer").setCellRenderer(rechtsAusrichter);
-        myTable.getColumn("Name").setCellRenderer(linksAusrichter);
-        myTable.getColumn("Kurzname").setCellRenderer(linksAusrichter);
-        myTable.getColumn("Menge").setCellRenderer(rechtsAusrichter);
-        myTable.getColumn("Barcode").setCellRenderer(rechtsAusrichter);
-        myTable.getColumn("Herkunft").setCellRenderer(linksAusrichter);
-        myTable.getColumn("VPE").setCellRenderer(rechtsAusrichter);
-        myTable.getColumn("Setgröße").setCellRenderer(rechtsAusrichter);
-        myTable.getColumn("VK-Preis").setCellRenderer(rechtsAusrichter);
-        myTable.getColumn("Empf. VK-Preis").setCellRenderer(rechtsAusrichter);
-        myTable.getColumn("EK-Rabatt").setCellRenderer(rechtsAusrichter);
-        myTable.getColumn("EK-Preis").setCellRenderer(rechtsAusrichter);
-        myTable.getColumn("MwSt.").setCellRenderer(rechtsAusrichter);
-        myTable.getColumn("Beliebtheit").setCellRenderer(zentralAusrichter);
-        myTable.getColumn("Bestand").setCellRenderer(rechtsAusrichter);
-        myTable.getColumn("Ab/Seit").setCellRenderer(rechtsAusrichter);
-        myTable.getColumn("Bis").setCellRenderer(rechtsAusrichter);
-
-        myTable.getColumn("Produktgruppe").setPreferredWidth(70);
-        myTable.getColumn("Lieferant").setPreferredWidth(70);
-        myTable.getColumn("Nummer").setPreferredWidth(70);
-        myTable.getColumn("Name").setPreferredWidth(100);
-        myTable.getColumn("Kurzname").setPreferredWidth(100);
-        myTable.getColumn("Menge").setPreferredWidth(30);
-        myTable.getColumn("Barcode").setPreferredWidth(70);
-        myTable.getColumn("Herkunft").setPreferredWidth(100);
-        myTable.getColumn("VPE").setPreferredWidth(10);
-        myTable.getColumn("Setgröße").setPreferredWidth(10);
-        myTable.getColumn("VK-Preis").setPreferredWidth(50);
-        myTable.getColumn("Empf. VK-Preis").setPreferredWidth(50);
-        myTable.getColumn("EK-Rabatt").setPreferredWidth(50);
-        myTable.getColumn("EK-Preis").setPreferredWidth(50);
-        myTable.getColumn("MwSt.").setPreferredWidth(20);
-        myTable.getColumn("Sortiment").setPreferredWidth(20);
-        myTable.getColumn("Lieferbar").setPreferredWidth(20);
-        myTable.getColumn("Beliebtheit").setPreferredWidth(30);
-        myTable.getColumn("Bestand").setPreferredWidth(30);
-        myTable.getColumn("Ab/Seit").setPreferredWidth(70);
-        myTable.getColumn("Bis").setPreferredWidth(70);
-        myTable.getColumn("Aktiv").setPreferredWidth(20);
+        for (String cname : linksColumns){
+            myTable.getColumn(cname).setCellRenderer(linksAusrichter);
+        }
+        for (String cname : rechtsColumns){
+            myTable.getColumn(cname).setCellRenderer(rechtsAusrichter);
+        }
+        for (String cname : zentralColumns){
+            myTable.getColumn(cname).setCellRenderer(zentralAusrichter);
+        }
+        // resize small columns:
+        for (String cname : smallColumns){
+            myTable.getColumn(cname).setPreferredWidth(minColumnWidth);
+        }
     }
 
     public void updateAll() {
