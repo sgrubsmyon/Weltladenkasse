@@ -56,7 +56,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
     protected PositiveNumberDocumentFilter relFilter = new PositiveNumberDocumentFilter(3, 6);
     protected PositiveNumberDocumentFilter mengeFilter = new PositiveNumberDocumentFilter(5, 8);
-    protected IntegerDocumentFilter intFilter = new IntegerDocumentFilter(smallintMax, "Wert", this);
+    protected IntegerDocumentFilter intFilter = new IntegerDocumentFilter(-smallintMax, smallintMax, this);
 
     protected Vector<Integer> beliebtWerte;
     protected Vector<String> beliebtNamen;

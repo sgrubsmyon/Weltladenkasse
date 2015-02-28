@@ -7,17 +7,30 @@ import javax.swing.JOptionPane;
 public class IntegerDocumentFilter extends DocumentFilter {
     private Integer minValue = null;
     private Integer maxValue = null;
-    private String valueName = null;
+    private String valueName = "Wert"; /** default valueName */
     private WindowContent parentWindow = null;
 
     public IntegerDocumentFilter() {
         super();
     }
 
+    public IntegerDocumentFilter(Integer theMaxValue, WindowContent theWC) {
+        super();
+        maxValue = theMaxValue;
+        parentWindow = theWC;
+    }
+
     public IntegerDocumentFilter(Integer theMaxValue, String theValueName, WindowContent theWC) {
         super();
         maxValue = theMaxValue;
         valueName = theValueName;
+        parentWindow = theWC;
+    }
+
+    public IntegerDocumentFilter(Integer theMinValue, Integer theMaxValue, WindowContent theWC) {
+        super();
+        minValue = theMinValue;
+        maxValue = theMaxValue;
         parentWindow = theWC;
     }
 
@@ -31,8 +44,8 @@ public class IntegerDocumentFilter extends DocumentFilter {
     }
 
     private boolean test(String text) {
-        // also allow empty strings:
-        if ( text.equals("") ){
+        // also allow empty strings and negative signs:
+        if ( text.equals("") || text.equals("-") ){
             return true;
         }
         try {
@@ -44,7 +57,10 @@ public class IntegerDocumentFilter extends DocumentFilter {
     }
 
     private boolean rangeCheck(String text) {
-        System.out.println("rangeCheck in IntegerDocumentFilter.");
+        // also allow empty strings and negative signs:
+        if ( text.equals("") || text.equals("-") ){
+            return true;
+        }
         Integer value = Integer.parseInt(text);
         if (maxValue != null && value > maxValue){
             JOptionPane.showMessageDialog(parentWindow,
@@ -63,7 +79,6 @@ public class IntegerDocumentFilter extends DocumentFilter {
     @Override
     public void insertString(FilterBypass fb, int offset, String newText,
             AttributeSet attrs) throws BadLocationException {
-        System.out.println("insertString in IntegerDocumentFilter.");
         Document doc = fb.getDocument();
         StringBuilder sb = new StringBuilder();
         sb.append(doc.getText(0, doc.getLength()));
@@ -82,7 +97,6 @@ public class IntegerDocumentFilter extends DocumentFilter {
     @Override
     public void replace(FilterBypass fb, int offset, int length, String newText,
             AttributeSet attrs) throws BadLocationException {
-        System.out.println("replace in IntegerDocumentFilter.");
         Document doc = fb.getDocument();
         StringBuilder sb = new StringBuilder();
         sb.append(doc.getText(0, doc.getLength()));
@@ -101,7 +115,6 @@ public class IntegerDocumentFilter extends DocumentFilter {
     @Override
     public void remove(FilterBypass fb, int offset, int length) throws
             BadLocationException {
-        System.out.println("remove in IntegerDocumentFilter.");
         Document doc = fb.getDocument();
         StringBuilder sb = new StringBuilder();
         sb.append(doc.getText(0, doc.getLength()));
