@@ -133,9 +133,9 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         beliebtKuerzel = new Vector<String>();
         beliebtFarben = new Vector<Color>();
         beliebtWerte.add(0); beliebtNamen.add("keine Angabe"); beliebtKuerzel.add("●"); beliebtFarben.add(Color.GRAY);
-        beliebtWerte.add(1); beliebtNamen.add("niedrig");      beliebtKuerzel.add("●");  beliebtFarben.add(Color.RED);
-        beliebtWerte.add(2); beliebtNamen.add("mittel");       beliebtKuerzel.add("●");  beliebtFarben.add(Color.YELLOW);
-        beliebtWerte.add(3); beliebtNamen.add("hoch");         beliebtKuerzel.add("●");  beliebtFarben.add(Color.GREEN);
+        beliebtWerte.add(1); beliebtNamen.add("niedrig");      beliebtKuerzel.add("●"); beliebtFarben.add(Color.RED);
+        beliebtWerte.add(2); beliebtNamen.add("mittel");       beliebtKuerzel.add("●"); beliebtFarben.add(Color.YELLOW);
+        beliebtWerte.add(3); beliebtNamen.add("hoch");         beliebtKuerzel.add("●"); beliebtFarben.add(Color.GREEN);
     }
 
 

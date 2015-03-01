@@ -56,6 +56,7 @@ public class ArtikelNeu extends WindowContent
     public Vector<Boolean> sortimente;
     public Vector<Boolean> lieferbarBools;
     public Vector<Integer> beliebtWerte;
+    public Vector<Integer> bestaende;
     public Vector<JButton> removeButtons;
     public Vector< Vector<Color> > colorMatrix;
 
@@ -73,14 +74,15 @@ public class ArtikelNeu extends WindowContent
     private void initiateTable() {
         columnLabels = new Vector<String>();
         columnLabels.add("Produktgruppe"); columnLabels.add("Lieferant");
-        columnLabels.add("Nummer"); columnLabels.add("Name"); columnLabels.add("Kurzname");
-        columnLabels.add("Menge"); columnLabels.add("Barcode");
-        columnLabels.add("Herkunft"); columnLabels.add("VPE"); columnLabels.add("Setgr.");
+        columnLabels.add("Nummer"); columnLabels.add("Name");
+        columnLabels.add("Kurzname"); columnLabels.add("Menge");
+        columnLabels.add("Sortiment"); columnLabels.add("Lieferbar");
+        columnLabels.add("Beliebtheit"); columnLabels.add("Barcode");
+        columnLabels.add("VPE"); columnLabels.add("Setgr.");
         columnLabels.add("VK-Preis"); columnLabels.add("Empf. VK-Preis");
         columnLabels.add("EK-Rabatt"); columnLabels.add("EK-Preis");
-        columnLabels.add("Variabel"); columnLabels.add("Sortiment");
-        columnLabels.add("Lieferbar"); columnLabels.add("Beliebtheit");
-        columnLabels.add("Entf.");
+        columnLabels.add("Variabel"); columnLabels.add("Herkunft");
+        columnLabels.add("Bestand"); columnLabels.add("Entf.");
     }
 
     public void emptyTable(){
@@ -105,6 +107,7 @@ public class ArtikelNeu extends WindowContent
         sortimente = new Vector<Boolean>();
         lieferbarBools = new Vector<Boolean>();
         beliebtWerte = new Vector<Integer>();
+        bestaende = new Vector<Integer>();
         removeButtons = new Vector<JButton>();
         colorMatrix = new Vector< Vector<Color> >();
     }
@@ -208,7 +211,7 @@ public class ArtikelNeu extends WindowContent
                     artikelNamen.get(i), kurznamen.get(i), mengen.get(i), barcodes.get(i),
                     herkuenfte.get(i), vpes.get(i), sets.get(i), vkPreise.get(i), empfvkPreise.get(i),
                     ekRabatte.get(i), ekPreise.get(i), variablePreise.get(i),
-                    sortimente.get(i), lieferbarBools.get(i), beliebtWerte.get(i));
+                    sortimente.get(i), lieferbarBools.get(i), beliebtWerte.get(i), bestaende.get(i));
             if (result == 0){
                 if (itemChanged){
                     JOptionPane.showMessageDialog(this,
@@ -281,6 +284,7 @@ public class ArtikelNeu extends WindowContent
             sortimente.remove(removeRow);
             lieferbarBools.remove(removeRow);
             beliebtWerte.remove(removeRow);
+            bestaende.remove(removeRow);
             removeButtons.remove(removeRow);
             colorMatrix.remove(removeRow);
 

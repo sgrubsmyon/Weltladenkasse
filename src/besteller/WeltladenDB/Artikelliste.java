@@ -627,8 +627,13 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     ((AbstractDocument)textField.getDocument()).setDocumentFilter(mengeFilter);
                 }
                 Vector<String> columns = new Vector<String>();
-                columns.add("VPE"); columns.add("Setgröße"); columns.add("Bestand");
+                columns.add("VPE"); columns.add("Setgröße");
                 if ( columns.contains(cname) ){
+                    IntegerDocumentFilter filter =
+                        new IntegerDocumentFilter(1, smallintMax, container);
+                    ((AbstractDocument)textField.getDocument()).setDocumentFilter(filter);
+                }
+                if ( cname.equals("Bestand") ){
                     ((AbstractDocument)textField.getDocument()).setDocumentFilter(intFilter);
                 }
                 if ( moneyColumns.contains(cname) ){
@@ -769,7 +774,9 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         int nummerIndex = editArtikelNummer.indexOf(origArtikelNummer); // look up artikelNummer in change list
         int lieferantIndex = editLieferant.indexOf(origLieferant); // look up lieferant in change list
 
+        //
         // post-edit edited cell (parse bad mistakes)
+        //
         String value = model.getValueAt(row, column).toString().replaceAll("\\s","");
         if ( value.equals("") ){
             // replace whitespace only entries with nothing
@@ -863,7 +870,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             Integer setgroesse;
             try {
                 setgroesse = Integer.parseInt( model.getValueAt(row, model.findColumn("Setgröße")).toString() );
-            } catch (NumberFormatException ex){ setgroesse = null; }
+            } catch (NumberFormatException ex){ setgroesse = 1; }
             String vkpreis = model.getValueAt(row, model.findColumn("VK-Preis")).toString();
             String empfvkpreis = model.getValueAt(row, model.findColumn("Empf. VK-Preis")).toString();
             String ekrabatt = model.getValueAt(row, model.findColumn("EK-Rabatt")).toString();
