@@ -272,8 +272,10 @@ public class ArtikelNeuEingeben extends DialogWindow
         artikelNeu.sortimente.add(sortiment);
         artikelNeu.lieferbarBools.add(lieferbar);
         artikelNeu.beliebtWerte.add(beliebtWert);
+        artikelNeu.bestaende.add(null);
         artikelNeu.removeButtons.add(new JButton("-"));
         artikelNeu.removeButtons.lastElement().addActionListener(this);
+
         Vector<Color> colors = new Vector<Color>();
         colors.add(Color.black); // produktgruppe
         colors.add(Color.black); // lieferant
@@ -281,8 +283,10 @@ public class ArtikelNeuEingeben extends DialogWindow
         colors.add(Color.black); // name
         colors.add(Color.black); // kurzname
         colors.add(Color.black); // menge
+        colors.add(Color.black); // sortiment
+        colors.add(Color.black); // lieferbar
+        colors.add(Color.black); // beliebt
         colors.add(Color.black); // barcode
-        colors.add(Color.black); // herkunft
         colors.add(Color.black); // vpe
         colors.add(Color.black); // set
         colors.add(Color.black); // vkpreis
@@ -290,9 +294,8 @@ public class ArtikelNeuEingeben extends DialogWindow
         colors.add(Color.black); // ekrabatt
         colors.add(Color.black); // ekpreis
         colors.add(Color.black); // variabel
-        colors.add(Color.black); // sortiment
-        colors.add(Color.black); // lieferbar
-        colors.add(Color.black); // beliebt
+        colors.add(Color.black); // herkunft
+        colors.add(Color.black); // bestand
         colors.add(Color.black); // entfernen
         artikelNeu.colorMatrix.add(colors);
 
@@ -303,10 +306,13 @@ public class ArtikelNeuEingeben extends DialogWindow
             row.add(name);
             row.add(kurzname);
             row.add( menge == null ? "" : menge.toString() );
+            row.add(sortiment);
+            row.add(lieferbar);
+            row.add(beliebt);
             row.add(barcode);
-            row.add(herkunft);
             row.add( vpe == null ? "" : vpe.toString() );
             row.add(set);
+            // prices:
                 String vkp = priceFormatter(artikelNeu.vkPreise.lastElement());
                 if (vkp.length() > 0) vkp += " "+currencySymbol;
                 String empfvkp = priceFormatter(artikelNeu.empfvkPreise.lastElement());
@@ -320,9 +326,8 @@ public class ArtikelNeuEingeben extends DialogWindow
                 row.add(rabatt);
                 row.add(ekp);
             row.add(var);
-            row.add(sortiment);
-            row.add(lieferbar);
-            row.add(beliebt);
+            row.add(herkunft);
+            row.add(null); // bestand
             row.add( artikelNeu.removeButtons.lastElement() );
         artikelNeu.data.add(row);
         return 0;
