@@ -1,18 +1,31 @@
 USE kasse;
 
-INSERT INTO lieferant SET lieferant_name="unbekannt";
+LOCK TABLES `lieferant` WRITE;
+/*!40000 ALTER TABLE `lieferant` DISABLE KEYS */;
+INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `aktiv`) VALUES (1,'unbekannt',1);
+/*!40000 ALTER TABLE `lieferant` ENABLE KEYS */;
+UNLOCK TABLES;
 
-INSERT INTO mwst SET mwst_satz=.00;
-INSERT INTO mwst SET mwst_satz=.07;
-INSERT INTO mwst SET mwst_satz=.19;
+LOCK TABLES `lieferant` WRITE;
+/*!40000 ALTER TABLE `lieferant` DISABLE KEYS */;
+INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (1,0.00000);
+INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (2,0.07000);
+INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (3,0.19000);
+/*!40000 ALTER TABLE `lieferant` ENABLE KEYS */;
+UNLOCK TABLES;
 
-LOAD DATA LOCAL INFILE 'interne_produktgruppen.dat' INTO TABLE produktgruppe;
+/*LOAD DATA LOCAL INFILE 'interne_produktgruppen.dat' INTO TABLE produktgruppe;*/
+/*LOAD DATA LOCAL INFILE 'interne_artikel.dat' INTO TABLE artikel;*/
+SOURCE interne_produktgruppen.sql;
+SOURCE interne_artikel.sql;
 
-LOAD DATA LOCAL INFILE 'interne_artikel.dat' INTO TABLE artikel;
-
-INSERT INTO pfand SET artikel_id=4;
-INSERT INTO pfand SET artikel_id=5;
-INSERT INTO pfand SET artikel_id=6;
-INSERT INTO pfand SET artikel_id=7;
-INSERT INTO pfand SET artikel_id=8;
-INSERT INTO pfand SET artikel_id=9;
+LOCK TABLES `lieferant` WRITE;
+/*!40000 ALTER TABLE `lieferant` DISABLE KEYS */;
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (1,4);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (2,5);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (3,6);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (4,7);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (5,8);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (6,9);
+/*!40000 ALTER TABLE `lieferant` ENABLE KEYS */;
+UNLOCK TABLES;
