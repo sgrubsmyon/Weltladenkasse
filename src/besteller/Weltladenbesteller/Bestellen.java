@@ -45,12 +45,11 @@ import WeltladenDB.BoundsPopupMenuListener;
 
 public class Bestellen extends BestellungsGrundlage implements ItemListener, DocumentListener {
     // Attribute:
-    private final String backupFilename = System.getProperty("user.home")+fileSep+".Weltladenkasse_Bestellung.backup";
     private final BigDecimal minusOne = new BigDecimal(-1);
     private final BigDecimal percent = new BigDecimal("0.01");
 
     protected int selBestellNr = -1;
-    protected String selTyp = "";
+    protected String selTyp = "LM";
     protected int selJahr = -1;
     protected int selKW = -1;
 
@@ -243,11 +242,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             ///////
 	    JLabel typLabel = new JLabel("Typ:");
             datePanel.add(typLabel);
-            String typ = "LM";
-            if (selTyp.length() > 0){
-                typ = selTyp;
-            }
-            typField = new JTextField(typ);
+            typField = new JTextField(selTyp);
             StringDocumentFilter sdf = new StringDocumentFilter(12);
 	    ((AbstractDocument)typField.getDocument()).setDocumentFilter(sdf);
             typField.getDocument().addDocumentListener(this);
@@ -504,7 +499,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         positions.clear();
         removeButtons.clear();
         selBestellNr = -1;
-        selTyp = "";
         selJahr = -1;
         selKW = -1;
 
@@ -512,8 +506,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     }
 
     protected void updateAll(){
-        // save a CSV backup to hard disk
-        doCSVBackup();
 	this.remove(allPanel);
 	this.revalidate();
             // create table anew
@@ -546,6 +538,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
     // CSV export:
     private void doCSVBackup() {
+        String backupFilename =
+            System.getProperty("user.home")+fileSep+".Weltladenkasse_Bestellung_"+selTyp+".backup";
         File file = new File(backupFilename);
 
         String fileStr = "";
@@ -603,6 +597,12 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
 
     private void doCSVBackupReadin() {
+        // clear possible previous order
+        clearAll();
+        updateAll();
+
+        String backupFilename =
+            System.getProperty("user.home")+fileSep+".Weltladenkasse_Bestellung_"+selTyp+".backup";
         File file = new File(backupFilename);
 
         try {
@@ -938,6 +938,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         hinzufuegen(selectedArtikelID, lieferant, artikelNummer, artikelName,
                 artikelPreis, vpe, stueck.toString(), sortimentBool);
         updateAll();
+        // save a CSV backup to hard disk
+        doCSVBackup();
     }
 
     private Vector<Object> abschliessen() {
@@ -1012,6 +1014,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private void verwerfen() {
         clearAll();
         updateAll();
+        // save a CSV backup to hard disk
+        doCSVBackup();
     }
 
     private void resetFormFromBarcodeBox() {
@@ -1104,6 +1108,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
      *    @param e the document event.
      **/
     public void insertUpdate(DocumentEvent e) {
+        if (e.getDocument() == typField.getDocument()){
+            selTyp = typField.getText();
+            doCSVBackupReadin();
+        }
         if (e.getDocument() == preisField.getDocument()){
             setButtonsEnabled();
             return;
@@ -1333,6 +1341,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             displayIndices.remove(removeRow);
 
             updateAll();
+            // save a CSV backup to hard disk
+            doCSVBackup();
             return;
         }
     }
