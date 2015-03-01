@@ -455,7 +455,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface {
                 }
             }
             // Setgröße
-            Integer setgrInt = null;
+            Integer setgrInt = 1;
             if (!setgroesse.equals("")){
                 try {
                     setgrInt = Integer.parseInt(setgroesse);
@@ -464,6 +464,8 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface {
                     log.setText(logString+logStringEnd);
                     continue;
                 }
+            } else {
+                setgroesse = "1";
             }
             // Preise
             if ( boolStringInvalid(variabel) ){
