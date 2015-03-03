@@ -459,6 +459,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         if (barcode.equals("") || barcode.equals("NULL")){ barcode = null; }
         if (herkunft.equals("") || herkunft.equals("NULL")){ herkunft = null; }
         if ( vpe == null || vpe.equals(0) ){ vpe = null; }
+        if ( setgroesse == null || setgroesse.equals(0) ){ setgroesse = 1; }
 
         BigDecimal vkpDecimal;
         try {
