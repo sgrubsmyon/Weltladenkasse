@@ -109,13 +109,30 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return variabel;
     }
 
-    protected String getPrice(int artikelID) {
-        // get price from DB
+    protected String getSalePrice(int artikelID) {
+        /** returns vk_preis from DB, this is price per article */
         String price = "";
         try {
-            // return regular price:
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT vk_preis FROM artikel WHERE artikel_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); price = rs.getString(1); rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return price;
+    }
+
+    protected String getRecSalePrice(int artikelID) {
+        /** returns empf_vk_preis from DB, this is price per set */
+        String price = "";
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT empf_vk_preis FROM artikel WHERE artikel_id = ?"
                     );
             pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
@@ -166,6 +183,24 @@ public abstract class ArtikelGrundlage extends WindowContent {
             ex.printStackTrace();
         }
         return vpe;
+    }
+
+    protected int getSetSize(int artikelID) {
+        // is price variable for artikelID?
+        int setgroesse = 1;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT setgroesse FROM artikel WHERE artikel_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); setgroesse = rs.getInt(1); rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return setgroesse;
     }
 
     protected Boolean getSortimentBool(int artikelID) {

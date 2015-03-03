@@ -1047,7 +1047,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         int pfandArtikelID = queryPfandArtikelID(selectedArtikelID);
         // gab es Pfand? Wenn ja, fuege Zeile in Tabelle:
         if ( pfandArtikelID > 0 ){
-            BigDecimal pfand = new BigDecimal( getPrice(pfandArtikelID) );
+            BigDecimal pfand = new BigDecimal( getSalePrice(pfandArtikelID) );
             String pfandName = getArticleName(pfandArtikelID)[0];
             BigDecimal gesamtPfand = pfand.multiply(stueck);
             BigDecimal pfandMwSt = mwsts.lastElement();
@@ -1357,7 +1357,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private void setPriceField() {
         boolean variablerPreis = getVariablePriceBool(selectedArtikelID);
         if ( ! variablerPreis ){
-            String artikelPreis = getPrice(selectedArtikelID);
+            String artikelPreis = getSalePrice(selectedArtikelID);
             preisField.getDocument().removeDocumentListener(this);
             preisField.setText("");
             System.out.println("Setze Preis auf: *"+artikelPreis.replace('.',',')+"*");
@@ -1472,7 +1472,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         int pfandArtikelID = queryPfandArtikelID(selectedArtikelID);
         // gab es Pfand? Wenn ja, fuege Zeile in Tabelle:
         if ( pfandArtikelID > 0 ){
-            BigDecimal pfand = new BigDecimal( getPrice(pfandArtikelID) );
+            BigDecimal pfand = new BigDecimal( getSalePrice(pfandArtikelID) );
             String pfandName = getArticleName(pfandArtikelID)[0];
             Integer stueck = -(Integer)anzahlSpinner.getValue();
             selectedStueck = stueck;
