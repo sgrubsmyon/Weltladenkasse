@@ -76,6 +76,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private boolean vpeOrAnzahlIsChanged = false;
     private JTextField vpeField;
     private JTextField preisField;
+    private JLabel setLabel;
     private JSpinner jahrSpinner;
     private JFormattedTextField jahrField;
     private JSpinner kwSpinner;
@@ -396,7 +397,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             vpeLabel.setLabelFor(vpeField);
             chooseArticlePanel2.add(vpeField);
 
-	    JLabel preisLabel = new JLabel("Preis: ");
+	    JLabel preisLabel = new JLabel("VK-Preis: ");
             chooseArticlePanel2.add(preisLabel);
             preisField = new JTextField("");
             preisField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
@@ -415,6 +416,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             preisField.setHorizontalAlignment(JTextField.RIGHT);
             chooseArticlePanel2.add(preisField);
             chooseArticlePanel2.add(new JLabel(currencySymbol));
+            setLabel = new JLabel("");
+            chooseArticlePanel2.add(setLabel);
 
 	    hinzufuegenButton = new JButton("Hinzufügen");
             hinzufuegenButton.setMnemonic(KeyEvent.VK_H);
@@ -790,7 +793,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private void setPriceField() {
         boolean variablerPreis = getVariablePriceBool(selectedArtikelID);
         if ( ! variablerPreis ){
-            String artikelPreis = getPrice(selectedArtikelID);
+            String artikelPreis = getRecSalePrice(selectedArtikelID);
+            if (artikelPreis == null || artikelPreis.equals("")){
+                artikelPreis = getSalePrice(selectedArtikelID);
+            }
             preisField.getDocument().removeDocumentListener(this);
             preisField.setText("");
             System.out.println("Setze Preis auf: *"+artikelPreis.replace('.',',')+"*");
@@ -799,6 +805,12 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         }
         else {
             preisField.setEditable(true);
+        }
+        int setgroesse = getSetSize(selectedArtikelID);
+        if (setgroesse > 1){
+            setLabel.setText("pro Set ("+setgroesse+"-er Set)");
+        } else {
+            setLabel.setText("");
         }
     }
 
