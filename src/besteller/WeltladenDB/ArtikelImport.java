@@ -44,6 +44,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface {
     protected UpdateTableFunctor utf;
 
     private JButton fileButton;
+    private JProgressBar progressBar;
     private JFileChooser odsChooser;
     private String logString;
     private final String logStringStart = "<html>\n<body>\n"+
@@ -103,6 +104,9 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface {
 	fileButton.addActionListener(this);
 	//fileButton.setEnabled(artikelNeu.data.size()==0);
         fileButtonPanel.add(fileButton);
+        progressBar = new JProgressBar();
+        progressBar.setStringPainted(true);
+        fileButtonPanel.add(progressBar);
         headerPanel.add(fileButtonPanel);
 
         //JPanel logPanel = new JPanel();
@@ -313,9 +317,14 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface {
             return;
         }
 
+        // initiate progress bar:
+        progressBar.setMinimum(1);
+        progressBar.setMaximum(sheet.getRowCount());
+
         int emptyLineCount = 0;
         for (int rowIndex = 1; rowIndex<sheet.getRowCount(); rowIndex++) {
             // ^ ignore first line with table header (column labels)
+            progressBar.setValue(rowIndex);
             if (emptyLineCount >= 10) break; // don't do an endless loop, stop after 10 empty lines
             int lineCount = rowIndex+1;
 

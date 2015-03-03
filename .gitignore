@@ -1,7 +1,7 @@
 .*.sw*
 build
 *.jar
-Artikelliste_Oktober2014*
+Artikelliste_*
 *.properties
 upload_software.sh
 *.dll
