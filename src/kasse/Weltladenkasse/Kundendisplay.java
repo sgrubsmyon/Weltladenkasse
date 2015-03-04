@@ -106,7 +106,7 @@ public class Kundendisplay {
             HIDManager manager = HIDManager.getInstance();
             HIDDeviceInfo[] devs = manager.listDevices();
             System.err.println("Devices:\n\n");
-            for(int i=0;i<devs.length;i++)
+            for(int i=0; i<devs.length; i++)
             {
                 System.err.println(""+i+".\t"+devs[i]);
                 System.err.println("---------------------------------------------\n");
