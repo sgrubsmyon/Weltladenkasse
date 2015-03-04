@@ -314,7 +314,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT bd.position, l.lieferant_name, a.artikel_nr, a.artikel_name, "+
-                    "a.vk_preis, a.vpe, bd.stueckzahl, a.sortiment, bd.artikel_id "+
+                    "a.empf_vk_preis, a.vk_preis, a.vpe, bd.stueckzahl, a.sortiment, bd.artikel_id "+
                     "FROM bestellung_details AS bd "+
                     "LEFT JOIN artikel AS a USING (artikel_id) "+
                     "LEFT JOIN lieferant AS l USING (lieferant_id) "+
@@ -330,13 +330,21 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 String lieferant = rs.getString(2);
                 String artikelNummer = rs.getString(3);
                 String artikelName = rs.getString(4);
-                String vkp = rs.getString(5);
-                String vpe = rs.getString(6);
-                //Integer vpeInt = rs.getInt(6);
+                String empf_vkpreis = rs.getString(5);
+                String vkpreis = rs.getString(6);
+                String vpe = rs.getString(7);
+                //Integer vpeInt = rs.getInt(7);
                 //vpeInt = vpeInt > 0 ? vpeInt : 0;
-                Integer stueck = rs.getInt(7);
-                Boolean sortimentBool = rs.getBoolean(8);
-                Integer artikelID = rs.getInt(9);
+                Integer stueck = rs.getInt(8);
+                Boolean sortimentBool = rs.getBoolean(9);
+                Integer artikelID = rs.getInt(10);
+
+                String vkp;
+                if (empf_vkpreis == null || empf_vkpreis.equals("")){
+                    vkp = vkpreis;
+                } else {
+                    vkp = empf_vkpreis;
+                }
 
                 Vector<Object> row = new Vector<Object>();
                     row.add(pos);
@@ -362,7 +370,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT bd.position, l.lieferant_name, a.artikel_nr, a.artikel_name, "+
-                    "a.vpe, a.vk_preis, a.ek_preis, m.mwst_satz, bd.stueckzahl "+
+                    "a.vpe, a.empf_vk_preis, a.vk_preis, a.ek_preis, m.mwst_satz, bd.stueckzahl "+
                     "FROM bestellung_details AS bd "+
                     "LEFT JOIN artikel AS a USING (artikel_id) "+
                     "LEFT JOIN lieferant AS l USING (lieferant_id) "+
@@ -381,10 +389,18 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 String artikelNummer = rs.getString(3);
                 String artikelName = rs.getString(4);
                 Integer vpe = rs.getString(5) == null ? null : rs.getInt(5);
-                BigDecimal vkp = rs.getBigDecimal(6);
-                BigDecimal ekp = rs.getBigDecimal(7);
-                BigDecimal mwst = rs.getBigDecimal(8);
-                Integer stueck = rs.getInt(9);
+                BigDecimal empf_vkpreis = rs.getBigDecimal(6);
+                BigDecimal vkpreis = rs.getBigDecimal(7);
+                BigDecimal ekp = rs.getBigDecimal(8);
+                BigDecimal mwst = rs.getBigDecimal(9);
+                Integer stueck = rs.getInt(10);
+
+                BigDecimal vkp;
+                if (empf_vkpreis == null || empf_vkpreis.equals("")){
+                    vkp = vkpreis;
+                } else {
+                    vkp = empf_vkpreis;
+                }
 
                 Vector<Object> row = new Vector<Object>();
                     //row.add(pos); // omit position
