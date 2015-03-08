@@ -1124,6 +1124,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         if (e.getDocument() == typField.getDocument()){
             selTyp = typField.getText();
             doCSVBackupReadin();
+            typField.requestFocus();
         }
         if (e.getDocument() == preisField.getDocument()){
             setButtonsEnabled();
