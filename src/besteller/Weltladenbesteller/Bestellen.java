@@ -516,7 +516,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             filterStr = filterField.getText();
             applyFilter();
             updateTable();
-        barcodeBox.requestFocus();
         setButtonsEnabled(); // for abschliessenButton
     }
 
@@ -950,6 +949,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         hinzufuegen(selectedArtikelID, lieferant, artikelNummer, artikelName,
                 artikelPreis, vpe, stueck.toString(), sortimentBool);
         updateAll();
+        barcodeBox.requestFocus();
         // save a CSV backup to hard disk
         doCSVBackup();
     }
@@ -1026,6 +1026,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private void verwerfen() {
         clearAll();
         updateAll();
+        barcodeBox.requestFocus();
         // save a CSV backup to hard disk
         doCSVBackup();
     }
@@ -1353,6 +1354,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             displayIndices.remove(removeRow);
 
             updateAll();
+            barcodeBox.requestFocus();
             // save a CSV backup to hard disk
             doCSVBackup();
             return;

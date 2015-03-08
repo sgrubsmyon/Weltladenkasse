@@ -351,7 +351,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         // Bestand
         String bestand = sheet.getValueAt(18, rowIndex).toString();
 
-        System.out.println(lineCount+" "+gruppenname+" "+name);
+        //System.out.println(lineCount+" "+gruppenname+" "+name);
 
         //
         // parse the fields
@@ -556,7 +556,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         for (int i=0; i<colors.size(); i++){
             if (colors.get(i) == Color.red){
                 itemChanged = true;
-                System.out.println("Change in column "+i);
+                System.out.println("Row "+lineCount+", Change in column "+i);
                 //break;
             }
         }
