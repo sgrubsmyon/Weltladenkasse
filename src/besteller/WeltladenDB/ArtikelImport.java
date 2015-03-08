@@ -611,8 +611,8 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             artikelNeu.data.add(row);
         }
         if (itemAlreadyKnown == 0){
-            logString += "<div style=\""+baseStyle+"\">Artikel \""+ name + "\" von "+lieferant+" mit Nr. "+nummer+" wird hinzugefügt.</div>\n";
-            log.setText(logString+logStringEnd);
+            //logString += "<div style=\""+baseStyle+"\">Artikel \""+ name + "\" von "+lieferant+" mit Nr. "+nummer+" wird hinzugefügt.</div>\n";
+            //log.setText(logString+logStringEnd);
         }
         else if (itemAlreadyKnown == 2){ // item already in table
             logString += "<div style=\""+redStyle+"\">Artikel \""+ name + "\" von "+lieferant+" mit Nr. "+nummer+" wird nicht erneut hinzugefügt/verändert.</div>\n";
