@@ -656,6 +656,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             System.out.println("Datei " + file.getName() + " wurde komplett eingelesen.");
             logString += "<div style=\""+baseStyle+"\">Datei " + file.getName() + " wurde komplett eingelesen.</div>\n";
             log.setText(logString+logStringEnd);
+            updateAll();
         }
     }
 
