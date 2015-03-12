@@ -562,7 +562,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             Component c = super.prepareRenderer(renderer, row, column);
             Object value = this.getValueAt(row, column);
             int realRowIndex = row;
-            //realRowIndex = convertRowIndexToModel(realRowIndex);
+            realRowIndex = convertRowIndexToModel(realRowIndex);
             realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
             // for rows with inactive items, set color:
             if ( ! activeRowBools.get(realRowIndex) ){
@@ -974,7 +974,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         Vector<Boolean> selectedVarPreisBools = new Vector<Boolean>();
         int[] selection = myTable.getSelectedRows();
         for (int i = 0; i < selection.length; i++) {
-            //selection[i] = myTable.convertRowIndexToModel(selection[i]);
+            selection[i] = myTable.convertRowIndexToModel(selection[i]);
             selection[i] = displayIndices.get(selection[i]); // convert from displayData index to data index
             selectedData.add( data.get(selection[i]) );
             selectedProdGrIDs.add( produktGruppeIDs.get(selection[i]) );
