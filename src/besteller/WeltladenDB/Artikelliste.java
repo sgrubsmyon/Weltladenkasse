@@ -24,7 +24,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private Integer toplevel_id;
     private Integer sub_id;
     private Integer subsub_id;
-    private String gruppenname;
+    private String produktgruppenname;
 
     private JPanel allPanel;
     private JPanel artikelListPanel;
@@ -106,7 +106,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         this.toplevel_id = tid;
         this.sub_id = sid;
         this.subsub_id = ssid;
-        this.gruppenname = gn;
+        this.produktgruppenname = gn;
 
         fillDataArray();
         showAll();
@@ -517,7 +517,14 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         public int getRowCount() { return displayData.size(); }
         public int getColumnCount() { return columnLabels.size(); }
         public Object getValueAt(int row, int col) {
-            return displayData.get(row).get(col);
+            Object obj;
+            try {
+                obj = displayData.get(row).get(col);
+            } catch (ArrayIndexOutOfBoundsException ex){
+                System.out.println("No data at row "+row+", column "+col);
+                obj = "";
+            }
+            return obj;
         }
         public void setValueAt(Object value, int row, int col) {
             Vector<Object> rowentries = displayData.get(row);
@@ -673,6 +680,12 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     }
 
     void initiateTable() {
+        // replace general number of items with displayed number of items:
+        String borderLabel = this.produktgruppenname.
+            replaceAll(" \\([0-9]*\\)$", " ("+displayData.size()+")");
+        artikelListPanel.setBorder(BorderFactory.createTitledBorder(borderLabel));
+	//artikelListPanel.revalidate();
+
         myTable = new ArtikellisteTable(new ArtikellisteTableModel(), columnMargin, minColumnWidth, maxColumnWidth);
         myTable.setAutoCreateRowSorter(true);
         myTable.getModel().addTableModelListener(this);
@@ -681,11 +694,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     }
 
     void showTable() {
-        initiateTable();
-
         artikelListPanel = new JPanel();
         artikelListPanel.setLayout(new BorderLayout());
-        artikelListPanel.setBorder(BorderFactory.createTitledBorder(this.gruppenname));
+
+        initiateTable();
 
         scrollPane = new JScrollPane(myTable);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
