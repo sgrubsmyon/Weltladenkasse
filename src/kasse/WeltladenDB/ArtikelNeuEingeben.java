@@ -118,7 +118,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(gruppenID);
         artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
 
-        artikelFormular.beliebtBox.setSelectedIndex(artikelFormular.beliebtNamen.indexOf("mittel"));
+        artikelFormular.beliebtBox.setSelectedIndex(artikelFormular.beliebtNamen.indexOf("keine Angabe"));
 
         KeyAdapter enterAdapter = new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
@@ -414,19 +414,12 @@ public class ArtikelNeuEingeben extends DialogWindow
             updateAll();
             return;
         }
-	if (e.getSource() == artikelFormular.produktgruppenBox){
-            hinzufuegenButton.setEnabled( checkIfFormIsComplete() );
-            return;
-        }
-	if (e.getSource() == artikelFormular.lieferantBox){
-            hinzufuegenButton.setEnabled( checkIfFormIsComplete() );
-            return;
-        }
 	if (e.getSource() == hinzufuegenButton){
             int retVal = hinzufuegen();
             if (retVal == 0){ updateAll(); }
             return;
         }
+        hinzufuegenButton.setEnabled( checkIfFormIsComplete() );
         super.actionPerformed(e);
         artikelNeu.actionPerformed(e);
     }

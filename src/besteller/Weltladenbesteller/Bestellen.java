@@ -796,9 +796,14 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             if (artikelPreis == null || artikelPreis.equals("")){
                 artikelPreis = getSalePrice(selectedArtikelID);
             }
+            if (artikelPreis == null){
+                artikelPreis = "";
+                JOptionPane.showMessageDialog(this,
+                        "Für diesen Artikel muss erst der Preis festgelegt werden!\n"+
+                        "(Im Tab 'Artikelliste')",
+                        "Info", JOptionPane.INFORMATION_MESSAGE);
+            }
             preisField.getDocument().removeDocumentListener(this);
-            preisField.setText("");
-            System.out.println("Setze Preis auf: *"+artikelPreis.replace('.',',')+"*");
             preisField.setText(artikelPreis.replace('.',','));
             preisField.getDocument().addDocumentListener(this);
         }
@@ -940,7 +945,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         String artikelNummer = (String)nummerBox.getSelectedItem();
         String vpe = vpeField.getText();
         Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
-        String artikelPreis = priceFormatterIntern(new BigDecimal( preisField.getText().replace(',','.') ));
+        String artikelPreis = priceFormatterIntern( preisField.getText() );
         artikelPreis = artikelPreis.replace('.',',')+' '+currencySymbol;
         String artikelMwSt = getVAT(selectedArtikelID);
         artikelMwSt = vatFormatter(artikelMwSt);
