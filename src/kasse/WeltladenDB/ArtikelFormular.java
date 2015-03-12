@@ -187,7 +187,7 @@ public class ArtikelFormular extends WindowContent
 
             JPanel vpePanel = new JPanel();
             vpePanel.setBorder(BorderFactory.createTitledBorder("VPE (Verpackungseinheit)"));
-            SpinnerNumberModel vpeModel = new SpinnerNumberModel(0, // initial value
+            SpinnerNumberModel vpeModel = new SpinnerNumberModel(1, // initial value
                     0, // min
                     smallintMax, // max (null == no max)
                     1); // step
@@ -199,7 +199,7 @@ public class ArtikelFormular extends WindowContent
                 .setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
             vpeField.setColumns(3);
             vpePanel.add(vpeSpinner);
-            vpePanel.add(new JLabel("Artikel/Sets pro Packung"));
+            vpePanel.add(new JLabel("Sets pro Packung"));
 
             JPanel setPanel = new JPanel();
             setPanel.setBorder(BorderFactory.createTitledBorder("Setgröße"));
@@ -243,7 +243,7 @@ public class ArtikelFormular extends WindowContent
             JPanel vkpreisPanel = new JPanel();
             vkpreisPanel.setBorder(BorderFactory.createTitledBorder("VK-Preis (für Artikel)"));
             vkpreisField = new JTextField("");
-            vkpreisField.setColumns(12);
+            vkpreisField.setColumns(15);
             ((AbstractDocument)vkpreisField.getDocument()).setDocumentFilter(geldFilter);
             vkpreisField.setHorizontalAlignment(JTextField.RIGHT);
             vkpreisPanel.add(vkpreisField);
@@ -252,7 +252,7 @@ public class ArtikelFormular extends WindowContent
             JPanel empfvkpreisPanel = new JPanel();
             empfvkpreisPanel.setBorder(BorderFactory.createTitledBorder("Empf. VK-Preis (für Set)"));
             empfvkpreisField = new JTextField("");
-            empfvkpreisField.setColumns(12);
+            empfvkpreisField.setColumns(15);
             ((AbstractDocument)empfvkpreisField.getDocument()).setDocumentFilter(geldFilter);
             empfvkpreisField.setHorizontalAlignment(JTextField.RIGHT);
             empfvkpreisPanel.add(empfvkpreisField);
@@ -270,7 +270,7 @@ public class ArtikelFormular extends WindowContent
             JPanel ekpreisPanel = new JPanel();
             ekpreisPanel.setBorder(BorderFactory.createTitledBorder("EK-Preis (für Set)"));
             ekpreisField = new JTextField("");
-            ekpreisField.setColumns(12);
+            ekpreisField.setColumns(15);
             ((AbstractDocument)ekpreisField.getDocument()).setDocumentFilter(geldFilter);
             ekpreisField.setHorizontalAlignment(JTextField.RIGHT);
             ekpreisPanel.add(ekpreisField);

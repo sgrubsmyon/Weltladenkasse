@@ -49,9 +49,9 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected DefaultTableCellRenderer rechtsAusrichter = new DefaultTableCellRenderer();
     protected DefaultTableCellRenderer linksAusrichter = new DefaultTableCellRenderer();
     protected DefaultTableCellRenderer zentralAusrichter = new DefaultTableCellRenderer();
-    protected final int columnMargin = 10; /** number of pixels of space between table columns */
+    protected final int columnMargin = 20; /** number of pixels of space between table columns */
     protected final int minColumnWidth = 20; /** minimally allowed pixel width of table columns */
-    protected final int maxColumnWidth = 100; /** maximally allowed pixel width of table columns */
+    protected final int maxColumnWidth = 150; /** maximally allowed pixel width of table columns */
     // Formats to format and parse numbers
     //protected NumberFormat amountFormat;
     protected NumberFormat vatFormat;
