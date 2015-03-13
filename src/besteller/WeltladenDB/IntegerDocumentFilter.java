@@ -63,14 +63,20 @@ public class IntegerDocumentFilter extends DocumentFilter {
         }
         Integer value = Integer.parseInt(text);
         if (maxValue != null && value > maxValue){
-            JOptionPane.showMessageDialog(parentWindow,
-                    valueName+" von "+value+" übersteigt den maximal erlaubten Wert von "+maxValue+"!",
-                    valueName+" zu groß", JOptionPane.WARNING_MESSAGE);
+            for (int i=0; i<2; i++){
+                System.out.println("IntegerDocumentFilter!!!");
+                JOptionPane.showMessageDialog(parentWindow,
+                        valueName+" von "+value+" übersteigt den maximal erlaubten Wert von "+maxValue+"!",
+                        valueName+" zu groß", JOptionPane.WARNING_MESSAGE);
+            }
             return false;
         } if (minValue != null && value < minValue){
-            JOptionPane.showMessageDialog(parentWindow,
-                    valueName+" von "+value+" unterschreitet den minimal erlaubten Wert von "+minValue+"!",
-                    valueName+" zu klein", JOptionPane.WARNING_MESSAGE);
+            for (int i=0; i<2; i++){
+                System.out.println("IntegerDocumentFilter!!!");
+                JOptionPane.showMessageDialog(parentWindow,
+                        valueName+" von "+value+" unterschreitet den minimal erlaubten Wert von "+minValue+"!",
+                        valueName+" zu klein", JOptionPane.WARNING_MESSAGE);
+            }
             return false;
         }
         return true;

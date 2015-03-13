@@ -84,6 +84,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private JTextField typField;
     private JTextField filterField;
     // Buttons
+    private JButton changeTypButton;
     private JButton emptyBarcodeButton;
     private JButton emptyArtikelButton;
     private JButton emptyNummerButton;
@@ -250,6 +251,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             typField.setColumns(6);
 	    typLabel.setLabelFor(typField);
             datePanel.add(typField);
+            changeTypButton = new JButton("Typ ändern");
+            changeTypButton.addActionListener(this);
+            datePanel.add(changeTypButton);
             ///////
             datePanel.add(new JLabel("Bestell-Nr.:"));
             JTextField bestNrField = new JTextField("");
@@ -546,9 +550,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
         String fileStr = "";
         // general infos:
-        fileStr += "#BestellNr;Typ;Jahr;KW"+lineSep;
+        fileStr += "#BestellNr;Jahr;KW"+lineSep;
         fileStr += selBestellNr + delimiter;
-        fileStr += selTyp + delimiter;
         fileStr += selJahr + delimiter;
         fileStr += selKW + lineSep;
         // format of csv file:
@@ -619,12 +622,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 if (fields.length < 3 ){
                     continue;
                 }
-
                 selBestellNr = Integer.parseInt(fields[0]);
-                selTyp = fields[1];
-                selJahr = Integer.parseInt(fields[2]);
-                selKW = Integer.parseInt(fields[3]);
-
+                selJahr = Integer.parseInt(fields[1]);
+                selKW = Integer.parseInt(fields[2]);
                 break;
             }
             // parse articles:
@@ -655,6 +655,44 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+    }
+
+
+
+    private void renameCSVBackupFile(String newTyp) {
+        String oldBackupFilename =
+            System.getProperty("user.home")+fileSep+".Weltladenkasse_Bestellung_"+selTyp+".backup";
+        File oldFile = new File(oldBackupFilename);
+        String newBackupFilename =
+            System.getProperty("user.home")+fileSep+".Weltladenkasse_Bestellung_"+newTyp+".backup";
+        File newFile = new File(newBackupFilename);
+        if ( newFile.exists() ){
+            int answer = JOptionPane.showConfirmDialog(this,
+                    "Es gibt schon eine Bestellung vom Typ '"+newTyp+"'.\n"+
+                    "Überschreiben?", "Warnung",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (answer == JOptionPane.NO_OPTION){
+                return;
+            } else {
+                // try to delete the existing file so that rename might work
+                if ( !newFile.delete() ){
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Andere Bestellung konnte nicht überschrieben werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            }
+        }
+        // Rename backup file
+        if ( !oldFile.renameTo(newFile) ) {
+            JOptionPane.showMessageDialog(this,
+                    "Fehler: Bestellungs-Typ konnte nicht geändert werden.",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        selTyp = newTyp;
+        doCSVBackupReadin();
+        barcodeBox.requestFocus();
     }
 
 
@@ -1275,6 +1313,42 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         }
     }
 
+    private static Vector<String> showChangeTypDialog(String oldTyp) {
+        final JTextField newTypField = new JTextField(oldTyp);
+        JOptionPane jop = new JOptionPane(new Object[]{"Neuer Bestellungs-Typ:", newTypField},
+                JOptionPane.QUESTION_MESSAGE,
+                JOptionPane.OK_CANCEL_OPTION);
+        JDialog dialog = jop.createDialog("Bitte neuen Bestellungs-Typ eingeben");
+        dialog.addWindowFocusListener(new WindowAdapter(){
+            @Override
+            public void windowGainedFocus(WindowEvent e){
+                newTypField.requestFocusInWindow();
+            }
+        });
+        newTypField.addFocusListener(new FocusListener() {
+            public void focusGained( FocusEvent e ) {
+                newTypField.selectAll();
+            }
+            public void focusLost( FocusEvent e ) {
+                if ( newTypField.getText().length() == 0 ) {
+                    newTypField.requestFocusInWindow();
+                }
+            }
+        });
+        dialog.setVisible(true);
+        int result = (Integer)jop.getValue();
+        dialog.dispose();
+
+        Vector<String> okTyp = new Vector<String>(2);
+        String ok;
+        if (result == JOptionPane.OK_OPTION){ ok = "OK"; }
+        else { ok = "CANCEL"; }
+        String typ = new String(newTypField.getText());
+        okTyp.add(ok);
+        okTyp.add(typ);
+        return okTyp;
+    }
+
     /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.
@@ -1320,6 +1394,12 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             nummerBox.requestFocus();
 	    return;
 	}
+        if (e.getSource() == changeTypButton){
+            Vector<String> okTyp = showChangeTypDialog(typField.getText());
+            if (okTyp.get(0) == "OK"){
+                renameCSVBackupFile(okTyp.get(1));
+            }
+        }
 	if (e.getSource() == abschliessenButton){
             Vector<Object> bestellNrUndTyp = abschliessen();
             if ( (Integer)bestellNrUndTyp.get(0) > 0 ){ // if abschliessen was successful

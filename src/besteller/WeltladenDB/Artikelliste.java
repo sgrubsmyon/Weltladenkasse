@@ -227,7 +227,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 String menge = rs.getString(8);
                 String barcode = rs.getString(9);
                 String herkunft = rs.getString(10);
-                String vpe = rs.getString(11);
+                Integer vpe = rs.getInt(11);
                 Integer setgroesse = rs.getInt(12);
                 String vkp = rs.getString(13);
                 String empf_vkp = rs.getString(14);
@@ -250,7 +250,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                 else { menge = unifyDecimal(menge); }
                 if (barcode == null){ barcode = ""; }
                 if (herkunft == null) herkunft = "";
-                if (vpe == null){ vpe = ""; }
+                //if (vpe == null){ vpe = ""; }
                 String vkpOutput = "";
                 if (vkp != null){ vkpOutput = priceFormatter(vkp); }
                 if (empf_vkp == null){ empf_vkp = ""; }
@@ -628,33 +628,38 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         public Component prepareEditor(TableCellEditor editor, int row, int column) {
             Component c = super.prepareEditor(editor, row, column);
             if (c instanceof JTextField){
+                System.out.println("Is running prepareEditor(): row = "+row+"   col = "+column);
                 JTextField textField = (JTextField)c;
                 String cname = this.getColumnName(column);
-                if ( cname.equals("Menge") ){
-                    ((AbstractDocument)textField.getDocument()).setDocumentFilter(mengeFilter);
-                }
-                Vector<String> columns = new Vector<String>();
-                columns.add("VPE"); columns.add("Setgröße");
-                if ( columns.contains(cname) ){
+                Vector<String> intColumns = new Vector<String>();
+                intColumns.add("VPE"); intColumns.add("Setgröße");
+                if ( intColumns.contains(cname) ){
                     IntegerDocumentFilter filter =
                         new IntegerDocumentFilter(1, smallintMax, container);
                     ((AbstractDocument)textField.getDocument()).setDocumentFilter(filter);
                 }
-                if ( cname.equals("Bestand") ){
+                else if ( cname.equals("Menge") ){
+                    ((AbstractDocument)textField.getDocument()).setDocumentFilter(mengeFilter);
+                }
+                else if ( cname.equals("Bestand") ){
                     ((AbstractDocument)textField.getDocument()).setDocumentFilter(intFilter);
                 }
-                if ( moneyColumns.contains(cname) ){
+                else if ( moneyColumns.contains(cname) ){
                     ((AbstractDocument)textField.getDocument()).setDocumentFilter(geldFilter);
                 }
-                if ( cname.equals("EK-Rabatt") ){
+                else if ( cname.equals("EK-Rabatt") ){
                     ((AbstractDocument)textField.getDocument()).setDocumentFilter(relFilter);
                 }
-                if ( cname.equals("Beliebtheit") ){
+                else if ( cname.equals("Beliebtheit") ){
                     Integer minBeliebt = Collections.min(beliebtWerte);
                     Integer maxBeliebt = Collections.max(beliebtWerte);
                     IntegerDocumentFilter beliebtFilter =
                         new IntegerDocumentFilter(minBeliebt, maxBeliebt, container);
                     ((AbstractDocument)textField.getDocument()).setDocumentFilter(beliebtFilter);
+                }
+                else {
+                    // just a normal field, replace any DocumentFilter from before with default:
+                    ((AbstractDocument)textField.getDocument()).setDocumentFilter(new DocumentFilter());
                 }
             }
             return c;
