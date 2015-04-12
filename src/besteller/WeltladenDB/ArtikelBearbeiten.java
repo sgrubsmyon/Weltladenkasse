@@ -141,7 +141,7 @@ public class ArtikelBearbeiten extends DialogWindow
         Boolean firstLieferbar = (Boolean)originalData.get(0).get(8);
         Integer firstBeliebtWert = (Integer)originalData.get(0).get(9);
         String firstBarcode = (String)originalData.get(0).get(10);
-        String firstVPE = (String)originalData.get(0).get(11);
+        Integer firstVPE = (Integer)originalData.get(0).get(11);
         Integer firstSetgroesse = (Integer)originalData.get(0).get(12);
         String firstEVKP = (String)originalData.get(0).get(13);
         String firstEKR = (String)originalData.get(0).get(14);
@@ -193,13 +193,11 @@ public class ArtikelBearbeiten extends DialogWindow
             artikelFormular.herkunftField.setText("");
         }
         if ( allRowsEqual(firstVPE, 11) ){
-            Integer firstVPEInt;
-            try {
-                firstVPEInt = Integer.parseInt(firstVPE);
-            } catch (NumberFormatException ex) {
-                firstVPEInt = 0;
+            if (firstVPE != null){
+                artikelFormular.vpeSpinner.setValue(firstVPE);
+            } else {
+                artikelFormular.vpeSpinner.setValue(0);
             }
-            artikelFormular.vpeSpinner.setValue(firstVPEInt);
         } else {
             artikelFormular.vpeSpinner.setValue(0);
         }
@@ -394,9 +392,9 @@ public class ArtikelBearbeiten extends DialogWindow
                 if (newVPE != 0){
                     Vector<Integer> origVPEs = new Vector<Integer>();
                     for (Vector<Object> v : originalData){
-                        String origVPEStr = (String)v.get(11);
-                        if ( origVPEStr.equals("") ){ origVPEStr = "0"; }
-                        origVPEs.add( Integer.parseInt(origVPEStr) );
+                        Integer origVPE = (Integer)v.get(11);
+                        if ( origVPE == null ){ origVPE = 0; }
+                        origVPEs.add( origVPE );
                     }
                     if ( !allElementsEqual(newVPE, origVPEs) ){
                         return true;
@@ -616,7 +614,7 @@ public class ArtikelBearbeiten extends DialogWindow
                 }
             }
             ////////
-            Integer vpe = Integer.parseInt( (String)originalData.get(i).get(11) );
+            Integer vpe = (Integer)originalData.get(i).get(11);
             if (artikelFormular.vpeSpinner.isEnabled()){
                 try {
                     Integer newVPE = (Integer)artikelFormular.vpeSpinner.getValue();
