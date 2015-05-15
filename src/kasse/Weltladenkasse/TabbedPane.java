@@ -41,6 +41,7 @@ public class TabbedPane extends TabbedPaneGrundlage {
     private RechnungenTabbedPane myRech;
     private AbrechnungenTabbedPane myAbrech;
     private Kassenstand myKassenstand;
+    private Preisschilder myPreisschild;
     private OptionTabbedPane myOptPane;
 
     // Methoden:
@@ -56,11 +57,13 @@ public class TabbedPane extends TabbedPaneGrundlage {
         myRech = new RechnungenTabbedPane(this.conn, this.mainWindow, this);
         myAbrech = new AbrechnungenTabbedPane(this.conn, this.mainWindow, this);
         myKassenstand = new Kassenstand(this.conn, this.mainWindow, this);
+        myPreisschild = new Preisschilder(this.conn, this.mainWindow, this);
         myOptPane = new OptionTabbedPane(this.conn, this.mainWindow, this);
         tabbedPane.addTab("Kassieren", null, myKassieren, "Kunden abkassieren");
         tabbedPane.addTab("Rechnungen", null, myRech, "Rechnungen ansehen/stornieren");
         tabbedPane.addTab("Abrechnungen", null, myAbrech, "Tages-/Monats-/Jahresabschluss");
         tabbedPane.addTab("Kassenstand", null, myKassenstand, "Kassenstand ansehen/ändern");
+        tabbedPane.addTab("Preisschilder", null, myPreisschild, "Preisschilder drucken");
         tabbedPane.addTab("Optionen", null, myOptPane, "Artikelliste/Rabattaktionen/Import/Export");
 
         this.add(tabbedPane, BorderLayout.CENTER);
