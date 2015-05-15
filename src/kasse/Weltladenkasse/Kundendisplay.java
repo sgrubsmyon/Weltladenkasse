@@ -53,39 +53,12 @@ public class Kundendisplay {
         HIDDevice dev;
         try {
             HIDManager manager = HIDManager.getInstance();
-            //dev = manager.openById(VENDOR_ID, PRODUCT_ID, null);
-            dev = manager.openByPath("0004:0003:00");
+            dev = manager.openById(VENDOR_ID, PRODUCT_ID, null);
+            //dev = manager.openByPath("0004:0003:00");
             //dev = manager.openByPath("0004:0003:01");
             System.out.print("Manufacturer: " + dev.getManufacturerString() + "\n");
             System.out.print("Product: " + dev.getProductString() + "\n");
             System.out.print("Serial Number: " + dev.getSerialNumberString() + "\n");
-            //try {
-            //    byte[] buf = new byte[BUFSIZE];
-            //    dev.enableBlocking();
-            //    while(true)
-            //    {
-            //        int n = dev.read(buf);
-            //        System.out.println(n);
-            //        for(int i=0; i<n; i++)
-            //        {
-            //            int v = buf[i];
-            //            if (v<0) v = v+256;
-            //            String hs = Integer.toHexString(v);
-            //            if (v<16)
-            //                System.out.print("0");
-            //            System.out.print(hs + " ");
-            //        }
-            //        System.out.println("");
-
-            //        try
-            //        {
-            //            Thread.sleep(READ_UPDATE_DELAY_MS);
-            //        } catch(InterruptedException e)
-            //        {
-            //            //Ignore
-            //            e.printStackTrace();
-            //        }
-            //    }
             try {
                 byte[] data = new byte[]{0x01, 0x1b, 0x5b, 0x30, 0x63};
                 //byte[] data = new byte[]{0x00, 0x00, 0x10, 0x00, 0x00,
@@ -102,6 +75,7 @@ public class Kundendisplay {
                 byte[] buf = new byte[BUFSIZE];
                 //dev.enableBlocking();
                 n = dev.readTimeout(buf, 10000);
+                //n = dev.read(buf);
                 System.out.println("Number of bytes read: "+n);
                 //dev.disableBlocking();
                 for(int i=0; i<n; i++)

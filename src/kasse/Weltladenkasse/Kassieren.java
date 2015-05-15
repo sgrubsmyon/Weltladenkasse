@@ -172,7 +172,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	showAll();
         barcodeBox.requestFocus();
 
-        display = new Kundendisplay();
+        //display = new Kundendisplay();
     }
 
     // listener for keyboard shortcuts
