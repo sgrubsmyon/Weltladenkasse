@@ -21,22 +21,22 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
        ListSelectionListener, DocumentListener {
     // Attribute:
     private ArtikellisteContainer container;
-    private Integer toplevel_id;
-    private Integer sub_id;
-    private Integer subsub_id;
-    private String produktgruppenname;
+    protected Integer toplevel_id;
+    protected Integer sub_id;
+    protected Integer subsub_id;
+    protected String produktgruppenname;
 
-    private JPanel allPanel;
-    private JPanel artikelListPanel;
-    private JScrollPane scrollPane;
-    private JButton backButton;
-    private JCheckBox inaktivCheckBox;
-    private boolean showInaktive = false;
-    private JCheckBox sortimentCheckBox;
-    private boolean showOnlySortiment = true;
-    private JCheckBox internalCheckBox;
-    private boolean showInternals = false;
-    private JTextField filterField;
+    protected JPanel allPanel;
+    protected JPanel artikelListPanel;
+    protected JScrollPane scrollPane;
+    protected JButton backButton;
+    protected JCheckBox inaktivCheckBox;
+    protected boolean showInaktive = false;
+    protected JCheckBox sortimentCheckBox;
+    protected boolean showOnlySortiment = true;
+    protected JCheckBox internalCheckBox;
+    protected boolean showInternals = false;
+    protected JTextField filterField;
     private JButton saveButton;
     private JButton revertButton;
     private JButton editButton;
@@ -48,15 +48,15 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     private String aktivFilterStr = " AND artikel.aktiv = TRUE ";
     private String sortimentFilterStr = " AND artikel.sortiment = TRUE ";
     //private String orderByStr = "artikel_name";
-    private String orderByStr = "p.toplevel_id, p.sub_id, p.subsub_id, artikel_name";
+    private String orderByStr = "p.toplevel_id, p.sub_id, p.subsub_id, artikel_nr";
 
     // The table holding the items
-    private AnyJComponentJTable myTable;
-    private Vector< Vector<Object> > data;
+    protected AnyJComponentJTable myTable;
+    protected Vector< Vector<Object> > data;
     protected Vector< Vector<Object> > originalData;
     protected Vector< Vector<Object> > displayData;
     protected Vector<Integer> displayIndices;
-    private Vector<String> columnLabels;
+    protected Vector<String> columnLabels;
     private Vector<Integer> produktGruppeIDs;
     private Vector<Integer> lieferantIDs;
     protected Vector<Boolean> sortimentBools;
@@ -99,7 +99,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     //private ArtikelImport itemsFromFile;
 
     // Methoden:
-    protected Artikelliste(Connection conn, ArtikellisteContainer ac, Integer tid, Integer sid, Integer ssid, String gn) {
+    protected Artikelliste(Connection conn, ArtikellisteContainer ac, Integer
+            tid, Integer sid, Integer ssid, String gn) {
         super(conn, ac.getMainWindowPointer());
 
         this.container = ac;
@@ -112,10 +113,14 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         showAll();
     }
 
-    private void fillDataArray() {
+    protected Artikelliste(Connection conn, MainWindowGrundlage mwp) {
+        super(conn, mwp);
+    }
+
+    protected void fillDataArray() {
         this.data = new Vector< Vector<Object> >();
         columnLabels = new Vector<String>();
-        columnLabels.add("Produktgruppe");
+    columnLabels.add("Produktgruppe");
         columnLabels.add("Lieferant");
         columnLabels.add("Nummer");
         columnLabels.add("Name");
@@ -306,12 +311,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
-        this.originalData = new Vector< Vector<Object> >();
-        for ( Vector<Object> row : data ){
-            Vector<Object> originalRow = new Vector<Object>();
-            originalRow.addAll(row);
-            originalData.add(originalRow);
-        }
+        refreshOriginalData();
         displayData = new Vector< Vector<Object> >(data);
         initiateDisplayIndices();
         editLieferant = new Vector<String>();
@@ -333,6 +333,15 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         changedBeliebt = new Vector<Integer>();
         changedBestand = new Vector<Integer>();
         changedAktiv = new Vector<Boolean>();
+    }
+
+    protected void refreshOriginalData() {
+        this.originalData = new Vector< Vector<Object> >();
+        for ( Vector<Object> row : data ){
+            Vector<Object> originalRow = new Vector<Object>();
+            originalRow.addAll(row);
+            originalData.add(originalRow);
+        }
     }
 
     private void putChangesIntoDB() {
@@ -397,10 +406,22 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         }
     }
 
-    void showAll() {
+
+    protected void showAll() {
         allPanel = new JPanel();
         allPanel.setLayout(new BorderLayout());
 
+        showTopPanel();
+        showTable();
+        showBottomPanel();
+
+        enableButtons();
+
+        this.add(allPanel, BorderLayout.CENTER);
+    }
+
+
+    protected void showTopPanel() {
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BorderLayout());
         JPanel topLeftPanel = new JPanel();
@@ -442,9 +463,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
           topRightPanel.add(filterField);
         topPanel.add(topRightPanel, BorderLayout.EAST);
         allPanel.add(topPanel, BorderLayout.NORTH);
+    }
 
-        showTable();
 
+    protected void showBottomPanel() {
         JPanel bottomPanel = new JPanel();
 	bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
           JPanel bottomLeftPanel = new JPanel();
@@ -481,13 +503,10 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             bottomRightPanel.add(exportButton);
         bottomPanel.add(bottomRightPanel);
         allPanel.add(bottomPanel, BorderLayout.SOUTH);
-
-        enableButtons();
-
-        this.add(allPanel, BorderLayout.CENTER);
     }
 
-    void enableButtons() {
+
+    protected void enableButtons() {
         saveButton.setEnabled(editLieferant.size() > 0);
         revertButton.setEnabled(editLieferant.size() > 0);
         editButton.setEnabled(myTable.getSelectedRowCount() > 0);
@@ -496,7 +515,8 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         exportButton.setEnabled(editLieferant.size() == 0);
     }
 
-    class ArtikellisteTableModel extends AbstractTableModel {
+
+    public class ArtikellisteTableModel extends AbstractTableModel {
         // Subclass the AbstractTableModel to set display data and
         // synchronize underlying data Vector.
         // Needed to prevent exception "java.lang.IllegalArgumentException: Identifier not found"
@@ -536,13 +556,14 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         }
     }
 
-    class ArtikellisteTable extends AnyJComponentJTable {
+    protected class ArtikellisteTable extends AnyJComponentJTable {
         public ArtikellisteTable(TableModel m, Integer columnMargin,
                 Integer minColumnWidth, Integer maxColumnWidth){
             super(m, columnMargin, minColumnWidth, maxColumnWidth);
         }
 
         // Subclass the AnyJComponentJTable to set editable cells, font properties and tool tip text.
+        @Override
         public boolean isCellEditable(int row, int col) {
             String header = this.getColumnName(col);
             if ( activeRowBools.get(row) ){
@@ -557,6 +578,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             return false;
         }
 
+        @Override
         public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
             // custom rendering
             Component c = super.prepareRenderer(renderer, row, column);
@@ -625,6 +647,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             return c;
         }
 
+        @Override
         public Component prepareEditor(TableCellEditor editor, int row, int column) {
             Component c = super.prepareEditor(editor, row, column);
             if (c instanceof JTextField){
@@ -665,6 +688,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             return c;
         }
 
+        @Override
         public String getToolTipText(MouseEvent e) {
             String defaultTip = super.getToolTipText(e);
             Point p = e.getPoint();
@@ -684,21 +708,22 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         }
     }
 
-    void initiateTable() {
+    protected void initiateTable() {
         // replace general number of items with displayed number of items:
         String borderLabel = this.produktgruppenname.
             replaceAll(" \\([0-9]*\\)$", " ("+displayData.size()+")");
         artikelListPanel.setBorder(BorderFactory.createTitledBorder(borderLabel));
 	//artikelListPanel.revalidate();
 
-        myTable = new ArtikellisteTable(new ArtikellisteTableModel(), columnMargin, minColumnWidth, maxColumnWidth);
+        myTable = new ArtikellisteTable(new ArtikellisteTableModel(),
+                columnMargin, minColumnWidth, maxColumnWidth);
         myTable.setAutoCreateRowSorter(true);
         myTable.getModel().addTableModelListener(this);
         myTable.getSelectionModel().addListSelectionListener(this);
         setTableProperties(myTable);
     }
 
-    void showTable() {
+    protected void showTable() {
         artikelListPanel = new JPanel();
         artikelListPanel.setLayout(new BorderLayout());
 
@@ -722,7 +747,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         enableButtons();
     }
 
-    void setTableProperties(AnyJComponentJTable myTable) {
+    protected void setTableProperties(AnyJComponentJTable myTable) {
         for (String cname : linksColumns){
             myTable.getColumn(cname).setCellRenderer(linksAusrichter);
         }

@@ -34,8 +34,8 @@ import javax.swing.table.*;
 // Klasse, die Produktgruppenliste und Artikelliste speichert und anzeigt
 public class ArtikellisteContainer extends WindowContent {
     // Attribute:
-    private ProduktgruppenbaumArtikelliste prodList;
-    private TreeSet<Integer> sortedExpandedRows; // saves (and thus enables to restore) the expansion state of JTree
+    protected ProduktgruppenbaumArtikelliste prodList;
+    protected TreeSet<Integer> sortedExpandedRows; // saves (and thus enables to restore) the expansion state of JTree
     private Artikelliste artList;
 
     // Methoden:
