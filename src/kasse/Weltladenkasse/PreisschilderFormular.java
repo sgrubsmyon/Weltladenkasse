@@ -34,10 +34,8 @@ import javax.swing.event.*;
 //import java.beans.PropertyChangeEvent;
 //import java.beans.PropertyChangeListener;
 
-// DateTime from date4j (http://www.date4j.net/javadoc/index.html)
-import hirondelle.date4j.DateTime;
-
 import WeltladenDB.MainWindowGrundlage;
+import WeltladenDB.TabbedPaneGrundlage;
 import WeltladenDB.BarcodeComboBox;
 import WeltladenDB.ArtikelNameComboBox;
 import WeltladenDB.ArtikelNummerComboBox;
@@ -45,9 +43,9 @@ import WeltladenDB.BoundsPopupMenuListener;
 import WeltladenDB.AnyJComponentJTable;
 import WeltladenDB.ArtikelGrundlage;
 
-public class Preisschilder extends ArtikelGrundlage implements DocumentListener {
+public class PreisschilderFormular extends ArtikelGrundlage implements DocumentListener {
     // Attribute:
-    private TabbedPane tabbedPane;
+    private TabbedPaneGrundlage tabbedPane;
 
     // Text Fields
     private BarcodeComboBox barcodeBox;
@@ -68,8 +66,8 @@ public class Preisschilder extends ArtikelGrundlage implements DocumentListener 
     private JButton emptyNummerButton;
     private JButton hinzufuegenButton;
     private Vector<JButton> removeButtons;
-    private JButton stornoButton;
-    private JButton neuerKundeButton;
+    private JButton deleteButton;
+    private JButton printButton;
 
     // The panels
     private JPanel allPanel;
@@ -93,7 +91,7 @@ public class Preisschilder extends ArtikelGrundlage implements DocumentListener 
     /**
      *    The constructor.
      *       */
-    public Preisschilder(Connection conn, MainWindowGrundlage mw, TabbedPane tp) {
+    public PreisschilderFormular(Connection conn, MainWindowGrundlage mw, TabbedPaneGrundlage tp) {
 	super(conn, mw);
         tabbedPane = tp;
 
@@ -121,7 +119,6 @@ public class Preisschilder extends ArtikelGrundlage implements DocumentListener 
         KeyStroke barcodeShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK); // Ctrl-C
         KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK); // Ctrl-A
         KeyStroke artikelNummerShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_N, Event.CTRL_MASK); // Ctrl-N
-        KeyStroke stornierenShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK); // Ctrl-S
 
         ShortcutListener shortcutListener = new ShortcutListener();
 
@@ -130,8 +127,6 @@ public class Preisschilder extends ArtikelGrundlage implements DocumentListener 
         this.registerKeyboardAction(shortcutListener, "name", artikelNameShortcut,
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
         this.registerKeyboardAction(shortcutListener, "nummer", artikelNummerShortcut,
-                JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "stornieren", stornierenShortcut,
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
     }
 
@@ -148,11 +143,6 @@ public class Preisschilder extends ArtikelGrundlage implements DocumentListener 
             }
             if (e.getActionCommand() == "nummer"){
                 nummerBox.requestFocus();
-                return;
-            }
-            if (e.getActionCommand() == "stornieren"){
-                if (stornoButton.isEnabled())
-                    stornieren();
                 return;
             }
         }
@@ -263,16 +253,17 @@ public class Preisschilder extends ArtikelGrundlage implements DocumentListener 
             JPanel buttonPanel = new JPanel();
             buttonPanel.setLayout(new BorderLayout());
                 JPanel centerPanel = new JPanel();
-                    stornoButton = new JButton("Storno");
-                    stornoButton.setMnemonic(KeyEvent.VK_S);
-                    if (data.size() == 0) stornoButton.setEnabled(false);
-                    stornoButton.addActionListener(this);
-                    centerPanel.add(stornoButton);
+                    deleteButton = new JButton("Löschen");
+                    deleteButton.setMnemonic(KeyEvent.VK_L);
+                    if (data.size() == 0) deleteButton.setEnabled(false);
+                    deleteButton.addActionListener(this);
+                    centerPanel.add(deleteButton);
 
-                    neuerKundeButton = new JButton("Fertig/Nächster Kunde");
-                    neuerKundeButton.setEnabled(false);
-                    neuerKundeButton.addActionListener(this);
-                    centerPanel.add(neuerKundeButton);
+                    printButton = new JButton("Artikel drucken");
+                    printButton.setMnemonic(KeyEvent.VK_D);
+                    printButton.setEnabled(false);
+                    printButton.addActionListener(this);
+                    centerPanel.add(printButton);
                 buttonPanel.add(centerPanel, BorderLayout.CENTER);
             neuerKundePanel.add(buttonPanel);
         allPanel.add(neuerKundePanel);
@@ -572,12 +563,7 @@ public class Preisschilder extends ArtikelGrundlage implements DocumentListener 
         hinzufuegen();
     }
 
-    private void neuerKunde() {
-        clearAll();
-        updateAll();
-    }
-
-    private void stornieren() {
+    private void delete() {
         clearAll();
         updateAll();
     }
@@ -765,13 +751,11 @@ public class Preisschilder extends ArtikelGrundlage implements DocumentListener 
             nummerBox.requestFocus();
 	    return;
 	}
-	if (e.getSource() == stornoButton){
-            stornieren();
+	if (e.getSource() == deleteButton){
+            delete();
 	    return;
 	}
-	if (e.getSource() == neuerKundeButton){
-            neuerKunde();
-            tabbedPane.recreateTabbedPane();
+	if (e.getSource() == printButton){
 	    return;
 	}
 	int removeRow = -1;

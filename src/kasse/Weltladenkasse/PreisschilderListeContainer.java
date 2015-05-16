@@ -1,4 +1,4 @@
-package WeltladenDB;
+package Weltladenkasse;
 
 // Basic Java stuff:
 import java.util.*; // for Vector
@@ -31,20 +31,19 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.*;
 
+import WeltladenDB.ArtikellisteContainer;
+import WeltladenDB.MainWindowGrundlage;
+import WeltladenDB.ProduktgruppenbaumArtikelliste;
+
 // Klasse, die Produktgruppenliste und Artikelliste speichert und anzeigt
-public class ArtikellisteContainer extends WindowContent {
+public class PreisschilderListeContainer extends ArtikellisteContainer {
     // Attribute:
-    protected ProduktgruppenbaumArtikelliste prodList;
-    protected TreeSet<Integer> sortedExpandedRows; // saves (and thus enables to restore) the expansion state of JTree
-    private Artikelliste artList;
+    private TreeSet<Integer> sortedExpandedRows; // saves (and thus enables to restore) the expansion state of JTree
+    private PreisschilderListe prList;
 
     // Methoden:
-    public ArtikellisteContainer(Connection conn, MainWindowGrundlage mw) {
+    public PreisschilderListeContainer(Connection conn, MainWindowGrundlage mw) {
 	super(conn, mw);
-
-        prodList = new ProduktgruppenbaumArtikelliste(conn, mw, this);
-
-        this.add(prodList, BorderLayout.CENTER);
     }
 
     public void switchToArtikelliste(Integer topid, Integer subid, Integer subsubid, String gruppenname) {
@@ -57,12 +56,12 @@ public class ArtikellisteContainer extends WindowContent {
         }
         this.remove(prodList);
         this.revalidate();
-        artList = new Artikelliste(this.conn, this, topid, subid, subsubid, gruppenname);
-        this.add(artList, BorderLayout.CENTER);
+        prList = new PreisschilderListe(this.conn, this, topid, subid, subsubid, gruppenname);
+        this.add(prList, BorderLayout.CENTER);
     }
 
     public void switchToProduktgruppenliste() {
-        this.remove(artList);
+        this.remove(prList);
         this.revalidate();
         prodList = new ProduktgruppenbaumArtikelliste(this.conn, this.mainWindow, this);
         JTree tree = prodList.getTree();

@@ -76,10 +76,10 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         this.currencySymbol = mw.currencySymbol;
     }
     // Getter:
-    Connection getConnection(){
+    public Connection getConnection(){
 	return this.conn;
     }
-    MainWindowGrundlage getMainWindowPointer(){
+    public MainWindowGrundlage getMainWindowPointer(){
 	return this.mainWindow;
     }
 
