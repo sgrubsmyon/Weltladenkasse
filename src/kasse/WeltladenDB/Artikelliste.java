@@ -143,7 +143,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         columnLabels.add("Herkunft");
         columnLabels.add("Bestand");
         columnLabels.add("Ab/Seit");
-        columnLabels.add("Bis"); columnLabels.add("Aktiv");
+        columnLabels.add("Bis");
+        columnLabels.add("Aktiv");
         artikelIDs = new Vector<Integer>();
         produktGruppeIDs = new Vector<Integer>();
         lieferantIDs = new Vector<Integer>();
@@ -154,13 +155,14 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         beliebtIndices = new Vector<Integer>();
 
         linksColumns = new Vector<String>();
+        linksColumns.add("Nummer"); 
         linksColumns.add("Produktgruppe"); linksColumns.add("Lieferant");
         linksColumns.add("Name"); linksColumns.add("Kurzname");
         linksColumns.add("Herkunft"); linksColumns.add("Ab/Seit");
         linksColumns.add("Bis");
         //
         rechtsColumns = new Vector<String>();
-        rechtsColumns.add("Nummer"); rechtsColumns.add("Menge");
+        rechtsColumns.add("Menge");
         rechtsColumns.add("Barcode"); rechtsColumns.add("VPE");
         rechtsColumns.add("Setgröße"); rechtsColumns.add("VK-Preis");
         rechtsColumns.add("Empf. VK-Preis"); rechtsColumns.add("EK-Rabatt");
@@ -1030,10 +1032,11 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         }
         JDialog editDialog = new JDialog(this.mainWindow, "Artikel bearbeiten", true);
         ArtikelBearbeiten bearb = new ArtikelBearbeiten(this.conn, this.mainWindow, this, editDialog,
-                selectedData, selectedProdGrIDs, selectedLiefIDs, selectedVarPreisBools);
+                columnLabels, selectedData, selectedProdGrIDs, selectedLiefIDs, selectedVarPreisBools);
         editDialog.getContentPane().add(bearb, BorderLayout.CENTER);
         editDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        WindowAdapterDialog wad = new WindowAdapterDialog(bearb, editDialog, "Achtung: Änderungen gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
+        WindowAdapterDialog wad = new WindowAdapterDialog(bearb, editDialog,
+                "Achtung: Änderungen gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
         editDialog.addWindowListener(wad);
         editDialog.pack();
         editDialog.setVisible(true);

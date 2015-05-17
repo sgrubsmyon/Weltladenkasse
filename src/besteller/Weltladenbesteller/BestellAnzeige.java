@@ -46,10 +46,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import WeltladenDB.MainWindowGrundlage;
-import WeltladenDB.ArtikelGrundlage;
-import WeltladenDB.AnyJComponentJTable;
-import WeltladenDB.FileExistsAwareFileChooser;
+import WeltladenDB.*;
 
 public class BestellAnzeige extends BestellungsGrundlage implements DocumentListener {
     // Attribute:
@@ -377,7 +374,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
                     "LEFT JOIN mwst AS m USING (mwst_id) "+
                     "WHERE bd.bestell_nr = ? AND bd.typ = ? "+
-                    "ORDER BY p.toplevel_id, p.sub_id, p.subsub_id"
+                    "ORDER BY p.toplevel_id, p.sub_id, p.subsub_id, a.artikel_name"
                     );
             pstmt.setInt(1, (Integer)bestellNrUndTyp.get(0));
             pstmt.setString(2, (String)bestellNrUndTyp.get(1));
@@ -647,7 +644,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
                 writeSpreadSheet(file);
 
-                System.out.println("Written to " + file.getName());
+                System.out.println("Written to " + file.getAbsolutePath());
             } else {
                 System.out.println("Save command cancelled by user.");
             }

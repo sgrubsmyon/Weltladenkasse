@@ -136,11 +136,11 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	oneDayBeforeEarliestDate = calendar.getTime();
 	calendar.set(Calendar.DAY_OF_MONTH, day);
 	earliestDate = calendar.getTime();
-	latestDate = new Date(); // current date
         if ( year == 0 ){
             earliestDate = new Date();
             oneDayBeforeEarliestDate = new Date();
         }
+	latestDate = new Date(); // current date
     }
 
     private void initiateSpinners(){

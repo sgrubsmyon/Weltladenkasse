@@ -5,6 +5,10 @@ import javax.swing.text.*; // for DocumentFilter, AbstractDocument, JTextCompone
 public class StringDocumentFilter extends DocumentFilter {
     private int numchars = 180;
 
+    public StringDocumentFilter() {
+        super();
+    }
+
     public StringDocumentFilter(int nchar) {
         super();
         numchars = nchar;

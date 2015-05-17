@@ -140,6 +140,8 @@ public class ArtikelNeuEingeben extends DialogWindow
         artikelFormular.kurznameField.addKeyListener(enterAdapter);
         artikelFormular.mengeField.getDocument().addDocumentListener(this);
         artikelFormular.mengeField.addKeyListener(enterAdapter);
+        artikelFormular.einheitField.getDocument().addDocumentListener(this);
+        artikelFormular.einheitField.addKeyListener(enterAdapter);
         artikelFormular.barcodeField.getDocument().addDocumentListener(this);
         artikelFormular.barcodeField.addKeyListener(enterAdapter);
         artikelFormular.herkunftField.getDocument().addDocumentListener(this);
@@ -230,6 +232,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         } catch (NumberFormatException ex) {
             menge = null;
         }
+        String einheit = artikelFormular.einheitField.getText();
         String barcode = artikelFormular.barcodeField.getText();
         String herkunft = artikelFormular.herkunftField.getText();
         Integer vpe = (Integer)artikelFormular.vpeSpinner.getValue();
@@ -252,6 +255,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         artikelNeu.artikelNamen.add(name);
         artikelNeu.kurznamen.add(kurzname);
         artikelNeu.mengen.add(menge);
+        artikelNeu.einheiten.add(einheit);
         artikelNeu.barcodes.add(barcode);
         artikelNeu.herkuenfte.add(herkunft);
         artikelNeu.vpes.add(vpe);
@@ -283,6 +287,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         colors.add(Color.black); // name
         colors.add(Color.black); // kurzname
         colors.add(Color.black); // menge
+        colors.add(Color.black); // einheit
         colors.add(Color.black); // sortiment
         colors.add(Color.black); // lieferbar
         colors.add(Color.black); // beliebt
@@ -306,6 +311,7 @@ public class ArtikelNeuEingeben extends DialogWindow
             row.add(name);
             row.add(kurzname);
             row.add( menge == null ? "" : menge.toString() );
+            row.add(einheit);
             row.add(sortiment);
             row.add(lieferbar);
             row.add(beliebt);

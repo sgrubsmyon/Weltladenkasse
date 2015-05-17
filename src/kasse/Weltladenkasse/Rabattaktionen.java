@@ -133,15 +133,15 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	oneDayBeforeEarliestDate = earlyCalendar.getTime();
 	earlyCalendar.set(Calendar.DAY_OF_MONTH, earlyDay);
 	earliestDate = earlyCalendar.getTime();
+        if ( earlyYear == 0 ){
+            earliestDate = new Date();
+            oneDayBeforeEarliestDate = new Date();
+        }
 	Calendar lateCalendar = Calendar.getInstance();
 	lateCalendar.set(Calendar.YEAR, lateYear);
 	lateCalendar.set(Calendar.MONTH, lateMonth-1);
 	lateCalendar.set(Calendar.DAY_OF_MONTH, lateDay);
 	latestDate = lateCalendar.getTime();
-        if ( earlyYear == 0 ){
-            earliestDate = new Date();
-            oneDayBeforeEarliestDate = new Date();
-        }
         if ( lateYear == 0 ){
             latestDate = new Date();
         }
