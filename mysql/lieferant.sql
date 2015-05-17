@@ -22,11 +22,13 @@ INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`,
 INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (15,'Olaf Müller','OM',1);
 INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (16,'Globo','Globo',1);
 INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (17,'Fairtrade Center Breisgau','FTC',1);
-INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (18,'BanaFair','Bana',1);
-INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (19,'Exil','Exil',1);
+INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (18,'BanaFair','BF',1);
+INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (19,'Exil Music','Exil',1);
 INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (20,'Memo','Memo',1);
 INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (21,'LamuLamu','Lamu',1);
 INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (22,'FairMail','FM',1);
-INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (23,'Biologische Station Bonn','BioSt',1);
+INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (23,'Biologische Station Bonn','BS',1);
+INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (24,'Postkarten Ackermann','Ack',1);
+INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (25,'Taguaprodukte Ecuador','Tagua',1);
 /*!40000 ALTER TABLE `lieferant` ENABLE KEYS */;
 UNLOCK TABLES;

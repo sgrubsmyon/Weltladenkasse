@@ -69,65 +69,52 @@ public class PreisschilderExport extends WindowContent {
         return template;
     }
 
-    //Map<String, String> createMap(String name, String menge, String preis,
-    //        String lieferant, String kg_preis) {
-    //    HashMap<String, String> map = new HashMap<String, String>();
-    //    map.put("name", name);
-    //    map.put("menge", menge);
-    //    map.put("preis", preis);
-    //    map.put("lieferant", lieferant);
-    //    map.put("kg_preis", kg_preis);
-    //    return map;
-    //}
-
     void createPriceTagFile() {
-        // Load the template.
-        // Java 5 users will have to use RhinoFileTemplate instead
-        JavaScriptFileTemplate template = loadTemplate();
-        if (template == null) return;
+        int fieldCounter = 0;
+        int pageCounter = 0;
+        while ( fieldCounter < names.size() ) {
+            // Load the template.
+            // Java 5 users will have to use RhinoFileTemplate instead
+            JavaScriptFileTemplate template = loadTemplate();
+            if (template == null) return;
+            pageCounter++;
 
-        // Fill with sample values.
-        template.setField("name_0", "Äthiopienhonig");
-        template.setField("menge_0", "500");
-        template.setField("preis_0", "5,00 €");
-        template.setField("lieferant_0", "EP");
-        template.setField("kg_preis_0", "10,00 €");
+            for (int i=0; i<27; i++){ // always fill full page, 27 fields
+                int index = fieldCounter;
+                if ( index < names.size() ){
+                    template.setField("name_"+i, names.get(index));
+                    template.setField("menge_"+i, mengen.get(index));
+                    template.setField("preis_"+i, preise.get(index));
+                    template.setField("lieferant_"+i, lieferanten.get(index));
+                    template.setField("kg_preis_"+i, kg_preise.get(index));
+                    template.setField("text_"+i, "Grundpreis\n(pro kg oder l)");
+                } else {
+                    template.setField("name_"+i, "");
+                    template.setField("menge_"+i, "");
+                    template.setField("preis_"+i, "");
+                    template.setField("lieferant_"+i, "");
+                    template.setField("kg_preis_"+i, "");
+                    template.setField("text_"+i, "");
+                }
+                fieldCounter++;
+            }
 
-        template.setField("name_1", "Blütenhonig");
-        template.setField("menge_1", "500");
-        template.setField("preis_1", "4,00 €");
-        template.setField("lieferant_1", "EP");
-        template.setField("kg_preis_1", "8,00 €");
+            try {
+                // Save to file.
+                File outFile = new File( String.format("out_%03d", pageCounter) );
+                System.out.println("Going to save price tag list.");
+                template.saveAs(outFile);
+                System.out.println("Done.");
 
-        template.setField("name_2", "Kaffee Hausmarke");
-        template.setField("menge_2", "250");
-        template.setField("preis_2", "3,50 €");
-        template.setField("lieferant_2", "EP");
-        template.setField("kg_preis_2", "14,00 €");
-
-        //List<Map<String, String>> articles = new ArrayList<Map<String, String>>();
-        //articles.add(createMap("Äthiopienhonig", "500", "5,00 €", "EP", "10,00 €"));
-        //articles.add(createMap("Blütenhonig", "500", "4,00 €", "EP", "8,00 €"));
-        //articles.add(createMap("Kaffee Hausmarke", "250", "3,50 €", "EP", "14,00 €"));
-        //template.setField("column1", articles);
-        //template.setField("column2", articles);
-        //template.setField("column3", articles);
-
-        try {
-            // Save to file.
-            File outFile = new File("out.odt");
-            System.out.println("Going to save.");
-            template.saveAs(outFile);
-            System.out.println("Have saved.");
-
-            // Open the document with OpenOffice.org !
-            OOUtils.open(outFile);
-        } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        } catch (TemplateException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+                // Open the document with OpenOffice.org !
+                OOUtils.open(outFile);
+            } catch (IOException ex) {
+                System.out.println("Exception: " + ex.getMessage());
+                ex.printStackTrace();
+            } catch (TemplateException ex) {
+                System.out.println("Exception: " + ex.getMessage());
+                ex.printStackTrace();
+            }
         }
     }
 

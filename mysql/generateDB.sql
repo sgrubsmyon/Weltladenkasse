@@ -45,6 +45,7 @@ CREATE TABLE artikel (
     artikel_name VARCHAR(180) NOT NULL,
     kurzname VARCHAR(50) DEFAULT NULL,
     menge DECIMAL(8,5) DEFAULT NULL,
+    einheit VARCHAR(10) DEFAULT "kg",
     barcode VARCHAR(30) DEFAULT NULL,
     herkunft VARCHAR(100) DEFAULT NULL,
     vpe SMALLINT(5) UNSIGNED DEFAULT NULL,

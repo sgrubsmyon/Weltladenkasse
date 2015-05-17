@@ -44,6 +44,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected final BigDecimal minusOne = new BigDecimal("-1");
     protected final BigDecimal percent = new BigDecimal("0.01");
     protected final BigDecimal hundred = new BigDecimal("100.");
+    protected final BigDecimal thousand = new BigDecimal("100.");
 
     // Die Ausrichter:
     protected DefaultTableCellRenderer rechtsAusrichter = new DefaultTableCellRenderer();
@@ -447,15 +448,17 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
     protected int insertNewItem(Integer produktgruppen_id, Integer
             lieferant_id, String nummer, String name, String kurzname,
-            BigDecimal menge, String barcode, String herkunft, Integer vpe,
-            Integer setgroesse, String vkpreis, String empfvkpreis,
-            String ekrabatt, String ekpreis, Boolean var_preis, Boolean sortiment,
-            Boolean lieferbar, Integer beliebt, Integer bestand) {
+            BigDecimal menge, String einheit, String barcode, String herkunft,
+            Integer vpe, Integer setgroesse, String vkpreis, String
+            empfvkpreis, String ekrabatt, String ekpreis, Boolean var_preis,
+            Boolean sortiment, Boolean lieferbar, Integer beliebt, Integer
+            bestand) {
         // add row for new item (with updated fields)
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
 
         if (kurzname.equals("") || kurzname.equals("NULL")){ kurzname = null; }
+        if (einheit.equals("") || einheit.equals("NULL")){ einheit = null; }
         if (barcode.equals("") || barcode.equals("NULL")){ barcode = null; }
         if (herkunft.equals("") || herkunft.equals("NULL")){ herkunft = null; }
         if ( vpe == null || vpe.equals(0) ){ vpe = null; }
@@ -496,6 +499,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "artikel_nr = ?, artikel_name = ?, "+
                     "kurzname = ?, "+
                     "menge = ?, "+
+                    "einheit = ?, "+
                     "barcode = ?, "+
                     "herkunft = ?, "+
                     "vpe = ?, "+
@@ -513,19 +517,20 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             pstmt.setString(4, name);
             pstmt.setString(5, kurzname);
             pstmt.setBigDecimal(6, menge);
-            pstmt.setString(7, barcode);
-            pstmt.setString(8, herkunft);
-            pstmtSetInteger(pstmt, 9, vpe);
-            pstmtSetInteger(pstmt, 10, setgroesse);
-            pstmt.setBigDecimal(11, vkpDecimal);
-            pstmt.setBigDecimal(12, empfvkpDecimal);
-            pstmt.setBigDecimal(13, ekrabattDecimal);
-            pstmt.setBigDecimal(14, ekpDecimal);
-            pstmtSetBoolean(pstmt, 15, var_preis);
-            pstmtSetBoolean(pstmt, 16, sortiment);
-            pstmtSetBoolean(pstmt, 17, lieferbar);
-            pstmtSetInteger(pstmt, 18, beliebt);
-            pstmtSetInteger(pstmt, 19, bestand);
+            pstmt.setString(7, einheit);
+            pstmt.setString(8, barcode);
+            pstmt.setString(9, herkunft);
+            pstmtSetInteger(pstmt, 10, vpe);
+            pstmtSetInteger(pstmt, 11, setgroesse);
+            pstmt.setBigDecimal(12, vkpDecimal);
+            pstmt.setBigDecimal(13, empfvkpDecimal);
+            pstmt.setBigDecimal(14, ekrabattDecimal);
+            pstmt.setBigDecimal(15, ekpDecimal);
+            pstmtSetBoolean(pstmt, 16, var_preis);
+            pstmtSetBoolean(pstmt, 17, sortiment);
+            pstmtSetBoolean(pstmt, 18, lieferbar);
+            pstmtSetInteger(pstmt, 19, beliebt);
+            pstmtSetInteger(pstmt, 20, bestand);
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
