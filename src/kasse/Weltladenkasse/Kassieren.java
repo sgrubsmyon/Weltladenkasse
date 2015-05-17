@@ -1426,6 +1426,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         String artikelPreis = priceFormatterIntern(preisField.getText());
         BigDecimal gesPreis = new BigDecimal(artikelPreis).multiply(new BigDecimal(stueck));
         String artikelGesamtPreis = priceFormatterIntern(gesPreis);
+        String kurzname = getShortName(selectedArtikelID);
         String artikelMwSt = getVAT(selectedArtikelID);
         Boolean sortiment = getSortimentBool(selectedArtikelID);
         if (color == "default"){
@@ -1442,7 +1443,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
         positions.add(lastPos+1);
         artikelIDs.add(selectedArtikelID);
-        articleNames.add(artikelName);
+        articleNames.add(kurzname);
         rabattIDs.add(null);
         stueckzahlen.add(stueck);
         einzelpreise.add(new BigDecimal(artikelPreis));

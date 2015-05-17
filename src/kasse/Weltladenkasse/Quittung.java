@@ -3,45 +3,31 @@ package Weltladenkasse;
 // Basic Java stuff:
 import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.lang.Process; // for executing system commands
 import java.lang.Runtime; // for executing system commands
 
 // GUI stuff:
+import javax.swing.*; // JFrame, JPanel, JTable, JButton etc.
 import java.awt.event.ActionEvent;
-import javax.swing.JOptionPane;
-import javax.swing.JFrame;
 import java.awt.print.*;
-import javax.print.PrintService;
-import javax.print.PrintServiceLookup;
+import javax.print.*; // PrintService
 import javax.print.attribute.*;
 import javax.print.attribute.standard.*;
 
 // MySQL Connector/J stuff:
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*; // Connection, Statement, ResultSet ...
 
 // DateTime from date4j (http://www.date4j.net/javadoc/index.html)
 import hirondelle.date4j.DateTime;
 
-// OpenDocument stuff:
-import org.jopendocument.dom.spreadsheet.Sheet;
-import org.jopendocument.dom.spreadsheet.SpreadSheet;
+// jOpenDocument stuff:
+import org.jopendocument.dom.spreadsheet.*; // SpreadSheet
 import org.jopendocument.dom.OOUtils;
 import org.jopendocument.model.OpenDocument;
-import org.jopendocument.print.DefaultDocumentPrinter;
 import org.jopendocument.print.ODTPrinter;
-import org.jopendocument.panel.ODSViewerPanel;
 
-import WeltladenDB.WindowContent;
-import WeltladenDB.MainWindowGrundlage;
+import WeltladenDB.*;
 
 public class Quittung extends WindowContent {
     private DateTime datetime;

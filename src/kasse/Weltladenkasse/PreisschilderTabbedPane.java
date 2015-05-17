@@ -53,7 +53,7 @@ public class PreisschilderTabbedPane extends TabbedPaneGrundlage {
         PreisschilderFormular myPreisschForm = new PreisschilderFormular(this.conn, this.mainWindow, this);
         PreisschilderListeContainer myPreisschList = new PreisschilderListeContainer(this.conn, this.mainWindow);
         tabbedPane.addTab("Artikel scannen", null, myPreisschForm, "Artikel durch Scannen auswählen");
-        tabbedPane.addTab("Artikel auswählen", null, myPreisschList, "Artikel aus Liste auswählen");
+        tabbedPane.addTab("Artikel aus Liste auswählen", null, myPreisschList, "Artikel aus Liste auswählen");
 
         this.add(tabbedPane, BorderLayout.CENTER);
     }
