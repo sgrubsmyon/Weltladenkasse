@@ -1,0 +1,74 @@
+# Load newest DB dump:
+$ mysql --local-infile -hlocalhost -ukassenadmin -p -e "source DB_Dump_2015_KW9.sql" kasse
+
+# Add new columns `lieferant_kurzname` and `einheit`:
+uriuri@dollie:~$ mysql-kasse-admin
+mysql> SELECT * FROM lieferant;
+mysql> ALTER TABLE lieferant ADD COLUMN lieferant_kurzname VARCHAR(10) DEFAULT NULL;
+mysql> SELECT * FROM lieferant;
+mysql> UPDATE lieferant SET lieferant_kurzname = "unbekannt" WHERE lieferant_id = 1;
+mysql> UPDATE lieferant SET lieferant_kurzname = "FHZ" WHERE lieferant_id = 2;
+mysql> UPDATE lieferant SET lieferant_kurzname = "GEPA" WHERE lieferant_id = 3;
+mysql> UPDATE lieferant SET lieferant_kurzname = "GEPA" WHERE lieferant_id = 4;
+mysql> UPDATE lieferant SET lieferant_kurzname = "EP" WHERE lieferant_id = 5;
+mysql> UPDATE lieferant SET lieferant_kurzname = "dwp" WHERE lieferant_id = 6;
+mysql> UPDATE lieferant SET lieferant_kurzname = "Eth" WHERE lieferant_id = 7;
+mysql> UPDATE lieferant SET lieferant_kurzname = "CTM" WHERE lieferant_id = 8;
+mysql> UPDATE lieferant SET lieferant_kurzname = "LT" WHERE lieferant_id = 9;
+mysql> UPDATE lieferant SET lieferant_kurzname = "CL" WHERE lieferant_id = 10;
+mysql> UPDATE lieferant SET lieferant_kurzname = "BM" WHERE lieferant_id = 11;
+mysql> UPDATE lieferant SET lieferant_kurzname = "BM/dwp" WHERE lieferant_id = 12;
+mysql> UPDATE lieferant SET lieferant_kurzname = "FK" WHERE lieferant_id = 13;
+mysql> UPDATE lieferant SET lieferant_kurzname = "Sal" WHERE lieferant_id = 14;
+mysql> UPDATE lieferant SET lieferant_kurzname = "OM" WHERE lieferant_id = 15;
+mysql> UPDATE lieferant SET lieferant_kurzname = "Globo" WHERE lieferant_id = 16;
+mysql> UPDATE lieferant SET lieferant_kurzname = "FTC" WHERE lieferant_id = 17;
+mysql> UPDATE lieferant SET lieferant_kurzname = "BF" WHERE lieferant_id = 18;
+mysql> UPDATE lieferant SET lieferant_kurzname = "Exil" WHERE lieferant_id = 19;
+mysql> UPDATE lieferant SET lieferant_name = "Exil Music" WHERE lieferant_id = 19;
+mysql> UPDATE lieferant SET lieferant_kurzname = "Memo" WHERE lieferant_id = 20;
+mysql> UPDATE lieferant SET lieferant_kurzname = "Lamu" WHERE lieferant_id = 21;
+mysql> UPDATE lieferant SET lieferant_kurzname = "FM" WHERE lieferant_id = 22;
+mysql> UPDATE lieferant SET lieferant_kurzname = "BS" WHERE lieferant_id = 23;
+mysql> INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (24,'Postkarten Ackermann','Ack',1);
+mysql> INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (25,'Taguaprodukte Ecuador','Tagua',1);
+mysql> SELECT * FROM lieferant;
+
+mysql> SELECT menge, einheit FROM artikel LIMIT 100;
+mysql> ALTER TABLE artikel ADD COLUMN einheit VARCHAR(10) DEFAULT "kg";
+mysql> SELECT menge, einheit FROM artikel LIMIT 100;
+mysql> SELECT artikel_name, menge, einheit FROM artikel WHERE produktgruppen_id = 36;
+mysql> UPDATE artikel SET einheit = "St." WHERE produktgruppen_id = 36;
+mysql> SELECT artikel_name, menge, einheit FROM artikel WHERE produktgruppen_id = 36;
+mysql> SELECT artikel_name, menge, einheit FROM artikel WHERE produktgruppen_id = 56;
+mysql> UPDATE artikel SET einheit = "l" WHERE produktgruppen_id = 56;
+mysql> SELECT artikel_name, menge, einheit FROM artikel JOIN produktgruppe USING (produktgruppen_id) WHERE toplevel_id = 3;
+mysql> UPDATE artikel JOIN produktgruppe USING (produktgruppen_id) SET einheit = "l" WHERE toplevel_id = 3;
+mysql> SELECT artikel_name, menge, einheit FROM artikel JOIN produktgruppe USING (produktgruppen_id) WHERE toplevel_id = 3;
+mysql> SELECT artikel_name, menge, einheit FROM artikel JOIN produktgruppe USING (produktgruppen_id) WHERE toplevel_id >= 4;
+mysql> UPDATE artikel JOIN produktgruppe USING (produktgruppen_id) SET einheit = "St." WHERE toplevel_id >= 4;
+mysql> SELECT artikel_name, menge, einheit FROM artikel JOIN produktgruppe USING (produktgruppen_id) WHERE toplevel_id >= 4;
+
+# Check if nothing was missed:
+# Should all have einheit = l
+mysql> SELECT artikel_name, menge, einheit FROM artikel WHERE artikel_name LIKE "%|%ml%";
+mysql> UPDATE artikel set einheit = "l" WHERE artikel_name LIKE "%|%ml%";
+mysql> SELECT artikel_name, menge, einheit FROM artikel WHERE artikel_name LIKE "%|%ml%";
+mysql> SELECT artikel_name, menge, einheit FROM artikel WHERE artikel_name LIKE "%|% l %";
+mysql> SELECT artikel_name, menge, einheit FROM artikel WHERE artikel_name REGEXP "[0-9]l";
+mysql> SELECT artikel_name, menge, einheit FROM artikel WHERE artikel_name REGEXP "[0-9] l";
+# Look for wrong einheit:
+mysql> SELECT artikel_name, menge, einheit FROM artikel JOIN produktgruppe USING (produktgruppen_id) WHERE produktgruppen_name = "Kosmetik";
+
+# Make NULL articles NULL:
+mysql> SELECT menge, einheit FROM artikel LIMIT 100;
+mysql> UPDATE artikel SET einheit = NULL WHERE menge IS NULL;
+mysql> SELECT menge, einheit FROM artikel LIMIT 100;
+
+
+
+
+# Reorder the produktgruppen:
+mysql> SELECT produktgruppen_name, produktgruppen_id, toplevel_id, sub_id, subsub_id FROM produktgruppe WHERE produktgruppen_id = 92;
+mysql> UPDATE produktgruppe SET toplevel_id = 4, sub_id = 17 FROM produktgruppe WHERE produktgruppen_id = 92;
+mysql> SELECT produktgruppen_name, produktgruppen_id, toplevel_id, sub_id, subsub_id FROM produktgruppe WHERE produktgruppen_id = 92;
