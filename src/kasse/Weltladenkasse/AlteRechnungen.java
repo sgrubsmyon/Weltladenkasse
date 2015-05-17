@@ -104,6 +104,7 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
     }
 
     private void initiateSpinners(){
+        System.out.println("AlteRechnungen spinner values: "+oneDayBeforeEarliestDate+" "+earliestDate+" "+latestDate);
         startDateModel = new SpinnerDateModel(earliestDate, // Startwert
                                      oneDayBeforeEarliestDate, // kleinster Wert
                                      latestDate, // groesster Wert

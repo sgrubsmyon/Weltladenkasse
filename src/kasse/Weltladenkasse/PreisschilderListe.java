@@ -102,12 +102,10 @@ public class PreisschilderListe extends Artikelliste {
                 int id = artikelIDs.get(i);
                 String kurzname = getShortName(id);
                 String liefkurz = getShortLieferantName(id);
-                String preis = priceFormatter(
-                        data.get(i).get(columnLabels.indexOf("VK-Preis")).toString() )+
-                        " "+currencySymbol;
-                String[] menge_kg_preis = getMengeAndPricePerKg(id);
-                String menge = menge_kg_preis[0];
-                String kg_preis = menge_kg_preis[1];
+                String[] menge_preis_kg_preis = getMengePriceAndPricePerKg(id);
+                String menge = menge_preis_kg_preis[0];
+                String preis = menge_preis_kg_preis[1];
+                String kg_preis = menge_preis_kg_preis[2];
 
                 articleNames.add(kurzname);
                 mengen.add(menge);

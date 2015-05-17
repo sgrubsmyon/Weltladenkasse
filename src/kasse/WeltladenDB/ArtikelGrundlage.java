@@ -120,8 +120,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT IFNULL(lieferant_kurzname, lieferant_name) "+
-                    "FROM lieferant INNER JOIN artikel USING (lieferant_id) WHERE artikel_id = ? "+
-                    "AND aktiv = TRUE"
+                    "FROM lieferant AS l INNER JOIN artikel AS a USING (lieferant_id) WHERE artikel_id = ? "+
+                    "AND a.aktiv = TRUE"
                     );
             pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
@@ -129,8 +129,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
             if (liefkurz == ""){
                 pstmt = this.conn.prepareStatement(
                     "SELECT lieferant_name "+
-                    "FROM lieferant INNER JOIN artikel USING (lieferant_id) WHERE artikel_id = ? "+
-                    "AND aktiv = TRUE"
+                    "FROM lieferant AS l INNER JOIN artikel AS a USING (lieferant_id) WHERE artikel_id = ? "+
+                    "AND a.aktiv = TRUE"
                         );
                 pstmtSetInteger(pstmt, 1, artikelID);
                 rs = pstmt.executeQuery();
@@ -236,18 +236,20 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return vat;
     }
 
-    protected String[] getMengeAndPricePerKg(int artikelID) {
+    protected String[] getMengePriceAndPricePerKg(int artikelID) {
         BigDecimal menge_bd = new BigDecimal("0");
-        BigDecimal preis = new BigDecimal("0");
+        String einheit = new String("");
+        BigDecimal preis_bd = new BigDecimal("0");
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT menge, vk_preis FROM artikel WHERE artikel_id = ?"
+                    "SELECT menge, einheit, vk_preis FROM artikel WHERE artikel_id = ?"
                     );
             pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
             if ( rs.next() ){
                 menge_bd = rs.getString(1) != null ? rs.getBigDecimal(1) : new BigDecimal("0");
-                preis = rs.getString(2) != null ? rs.getBigDecimal(2) : new BigDecimal("0");
+                einheit = rs.getString(2) != null ? rs.getString(2) : new String("");
+                preis_bd = rs.getString(3) != null ? rs.getBigDecimal(3) : new BigDecimal("0");
             }
             rs.close();
             pstmt.close();
@@ -257,13 +259,23 @@ public abstract class ArtikelGrundlage extends WindowContent {
         }
 
         String menge = "";
+        String preis = priceFormatter(preis_bd)+" "+currencySymbol;
         String kg_preis = "";
         if (menge_bd.signum() > 0){
-            menge = menge_bd.multiply(new BigDecimal("1000")).toString();
-            BigDecimal preis_pro_kg = preis.divide(menge_bd, 10, RoundingMode.HALF_UP);
+            BigDecimal preis_pro_kg = preis_bd.divide(menge_bd, 10, RoundingMode.HALF_UP);
             kg_preis = priceFormatter(preis_pro_kg)+" "+currencySymbol;
+            if (einheit == "kg" | einheit == "l"){
+                if ( menge_bd.compareTo(one) < 0 ){ // if menge < 1 kg or 1 l
+                    menge_bd = menge_bd.multiply(thousand);
+                    if (einheit == "kg")
+                        einheit = "g";
+                    else if (einheit == "l")
+                        einheit = "ml";
+                }
+            }
+            menge = (menge_bd.toString()+" "+einheit).trim();
         }
-        return new String[]{menge, kg_preis};
+        return new String[]{menge, preis, kg_preis};
     }
 
     protected String getVPE(int artikelID) {

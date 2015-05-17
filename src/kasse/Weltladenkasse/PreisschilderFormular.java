@@ -515,16 +515,16 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
         String artikelName = an[0];
         String lieferant = an[1];
         String artikelNummer = (String)nummerBox.getSelectedItem();
-        String preis = priceFormatter(preisField.getText())+" "+currencySymbol;
         String kurzname = getShortName(selectedArtikelID);
         String liefkurz = getShortLieferantName(selectedArtikelID);
         String barcode = getBarcode(selectedArtikelID);
         String artikelMwSt = getVAT(selectedArtikelID);
         Boolean sortiment = getSortimentBool(selectedArtikelID);
         String color = sortiment ? "default" : "gray";
-        String[] menge_kg_preis = getMengeAndPricePerKg(selectedArtikelID);
-        String menge = menge_kg_preis[0];
-        String kg_preis = menge_kg_preis[1];
+        String[] menge_preis_kg_preis = getMengePriceAndPricePerKg(selectedArtikelID);
+        String menge = menge_preis_kg_preis[0];
+        String preis = menge_preis_kg_preis[1];
+        String kg_preis = menge_preis_kg_preis[2];
 
         // for PreisschilderExport:
         artikelIDs.add(selectedArtikelID);

@@ -81,6 +81,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
     private Vector<String> changedName;
     private Vector<String> changedKurzname;
     private Vector<BigDecimal> changedMenge;
+    private Vector<String> changedEinheit;
     private Vector<String> changedBarcode;
     private Vector<String> changedHerkunft;
     private Vector<Integer> changedVPE;
@@ -127,6 +128,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         columnLabels.add("Name");
         columnLabels.add("Kurzname");
         columnLabels.add("Menge");
+        columnLabels.add("Einheit");
         columnLabels.add("VK-Preis");
         columnLabels.add("Sortiment");
         columnLabels.add("Lieferbar");
@@ -167,6 +169,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         //
         zentralColumns = new Vector<String>();
         zentralColumns.add("Beliebtheit");
+        zentralColumns.add("Einheit");
         //
         smallColumns = new Vector<String>();
         smallColumns.add("Ab/Seit"); smallColumns.add("Bis");
@@ -174,6 +177,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         editableColumns = new Vector<String>();
         editableColumns.add("Nummer"); editableColumns.add("Name");
         editableColumns.add("Kurzname"); editableColumns.add("Menge");
+        editableColumns.add("Einheit");
         editableColumns.add("Barcode"); editableColumns.add("Herkunft");
         editableColumns.add("VPE"); editableColumns.add("Setgröße");
         editableColumns.add("Sortiment"); editableColumns.add("Lieferbar");
@@ -206,7 +210,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
                     "lieferant_id, lieferant_name, "+
                     "artikel_nr, artikel_name, "+
                     "kurzname, "+
-                    "menge, barcode, "+
+                    "menge, einheit, barcode, "+
                     "herkunft, vpe, "+
                     "setgroesse, "+
                     "vk_preis, empf_vk_preis, ek_rabatt, ek_preis, variabler_preis, mwst_satz, "+
@@ -233,29 +237,31 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
                 String name = rs.getString(7);
                 String kurzname = rs.getString(8);
                 String menge = rs.getString(9);
-                String barcode = rs.getString(10);
-                String herkunft = rs.getString(11);
-                Integer vpe = rs.getInt(12);
-                Integer setgroesse = rs.getInt(13);
-                String vkp = rs.getString(14);
-                String empf_vkp = rs.getString(15);
-                String ek_rabatt = rs.getString(16);
-                String ekp = rs.getString(17);
-                Boolean var = rs.getBoolean(18);
-                String mwst = rs.getString(19);
-                Boolean sortimentBool = rs.getBoolean(20);
-                Boolean lieferbarBool = rs.getBoolean(21);
-                Integer beliebtWert = rs.getInt(22);
-                String bestand = rs.getString(23);
-                String von = rs.getString(24);
-                String bis = rs.getString(25);
-                Boolean aktivBool = rs.getBoolean(26);
+                String einheit = rs.getString(10);
+                String barcode = rs.getString(11);
+                String herkunft = rs.getString(12);
+                Integer vpe = rs.getInt(13);
+                Integer setgroesse = rs.getInt(14);
+                String vkp = rs.getString(15);
+                String empf_vkp = rs.getString(16);
+                String ek_rabatt = rs.getString(17);
+                String ekp = rs.getString(18);
+                Boolean var = rs.getBoolean(19);
+                String mwst = rs.getString(20);
+                Boolean sortimentBool = rs.getBoolean(21);
+                Boolean lieferbarBool = rs.getBoolean(22);
+                Integer beliebtWert = rs.getInt(23);
+                String bestand = rs.getString(24);
+                String von = rs.getString(25);
+                String bis = rs.getString(26);
+                Boolean aktivBool = rs.getBoolean(27);
 
                 if (lieferant_id == null) lieferant_id = 1; // corresponds to "unknown"
                 if (lieferant == null) lieferant = "";
                 if (kurzname == null) kurzname = "";
                 if (menge == null){ menge = ""; }
                 else { menge = unifyDecimal(menge); }
+                if (einheit == null){ einheit = ""; }
                 if (barcode == null){ barcode = ""; }
                 if (herkunft == null) herkunft = "";
                 //if (vpe == null){ vpe = ""; }
@@ -289,7 +295,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
                     row.add(gruppenname);
                     row.add(lieferant); row.add(nr);
                     row.add(name); row.add(kurzname);
-                    row.add(menge); row.add(vkpOutput);
+                    row.add(menge); row.add(einheit);
+                    row.add(vkpOutput);
                     row.add(sortimentBool);
                     row.add(lieferbarBool);
                     row.add(beliebtIndex); row.add(barcode);
@@ -324,6 +331,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         changedName = new Vector<String>();
         changedKurzname = new Vector<String>();
         changedMenge = new Vector<BigDecimal>();
+        changedEinheit = new Vector<String>();
         changedBarcode = new Vector<String>();
         changedHerkunft = new Vector<String>();
         changedVPE = new Vector<Integer>();
@@ -388,6 +396,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
                 result = insertNewItem(prod_id, lief_id,
                         changedNummer.get(index), changedName.get(index),
                         changedKurzname.get(index), changedMenge.get(index),
+                        changedEinheit.get(index),
                         changedBarcode.get(index), changedHerkunft.get(index),
                         changedVPE.get(index), changedSetgroesse.get(index),
                         changedVKP.get(index), changedEmpfVKP.get(index),
@@ -907,6 +916,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
             try {
                 menge = new BigDecimal(model.getValueAt(row, model.findColumn("Menge")).toString().replace(',','.'));
             } catch (NumberFormatException ex){ menge = null; }
+            String einheit = model.getValueAt(row, model.findColumn("Einheit")).toString();
             String barcode = model.getValueAt(row, model.findColumn("Barcode")).toString();
             String herkunft = model.getValueAt(row, model.findColumn("Herkunft")).toString();
             Integer vpe;
@@ -939,6 +949,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
                 changedName.set(nummerIndex, artikelName);
                 changedKurzname.set(nummerIndex, kurzname);
                 changedMenge.set(nummerIndex, menge);
+                changedEinheit.set(nummerIndex, einheit);
                 changedBarcode.set(nummerIndex, barcode);
                 changedHerkunft.set(nummerIndex, herkunft);
                 changedVPE.set(nummerIndex, vpe);
@@ -959,6 +970,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
                 changedName.add(artikelName);
                 changedKurzname.add(kurzname);
                 changedMenge.add(menge);
+                changedEinheit.add(einheit);
                 changedBarcode.add(barcode);
                 changedHerkunft.add(herkunft);
                 changedVPE.add(vpe);
@@ -982,6 +994,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
                 changedName.remove(nummerIndex);
                 changedKurzname.remove(nummerIndex);
                 changedMenge.remove(nummerIndex);
+                changedEinheit.remove(nummerIndex);
                 changedBarcode.remove(nummerIndex);
                 changedHerkunft.remove(nummerIndex);
                 changedVPE.remove(nummerIndex);
