@@ -2,13 +2,10 @@ package WeltladenDB;
 
 // Basic Java stuff:
 import java.util.*; // for Vector
+import java.math.*; // for BigDecimal and RoundingMode
 
 // MySQL Connector/J stuff:
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*; // Connection, Statement, ResultSet ...
 
 public abstract class ArtikelGrundlage extends WindowContent {
     /**
@@ -91,6 +88,80 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return new String[]{artikelNumber};
     }
 
+    protected String getShortName(int artikelID) {
+        String kurzname = new String();
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT IFNULL(kurzname, artikel_name) FROM artikel WHERE artikel_id = ? " +
+                    "AND aktiv = TRUE"
+                    );
+            pstmtSetInteger(pstmt, 1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); kurzname = rs.getString(1); rs.close();
+            if (kurzname == ""){
+                pstmt = this.conn.prepareStatement(
+                        "SELECT artikel_name FROM artikel WHERE artikel_id = ? " +
+                        "AND aktiv = TRUE"
+                        );
+                pstmtSetInteger(pstmt, 1, artikelID);
+                rs = pstmt.executeQuery();
+                rs.next(); kurzname = rs.getString(1); rs.close();
+            }
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return kurzname;
+    }
+
+    protected String getShortLieferantName(int artikelID) {
+        String liefkurz = new String();
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT IFNULL(lieferant_kurzname, lieferant_name) "+
+                    "FROM lieferant INNER JOIN artikel USING (lieferant_id) WHERE artikel_id = ? "+
+                    "AND aktiv = TRUE"
+                    );
+            pstmtSetInteger(pstmt, 1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); liefkurz = rs.getString(1); rs.close();
+            if (liefkurz == ""){
+                pstmt = this.conn.prepareStatement(
+                    "SELECT lieferant_name "+
+                    "FROM lieferant INNER JOIN artikel USING (lieferant_id) WHERE artikel_id = ? "+
+                    "AND aktiv = TRUE"
+                        );
+                pstmtSetInteger(pstmt, 1, artikelID);
+                rs = pstmt.executeQuery();
+                rs.next(); liefkurz = rs.getString(1); rs.close();
+            }
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return liefkurz;
+    }
+
+    protected String getBarcode(int artikelID) {
+        String barcode = new String();
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT barcode FROM artikel WHERE artikel_id = ? " +
+                    "AND aktiv = TRUE"
+                    );
+            pstmtSetInteger(pstmt, 1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); barcode = rs.getString(1); rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return barcode;
+    }
+
     protected boolean getVariablePriceBool(int artikelID) {
         // is price variable for artikelID?
         boolean variabel = false;
@@ -163,6 +234,36 @@ public abstract class ArtikelGrundlage extends WindowContent {
             ex.printStackTrace();
         }
         return vat;
+    }
+
+    protected String[] getMengeAndPricePerKg(int artikelID) {
+        BigDecimal menge_bd = new BigDecimal("0");
+        BigDecimal preis = new BigDecimal("0");
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT menge, vk_preis FROM artikel WHERE artikel_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
+            if ( rs.next() ){
+                menge_bd = rs.getString(1) != null ? rs.getBigDecimal(1) : new BigDecimal("0");
+                preis = rs.getString(2) != null ? rs.getBigDecimal(2) : new BigDecimal("0");
+            }
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+
+        String menge = "";
+        String kg_preis = "";
+        if (menge_bd.signum() > 0){
+            menge = menge_bd.multiply(new BigDecimal("1000")).toString();
+            BigDecimal preis_pro_kg = preis.divide(menge_bd, 10, RoundingMode.HALF_UP);
+            kg_preis = priceFormatter(preis_pro_kg)+" "+currencySymbol;
+        }
+        return new String[]{menge, kg_preis};
     }
 
     protected String getVPE(int artikelID) {

@@ -17,7 +17,7 @@ import javax.swing.table.*;
 import javax.swing.event.*; // for TableModelListener
 import javax.swing.text.*; // for DocumentFilter
 
-public class Artikelliste extends WindowContent implements ItemListener, TableModelListener,
+public class Artikelliste extends ArtikelGrundlage implements ItemListener, TableModelListener,
        ListSelectionListener, DocumentListener {
     // Attribute:
     private ArtikellisteContainer container;
@@ -57,6 +57,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     protected Vector< Vector<Object> > displayData;
     protected Vector<Integer> displayIndices;
     protected Vector<String> columnLabels;
+    protected Vector<Integer> artikelIDs;
     private Vector<Integer> produktGruppeIDs;
     private Vector<Integer> lieferantIDs;
     protected Vector<Boolean> sortimentBools;
@@ -120,7 +121,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
     protected void fillDataArray() {
         this.data = new Vector< Vector<Object> >();
         columnLabels = new Vector<String>();
-    columnLabels.add("Produktgruppe");
+        columnLabels.add("Produktgruppe");
         columnLabels.add("Lieferant");
         columnLabels.add("Nummer");
         columnLabels.add("Name");
@@ -141,6 +142,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
         columnLabels.add("Bestand");
         columnLabels.add("Ab/Seit");
         columnLabels.add("Bis"); columnLabels.add("Aktiv");
+        artikelIDs = new Vector<Integer>();
         produktGruppeIDs = new Vector<Integer>();
         lieferantIDs = new Vector<Integer>();
         sortimentBools = new Vector<Boolean>();
@@ -200,7 +202,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
             filter += " AND p.subsub_id = " + subsub_id + " ";
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT produktgruppen_id, produktgruppen_name, "+
+                    "SELECT artikel_id, produktgruppen_id, produktgruppen_name, "+
                     "lieferant_id, lieferant_name, "+
                     "artikel_nr, artikel_name, "+
                     "kurzname, "+
@@ -222,31 +224,32 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     );
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                Integer produktgruppen_id = rs.getInt(1);
-                String gruppenname = rs.getString(2);
-                Integer lieferant_id = rs.getInt(3);
-                String lieferant = rs.getString(4);
-                String nr = rs.getString(5);
-                String name = rs.getString(6);
-                String kurzname = rs.getString(7);
-                String menge = rs.getString(8);
-                String barcode = rs.getString(9);
-                String herkunft = rs.getString(10);
-                Integer vpe = rs.getInt(11);
-                Integer setgroesse = rs.getInt(12);
-                String vkp = rs.getString(13);
-                String empf_vkp = rs.getString(14);
-                String ek_rabatt = rs.getString(15);
-                String ekp = rs.getString(16);
-                Boolean var = rs.getBoolean(17);
-                String mwst = rs.getString(18);
-                Boolean sortimentBool = rs.getBoolean(19);
-                Boolean lieferbarBool = rs.getBoolean(20);
-                Integer beliebtWert = rs.getInt(21);
-                String bestand = rs.getString(22);
-                String von = rs.getString(23);
-                String bis = rs.getString(24);
-                Boolean aktivBool = rs.getBoolean(25);
+                Integer artikel_id = rs.getInt(1);
+                Integer produktgruppen_id = rs.getInt(2);
+                String gruppenname = rs.getString(3);
+                Integer lieferant_id = rs.getInt(4);
+                String lieferant = rs.getString(5);
+                String nr = rs.getString(6);
+                String name = rs.getString(7);
+                String kurzname = rs.getString(8);
+                String menge = rs.getString(9);
+                String barcode = rs.getString(10);
+                String herkunft = rs.getString(11);
+                Integer vpe = rs.getInt(12);
+                Integer setgroesse = rs.getInt(13);
+                String vkp = rs.getString(14);
+                String empf_vkp = rs.getString(15);
+                String ek_rabatt = rs.getString(16);
+                String ekp = rs.getString(17);
+                Boolean var = rs.getBoolean(18);
+                String mwst = rs.getString(19);
+                Boolean sortimentBool = rs.getBoolean(20);
+                Boolean lieferbarBool = rs.getBoolean(21);
+                Integer beliebtWert = rs.getInt(22);
+                String bestand = rs.getString(23);
+                String von = rs.getString(24);
+                String bis = rs.getString(25);
+                Boolean aktivBool = rs.getBoolean(26);
 
                 if (lieferant_id == null) lieferant_id = 1; // corresponds to "unknown"
                 if (lieferant == null) lieferant = "";
@@ -297,6 +300,7 @@ public class Artikelliste extends WindowContent implements ItemListener, TableMo
                     row.add(von); row.add(bis);
                     row.add(aktivBool);
                 data.add(row);
+                artikelIDs.add(artikel_id);
                 produktGruppeIDs.add(produktgruppen_id);
                 lieferantIDs.add(lieferant_id);
                 sortimentBools.add(sortimentBool);

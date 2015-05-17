@@ -22,6 +22,12 @@ public class PreisschilderListe extends Artikelliste {
 
     private JButton printButton;
 
+    private Vector<String> articleNames;
+    private Vector<String> mengen;
+    private Vector<String> preise;
+    private Vector<String> lieferanten;
+    private Vector<String> kg_preise;
+
     // Methoden:
     protected PreisschilderListe(Connection conn, PreisschilderListeContainer pc,
             Integer tid, Integer sid, Integer ssid, String gn) {
@@ -85,6 +91,34 @@ public class PreisschilderListe extends Artikelliste {
     }
 
 
+    void fillPriceTagVectors() {
+        articleNames = new Vector<String>();
+        mengen = new Vector<String>();
+        preise = new Vector<String>();
+        lieferanten = new Vector<String>();
+        kg_preise = new Vector<String>();
+        for (int i=0; i<data.size(); i++){
+            if ( (Boolean)data.get(i).get(0) == true ){
+                int id = artikelIDs.get(i);
+                String kurzname = getShortName(id);
+                String liefkurz = getShortLieferantName(id);
+                String preis = priceFormatter(
+                        data.get(i).get(columnLabels.indexOf("VK-Preis")).toString() )+
+                        " "+currencySymbol;
+                String[] menge_kg_preis = getMengeAndPricePerKg(id);
+                String menge = menge_kg_preis[0];
+                String kg_preis = menge_kg_preis[1];
+
+                articleNames.add(kurzname);
+                mengen.add(menge);
+                preise.add(preis);
+                lieferanten.add(liefkurz);
+                kg_preise.add(kg_preis);
+            }
+        }
+    }
+
+
     /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.
@@ -97,6 +131,9 @@ public class PreisschilderListe extends Artikelliste {
             return;
         }
         if (e.getSource() == printButton){
+            fillPriceTagVectors();
+            new PreisschilderExport(this.conn, this.mainWindow,
+                    articleNames, mengen, preise, lieferanten, kg_preise);
             return;
         }
         super.actionPerformed(e);

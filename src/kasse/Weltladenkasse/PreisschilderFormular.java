@@ -5,43 +5,18 @@ import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
-import java.sql.SQLException;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*; // Connection, Statment, ResultSet
 
 // GUI stuff:
-//import java.awt.BorderLayout;
-//import java.awt.FlowLayout;
-//import java.awt.Dimension;
-import java.awt.*;
-//import java.awt.event.ActionEvent;
-//import java.awt.event.ActionListener;
+import java.awt.*; // for BorderLayout, FlowLayout, Dimension
 import java.awt.event.*;
 
-//import javax.swing.JFrame;
-//import javax.swing.JPanel;
-//import javax.swing.JScrollPane;
-//import javax.swing.JTable;
-//import javax.swing.JTextArea;
-//import javax.swing.JButton;
-//import javax.swing.JCheckBox;
-import javax.swing.*;
+import javax.swing.*; // JFrame, JPanel, JTable, JButton etc.
 import javax.swing.table.*;
 import javax.swing.text.*; // for DocumentFilter
 import javax.swing.event.*;
-//import java.beans.PropertyChangeEvent;
-//import java.beans.PropertyChangeListener;
 
-import WeltladenDB.MainWindowGrundlage;
-import WeltladenDB.TabbedPaneGrundlage;
-import WeltladenDB.BarcodeComboBox;
-import WeltladenDB.ArtikelNameComboBox;
-import WeltladenDB.ArtikelNummerComboBox;
-import WeltladenDB.BoundsPopupMenuListener;
-import WeltladenDB.AnyJComponentJTable;
-import WeltladenDB.ArtikelGrundlage;
+import WeltladenDB.*;
 
 public class PreisschilderFormular extends ArtikelGrundlage implements DocumentListener {
     // Attribute:
@@ -81,8 +56,10 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
 
     private Vector<Integer> artikelIDs;
     private Vector<String> articleNames;
-    private Vector<BigDecimal> einzelpreise;
-    protected Vector<BigDecimal> mwsts;
+    private Vector<String> mengen;
+    private Vector<String> preise;
+    private Vector<String> lieferanten;
+    private Vector<String> kg_preise;
     protected Vector<String> colors;
     protected Vector<String> types;
 
@@ -107,9 +84,9 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
 
     private void initiateVectors() {
 	columnLabels = new Vector<String>();
-        columnLabels.add("Pos.");
+        columnLabels.add("Lieferant");
 	columnLabels.add("Artikel-Name"); columnLabels.add("Artikel-Nr."); columnLabels.add("Stückzahl");
-        columnLabels.add("Einzelpreis"); columnLabels.add("Gesamtpreis"); columnLabels.add("MwSt.");
+        columnLabels.add("Einzelpreis"); columnLabels.add("MwSt.");
         colors = new Vector<String>();
         types = new Vector<String>();
     }
@@ -299,7 +276,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
     protected void setTableProperties(ArtikelSelectTable table) {
 	// Spalteneigenschaften:
 //	table.getColumnModel().getColumn(0).setPreferredWidth(10);
-	TableColumn pos = table.getColumn("Pos.");
+	TableColumn pos = table.getColumn("Lieferant");
 	pos.setCellRenderer(zentralAusrichter);
 	pos.setPreferredWidth(5);
 	TableColumn artikelbez = table.getColumn("Artikel-Name");
@@ -312,8 +289,6 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
 	stueckzahl.setCellRenderer(rechtsAusrichter);
 	TableColumn preis = table.getColumn("Einzelpreis");
 	preis.setCellRenderer(rechtsAusrichter);
-	TableColumn gespreis = table.getColumn("Gesamtpreis");
-	gespreis.setCellRenderer(rechtsAusrichter);
 	TableColumn mwst = table.getColumn("MwSt.");
 	mwst.setCellRenderer(rechtsAusrichter);
 	mwst.setPreferredWidth(5);
@@ -341,9 +316,12 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
 	data = new Vector< Vector<Object> >();
         artikelIDs = new Vector<Integer>();
         articleNames = new Vector<String>();
+        mengen = new Vector<String>();
+        preise = new Vector<String>();
+        lieferanten = new Vector<String>();
+        kg_preise = new Vector<String>();
         colors = new Vector<String>();
         types = new Vector<String>();
-        einzelpreise = new Vector<BigDecimal>();
         removeButtons = new Vector<JButton>();
     }
 
@@ -351,9 +329,12 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
         data.clear();
         artikelIDs.clear();
         articleNames.clear();
+        mengen.clear();
+        preise.clear();
+        lieferanten.clear();
+        kg_preise.clear();
         colors.clear();
         types.clear();
-        einzelpreise.clear();
         removeButtons.clear();
     }
 
@@ -534,25 +515,34 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
         String artikelName = an[0];
         String lieferant = an[1];
         String artikelNummer = (String)nummerBox.getSelectedItem();
-        String artikelPreis = priceFormatterIntern(preisField.getText());
+        String preis = priceFormatter(preisField.getText())+" "+currencySymbol;
+        String kurzname = getShortName(selectedArtikelID);
+        String liefkurz = getShortLieferantName(selectedArtikelID);
+        String barcode = getBarcode(selectedArtikelID);
         String artikelMwSt = getVAT(selectedArtikelID);
         Boolean sortiment = getSortimentBool(selectedArtikelID);
         String color = sortiment ? "default" : "gray";
+        String[] menge_kg_preis = getMengeAndPricePerKg(selectedArtikelID);
+        String menge = menge_kg_preis[0];
+        String kg_preis = menge_kg_preis[1];
 
+        // for PreisschilderExport:
         artikelIDs.add(selectedArtikelID);
-        articleNames.add(artikelName);
-        einzelpreise.add(new BigDecimal(artikelPreis));
+        articleNames.add(kurzname);
+        mengen.add(menge);
+        preise.add(preis);
+        lieferanten.add(liefkurz);
+        kg_preise.add(kg_preis);
+
         colors.add(color);
         types.add("artikel");
         removeButtons.add(new JButton("-"));
         removeButtons.lastElement().addActionListener(this);
 
-        artikelPreis = artikelPreis.replace('.',',')+' '+currencySymbol;
-
         Vector<Object> row = new Vector<Object>();
-            row.add("");
-            row.add(artikelName); row.add(artikelNummer); row.add("");
-            row.add(artikelPreis); row.add(""); row.add(vatFormatter(artikelMwSt));
+            row.add(liefkurz);
+            row.add(artikelName); row.add(artikelNummer); row.add(barcode);
+            row.add(preis); row.add(vatFormatter(artikelMwSt));
             row.add(removeButtons.lastElement());
         data.add(row);
 
@@ -756,6 +746,8 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
 	    return;
 	}
 	if (e.getSource() == printButton){
+            new PreisschilderExport(this.conn, this.mainWindow,
+                    articleNames, mengen, preise, lieferanten, kg_preise);
 	    return;
 	}
 	int removeRow = -1;
@@ -769,7 +761,10 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
             data.remove(removeRow);
             artikelIDs.remove(removeRow);
             articleNames.remove(removeRow);
-            einzelpreise.remove(removeRow);
+            mengen.remove(removeRow);
+            preise.remove(removeRow);
+            lieferanten.remove(removeRow);
+            kg_preise.remove(removeRow);
             colors.remove(removeRow);
             types.remove(removeRow);
             removeButtons.remove(removeRow);
@@ -779,7 +774,10 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
                 data.remove(removeRow);
                 artikelIDs.remove(removeRow);
                 articleNames.remove(removeRow);
-                einzelpreise.remove(removeRow);
+                mengen.remove(removeRow);
+                preise.remove(removeRow);
+                lieferanten.remove(removeRow);
+                kg_preise.remove(removeRow);
                 colors.remove(removeRow);
                 types.remove(removeRow);
                 removeButtons.remove(removeRow);
