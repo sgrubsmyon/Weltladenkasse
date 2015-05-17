@@ -3,7 +3,7 @@ package WeltladenDB;
 // Basic Java stuff:
 import java.io.*; // for InputStream
 import java.util.*; // for Vector, Collections
-import java.util.Date;
+import java.util.Date; // because Date alone ambiguous due to java.sql.Date
 import java.text.*; // for NumberFormat
 import java.math.*; // for monetary value representation and arithmetic with correct rounding
 
@@ -43,8 +43,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected final BigDecimal one = new BigDecimal("1");
     protected final BigDecimal minusOne = new BigDecimal("-1");
     protected final BigDecimal percent = new BigDecimal("0.01");
-    protected final BigDecimal hundred = new BigDecimal("100.");
-    protected final BigDecimal thousand = new BigDecimal("100.");
+    protected final BigDecimal hundred = new BigDecimal("100");
+    protected final BigDecimal thousand = new BigDecimal("1000");
 
     // Die Ausrichter:
     protected DefaultTableCellRenderer rechtsAusrichter = new DefaultTableCellRenderer();
@@ -60,6 +60,10 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
     protected PositiveNumberDocumentFilter relFilter = new PositiveNumberDocumentFilter(3, 6);
     protected PositiveNumberDocumentFilter mengeFilter = new PositiveNumberDocumentFilter(5, 8);
+    protected StringDocumentFilter einheitFilter = new StringDocumentFilter(10);
+    protected StringDocumentFilter nameFilter = new StringDocumentFilter(180);
+    protected StringDocumentFilter kurznameFilter = new StringDocumentFilter(50);
+    protected StringDocumentFilter herkunftFilter = new StringDocumentFilter(100);
     protected IntegerDocumentFilter intFilter = new IntegerDocumentFilter(-smallintMax, smallintMax, this);
 
     protected Vector<Integer> beliebtWerte;

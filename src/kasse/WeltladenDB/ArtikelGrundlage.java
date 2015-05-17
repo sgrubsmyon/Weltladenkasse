@@ -98,7 +98,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
             rs.next(); kurzname = rs.getString(1); rs.close();
-            if (kurzname == ""){
+            if ( kurzname.equals("") ){
                 pstmt = this.conn.prepareStatement(
                         "SELECT artikel_name FROM artikel WHERE artikel_id = ? " +
                         "AND aktiv = TRUE"
@@ -126,7 +126,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
             rs.next(); liefkurz = rs.getString(1); rs.close();
-            if (liefkurz == ""){
+            if ( liefkurz.equals("") ){
                 pstmt = this.conn.prepareStatement(
                     "SELECT lieferant_name "+
                     "FROM lieferant AS l INNER JOIN artikel AS a USING (lieferant_id) WHERE artikel_id = ? "+
@@ -264,16 +264,16 @@ public abstract class ArtikelGrundlage extends WindowContent {
         if (menge_bd.signum() > 0){
             BigDecimal preis_pro_kg = preis_bd.divide(menge_bd, 10, RoundingMode.HALF_UP);
             kg_preis = priceFormatter(preis_pro_kg)+" "+currencySymbol;
-            if (einheit == "kg" | einheit == "l"){
+            if ( einheit.equals("kg") || einheit.equals("l") ){
                 if ( menge_bd.compareTo(one) < 0 ){ // if menge < 1 kg or 1 l
                     menge_bd = menge_bd.multiply(thousand);
-                    if (einheit == "kg")
+                    if ( einheit.equals("kg") )
                         einheit = "g";
-                    else if (einheit == "l")
+                    else if ( einheit.equals("l") )
                         einheit = "ml";
                 }
             }
-            menge = (menge_bd.toString()+" "+einheit).trim();
+            menge = (unifyDecimal(menge_bd)+" "+einheit).trim();
         }
         return new String[]{menge, preis, kg_preis};
     }

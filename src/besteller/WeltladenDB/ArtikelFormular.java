@@ -40,6 +40,7 @@ public class ArtikelFormular extends WindowContent
     public JTextField nameField;
     public JTextField kurznameField;
     public JTextField mengeField;
+    public JTextField einheitField;
     public JTextField herkunftField;
     public JSpinner vpeSpinner;
     public JSpinner setSpinner;
@@ -155,12 +156,14 @@ public class ArtikelFormular extends WindowContent
             namePanel.setBorder(BorderFactory.createTitledBorder("Bezeichnung | Einheit"));
             nameField = new JTextField("");
             nameField.setColumns(30);
+            ((AbstractDocument)nameField.getDocument()).setDocumentFilter(nameFilter);
             namePanel.add(nameField);
 
             JPanel kurznamePanel = new JPanel();
             kurznamePanel.setBorder(BorderFactory.createTitledBorder("Kurzname"));
             kurznameField = new JTextField("");
             kurznameField.setColumns(10);
+            ((AbstractDocument)kurznameField.getDocument()).setDocumentFilter(kurznameFilter);
             kurznamePanel.add(kurznameField);
 
             JPanel mengePanel = new JPanel();
@@ -170,18 +173,27 @@ public class ArtikelFormular extends WindowContent
             ((AbstractDocument)mengeField.getDocument()).setDocumentFilter(mengeFilter);
             mengeField.setHorizontalAlignment(JTextField.RIGHT);
             mengePanel.add(mengeField);
-            mengePanel.add(new JLabel("kg/l/Stk."));
+            mengePanel.add(new JLabel("kg/l/St."));
+
+            JPanel einheitPanel = new JPanel();
+            einheitPanel.setBorder(BorderFactory.createTitledBorder("Einheit (kg/l/St.)"));
+            einheitField = new JTextField("kg");
+            einheitField.setColumns(6);
+            ((AbstractDocument)einheitField.getDocument()).setDocumentFilter(einheitFilter);
+            einheitPanel.add(einheitField);
 
             JPanel herkunftPanel = new JPanel();
             herkunftPanel.setBorder(BorderFactory.createTitledBorder("Herkunft"));
             herkunftField = new JTextField("");
             herkunftField.setColumns(20);
+            ((AbstractDocument)herkunftField.getDocument()).setDocumentFilter(herkunftFilter);
             herkunftPanel.add(herkunftField);
 
         JPanel describePanel = new JPanel();
         describePanel.add(namePanel);
         describePanel.add(kurznamePanel);
         describePanel.add(mengePanel);
+        describePanel.add(einheitPanel);
         describePanel.add(herkunftPanel);
         headerPanel.add(describePanel);
 
