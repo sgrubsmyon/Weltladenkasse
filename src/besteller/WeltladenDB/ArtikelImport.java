@@ -230,7 +230,8 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         Vector<String> results = new Vector<String>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT produktgruppen_id, artikel_name, kurzname, menge, sortiment, lieferbar, beliebtheit, "+
+                    "SELECT produktgruppen_id, artikel_name, kurzname, menge, einheit, "+
+                    "sortiment, lieferbar, beliebtheit, "+
                     "barcode, vpe, setgroesse, vk_preis, empf_vk_preis, ek_rabatt, ek_preis, variabler_preis, "+
                     "herkunft, bestand " +
                     "FROM artikel "+
@@ -244,19 +245,20 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             results.add(rs.getString(2)); // artikel_name
             results.add(rs.getString(3) == null ? "" : rs.getString(3)); // kurzname
             results.add(rs.getString(4) == null ? "" : rs.getString(4)); // menge
-            results.add(rs.getString(5));                               // sortiment
-            results.add(rs.getString(6) == null ? "" : rs.getString(6)); // lieferbar
-            results.add(rs.getString(7) == null ? "" : rs.getString(7)); // beliebtheit
-            results.add(rs.getString(8) == null ? "" : rs.getString(8)); // barcode
-            results.add(rs.getString(9) == null ? "" : rs.getString(9)); // vpe
-            results.add(rs.getString(10) == null ? "" : rs.getString(10)); // setgroesse
-            results.add(rs.getString(11) == null ? "" : rs.getString(11)); // vk_preis
-            results.add(rs.getString(12) == null ? "" : rs.getString(12)); // empf_vk_preis
-            results.add(rs.getString(13) == null ? "" : vatFormatter(rs.getString(13))); // ek_rabatt
-            results.add(rs.getString(14) == null ? "" : rs.getString(14)); // ek_preis
-            results.add(rs.getString(15));                               // variabler_preis
-            results.add(rs.getString(16) == null ? "" : rs.getString(16)); // herkunft
-            results.add(rs.getString(17) == null ? "" : rs.getString(17)); // bestand
+            results.add(rs.getString(5) == null ? "" : rs.getString(5)); // einheit
+            results.add(rs.getString(6));                               // sortiment
+            results.add(rs.getString(7) == null ? "" : rs.getString(7)); // lieferbar
+            results.add(rs.getString(8) == null ? "" : rs.getString(8)); // beliebtheit
+            results.add(rs.getString(9) == null ? "" : rs.getString(9)); // barcode
+            results.add(rs.getString(10) == null ? "" : rs.getString(10)); // vpe
+            results.add(rs.getString(11) == null ? "" : rs.getString(11)); // setgroesse
+            results.add(rs.getString(12) == null ? "" : rs.getString(12)); // vk_preis
+            results.add(rs.getString(13) == null ? "" : rs.getString(13)); // empf_vk_preis
+            results.add(rs.getString(14) == null ? "" : vatFormatter(rs.getString(14))); // ek_rabatt
+            results.add(rs.getString(15) == null ? "" : rs.getString(15)); // ek_preis
+            results.add(rs.getString(16));                               // variabler_preis
+            results.add(rs.getString(17) == null ? "" : rs.getString(17)); // herkunft
+            results.add(rs.getString(18) == null ? "" : rs.getString(18)); // bestand
             // edit menge:
             try {
                 results.set(3, new BigDecimal(results.get(3)).stripTrailingZeros().toPlainString());
@@ -325,31 +327,33 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         String kurzname = sheet.getValueAt(4, rowIndex).toString();
         // Menge
         String menge = sheet.getValueAt(5, rowIndex).toString();
+        // Einheit
+        String einheit = sheet.getValueAt(6, rowIndex).toString();
         // Sortiment
-        String sortiment = sheet.getValueAt(6, rowIndex).toString();
+        String sortiment = sheet.getValueAt(7, rowIndex).toString();
         if (sortiment.length() == 0){ sortiment = "false"; }
         // Lieferbar
-        String lieferbar = sheet.getValueAt(7, rowIndex).toString();
+        String lieferbar = sheet.getValueAt(8, rowIndex).toString();
         if (lieferbar.length() == 0){ lieferbar = "false"; }
         // Beliebtheit
-        String beliebt = sheet.getValueAt(8, rowIndex).toString();
+        String beliebt = sheet.getValueAt(9, rowIndex).toString();
         // Barcode
-        String barcode = sheet.getValueAt(9, rowIndex).toString();
+        String barcode = sheet.getValueAt(10, rowIndex).toString();
         // VPE
-        String vpe = sheet.getValueAt(10, rowIndex).toString();
+        String vpe = sheet.getValueAt(11, rowIndex).toString();
         // Setgröße
-        String setgroesse = sheet.getValueAt(11, rowIndex).toString();
+        String setgroesse = sheet.getValueAt(12, rowIndex).toString();
         // Preise
-        String vkpreis = sheet.getValueAt(12, rowIndex).toString();
-        String empf_vkpreis = sheet.getValueAt(13, rowIndex).toString();
-        String ekrabatt = sheet.getValueAt(14, rowIndex).toString();
-        String ekpreis = sheet.getValueAt(15, rowIndex).toString();
-        String variabel = sheet.getValueAt(16, rowIndex).toString();
+        String vkpreis = sheet.getValueAt(13, rowIndex).toString();
+        String empf_vkpreis = sheet.getValueAt(14, rowIndex).toString();
+        String ekrabatt = sheet.getValueAt(15, rowIndex).toString();
+        String ekpreis = sheet.getValueAt(16, rowIndex).toString();
+        String variabel = sheet.getValueAt(17, rowIndex).toString();
         if (variabel.length() == 0){ variabel = "false"; }
         // Herkunft
-        String herkunft = sheet.getValueAt(17, rowIndex).toString();
+        String herkunft = sheet.getValueAt(18, rowIndex).toString();
         // Bestand
-        String bestand = sheet.getValueAt(18, rowIndex).toString();
+        String bestand = sheet.getValueAt(19, rowIndex).toString();
 
         //System.out.println(lineCount+" "+gruppenname+" "+name);
 
@@ -384,7 +388,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         }
         // Sortiment
         if ( boolStringInvalid(sortiment) ){
-            logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte G: 'Sortiment').</div>\n";
+            logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte H: 'Sortiment').</div>\n";
             log.setText(logString+logStringEnd);
             return emptyLineCount;
         }
@@ -395,7 +399,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         }
         // Lieferbar
         if ( boolStringInvalid(lieferbar) ){
-            logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte H: 'Sofort lieferbar').</div>\n";
+            logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte I: 'Sofort lieferbar').</div>\n";
             log.setText(logString+logStringEnd);
             return emptyLineCount;
         }
@@ -410,7 +414,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             try {
                 beliebtWert = beliebtWerte.get( beliebtNamen.indexOf(beliebt) );
             } catch (ArrayIndexOutOfBoundsException ex) {
-                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte I: 'Beliebtheit').</div>\n";
+                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte J: 'Beliebtheit').</div>\n";
                 log.setText(logString+logStringEnd);
                 return emptyLineCount;
             }
@@ -421,7 +425,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             try {
                 vpeInt = Integer.parseInt(vpe);
             } catch (NumberFormatException ex) {
-                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte H: 'VPE').</div>\n";
+                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte I: 'VPE').</div>\n";
                 log.setText(logString+logStringEnd);
                 return emptyLineCount;
             }
@@ -432,7 +436,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             try {
                 setgrInt = Integer.parseInt(setgroesse);
             } catch (NumberFormatException ex) {
-                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte L: 'Setgröße').</div>\n";
+                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte M: 'Setgröße').</div>\n";
                 log.setText(logString+logStringEnd);
                 return emptyLineCount;
             }
@@ -441,7 +445,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         }
         // Preise
         if ( boolStringInvalid(variabel) ){
-            logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte K: 'Variabel').</div>\n";
+            logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte L: 'Variabel').</div>\n";
             log.setText(logString+logStringEnd);
             return emptyLineCount;
         }
@@ -457,7 +461,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
                 vkpreis = priceFormatterIntern(vkpreis);
                 if ( vkpreis.equals("") ){
                     // price could not be parsed
-                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte M: 'VK-Preis').</div>\n";
+                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte N: 'VK-Preis').</div>\n";
                     log.setText(logString+logStringEnd);
                     return emptyLineCount;
                 }
@@ -466,7 +470,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
                 empf_vkpreis = priceFormatterIntern(empf_vkpreis);
                 if ( empf_vkpreis.equals("") ){
                     // price could not be parsed
-                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte N: 'Empf. VK-Preis').</div>\n";
+                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte O: 'Empf. VK-Preis').</div>\n";
                     log.setText(logString+logStringEnd);
                     return emptyLineCount;
                 }
@@ -475,7 +479,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
                 ekrabatt = vatFormatter(ekrabatt);
                 if ( ekrabatt.equals("") ){
                     // rabatt could not be parsed
-                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte O: 'EK-Rabatt').</div>\n";
+                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte P: 'EK-Rabatt').</div>\n";
                     log.setText(logString+logStringEnd);
                     return emptyLineCount;
                 }
@@ -484,7 +488,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
                 ekpreis = priceFormatterIntern(ekpreis);
                 if ( ekpreis.equals("") ){
                     // price could not be parsed
-                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte P: 'EK-Preis').</div>\n";
+                    logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte Q: 'EK-Preis').</div>\n";
                     log.setText(logString+logStringEnd);
                     return emptyLineCount;
                 }
@@ -508,7 +512,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             try {
                 bestandInt = Integer.parseInt(bestand);
             } catch (NumberFormatException ex) {
-                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte S: 'Bestand').</div>\n";
+                logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte T: 'Bestand').</div>\n";
                 log.setText(logString+logStringEnd);
                 return emptyLineCount;
             }
@@ -526,26 +530,27 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             colors.add( name.equals(allFields.get(1)) ? Color.black : Color.red ); // name
             colors.add( kurzname.equals(allFields.get(2)) ? Color.black : Color.red ); // kurzname
             colors.add( menge.equals(allFields.get(3)) ? Color.black : Color.red ); // menge
-            colors.add( sortiment.equals(allFields.get(4)) ? Color.black : Color.red ); // sortiment
-            colors.add( lieferbar.equals(allFields.get(5)) ? Color.black : Color.red ); // lieferbar
-            colors.add( beliebtWert.toString().equals(allFields.get(6)) ? Color.black : Color.red ); // beliebt
-            colors.add( barcode.equals(allFields.get(7)) ? Color.black : Color.red ); // barcode
-            colors.add( vpe.equals(allFields.get(8)) ? Color.black : Color.red ); // vpe
-            colors.add( setgroesse.equals(allFields.get(9)) ? Color.black : Color.red ); // setgroesse
+            colors.add( einheit.equals(allFields.get(4)) ? Color.black : Color.red ); // einheit
+            colors.add( sortiment.equals(allFields.get(5)) ? Color.black : Color.red ); // sortiment
+            colors.add( lieferbar.equals(allFields.get(6)) ? Color.black : Color.red ); // lieferbar
+            colors.add( beliebtWert.toString().equals(allFields.get(7)) ? Color.black : Color.red ); // beliebt
+            colors.add( barcode.equals(allFields.get(8)) ? Color.black : Color.red ); // barcode
+            colors.add( vpe.equals(allFields.get(9)) ? Color.black : Color.red ); // vpe
+            colors.add( setgroesse.equals(allFields.get(10)) ? Color.black : Color.red ); // setgroesse
             if (variabel.equals("0")){ // compare prices:
-                colors.add( vkpreis.equals(allFields.get(10)) ? Color.black : Color.red ); // vkpreis
-                colors.add( empf_vkpreis.equals(allFields.get(11)) ? Color.black : Color.red ); // empf_vkpreis
-                colors.add( ekrabatt.equals(allFields.get(12)) ? Color.black : Color.red ); // ekrabatt
-                colors.add( ekpreis.equals(allFields.get(13)) ? Color.black : Color.red ); // ekpreis
+                colors.add( vkpreis.equals(allFields.get(11)) ? Color.black : Color.red ); // vkpreis
+                colors.add( empf_vkpreis.equals(allFields.get(12)) ? Color.black : Color.red ); // empf_vkpreis
+                colors.add( ekrabatt.equals(allFields.get(13)) ? Color.black : Color.red ); // ekrabatt
+                colors.add( ekpreis.equals(allFields.get(14)) ? Color.black : Color.red ); // ekpreis
             } else {
                 colors.add(Color.black);
                 colors.add(Color.black);
                 colors.add(Color.black);
                 colors.add(Color.black);
             }
-            colors.add( variabel.equals(allFields.get(14)) ? Color.black : Color.red ); // variabel
-            colors.add( herkunft.equals(allFields.get(15)) ? Color.black : Color.red ); // herkunft
-            colors.add( bestand.equals(allFields.get(16)) ? Color.black : Color.red ); // bestand
+            colors.add( variabel.equals(allFields.get(15)) ? Color.black : Color.red ); // variabel
+            colors.add( herkunft.equals(allFields.get(16)) ? Color.black : Color.red ); // herkunft
+            colors.add( bestand.equals(allFields.get(17)) ? Color.black : Color.red ); // bestand
             colors.add(Color.black); // entfernen
         } else {
             for (int i=0; i<20; i++){
@@ -569,6 +574,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             artikelNeu.artikelNamen.add(name);
             artikelNeu.kurznamen.add(kurzname);
             artikelNeu.mengen.add(mengeDecimal);
+            artikelNeu.einheiten.add(einheit);
             artikelNeu.sortimente.add( sortiment.equals("0") ? false : true );
             artikelNeu.lieferbarBools.add( lieferbar.equals("0") ? false : true );
             artikelNeu.beliebtWerte.add(beliebtWert);
@@ -594,6 +600,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             row.add(name);
             row.add(kurzname);
             row.add( unifyDecimal(menge) );
+            row.add(einheit);
             row.add( sortiment.equals("0") ? false : true );
             row.add( lieferbar.equals("0") ? false : true );
             row.add(beliebt);
@@ -722,7 +729,8 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         }
 	if (e.getSource() == submitButton){
             submit();
-            artikelListe.updateAll();
+            artikelListe.fillDataArray();
+            artikelListe.updateTable();
             emptyTable();
             //utf.updateTable();
             updateAll();
