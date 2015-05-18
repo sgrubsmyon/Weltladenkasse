@@ -65,6 +65,11 @@ SELECT menge, einheit FROM artikel LIMIT 100;
 UPDATE artikel SET einheit = NULL WHERE menge IS NULL;
 SELECT menge, einheit FROM artikel LIMIT 100;
 
+Vanilleschoten in St.
+Cacao pur Afrika: 6 kg -> 0.25 kg
+Bio Cocoba Instant: 6 kg -> 0.4 kg
+Teebeutel: 5 kg -> 20 x 1.75 g
+
 
 
 
