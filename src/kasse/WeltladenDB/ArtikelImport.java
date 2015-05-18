@@ -250,7 +250,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             results.add(rs.getString(7) == null ? "" : rs.getString(7)); // lieferbar
             results.add(rs.getString(8) == null ? "" : rs.getString(8)); // beliebtheit
             results.add(rs.getString(9) == null ? "" : rs.getString(9)); // barcode
-            results.add(rs.getString(10) == null ? "" : rs.getString(10)); // vpe
+            results.add(rs.getString(10) == null ? "0" : rs.getString(10)); // vpe
             results.add(rs.getString(11) == null ? "" : rs.getString(11)); // setgroesse
             results.add(rs.getString(12) == null ? "" : rs.getString(12)); // vk_preis
             results.add(rs.getString(13) == null ? "" : rs.getString(13)); // empf_vk_preis
