@@ -1139,18 +1139,21 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         if (filterStr.length() == 0){
             return;
         }
+        // Search in each row
         for (int i=0; i<data.size(); i++){
-            boolean contains = false;
-            for (Object obj : data.get(i)){
-                String str;
-                try {
-                    str = (String) obj;
-                    str = str.toLowerCase();
-                } catch (ClassCastException ex) {
-                    str = "";
-                }
-                if (str.contains(filterStr.toLowerCase())){
-                    contains = true;
+            boolean contains = true;
+            String row = "";
+            for ( Object obj : data.get(i) ){
+                String str = obj.toString().toLowerCase();
+                row.concat(str+" ");
+            }
+            System.out.println(row);
+            // row must contain (somewhere) each whitespace separated filter word
+            for ( String fstr : filterStr.split(" ") ){
+                if ( fstr.equals("") )
+                    continue;
+                if ( ! row.contains(fstr.toLowerCase()) ){
+                    contains = false;
                     break;
                 }
             }
