@@ -33,7 +33,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
     protected JCheckBox inaktivCheckBox;
     protected boolean showInaktive = false;
     protected JCheckBox sortimentCheckBox;
-    protected boolean showOnlySortiment = true;
+    protected boolean showOnlySortiment = false;
     protected JCheckBox internalCheckBox;
     protected boolean showInternals = false;
     protected JTextField filterField;
@@ -46,7 +46,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
 
     private String filterStr = "";
     private String aktivFilterStr = " AND artikel.aktiv = TRUE ";
-    private String sortimentFilterStr = " AND artikel.sortiment = TRUE ";
+    private String sortimentFilterStr = "";
     //private String orderByStr = "artikel_name";
     private String orderByStr = "p.toplevel_id, p.sub_id, p.subsub_id, artikel_nr";
 
@@ -57,6 +57,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
     protected Vector< Vector<Object> > displayData;
     protected Vector<Integer> displayIndices;
     protected Vector<String> columnLabels;
+    protected HashMap<String, Integer> indexMap;
     protected Vector<Integer> artikelIDs;
     private Vector<Integer> produktGruppeIDs;
     private Vector<Integer> lieferantIDs;
@@ -121,6 +122,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
 
     protected void fillDataArray() {
         this.data = new Vector< Vector<Object> >();
+
         columnLabels = new Vector<String>();
         columnLabels.add("Produktgruppe");
         columnLabels.add("Lieferant");
@@ -145,6 +147,29 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         columnLabels.add("Ab/Seit");
         columnLabels.add("Bis");
         columnLabels.add("Aktiv");
+
+        indexMap = new HashMap<String, Integer>();
+        indexMap.put("produktgruppe", columnLabels.indexOf("Produktgruppe"));
+        indexMap.put("lieferant", columnLabels.indexOf("Lieferant"));
+        indexMap.put("nummer", columnLabels.indexOf("Nummer"));
+        indexMap.put("name", columnLabels.indexOf("Name"));
+        indexMap.put("kurzname", columnLabels.indexOf("Kurzname"));
+        indexMap.put("menge", columnLabels.indexOf("Menge"));
+        indexMap.put("einheit", columnLabels.indexOf("Einheit"));
+        indexMap.put("vkp", columnLabels.indexOf("VK-Preis"));
+        indexMap.put("sortiment", columnLabels.indexOf("Sortiment"));
+        indexMap.put("lieferbar", columnLabels.indexOf("Lieferbar"));
+        indexMap.put("beliebt", columnLabels.indexOf("Beliebtheit"));
+        indexMap.put("barcode", columnLabels.indexOf("Barcode"));
+        indexMap.put("vpe", columnLabels.indexOf("VPE"));
+        indexMap.put("setgroesse", columnLabels.indexOf("Setgröße"));
+        indexMap.put("evkp", columnLabels.indexOf("Empf. VK-Preis"));
+        indexMap.put("ekr", columnLabels.indexOf("EK-Rabatt"));
+        indexMap.put("ekp", columnLabels.indexOf("EK-Preis"));
+        indexMap.put("herkunft", columnLabels.indexOf("Herkunft"));
+        indexMap.put("bestand", columnLabels.indexOf("Bestand"));
+        indexMap.put("aktiv", columnLabels.indexOf("Aktiv"));
+
         artikelIDs = new Vector<Integer>();
         produktGruppeIDs = new Vector<Integer>();
         lieferantIDs = new Vector<Integer>();
@@ -155,7 +180,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         beliebtIndices = new Vector<Integer>();
 
         linksColumns = new Vector<String>();
-        linksColumns.add("Nummer"); 
+        linksColumns.add("Nummer");
         linksColumns.add("Produktgruppe"); linksColumns.add("Lieferant");
         linksColumns.add("Name"); linksColumns.add("Kurzname");
         linksColumns.add("Herkunft"); linksColumns.add("Ab/Seit");
@@ -408,12 +433,18 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
                         changedBestand.get(index));
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Artikel von "+editLieferant.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht geändert werden.",
+                            "Fehler: Artikel von "+editLieferant.get(index)+
+                            "mit Nummer "+editArtikelNummer.get(index)+" konnte "+
+                            "nicht geändert werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                     result = setItemActive(lief_id, editArtikelNummer.get(index));
                     if (result == 0){
                         JOptionPane.showMessageDialog(this,
-                                "Fehler: Artikel von "+editLieferant.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht wieder hergestellt werden. Artikel ist nun gelöscht (inaktiv).",
+                                "Fehler: Artikel von "+
+                                editLieferant.get(index)+" mit Nummer "+
+                                editArtikelNummer.get(index)+" konnte nicht "+
+                                "wieder hergestellt werden. Artikel ist nun "+
+                                "gelöscht (inaktiv).",
                                 "Fehler", JOptionPane.ERROR_MESSAGE);
                     }
                 }
@@ -751,10 +782,13 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         allPanel.add(artikelListPanel, BorderLayout.CENTER);
     }
 
-    void updateTable() {
+    protected void updateTable() {
+        applyFilter();
         artikelListPanel.remove(scrollPane);
 	artikelListPanel.revalidate();
+
         initiateTable();
+
         scrollPane = new JScrollPane(myTable);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         myTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -779,10 +813,14 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
     }
 
     public void updateAll() {
-        this.remove(allPanel);
-        this.revalidate();
+        // old (view gets lost):
+        //this.remove(allPanel);
+        //this.revalidate();
+        //fillDataArray();
+        //showAll();
+        // new, much better, keeping view:
         fillDataArray();
-        showAll();
+        updateTable();
     }
 
     /** Needed for ItemListener. */
@@ -1032,7 +1070,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         }
         JDialog editDialog = new JDialog(this.mainWindow, "Artikel bearbeiten", true);
         ArtikelBearbeiten bearb = new ArtikelBearbeiten(this.conn, this.mainWindow, this, editDialog,
-                columnLabels, selectedData, selectedProdGrIDs, selectedLiefIDs, selectedVarPreisBools);
+                indexMap, selectedData, selectedProdGrIDs, selectedLiefIDs, selectedVarPreisBools);
         editDialog.getContentPane().add(bearb, BorderLayout.CENTER);
         editDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         WindowAdapterDialog wad = new WindowAdapterDialog(bearb, editDialog,
@@ -1065,7 +1103,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
     }
 
     void showExportDialog() {
-        ArtikelExport itemsToFile = new ArtikelExport(this.conn, this.mainWindow, this);
+        ArtikelExport itemsToFile = new ArtikelExport(this.conn, this.mainWindow, this, indexMap);
     }
 
     int changeLossConfirmDialog() {
@@ -1084,7 +1122,6 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
     public void insertUpdate(DocumentEvent e) {
         if (e.getDocument() == filterField.getDocument()){
             filterStr = filterField.getText();
-            applyFilter();
             updateTable();
         }
     }
@@ -1108,18 +1145,20 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         if (filterStr.length() == 0){
             return;
         }
+        // Search in each row
         for (int i=0; i<data.size(); i++){
-            boolean contains = false;
-            for (Object obj : data.get(i)){
-                String str;
-                try {
-                    str = (String) obj;
-                    str = str.toLowerCase();
-                } catch (ClassCastException ex) {
-                    str = "";
-                }
-                if (str.contains(filterStr.toLowerCase())){
-                    contains = true;
+            boolean contains = true;
+            String row = "";
+            for ( Object obj : data.get(i) ){
+                String str = obj.toString().toLowerCase();
+                row = row.concat(str+" ");
+            }
+            // row must contain (somewhere) each whitespace separated filter word
+            for ( String fstr : filterStr.split(" ") ){
+                if ( fstr.equals("") )
+                    continue;
+                if ( ! row.contains(fstr.toLowerCase()) ){
+                    contains = false;
                     break;
                 }
             }
