@@ -782,11 +782,13 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         allPanel.add(artikelListPanel, BorderLayout.CENTER);
     }
 
-    public void updateTable() {
+    protected void updateTable() {
         applyFilter();
         artikelListPanel.remove(scrollPane);
 	artikelListPanel.revalidate();
+
         initiateTable();
+
         scrollPane = new JScrollPane(myTable);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         myTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -811,10 +813,14 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
     }
 
     public void updateAll() {
-        this.remove(allPanel);
-        this.revalidate();
+        // old (view gets lost):
+        //this.remove(allPanel);
+        //this.revalidate();
+        //fillDataArray();
+        //showAll();
+        // new, much better, keeping view:
         fillDataArray();
-        showAll();
+        updateTable();
     }
 
     /** Needed for ItemListener. */
@@ -1145,9 +1151,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
             String row = "";
             for ( Object obj : data.get(i) ){
                 String str = obj.toString().toLowerCase();
-                row.concat(str+" ");
+                row = row.concat(str+" ");
             }
-            System.out.println(row);
             // row must contain (somewhere) each whitespace separated filter word
             for ( String fstr : filterStr.split(" ") ){
                 if ( fstr.equals("") )
@@ -1178,13 +1183,11 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         }
         if (e.getSource() == saveButton){
             putChangesIntoDB();
-            fillDataArray();
-            updateTable();
+            updateAll();
             return;
         }
         if (e.getSource() == revertButton){
-            fillDataArray();
-            updateTable();
+            updateAll();
             return;
         }
         if (e.getSource() == editButton){

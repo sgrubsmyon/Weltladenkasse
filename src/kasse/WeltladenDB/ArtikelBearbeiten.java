@@ -804,8 +804,7 @@ public class ArtikelBearbeiten extends DialogWindow
 	if (e.getSource() == submitButton){
             int result = submit();
             if (result == 0){
-                artikelListe.fillDataArray();
-                artikelListe.updateTable();
+                artikelListe.updateAll();
                 this.window.dispose(); // close
             }
             return;

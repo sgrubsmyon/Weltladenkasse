@@ -410,8 +410,7 @@ public class ArtikelNeuEingeben extends DialogWindow
     public void actionPerformed(ActionEvent e) {
 	if (e.getSource() == submitButton){
             submit();
-            artikelListe.fillDataArray();
-            artikelListe.updateTable();
+            artikelListe.updateAll();
             emptyTable();
             updateAll();
             return;

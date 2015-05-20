@@ -729,8 +729,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         }
 	if (e.getSource() == submitButton){
             submit();
-            artikelListe.fillDataArray();
-            artikelListe.updateTable();
+            artikelListe.updateAll();
             emptyTable();
             //utf.updateTable();
             updateAll();
