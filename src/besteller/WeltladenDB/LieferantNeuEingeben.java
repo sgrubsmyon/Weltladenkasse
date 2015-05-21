@@ -43,6 +43,7 @@ public class LieferantNeuEingeben extends DialogWindow
     protected JPanel footerPanel;
 
     private JTextField lieferantNameField;
+    private JTextField lieferantKurznameField;
 
     // Methoden:
     public LieferantNeuEingeben(Connection conn, MainWindowGrundlage mw, Lieferantliste pw, JDialog dia) {
@@ -70,6 +71,13 @@ public class LieferantNeuEingeben extends DialogWindow
         namePanel.add(lieferantNameField);
         headerPanel.add(namePanel);
 
+        JPanel kurznamePanel = new JPanel();
+        kurznamePanel.setBorder(BorderFactory.createTitledBorder("Kurzname (bis 10 Zeichen)"));
+        lieferantKurznameField = new JTextField("");
+        lieferantKurznameField.setColumns(30);
+        kurznamePanel.add(lieferantKurznameField);
+        headerPanel.add(kurznamePanel);
+
         KeyAdapter enterAdapter = new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
                 if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
@@ -82,6 +90,8 @@ public class LieferantNeuEingeben extends DialogWindow
 
         lieferantNameField.getDocument().addDocumentListener(this);
         lieferantNameField.addKeyListener(enterAdapter);
+        lieferantKurznameField.getDocument().addDocumentListener(this);
+        lieferantKurznameField.addKeyListener(enterAdapter);
         allPanel.add(headerPanel);
     }
 
@@ -109,15 +119,18 @@ public class LieferantNeuEingeben extends DialogWindow
 
     public boolean checkIfFormIsComplete() {
         String lieferant = lieferantNameField.getText();
+        String kurzname = lieferantKurznameField.getText();
         boolean lieferantOK = (lieferant.replaceAll("\\s","").length() > 0);
+        boolean kurzOK = (kurzname.replaceAll("\\s","").length() > 0);
         if (lieferantOK){
             lieferantOK = !isLieferantAlreadyKnown(lieferant);
         }
-        return lieferantOK;
+        return lieferantOK && kurzOK;
     }
 
     public int submit() {
-        return insertNewLieferant(lieferantNameField.getText());
+        return insertNewLieferant(lieferantNameField.getText(),
+                lieferantKurznameField.getText());
     }
 
     /**
@@ -159,6 +172,7 @@ public class LieferantNeuEingeben extends DialogWindow
         }
 	if (e.getSource() == deleteButton){
             lieferantNameField.setText("");
+            lieferantKurznameField.setText("");
             return;
         }
         super.actionPerformed(e);
