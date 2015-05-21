@@ -309,11 +309,11 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     }
 
     void showTable() {
-        initiateTable();
-
         lieferantListPanel = new JPanel();
         lieferantListPanel.setLayout(new BorderLayout());
         lieferantListPanel.setBorder(BorderFactory.createTitledBorder("Lieferanten"));
+
+        initiateTable();
 
         scrollPane = new JScrollPane(myTable);
         lieferantListPanel.add(scrollPane, BorderLayout.CENTER);
@@ -321,9 +321,12 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     }
 
     void updateTable() {
+        applyFilter();
         lieferantListPanel.remove(scrollPane);
 	lieferantListPanel.revalidate();
+
         initiateTable();
+
         scrollPane = new JScrollPane(myTable);
         lieferantListPanel.add(scrollPane);
         enableButtons();
@@ -340,10 +343,14 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     }
 
     public void updateAll() {
-        this.remove(allPanel);
-        this.revalidate();
+        // old (view gets lost):
+        //this.remove(allPanel);
+        //this.revalidate();
+        //fillDataArray();
+        //showAll();
+        // new, much better, keeping view:
         fillDataArray();
-        showAll();
+        updateTable();
     }
 
     /** Needed for ItemListener. */
@@ -477,7 +484,6 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     public void insertUpdate(DocumentEvent e) {
         if (e.getDocument() == filterField.getDocument()){
             filterStr = filterField.getText();
-            applyFilter();
             updateTable();
         }
     }
