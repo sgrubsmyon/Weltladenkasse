@@ -68,13 +68,15 @@ public class LieferantNeuEingeben extends DialogWindow
         namePanel.setBorder(BorderFactory.createTitledBorder("Lieferant-Name"));
         lieferantNameField = new JTextField("");
         lieferantNameField.setColumns(30);
+        ((AbstractDocument)lieferantNameField.getDocument()).setDocumentFilter(kurznameFilter);
         namePanel.add(lieferantNameField);
         headerPanel.add(namePanel);
 
         JPanel kurznamePanel = new JPanel();
         kurznamePanel.setBorder(BorderFactory.createTitledBorder("Kurzname (bis 10 Zeichen)"));
         lieferantKurznameField = new JTextField("");
-        lieferantKurznameField.setColumns(30);
+        lieferantKurznameField.setColumns(15);
+        ((AbstractDocument)lieferantKurznameField.getDocument()).setDocumentFilter(einheitFilter);
         kurznamePanel.add(lieferantKurznameField);
         headerPanel.add(kurznamePanel);
 
