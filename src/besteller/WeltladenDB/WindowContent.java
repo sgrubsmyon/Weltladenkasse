@@ -625,7 +625,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return howManyActiveArticlesWithLieferant(lieferant_id) > 0;
     }
 
-    protected int updateLieferant(Integer lieferant_id, String lieferant_name, Boolean aktiv) {
+    protected int updateLieferant(Integer lieferant_id, String lieferant_name,
+            String lieferant_kurzname, Boolean aktiv) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         if (aktiv == false){
@@ -639,12 +640,13 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "UPDATE lieferant SET lieferant_name = ?, aktiv = ? WHERE "+
-                    "lieferant_id = ?"
+                    "UPDATE lieferant SET lieferant_name = ?, lieferant_kurzname = ?, aktiv = ? "+
+                    "WHERE lieferant_id = ?"
                     );
             pstmt.setString(1, lieferant_name);
-            pstmt.setBoolean(2, aktiv);
-            pstmt.setInt(3, lieferant_id);
+            pstmt.setString(2, lieferant_kurzname);
+            pstmt.setBoolean(3, aktiv);
+            pstmt.setInt(4, lieferant_id);
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
@@ -697,7 +699,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected int insertNewLieferant(String lieferantName) {
+    protected int insertNewLieferant(String lieferantName, String lieferantKurzname) {
         // add row for new item (with updated fields)
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
@@ -707,9 +709,11 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "INSERT INTO lieferant SET "+
                     "lieferant_name = ?, "+
+                    "lieferant_kurzname = ?, "+
                     "aktiv = TRUE"
                     );
             pstmt.setString(1, lieferantName);
+            pstmt.setString(2, lieferantKurzname);
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {

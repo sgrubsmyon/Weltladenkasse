@@ -63,6 +63,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     // Vectors storing table edits
     private Vector<Integer> editedLieferantIDs;
     private Vector<String> changedLieferantName;
+    private Vector<String> changedLieferantKurzname;
     private Vector<Boolean> changedAktiv;
 
     // Dialog to read items from file
@@ -80,6 +81,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         this.data = new Vector< Vector<Object> >();
         columnLabels = new Vector<String>();
         columnLabels.add("Lieferant-Nr."); columnLabels.add("Lieferant-Name");
+        columnLabels.add("Kurzname");
         columnLabels.add("# Artikel"); columnLabels.add("Aktiv");
         lieferantIDs = new Vector<Integer>();
         activeRowBools = new Vector<Boolean>();
@@ -87,7 +89,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         String filter = "lieferant_id != 1 "; // exclude 'unbekannt'
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT lieferant_id, lieferant_name, aktiv "+
+                    "SELECT lieferant_id, lieferant_name, lieferant_kurzname, aktiv "+
                     "FROM lieferant "+
                     "WHERE " + filter +
                     aktivFilterStr +
@@ -97,13 +99,15 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
             while (rs.next()) {
                 Integer lieferant_id = rs.getInt(1);
                 String lieferant = rs.getString(2);
-                Boolean aktivBool = rs.getBoolean(3);
+                String kurzname = rs.getString(3);
+                Boolean aktivBool = rs.getBoolean(4);
 
                 Integer nArticles = howManyActiveArticlesWithLieferant(lieferant_id);
 
                 Vector<Object> row = new Vector<Object>();
                     row.add(lieferant_id);
                     row.add(lieferant);
+                    row.add(kurzname);
                     row.add(nArticles);
                     row.add(aktivBool);
                 data.add(row);
@@ -126,6 +130,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         initiateDisplayIndices();
         editedLieferantIDs = new Vector<Integer>();
         changedLieferantName = new Vector<String>();
+        changedLieferantKurzname = new Vector<String>();
         changedAktiv = new Vector<Boolean>();
     }
 
@@ -133,9 +138,10 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         for (int index=0; index<editedLieferantIDs.size(); index++){
             Integer lief_id = editedLieferantIDs.get(index);
             String lieferantName = changedLieferantName.get(index);
+            String lieferantKurzname = changedLieferantKurzname.get(index);
             Boolean aktivBool = changedAktiv.get(index);
 
-            int result = updateLieferant(lief_id, lieferantName, aktivBool);
+            int result = updateLieferant(lief_id, lieferantName, lieferantKurzname, aktivBool);
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Lieferant mit Nr. "+lief_id+" konnte nicht geändert werden.",
@@ -208,73 +214,98 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     }
 
     void initiateTable() {
-        myTable = new AnyJComponentJTable( new AbstractTableModel() { // subclass the AbstractTableModel to set editable cells etc.
-            public String getColumnName(int col) {
-                return columnLabels.get(col);
-            }
-            public int findColumn(String name) {
-                int col=0;
-                for (String s : columnLabels){
-                    if (s.equals(name)){
-                        return col;
-                    }
-                    col++;
-                }
-                return -1;
-            }
-            public int getRowCount() { return displayData.size(); }
-            public int getColumnCount() { return columnLabels.size(); }
-            public Object getValueAt(int row, int col) {
-                return displayData.get(row).get(col);
-            }
-            public Class getColumnClass(int c) { // JTable uses this method to determine the default renderer/editor for each cell.
-                                                 // If we didn't implement this method, then the last column would contain text ("true"/"false"),
-                                                 // rather than a check box.
-                return getValueAt(0, c).getClass();
-            }
-            public boolean isCellEditable(int row, int col) {
-                String header = this.getColumnName(col);
-                if ( activeRowBools.get(row) ){
-                    if ( header.equals("Lieferant-Nr.") ) {
-                        return false;
-                    }
-                    return true;
-                } else {
-                    if ( header.equals("Aktiv") ) {
-                        return true;
-                    }
-                    return false;
-                }
-            }
-            public void setValueAt(Object value, int row, int col) {
-                Vector<Object> rowentries = displayData.get(row);
-                rowentries.set(col, value);
-                displayData.set(row, rowentries);
-                int dataRow = displayIndices.get(row); // convert from displayData index to data index
-                data.set(dataRow, rowentries);
-                fireTableCellUpdated(row, col);
-            }
-        } ) { // subclass the JTable to set font properties and tool tip text
-            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-                Component c = super.prepareRenderer(renderer, row, column);
-                // add custom rendering here
-                int realRowIndex = convertRowIndexToModel(row);
-                realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
-                if ( ! activeRowBools.get(realRowIndex) ){ // for rows with inactive items
-                    c.setFont( c.getFont().deriveFont(Font.ITALIC) );
-                    c.setForeground(Color.BLUE);
-                }
-                else {
-                    c.setFont( c.getFont().deriveFont(Font.PLAIN) );
-                    c.setForeground(Color.BLACK);
-                }
-                return c;
-            }
-        };
+        myTable = new LieferantlisteTable(new LieferantlisteTableModel(),
+                columnMargin, minColumnWidth, maxColumnWidth);
         myTable.setAutoCreateRowSorter(true);
         myTable.getModel().addTableModelListener(this);
         myTable.getSelectionModel().addListSelectionListener(this);
         setTableProperties(myTable);
+    }
+
+    // subclass the AbstractTableModel to set editable cells etc.
+    protected class LieferantlisteTableModel extends AbstractTableModel {
+        public String getColumnName(int col) {
+            return columnLabels.get(col);
+        }
+
+        public int findColumn(String name) {
+            int col=0;
+            for (String s : columnLabels){
+                if (s.equals(name)){
+                    return col;
+                }
+                col++;
+            }
+            return -1;
+        }
+
+        public int getRowCount() { return displayData.size(); }
+
+        public int getColumnCount() { return columnLabels.size(); }
+
+        public Object getValueAt(int row, int col) {
+            return displayData.get(row).get(col);
+        }
+
+        public Class getColumnClass(int c) { /* JTable uses this method to
+                                              * determine the default renderer/editor for each cell.
+                                              * If we didn't implement this
+                                              * method, then the last
+                                              * column would contain text
+                                              * ("true"/"false"), rather
+                                              * than a check box.
+                                              */
+            return getValueAt(0, c).getClass();
+        }
+
+        public void setValueAt(Object value, int row, int col) {
+            Vector<Object> rowentries = displayData.get(row);
+            rowentries.set(col, value);
+            displayData.set(row, rowentries);
+            int dataRow = displayIndices.get(row); // convert from displayData index to data index
+            data.set(dataRow, rowentries);
+            fireTableCellUpdated(row, col);
+        }
+    }
+
+    // subclass the JTable to set font properties and tool tip text
+    protected class LieferantlisteTable extends AnyJComponentJTable {
+        public LieferantlisteTable(TableModel m, Integer columnMargin,
+                Integer minColumnWidth, Integer maxColumnWidth){
+            super(m, columnMargin, minColumnWidth, maxColumnWidth);
+        }
+
+        @Override
+        public boolean isCellEditable(int row, int col) {
+            String header = this.getColumnName(col);
+            if ( activeRowBools.get(row) ){
+                if ( header.equals("Lieferant-Nr.") || header.equals("# Artikel") ) {
+                    return false;
+                }
+                return true;
+            } else {
+                if ( header.equals("Aktiv") ) {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+            Component c = super.prepareRenderer(renderer, row, column);
+            // add custom rendering here
+            int realRowIndex = convertRowIndexToModel(row);
+            realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
+            if ( ! activeRowBools.get(realRowIndex) ){ // for rows with inactive items
+                c.setFont( c.getFont().deriveFont(Font.ITALIC) );
+                c.setForeground(Color.BLUE);
+            }
+            else {
+                c.setFont( c.getFont().deriveFont(Font.PLAIN) );
+                c.setForeground(Color.BLACK);
+            }
+            return c;
+        }
     }
 
     void showTable() {
@@ -344,6 +375,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         AbstractTableModel model = (AbstractTableModel)e.getSource();
         Integer origLieferantID = lieferantIDs.get(dataRow);
         String origLieferantName = originalData.get(dataRow).get(model.findColumn("Lieferant-Name")).toString();
+        String origLieferantKurzname = originalData.get(dataRow).get(model.findColumn("Kurzname")).toString();
 
         // post-edit edited cell
         String value = model.getValueAt(row, column).toString().replaceAll("\\s","");
@@ -394,15 +426,18 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
                     return;
                 }
             }
+            String kurzname = model.getValueAt(row, model.findColumn("Kurzname")).toString();
             boolean aktiv = model.getValueAt(row, model.findColumn("Aktiv")).toString().equals("true") ? true : false;
 
             // update the vectors caching the changes
             if (lieferantIndex != -1){ // this row has been changed before, update the change cache
                 changedLieferantName.set(lieferantIndex, lieferant);
+                changedLieferantKurzname.set(lieferantIndex, kurzname);
                 changedAktiv.set(lieferantIndex, aktiv);
             } else { // an edit occurred in a row that is not in the list of changes yet
                 editedLieferantIDs.add(origLieferantID);
                 changedLieferantName.add(lieferant);
+                changedLieferantKurzname.add(kurzname);
                 changedAktiv.add(aktiv);
             }
         } else if (!changed) {
@@ -410,6 +445,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
             if (lieferantIndex != -1){ // this row has been changed before, all changes undone
                 editedLieferantIDs.remove(lieferantIndex); // remove item from list of changes
                 changedLieferantName.remove(lieferantIndex);
+                changedLieferantKurzname.remove(lieferantIndex);
                 changedAktiv.remove(lieferantIndex);
             }
         }
