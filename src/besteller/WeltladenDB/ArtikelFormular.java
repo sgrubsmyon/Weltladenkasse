@@ -178,7 +178,7 @@ public class ArtikelFormular extends WindowContent
             JPanel einheitPanel = new JPanel();
             einheitPanel.setBorder(BorderFactory.createTitledBorder("Einheit (kg/l/St.)"));
             einheitField = new JTextField("kg");
-            einheitField.setColumns(6);
+            einheitField.setColumns(10);
             ((AbstractDocument)einheitField.getDocument()).setDocumentFilter(einheitFilter);
             einheitPanel.add(einheitField);
 
@@ -332,8 +332,7 @@ public class ArtikelFormular extends WindowContent
             // we have a variable price, don't touch it!
             return;
         }
-        if ( !empfvkpreisField.getText().replaceAll("\\s","").equals("") &&
-             !ekrabattField.getText().replaceAll("\\s","").equals("") ){
+        if ( empfVKPAndEKPValid(empfvkpreisField.getText(), ekrabattField.getText()) ){
             ekpreisField.setEnabled(false);
             BigDecimal ekpreis = calculateEKP(empfvkpreisField.getText(), ekrabattField.getText());
             ekpreisField.setText( priceFormatter(ekpreis) );
