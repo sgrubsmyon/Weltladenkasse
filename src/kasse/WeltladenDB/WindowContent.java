@@ -221,26 +221,26 @@ public abstract class WindowContent extends JPanel implements ActionListener {
      * Price calculation methods
      */
 
-    protected BigDecimal calculateVAT(BigDecimal totalPrice, BigDecimal mwst){
+    protected BigDecimal calculateVAT(BigDecimal totalPrice, BigDecimal mwst) {
         //return totalPrice.multiply( one.subtract( one.divide(one.add(mwst), 10, RoundingMode.HALF_UP) ) ); // VAT = bruttoPreis * ( 1. - 1./(1.+mwst) );
         return totalPrice.divide(one.add(mwst), 10, RoundingMode.HALF_UP).multiply(mwst); // VAT = bruttoPreis / (1.+mwst) * mwst;
     }
 
-    protected BigDecimal calculateEKP(BigDecimal empfVKPreis, BigDecimal ekRabatt){
+    protected BigDecimal calculateEKP(BigDecimal empfVKPreis, BigDecimal ekRabatt) {
         return ( one.subtract(ekRabatt) ).multiply(empfVKPreis); // Einkaufspreis = (1 - rabatt) * Empf. VK-Preis
     }
 
-    protected BigDecimal calculateEKP(String empfVKPreis, BigDecimal ekRabatt){
+    protected BigDecimal calculateEKP(String empfVKPreis, BigDecimal ekRabatt) {
         BigDecimal empfvkpDecimal;
         try {
-            empfvkpDecimal = new BigDecimal(priceFormatterIntern(empfVKPreis));
+            empfvkpDecimal = new BigDecimal( priceFormatterIntern(empfVKPreis) );
         } catch (NumberFormatException ex) {
             return null;
         }
         return calculateEKP(empfvkpDecimal, ekRabatt);
     }
 
-    protected BigDecimal calculateEKP(String empfVKPreis, String ekRabatt){
+    protected BigDecimal calculateEKP(String empfVKPreis, String ekRabatt) {
         BigDecimal rabatt;
         try {
             rabatt = new BigDecimal( vatParser(ekRabatt) );
@@ -250,7 +250,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return calculateEKP(empfVKPreis, rabatt);
     }
 
-    protected String figureOutEKP(String empfVKPreis, String ekRabatt, String ekPreis){
+    protected String figureOutEKP(String empfVKPreis, String ekRabatt, String ekPreis) {
         /** If empfVKPreis and ekRabatt are both valid numbers, calculate EK-Preis
          *  from them and return it. Otherwise, fall back to using ekPreis.
          */
@@ -260,6 +260,22 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } else {
             return priceFormatterIntern(ekPreis);
         }
+    }
+
+    protected boolean empfVKPAndEKPValid(String empfVKPreis, String ekRabatt) {
+        /** If empfVKPreis and ekRabatt are both valid numbers, return true, else false.
+         */
+        try {
+            new BigDecimal( priceFormatterIntern(empfVKPreis) );
+        } catch (NumberFormatException ex) {
+            return false;
+        }
+        try {
+            new BigDecimal( vatParser(ekRabatt) );
+        } catch (NumberFormatException ex) {
+            return false;
+        }
+        return true;
     }
 
     /**
