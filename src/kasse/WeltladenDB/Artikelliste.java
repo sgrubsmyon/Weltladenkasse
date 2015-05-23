@@ -75,6 +75,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
     protected Vector<String> moneyColumns;
     protected Vector<String> decimalColumns;
 
+    protected HashMap<String, DocumentFilter> documentFilterMap;
+
     // Vectors storing table edits
     private Vector<String> editLieferant;
     private Vector<String> editArtikelNummer;
@@ -217,6 +219,23 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         //
         decimalColumns = new Vector<String>(moneyColumns);
         decimalColumns.add("Menge"); decimalColumns.add("EK-Rabatt");
+
+        documentFilterMap = new HashMap<String, DocumentFilter>();
+        documentFilterMap.put("Nummer", nummerFilter);
+        documentFilterMap.put("Name", nameFilter);
+        documentFilterMap.put("Kurzname", kurznameFilter);
+        documentFilterMap.put("Menge", mengeFilter);
+        documentFilterMap.put("Einheit", einheitFilter);
+        for (String cname : moneyColumns){
+            documentFilterMap.put(cname, geldFilter);
+        }
+        documentFilterMap.put("Beliebtheit", beliebtFilter);
+        documentFilterMap.put("Barcode", nummerFilter);
+        documentFilterMap.put("VPE", vpeFilter);
+        documentFilterMap.put("Setgröße", vpeFilter);
+        documentFilterMap.put("EK-Rabatt", relFilter);
+        documentFilterMap.put("Herkunft", herkunftFilter);
+        documentFilterMap.put("Bestand", intFilter);
 
         String filter = "";
         if (toplevel_id == null){ // if user clicked on "Alle Artikel"
@@ -697,41 +716,28 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         public Component prepareEditor(TableCellEditor editor, int row, int column) {
             Component c = super.prepareEditor(editor, row, column);
             if (c instanceof JTextField){
-                System.out.println("Is running prepareEditor(): row = "+row+"   col = "+column);
                 JTextField textField = (JTextField)c;
                 String cname = this.getColumnName(column);
-                Vector<String> intColumns = new Vector<String>();
-                intColumns.add("VPE"); intColumns.add("Setgröße");
-                if ( intColumns.contains(cname) ){
-                    IntegerDocumentFilter filter =
-                        new IntegerDocumentFilter(1, smallintMax, container);
+
+                //System.out.println( "Before: "+((AbstractDocument)textField.getDocument()).getDocumentFilter() );
+                if ( documentFilterMap.containsKey(cname) ){
+                    DocumentFilter filter = documentFilterMap.get(cname);
                     ((AbstractDocument)textField.getDocument()).setDocumentFilter(filter);
                 }
-                else if ( cname.equals("Menge") ){
-                    ((AbstractDocument)textField.getDocument()).setDocumentFilter(mengeFilter);
-                }
-                else if ( cname.equals("Bestand") ){
-                    ((AbstractDocument)textField.getDocument()).setDocumentFilter(intFilter);
-                }
-                else if ( moneyColumns.contains(cname) ){
-                    ((AbstractDocument)textField.getDocument()).setDocumentFilter(geldFilter);
-                }
-                else if ( cname.equals("EK-Rabatt") ){
-                    ((AbstractDocument)textField.getDocument()).setDocumentFilter(relFilter);
-                }
-                else if ( cname.equals("Beliebtheit") ){
-                    Integer minBeliebt = Collections.min(beliebtWerte);
-                    Integer maxBeliebt = Collections.max(beliebtWerte);
-                    IntegerDocumentFilter beliebtFilter =
-                        new IntegerDocumentFilter(minBeliebt, maxBeliebt, container);
-                    ((AbstractDocument)textField.getDocument()).setDocumentFilter(beliebtFilter);
-                }
-                else {
-                    // just a normal field, replace any DocumentFilter from before with default:
-                    ((AbstractDocument)textField.getDocument()).setDocumentFilter(new DocumentFilter());
-                }
+                //System.out.println( "After: "+((AbstractDocument)textField.getDocument()).getDocumentFilter() );
             }
             return c;
+        }
+
+        @Override
+        public void removeEditor() {
+            // remove the DocumentFilter as well
+            Component c = this.getEditorComponent();
+            if (c instanceof JTextField){
+                JTextField textField = (JTextField)c;
+                ((AbstractDocument)textField.getDocument()).setDocumentFilter(null);
+            }
+            super.removeEditor();
         }
 
         @Override
