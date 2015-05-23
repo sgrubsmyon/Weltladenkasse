@@ -83,6 +83,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private JFormattedTextField kwField;
     private JTextField typField;
     private JTextField filterField;
+    private JButton emptyFilterButton;
     // Buttons
     private JButton changeTypButton;
     private JButton emptyBarcodeButton;
@@ -481,6 +482,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             filterField.getDocument().addDocumentListener(this);
             filterField.setAlignmentX(JComponent.RIGHT_ALIGNMENT);
             abschliessenPanel.add(filterField);
+	    emptyFilterButton = new JButton("x");
+	    emptyFilterButton.addActionListener(this);
+	    abschliessenPanel.add(emptyFilterButton);
         allPanel.add(abschliessenPanel);
     }
 
@@ -1263,18 +1267,20 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         if (filterStr.length() == 0){
             return;
         }
+        // Search in each row
         for (int i=0; i<data.size(); i++){
-            boolean contains = false;
-            for (Object obj : data.get(i)){
-                String str;
-                try {
-                    str = (String) obj;
-                    str = str.toLowerCase();
-                } catch (ClassCastException ex) {
-                    str = "";
-                }
-                if (str.contains(filterStr.toLowerCase())){
-                    contains = true;
+            boolean contains = true;
+            String row = "";
+            for ( Object obj : data.get(i) ){
+                String str = obj.toString().toLowerCase();
+                row = row.concat(str+" ");
+            }
+            // row must contain (somewhere) each whitespace separated filter word
+            for ( String fstr : filterStr.split(" ") ){
+                if ( fstr.equals("") )
+                    continue;
+                if ( ! row.contains(fstr.toLowerCase()) ){
+                    contains = false;
                     break;
                 }
             }
@@ -1445,5 +1451,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             doCSVBackup();
             return;
         }
+        if (e.getSource() == emptyFilterButton){
+            filterField.setText("");
+	    return;
+	}
     }
 }

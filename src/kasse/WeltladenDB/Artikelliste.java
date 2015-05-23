@@ -37,6 +37,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
     protected JCheckBox internalCheckBox;
     protected boolean showInternals = false;
     protected JTextField filterField;
+    private JButton emptyFilterButton;
     private JButton saveButton;
     private JButton revertButton;
     private JButton editButton;
@@ -524,8 +525,10 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
           filterField = new JTextField("");
           filterField.setColumns(20);
           filterField.getDocument().addDocumentListener(this);
-
           topRightPanel.add(filterField);
+          emptyFilterButton = new JButton("x");
+          emptyFilterButton.addActionListener(this);
+          topRightPanel.add(emptyFilterButton);
         topPanel.add(topRightPanel, BorderLayout.EAST);
         allPanel.add(topPanel, BorderLayout.NORTH);
     }
@@ -1254,5 +1257,9 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
             }
             return;
         }
+        if (e.getSource() == emptyFilterButton){
+            filterField.setText("");
+	    return;
+	}
     }
 }
