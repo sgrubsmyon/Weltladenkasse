@@ -42,6 +42,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     private JCheckBox inaktivCheckBox;
     private boolean showInaktive = false;
     private JTextField filterField;
+    private JButton emptyFilterButton;
     private JButton saveButton;
     private JButton revertButton;
     private JButton newButton;
@@ -173,8 +174,10 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
           filterField = new JTextField("");
           filterField.setColumns(20);
           filterField.getDocument().addDocumentListener(this);
-
           topRightPanel.add(filterField);
+          emptyFilterButton = new JButton("x");
+          emptyFilterButton.addActionListener(this);
+          topRightPanel.add(emptyFilterButton);
         topPanel.add(topRightPanel, BorderLayout.EAST);
         allPanel.add(topPanel, BorderLayout.NORTH);
 
@@ -563,5 +566,9 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
             }
             return;
         }
+        if (e.getSource() == emptyFilterButton){
+            filterField.setText("");
+	    return;
+	}
     }
 }
