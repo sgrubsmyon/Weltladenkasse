@@ -216,15 +216,6 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         newButton.setEnabled(editedLieferantIDs.size() == 0);
     }
 
-    void initiateTable() {
-        myTable = new LieferantlisteTable(new LieferantlisteTableModel(),
-                columnMargin, minColumnWidth, maxColumnWidth);
-        myTable.setAutoCreateRowSorter(true);
-        myTable.getModel().addTableModelListener(this);
-        myTable.getSelectionModel().addListSelectionListener(this);
-        setTableProperties(myTable);
-    }
-
     // subclass the AbstractTableModel to set editable cells etc.
     protected class LieferantlisteTableModel extends AbstractTableModel {
         public String getColumnName(int col) {
@@ -294,6 +285,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
             }
         }
 
+        @Override
         public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
             Component c = super.prepareRenderer(renderer, row, column);
             // add custom rendering here
@@ -309,6 +301,15 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
             }
             return c;
         }
+    }
+
+    void initiateTable() {
+        myTable = new LieferantlisteTable(new LieferantlisteTableModel(),
+                columnMargin, minColumnWidth, maxColumnWidth);
+        myTable.setAutoCreateRowSorter(true);
+        myTable.getModel().addTableModelListener(this);
+        myTable.getSelectionModel().addListSelectionListener(this);
+        setTableProperties(myTable);
     }
 
     void showTable() {

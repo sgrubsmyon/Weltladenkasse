@@ -248,77 +248,103 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
         newButton.setEnabled(editedProduktgruppenIDs.size() == 0);
     }
 
+    // subclass the AbstractTableModel to set editable cells etc.
+    protected class ProduktgruppenlisteTableModel extends AbstractTableModel {
+        public String getColumnName(int col) {
+            return columnLabels.get(col);
+        }
+
+        public int findColumn(String name) {
+            int col=0;
+            for (String s : columnLabels){
+                if (s.equals(name)){
+                    return col;
+                }
+                col++;
+            }
+            return -1;
+        }
+
+        public int getRowCount() { return displayData.size(); }
+
+        public int getColumnCount() { return columnLabels.size(); }
+
+        public Object getValueAt(int row, int col) {
+            return displayData.get(row).get(col);
+        }
+
+        public Class getColumnClass(int c) { /* JTable uses this method to
+                                              * determine the default renderer/editor for each cell.
+                                              * If we didn't implement this
+                                              * method, then the last
+                                              * column would contain text
+                                              * ("true"/"false"), rather
+                                              * than a check box.
+                                              */
+            return getValueAt(0, c).getClass();
+        }
+
+        public void setValueAt(Object value, int row, int col) {
+            Vector<Object> rowentries = displayData.get(row);
+            rowentries.set(col, value);
+            displayData.set(row, rowentries);
+            int dataRow = displayIndices.get(row); // convert from displayData index to data index
+            data.set(dataRow, rowentries);
+            fireTableCellUpdated(row, col);
+        }
+    }
+
+    // subclass the JTable to set font properties and tool tip text
+    protected class ProduktgruppenlisteTable extends AnyJComponentJTable {
+        public ProduktgruppenlisteTable(TableModel m, Integer columnMargin,
+                Integer minColumnWidth, Integer maxColumnWidth){
+            super(m, columnMargin, minColumnWidth, maxColumnWidth);
+        }
+
+        @Override
+        public boolean isCellEditable(int row, int col) {
+            String header = this.getColumnName(col);
+            if ( activeRowBools.get(row) ){
+                if ( header.equals("Produktgruppen-Name") || header.equals("Aktiv") ) {
+                    return true;
+                }
+                return false;
+            } else {
+                if ( header.equals("Aktiv") ) {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        @Override
+        public Component prepareRenderer(TableCellRenderer renderer, int row, int col) {
+            JComponent c = (JComponent)super.prepareRenderer(renderer, row, col);
+            // add custom rendering here
+            int realRowIndex = convertRowIndexToModel(row);
+            realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
+            int realColIndex = convertColumnIndexToModel(col); // user might have changed column order
+            if ( ! activeRowBools.get(realRowIndex) ){ // for rows with inactive items
+                c.setFont( c.getFont().deriveFont(Font.ITALIC) );
+                c.setForeground(Color.BLUE);
+            }
+            else {
+                c.setFont( c.getFont().deriveFont(Font.PLAIN) );
+                c.setForeground(Color.BLACK);
+            }
+            // indent the produktgruppen_name
+            if ( this.getColumnName(realColIndex).equals("Produktgruppen-Name") ) {
+                ProduktgruppenIndentedRenderer pir = new ProduktgruppenIndentedRenderer(produktgruppenIDsList);
+                int indent = pir.getIndent(realRowIndex);
+                c.setBorder(BorderFactory.createEmptyBorder(0,indent,0,0));//5 is the indent, modify to suit
+            }
+            return c;
+        }
+    }
+
     void initiateTable() {
-        myTable = new AnyJComponentJTable( new AbstractTableModel() { // subclass the AbstractTableModel to set editable cells etc.
-            public String getColumnName(int col) {
-                return columnLabels.get(col);
-            }
-            public int findColumn(String name) {
-                int col=0;
-                for (String s : columnLabels){
-                    if (s.equals(name)){
-                        return col;
-                    }
-                    col++;
-                }
-                return -1;
-            }
-            public int getRowCount() { return displayData.size(); }
-            public int getColumnCount() { return columnLabels.size(); }
-            public Object getValueAt(int row, int col) {
-                return displayData.get(row).get(col);
-            }
-            public Class getColumnClass(int c) { // JTable uses this method to determine the default renderer/editor for each cell.
-                                                 // If we didn't implement this method, then the last column would contain text ("true"/"false"),
-                                                 // rather than a check box.
-                return getValueAt(0, c).getClass();
-            }
-            public boolean isCellEditable(int row, int col) {
-                String header = this.getColumnName(col);
-                if ( activeRowBools.get(row) ){
-                    if ( header.equals("Produktgruppen-Name") || header.equals("Aktiv") ) {
-                        return true;
-                    }
-                    return false;
-                } else {
-                    if ( header.equals("Aktiv") ) {
-                        return true;
-                    }
-                    return false;
-                }
-            }
-            public void setValueAt(Object value, int row, int col) {
-                Vector<Object> rowentries = displayData.get(row);
-                rowentries.set(col, value);
-                displayData.set(row, rowentries);
-                int dataRow = displayIndices.get(row); // convert from displayData index to data index
-                data.set(dataRow, rowentries);
-                fireTableCellUpdated(row, col);
-            }
-        } ) { // subclass the JTable to set font properties and tool tip text
-            public Component prepareRenderer(TableCellRenderer renderer, int row, int col) {
-                JComponent c = (JComponent)super.prepareRenderer(renderer, row, col);
-                // add custom rendering here
-                int realRowIndex = convertRowIndexToModel(row);
-                realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
-                int realColIndex = convertColumnIndexToModel(col); // user might have changed column order
-                if ( ! activeRowBools.get(realRowIndex) ){ // for rows with inactive items
-                    c.setFont( c.getFont().deriveFont(Font.ITALIC) );
-                    c.setForeground(Color.BLUE);
-                }
-                else {
-                    c.setFont( c.getFont().deriveFont(Font.PLAIN) );
-                    c.setForeground(Color.BLACK);
-                }
-                // indent the produktgruppen_name
-                if ( this.getColumnName(realColIndex).equals("Produktgruppen-Name") ) {
-                    ProduktgruppenIndentedRenderer pir = new ProduktgruppenIndentedRenderer(produktgruppenIDsList);
-                    int indent = pir.getIndent(realRowIndex);
-                    c.setBorder(BorderFactory.createEmptyBorder(0,indent,0,0));//5 is the indent, modify to suit
-                }
-                return c;
-            }
-        };
+        myTable = new ProduktgruppenlisteTable(new ProduktgruppenlisteTableModel(),
+                columnMargin, minColumnWidth, maxColumnWidth);
         myTable.setAutoCreateRowSorter(true);
         myTable.getModel().addTableModelListener(this);
         myTable.getSelectionModel().addListSelectionListener(this);
@@ -326,11 +352,11 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
     }
 
     void showTable() {
-        initiateTable();
-
         produktgruppenListPanel = new JPanel();
         produktgruppenListPanel.setLayout(new BorderLayout());
         produktgruppenListPanel.setBorder(BorderFactory.createTitledBorder("Produktgruppen"));
+
+        initiateTable();
 
         scrollPane = new JScrollPane(myTable);
         produktgruppenListPanel.add(scrollPane, BorderLayout.CENTER);
