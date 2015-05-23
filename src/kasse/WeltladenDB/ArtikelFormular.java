@@ -126,23 +126,27 @@ public class ArtikelFormular extends WindowContent
             produktgruppenPanel.setBorder(BorderFactory.createTitledBorder("Produktgruppe"));
             produktgruppenBox = new JComboBox(produktgruppenNamen);
             produktgruppenBox.setRenderer(new ProduktgruppenIndentedRenderer(produktgruppenIDsList));
+            produktgruppenBox.setPrototypeDisplayValue("   Kakao und Trinkschokolade");
             produktgruppenPanel.add(produktgruppenBox);
 
             JPanel lieferantPanel = new JPanel();
             lieferantPanel.setBorder(BorderFactory.createTitledBorder("Lieferant"));
             lieferantBox = new JComboBox(lieferantNamen);
+            lieferantBox.setPrototypeDisplayValue("Fairtrade Center Breisgau");
             lieferantPanel.add(lieferantBox);
 
             JPanel nummerPanel = new JPanel();
             nummerPanel.setBorder(BorderFactory.createTitledBorder("Artikelnummer"));
             nummerField = new JTextField("");
             nummerField.setColumns(10);
+            ((AbstractDocument)nummerField.getDocument()).setDocumentFilter(nummerFilter);
             nummerPanel.add(nummerField);
 
             JPanel barcodePanel = new JPanel();
             barcodePanel.setBorder(BorderFactory.createTitledBorder("Barcode"));
             barcodeField = new JTextField("");
             barcodeField.setColumns(20);
+            ((AbstractDocument)barcodeField.getDocument()).setDocumentFilter(nummerFilter);
             barcodePanel.add(barcodeField);
 
         JPanel identPanel = new JPanel(); identPanel.setLayout(new FlowLayout());
@@ -166,10 +170,29 @@ public class ArtikelFormular extends WindowContent
             ((AbstractDocument)kurznameField.getDocument()).setDocumentFilter(kurznameFilter);
             kurznamePanel.add(kurznameField);
 
+            JPanel herkunftPanel = new JPanel();
+            herkunftPanel.setBorder(BorderFactory.createTitledBorder("Herkunft"));
+            herkunftField = new JTextField("");
+            herkunftField.setColumns(20);
+            ((AbstractDocument)herkunftField.getDocument()).setDocumentFilter(herkunftFilter);
+            herkunftPanel.add(herkunftField);
+
+            JPanel beliebtPanel = new JPanel();
+            beliebtPanel.setBorder(BorderFactory.createTitledBorder("Beliebtheit"));
+            beliebtBox = new JComboBox(beliebtNamen);
+            beliebtPanel.add(beliebtBox);
+
+        JPanel describePanel = new JPanel();
+        describePanel.add(namePanel);
+        describePanel.add(kurznamePanel);
+        describePanel.add(herkunftPanel);
+        describePanel.add(beliebtPanel);
+        headerPanel.add(describePanel);
+
             JPanel mengePanel = new JPanel();
             mengePanel.setBorder(BorderFactory.createTitledBorder("Menge (pro Artikel)"));
             mengeField = new JTextField("");
-            mengeField.setColumns(6);
+            mengeField.setColumns(10);
             ((AbstractDocument)mengeField.getDocument()).setDocumentFilter(mengeFilter);
             mengeField.setHorizontalAlignment(JTextField.RIGHT);
             mengePanel.add(mengeField);
@@ -181,21 +204,6 @@ public class ArtikelFormular extends WindowContent
             einheitField.setColumns(10);
             ((AbstractDocument)einheitField.getDocument()).setDocumentFilter(einheitFilter);
             einheitPanel.add(einheitField);
-
-            JPanel herkunftPanel = new JPanel();
-            herkunftPanel.setBorder(BorderFactory.createTitledBorder("Herkunft"));
-            herkunftField = new JTextField("");
-            herkunftField.setColumns(20);
-            ((AbstractDocument)herkunftField.getDocument()).setDocumentFilter(herkunftFilter);
-            herkunftPanel.add(herkunftField);
-
-        JPanel describePanel = new JPanel();
-        describePanel.add(namePanel);
-        describePanel.add(kurznamePanel);
-        describePanel.add(mengePanel);
-        describePanel.add(einheitPanel);
-        describePanel.add(herkunftPanel);
-        headerPanel.add(describePanel);
 
             JPanel vpePanel = new JPanel();
             vpePanel.setBorder(BorderFactory.createTitledBorder("VPE (Verpackungseinheit)"));
@@ -239,17 +247,13 @@ public class ArtikelFormular extends WindowContent
             lieferbarBox.setSelected(false);
             lieferbarPanel.add(lieferbarBox);
 
-            JPanel beliebtPanel = new JPanel();
-            beliebtPanel.setBorder(BorderFactory.createTitledBorder("Beliebtheit"));
-            beliebtBox = new JComboBox(beliebtNamen);
-            beliebtPanel.add(beliebtBox);
-
         JPanel detailsPanel = new JPanel();
+        detailsPanel.add(mengePanel);
+        detailsPanel.add(einheitPanel);
         detailsPanel.add(vpePanel);
         detailsPanel.add(setPanel);
         detailsPanel.add(sortimentPanel);
         detailsPanel.add(lieferbarPanel);
-        detailsPanel.add(beliebtPanel);
         headerPanel.add(detailsPanel);
 
             JPanel vkpreisPanel = new JPanel();

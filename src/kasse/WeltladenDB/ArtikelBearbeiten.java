@@ -615,7 +615,12 @@ public class ArtikelBearbeiten extends DialogWindow
                 }
             }
             ////////
-            BigDecimal menge = new BigDecimal( ((String)originalData.get(i).get(indexMap.get("menge"))).replace(',', '.') );
+            BigDecimal menge;
+            try {
+                menge = new BigDecimal( ((String)originalData.get(i).get(indexMap.get("menge"))).replace(',', '.') );
+            } catch (NumberFormatException ex) {
+                menge = null;
+            }
             if (artikelFormular.mengeField.isEnabled()){
                 try {
                     menge = new BigDecimal( artikelFormular.mengeField.getText().replace(',', '.') );
@@ -746,7 +751,7 @@ public class ArtikelBearbeiten extends DialogWindow
             if ( aktiv == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
                 result = insertNewItem(produktgruppen_id, newLieferantID,
                         newNummer, newName, newKurzname, menge, einheit, barcode, herkunft, vpe,
-                        setgroesse, vkpreis, empfvkpreis, ekrabatt, ekpreis, 
+                        setgroesse, vkpreis, empfvkpreis, ekrabatt, ekpreis,
                         preisVar, sortiment, lieferbar, beliebtWert, bestand);
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
