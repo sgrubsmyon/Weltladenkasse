@@ -69,11 +69,12 @@ Vanilleschoten in St.
 Cacao pur Afrika: 6 kg -> 0.25 kg
 Bio Cocoba Instant: 6 kg -> 0.4 kg
 Teebeutel: 5 kg -> 20 x 1.75 g
+SELECT artikel_name, menge, einheit FROM artikel WHERE artikel_name LIKE "%teebeutel%" AND menge = 5;
 
 
 
 
 # Reorder the produktgruppen:
 SELECT produktgruppen_name, produktgruppen_id, toplevel_id, sub_id, subsub_id FROM produktgruppe WHERE produktgruppen_id = 92;
-UPDATE produktgruppe SET toplevel_id = 4, sub_id = 17 FROM produktgruppe WHERE produktgruppen_id = 92;
+UPDATE produktgruppe SET toplevel_id = 4, sub_id = 17 WHERE produktgruppen_id = 92;
 SELECT produktgruppen_name, produktgruppen_id, toplevel_id, sub_id, subsub_id FROM produktgruppe WHERE produktgruppen_id = 92;
