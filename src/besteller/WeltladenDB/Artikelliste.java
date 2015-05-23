@@ -725,6 +725,9 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
                     ((AbstractDocument)textField.getDocument()).setDocumentFilter(filter);
                 }
                 //System.out.println( "After: "+((AbstractDocument)textField.getDocument()).getDocumentFilter() );
+
+                // select all text in TextField:
+                textField.selectAll();
             }
             return c;
         }
