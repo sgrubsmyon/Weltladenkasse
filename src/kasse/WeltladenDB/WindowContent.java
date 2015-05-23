@@ -61,10 +61,13 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected PositiveNumberDocumentFilter relFilter = new PositiveNumberDocumentFilter(3, 6);
     protected PositiveNumberDocumentFilter mengeFilter = new PositiveNumberDocumentFilter(5, 8);
     protected StringDocumentFilter einheitFilter = new StringDocumentFilter(10);
+    protected StringDocumentFilter nummerFilter = new StringDocumentFilter(30);
     protected StringDocumentFilter nameFilter = new StringDocumentFilter(180);
     protected StringDocumentFilter kurznameFilter = new StringDocumentFilter(50);
     protected StringDocumentFilter herkunftFilter = new StringDocumentFilter(100);
     protected IntegerDocumentFilter intFilter = new IntegerDocumentFilter(-smallintMax, smallintMax, this);
+    protected IntegerDocumentFilter vpeFilter = new IntegerDocumentFilter(1, smallintMax, this);
+    protected IntegerDocumentFilter beliebtFilter;
 
     protected Vector<Integer> beliebtWerte;
     protected Vector<String> beliebtNamen;
@@ -141,6 +144,9 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         beliebtWerte.add(1); beliebtNamen.add("niedrig");      beliebtKuerzel.add("●"); beliebtFarben.add(Color.RED);
         beliebtWerte.add(2); beliebtNamen.add("mittel");       beliebtKuerzel.add("●"); beliebtFarben.add(Color.YELLOW);
         beliebtWerte.add(3); beliebtNamen.add("hoch");         beliebtKuerzel.add("●"); beliebtFarben.add(Color.GREEN);
+        Integer minBeliebt = Collections.min(beliebtWerte);
+        Integer maxBeliebt = Collections.max(beliebtWerte);
+        beliebtFilter = new IntegerDocumentFilter(minBeliebt, maxBeliebt, this);
     }
 
 

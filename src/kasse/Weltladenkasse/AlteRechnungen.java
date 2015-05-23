@@ -97,8 +97,8 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
 	calendar.set(Calendar.DAY_OF_MONTH, day);
 	earliestDate = calendar.getTime();
         if ( year == 0 ){
-            earliestDate = new Date();
             oneDayBeforeEarliestDate = new Date();
+            earliestDate = new Date();
         }
 	latestDate = new Date(); // current date
     }

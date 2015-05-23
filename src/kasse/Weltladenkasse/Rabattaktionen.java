@@ -134,8 +134,8 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	earlyCalendar.set(Calendar.DAY_OF_MONTH, earlyDay);
 	earliestDate = earlyCalendar.getTime();
         if ( earlyYear == 0 ){
-            earliestDate = new Date();
             oneDayBeforeEarliestDate = new Date();
+            earliestDate = new Date();
         }
 	Calendar lateCalendar = Calendar.getInstance();
 	lateCalendar.set(Calendar.YEAR, lateYear);
@@ -149,6 +149,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 
     public void initiateSpinners(){
 	queryEarliestAndLatestRabattaktion();
+        System.out.println("Rabattaktionen spinner values: "+oneDayBeforeEarliestDate+" "+earliestDate+" "+latestDate);
         startDateModel = new SpinnerDateModel(earliestDate, // Startwert
                                      oneDayBeforeEarliestDate, // kleinster Wert
                                      latestDate, // groesster Wert

@@ -1141,7 +1141,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     );
             rs.next(); rechnungsNr = rs.getInt(1); rs.close();
             stmt.close();
-            System.out.println("vatMap: "+vatMap);
             for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : this.vatMap.entrySet() ){
                 pstmt = this.conn.prepareStatement(
                         "INSERT INTO verkauf_mwst SET rechnungs_nr = ?, mwst_satz = ?, "+
