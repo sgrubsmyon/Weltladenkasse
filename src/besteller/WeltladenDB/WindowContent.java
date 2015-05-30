@@ -238,8 +238,11 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             boolean contains = true;
             String row = "";
             for ( Object obj : dataCopy.get(i) ){
-                String str = obj.toString().toLowerCase();
-                row = row.concat(str+" ");
+                // omit UI components:
+                if ( !(obj instanceof JComponent) ){
+                    String str = obj.toString().toLowerCase();
+                    row = row.concat(str+" ");
+                }
             }
             // row must contain (somewhere) each whitespace separated filter word
             for ( String fstr : filterStr.split(" ") ){
