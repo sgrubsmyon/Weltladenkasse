@@ -84,8 +84,8 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
 
     private void initiateVectors() {
 	columnLabels = new Vector<String>();
-        columnLabels.add("Lieferant");
-	columnLabels.add("Artikel-Name"); columnLabels.add("Artikel-Nr."); columnLabels.add("Stückzahl");
+        columnLabels.add("Lieferant"); columnLabels.add("Artikel-Name");
+        columnLabels.add("Artikel-Nr."); columnLabels.add("Barcode");
         columnLabels.add("Einzelpreis"); columnLabels.add("MwSt.");
         colors = new Vector<String>();
         types = new Vector<String>();
@@ -209,6 +209,14 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
 	    JLabel preisLabel = new JLabel("Preis: ");
             hinzufuegenPanel.add(preisLabel);
             preisField = new JTextField("");
+            preisField.addKeyListener(new KeyAdapter() {
+                public void keyPressed(KeyEvent e) { if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
+                    if (hinzufuegenButton.isEnabled()){
+                        hinzufuegenButton.doClick();
+                    }
+                } }
+            });
+            preisField.getDocument().addDocumentListener(this);
 	    ((AbstractDocument)preisField.getDocument()).setDocumentFilter(geldFilter);
             preisField.setEditable(false);
             preisField.setColumns(6);
@@ -238,7 +246,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
 
                     printButton = new JButton("Artikel drucken");
                     printButton.setMnemonic(KeyEvent.VK_D);
-                    printButton.setEnabled(false);
+                    if (data.size() == 0) printButton.setEnabled(false);
                     printButton.addActionListener(this);
                     centerPanel.add(printButton);
                 buttonPanel.add(centerPanel, BorderLayout.CENTER);
@@ -283,10 +291,10 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
 	artikelbez.setCellRenderer(linksAusrichter);
 	artikelbez.setPreferredWidth(150);
 	TableColumn artikelnr = table.getColumn("Artikel-Nr.");
-	artikelnr.setCellRenderer(rechtsAusrichter);
+	artikelnr.setCellRenderer(linksAusrichter);
 	artikelnr.setPreferredWidth(50);
-	TableColumn stueckzahl = table.getColumn("Stückzahl");
-	stueckzahl.setCellRenderer(rechtsAusrichter);
+	TableColumn barcode = table.getColumn("Barcode");
+	barcode.setCellRenderer(linksAusrichter);
 	TableColumn preis = table.getColumn("Einzelpreis");
 	preis.setCellRenderer(rechtsAusrichter);
 	TableColumn mwst = table.getColumn("MwSt.");
@@ -480,10 +488,24 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
     }
 
 
+    private void setPriceField() {
+        boolean variablerPreis = getVariablePriceBool(selectedArtikelID);
+        if ( ! variablerPreis ){
+            String artikelPreis = getSalePrice(selectedArtikelID);
+            preisField.getDocument().removeDocumentListener(this);
+            preisField.setText("");
+            preisField.setText( decimalMark(artikelPreis) );
+            preisField.getDocument().addDocumentListener(this);
+        }
+        else {
+            preisField.setEditable(true);
+        }
+    }
 
     private void setButtonsEnabled() {
         if (preisField.getText().length() > 0) {
             hinzufuegenButton.setEnabled(true);
+            hinzufuegenButton.requestFocus();
         }
         else {
             hinzufuegenButton.setEnabled(false);
@@ -499,6 +521,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
             String lieferant = an[1];
             String artikelNummer = (String)nummerBox.getSelectedItem();
             selectedArtikelID = getArticleID(lieferant, artikelNummer); // get the internal artikelID from the DB
+            setPriceField();
         }
         setButtonsEnabled();
     }
@@ -648,6 +671,10 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
      *    @param e the document event.
      **/
     public void insertUpdate(DocumentEvent e) {
+        if (e.getDocument() == preisField.getDocument()){
+            setButtonsEnabled();
+            return;
+        }
         if (e.getDocument() == barcodeField.getDocument()){
             if (barcodeBox.setBoxMode){ return; }
             System.out.println("\nbarcodeField DocumentListener fired!");
