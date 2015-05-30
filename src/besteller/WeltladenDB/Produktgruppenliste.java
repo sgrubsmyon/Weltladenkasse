@@ -571,30 +571,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
     private void applyFilter() {
         displayData = new Vector< Vector<Object> >(data);
         initiateDisplayIndices();
-        if (filterStr.length() == 0){
-            return;
-        }
-        for (int i=0; i<data.size(); i++){
-            boolean contains = false;
-            for (Object obj : data.get(i)){
-                String str;
-                try {
-                    str = (String) obj;
-                    str = str.toLowerCase();
-                } catch (ClassCastException ex) {
-                    str = "";
-                }
-                if (str.contains(filterStr.toLowerCase())){
-                    contains = true;
-                    break;
-                }
-            }
-            if (!contains){
-                int display_index = displayIndices.indexOf(i);
-                displayData.remove(display_index);
-                displayIndices.remove(display_index);
-            }
-        }
+        applyFilter(filterStr, displayData, displayIndices);
     }
 
     /**

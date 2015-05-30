@@ -1154,32 +1154,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
     private void applyFilter() {
         displayData = new Vector< Vector<Object> >(data);
         initiateDisplayIndices();
-        if (filterStr.length() == 0){
-            return;
-        }
-        // Search in each row
-        for (int i=0; i<data.size(); i++){
-            boolean contains = true;
-            String row = "";
-            for ( Object obj : data.get(i) ){
-                String str = obj.toString().toLowerCase();
-                row = row.concat(str+" ");
-            }
-            // row must contain (somewhere) each whitespace separated filter word
-            for ( String fstr : filterStr.split(" ") ){
-                if ( fstr.equals("") )
-                    continue;
-                if ( ! row.contains(fstr.toLowerCase()) ){
-                    contains = false;
-                    break;
-                }
-            }
-            if (!contains){
-                int display_index = displayIndices.indexOf(i);
-                displayData.remove(display_index);
-                displayIndices.remove(display_index);
-            }
-        }
+        applyFilter(filterStr, displayData, displayIndices);
     }
 
     /**
