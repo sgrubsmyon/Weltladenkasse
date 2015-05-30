@@ -297,12 +297,9 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
 
     void showTable(){
 	myTable = new ArtikelSelectTable(data, columnLabels);
-//	myTable.setBounds(71,53,150,100);
-//	myTable.setToolTipText("Tabelle kann nur gelesen werden.");
 	setTableProperties(myTable);
 	TableColumn entf = myTable.getColumn("Entfernen");
 	entf.setPreferredWidth(2);
-//	myTable.setAutoResizeMode(5);
 
 	articleListPanel = new JPanel();
 	articleListPanel.setLayout(new BoxLayout(articleListPanel, BoxLayout.Y_AXIS));

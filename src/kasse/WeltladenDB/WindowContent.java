@@ -233,11 +233,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             return;
         }
         // Search in each row
-        final Vector< Vector<Object> > dataCopy = new Vector< Vector<Object> >(data);
-        for (int i=0; i<dataCopy.size(); i++){
+        final Vector< Vector<Object> > fullData = new Vector< Vector<Object> >(data);
+        final Vector<Integer> fullIndices = new Vector<Integer>(indices);
+        for (int i=0; i<fullData.size(); i++){
             boolean contains = true;
             String row = "";
-            for ( Object obj : dataCopy.get(i) ){
+            for ( Object obj : fullData.get(i) ){
                 // omit UI components:
                 if ( !(obj instanceof JComponent) ){
                     String str = obj.toString().toLowerCase();
@@ -254,7 +255,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                 }
             }
             if (!contains){
-                int display_index = indices.indexOf(i);
+                int display_index = indices.indexOf( fullIndices.get(i) );
                 data.remove(display_index);
                 indices.remove(display_index);
             }

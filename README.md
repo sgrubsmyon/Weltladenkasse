@@ -80,7 +80,7 @@ Datenbank-Daten im-/exportieren:
 For Developers:
 ---------------
 
-Dependencies:
+## Dependencies:
 
 Download and put into the folder `lib` the following jars:
 
@@ -94,7 +94,7 @@ Unjar the hidapi-1.1.jar (with `jar -xvf hidapi-1.1.jar`) and copy the content
 of the `native/*` folders (files ending with `.so`, `.dll` or `.jnilib`) into
 folder `resources/natives`.
 
-Compile:
+## Compile:
 ```
 ant
 ```
@@ -115,3 +115,7 @@ Compile without jar creation (much faster) and run locally:
 ant develop && ./run_kasse.sh
 ant develop && ./run_besteller.sh
 ```
+
+## Good profilers:
+* JProfiler (proprietary): https://www.ej-technologies.com/download/jprofiler/files
+

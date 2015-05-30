@@ -795,15 +795,12 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
     }
 
     protected void updateTable() {
-        applyFilter();
+        applyFilter(filterStr, displayData, displayIndices);
         artikelListPanel.remove(scrollPane);
 	artikelListPanel.revalidate();
 
-        initiateTable();
-
         scrollPane = new JScrollPane(myTable);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        myTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         artikelListPanel.add(scrollPane);
         enableButtons();
     }
@@ -1133,7 +1130,13 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
      **/
     public void insertUpdate(DocumentEvent e) {
         if (e.getDocument() == filterField.getDocument()){
+            String oldFilterStr = new String(filterStr);
             filterStr = filterField.getText();
+            if ( !filterStr.contains(oldFilterStr) ){
+                // user has deleted from, not added to the filter string, reset the displayData
+                displayData = new Vector< Vector<Object> >(data);
+                initiateDisplayIndices();
+            }
             updateTable();
         }
     }
@@ -1149,12 +1152,6 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         for (int i=0; i<data.size(); i++){
             displayIndices.add(i);
         }
-    }
-
-    private void applyFilter() {
-        displayData = new Vector< Vector<Object> >(data);
-        initiateDisplayIndices();
-        applyFilter(filterStr, displayData, displayIndices);
     }
 
     /**
@@ -1234,6 +1231,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
         }
         if (e.getSource() == emptyFilterButton){
             filterField.setText("");
+            filterField.requestFocus();
 	    return;
 	}
     }

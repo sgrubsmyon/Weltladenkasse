@@ -153,16 +153,19 @@ public class AnyJComponentJTable extends JTable {
         if (minColumnWidth != null){
             maxWidth = minColumnWidth;
         }
-        for (int row=0; row < getRowCount(); row++) {
+        int rowCount = getRowCount();
+        // small speed up for large tables: only scan first 100 rows, should be good enough
+        if (rowCount > 100){ rowCount = 100; }
+        for (int row=0; row < rowCount; row++) {
             renderer = getCellRenderer(row, columnIndex);
             c = renderer.getTableCellRendererComponent(this,
                     getValueAt(row, columnIndex), false, false, row, columnIndex);
-            maxWidth = Math.max(maxWidth, c.getPreferredSize().width);
-        }
-        if ( maxColumnWidth != null && maxWidth > maxColumnWidth){
-            //System.out.println("column: "+column.getHeaderValue().toString()+"; maxWidth = "+
-            //        maxWidth+" > "+maxColumnWidth+" = maxColumnWidth");
-            maxWidth = maxColumnWidth;
+            int width = c.getPreferredSize().width;
+            if ( maxColumnWidth != null && width > maxColumnWidth){
+                maxWidth = maxColumnWidth;
+                break;
+            }
+            maxWidth = Math.max(maxWidth, width);
         }
         column.setPreferredWidth(maxWidth + margin);
     }

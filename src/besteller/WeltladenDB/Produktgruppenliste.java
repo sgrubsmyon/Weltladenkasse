@@ -364,11 +364,9 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
     }
 
     void updateTable() {
-        applyFilter();
+        applyFilter(filterStr, displayData, displayIndices);
         produktgruppenListPanel.remove(scrollPane);
 	produktgruppenListPanel.revalidate();
-
-        initiateTable();
 
         scrollPane = new JScrollPane(myTable);
         produktgruppenListPanel.add(scrollPane);
@@ -550,7 +548,13 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
      **/
     public void insertUpdate(DocumentEvent e) {
         if (e.getDocument() == filterField.getDocument()){
+            String oldFilterStr = new String(filterStr);
             filterStr = filterField.getText();
+            if ( !filterStr.contains(oldFilterStr) ){
+                // user has deleted from, not added to the filter string, reset the displayData
+                displayData = new Vector< Vector<Object> >(data);
+                initiateDisplayIndices();
+            }
             updateTable();
         }
     }
@@ -566,12 +570,6 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
         for (int i=0; i<data.size(); i++){
             displayIndices.add(i);
         }
-    }
-
-    private void applyFilter() {
-        displayData = new Vector< Vector<Object> >(data);
-        initiateDisplayIndices();
-        applyFilter(filterStr, displayData, displayIndices);
     }
 
     /**
@@ -613,6 +611,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
         }
         if (e.getSource() == emptyFilterButton){
             filterField.setText("");
+            filterField.requestFocus();
 	    return;
 	}
     }
