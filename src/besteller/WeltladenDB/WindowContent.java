@@ -223,6 +223,41 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return path;
     }
 
+    protected void applyFilter(String filterStr, Vector< Vector<Object> > data, Vector<Integer> indices) {
+        /** Filter all rows in `data` using the filter strings given in `filterStr`, which
+         *  are space separated. Each filter string must be present (case insensitive).
+         *  This behaviour is the same as an SQL query using 'foo LIKE "%str1%" AND foo LIKE "%str2%" AND ...'.
+         *  Returns only the rows of `data` and `indices` that correspond to rows in `data`
+         *  containing all the filter strings. */
+        if (filterStr.length() == 0){
+            return;
+        }
+        // Search in each row
+        final Vector< Vector<Object> > dataCopy = new Vector< Vector<Object> >(data);
+        for (int i=0; i<dataCopy.size(); i++){
+            boolean contains = true;
+            String row = "";
+            for ( Object obj : dataCopy.get(i) ){
+                String str = obj.toString().toLowerCase();
+                row = row.concat(str+" ");
+            }
+            // row must contain (somewhere) each whitespace separated filter word
+            for ( String fstr : filterStr.split(" ") ){
+                if ( fstr.equals("") )
+                    continue;
+                if ( ! row.contains(fstr.toLowerCase()) ){
+                    contains = false;
+                    break;
+                }
+            }
+            if (!contains){
+                int display_index = indices.indexOf(i);
+                data.remove(display_index);
+                indices.remove(display_index);
+            }
+        }
+    }
+
     /**
      * Price calculation methods
      */

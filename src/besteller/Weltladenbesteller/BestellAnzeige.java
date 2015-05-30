@@ -251,6 +251,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     }
 
     private void updateDetailTable() {
+        applyFilter();
         orderDetailTablePanel.remove(orderDetailScrollPane);
 	orderDetailTablePanel.revalidate();
 
@@ -552,7 +553,6 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     public void insertUpdate(DocumentEvent e) {
         if (e.getDocument() == filterField.getDocument()){
             filterStr = filterField.getText();
-            applyFilter();
             updateDetailTable();
         }
     }
@@ -573,30 +573,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     private void applyFilter() {
         orderDetailDisplayData = new Vector< Vector<Object> >(orderDetailData);
         initiateDisplayIndices();
-        if (filterStr.length() == 0){
-            return;
-        }
-        for (int i=0; i<orderDetailData.size(); i++){
-            boolean contains = false;
-            for (Object obj : orderDetailData.get(i)){
-                String str;
-                try {
-                    str = (String) obj;
-                    str = str.toLowerCase();
-                } catch (ClassCastException ex) {
-                    str = "";
-                }
-                if (str.contains(filterStr.toLowerCase())){
-                    contains = true;
-                    break;
-                }
-            }
-            if (!contains){
-                int display_index = orderDetailDisplayIndices.indexOf(i);
-                orderDetailDisplayData.remove(display_index);
-                orderDetailDisplayIndices.remove(display_index);
-            }
-        }
+        applyFilter(filterStr, orderDetailDisplayData, orderDetailDisplayIndices);
     }
 
     /**
