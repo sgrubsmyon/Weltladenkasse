@@ -478,6 +478,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             filterLabel.setAlignmentX(JComponent.RIGHT_ALIGNMENT);
             abschliessenPanel.add(filterLabel);
             filterField = new JTextField("");
+            filterStr = "";
             filterField.setColumns(20);
             filterField.getDocument().addDocumentListener(this);
             filterField.setAlignmentX(JComponent.RIGHT_ALIGNMENT);
@@ -521,13 +522,12 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	this.revalidate();
             // create table anew
             showAll();
-            filterStr = filterField.getText();
             updateTable();
         setButtonsEnabled(); // for abschliessenButton
     }
 
     private void updateTable(){
-        applyFilter();
+        applyFilter(filterStr, displayData, displayIndices);
         articleListPanel.remove(articleScrollPane);
 	articleListPanel.revalidate();
 
@@ -1241,7 +1241,13 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             return;
         }
         if (e.getDocument() == filterField.getDocument()){
+            String oldFilterStr = new String(filterStr);
             filterStr = filterField.getText();
+            if ( !filterStr.contains(oldFilterStr) ){
+                // user has deleted from, not added to the filter string, reset the displayData
+                displayData = new Vector< Vector<Object> >(data);
+                initiateDisplayIndices();
+            }
             updateTable();
             return;
         }
@@ -1258,12 +1264,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         for (int i=0; i<data.size(); i++){
             displayIndices.add(i);
         }
-    }
-
-    private void applyFilter() {
-        displayData = new Vector< Vector<Object> >(data);
-        initiateDisplayIndices();
-        applyFilter(filterStr, displayData, displayIndices);
     }
 
     /**
@@ -1427,6 +1427,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         }
         if (e.getSource() == emptyFilterButton){
             filterField.setText("");
+            filterField.requestFocus();
 	    return;
 	}
     }

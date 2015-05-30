@@ -64,6 +64,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     private JButton exportButton; // click the button to print the order
     private JButton editButton; // click the button to edit the order (in the Bestellen tab)
     private JTextField filterField;
+    private JButton emptyFilterButton;
 
     private Vector<Object> selBestellNrUndTyp;
     protected Vector< Vector<Object> > bestellNummernUndTyp;
@@ -230,6 +231,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             filterField.getDocument().addDocumentListener(this);
             filterField.setAlignmentX(JComponent.RIGHT_ALIGNMENT);
             buttonPanel.add(filterField);
+	    emptyFilterButton = new JButton("x");
+	    emptyFilterButton.addActionListener(this);
+	    buttonPanel.add(emptyFilterButton);
 
             orderDetailPanel.add(buttonPanel, BorderLayout.SOUTH);
         }
@@ -251,7 +255,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     }
 
     private void updateDetailTable() {
-        applyFilter();
+        applyFilter(filterStr, orderDetailDisplayData, orderDetailDisplayIndices);
         orderDetailTablePanel.remove(orderDetailScrollPane);
 	orderDetailTablePanel.revalidate();
 
@@ -552,7 +556,13 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
      **/
     public void insertUpdate(DocumentEvent e) {
         if (e.getDocument() == filterField.getDocument()){
+            String oldFilterStr = new String(filterStr);
             filterStr = filterField.getText();
+            if ( !filterStr.contains(oldFilterStr) ){
+                // user has deleted from, not added to the filter string, reset the displayData
+                orderDetailDisplayData = new Vector< Vector<Object> >(orderDetailData);
+                initiateDisplayIndices();
+            }
             updateDetailTable();
         }
     }
@@ -568,12 +578,6 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         for (int i=0; i<orderDetailData.size(); i++){
             orderDetailDisplayIndices.add(i);
         }
-    }
-
-    private void applyFilter() {
-        orderDetailDisplayData = new Vector< Vector<Object> >(orderDetailData);
-        initiateDisplayIndices();
-        applyFilter(filterStr, orderDetailDisplayData, orderDetailDisplayIndices);
     }
 
     /**
@@ -626,6 +630,11 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 System.out.println("Save command cancelled by user.");
             }
             return;
+	}
+        if (e.getSource() == emptyFilterButton){
+            filterField.setText("");
+            filterField.requestFocus();
+	    return;
 	}
     }
 }

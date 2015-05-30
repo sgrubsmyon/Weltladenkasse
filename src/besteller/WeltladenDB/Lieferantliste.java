@@ -325,11 +325,9 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     }
 
     void updateTable() {
-        applyFilter();
+        applyFilter(filterStr, displayData, displayIndices);
         lieferantListPanel.remove(scrollPane);
 	lieferantListPanel.revalidate();
-
-        initiateTable();
 
         scrollPane = new JScrollPane(myTable);
         lieferantListPanel.add(scrollPane);
@@ -487,7 +485,13 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
      **/
     public void insertUpdate(DocumentEvent e) {
         if (e.getDocument() == filterField.getDocument()){
+            String oldFilterStr = new String(filterStr);
             filterStr = filterField.getText();
+            if ( !filterStr.contains(oldFilterStr) ){
+                // user has deleted from, not added to the filter string, reset the displayData
+                displayData = new Vector< Vector<Object> >(data);
+                initiateDisplayIndices();
+            }
             updateTable();
         }
     }
@@ -503,12 +507,6 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         for (int i=0; i<data.size(); i++){
             displayIndices.add(i);
         }
-    }
-
-    private void applyFilter() {
-        displayData = new Vector< Vector<Object> >(data);
-        initiateDisplayIndices();
-        applyFilter(filterStr, displayData, displayIndices);
     }
 
     /**
@@ -546,6 +544,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         }
         if (e.getSource() == emptyFilterButton){
             filterField.setText("");
+            filterField.requestFocus();
 	    return;
 	}
     }
