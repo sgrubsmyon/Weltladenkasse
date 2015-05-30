@@ -1359,8 +1359,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             String artikelPreis = getSalePrice(selectedArtikelID);
             preisField.getDocument().removeDocumentListener(this);
             preisField.setText("");
-            System.out.println("Setze Preis auf: *"+artikelPreis.replace('.',',')+"*");
-            preisField.setText(artikelPreis.replace('.',','));
+            preisField.setText( decimalMark(artikelPreis) );
             preisField.getDocument().addDocumentListener(this);
         }
         else {
@@ -1453,8 +1452,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         removeButtons.add(new JButton("-"));
         removeButtons.lastElement().addActionListener(this);
 
-        artikelGesamtPreis = artikelGesamtPreis.replace('.',',')+' '+currencySymbol;
-        artikelPreis = artikelPreis.replace('.',',')+' '+currencySymbol;
+        artikelGesamtPreis = decimalMark(artikelGesamtPreis)+' '+currencySymbol;
+        artikelPreis = decimalMark(artikelPreis)+' '+currencySymbol;
 
         Vector<Object> row = new Vector<Object>();
             row.add(positions.lastElement());
