@@ -243,8 +243,10 @@ public class ArtikelNeuEingeben extends DialogWindow
         }
 
         void setMengeField(int row){
-            String menge = unifyDecimal( artikelNeu.mengen.get(row) );
-            artikelFormular.mengeField.setText(menge);
+            if (artikelNeu.mengen.get(row) != null){
+                String menge = unifyDecimal( artikelNeu.mengen.get(row) );
+                artikelFormular.mengeField.setText(menge);
+            }
         }
 
         void setEinheitField(int row){
@@ -258,8 +260,10 @@ public class ArtikelNeuEingeben extends DialogWindow
         }
 
         void setVPESpinner(int row){
-            Integer vpe = artikelNeu.vpes.get(row);
-            artikelFormular.vpeSpinner.setValue(vpe);
+            if (artikelNeu.vpes.get(row) != null){
+                Integer vpe = artikelNeu.vpes.get(row);
+                artikelFormular.vpeSpinner.setValue(vpe);
+            }
         }
 
         void setSetSpinner(int row){
