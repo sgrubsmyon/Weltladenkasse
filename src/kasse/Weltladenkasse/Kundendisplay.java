@@ -33,7 +33,7 @@ public class Kundendisplay {
     }
 
     private HIDManager manager;
-    private HIDDevice device;
+    private HIDDevice device = null;
     //private static final long READ_UPDATE_DELAY_MS = 50L;
 
     // Wincor Nixdorf International GmbH Operator Display, BA63-USB
@@ -63,13 +63,16 @@ public class Kundendisplay {
         {
             mgr = HIDManager.getInstance();
             HIDDeviceInfo[] devs = mgr.listDevices();
-            System.out.println("Devices:");
-            for(int i=0; i<devs.length; i++)
-            {
-                System.out.println(""+i+":\t"+devs[i]);
-                System.out.println("---------------------------------------------\n");
+            System.out.println("HID (Display) Devices:");
+            if (devs != null){
+                for(int i=0; i<devs.length; i++)
+                {
+                    System.out.println(""+i+":\t"+devs[i]);
+                    System.out.println("---------------------------------------------\n");
+                }
+            } else {
+                System.out.println("No devices found.");
             }
-            System.gc();
         }
         catch(IOException e)
         {
@@ -97,16 +100,18 @@ public class Kundendisplay {
         try {
             manager = HIDManager.getInstance();
             HIDDeviceInfo[] devs = manager.listDevices();
-            // always use the second device, first is defunct (don't know why)
-            String path = devs[1].getPath();
-            //device = manager.openById(VENDOR_ID, PRODUCT_ID, null);
-            //device = manager.openByPath("0004:0002:01");
-            System.out.println("Trying to open device at path "+path);
-            device = manager.openByPath(path);
-            System.out.print("Manufacturer: " + device.getManufacturerString() + "\n");
-            System.out.print("Product: " + device.getProductString() + "\n");
-            System.out.print("Serial Number: " + device.getSerialNumberString() + "\n");
-            setCodePage();
+            if (devs != null){
+                // always use the second device, first is defunct (don't know why)
+                String path = devs[1].getPath();
+                //device = manager.openById(VENDOR_ID, PRODUCT_ID, null);
+                //device = manager.openByPath("0004:0002:01");
+                System.out.println("Trying to open device at path "+path);
+                device = manager.openByPath(path);
+                System.out.print("Manufacturer: " + device.getManufacturerString() + "\n");
+                System.out.print("Product: " + device.getProductString() + "\n");
+                System.out.print("Serial Number: " + device.getSerialNumberString() + "\n");
+                setCodePage();
+            }
         } catch(IOException e) {
             e.printStackTrace();
         }
@@ -118,8 +123,10 @@ public class Kundendisplay {
      * Should be called when working with device is finished.
      */
         try {
-            clearScreen();
-            device.close();
+            if (device != null){
+                clearScreen();
+                device.close();
+            }
         } catch(IOException e) {
             e.printStackTrace();
         } finally {
@@ -147,15 +154,17 @@ public class Kundendisplay {
 
 
     private void writeToDevice(byte[] data) {
-        try {
-            for (byte b : data){
-                System.out.print(b+" ");
+        if (device != null){
+            try {
+                for (byte b : data){
+                    System.out.print(b+" ");
+                }
+                System.out.println();
+                int n = device.write(data);
+                System.out.println("Number of bytes written to BA63 device: "+n);
+            } catch(IOException e) {
+                e.printStackTrace();
             }
-            System.out.println();
-            int n = device.write(data);
-            System.out.println("Number of bytes written to BA63 device: "+n);
-        } catch(IOException e) {
-            e.printStackTrace();
         }
     }
 
