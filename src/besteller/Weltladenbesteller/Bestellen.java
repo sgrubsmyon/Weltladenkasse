@@ -894,8 +894,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private void updateAnzahlSpinner(Integer vpe) {
         if (vpe > 0){
             System.out.println("updateAnzahlSpinner at work.");
-            Integer vpes = (Integer)vpeSpinner.getValue();
-            Integer stueck = new Integer(vpes*vpe);
+            Integer nvpe = (Integer)vpeSpinner.getValue();
+            Integer stueck = new Integer(nvpe*vpe);
             if (
                     stueck >= (Integer)((SpinnerNumberModel)anzahlSpinner.getModel()).getMinimum() &&
                     stueck <= (Integer)((SpinnerNumberModel)anzahlSpinner.getModel()).getMaximum()
@@ -911,9 +911,9 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         if (vpe > 0){
             System.out.println("updateVPESpinner at work.");
             Integer stueck = (Integer)anzahlSpinner.getValue();
-            Integer vpes = new Integer(stueck/vpe);
+            Integer nvpe = new Integer(stueck/vpe);
             this.vpeOrAnzahlIsChanged = true;
-                vpeSpinner.setValue(vpes);
+                vpeSpinner.setValue(nvpe);
                 selectedNumberOfVPEs = (Integer)vpeSpinner.getValue();
             this.vpeOrAnzahlIsChanged = false;
         }
