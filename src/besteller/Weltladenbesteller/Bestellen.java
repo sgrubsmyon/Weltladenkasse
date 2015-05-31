@@ -108,7 +108,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     private Vector<Integer> displayIndices; // holding indices that rows in displayData have in data
     private Vector<Integer> artikelIDs;
     private Vector<Boolean> sortimentBools;
-    private Vector<Integer> stueckzahlen;
     private Vector<Integer> positions;
 
     private String filterStr = "";
@@ -496,7 +495,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         sortimentBools = new Vector<Boolean>();
         orderTable = new BestellungsTable(displayData, columnLabels, displayIndices, sortimentBools);
         artikelIDs = new Vector<Integer>();
-        stueckzahlen = new Vector<Integer>();
         positions = new Vector<Integer>();
         removeButtons = new Vector<JButton>();
     }
@@ -507,7 +505,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         displayIndices.clear();
         artikelIDs.clear();
         sortimentBools.clear();
-        stueckzahlen.clear();
         positions.clear();
         removeButtons.clear();
         selBestellNr = -1;
@@ -566,7 +563,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             String name = (String)data.get(i).get(3);
             String vkp = (String)data.get(i).get(4); vkp = vkp == null ? "" : vkp;
             String vpe = (String)data.get(i).get(5); vpe = vpe == null ? "" : vpe;
-            String stueck = (String)data.get(i).get(6);
+            String stueck = ((JSpinner)data.get(i).get(6)).getValue().toString();
             String sortiment = sortimentBools.get(i).toString();
             String artikelID = artikelIDs.get(i).toString();
 
@@ -645,7 +642,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 String name = fields[2];
                 String vkp = fields[3];
                 String vpe = fields[4];
-                String stueck = fields[5];
+                Integer stueck = Integer.parseInt(fields[5]);
                 Boolean sortimentBool = fields[6].equals("true") ? true : false;
                 Integer artikelID = Integer.parseInt(fields[7]);
 
@@ -950,7 +947,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
     protected void hinzufuegen(Integer artikelID,
             String lieferant, String artikelNummer, String artikelName,
-            String vkp, String vpe, String stueck, Boolean sortiment) {
+            String vkp, String vpe, Integer stueck, Boolean sortiment) {
         artikelIDs.add(0, artikelID);
         sortimentBools.add(0, sortiment);
         Integer lastPos = 0;
@@ -958,14 +955,22 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             lastPos = positions.firstElement();
         } catch (NoSuchElementException ex) { }
         positions.add(0, lastPos+1);
-        stueckzahlen.add(0, Integer.parseInt(stueck));
         removeButtons.add(0, new JButton("-"));
         removeButtons.firstElement().addActionListener(this);
+
+        JSpinner stueckSpinner = new JSpinner(
+                new SpinnerNumberModel((int)stueck, 1, smallintMax, 1)
+                );
+        JSpinner.NumberEditor stueckEditor = new JSpinner.NumberEditor(stueckSpinner, "###");
+        stueckSpinner.setEditor(stueckEditor);
+        JFormattedTextField stueckField = stueckEditor.getTextField();
+        preventSpinnerOverflow(stueckField);
+        ( (NumberFormatter) stueckField.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
 
         Vector<Object> row = new Vector<Object>();
             row.add(positions.firstElement());
             row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
-            row.add(vkp); row.add(vpe); row.add(stueck);
+            row.add(vkp); row.add(vpe); row.add(stueckSpinner);
             row.add(removeButtons.firstElement());
         data.add(0, row);
 
@@ -994,7 +999,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         Boolean sortimentBool = getSortimentBool(selectedArtikelID);
 
         hinzufuegen(selectedArtikelID, lieferant, artikelNummer, artikelName,
-                artikelPreis, vpe, stueck.toString(), sortimentBool);
+                artikelPreis, vpe, stueck, sortimentBool);
         updateAll();
         barcodeBox.requestFocus();
         // save a CSV backup to hard disk
@@ -1039,6 +1044,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 stmt.close();
             }
             for (int i=0; i<artikelIDs.size(); i++){
+                JSpinner stueckSpinner = (JSpinner)data.get(i).get( columnLabels.indexOf("Stückzahl") );
                 pstmt = this.conn.prepareStatement(
                         "INSERT INTO bestellung_details SET bestell_nr = ?, "+
                         "typ = ?, position = ?, artikel_id = ?, stueckzahl = ?"
@@ -1047,7 +1053,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 pstmt.setString(2, typ);
                 pstmtSetInteger(pstmt, 3, positions.get(i));
                 pstmtSetInteger(pstmt, 4, artikelIDs.get(i));
-                pstmtSetInteger(pstmt, 5, stueckzahlen.get(i));
+                pstmtSetInteger(pstmt, 5, (Integer)stueckSpinner.getValue());
                 result = pstmt.executeUpdate();
                 pstmt.close();
                 if (result == 0){
@@ -1406,7 +1412,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             data.remove(removeIndex);
             artikelIDs.remove(removeIndex);
             sortimentBools.remove(removeIndex);
-            stueckzahlen.remove(removeIndex);
             removeButtons.remove(removeIndex);
 
             positions.remove(removeIndex);

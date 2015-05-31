@@ -99,7 +99,8 @@ public class AnyJComponentJTable extends JTable {
     }
 
     public boolean isCellEditable(int row, int col){
-        if (editableCols.contains(col) || getValueAt(row, col) instanceof JButton)
+        if (editableCols.contains(col) || getValueAt(row, col) instanceof JButton ||
+                getValueAt(row, col) instanceof JSpinner)
             return true;
         else
             return false;
