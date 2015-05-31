@@ -8,12 +8,10 @@ import com.codeminders.hidapi.*;
 //import WeltladenDB.JNIFromJar;
 
 /**
- * This class demonstrates enumeration, reading and getting
- * notifications when a HID device is connected/disconnected.
+ * This class is for interaction with VFD customer display Wincor Nixdorf BA63
+ * USB.
  */
 public class Kundendisplay {
-
-    private static final long READ_UPDATE_DELAY_MS = 50L;
 
     static {
         ClassPathLibraryLoader.loadNativeHIDLibrary();
@@ -32,6 +30,10 @@ public class Kundendisplay {
         //}
     }
 
+    private HIDManager manager;
+    private HIDDevice device;
+    //private static final long READ_UPDATE_DELAY_MS = 50L;
+
     // Wincor Nixdorf International GmbH Operator Display, BA63-USB
     static final int VENDOR_ID = 2727;
     static final int PRODUCT_ID = 512;
@@ -43,79 +45,22 @@ public class Kundendisplay {
      *       */
     public Kundendisplay() {
         listDevices();
-        readDevice();
+        openDevice();
+        showWelcomeScreen();
     }
 
-    /**
-     * Static function to read an input report to a HID device.
-     */
-    private static void readDevice() {
-        HIDDevice dev;
-        try {
-            HIDManager manager = HIDManager.getInstance();
-            dev = manager.openById(VENDOR_ID, PRODUCT_ID, null);
-            //dev = manager.openByPath("0004:0003:00");
-            //dev = manager.openByPath("0004:0003:01");
-            System.out.print("Manufacturer: " + dev.getManufacturerString() + "\n");
-            System.out.print("Product: " + dev.getProductString() + "\n");
-            System.out.print("Serial Number: " + dev.getSerialNumberString() + "\n");
-            try {
-                byte[] data = new byte[]{0x01, 0x1b, 0x5b, 0x30, 0x63};
-                //byte[] data = new byte[]{0x00, 0x00, 0x10, 0x00, 0x00,
-                //    0x00, 0x00, 0x00, 0x00,
-                //    0x00, 0x00, 0x00, 0x00,
-                //    0x00, 0x00, 0x00, 0x00,
-                //    0x00, 0x00, 0x00, 0x00,
-                //    0x00, 0x00, 0x00, 0x00,
-                //    0x00, 0x00, 0x00, 0x00,
-                //    0x00, 0x00, 0x00, 0x00};
-                int n = dev.write(data);
-                System.out.println("Number of bytes written to BA63 device: "+n);
-
-                byte[] buf = new byte[BUFSIZE];
-                //dev.enableBlocking();
-                n = dev.readTimeout(buf, 10000);
-                //n = dev.read(buf);
-                System.out.println("Number of bytes read: "+n);
-                //dev.disableBlocking();
-                for(int i=0; i<n; i++)
-                {
-                    int v = buf[i];
-                    if (v<0) v = v+256;
-                    String hs = Integer.toHexString(v);
-                    if (v<16)
-                        System.out.print("0");
-                    System.out.print(hs + " ");
-                }
-                System.out.println("");
-            } finally {
-                dev.close();
-                if (null != manager){
-                    manager.release();
-                }
-                System.gc();
-            }
-
-        }
-        catch(IOException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
+    private void listDevices() {
     /**
      * Static function to find the list of all the HID devices
      * attached to the system.
      */
-    private static void listDevices()
-    {
         String property = System.getProperty("java.library.path");
         System.out.println(property);
-        HIDManager manager = null;
+        HIDManager mgr = null;
         try
         {
-            manager = HIDManager.getInstance();
-            HIDDeviceInfo[] devs = manager.listDevices();
+            mgr = HIDManager.getInstance();
+            HIDDeviceInfo[] devs = mgr.listDevices();
             System.out.println("Devices:");
             for(int i=0; i<devs.length; i++)
             {
@@ -135,12 +80,191 @@ public class Kundendisplay {
             e.printStackTrace();
             System.err.println("It seems that the customer display is not connected. (No HID devices found.)");
         } finally {
-            if (null != manager){
+            if (null != mgr){
+                mgr.release();
+            }
+            System.gc();
+        }
+    }
+
+    private void openDevice() {
+    /**
+     * Function to open connection to HID device VFD display Nixdorf
+     * BA63 USB. Must be called before starting to work with device.
+     */
+        try {
+            manager = HIDManager.getInstance();
+            HIDDeviceInfo[] devs = manager.listDevices();
+            // always use the second device, first is defunct (don't know why)
+            String path = devs[1].getPath();
+            //device = manager.openById(VENDOR_ID, PRODUCT_ID, null);
+            //device = manager.openByPath("0004:0003:01");
+            System.out.println("Trying to open device at path "+path);
+            device = manager.openByPath(path);
+            System.out.print("Manufacturer: " + device.getManufacturerString() + "\n");
+            System.out.print("Product: " + device.getProductString() + "\n");
+            System.out.print("Serial Number: " + device.getSerialNumberString() + "\n");
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void closeDevice() {
+    /**
+     * Function to close connection to HID device and free resources.
+     * Should be called when working with device is finished.
+     */
+        try {
+            clearScreen();
+            device.close();
+        } catch(IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (manager != null){
                 manager.release();
             }
             System.gc();
         }
     }
+
+    /**
+     * Release resources. Will call closeDevice().
+     *
+     * @throws Throwable
+     */
+    protected void finalize() throws Throwable
+    {
+        // It is important to call closeDevice() if user forgot to do so.
+        try {
+           closeDevice();
+        } finally {
+           super.finalize();
+        }
+    }
+
+
+    private void writeToDevice(byte[] data) {
+        try {
+            for (byte b : data){
+                System.out.print(b+" ");
+            }
+            System.out.println();
+            int n = device.write(data);
+            System.out.println("Number of bytes written to BA63 device: "+n);
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void oneRowDown() {
+        /**
+         * Move the display's cursor one row down on the screen.
+         */
+        byte[] data = new byte[]{0x02, 0x00, 0x07,
+            0x0A, 0x0D // Line feed and carriage return
+        };
+        writeToDevice(data);
+        data = new byte[]{0x02, 0x00, 0x07,
+            0x1B, 0x5B, 0x32, 0x3B, 0x31, 0x48 // set cursor in row 2, column 1
+        };
+    }
+
+    private void printToScreen(String text) {
+        /** 
+         * Print text on the current row of the screen. Text cannot be longer
+         * than 20 chars.
+         */
+        byte[] textAsBytes = text.getBytes();
+        int nchars = text.length() > 20 ? 20 : text.length();
+        int nbytes = 3+nchars;
+        byte[] data = new byte[nbytes];
+        data[0] = 0x02; data[1] = 0x00; data[2] = (byte)nchars;
+        for (int i=0; i<nchars; i++){
+            data[3+i] = textAsBytes[i];
+        }
+        writeToDevice(data);
+    }
+
+
+
+    public void clearScreen() {
+        byte[] data = new byte[]{0x02, 0x00, 0x07,
+            0x1B, 0x5B, 0x32, 0x4A, // clear screen
+            0x1B, 0x5B, 0x48 // set cursor in row 1, column 1
+        };
+        writeToDevice(data);
+    }
+
+    public void showWelcomeScreen() {
+        clearScreen();
+        printToScreen("     Willkommen     ");
+        oneRowDown();
+        printToScreen(" im  Weltladen Bonn ");
+    }
+
+    private String parseString(String str) {
+        /**
+         * Remove problem characters.
+         */
+        str = str.replaceAll("€", "EUR");
+        return str;
+    }
+
+    public void printArticle(String name, Integer stueck, String preis, String total) {
+        /** 
+         * Convenience method for printing details on bought article. Interface
+         * method exposed to the public.
+         */
+        name = parseString(name);
+        preis = parseString(preis);
+        total = parseString(total);
+
+        clearScreen();
+        printToScreen(name);
+        oneRowDown();
+
+        String priceRow = stueck.toString()+" x "+preis;
+        int nspaces = 20 - priceRow.length() - total.length();
+        for (int i=0; i<nspaces; i++){ priceRow += " "; }
+        priceRow += total;
+        printToScreen(priceRow);
+    }
+
+
+    private void readDevice() {
+        try {
+            try {
+                int n = 1;
+                while (n > 0){
+                    byte[] buf = new byte[BUFSIZE];
+                    //device.enableBlocking();
+                    n = device.readTimeout(buf, 10000);
+                    //n = device.read(buf);
+                    System.out.println("Number of bytes read: "+n);
+                    //device.disableBlocking();
+                    for(int i=0; i<n; i++)
+                    {
+                        int v = buf[i];
+                        if (v<0) v = v+256;
+                        String hs = Integer.toHexString(v);
+                        if (v<16)
+                            System.out.print("0");
+                        System.out.print(hs + " ");
+                    }
+                    System.out.println("");
+                }
+            } finally {
+                device.close();
+                if (null != manager){
+                    manager.release();
+                }
+                System.gc();
+            }
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }
 
