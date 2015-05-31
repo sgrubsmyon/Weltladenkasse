@@ -229,7 +229,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
          *  This behaviour is the same as an SQL query using 'foo LIKE "%str1%" AND foo LIKE "%str2%" AND ...'.
          *  Returns only the rows of `data` and `indices` that correspond to rows in `data`
          *  containing all the filter strings. */
-        if (filterStr.length() == 0){
+        if (filterStr.length() < 3){
             return;
         }
         // Search in each row

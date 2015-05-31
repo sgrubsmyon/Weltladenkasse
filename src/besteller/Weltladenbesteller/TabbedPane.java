@@ -95,7 +95,7 @@ public class TabbedPane extends TabbedPaneGrundlage {
             String artikelName = data.get(i).get(3).toString();
             String vkp = data.get(i).get(4).toString();
             String vpe = data.get(i).get(5) == null ? null : data.get(i).get(5).toString();
-            String stueck = data.get(i).get(6).toString();
+            Integer stueck = Integer.parseInt( data.get(i).get(6).toString() );
             myBestellen.hinzufuegen(artikelIDs.get(i), lieferant, artikelNr,
                     artikelName, vkp, vpe, stueck, sortimentBools.get(i));
         }
