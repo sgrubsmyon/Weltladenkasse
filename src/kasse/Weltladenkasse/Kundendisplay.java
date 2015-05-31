@@ -1,6 +1,8 @@
 package Weltladenkasse;
 
+import java.util.*; // Map, SortedMap
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 // HID API to talk with Nixdorf BA63/USB display:
 import com.codeminders.hidapi.*;
@@ -98,12 +100,13 @@ public class Kundendisplay {
             // always use the second device, first is defunct (don't know why)
             String path = devs[1].getPath();
             //device = manager.openById(VENDOR_ID, PRODUCT_ID, null);
-            //device = manager.openByPath("0004:0003:01");
+            //device = manager.openByPath("0004:0002:01");
             System.out.println("Trying to open device at path "+path);
             device = manager.openByPath(path);
             System.out.print("Manufacturer: " + device.getManufacturerString() + "\n");
             System.out.print("Product: " + device.getProductString() + "\n");
             System.out.print("Serial Number: " + device.getSerialNumberString() + "\n");
+            setCodePage();
         } catch(IOException e) {
             e.printStackTrace();
         }
@@ -156,25 +159,50 @@ public class Kundendisplay {
         }
     }
 
+    private void setCodePage() {
+        /**
+         * Set Code Page to one with € symbol (858), which is county code 0x34,
+         * according to user's manual of BA63/USB.
+         */
+        byte[] data = new byte[]{0x02, 0x00, 0x03,
+            0x1B, 0x52, 0x34
+        };
+        writeToDevice(data);
+    }
+
     private void oneRowDown() {
         /**
          * Move the display's cursor one row down on the screen.
          */
-        byte[] data = new byte[]{0x02, 0x00, 0x07,
+        byte[] data = new byte[]{0x02, 0x00, 0x02,
             0x0A, 0x0D // Line feed and carriage return
         };
         writeToDevice(data);
-        data = new byte[]{0x02, 0x00, 0x07,
+
+        cursorToSecondRowFront();
+    }
+
+    private void cursorToSecondRowFront() {
+        /**
+         * Move the display's cursor to front of second row.
+         */
+        byte[] data = new byte[]{0x02, 0x00, 0x06,
             0x1B, 0x5B, 0x32, 0x3B, 0x31, 0x48 // set cursor in row 2, column 1
         };
+        writeToDevice(data);
     }
 
     private void printToScreen(String text) {
-        /** 
+        /**
          * Print text on the current row of the screen. Text cannot be longer
          * than 20 chars.
          */
-        byte[] textAsBytes = text.getBytes();
+        // Print available charsets:
+        //SortedMap<String, Charset> charsets = Charset.availableCharsets();
+        //for ( Map.Entry<String, Charset> entry : charsets.entrySet() ){
+        //    System.out.println(entry.getKey());
+        //}
+        byte[] textAsBytes = text.getBytes(Charset.forName("IBM00858")); // default charset of BA63/USB is Codepage 437
         int nchars = text.length() > 20 ? 20 : text.length();
         int nbytes = 3+nchars;
         byte[] data = new byte[nbytes];
@@ -197,7 +225,7 @@ public class Kundendisplay {
 
     public void showWelcomeScreen() {
         clearScreen();
-        printToScreen("     Willkommen     ");
+        printToScreen("     Wällkömménßü€  ");
         oneRowDown();
         printToScreen(" im  Weltladen Bonn ");
     }
@@ -206,12 +234,12 @@ public class Kundendisplay {
         /**
          * Remove problem characters.
          */
-        str = str.replaceAll("€", "EUR");
+        //str = str.replaceAll("€", "EUR");
         return str;
     }
 
     public void printArticle(String name, Integer stueck, String preis, String total) {
-        /** 
+        /**
          * Convenience method for printing details on bought article. Interface
          * method exposed to the public.
          */
@@ -223,7 +251,7 @@ public class Kundendisplay {
         printToScreen(name);
         oneRowDown();
 
-        String priceRow = stueck.toString()+" x "+preis;
+        String priceRow = stueck.toString()+"x"+preis;
         int nspaces = 20 - priceRow.length() - total.length();
         for (int i=0; i<nspaces; i++){ priceRow += " "; }
         priceRow += total;
