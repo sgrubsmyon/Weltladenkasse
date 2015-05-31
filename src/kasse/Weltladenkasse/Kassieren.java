@@ -37,12 +37,7 @@ import javax.swing.event.*;
 // DateTime from date4j (http://www.date4j.net/javadoc/index.html)
 import hirondelle.date4j.DateTime;
 
-import WeltladenDB.MainWindowGrundlage;
-import WeltladenDB.BarcodeComboBox;
-import WeltladenDB.ArtikelNameComboBox;
-import WeltladenDB.ArtikelNummerComboBox;
-import WeltladenDB.IntegerDocumentFilter;
-import WeltladenDB.BoundsPopupMenuListener;
+import WeltladenDB.*;
 
 public class Kassieren extends RechnungsGrundlage implements ItemListener, DocumentListener {
     // Attribute:
@@ -53,6 +48,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private int rechnungRabattArtikelID = 2;
     private String zahlungsModus = "unbekannt";
 
+    private Kundendisplay display;
     private TabbedPane tabbedPane;
     private Kassieren myKassieren;
 
@@ -119,9 +115,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private Vector<Integer> stueckzahlen;
     private Vector<BigDecimal> einzelpreise;
 
-    // class to talk to Kundendisplay
-    private Kundendisplay display;
-
     // Methoden:
 
     /**
@@ -129,6 +122,11 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
      *       */
     public Kassieren(Connection conn, MainWindowGrundlage mw, TabbedPane tp) {
 	super(conn, mw);
+        if (mw instanceof MainWindow){
+            display = ( (MainWindow)mw ).getDisplay();
+        } else {
+            display = null;
+        }
         myKassieren = this;
         tabbedPane = tp;
 
@@ -171,8 +169,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         emptyTable();
 	showAll();
         barcodeBox.requestFocus();
-
-        //display = new Kundendisplay();
     }
 
     // listener for keyboard shortcuts
@@ -493,36 +489,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 rueckgeldPanel.add(new JLabel(currencySymbol));
                 rueckgeldPanel.add(Box.createRigidArea(new Dimension(40, 0)));
 
-                /*
-                GroupLayout layout = new GroupLayout(gridPanel);
-                gridPanel.setLayout(layout);
-                layout.setAutoCreateGaps(true);
-                layout.setAutoCreateContainerGaps(true);
-
-                layout.setHorizontalGroup(
-                        layout.createSequentialGroup()
-                            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.TRAILING)
-                                .addComponent(kundeGibtLabel)
-                                .addComponent(gutscheinLabel)
-                                .addComponent(rueckgeldLabel))
-                            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.TRAILING)
-                                .addComponent(kundeGibtPanel)
-                                .addComponent(gutscheinPanel)
-                                .addComponent(rueckgeldPanel))
-                        );
-                layout.setVerticalGroup(
-                        layout.createSequentialGroup()
-                            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                                .addComponent(kundeGibtLabel)
-                                .addComponent(kundeGibtPanel))
-                            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                                .addComponent(gutscheinLabel)
-                                .addComponent(gutscheinPanel))
-                            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                                .addComponent(rueckgeldLabel)
-                                .addComponent(rueckgeldPanel))
-                        );
-                        */
                 gridPanel.add(kundeGibtLabel);
                 gridPanel.add(kundeGibtPanel);
                 gridPanel.add(gutscheinLabel);
@@ -935,11 +901,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
          * 3. Alle Mengenrabatte, Anzahl kostenlos
          * 4. Alle Mengenrabatte, relativ
         */
-        System.out.println("Die Vektoren:");
-        System.out.println(einzelrabattAbsolutVector);
-        System.out.println(einzelrabattRelativVector);
-        System.out.println(mengenrabattAnzahlVector);
-        System.out.println(mengenrabattRelativVector);
         for ( Vector<Object> vector : einzelrabattAbsolutVector ){
             int rabattID = (Integer) vector.get(0);
             String aktionsname = (String) vector.get(1);
@@ -1465,6 +1426,12 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         checkForRabatt();
         checkForPfand();
         updateAll();
+
+        if (display != null){
+            System.out.println("Going to display article.");
+            String zws = priceFormatter(getTotalPrice())+" "+currencySymbol;
+            display.printArticle(kurzname, stueck, artikelPreis, zws);
+        }
     }
 
     private void leergutHinzufuegen() {

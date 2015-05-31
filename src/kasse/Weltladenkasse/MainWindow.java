@@ -32,6 +32,9 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
     //***************************************************
     TabbedPane myTabbedPane;
 
+    // class to talk to Kundendisplay
+    private Kundendisplay display;
+
     private JButton beendenButton = new JButton("Beenden");
 
     //***************************************************
@@ -43,6 +46,9 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
      *       */
     public MainWindow(String password){
         super(password);
+
+        display = new Kundendisplay();
+
         if (connectionWorks){
             myTabbedPane = new TabbedPane(this.conn, this);
             setContentPanel(myTabbedPane);
@@ -52,6 +58,18 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
 	//topPanel.add(beendenButton);
 	//holdAll.add(topPanel, BorderLayout.NORTH);
     }
+
+    @Override
+    public void dispose() {
+        display.closeDevice();
+        super.dispose();
+    }
+
+
+    public Kundendisplay getDisplay() {
+        return display;
+    }
+
 
     public boolean isThereIncompleteAbrechnungTag() {
         return myTabbedPane.isThereIncompleteAbrechnungTag();
