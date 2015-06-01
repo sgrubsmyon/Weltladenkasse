@@ -9,6 +9,8 @@ import java.awt.Font;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
+
+import javax.swing.*;
 import javax.swing.table.*;
 
 import WeltladenDB.AnyJComponentJTable;
@@ -26,28 +28,34 @@ public class BestellungsTable extends AnyJComponentJTable {
         super(data, columns);
         displayIndices = dispInd;
         sortimentBools = sortBools;
+        //int stueckCol = columns.indexOf("Stückzahl");
+        //for (int i=0; i<data.size(); i++){
+        //    System.out.println("Editing cell at "+i+","+stueckCol);
+        //    editCellAt(i, stueckCol);
+        //}
     }
 
     @Override
         public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
             Component c = super.prepareRenderer(renderer, row, column);
             // add custom rendering here
-            c.setFont( c.getFont().deriveFont(Font.BOLD) );
             if ( getColumnName(column).equals("Stückzahl") ){
-                //int vpeColIndex = convertColumnIndexToView( getColumnModel().getColumnIndex("VPE") );
+                JFormattedTextField tf = ((JSpinner.NumberEditor)((JSpinner)c).getEditor()).getTextField();
+                tf.setFont( tf.getFont().deriveFont(Font.BOLD) );
                 int vpeColIndex = convertColumnIndexToView( getColumn("VPE").getModelIndex() );
                 try {
                     int vpeInt = Integer.parseInt(getValueAt(row, vpeColIndex).toString());
-                    int stueck = Integer.parseInt(getValueAt(row, column).toString());
+                    int stueck = (Integer)((JSpinner)getValueAt(row, column)).getValue();
                     if (stueck < vpeInt){
-                        c.setForeground(Color.red);
+                        tf.setForeground(Color.red);
                     } else {
-                        c.setForeground(Color.green.darker().darker());
+                        tf.setForeground(Color.green.darker().darker());
                     }
                 } catch (Exception ex) {
-                    c.setForeground(Color.black); // if sth. goes wrong: default color
+                    tf.setForeground(Color.black); // if sth. goes wrong: default color
                 }
             } else {
+                c.setFont( c.getFont().deriveFont(Font.BOLD) );
                 int realRowIndex = convertRowIndexToModel(row);
                 realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
                 if ( sortimentBools.get( realRowIndex ) == false ){
