@@ -246,6 +246,8 @@ public class ArtikelNeuEingeben extends DialogWindow
             if (artikelNeu.mengen.get(row) != null){
                 String menge = unifyDecimal( artikelNeu.mengen.get(row) );
                 artikelFormular.mengeField.setText(menge);
+            } else {
+                artikelFormular.mengeField.setText("");
             }
         }
 
@@ -263,6 +265,8 @@ public class ArtikelNeuEingeben extends DialogWindow
             if (artikelNeu.vpes.get(row) != null){
                 Integer vpe = artikelNeu.vpes.get(row);
                 artikelFormular.vpeSpinner.setValue(vpe);
+            } else {
+                artikelFormular.vpeSpinner.setValue(0);
             }
         }
 

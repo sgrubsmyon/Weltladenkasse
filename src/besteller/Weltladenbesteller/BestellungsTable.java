@@ -40,19 +40,23 @@ public class BestellungsTable extends AnyJComponentJTable {
             Component c = super.prepareRenderer(renderer, row, column);
             // add custom rendering here
             if ( getColumnName(column).equals("Stückzahl") ){
-                JFormattedTextField tf = ((JSpinner.NumberEditor)((JSpinner)c).getEditor()).getTextField();
-                tf.setFont( tf.getFont().deriveFont(Font.BOLD) );
+                //JFormattedTextField tf = ((JSpinner.NumberEditor)((JSpinner)c).getEditor()).getTextField();
+                //tf.setFont( tf.getFont().deriveFont(Font.BOLD) );
+                c.setFont( c.getFont().deriveFont(Font.BOLD) );
                 int vpeColIndex = convertColumnIndexToView( getColumn("VPE").getModelIndex() );
                 try {
                     int vpeInt = Integer.parseInt(getValueAt(row, vpeColIndex).toString());
                     int stueck = (Integer)((JSpinner)getValueAt(row, column)).getValue();
                     if (stueck < vpeInt){
-                        tf.setForeground(Color.red);
+                        //tf.setForeground(Color.red);
+                        c.setForeground(Color.red);
                     } else {
-                        tf.setForeground(Color.green.darker().darker());
+                        //tf.setForeground(Color.green.darker().darker());
+                        c.setForeground(Color.green.darker().darker());
                     }
                 } catch (Exception ex) {
-                    tf.setForeground(Color.black); // if sth. goes wrong: default color
+                    //tf.setForeground(Color.black); // if sth. goes wrong: default color
+                    c.setForeground(Color.black); // if sth. goes wrong: default color
                 }
             } else {
                 c.setFont( c.getFont().deriveFont(Font.BOLD) );
