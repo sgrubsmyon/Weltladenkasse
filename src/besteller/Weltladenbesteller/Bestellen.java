@@ -35,13 +35,7 @@ import javax.swing.event.*;
 //import java.beans.PropertyChangeEvent;
 //import java.beans.PropertyChangeListener;
 
-import WeltladenDB.MainWindowGrundlage;
-import WeltladenDB.BarcodeComboBox;
-import WeltladenDB.ArtikelNameComboBox;
-import WeltladenDB.ArtikelNummerComboBox;
-import WeltladenDB.StringDocumentFilter;
-import WeltladenDB.IntegerDocumentFilter;
-import WeltladenDB.BoundsPopupMenuListener;
+import WeltladenDB.*;
 
 public class Bestellen extends BestellungsGrundlage implements ItemListener, DocumentListener {
     // Attribute:
@@ -174,7 +168,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         }
     }
 
-    void preventSpinnerOverflow(JFormattedTextField spinnerField) {
+    void preventSpinnerOverflow(JSpinner spinner) {
         AbstractDocument doc = new PlainDocument() {
             @Override
             public void setDocumentFilter(DocumentFilter filter) {
@@ -186,11 +180,13 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         };
         doc.setDocumentFilter(
                 new IntegerDocumentFilter(
-                    (Integer)((SpinnerNumberModel)anzahlSpinner.getModel()).getMinimum(),
-                    (Integer)((SpinnerNumberModel)anzahlSpinner.getModel()).getMaximum(), "Anzahl", this
+                    (Integer)((SpinnerNumberModel)spinner.getModel()).getMinimum(),
+                    (Integer)((SpinnerNumberModel)spinner.getModel()).getMaximum(), "Anzahl", this
                     )
                 );
-        spinnerField.setDocument(doc);
+        JSpinner.NumberEditor editor = (JSpinner.NumberEditor)spinner.getEditor();
+        JFormattedTextField field = editor.getTextField();
+        field.setDocument(doc);
     }
 
     void showAll(){
@@ -340,7 +336,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(anzahlSpinner, "###");
             anzahlSpinner.setEditor(anzahlEditor);
             anzahlField = anzahlEditor.getTextField();
-            preventSpinnerOverflow(anzahlField);
             ( (NumberFormatter) anzahlField.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
             anzahlField.getDocument().addDocumentListener(this);
             anzahlField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
@@ -360,6 +355,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 }
             });
             anzahlField.setColumns(4);
+            preventSpinnerOverflow(anzahlSpinner);
 	    anzahlLabel.setLabelFor(anzahlSpinner);
             chooseArticlePanel2.add(anzahlSpinner);
 
@@ -437,6 +433,12 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
     void initiateTable() {
 	orderTable = new BestellungsTable(displayData, columnLabels, displayIndices, sortimentBools);
+        TableColumn col = orderTable.getColumn("Stückzahl");
+        SpinnerNumberModel model = new SpinnerNumberModel(1, 1, smallintMax, 1);
+        JSpinnerRenderer sr = new JSpinnerRenderer(model);
+        col.setCellRenderer(sr);
+        preventSpinnerOverflow(sr);
+        col.setCellEditor(new JSpinnerEditor(model));
 //	orderTable.setBounds(71,53,150,100);
 //	orderTable.setToolTipText("Tabelle kann nur gelesen werden.");
 	setTableProperties(orderTable);
@@ -493,7 +495,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         displayData = new Vector< Vector<Object> >();
         displayIndices = new Vector<Integer>();
         sortimentBools = new Vector<Boolean>();
-        orderTable = new BestellungsTable(displayData, columnLabels, displayIndices, sortimentBools);
+        initiateTable();
         artikelIDs = new Vector<Integer>();
         positions = new Vector<Integer>();
         removeButtons = new Vector<JButton>();
@@ -558,12 +560,12 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         // format of csv file:
         fileStr += "#Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;sortiment;artikelID"+lineSep;
         for (int i=data.size()-1; i>=0; i--){
-            String lieferant = (String)data.get(i).get(1);
-            String nummer = (String)data.get(i).get(2);
-            String name = (String)data.get(i).get(3);
-            String vkp = (String)data.get(i).get(4); vkp = vkp == null ? "" : vkp;
-            String vpe = (String)data.get(i).get(5); vpe = vpe == null ? "" : vpe;
-            String stueck = ((JSpinner)data.get(i).get(6)).getValue().toString();
+            String lieferant = data.get(i).get(1).toString();
+            String nummer = data.get(i).get(2).toString();
+            String name = data.get(i).get(3).toString();
+            String vkp = data.get(i).get(4).toString(); vkp = vkp == null ? "" : vkp;
+            String vpe = data.get(i).get(5).toString(); vpe = vpe == null ? "" : vpe;
+            String stueck = data.get(i).get(6).toString();
             String sortiment = sortimentBools.get(i).toString();
             String artikelID = artikelIDs.get(i).toString();
 
@@ -958,19 +960,10 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         removeButtons.add(0, new JButton("-"));
         removeButtons.firstElement().addActionListener(this);
 
-        JSpinner stueckSpinner = new JSpinner(
-                new SpinnerNumberModel((int)stueck, 1, smallintMax, 1)
-                );
-        JSpinner.NumberEditor stueckEditor = new JSpinner.NumberEditor(stueckSpinner, "###");
-        stueckSpinner.setEditor(stueckEditor);
-        JFormattedTextField stueckField = stueckEditor.getTextField();
-        preventSpinnerOverflow(stueckField);
-        ( (NumberFormatter) stueckField.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
-
         Vector<Object> row = new Vector<Object>();
             row.add(positions.firstElement());
             row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
-            row.add(vkp); row.add(vpe); row.add(stueckSpinner);
+            row.add(vkp); row.add(vpe); row.add(stueck);
             row.add(removeButtons.firstElement());
         data.add(0, row);
 
@@ -1044,7 +1037,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 stmt.close();
             }
             for (int i=0; i<artikelIDs.size(); i++){
-                JSpinner stueckSpinner = (JSpinner)data.get(i).get( columnLabels.indexOf("Stückzahl") );
                 pstmt = this.conn.prepareStatement(
                         "INSERT INTO bestellung_details SET bestell_nr = ?, "+
                         "typ = ?, position = ?, artikel_id = ?, stueckzahl = ?"
@@ -1053,7 +1045,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 pstmt.setString(2, typ);
                 pstmtSetInteger(pstmt, 3, positions.get(i));
                 pstmtSetInteger(pstmt, 4, artikelIDs.get(i));
-                pstmtSetInteger(pstmt, 5, (Integer)stueckSpinner.getValue());
+                pstmtSetInteger(pstmt, 5, (Integer)data.get(i).get( columnLabels.indexOf("Stückzahl") ));
                 result = pstmt.executeUpdate();
                 pstmt.close();
                 if (result == 0){
