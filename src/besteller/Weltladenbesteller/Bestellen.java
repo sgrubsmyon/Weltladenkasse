@@ -519,7 +519,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 	this.revalidate();
             // create table anew
             showAll();
-            updateTable();
+            //updateTable();
         setButtonsEnabled(); // for abschliessenButton
     }
 
@@ -1423,11 +1423,16 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             int removeRow = displayIndices.indexOf(removeIndex);
             displayData.remove(removeRow);
             displayIndices.remove(removeRow);
+            // propagate change in displayIndices:
+            for (int i=removeRow; i<displayIndices.size(); i++){
+                displayIndices.set(i, displayIndices.get(i)-1);
+            }
 
-            updateAll();
-            barcodeBox.requestFocus();
             // save a CSV backup to hard disk
             doCSVBackup();
+            //updateAll();
+            //barcodeBox.requestFocus();
+            updateTable();
             return;
         }
         if (e.getSource() == emptyFilterButton){

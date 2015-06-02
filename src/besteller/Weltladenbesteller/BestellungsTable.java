@@ -58,7 +58,7 @@ public class BestellungsTable extends AnyJComponentJTable {
                 c.setFont( c.getFont().deriveFont(Font.BOLD) );
                 int realRowIndex = convertRowIndexToModel(row);
                 realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
-                System.out.println("PPPPP "+row+" "+realRowIndex);
+                //System.out.println("PPPPP "+row+" "+realRowIndex);
                 if ( sortimentBools.get( realRowIndex ) == false ){
                     c.setForeground(Color.GRAY); // not in sortiment
                 } else {
