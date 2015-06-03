@@ -46,16 +46,13 @@ public class AnyJComponentJTable extends JTable {
         editableCols = new HashSet<Integer>(edCol);
     }
 
-    public void setColEditableTrue(int colNumber){
+    public void setColEditable(int colNumber, boolean editable){
         if ( colNumber < 0 || colNumber >= this.getColumnCount() )
             throw new IllegalArgumentException();
-        editableCols.add(colNumber);
-    }
-
-    public void setColEditableFalse(int colNumber){
-        if ( colNumber < 0 || colNumber >= this.getColumnCount() )
-            throw new IllegalArgumentException();
-        editableCols.remove(colNumber);
+        if (editable)
+            editableCols.add(colNumber);
+        else
+            editableCols.remove(colNumber);
     }
 
     public TableCellRenderer getCellRenderer(int row, int column) {
@@ -99,8 +96,7 @@ public class AnyJComponentJTable extends JTable {
     }
 
     public boolean isCellEditable(int row, int col){
-        if (editableCols.contains(col) || getValueAt(row, col) instanceof JButton ||
-                getValueAt(row, col) instanceof JSpinner)
+        if (editableCols.contains(col) || getValueAt(row, col) instanceof JButton)
             return true;
         else
             return false;
@@ -155,8 +151,8 @@ public class AnyJComponentJTable extends JTable {
             maxWidth = minColumnWidth;
         }
         int rowCount = getRowCount();
-        // small speed up for large tables: only scan first 100 rows, should be good enough
-        if (rowCount > 100){ rowCount = 100; }
+        // small speed up for large tables: only scan first 50 rows, should be good enough
+        if (rowCount > 50){ rowCount = 50; }
         for (int row=0; row < rowCount; row++) {
             renderer = getCellRenderer(row, columnIndex);
             c = renderer.getTableCellRendererComponent(this,

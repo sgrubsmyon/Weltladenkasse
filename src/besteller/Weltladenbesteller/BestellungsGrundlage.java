@@ -50,7 +50,6 @@ public abstract class BestellungsGrundlage extends ArtikelGrundlage {
 
     protected void setTableProperties(JTable table) {
 	// Spalteneigenschaften:
-//	table.getColumnModel().getColumn(0).setPreferredWidth(10);
 	TableColumn pos = table.getColumn("Pos.");
 	pos.setCellRenderer(zentralAusrichter);
 	pos.setPreferredWidth(200);

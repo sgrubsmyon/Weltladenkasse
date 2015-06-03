@@ -433,18 +433,18 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
 
     void initiateTable() {
 	orderTable = new BestellungsTable(displayData, columnLabels, displayIndices, sortimentBools);
-        TableColumn col = orderTable.getColumn("Stückzahl");
-        SpinnerNumberModel model = new SpinnerNumberModel(1, 1, smallintMax, 1);
-        JSpinnerRenderer sr = new JSpinnerRenderer(model);
-        col.setCellRenderer(sr);
-        preventSpinnerOverflow(sr);
-        col.setCellEditor(new JSpinnerEditor(model));
-//	orderTable.setBounds(71,53,150,100);
-//	orderTable.setToolTipText("Tabelle kann nur gelesen werden.");
 	setTableProperties(orderTable);
 	TableColumn entf = orderTable.getColumn("Entfernen");
 	entf.setPreferredWidth(200);
-//	orderTable.setAutoResizeMode(5);
+
+        // set up spinner column:
+        TableColumn col = orderTable.getColumn("Stückzahl");
+        SpinnerNumberModel model = new SpinnerNumberModel(1, 1, smallintMax, 1);
+        col.setCellRenderer(new JSpinnerRenderer(model));
+        JSpinnerEditor se = new JSpinnerEditor(model);
+        //preventSpinnerOverflow(se);
+        col.setCellEditor(se);
+        orderTable.setColEditable(col.getModelIndex(), true);
     }
 
     void showTable(){
