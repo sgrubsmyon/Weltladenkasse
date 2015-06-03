@@ -1162,7 +1162,16 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
      **/
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == backButton){
-            container.switchToProduktgruppenliste();
+            if ( editLieferant.size() > 0 ){
+                int answer = changeLossConfirmDialog();
+                if (answer == JOptionPane.YES_OPTION){
+                    container.switchToProduktgruppenliste();
+                } else {
+                    // do nothing, stay in this view
+                }
+            } else {
+                container.switchToProduktgruppenliste();
+            }
             return;
         }
         if (e.getSource() == saveButton){
