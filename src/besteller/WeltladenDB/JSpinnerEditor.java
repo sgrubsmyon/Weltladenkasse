@@ -39,10 +39,19 @@ public class JSpinnerEditor extends JSpinner implements TableCellEditor{
 
     // Gibt eine Component zurück, welche auf dem JTable dargestellt wird,
     // und mit der der Benutzer interagieren kann.
-    public Component getTableCellEditorComponent(JTable table, Object value,
+    public Component getTableCellEditorComponent(JTable table, final Object value,
             boolean isSelected, int row, int column) {
-
-        setValue( value );
+        System.out.println("getTableCellEditorComponent() is called. value: "+value);
+        SwingUtilities.invokeLater(new Runnable(){
+            public void run(){
+                JSpinner.NumberEditor editor = (JSpinner.NumberEditor)getEditor();
+                JFormattedTextField field = editor.getTextField();
+                field.setText(value.toString());
+                setValue(value);
+                System.out.println(getValue());
+            }
+        });
+        System.out.println(getValue());
         return this;
     }
 

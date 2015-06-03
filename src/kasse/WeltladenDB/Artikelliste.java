@@ -822,11 +822,6 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener, Tabl
     }
 
     public void updateAll() {
-        // old (view gets lost):
-        //this.remove(allPanel);
-        //this.revalidate();
-        //fillDataArray();
-        //showAll();
         // new, much better, keeping view:
         fillDataArray();
         updateTable();
