@@ -10,7 +10,7 @@ import javax.swing.text.*; // for NumberFormatter
 import javax.swing.table.TableCellEditor;
 
 public class JSpinnerEditor implements TableCellEditor{
-    private List listeners = new ArrayList();
+    private ArrayList<CellEditorListener> listeners = new ArrayList<CellEditorListener>();
     private JSpinner spinner;
     private JTable table;
     private int editingRow;
@@ -58,12 +58,12 @@ public class JSpinnerEditor implements TableCellEditor{
     // Möglicherweise möchte jemand über Ereignisse des Editors
     // informiert werden
     public void addCellEditorListener(CellEditorListener l) {
-        listeners.add( l );
+        listeners.add(l);
     }
 
     // Ein CellEditorListener entfernen
     public void removeCellEditorListener(CellEditorListener l) {
-        listeners.remove( l );
+        listeners.remove(l);
     }
 
     // Gibt den aktuellen Wert des Editors zurück.
@@ -120,7 +120,7 @@ public class JSpinnerEditor implements TableCellEditor{
     protected void fireEditingCanceled(){
         ChangeEvent e = new ChangeEvent(spinner);
         for( int i = 0, n = listeners.size(); i<n; i++ )
-            ((CellEditorListener)listeners.get( i )).editingCanceled( e );
+            ((CellEditorListener)listeners.get(i)).editingCanceled( e );
         updateTable();
     }
 
@@ -128,7 +128,7 @@ public class JSpinnerEditor implements TableCellEditor{
     protected void fireEditingStopped(){
         ChangeEvent e = new ChangeEvent(spinner);
         for( int i = 0, n = listeners.size(); i<n; i++ )
-            ((CellEditorListener)listeners.get( i )).editingStopped( e );
+            ((CellEditorListener)listeners.get(i)).editingStopped( e );
         updateTable();
     }
 }

@@ -53,9 +53,13 @@
 
     <target name="debug-compile" depends="convert" description="compile the source in debugging mode">
         <javac srcdir="${src-kasse}" destdir="${build-kasse}" debug="on" debuglevel="lines,vars,source"
-            includeantruntime="false" classpathref="classpath"/>
+            includeantruntime="false" classpathref="classpath">
+            <compilerarg value="-Xlint:unchecked"/>
+        </javac>
         <javac srcdir="${src-besteller}" destdir="${build-besteller}" debug="on" debuglevel="lines,vars,source"
-            includeantruntime="false" classpathref="classpath"/>
+            includeantruntime="false" classpathref="classpath">
+            <compilerarg value="-Xlint:unchecked"/>
+        </javac>
     </target>
 
     <target name="jar" depends="compile" description="generate the distribution .jar file">
