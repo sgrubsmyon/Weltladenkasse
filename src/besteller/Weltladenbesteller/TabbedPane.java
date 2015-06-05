@@ -100,6 +100,7 @@ public class TabbedPane extends TabbedPaneGrundlage {
                     artikelName, vkp, vpe, stueck, sortimentBools.get(i));
         }
         myBestellen.updateAll();
+        myBestellen.doCSVBackup();
     }
 
     /**

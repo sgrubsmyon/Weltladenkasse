@@ -17,8 +17,8 @@ import javax.swing.table.*;
 import javax.swing.event.*; // for TableModelListener
 import javax.swing.text.*; // for DocumentFilter
 
-public class Artikelliste extends ArtikelGrundlage implements ItemListener, TableModelListener,
-       ListSelectionListener, DocumentListener {
+public class Artikelliste extends ArtikelGrundlage implements ItemListener,
+       TableModelListener, ListSelectionListener, DocumentListener {
     // Attribute:
     private ArtikellisteContainer container;
     protected Integer toplevel_id;

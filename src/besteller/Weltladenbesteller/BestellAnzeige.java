@@ -604,8 +604,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 int jahr = Integer.parseInt(bestellung.get(2));
                 int kw = Integer.parseInt(bestellung.get(3));
                 // put order data into Bestellen tab
-                tabbedPane.setBestellenTable(selBestellNrUndTyp, jahr, kw, orderDetailArtikelIDs, 
-                        orderDetailSortimentBools, orderDetailData);
+                tabbedPane.setBestellenTable(selBestellNrUndTyp, jahr, kw,
+                        orderDetailArtikelIDs, orderDetailSortimentBools,
+                        orderDetailData);
                 // clear the BestellAnzeige
                 updateAll();
                 // switch to Bestellen tab
