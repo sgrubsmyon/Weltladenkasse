@@ -13,7 +13,6 @@ import java.io.Serializable;
 import javax.swing.*;
 
 public class JComponentCellEditor implements TableCellEditor, TreeCellEditor, Serializable {
-
     protected EventListenerList listenerList = new EventListenerList();
     transient protected ChangeEvent changeEvent = null;
 
