@@ -37,7 +37,8 @@ import javax.swing.event.*;
 
 import WeltladenDB.*;
 
-public class Bestellen extends BestellungsGrundlage implements DocumentListener {
+public class Bestellen extends BestellungsGrundlage implements
+    DocumentListener, TableModelListener {
     // Attribute:
     private final BigDecimal minusOne = new BigDecimal(-1);
     private final BigDecimal percent = new BigDecimal("0.01");
@@ -419,6 +420,7 @@ public class Bestellen extends BestellungsGrundlage implements DocumentListener 
     void initiateTable() {
         orderTable = new BestellungsTable(displayData, columnLabels,
                 displayIndices, sortimentBools);
+        orderTable.getModel().addTableModelListener(this);
 	setTableProperties(orderTable);
 	TableColumn entf = orderTable.getColumn("Entfernen");
 	entf.setPreferredWidth(200);
@@ -532,7 +534,7 @@ public class Bestellen extends BestellungsGrundlage implements DocumentListener 
 
 
     // CSV export:
-    private void doCSVBackup() {
+    public void doCSVBackup() {
         String backupFilename =
             System.getProperty("user.home")+fileSep+".Weltladenkasse_Bestellung_"+selTyp+".backup";
         File file = new File(backupFilename);
@@ -565,7 +567,7 @@ public class Bestellen extends BestellungsGrundlage implements DocumentListener 
             fileStr += artikelID + lineSep;
         }
 
-        System.out.println(fileStr);
+        //System.out.println(fileStr);
 
         BufferedWriter writer = null;
         try {
@@ -586,8 +588,6 @@ public class Bestellen extends BestellungsGrundlage implements DocumentListener 
             }
         }
     }
-
-
 
 
     private void doCSVBackupReadin() {
@@ -981,6 +981,7 @@ public class Bestellen extends BestellungsGrundlage implements DocumentListener 
                 artikelPreis, vpe, stueck, sortimentBool);
         updateAll();
         barcodeBox.requestFocus();
+
         // save a CSV backup to hard disk
         doCSVBackup();
     }
@@ -1072,7 +1073,7 @@ public class Bestellen extends BestellungsGrundlage implements DocumentListener 
         preisField.setEditable(false);
     }
     private void resetFormFromArtikelBox() {
-        System.out.println("resetting form from artikel box.");
+        //System.out.println("resetting form from artikel box.");
         barcodeText = "";
         artikelNummerText = "";
         barcodeBox.emptyBox();
@@ -1082,7 +1083,7 @@ public class Bestellen extends BestellungsGrundlage implements DocumentListener 
         preisField.setEditable(false);
     }
     private void resetFormFromNummerBox() {
-        System.out.println("resetting form from nummer box.");
+        //System.out.println("resetting form from nummer box.");
         barcodeText = "";
         artikelNameText = "";
         barcodeBox.emptyBox();
@@ -1146,6 +1147,17 @@ public class Bestellen extends BestellungsGrundlage implements DocumentListener 
     }
 
     /**
+     *    * Each non abstract class that implements the TableModelListener
+     *      must have these methods.
+     *
+     *    @param e the table model event.
+     **/
+    public void tableChanged(TableModelEvent e) {
+        // save a CSV backup to hard disk
+        doCSVBackup();
+    }
+
+    /**
      *    * Each non abstract class that implements the DocumentListener
      *      must have these methods.
      *
@@ -1163,9 +1175,9 @@ public class Bestellen extends BestellungsGrundlage implements DocumentListener 
         }
         if (e.getDocument() == barcodeField.getDocument()){
             if (barcodeBox.setBoxMode){ return; }
-            System.out.println("\nbarcodeField DocumentListener fired!");
-            System.out.println("selectedItem: "+barcodeBox.getSelectedItem());
-            System.out.println("barcodeField text: "+barcodeField.getText()+"   barcodeText: "+barcodeText);
+            //System.out.println("\nbarcodeField DocumentListener fired!");
+            //System.out.println("selectedItem: "+barcodeBox.getSelectedItem());
+            //System.out.println("barcodeField text: "+barcodeField.getText()+"   barcodeText: "+barcodeText);
             if ( !barcodeField.getText().equals(barcodeText) ) { // some editing change in box
                 resetFormFromBarcodeBox();
                 barcodeText = barcodeField.getText();
@@ -1175,9 +1187,9 @@ public class Bestellen extends BestellungsGrundlage implements DocumentListener 
         }
         if (e.getDocument() == artikelField.getDocument()){
             if (artikelBox.setBoxMode){ return; }
-            System.out.println("\nartikelField DocumentListener fired!");
-            System.out.println("selectedItem: "+artikelBox.getSelectedItem());
-            System.out.println("artikelField text: "+artikelField.getText()+"   artikelNameText: "+artikelNameText);
+            //System.out.println("\nartikelField DocumentListener fired!");
+            //System.out.println("selectedItem: "+artikelBox.getSelectedItem());
+            //System.out.println("artikelField text: "+artikelField.getText()+"   artikelNameText: "+artikelNameText);
             if ( !artikelField.getText().equals(artikelNameText) ) { // some editing change in box
                 resetFormFromArtikelBox();
                 artikelNameText = artikelField.getText();
@@ -1187,9 +1199,9 @@ public class Bestellen extends BestellungsGrundlage implements DocumentListener 
         }
         if (e.getDocument() == nummerField.getDocument()){
             if (nummerBox.setBoxMode){ return; }
-            System.out.println("\nnummerField DocumentListener fired!");
-            System.out.println("selectedItem: "+nummerBox.getSelectedItem());
-            System.out.println("nummerField text: "+nummerField.getText()+"   artikelNummerText: "+artikelNummerText);
+            //System.out.println("\nnummerField DocumentListener fired!");
+            //System.out.println("selectedItem: "+nummerBox.getSelectedItem());
+            //System.out.println("nummerField text: "+nummerField.getText()+"   artikelNummerText: "+artikelNummerText);
             if ( !nummerField.getText().equals(artikelNummerText) ) { // some editing change in box
                 resetFormFromNummerBox();
                 artikelNummerText = nummerField.getText();
@@ -1199,9 +1211,9 @@ public class Bestellen extends BestellungsGrundlage implements DocumentListener 
         }
         if (e.getDocument() == anzahlField.getDocument()){
             if (this.vpeOrAnzahlIsChanged) return;
-            System.out.println("anzahlField DocumentListener fired.");
-            System.out.println("anzahlField.getText(): "+anzahlField.getText());
-            System.out.println("anzahlSpinner.getValue(): "+anzahlSpinner.getValue());
+            //System.out.println("anzahlField DocumentListener fired.");
+            //System.out.println("anzahlField.getText(): "+anzahlField.getText());
+            //System.out.println("anzahlSpinner.getValue(): "+anzahlSpinner.getValue());
             String vpe = getVPE(selectedArtikelID);
             Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
             updateAnzahlColor(vpeInt);
@@ -1215,10 +1227,10 @@ public class Bestellen extends BestellungsGrundlage implements DocumentListener 
             } else {
                 selectedNumberOfVPEs = (Integer)vpeSpinner.getValue();
             }
-            System.out.println("vpeSpinnerField DocumentListener fired.");
-            System.out.println("vpeSpinnerField DocumentListener: vpeOrAnzahlIsChanged = "+vpeOrAnzahlIsChanged);
-            System.out.println("anzahlField.getText(): "+anzahlField.getText());
-            System.out.println("anzahlSpinner.getValue(): "+anzahlSpinner.getValue());
+            //System.out.println("vpeSpinnerField DocumentListener fired.");
+            //System.out.println("vpeSpinnerField DocumentListener: vpeOrAnzahlIsChanged = "+vpeOrAnzahlIsChanged);
+            //System.out.println("anzahlField.getText(): "+anzahlField.getText());
+            //System.out.println("anzahlSpinner.getValue(): "+anzahlSpinner.getValue());
             String vpe = getVPE(selectedArtikelID);
             Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
             updateAnzahlSpinner(vpeInt);
@@ -1385,11 +1397,12 @@ public class Bestellen extends BestellungsGrundlage implements DocumentListener 
                 displayIndices.set(i, displayIndices.get(i)-1);
             }
 
-            // save a CSV backup to hard disk
-            doCSVBackup();
             //updateAll();
             //barcodeBox.requestFocus();
             updateTable();
+
+            // save a CSV backup to hard disk
+            doCSVBackup();
             return;
         }
         if (e.getSource() == emptyFilterButton){
