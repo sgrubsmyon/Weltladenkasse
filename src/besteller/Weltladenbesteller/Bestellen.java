@@ -432,23 +432,25 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     }
 
     void initiateTable() {
-	orderTable = new BestellungsTable(displayData, columnLabels, displayIndices, sortimentBools){
-            @Override
-            public void removeEditor() {
-                System.out.println("removeEditor called.");
-
-                // set up spinner column:
-                TableColumn col = this.getColumn("Stückzahl");
-                SpinnerNumberModel model = new SpinnerNumberModel(1, 1, smallintMax, 1);
-                col.setCellRenderer(new JSpinnerRenderer(model));
-                JSpinnerEditor se = new JSpinnerEditor(model);
-                preventSpinnerOverflow(se);
-                col.setCellEditor(se);
-                this.setColEditable(col.getModelIndex(), true);
-
-                super.removeEditor();
-            }
-        };
+	orderTable = new BestellungsTable(displayData, columnLabels, displayIndices, sortimentBools);//{
+//            @Override
+//            public void removeEditor() {
+//                System.out.println("removeEditor called.");
+//
+//                // set up spinner column:
+//                TableColumn col = this.getColumn("Stückzahl");
+//                SpinnerNumberModel model = new SpinnerNumberModel(1, 1, smallintMax, 1);
+//                col.setCellRenderer(new JSpinnerRenderer(model));
+//                JSpinnerEditor se = new JSpinnerEditor(model);
+//                preventSpinnerOverflow(se.getSpinner());
+//                col.setCellEditor(se);
+//                this.setColEditable(col.getModelIndex(), true);
+//                System.out.println("removeEditor value: "+se.getSpinner().getValue());
+//                System.out.println("removeEditor value: "+se.getCellEditorValue());
+//
+//                super.removeEditor();
+//            }
+//        };
 	setTableProperties(orderTable);
 	TableColumn entf = orderTable.getColumn("Entfernen");
 	entf.setPreferredWidth(200);
@@ -458,7 +460,7 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         SpinnerNumberModel model = new SpinnerNumberModel(1, 1, smallintMax, 1);
         col.setCellRenderer(new JSpinnerRenderer(model));
         JSpinnerEditor se = new JSpinnerEditor(model);
-        preventSpinnerOverflow(se);
+        preventSpinnerOverflow(se.getSpinner());
         col.setCellEditor(se);
         orderTable.setColEditable(col.getModelIndex(), true);
     }

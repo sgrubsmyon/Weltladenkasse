@@ -9,16 +9,25 @@ import javax.swing.event.*;
 import javax.swing.text.*; // for NumberFormatter
 import javax.swing.table.TableCellEditor;
 
-public class JSpinnerEditor extends JSpinner implements TableCellEditor{
+public class JSpinnerEditor implements TableCellEditor{
     private List listeners = new ArrayList();
+    private JSpinner spinner;
 
     // Standardkonstruktor
     public JSpinnerEditor(SpinnerModel m){
-        setModel(m);
-        JSpinner.NumberEditor editor = new JSpinner.NumberEditor(this, "###");
-        this.setEditor(editor);
+        initiateSpinner(m);
+    }
+
+    private void initiateSpinner(SpinnerModel m){
+        spinner = new JSpinner(m);
+        JSpinner.NumberEditor editor = new JSpinner.NumberEditor(spinner, "###");
+        spinner.setEditor(editor);
         JFormattedTextField field = editor.getTextField();
         ( (NumberFormatter) field.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
+    }
+
+    public JSpinner getSpinner() {
+        return spinner;
     }
 
     // Möglicherweise möchte jemand über Ereignisse des Editors
@@ -34,25 +43,31 @@ public class JSpinnerEditor extends JSpinner implements TableCellEditor{
 
     // Gibt den aktuellen Wert des Editors zurück.
     public Object getCellEditorValue() {
-        return getValue();
+        return spinner.getValue();
     }
 
     // Gibt eine Component zurück, welche auf dem JTable dargestellt wird,
     // und mit der der Benutzer interagieren kann.
-    public Component getTableCellEditorComponent(JTable table, final Object value,
+    public Component getTableCellEditorComponent(JTable table, Object value,
             boolean isSelected, int row, int column) {
-        System.out.println("getTableCellEditorComponent() is called. value: "+value);
-        SwingUtilities.invokeLater(new Runnable(){
-            public void run(){
-                JSpinner.NumberEditor editor = (JSpinner.NumberEditor)getEditor();
-                JFormattedTextField field = editor.getTextField();
-                field.setText(value.toString());
-                setValue(value);
-                System.out.println(getValue());
-            }
-        });
-        System.out.println(getValue());
-        return this;
+        System.out.println("getTableCellEditorComponent() is called. 1 value: "+value);
+        // only if need be:
+        //SwingUtilities.invokeLater(new Runnable(){
+        //    public void run(){
+        SpinnerNumberModel mold = (SpinnerNumberModel)spinner.getModel();
+        SpinnerNumberModel m = new SpinnerNumberModel((Number)value,
+                mold.getMinimum(), mold.getMaximum(), mold.getStepSize());
+        initiateSpinner(m);
+        //JSpinner.NumberEditor editor = (JSpinner.NumberEditor)spinner.getEditor();
+        //JFormattedTextField field = editor.getTextField();
+        //field.setText(value.toString());
+        //spinner.setValue(value);
+        System.out.println("2 value: "+spinner.getValue());
+        //System.out.println("2 textField value: "+field.getText());
+        //    }
+        //});
+        //System.out.println("3 value: "+spinner.getValue());
+        return spinner;
     }
 
     // Gibt an, ob die Zelle editierbar ist. Das EventObject kann
@@ -74,7 +89,7 @@ public class JSpinnerEditor extends JSpinner implements TableCellEditor{
     }
 
     // Stoppt das editieren der Zelle, sofern möglich.
-    // Da der JSpinner immer einen gültigen Wert anzeigt, kann auch 
+    // Da der JSpinner immer einen gültigen Wert anzeigt, kann auch
     // jederzeit gestoppt werden (return-Wert = true)
     public boolean stopCellEditing() {
         fireEditingStopped();
@@ -83,14 +98,14 @@ public class JSpinnerEditor extends JSpinner implements TableCellEditor{
 
     // Benachrichtig alle Listener, dass das Editieren abgebrochen wurde
     protected void fireEditingCanceled(){
-        ChangeEvent e = new ChangeEvent( this );
+        ChangeEvent e = new ChangeEvent(spinner);
         for( int i = 0, n = listeners.size(); i<n; i++ )
             ((CellEditorListener)listeners.get( i )).editingCanceled( e );
     }
 
     // Benachrichtig alle Listener, dass das Editieren beendet wurde
     protected void fireEditingStopped(){
-        ChangeEvent e = new ChangeEvent( this );
+        ChangeEvent e = new ChangeEvent(spinner);
         for( int i = 0, n = listeners.size(); i<n; i++ )
             ((CellEditorListener)listeners.get( i )).editingStopped( e );
     }
