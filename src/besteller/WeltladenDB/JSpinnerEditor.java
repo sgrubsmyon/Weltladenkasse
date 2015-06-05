@@ -12,13 +12,16 @@ import javax.swing.table.TableCellEditor;
 public class JSpinnerEditor implements TableCellEditor{
     private List listeners = new ArrayList();
     private JSpinner spinner;
+    private JTable table;
+    private int editingRow;
+    private int editingColumn;
 
     // Standardkonstruktor
-    public JSpinnerEditor(SpinnerModel m){
+    public JSpinnerEditor(SpinnerNumberModel m){
         initiateSpinner(m);
     }
 
-    private void initiateSpinner(SpinnerModel m){
+    private void initiateSpinner(SpinnerNumberModel m){
         spinner = new JSpinner(m);
         JSpinner.NumberEditor editor = new JSpinner.NumberEditor(spinner, "###");
         spinner.setEditor(editor);
@@ -28,6 +31,28 @@ public class JSpinnerEditor implements TableCellEditor{
 
     public JSpinner getSpinner() {
         return spinner;
+    }
+
+    private JFormattedTextField getField() {
+        JSpinner.NumberEditor editor = (JSpinner.NumberEditor)spinner.getEditor();
+        JFormattedTextField field = editor.getTextField();
+        return field;
+    }
+
+    private void updateSpinner(Number value) {
+        SpinnerNumberModel mold = (SpinnerNumberModel)spinner.getModel();
+        SpinnerNumberModel m = new SpinnerNumberModel(value,
+                mold.getMinimum(), mold.getMaximum(), mold.getStepSize());
+        initiateSpinner(m);
+    }
+
+    private void updateTable() {
+        JFormattedTextField field = getField();
+        try {
+            Integer newValue = Integer.parseInt(field.getText());
+            table.setValueAt(newValue, editingRow, editingColumn);
+        } catch (NumberFormatException ex){
+        }
     }
 
     // Möglicherweise möchte jemand über Ereignisse des Editors
@@ -50,23 +75,18 @@ public class JSpinnerEditor implements TableCellEditor{
     // und mit der der Benutzer interagieren kann.
     public Component getTableCellEditorComponent(JTable table, Object value,
             boolean isSelected, int row, int column) {
-        System.out.println("getTableCellEditorComponent() is called. 1 value: "+value);
-        // only if need be:
+        updateSpinner((Number)value);
+        this.table = table;
+        this.editingRow = row;
+        this.editingColumn = column;
+        // seems to have no effect at all:
         //SwingUtilities.invokeLater(new Runnable(){
         //    public void run(){
-        SpinnerNumberModel mold = (SpinnerNumberModel)spinner.getModel();
-        SpinnerNumberModel m = new SpinnerNumberModel((Number)value,
-                mold.getMinimum(), mold.getMaximum(), mold.getStepSize());
-        initiateSpinner(m);
-        //JSpinner.NumberEditor editor = (JSpinner.NumberEditor)spinner.getEditor();
-        //JFormattedTextField field = editor.getTextField();
-        //field.setText(value.toString());
-        //spinner.setValue(value);
-        System.out.println("2 value: "+spinner.getValue());
-        //System.out.println("2 textField value: "+field.getText());
+        //        JSpinner.NumberEditor editor = (JSpinner.NumberEditor)spinner.getEditor();
+        //        JFormattedTextField field = editor.getTextField();
+        //        field.selectAll();
         //    }
         //});
-        //System.out.println("3 value: "+spinner.getValue());
         return spinner;
     }
 
@@ -101,6 +121,7 @@ public class JSpinnerEditor implements TableCellEditor{
         ChangeEvent e = new ChangeEvent(spinner);
         for( int i = 0, n = listeners.size(); i<n; i++ )
             ((CellEditorListener)listeners.get( i )).editingCanceled( e );
+        updateTable();
     }
 
     // Benachrichtig alle Listener, dass das Editieren beendet wurde
@@ -108,5 +129,6 @@ public class JSpinnerEditor implements TableCellEditor{
         ChangeEvent e = new ChangeEvent(spinner);
         for( int i = 0, n = listeners.size(); i<n; i++ )
             ((CellEditorListener)listeners.get( i )).editingStopped( e );
+        updateTable();
     }
 }
