@@ -165,7 +165,6 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 System.out.println("The mouse button has not yet been released");
                 return;
             }
-            System.out.println("ListSelection");
             int[] selRows = orderTable.getSelectedRows();
             if ( selRows.length == 1 ){
                 int realRowIndex = orderTable.convertRowIndexToModel(selRows[0]); // user might have changed row order

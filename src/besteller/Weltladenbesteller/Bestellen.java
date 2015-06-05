@@ -37,7 +37,7 @@ import javax.swing.event.*;
 
 import WeltladenDB.*;
 
-public class Bestellen extends BestellungsGrundlage implements ItemListener, DocumentListener {
+public class Bestellen extends BestellungsGrundlage implements DocumentListener {
     // Attribute:
     private final BigDecimal minusOne = new BigDecimal(-1);
     private final BigDecimal percent = new BigDecimal("0.01");
@@ -122,10 +122,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         KeyStroke barcodeShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK); // Ctrl-C
         KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK); // Ctrl-A
         KeyStroke artikelNummerShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_N, Event.CTRL_MASK); // Ctrl-N
-        //KeyStroke zwischensummeShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_Z, Event.CTRL_MASK); // Ctrl-Z
-        //KeyStroke barShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_B, Event.CTRL_MASK); // Ctrl-B
-        //KeyStroke ecShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK); // Ctrl-E
-        //KeyStroke stornierenShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK); // Ctrl-S
 
         ShortcutListener shortcutListener = new ShortcutListener();
 
@@ -135,14 +131,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
         this.registerKeyboardAction(shortcutListener, "nummer", artikelNummerShortcut,
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
-        //this.registerKeyboardAction(shortcutListener, "zws", zwischensummeShortcut,
-        //        JComponent.WHEN_IN_FOCUSED_WINDOW);
-        //this.registerKeyboardAction(shortcutListener, "bar", barShortcut,
-        //        JComponent.WHEN_IN_FOCUSED_WINDOW);
-        //this.registerKeyboardAction(shortcutListener, "ec", ecShortcut,
-        //        JComponent.WHEN_IN_FOCUSED_WINDOW);
-        //this.registerKeyboardAction(shortcutListener, "stornieren", stornierenShortcut,
-        //        JComponent.WHEN_IN_FOCUSED_WINDOW);
 
         emptyTable();
 	showAll();
@@ -271,7 +259,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             String comboBoxFilterStr = " AND variabler_preis = FALSE AND toplevel_id IS NOT NULL ";
             barcodeBox = new BarcodeComboBox(this.conn, comboBoxFilterStr);
             barcodeBox.addActionListener(this);
-            //barcodeBox.addItemListener(this);
             barcodeBox.addPopupMouseListener(new MouseListenerBarcodeBox());
             barcodeField = (JTextComponent)barcodeBox.getEditor().getEditorComponent();
             barcodeField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
@@ -291,7 +278,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             chooseArticlePanel1.add(artikelLabel);
             artikelBox = new ArtikelNameComboBox(this.conn, comboBoxFilterStr);
             artikelBox.addActionListener(this);
-            //artikelBox.addItemListener(this);
             artikelBox.addPopupMouseListener(new MouseListenerArtikelBox());
             // set preferred width etc.:
             artikelBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 50, false));
@@ -309,7 +295,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
             chooseArticlePanel1.add(nummerLabel);
             nummerBox = new ArtikelNummerComboBox(this.conn, comboBoxFilterStr);
             nummerBox.addActionListener(this);
-            //nummerBox.addItemListener(this);
             nummerBox.addPopupMouseListener(new MouseListenerNummerBox());
             // set preferred width etc.:
             nummerBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 30, false));
@@ -432,25 +417,8 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
     }
 
     void initiateTable() {
-	orderTable = new BestellungsTable(displayData, columnLabels, displayIndices, sortimentBools);//{
-//            @Override
-//            public void removeEditor() {
-//                System.out.println("removeEditor called.");
-//
-//                // set up spinner column:
-//                TableColumn col = this.getColumn("Stückzahl");
-//                SpinnerNumberModel model = new SpinnerNumberModel(1, 1, smallintMax, 1);
-//                col.setCellRenderer(new JSpinnerRenderer(model));
-//                JSpinnerEditor se = new JSpinnerEditor(model);
-//                preventSpinnerOverflow(se.getSpinner());
-//                col.setCellEditor(se);
-//                this.setColEditable(col.getModelIndex(), true);
-//                System.out.println("removeEditor value: "+se.getSpinner().getValue());
-//                System.out.println("removeEditor value: "+se.getCellEditorValue());
-//
-//                super.removeEditor();
-//            }
-//        };
+        orderTable = new BestellungsTable(displayData, columnLabels,
+                displayIndices, sortimentBools);
 	setTableProperties(orderTable);
 	TableColumn entf = orderTable.getColumn("Entfernen");
 	entf.setPreferredWidth(200);
@@ -1280,27 +1248,6 @@ public class Bestellen extends BestellungsGrundlage implements ItemListener, Doc
         for (int i=0; i<data.size(); i++){
             displayIndices.add(i);
         }
-    }
-
-    /**
-     *    * Each non abstract class that implements the ItemListener
-     *      must have this method.
-     *
-     *    @param e the item event.
-     **/
-    public void itemStateChanged(ItemEvent e) {
-        //if (e.getSource() == barcodeBox){
-        //    checkBarcodeBox();
-        //    return;
-        //}
-        //if (e.getSource() == artikelBox){
-        //    checkArtikelBox();
-        //    return;
-        //}
-        //if (e.getSource() == nummerBox){
-        //    checkNummerBox();
-        //    return;
-        //}
     }
 
     void refreshPositionsInData() {
