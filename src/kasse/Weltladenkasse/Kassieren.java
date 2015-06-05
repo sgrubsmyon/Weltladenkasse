@@ -5,34 +5,16 @@ import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
-import java.sql.SQLException;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 
 // GUI stuff:
-//import java.awt.BorderLayout;
-//import java.awt.FlowLayout;
-//import java.awt.Dimension;
-import java.awt.*;
-//import java.awt.event.ActionEvent;
-//import java.awt.event.ActionListener;
-import java.awt.event.*;
+import java.awt.*; // BorderLayout, FlowLayout, Dimension
+import java.awt.event.*; // ActionEvent, ActionListener
 
-//import javax.swing.JFrame;
-//import javax.swing.JPanel;
-//import javax.swing.JScrollPane;
-//import javax.swing.JTable;
-//import javax.swing.JTextArea;
-//import javax.swing.JButton;
-//import javax.swing.JCheckBox;
-import javax.swing.*;
+import javax.swing.*; // JFrame, JPanel, JTable, JButton, ...
 import javax.swing.table.*;
 import javax.swing.text.*; // for DocumentFilter
 import javax.swing.event.*;
-//import java.beans.PropertyChangeEvent;
-//import java.beans.PropertyChangeListener;
 
 // DateTime from date4j (http://www.date4j.net/javadoc/index.html)
 import hirondelle.date4j.DateTime;
@@ -1318,8 +1300,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         boolean variablerPreis = getVariablePriceBool(selectedArtikelID);
         if ( ! variablerPreis ){
             String artikelPreis = getSalePrice(selectedArtikelID);
+            if (artikelPreis == null){
+                artikelPreis = handleMissingSalePrice("Bitte Verkaufspreis eingeben");
+            }
             preisField.getDocument().removeDocumentListener(this);
-            preisField.setText("");
             preisField.setText( decimalMark(artikelPreis) );
             preisField.getDocument().addDocumentListener(this);
         }

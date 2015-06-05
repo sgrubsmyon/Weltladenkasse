@@ -6,34 +6,16 @@ import java.io.*; // for File
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
-import java.sql.SQLException;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 
 // GUI stuff:
-//import java.awt.BorderLayout;
-//import java.awt.FlowLayout;
-//import java.awt.Dimension;
-import java.awt.*;
-//import java.awt.event.ActionEvent;
-//import java.awt.event.ActionListener;
-import java.awt.event.*;
+import java.awt.*; // BorderLayout, FlowLayout, Dimension
+import java.awt.event.*; // ActionEvent, ActionListener
 
-//import javax.swing.JFrame;
-//import javax.swing.JPanel;
-//import javax.swing.JScrollPane;
-//import javax.swing.JTable;
-//import javax.swing.JTextArea;
-//import javax.swing.JButton;
-//import javax.swing.JCheckBox;
-import javax.swing.*;
+import javax.swing.*; // JFrame, JPanel, JTable, JButton, ...
 import javax.swing.table.*;
 import javax.swing.text.*; // for DocumentFilter
 import javax.swing.event.*;
-//import java.beans.PropertyChangeEvent;
-//import java.beans.PropertyChangeListener;
 
 import WeltladenDB.*;
 
@@ -831,7 +813,7 @@ public class Bestellen extends BestellungsGrundlage implements
                         "Info", JOptionPane.INFORMATION_MESSAGE);
             }
             preisField.getDocument().removeDocumentListener(this);
-            preisField.setText(artikelPreis.replace('.',','));
+            preisField.setText( decimalMark(artikelPreis) );
             preisField.getDocument().addDocumentListener(this);
         }
         else {
@@ -972,7 +954,7 @@ public class Bestellen extends BestellungsGrundlage implements
         String vpe = vpeField.getText();
         Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
         String artikelPreis = priceFormatterIntern( preisField.getText() );
-        artikelPreis = artikelPreis.replace('.',',')+' '+currencySymbol;
+        artikelPreis = decimalMark(artikelPreis)+' '+currencySymbol;
         String artikelMwSt = getVAT(selectedArtikelID);
         artikelMwSt = vatFormatter(artikelMwSt);
         Boolean sortimentBool = getSortimentBool(selectedArtikelID);
