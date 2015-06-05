@@ -15,6 +15,7 @@ import java.awt.event.*;
 import java.awt.*;
 
 import javax.swing.*;
+import javax.swing.text.*; // for DocumentFilter
 import javax.swing.table.*;
 
 // DateTime from date4j (http://www.date4j.net/javadoc/index.html)
@@ -261,6 +262,35 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             }
         }
     }
+
+    protected String handleMissingSalePrice(String title) {
+        JLabel label = new JLabel("Wie viel kostet dieser Artikel?");
+
+        JPanel preisPanel = new JPanel();
+        JTextField preisField = new JTextField("");
+        ((AbstractDocument)preisField.getDocument()).setDocumentFilter(geldFilter);
+        preisField.setColumns(6);
+        preisField.setHorizontalAlignment(JTextField.RIGHT);
+        preisPanel.add(preisField);
+        preisPanel.add(new JLabel(currencySymbol));
+
+        JOptionPane jop = new JOptionPane(new Object[]{label, preisPanel},
+                    JOptionPane.QUESTION_MESSAGE,
+                    JOptionPane.OK_CANCEL_OPTION);
+        JDialog dialog = jop.createDialog(title);
+        dialog.setVisible(true);
+        int result = (Integer)jop.getValue();
+        dialog.dispose();
+
+        String artikelPreis = "";
+        if (result == JOptionPane.OK_OPTION){
+            artikelPreis = new String(preisField.getText());
+            if (artikelPreis == null)
+                return "";
+        }
+        return artikelPreis;
+    }
+
 
     /**
      * Price calculation methods
