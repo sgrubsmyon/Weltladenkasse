@@ -184,7 +184,7 @@ public class DumpDatabase extends WindowContent {
 
     void dumpDatabase(String password, String filename) {
         // From: http://www.jvmhost.com/articles/mysql-postgresql-dump-restore-java-jsp-code#sthash.6M0ty78M.dpuf
-        String program = constructProgramPath(this.mysqlPath, "mysqldump");
+        String program = constructProgramPath(bc.mysqlPath, "mysqldump");
         System.out.println("MySQL path from config.properties: *"+program+"*");
         // 'destructive' dump, resulting in exact copy of DB:
         String[] executeCmd = new String[] {program,
@@ -234,7 +234,7 @@ public class DumpDatabase extends WindowContent {
         // Use mysqlimport
         //String executeCmd = "mysql -u kassenadmin -p"+password+" kasse < "+filename;
         //String[] executeCmd = new String[] {"/bin/sh", "-c", "mysql -u kassenadmin -p"+password+" kasse < "+filename};
-        String program = constructProgramPath(this.mysqlPath, "mysql");
+        String program = constructProgramPath(bc.mysqlPath, "mysql");
         System.out.println("MySQL path from config.properties: *"+program+"*");
         String[] executeCmd = new String[] {program, "--local-infile",
             "-hlocalhost", "-ukassenadmin", "-p"+password,

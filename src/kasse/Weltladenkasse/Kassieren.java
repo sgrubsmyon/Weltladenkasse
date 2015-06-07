@@ -317,7 +317,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             spinnerPanel.add(anzahlLabel);
             SpinnerNumberModel anzahlModel = new SpinnerNumberModel(1, // initial value
                                                                     1, // min
-                                                                    smallintMax, // max (null == no max)
+                                                                    bc.smallintMax, // max (null == no max)
                                                                     1); // step
 	    anzahlSpinner = new JSpinner(anzahlModel);
             JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(anzahlSpinner, "###");
@@ -364,7 +364,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             preisField.setColumns(6);
             preisField.setHorizontalAlignment(JTextField.RIGHT);
             spinnerPanel.add(preisField);
-            spinnerPanel.add(new JLabel(currencySymbol));
+            spinnerPanel.add(new JLabel(bc.currencySymbol));
 
 	    hinzufuegenButton = new JButton("Hinzufügen");
             hinzufuegenButton.setMnemonic(KeyEvent.VK_H);
@@ -432,7 +432,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 JPanel kundeGibtPanel = new JPanel();
                 kundeGibtPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
                 kundeGibtPanel.add(kundeGibtField);
-                kundeGibtPanel.add(new JLabel(currencySymbol));
+                kundeGibtPanel.add(new JLabel(bc.currencySymbol));
                 kundeGibtPanel.add(Box.createRigidArea(new Dimension(40, 0)));
 
                 JLabel gutscheinLabel = new JLabel("Gutschein:");
@@ -452,7 +452,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 JPanel gutscheinPanel = new JPanel();
                 gutscheinPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
                 gutscheinPanel.add(gutscheinField);
-                gutscheinPanel.add(new JLabel(currencySymbol));
+                gutscheinPanel.add(new JLabel(bc.currencySymbol));
                 gutscheinButton = new JButton("OK");
                 gutscheinButton.setEnabled(false);
                 gutscheinButton.addActionListener(this);
@@ -468,7 +468,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 rueckgeldField.setHorizontalAlignment(JTextField.RIGHT);
                 rueckgeldField.setFont(new Font("Tahoma", Font.BOLD, 12));
                 rueckgeldPanel.add(rueckgeldField);
-                rueckgeldPanel.add(new JLabel(currencySymbol));
+                rueckgeldPanel.add(new JLabel(bc.currencySymbol));
                 rueckgeldPanel.add(Box.createRigidArea(new Dimension(40, 0)));
 
                 gridPanel.add(kundeGibtLabel);
@@ -598,7 +598,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 }
             });
             absolutPanel.add(individuellRabattAbsolutField);
-            absolutPanel.add(new JLabel(currencySymbol));
+            absolutPanel.add(new JLabel(bc.currencySymbol));
             individuellRabattAbsolutButton = new JButton("OK");
             individuellRabattAbsolutButton.addActionListener(this);
             absolutPanel.add(individuellRabattAbsolutButton);
@@ -767,16 +767,16 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 rueckgeldField.setForeground(Color.green.darker().darker());
                 //neuerKundeButton.setEnabled(true);
             }
-            rueckgeldField.setText( priceFormatter(rueckgeld) );
+            rueckgeldField.setText( bc.priceFormatter(rueckgeld) );
         }
     }
 
     String getTotalPrice() {
-        return priceFormatterIntern( totalPriceField.getText() );
+        return bc.priceFormatterIntern( totalPriceField.getText() );
     }
 
     String getKundeGibt() {
-        return priceFormatterIntern( kundeGibtField.getText() );
+        return bc.priceFormatterIntern( kundeGibtField.getText() );
     }
 
     //////////////////////////////////
@@ -887,7 +887,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             int rabattID = (Integer) vector.get(0);
             String aktionsname = (String) vector.get(1);
             BigDecimal einzelAbsRabatt = (BigDecimal) vector.get(2);
-            BigDecimal reduktion = stueck.multiply(einzelAbsRabatt).multiply(minusOne);
+            BigDecimal reduktion = stueck.multiply(einzelAbsRabatt).multiply(bc.minusOne);
             einzelpreis = einzelpreis.subtract(einzelAbsRabatt);
 
             addRabattRow(rabattID, aktionsname, reduktion, stueck);
@@ -897,7 +897,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             String aktionsname = (String) vector.get(1);
             BigDecimal einzelRelRabatt = (BigDecimal) vector.get(2);
             BigDecimal reduktion = new BigDecimal(
-                    priceFormatterIntern( stueck.multiply(einzelRelRabatt).multiply(einzelpreis).multiply(minusOne) )
+                    bc.priceFormatterIntern( stueck.multiply(einzelRelRabatt).multiply(einzelpreis).multiply(bc.minusOne) )
                     );
             einzelpreis = einzelpreis.subtract( einzelRelRabatt.multiply(einzelpreis) );
 
@@ -910,7 +910,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             BigDecimal mengenAnzKostenlos = (BigDecimal) vector.get(3);
             if ( stueck.compareTo(mengenSchwelle) >= 0 ){ // if stueck >= mengenSchwelle
                 BigDecimal reduktion = (new BigDecimal(stueck.intValue()/mengenSchwelle.intValue())).
-                        multiply(mengenAnzKostenlos).multiply(einzelpreis).multiply(minusOne);
+                        multiply(mengenAnzKostenlos).multiply(einzelpreis).multiply(bc.minusOne);
                 stueck = stueck.subtract(mengenAnzKostenlos);
 
                 addRabattRow(rabattID, aktionsname, reduktion, stueck);
@@ -923,7 +923,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             BigDecimal mengenRelRabatt = (BigDecimal) vector.get(3);
             if ( stueck.compareTo(mengenSchwelle) >= 0 ){ // if stueck >= mengenSchwelle
                 BigDecimal reduktion = new BigDecimal(
-                        priceFormatterIntern( stueck.multiply(mengenRelRabatt).multiply(einzelpreis).multiply(minusOne) )
+                        bc.priceFormatterIntern( stueck.multiply(mengenRelRabatt).multiply(einzelpreis).multiply(bc.minusOne) )
                         );
                 einzelpreis = einzelpreis.subtract( mengenRelRabatt.multiply(einzelpreis) );
 
@@ -979,8 +979,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         Vector<Object> row = new Vector<Object>();
             row.add(""); // pos
             row.add(einrueckung+aktionsname); row.add("RABATT"); row.add(stueck.toPlainString());
-            row.add(""); row.add(priceFormatter(reduktion)+" "+currencySymbol);
-            row.add(vatFormatter(artikelMwSt));
+            row.add(""); row.add(bc.priceFormatter(reduktion)+" "+bc.currencySymbol);
+            row.add(bc.vatFormatter(artikelMwSt));
             row.add("");
         data.add(row);
     }
@@ -1003,16 +1003,16 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             types.add("pfand");
             mwsts.add(pfandMwSt);
             stueckzahlen.add(stueck.intValue());
-            einzelpreise.add(new BigDecimal( priceFormatterIntern(pfand) ));
-            preise.add(new BigDecimal( priceFormatterIntern(gesamtPfand) ));
+            einzelpreise.add(new BigDecimal( bc.priceFormatterIntern(pfand) ));
+            preise.add(new BigDecimal( bc.priceFormatterIntern(gesamtPfand) ));
             removeButtons.add(null);
 
             Vector<Object> row = new Vector<Object>();
                 row.add(""); // pos
                 row.add(einrueckung+pfandName); row.add("PFAND"); row.add(stueck);
-                row.add( priceFormatter(pfand)+' '+currencySymbol );
-                row.add( priceFormatter(gesamtPfand)+' '+currencySymbol );
-                row.add(vatFormatter(pfandMwSt));
+                row.add( bc.priceFormatter(pfand)+' '+bc.currencySymbol );
+                row.add( bc.priceFormatter(gesamtPfand)+' '+bc.currencySymbol );
+                row.add(bc.vatFormatter(pfandMwSt));
                 row.add("");
             data.add(row);
         }
@@ -1304,7 +1304,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 artikelPreis = handleMissingSalePrice("Bitte Verkaufspreis eingeben");
             }
             preisField.getDocument().removeDocumentListener(this);
-            preisField.setText( decimalMark(artikelPreis) );
+            preisField.setText( bc.decimalMark(artikelPreis) );
             preisField.getDocument().addDocumentListener(this);
         }
         else {
@@ -1366,9 +1366,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         String lieferant = an[1];
         String artikelNummer = (String)nummerBox.getSelectedItem();
         selectedStueck = stueck;
-        String artikelPreis = priceFormatterIntern(preisField.getText());
+        String artikelPreis = bc.priceFormatterIntern(preisField.getText());
         BigDecimal gesPreis = new BigDecimal(artikelPreis).multiply(new BigDecimal(stueck));
-        String artikelGesamtPreis = priceFormatterIntern(gesPreis);
+        String artikelGesamtPreis = bc.priceFormatterIntern(gesPreis);
         String kurzname = getShortName(selectedArtikelID);
         String artikelMwSt = getVAT(selectedArtikelID);
         Boolean sortiment = getSortimentBool(selectedArtikelID);
@@ -1397,13 +1397,13 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         removeButtons.add(new JButton("-"));
         removeButtons.lastElement().addActionListener(this);
 
-        artikelGesamtPreis = decimalMark(artikelGesamtPreis)+' '+currencySymbol;
-        artikelPreis = decimalMark(artikelPreis)+' '+currencySymbol;
+        artikelGesamtPreis = bc.decimalMark(artikelGesamtPreis)+' '+bc.currencySymbol;
+        artikelPreis = bc.decimalMark(artikelPreis)+' '+bc.currencySymbol;
 
         Vector<Object> row = new Vector<Object>();
             row.add(positions.lastElement());
             row.add(artikelName); row.add(artikelNummer); row.add(stueck.toString());
-            row.add(artikelPreis); row.add(artikelGesamtPreis); row.add(vatFormatter(artikelMwSt));
+            row.add(artikelPreis); row.add(artikelGesamtPreis); row.add(bc.vatFormatter(artikelMwSt));
             row.add(removeButtons.lastElement());
         data.add(row);
 
@@ -1413,7 +1413,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
         if (display != null){
             System.out.println("Going to display article.");
-            String zws = priceFormatter(getTotalPrice())+" "+currencySymbol;
+            String zws = bc.priceFormatter(getTotalPrice())+" "+bc.currencySymbol;
             display.printArticle(kurzname, stueck, artikelPreis, zws);
         }
     }
@@ -1445,9 +1445,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             Vector<Object> row = new Vector<Object>();
                 row.add(""); // pos
                 row.add(pfandName); row.add("LEERGUT"); row.add(stueck.toString());
-                row.add( priceFormatter(pfand)+' '+currencySymbol );
-                row.add( priceFormatter(gesamtPfand)+' '+currencySymbol );
-                row.add(vatFormatter(pfandMwSt));
+                row.add( bc.priceFormatter(pfand)+' '+bc.currencySymbol );
+                row.add( bc.priceFormatter(gesamtPfand)+' '+bc.currencySymbol );
+                row.add(bc.vatFormatter(pfandMwSt));
                 row.add(removeButtons.lastElement());
             data.add(row);
 
@@ -1532,7 +1532,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         // Now i points to the Artikel that gets the Rabatt
         BigDecimal gesPreis = preise.get(i);
         BigDecimal reduktion = new BigDecimal(
-                priceFormatterIntern( rabattRelativ.multiply(gesPreis).multiply(minusOne) )
+                bc.priceFormatterIntern( rabattRelativ.multiply(gesPreis).multiply(bc.minusOne) )
                 );
         BigDecimal artikelMwSt = mwsts.get(i);
         positions.add(i+1, null);
@@ -1552,8 +1552,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         Vector<Object> rabattRow = new Vector<Object>();
             rabattRow.add(""); // pos
             rabattRow.add(einrueckung+rabattName); rabattRow.add("RABATT"); rabattRow.add(Integer.toString(selectedStueck));
-            rabattRow.add(""); rabattRow.add(priceFormatter(reduktion)+" "+currencySymbol);
-            rabattRow.add(vatFormatter(artikelMwSt));
+            rabattRow.add(""); rabattRow.add(bc.priceFormatter(reduktion)+" "+bc.currencySymbol);
+            rabattRow.add(bc.vatFormatter(artikelMwSt));
             rabattRow.add("");
         data.add(i+1, rabattRow);
         updateAll();
@@ -1565,7 +1565,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             i--;
         }
         // Now i points to the Artikel that gets the Rabatt
-        BigDecimal reduktion = rabattAbsolut.multiply(minusOne);
+        BigDecimal reduktion = rabattAbsolut.multiply(bc.minusOne);
         BigDecimal artikelMwSt = mwsts.get(i);
         positions.add(i+1, null);
         artikelIDs.add(i+1, artikelRabattArtikelID);
@@ -1584,8 +1584,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         Vector<Object> rabattRow = new Vector<Object>();
             rabattRow.add(""); // pos
             rabattRow.add(einrueckung+rabattName); rabattRow.add("RABATT"); rabattRow.add(Integer.toString(selectedStueck));
-            rabattRow.add(""); rabattRow.add(priceFormatter(reduktion)+" "+currencySymbol);
-            rabattRow.add(vatFormatter(artikelMwSt));
+            rabattRow.add(""); rabattRow.add(bc.priceFormatter(reduktion)+" "+bc.currencySymbol);
+            rabattRow.add(bc.vatFormatter(artikelMwSt));
             rabattRow.add("");
         data.add(i+1, rabattRow);
         updateAll();
@@ -1646,7 +1646,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             articleNames.add(rabattName);
             rabattIDs.add(null);
             BigDecimal reduktion = new BigDecimal(
-                    priceFormatterIntern( rabattRelativ.multiply(entry.getValue()).multiply(minusOne) )
+                    bc.priceFormatterIntern( rabattRelativ.multiply(entry.getValue()).multiply(bc.minusOne) )
                     );
             einzelpreise.add(null);
             preise.add(reduktion);
@@ -1661,8 +1661,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             Vector<Object> rabattRow = new Vector<Object>();
                 rabattRow.add(""); // pos
                 rabattRow.add(rabattName); rabattRow.add("RABATT"); rabattRow.add("");
-                rabattRow.add(""); rabattRow.add(priceFormatter(reduktion)+" "+currencySymbol);
-                rabattRow.add(vatFormatter(mwst));
+                rabattRow.add(""); rabattRow.add(bc.priceFormatter(reduktion)+" "+bc.currencySymbol);
+                rabattRow.add(bc.vatFormatter(mwst));
                 rabattRow.add(removeButtons.lastElement());
             data.add(rabattRow);
 
@@ -1942,7 +1942,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	if (e.getSource() == ecButton){
             if ( ( new BigDecimal(getTotalPrice()) ).compareTo(ecSchwelle) < 0 ){
                 int answer = JOptionPane.showConfirmDialog(this,
-                        "ACHTUNG: Gesamtbetrag unter "+priceFormatter(ecSchwelle)+" "+currencySymbol+" !\n"+
+                        "ACHTUNG: Gesamtbetrag unter "+bc.priceFormatter(ecSchwelle)+" "+bc.currencySymbol+" !\n"+
                         "Wirklich EC-Zahlung erlauben?", "Warnung",
                         JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if (answer == JOptionPane.NO_OPTION){
@@ -1978,7 +1978,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                         Vector<BigDecimal> values = new Vector<BigDecimal>();
                         BigDecimal brutto = calculateTotalVATUmsatz(vat);
                         BigDecimal steuer = calculateTotalVATAmount(vat);
-                        BigDecimal netto = new BigDecimal( priceFormatterIntern(brutto.subtract(steuer)) );
+                        BigDecimal netto = new BigDecimal( bc.priceFormatterIntern(brutto.subtract(steuer)) );
                         values.add(netto); // Netto
                         values.add(steuer); // Steuer
                         values.add(brutto); // Umsatz
@@ -2025,7 +2025,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             BigDecimal rabattAnteil = (new BigDecimal(
                         rabattButtons.get(rabattIndex).getText().replace("%","").replace(',','.').replaceAll(" ","")
                         )
-                    ).multiply(percent);
+                    ).multiply(bc.percent);
             if (barButton.isEnabled()){
                 rechnungRabattierenRelativ(rabattAnteil);
             }
@@ -2035,7 +2035,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             return;
         }
 	if (e.getSource() == individuellRabattRelativButton){
-            BigDecimal rabattAnteil = (new BigDecimal( individuellRabattRelativField.getText().replace(',','.') )).multiply(percent);
+            BigDecimal rabattAnteil = (
+                    new BigDecimal( individuellRabattRelativField.getText().replace(',','.') )).multiply(bc.percent);
             if (barButton.isEnabled()){
                 rechnungRabattierenRelativ(rabattAnteil);
             }

@@ -180,7 +180,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             }
 	    // Run MySQL command
 	    ResultSet rs = stmt.executeQuery(
-		    "SELECT DATE_FORMAT(buchungsdatum,'"+dateFormatSQL+"'), neuer_kassenstand, " +
+		    "SELECT DATE_FORMAT(buchungsdatum,'"+bc.dateFormatSQL+"'), neuer_kassenstand, " +
 		    "manuell, rechnungs_nr, kommentar " +
 		    "FROM kassenstand " +
                     "WHERE " + ausblendeString +
@@ -191,7 +191,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    // Now do something with the ResultSet ...
 	    while (rs.next()) {
 		Vector<String> row = new Vector<String>();
-		row.add(rs.getString(1)); row.add(rs.getString(2)+" "+currencySymbol);
+		row.add(rs.getString(1)); row.add(rs.getString(2)+" "+bc.currencySymbol);
 		row.add(rs.getString(3).contentEquals("0") ? "Nein" : "Ja"); row.add(rs.getString(4));
 		row.add(rs.getString(5));
 		// change dots to commas
@@ -230,7 +230,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	kassenstandPanel.add(kassenstandLabel);
 	JTextField kassenstandField = new JTextField("", 10);
         kassenstandField.setHorizontalAlignment(JTextField.RIGHT);
-	kassenstandField.setText( priceFormatter(mainWindow.retrieveKassenstand())+this.currencySymbol );
+	kassenstandField.setText( bc.priceFormatter(mainWindow.retrieveKassenstand())+bc.currencySymbol );
 	kassenstandField.setEditable(false);
 	kassenstandLabel.setLabelFor(kassenstandField);
 	kassenstandPanel.add(kassenstandField);
@@ -251,7 +251,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    ((AbstractDocument)neuerKassenstandField.getDocument()).setDocumentFilter(geldFilter);
 	    neuerKassenstandLabel.setLabelFor(neuerKassenstandField);
 	    kassenstandAendernPanel.add(neuerKassenstandField);
-	    kassenstandAendernPanel.add(new JLabel(currencySymbol));
+	    kassenstandAendernPanel.add(new JLabel(bc.currencySymbol));
 
 	    kassenstandAendernPanel.add(Box.createRigidArea(new Dimension(12,0)));
 
@@ -268,7 +268,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    ((AbstractDocument)differenzField.getDocument()).setDocumentFilter(df);
 	    differenzLabel.setLabelFor(differenzField);
 	    kassenstandAendernPanel.add(differenzField);
-	    kassenstandAendernPanel.add(new JLabel(currencySymbol));
+	    kassenstandAendernPanel.add(new JLabel(bc.currencySymbol));
             */
 	manuellAendernPanel.add(kassenstandAendernPanel);
 	//
@@ -419,13 +419,13 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
                 kommentarField.setText("");
                 return;
             }
-            text = priceFormatter(text)+" "+currencySymbol;
+            text = bc.priceFormatter(text)+" "+bc.currencySymbol;
             int answer = JOptionPane.showConfirmDialog(this,
                     "Kassenstand wirklich auf "+text+" setzen "+
                     "mit Kommentar \n\""+kommentar+"\"?", "Kassenstand ändern",
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (answer == JOptionPane.YES_OPTION){
-                BigDecimal newValue = new BigDecimal( priceFormatterIntern(text) );
+                BigDecimal newValue = new BigDecimal( bc.priceFormatterIntern(text) );
                 try {
                     PreparedStatement pstmt = this.conn.prepareStatement(
                             "INSERT INTO kassenstand SET buchungsdatum = "+
@@ -467,8 +467,8 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
                 kommentarField.setText("");
                 return;
             }
-            text = priceFormatter(text)+" "+currencySymbol;
-            BigDecimal differenz = new BigDecimal( priceFormatterIntern(text) );
+            text = bc.priceFormatter(text)+" "+bc.currencySymbol;
+            BigDecimal differenz = new BigDecimal( bc.priceFormatterIntern(text) );
             String erhoehenReduzieren = new String("");
             if (text.charAt(0) == '-'){
                 erhoehenReduzieren = "reduzieren";

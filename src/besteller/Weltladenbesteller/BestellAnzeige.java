@@ -274,7 +274,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
                     "SELECT bestell_nr, typ, jahr, kw, DATE_FORMAT(bestell_datum, "+
-                    "'"+dateFormatSQL+"') FROM bestellung ORDER BY "+
+                    "'"+bc.dateFormatSQL+"') FROM bestellung ORDER BY "+
                     "bestell_nr DESC LIMIT " +
                     (currentPage-1)*bestellungenProSeite + "," + bestellungenProSeite
                     );
@@ -350,7 +350,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 Vector<Object> row = new Vector<Object>();
                     row.add(pos);
                     row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
-                    row.add(priceFormatter(vkp)+" "+currencySymbol); row.add(vpe); row.add(stueck);
+                    row.add(bc.priceFormatter(vkp)+" "+bc.currencySymbol); row.add(vpe); row.add(stueck);
                     row.add(""); // row.add(removeButtons.lastElement())
                 orderDetailData.add(row);
                 orderDetailArtikelIDs.add(artikelID);
@@ -494,7 +494,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         String newDate = oldDate;
         try {
             // reformat the date to be without hour:
-            Date date = new SimpleDateFormat(dateFormatJava).parse(oldDate);
+            Date date = new SimpleDateFormat(bc.dateFormatJava).parse(oldDate);
             newDate = new SimpleDateFormat("dd.MM.yyyy").format(date);;
         } catch (java.text.ParseException ex) {
             System.out.println("Exception: " + ex.getMessage());
@@ -504,7 +504,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         // Load the template file
         final Sheet sheet;
         try {
-            String filename = "vorlagen"+fileSep+"Bestellvorlage_"+typ+".ods";
+            String filename = "vorlagen"+bc.fileSep+"Bestellvorlage_"+typ+".ods";
             File infile = new File(filename);
             if (!infile.exists()){
                 JOptionPane.showMessageDialog(this,

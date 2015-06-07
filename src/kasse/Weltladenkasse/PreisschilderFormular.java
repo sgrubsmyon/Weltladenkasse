@@ -222,7 +222,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
             preisField.setColumns(6);
             preisField.setHorizontalAlignment(JTextField.RIGHT);
             hinzufuegenPanel.add(preisField);
-            hinzufuegenPanel.add(new JLabel(currencySymbol));
+            hinzufuegenPanel.add(new JLabel(bc.currencySymbol));
 
 	    hinzufuegenButton = new JButton("Hinzufügen");
             hinzufuegenButton.setMnemonic(KeyEvent.VK_H);
@@ -494,7 +494,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
             String artikelPreis = getSalePrice(selectedArtikelID);
             preisField.getDocument().removeDocumentListener(this);
             preisField.setText("");
-            preisField.setText( decimalMark(artikelPreis) );
+            preisField.setText( bc.decimalMark(artikelPreis) );
             preisField.getDocument().addDocumentListener(this);
         }
         else {
@@ -562,7 +562,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
         Vector<Object> row = new Vector<Object>();
             row.add(liefkurz);
             row.add(artikelName); row.add(artikelNummer); row.add(barcode);
-            row.add(preis); row.add(vatFormatter(artikelMwSt));
+            row.add(preis); row.add(bc.vatFormatter(artikelMwSt));
             row.add(removeButtons.lastElement());
         data.add(row);
 

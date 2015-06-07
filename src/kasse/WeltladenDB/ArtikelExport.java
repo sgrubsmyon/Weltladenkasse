@@ -53,7 +53,7 @@ public class ArtikelExport extends WindowContent {
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "ODS Spreadsheet-Dokumente", "ods");
         odsChooser.setFileFilter(filter);
-        odsChooser.setSelectedFile(new File("vorlagen"+fileSep+"Artikelliste.ods"));
+        odsChooser.setSelectedFile(new File("vorlagen"+bc.fileSep+"Artikelliste.ods"));
 
         int returnVal = odsChooser.showSaveDialog(pw);
         if (returnVal == JFileChooser.APPROVE_OPTION){
@@ -93,78 +93,42 @@ public class ArtikelExport extends WindowContent {
             columnLabels.add("Bestand");
         // table rows
         final Vector< Vector<Object> > data = new Vector< Vector<Object> >();
-        for (int i=0; i<artikelListe.originalData.size(); i++){
-            if (artikelListe.activeRowBools.get(i) == false){
+        for (int i=0; i < artikelListe.articles.size(); i++){
+            if (artikelListe.articles.get(i).getAktiv() == false){
                 // skip deactivated articles
                 continue;
             }
-            String produktgruppe = artikelListe.originalData.get(i).get(indexMap.get("produktgruppe")).toString();
-            String lieferant = artikelListe.originalData.get(i).get(indexMap.get("lieferant")).toString();
-            String nummer = artikelListe.originalData.get(i).get(indexMap.get("nummer")).toString();
-            String name = artikelListe.originalData.get(i).get(indexMap.get("name")).toString();
-            String kurzname = artikelListe.originalData.get(i).get(indexMap.get("kurzname")).toString();
-            BigDecimal menge;
-            try {
-                menge = new BigDecimal(
-                        artikelListe.originalData.get(i).get(indexMap.get("menge")).toString().replace(',','.') );
-            } catch (NumberFormatException ex) {
-                menge = null;
-            }
-            String einheit = artikelListe.originalData.get(i).get(indexMap.get("einheit")).toString();
-            String sortimentStr = artikelListe.sortimentBools.get(i) ? "Ja" : "Nein";
-            String lieferbarStr = artikelListe.lieferbarBools.get(i) ? "Ja" : "Nein";
+            String produktgruppe = getProduktgruppe( artikelListe.articles.get(i).getProdGrID() );
+            String lieferant = getLieferant( artikelListe.articles.get(i).getLiefID() );
+            String nummer = artikelListe.articles.get(i).getNummer();
+            String name = artikelListe.articles.get(i).getName();
+            String kurzname = artikelListe.articles.get(i).getKurzname();
+            BigDecimal menge = artikelListe.articles.get(i).getMenge();
+            String einheit = artikelListe.articles.get(i).getEinheit();
+            String sortimentStr = artikelListe.articles.get(i).getSortiment() ? "Ja" : "Nein";
+            String lieferbarStr = artikelListe.articles.get(i).getLieferbar() ? "Ja" : "Nein";
             String beliebtheit = beliebtNamen.get(artikelListe.beliebtIndices.get(i));
-            String barcode = artikelListe.originalData.get(i).get(indexMap.get("barcode")).toString();
-            Integer vpe;
-            try {
-                vpe = Integer.parseInt( artikelListe.originalData.get(i).get(indexMap.get("vpe")).toString() );
-            } catch (NumberFormatException ex) {
-                vpe = null;
-            }
-            Integer setgroesse;
-            try {
-                setgroesse = Integer.parseInt( artikelListe.originalData.get(i).get(indexMap.get("setgroesse")).toString() );
-            } catch (NumberFormatException ex) {
-                setgroesse = null;
-            }
-            Boolean var = artikelListe.varPreisBools.get(i);
+            String barcode = artikelListe.articles.get(i).getBarcode();
+            Integer vpe = artikelListe.articles.get(i).getVPE();
+            Integer setgroesse = artikelListe.articles.get(i).getSetgroesse();
+            Boolean var = artikelListe.articles.get(i).getVarPreis();
             BigDecimal vkp = null;
             BigDecimal empf_vkp = null;
             BigDecimal ekrabatt = null;
             BigDecimal ekp = null;
             if (!var){
-                try {
-                    vkp = new BigDecimal(
-                            priceFormatterIntern(artikelListe.originalData.get(i).get(indexMap.get("vkp")).toString()));
-                } catch (NumberFormatException ex) {
-                    vkp = null;
-                }
-                try {
-                    empf_vkp = new BigDecimal(
-                            priceFormatterIntern(artikelListe.originalData.get(i).get(indexMap.get("evkp")).toString()));
-                } catch (NumberFormatException ex) {
-                    empf_vkp = null;
-                }
-                try {
-                    ekrabatt = new BigDecimal( vatParser(artikelListe.originalData.get(i).get(indexMap.get("ekr")).toString()) );
-                } catch (NumberFormatException ex) {
-                    ekrabatt = null;
-                }
-                try {
-                    ekp = new BigDecimal(
-                            priceFormatterIntern(artikelListe.originalData.get(i).get(indexMap.get("ekp")).toString()));
-                } catch (NumberFormatException ex) {
-                    ekp = null;
-                }
+                try { vkp = new BigDecimal(artikelListe.articles.get(i).getVKP()); }
+                catch (NumberFormatException ex) { vkp = null; }
+                try { empf_vkp = new BigDecimal(artikelListe.articles.get(i).getEmpfVKP()); }
+                catch (NumberFormatException ex) { empf_vkp = null; }
+                try { ekrabatt = new BigDecimal(artikelListe.articles.get(i).getEKRabatt()); }
+                catch (NumberFormatException ex) { ekrabatt = null; }
+                try { ekp = new BigDecimal(artikelListe.articles.get(i).getEKP()); }
+                catch (NumberFormatException ex) { ekp = null; }
             }
             String varStr = var ? "Ja" : "Nein";
-            String herkunft = artikelListe.originalData.get(i).get(indexMap.get("herkunft")).toString();
-            Integer bestand;
-            try {
-                bestand = Integer.parseInt( artikelListe.originalData.get(i).get(indexMap.get("bestand")).toString() );
-            } catch (NumberFormatException ex) {
-                bestand = null;
-            }
+            String herkunft = artikelListe.articles.get(i).getHerkunft();
+            Integer bestand = artikelListe.articles.get(i).getBestand();
 
             Vector<Object> row = new Vector<Object>();
                 row.add(produktgruppe); row.add(lieferant); row.add(nummer);

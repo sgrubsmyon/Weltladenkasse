@@ -189,7 +189,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 		    "SELECT r.rabatt_id, r.aktionsname, r.rabatt_relativ, r.rabatt_absolut, "+
                     "r.mengenrabatt_schwelle, r.mengenrabatt_anzahl_kostenlos, r.mengenrabatt_relativ, "+
                     "r.von > NOW(), r.bis > NOW() OR r.bis IS NULL, "+
-                    "DATE_FORMAT(r.von,'"+dateFormatSQL+"'), DATE_FORMAT(r.bis,'"+dateFormatSQL+"'), "+
+                    "DATE_FORMAT(r.von,'"+bc.dateFormatSQL+"'), DATE_FORMAT(r.bis,'"+bc.dateFormatSQL+"'), "+
                     "artikel.artikel_name, produktgruppe.produktgruppen_name "+
                     "FROM rabattaktion AS r LEFT JOIN produktgruppe USING (produktgruppen_id) "+
                     "LEFT JOIN artikel USING (artikel_id) "+
@@ -214,11 +214,11 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
                 String produktgr = rs.getString(13);
 
                 aktionsname = aktionsname == null ? "" : aktionsname;
-                rabattRel = rabattRel == null ? "" : vatFormatter(rabattRel);
-                rabattAbs = rabattAbs == null ? "" : rabattAbs.replace('.',',')+" "+currencySymbol;
+                rabattRel = rabattRel == null ? "" : bc.vatFormatter(rabattRel);
+                rabattAbs = rabattAbs == null ? "" : rabattAbs.replace('.',',')+" "+bc.currencySymbol;
                 schwelle = schwelle == null ? "" : schwelle;
                 mengenAnz = mengenAnz == null ? "" : mengenAnz;
-                mengenRel = mengenRel == null ? "" : vatFormatter(mengenRel);
+                mengenRel = mengenRel == null ? "" : bc.vatFormatter(mengenRel);
                 von = von == null ? "" : von;
                 bis = bis == null ? "" : bis;
                 artikel = artikel == null ? "" : artikel;

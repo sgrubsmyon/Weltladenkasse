@@ -133,7 +133,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
                     row.add(produktgruppenNumber);
                     row.add(produktgruppe);
                     row.add(nArticles);
-                    row.add( vatFormatter(mwst_satz) );
+                    row.add( bc.vatFormatter(mwst_satz) );
                     row.add(pfand_name);
                     row.add(aktivBool);
                 data.add(row);

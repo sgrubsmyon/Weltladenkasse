@@ -222,8 +222,8 @@ public abstract class Abrechnungen extends WindowContent {
                 //BigDecimal mwst_netto = rs.getBigDecimal(2);
                 //BigDecimal mwst_betrag = rs.getBigDecimal(3);
             // NEW: ROUND OF SUM (rounding in Java)
-                //BigDecimal mwst_netto = new BigDecimal( priceFormatterIntern(rs.getBigDecimal(2)) );
-                //BigDecimal mwst_betrag = new BigDecimal( priceFormatterIntern(rs.getBigDecimal(3)) );
+                //BigDecimal mwst_netto = new BigDecimal( bc.priceFormatterIntern(rs.getBigDecimal(2)) );
+                //BigDecimal mwst_betrag = new BigDecimal( bc.priceFormatterIntern(rs.getBigDecimal(3)) );
             // NEWER: Rounding was already done when Rechnung was saved, not necessary here
                 BigDecimal mwst_netto = rs.getBigDecimal(2);
                 BigDecimal mwst_betrag = rs.getBigDecimal(3);
@@ -356,9 +356,9 @@ public abstract class Abrechnungen extends WindowContent {
         data.add(new Vector<Object>()); data.lastElement().add("Gesamt Bar Brutto");
         data.add(new Vector<Object>()); data.lastElement().add("Gesamt EC Brutto");
         for (BigDecimal mwst : mwstSet){
-            data.add(new Vector<Object>()); data.lastElement().add(vatFormatter(mwst)+" MwSt. Brutto");
-            data.add(new Vector<Object>()); data.lastElement().add(vatFormatter(mwst)+" MwSt. Netto");
-            data.add(new Vector<Object>()); data.lastElement().add(vatFormatter(mwst)+" MwSt. Betrag");
+            data.add(new Vector<Object>()); data.lastElement().add(bc.vatFormatter(mwst)+" MwSt. Brutto");
+            data.add(new Vector<Object>()); data.lastElement().add(bc.vatFormatter(mwst)+" MwSt. Netto");
+            data.add(new Vector<Object>()); data.lastElement().add(bc.vatFormatter(mwst)+" MwSt. Betrag");
         }
         data.add(new Vector<Object>()); data.lastElement().add(""); // row for exportButtons
     }
@@ -367,20 +367,20 @@ public abstract class Abrechnungen extends WindowContent {
         String formattedDate = formatDate(date, this.dateOutFormat);
         columnLabels.add(formattedDate);
         // add Gesamt Brutto
-        data.get(0).add( priceFormatter( totals.get(0) )+" "+currencySymbol );
+        data.get(0).add( bc.priceFormatter( totals.get(0) )+" "+bc.currencySymbol );
         // add Gesamt Bar Brutto
-        data.get(1).add( priceFormatter( totals.get(1) )+" "+currencySymbol );
+        data.get(1).add( bc.priceFormatter( totals.get(1) )+" "+bc.currencySymbol );
         // add Gesamt EC Brutto
-        data.get(2).add( priceFormatter( totals.get(2) )+" "+currencySymbol );
+        data.get(2).add( bc.priceFormatter( totals.get(2) )+" "+bc.currencySymbol );
         // add VATs
         int rowIndex = 3;
         for (BigDecimal mwst : mwstSet){
             for (int i=0; i<3; i++){
                 if (vats != null && vats.containsKey(mwst)){
                     BigDecimal bd = vats.get(mwst).get(i);
-                    data.get(rowIndex).add( priceFormatter(bd)+" "+currencySymbol );
+                    data.get(rowIndex).add( bc.priceFormatter(bd)+" "+bc.currencySymbol );
                 } else {
-                    data.get(rowIndex).add( priceFormatter("0")+" "+currencySymbol );
+                    data.get(rowIndex).add( bc.priceFormatter("0")+" "+bc.currencySymbol );
                 }
                 rowIndex++;
             }
@@ -524,7 +524,7 @@ public abstract class Abrechnungen extends WindowContent {
         // Load the template file
         final Sheet sheet;
         try {
-            String filename = "vorlagen"+fileSep+titleStr+".ods";
+            String filename = "vorlagen"+bc.fileSep+titleStr+".ods";
             File infile = new File(filename);
             if (!infile.exists()){
                 JOptionPane.showMessageDialog(this,
@@ -555,9 +555,9 @@ public abstract class Abrechnungen extends WindowContent {
 
         // Set VATs:
         for (BigDecimal mwst : mwstSet){
-            sheet.setValueAt(vatFormatter(mwst)+" MwSt. Brutto", 0, rowIndex);
-            sheet.setValueAt(vatFormatter(mwst)+" MwSt. Netto", 0, rowIndex+1);
-            sheet.setValueAt(vatFormatter(mwst)+" MwSt. Betrag", 0, rowIndex+2);
+            sheet.setValueAt(bc.vatFormatter(mwst)+" MwSt. Brutto", 0, rowIndex);
+            sheet.setValueAt(bc.vatFormatter(mwst)+" MwSt. Netto", 0, rowIndex+1);
+            sheet.setValueAt(bc.vatFormatter(mwst)+" MwSt. Betrag", 0, rowIndex+2);
             for (int i=0; i<3; i++){
                 if (vats.containsKey(mwst)){
                     sheet.setValueAt(vats.get(mwst).get(i), 1, rowIndex);

@@ -69,7 +69,7 @@ public class Quittung extends WindowContent {
     private Sheet createSheetFromTemplate() {
         final Sheet sheet;
         try {
-            String filename = "vorlagen"+fileSep+"Quittung.ods";
+            String filename = "vorlagen"+bc.fileSep+"Quittung.ods";
             File infile = new File(filename);
             if (!infile.exists()){
                 JOptionPane.showMessageDialog(this,
@@ -96,7 +96,7 @@ public class Quittung extends WindowContent {
             rowOffset = 0;
         } else {
             // Fill header
-            sheet.getCellAt("A5").setValue(datetime.format(dateFormatDate4j));
+            sheet.getCellAt("A5").setValue(datetime.format(bc.dateFormatDate4j));
             rowOffset = 7;
         }
     }
@@ -151,7 +151,7 @@ public class Quittung extends WindowContent {
             row++;
             Integer mwstIndex = 1;
             for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : mwstsAndTheirValues.entrySet() ){
-                sheet.setValueAt(vatFormatter(entry.getKey()), 0, row);
+                sheet.setValueAt(bc.vatFormatter(entry.getKey()), 0, row);
                 int col = 1;
                 for ( BigDecimal val : entry.getValue() ){
                     sheet.setValueAt(val, col, row);
@@ -176,14 +176,14 @@ public class Quittung extends WindowContent {
 
         // Get a handle on the printer, by requiring a printer with the given name
         PrintServiceAttributeSet attrSet = new HashPrintServiceAttributeSet();
-        attrSet.add(new PrinterName(this.printerName, null));
+        attrSet.add(new PrinterName(bc.printerName, null));
         PrintService[] pservices = PrintServiceLookup.lookupPrintServices(null, attrSet);
         PrintService ps;
         try {
             ps = pservices[0];
             job.setPrintService(ps);   // Try setting the printer you want
         } catch (ArrayIndexOutOfBoundsException e){
-            System.err.println("Error: No printer named '"+this.printerName+"', using default printer.");
+            System.err.println("Error: No printer named '"+bc.printerName+"', using default printer.");
         } catch (PrinterException exception) {
             System.err.println("Printing error: " + exception);
         }
@@ -207,9 +207,9 @@ public class Quittung extends WindowContent {
 
     private void printQuittungWithSoffice(String filename) {
         /** Simple method: printing with openoffice command line tool 'soffice' */
-        String program = constructProgramPath(this.sofficePath, "soffice");
+        String program = constructProgramPath(bc.sofficePath, "soffice");
         String[] executeCmd = new String[] {program, "--headless",
-            "-pt", this.printerName, filename};
+            "-pt", bc.printerName, filename};
         //for (String s : executeCmd){
         //    System.out.println(s);
         //}

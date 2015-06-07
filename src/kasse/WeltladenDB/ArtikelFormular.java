@@ -209,7 +209,7 @@ public class ArtikelFormular extends WindowContent
             vpePanel.setBorder(BorderFactory.createTitledBorder("VPE (Verpackungseinheit)"));
             SpinnerNumberModel vpeModel = new SpinnerNumberModel(1, // initial value
                     0, // min
-                    smallintMax, // max (null == no max)
+                    bc.smallintMax, // max (null == no max)
                     1); // step
             vpeSpinner = new JSpinner(vpeModel);
             JSpinner.NumberEditor vpeEditor = new JSpinner.NumberEditor(vpeSpinner, "###");
@@ -225,7 +225,7 @@ public class ArtikelFormular extends WindowContent
             setPanel.setBorder(BorderFactory.createTitledBorder("Setgröße"));
             SpinnerNumberModel setModel = new SpinnerNumberModel(1, // initial value
                     1, // min
-                    smallintMax, // max (null == no max)
+                    bc.smallintMax, // max (null == no max)
                     1); // step
             setSpinner = new JSpinner(setModel);
             JSpinner.NumberEditor setEditor = new JSpinner.NumberEditor(setSpinner, "###");
@@ -263,7 +263,7 @@ public class ArtikelFormular extends WindowContent
             ((AbstractDocument)vkpreisField.getDocument()).setDocumentFilter(geldFilter);
             vkpreisField.setHorizontalAlignment(JTextField.RIGHT);
             vkpreisPanel.add(vkpreisField);
-            vkpreisPanel.add(new JLabel(currencySymbol));
+            vkpreisPanel.add(new JLabel(bc.currencySymbol));
 
             JPanel empfvkpreisPanel = new JPanel();
             empfvkpreisPanel.setBorder(BorderFactory.createTitledBorder("Empf. VK-Preis (für Set)"));
@@ -272,7 +272,7 @@ public class ArtikelFormular extends WindowContent
             ((AbstractDocument)empfvkpreisField.getDocument()).setDocumentFilter(geldFilter);
             empfvkpreisField.setHorizontalAlignment(JTextField.RIGHT);
             empfvkpreisPanel.add(empfvkpreisField);
-            empfvkpreisPanel.add(new JLabel(currencySymbol));
+            empfvkpreisPanel.add(new JLabel(bc.currencySymbol));
 
             JPanel ekrabattPanel = new JPanel();
             ekrabattPanel.setBorder(BorderFactory.createTitledBorder("EK-Rabatt"));
@@ -290,7 +290,7 @@ public class ArtikelFormular extends WindowContent
             ((AbstractDocument)ekpreisField.getDocument()).setDocumentFilter(geldFilter);
             ekpreisField.setHorizontalAlignment(JTextField.RIGHT);
             ekpreisPanel.add(ekpreisField);
-            ekpreisPanel.add(new JLabel(currencySymbol));
+            ekpreisPanel.add(new JLabel(bc.currencySymbol));
 
             JPanel preisVariabelPanel = new JPanel();
             //preisVariabelPanel.setBorder(BorderFactory.createTitledBorder("Variabler Preis"));
@@ -339,7 +339,7 @@ public class ArtikelFormular extends WindowContent
         if ( empfVKPAndEKPValid(empfvkpreisField.getText(), ekrabattField.getText()) ){
             ekpreisField.setEnabled(false);
             BigDecimal ekpreis = calculateEKP(empfvkpreisField.getText(), ekrabattField.getText());
-            ekpreisField.setText( priceFormatter(ekpreis) );
+            ekpreisField.setText( bc.priceFormatter(ekpreis) );
         } else {
             ekpreisField.setEnabled(true);
         }

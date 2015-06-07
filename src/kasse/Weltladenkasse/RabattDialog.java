@@ -249,9 +249,9 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         if ( (this.rabattAbsolut != null) || (this.rabattRelativ != null) ){ // Einzelrabatt
             rabattModus = rabattDropDownOptions[0];
             this.presetRabattModus = rabattModus;
-            if (this.rabattAbsolut != null) absolutField.setText( priceFormatter(this.rabattAbsolut) );
+            if (this.rabattAbsolut != null) absolutField.setText( bc.priceFormatter(this.rabattAbsolut) );
             if (this.rabattRelativ != null){
-                relativField.setText( vatFormatter(this.rabattRelativ).replace(" %","") );
+                relativField.setText( bc.vatFormatter(this.rabattRelativ).replace(" %","") );
             }
         } else if (!this.mengenrabattSchwelle.equals("")){ // Mengenrabatt
             rabattModus = rabattDropDownOptions[1];
@@ -261,7 +261,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                 kostenlosSpinner.setValue(this.mengenrabattAnzahl);
             }
             if (!this.mengenrabattRelativ.equals("")){
-                mengenrabattRelativField.setText( vatFormatter(this.mengenrabattRelativ).replace(" %","") );
+                mengenrabattRelativField.setText( bc.vatFormatter(this.mengenrabattRelativ).replace(" %","") );
             }
         }
         rabattDropDown.setSelectedItem(rabattModus);
@@ -449,7 +449,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                     absolutField.getDocument().addDocumentListener(this);
                     ((AbstractDocument)absolutField.getDocument()).setDocumentFilter(geldFilter);
                     absolutPanel.add(absolutField);
-                    absolutPanel.add(new JLabel(currencySymbol));
+                    absolutPanel.add(new JLabel(bc.currencySymbol));
                     einzelCard.add(absolutPanel);
                     //
                     einzelCard.add(Box.createRigidArea(new Dimension(12,0)));

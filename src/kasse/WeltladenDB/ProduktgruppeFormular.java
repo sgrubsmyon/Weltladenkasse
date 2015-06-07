@@ -198,7 +198,7 @@ public class ProduktgruppeFormular extends WindowContent
             while (rs.next()) {
                 Integer id = rs.getInt(1);
                 BigDecimal satz = rs.getBigDecimal(2);
-                String mwst = vatFormatter(satz);
+                String mwst = bc.vatFormatter(satz);
                 mwstIDs.add(id);
                 mwsts.add(mwst);
             }
