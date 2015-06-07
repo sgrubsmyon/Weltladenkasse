@@ -10,7 +10,7 @@ Headless printing:
 $ soffice --headless -pt "epson_tmu220" /tmp/Quittung3778691455536663257.ods
 
 Create JAR file by hand:
-$ jar cfe Weltladenkasse_v0.9.7.jar Weltladenkasse.Kasse icons/ jcalendarbutton/ Weltladenkasse/
+$ jar cfe Weltladenkasse_v0.9.8.jar Weltladenkasse.Kasse icons/ jcalendarbutton/ Weltladenkasse/
 
 Export Artikelliste.ods to .csv file:
    File -> Save As -> .csv file

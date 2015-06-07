@@ -1,1 +1,1 @@
-"C:\Program Files (x86)\Java\jre7\bin\java.exe" -jar Weltladenbesteller_v0.9.7.jar
+"C:\Program Files (x86)\Java\jre7\bin\java.exe" -jar Weltladenbesteller_v0.9.8.jar
