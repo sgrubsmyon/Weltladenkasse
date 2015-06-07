@@ -548,7 +548,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         }
         if ( itemAlreadyKnown == 0 || (itemChanged && itemAlreadyKnown != 2) ){ // if item not known or item changed
             // add new item to the list
-            Artikel newArticle = new Artikel(Integer.parseInt(gruppenid),
+            Artikel newArticle = new Artikel(bc, Integer.parseInt(gruppenid),
                     lieferant_id, nummer, name, kurzname, mengeDecimal, einheit,
                     barcode, herkunft, vpeInt, setgrInt, vkpreis,
                     empf_vkpreis, ekrabatt, ekpreis,

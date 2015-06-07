@@ -797,6 +797,18 @@ public class Bestellen extends BestellungsGrundlage implements
     }
 
 
+    private void showEditDialog(Vector<Artikel> selectedArticles) {
+        JDialog editDialog = new JDialog(this.mainWindow, "Artikel bearbeiten", true);
+        ArtikelBearbeiten bearb = new ArtikelBearbeiten(this.conn, this.mainWindow, null, editDialog,
+                selectedArticles);
+        editDialog.getContentPane().add(bearb, BorderLayout.CENTER);
+        editDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        WindowAdapterDialog wad = new WindowAdapterDialog(bearb, editDialog,
+                "Achtung: Änderungen gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
+        editDialog.addWindowListener(wad);
+        editDialog.pack();
+        editDialog.setVisible(true);
+    }
 
     private void setPriceField() {
         boolean variablerPreis = getVariablePriceBool(selectedArtikelID);
@@ -805,12 +817,21 @@ public class Bestellen extends BestellungsGrundlage implements
             if (artikelPreis == null || artikelPreis.equals("")){
                 artikelPreis = getSalePrice(selectedArtikelID);
             }
-            if (artikelPreis == null){
-                artikelPreis = "";
+            if (artikelPreis == null || artikelPreis.equals("")){
                 JOptionPane.showMessageDialog(this,
-                        "Für diesen Artikel muss erst der Preis festgelegt werden!\n"+
-                        "(Im Tab 'Artikelliste')",
+                        "Für diesen Artikel muss erst der Preis festgelegt werden!",
                         "Info", JOptionPane.INFORMATION_MESSAGE);
+
+                Artikel article = getArticle(selectedArtikelID);
+                Vector<Artikel> selectedArticles = new Vector<Artikel>();
+                selectedArticles.add(article);
+
+                showEditDialog(selectedArticles);
+
+                artikelPreis = getRecSalePrice(selectedArtikelID);
+                if (artikelPreis == null || artikelPreis.equals("")){
+                    artikelPreis = getSalePrice(selectedArtikelID);
+                }
             }
             preisField.getDocument().removeDocumentListener(this);
             preisField.setText( bc.decimalMark(artikelPreis) );
