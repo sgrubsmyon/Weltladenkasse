@@ -327,7 +327,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                     row.add(aktiv);
                 data.add(row);
 
-                Artikel article = new Artikel(produktgruppen_id, lieferant_id,
+                Artikel article = new Artikel(bc, produktgruppen_id, lieferant_id,
                         nummer, name, kurzname, menge, einheit, barcode,
                         herkunft, vpe, setgroesse, vkp, empf_vkp, ek_rabatt,
                         ekp, var, sortiment, lieferbar, beliebtWert, bestand,
@@ -834,7 +834,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         /**
          * Get and store all the values of the edited row
          */
-        Artikel a = new Artikel();
+        Artikel a = new Artikel(bc);
         a.setProdGrID(origArticle.getProdGrID());
         a.setVarPreis(origArticle.getVarPreis());
 
@@ -914,12 +914,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         int column = e.getColumn();
         AbstractTableModel model = (AbstractTableModel)e.getSource();
 
-        String origLieferant =
-            originalData.get(dataRow).get(model.findColumn("Lieferant")).toString();
-        Integer origLiefID = getLieferantID(origLieferant);
-        String origArtikelNummer =
-            originalData.get(dataRow).get(model.findColumn("Nummer")).toString();
-        Artikel origArticle = getArticle(origLiefID, origArtikelNummer);
+        Integer origArtikelID = artikelIDs.get(dataRow);
+        Artikel origArticle = getArticle(origArtikelID);
         int changeIndex = editedArticles.indexOf(origArticle); // look up artikelNummer in change list
         System.out.println("changeIndex: "+changeIndex);
 

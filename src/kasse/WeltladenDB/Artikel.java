@@ -8,7 +8,7 @@ public class Artikel {
     /**
      * Class describing an article.
      */
-    private BaseClass bc = new BaseClass();
+    private BaseClass bc;
 
     // All attributes:
     private Integer produktgruppen_id;
@@ -33,7 +33,8 @@ public class Artikel {
     private Integer bestand;
     private Boolean aktiv;
 
-    public Artikel() {
+    public Artikel(BaseClass bc_) {
+        bc = bc_;
         produktgruppen_id = 8;
         lieferant_id = 1;
         artikel_nr = "";
@@ -57,13 +58,14 @@ public class Artikel {
         aktiv = true;
     }
 
-    public Artikel(Integer prodGrID, Integer liefID, String nummer,
+    public Artikel(BaseClass bc_, Integer prodGrID, Integer liefID, String nummer,
             String name, String kname, BigDecimal menge_, String einh,
             String bcode, String herk, Integer vpe_, Integer setgr,
             String vkpreis, String empfvkpreis, String ekrabatt,
             String ekpreis, Boolean varpreis, Boolean sortim,
             Boolean liefbar, Integer beliebt, Integer bestand_,
             Boolean aktiv_) {
+        bc = bc_;
         setProdGrID(prodGrID);
         setLiefID(liefID);
         setNummer(nummer);
@@ -309,7 +311,10 @@ public class Artikel {
     }
 
     public void setKurzname(String kname) {
-        kurzname = kname;
+        if (kname == null)
+            kurzname = "";
+        else
+            kurzname = kname;
     }
 
     public void setMenge(BigDecimal menge_) {
@@ -320,15 +325,24 @@ public class Artikel {
     }
 
     public void setEinheit(String einh) {
-        einheit = einh;
+        if (einh == null)
+            einheit = "";
+        else
+            einheit = einh;
     }
 
     public void setBarcode(String bcode) {
-        barcode = bcode;
+        if (bcode == null)
+            barcode = "";
+        else
+            barcode = bcode;
     }
 
     public void setHerkunft(String herk) {
-        herkunft = herk;
+        if (herk == null)
+            herkunft = "";
+        else
+            herkunft = herk;
     }
 
     public void setVPE(Integer vpe_) {

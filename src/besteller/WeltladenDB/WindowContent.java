@@ -505,8 +505,68 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
+
+    protected Artikel getArticle(Integer artikel_id) {
+        Artikel a = new Artikel(bc);
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT "+
+                    "produktgruppen_id, "+
+                    "lieferant_id, "+
+                    "artikel_nr, "+
+                    "artikel_name, "+
+                    "kurzname, "+
+                    "menge, "+
+                    "einheit, "+
+                    "barcode, "+
+                    "herkunft, "+
+                    "vpe, "+
+                    "setgroesse, "+
+                    "vk_preis, empf_vk_preis, "+
+                    "ek_rabatt, ek_preis, "+
+                    "variabler_preis, sortiment, "+
+                    "lieferbar, beliebtheit, "+
+                    "bestand "+
+                    "FROM artikel "+
+                    "WHERE artikel_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, artikel_id);
+            ResultSet rs = pstmt.executeQuery();
+            // Now do something with the ResultSet, should be only one result ...
+            rs.next();
+            a.setProdGrID(rs.getInt(1));
+            a.setLiefID(rs.getInt(2));
+            a.setNummer(rs.getString(3));
+            a.setName(rs.getString(4));
+            a.setKurzname(rs.getString(5));
+            a.setMenge(rs.getBigDecimal(6));
+            a.setEinheit(rs.getString(7));
+            a.setBarcode(rs.getString(8));
+            a.setHerkunft(rs.getString(9));
+            a.setVPE(rs.getInt(10));
+            a.setSetgroesse(rs.getInt(11));
+            Boolean var = rs.getBoolean(16);
+            a.setVKP(var ? "" : rs.getString(12));
+            a.setEmpfVKP(var ? "" : rs.getString(13));
+            a.setEKRabatt( bc.vatFormatter(rs.getString(14)) );
+            a.setEKP(var ? "" : rs.getString(15));
+            a.setVarPreis(var);
+            a.setSortiment(rs.getBoolean(17));
+            a.setLieferbar(rs.getBoolean(18));
+            a.setBeliebt(rs.getInt(19));
+            a.setBestand(rs.getInt(20));
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return a;
+    }
+
+
     protected Artikel getArticle(Integer lieferant_id, String artikel_nr) {
-        Artikel a = new Artikel();
+        Artikel a = new Artikel(bc);
         a.setLiefID(lieferant_id);
         a.setNummer(artikel_nr);
         try {
@@ -621,6 +681,29 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             ex.printStackTrace();
         }
         return lieferant_id;
+    }
+
+    protected Vector<Object> getLieferantIDArtikelNummer(Integer artikel_id) {
+        Vector<Object> liefIDAndNr = new Vector<Object>();
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT lieferant_id, artikel_nr FROM artikel "+
+                    "WHERE artikel_id = ? AND artikel.aktiv = TRUE"
+                    );
+            pstmtSetInteger(pstmt, 1, artikel_id);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            Integer lieferant_id = rs.getInt(1);
+            String artikel_nr = rs.getString(2);
+            liefIDAndNr.add(lieferant_id);
+            liefIDAndNr.add(artikel_nr);
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return liefIDAndNr;
     }
 
     protected boolean isLieferantAlreadyKnown(String lieferant) {

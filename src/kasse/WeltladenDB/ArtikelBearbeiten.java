@@ -282,7 +282,7 @@ public class ArtikelBearbeiten extends DialogWindow
 
 
     private Artikel getNewArticle(Artikel origArticle) {
-        Artikel a = new Artikel();
+        Artikel a = new Artikel(bc);
 
         Integer newLieferantID = origArticle.getLiefID();
         if (artikelFormular.lieferantBox.isEnabled()){

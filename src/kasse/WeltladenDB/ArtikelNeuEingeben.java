@@ -401,7 +401,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         Integer beliebtWert = artikelFormular.beliebtWerte.get(artikelFormular.beliebtBox.getSelectedIndex());
         String beliebt = artikelFormular.beliebtBox.getSelectedItem().toString();
 
-        Artikel newArticle = new Artikel(prodgrID, lieferantID, nummer, name,
+        Artikel newArticle = new Artikel(bc, prodgrID, lieferantID, nummer, name,
                 kurzname, menge, einheit, barcode, herkunft, vpe, setgroesse,
                 var ? "" : vkpreis,
                 var ? "" : empfvkpreis,
