@@ -808,6 +808,13 @@ public class Bestellen extends BestellungsGrundlage implements
         editDialog.addWindowListener(wad);
         editDialog.pack();
         editDialog.setVisible(true);
+
+        // update selected Artikel
+        String[] an = artikelBox.parseArtikelName();
+        String artikelName = an[0];
+        String lieferant = an[1];
+        String artikelNummer = (String)nummerBox.getSelectedItem();
+        selectedArtikelID = getArticleID(lieferant, artikelNummer); // get the internal artikelID from the DB
     }
 
     private void setPriceField() {
@@ -832,6 +839,9 @@ public class Bestellen extends BestellungsGrundlage implements
                 if (artikelPreis == null || artikelPreis.equals("")){
                     artikelPreis = getSalePrice(selectedArtikelID);
                 }
+                if (artikelPreis == null)
+                    artikelPreis = "";
+                System.out.println("artikelPreis: "+artikelPreis);
             }
             preisField.getDocument().removeDocumentListener(this);
             preisField.setText( bc.decimalMark(artikelPreis) );
