@@ -92,7 +92,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         for ( BigDecimal preis : preise ){
             totalPrice = totalPrice.add(preis);
         }
-        return priceFormatter(totalPrice);
+        return bc.priceFormatter(totalPrice);
     }
 
     protected BigDecimal calculateTotalVATUmsatz(BigDecimal vat) {
@@ -113,7 +113,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         /** Returns the total amount of VAT tax that is included in Rechnung
          *  (MwSt.-Betrag). */
         BigDecimal priceForVAT = calculateTotalVATUmsatz(vat);
-        BigDecimal totalVAT = new BigDecimal( priceFormatterIntern(calculateVAT(priceForVAT, vat)) );
+        BigDecimal totalVAT = new BigDecimal( bc.priceFormatterIntern(calculateVAT(priceForVAT, vat)) );
         return totalVAT;
     }
 
@@ -122,7 +122,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         totalPricePanel.setLayout(new FlowLayout());
         JLabel totalPriceLabel = new JLabel("Gesamtpreis: ");
         totalPricePanel.add(totalPriceLabel);
-        totalPriceField = new JTextField(calculateTotalPrice()+" "+currencySymbol);
+        totalPriceField = new JTextField(calculateTotalPrice()+" "+bc.currencySymbol);
         totalPriceField.setEditable(false);
         totalPriceField.setColumns(7);
         totalPriceField.setHorizontalAlignment(JTextField.RIGHT);
@@ -141,9 +141,9 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
                     vatVec.add(vatNetto); vatVec.add(vatAmount);
                     this.vatMap.put(vat, vatVec);
                 }
-                String vatPercent = vatFormatter(vat);
+                String vatPercent = bc.vatFormatter(vat);
                 totalPricePanel.add(new JLabel("   "+vatPercent+" MwSt.: "));
-                JTextField vatField = new JTextField(priceFormatter(vatAmount)+" "+currencySymbol);
+                JTextField vatField = new JTextField(bc.priceFormatter(vatAmount)+" "+bc.currencySymbol);
                 vatField.setEditable(false);
                 vatField.setColumns(7);
                 vatField.setHorizontalAlignment(JTextField.RIGHT);

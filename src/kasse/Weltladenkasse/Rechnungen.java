@@ -92,7 +92,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    // Run MySQL command
 	    ResultSet rs = stmt.executeQuery(
 		    "SELECT vd.rechnungs_nr, SUM(vd.ges_preis) AS rechnungs_betrag, " +
-		    "DATE_FORMAT(verkauf.verkaufsdatum, '"+dateFormatSQL+"') " +
+		    "DATE_FORMAT(verkauf.verkaufsdatum, '"+bc.dateFormatSQL+"') " +
 		    "FROM verkauf_details AS vd " +
                     "INNER JOIN verkauf USING (rechnungs_nr) " +
 		    filterStr +
@@ -104,7 +104,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    while (rs.next()) {
 		Vector<String> row = new Vector<String>();
 		row.add("");
-		row.add(rs.getString(1)); row.add(rs.getString(2) + ' ' + currencySymbol); row.add(rs.getString(3));
+		row.add(rs.getString(1)); row.add(rs.getString(2) + ' ' + bc.currencySymbol); row.add(rs.getString(3));
 		row.add("");
 		// change dots to commas
 		row.set(2, row.get(2).replace('.',','));
@@ -255,12 +255,12 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 preise.add(gesPreisDec);
                 String mwst = rs.getString(10);
                 mwsts.add(new BigDecimal(mwst));
-                mwst = vatFormatter(mwst);
+                mwst = bc.vatFormatter(mwst);
                 String einzelPreis = "";
                 if (stueck != null){
-                    einzelPreis = priceFormatter( gesPreisDec.divide( stueckDec, 10, RoundingMode.HALF_UP ) )+' '+currencySymbol;
+                    einzelPreis = bc.priceFormatter( gesPreisDec.divide( stueckDec, 10, RoundingMode.HALF_UP ) )+' '+bc.currencySymbol;
                 }
-                gesPreis = gesPreis.replace('.',',')+' '+currencySymbol;
+                gesPreis = gesPreis.replace('.',',')+' '+bc.currencySymbol;
                 String name = "";
                 String color = "default";
                 if ( aktionsname != null ) { // Aktionsrabatt

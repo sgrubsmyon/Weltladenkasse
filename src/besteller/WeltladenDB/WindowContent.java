@@ -4,7 +4,6 @@ package WeltladenDB;
 import java.io.*; // for InputStream
 import java.util.*; // for Vector, Collections
 import java.util.Date; // because Date alone ambiguous due to java.sql.Date
-import java.text.*; // for NumberFormat
 import java.math.*; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
@@ -29,23 +28,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     // mySQL Connection:
     protected Connection conn = null;
     protected MainWindowGrundlage mainWindow = null;
-    protected String currencySymbol;
-    protected Locale myLocale = Locale.GERMAN;
-    protected String mysqlPath;
-    protected String sofficePath;
-    protected String printerName;
-    protected String dateFormatSQL;
-    protected String dateFormatJava;
-    protected String dateFormatDate4j;
-    protected String delimiter; // for CSV export/import
-    protected final String fileSep = System.getProperty("file.separator");
-    protected final String lineSep = System.getProperty("line.separator");
-    protected final int smallintMax = 32767;
-    protected final BigDecimal one = new BigDecimal("1");
-    protected final BigDecimal minusOne = new BigDecimal("-1");
-    protected final BigDecimal percent = new BigDecimal("0.01");
-    protected final BigDecimal hundred = new BigDecimal("100");
-    protected final BigDecimal thousand = new BigDecimal("1000");
+    protected BaseClass bc = null;
 
     // Die Ausrichter:
     protected DefaultTableCellRenderer rechtsAusrichter = new DefaultTableCellRenderer();
@@ -54,9 +37,6 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected final int columnMargin = 20; /** number of pixels of space between table columns */
     protected final int minColumnWidth = 20; /** minimally allowed pixel width of table columns */
     protected final int maxColumnWidth = 150; /** maximally allowed pixel width of table columns */
-    // Formats to format and parse numbers
-    //protected NumberFormat amountFormat;
-    protected NumberFormat vatFormat;
 
     protected PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
     protected PositiveNumberDocumentFilter relFilter = new PositiveNumberDocumentFilter(3, 6);
@@ -66,8 +46,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected StringDocumentFilter nameFilter = new StringDocumentFilter(180);
     protected StringDocumentFilter kurznameFilter = new StringDocumentFilter(50);
     protected StringDocumentFilter herkunftFilter = new StringDocumentFilter(100);
-    protected IntegerDocumentFilter intFilter = new IntegerDocumentFilter(-smallintMax, smallintMax, this);
-    protected IntegerDocumentFilter vpeFilter = new IntegerDocumentFilter(1, smallintMax, this);
+    protected IntegerDocumentFilter intFilter;
+    protected IntegerDocumentFilter vpeFilter;
     protected IntegerDocumentFilter beliebtFilter;
 
     protected Vector<Integer> beliebtWerte;
@@ -82,7 +62,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
     void setMainWindowPointer(MainWindowGrundlage mw){
 	this.mainWindow = mw;
-        this.currencySymbol = mw.currencySymbol;
+        this.bc = mw.bc;
     }
     // Getter:
     public Connection getConnection(){
@@ -97,42 +77,17 @@ public abstract class WindowContent extends JPanel implements ActionListener {
      *       */
     public WindowContent(Connection conn, MainWindowGrundlage mw) {
 	this.conn = conn;
-	//amountFormat = new DecimalFormat("0.00");
-	//amountFormat = NumberFormat.getCurrencyInstance(myLocale);
-	vatFormat = new DecimalFormat("0.####");
+	this.mainWindow = mw;
+        this.bc = mw.bc;
+
+        intFilter = new IntegerDocumentFilter(-bc.smallintMax, bc.smallintMax, this);
+        vpeFilter = new IntegerDocumentFilter(1, bc.smallintMax, this);
+
 	rechtsAusrichter.setHorizontalAlignment(JLabel.RIGHT);
 	linksAusrichter.setHorizontalAlignment(JLabel.LEFT);
 	zentralAusrichter.setHorizontalAlignment(JLabel.CENTER);
 	this.setLayout(new BorderLayout());
 
-	this.mainWindow = mw;
-        this.currencySymbol = mw.currencySymbol;
-
-        // load config file:
-        String filename = "config.properties";
-        try {
-            InputStream fis = new FileInputStream(filename);
-            Properties props = new Properties();
-            props.load(fis);
-
-            this.mysqlPath = props.getProperty("mysqlPath"); // path where mysql and mysqldump lie around
-            this.sofficePath = props.getProperty("sofficePath"); // path where soffice lies around
-            this.printerName = props.getProperty("printerName"); // name of receipt printer
-            this.dateFormatSQL = props.getProperty("dateFormatSQL");
-            this.dateFormatJava = props.getProperty("dateFormatJava");
-            this.dateFormatDate4j = props.getProperty("dateFormatDate4j");
-            this.delimiter = props.getProperty("delimiter"); // for CSV export/import
-        } catch (Exception ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            this.mysqlPath = "";
-            this.sofficePath = "";
-            this.printerName = "epson_tmu220";
-            this.dateFormatSQL = "%d.%m.%Y, %H:%i Uhr";
-            this.dateFormatJava = "dd.MM.yyyy, HH:mm 'Uhr'";
-            this.dateFormatDate4j = "DD.MM.YYYY, hh:mm |Uhr|";
-            this.delimiter = ";"; // for CSV export/import
-        }
-        this.printerName = this.printerName.replaceAll("\"","");
         fillBeliebtWerte();
     }
 
@@ -216,9 +171,9 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             path = program;
         } else {
             if ( dir.endsWith("\"") ){
-                path = dir.substring(0, dir.length()-1)+fileSep+program+"\"";
+                path = dir.substring(0, dir.length()-1)+bc.fileSep+program+"\"";
             } else {
-                path = dir+fileSep+program;
+                path = dir+bc.fileSep+program;
             }
         }
         return path;
@@ -272,7 +227,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         preisField.setColumns(6);
         preisField.setHorizontalAlignment(JTextField.RIGHT);
         preisPanel.add(preisField);
-        preisPanel.add(new JLabel(currencySymbol));
+        preisPanel.add(new JLabel(bc.currencySymbol));
 
         JOptionPane jop = new JOptionPane(new Object[]{label, preisPanel},
                     JOptionPane.QUESTION_MESSAGE,
@@ -298,17 +253,17 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
     protected BigDecimal calculateVAT(BigDecimal totalPrice, BigDecimal mwst) {
         //return totalPrice.multiply( one.subtract( one.divide(one.add(mwst), 10, RoundingMode.HALF_UP) ) ); // VAT = bruttoPreis * ( 1. - 1./(1.+mwst) );
-        return totalPrice.divide(one.add(mwst), 10, RoundingMode.HALF_UP).multiply(mwst); // VAT = bruttoPreis / (1.+mwst) * mwst;
+        return totalPrice.divide(bc.one.add(mwst), 10, RoundingMode.HALF_UP).multiply(mwst); // VAT = bruttoPreis / (1.+mwst) * mwst;
     }
 
     protected BigDecimal calculateEKP(BigDecimal empfVKPreis, BigDecimal ekRabatt) {
-        return ( one.subtract(ekRabatt) ).multiply(empfVKPreis); // Einkaufspreis = (1 - rabatt) * Empf. VK-Preis
+        return ( bc.one.subtract(ekRabatt) ).multiply(empfVKPreis); // Einkaufspreis = (1 - rabatt) * Empf. VK-Preis
     }
 
     protected BigDecimal calculateEKP(String empfVKPreis, BigDecimal ekRabatt) {
         BigDecimal empfvkpDecimal;
         try {
-            empfvkpDecimal = new BigDecimal( priceFormatterIntern(empfVKPreis) );
+            empfvkpDecimal = new BigDecimal( bc.priceFormatterIntern(empfVKPreis) );
         } catch (NumberFormatException ex) {
             return null;
         }
@@ -318,7 +273,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected BigDecimal calculateEKP(String empfVKPreis, String ekRabatt) {
         BigDecimal rabatt;
         try {
-            rabatt = new BigDecimal( vatParser(ekRabatt) );
+            rabatt = new BigDecimal( bc.vatParser(ekRabatt) );
         } catch (NumberFormatException ex) {
             return null;
         }
@@ -331,9 +286,9 @@ public abstract class WindowContent extends JPanel implements ActionListener {
          */
         BigDecimal preis = calculateEKP(empfVKPreis, ekRabatt);
         if (preis != null){
-            return priceFormatterIntern(preis);
+            return bc.priceFormatterIntern(preis);
         } else {
-            return priceFormatterIntern(ekPreis);
+            return bc.priceFormatterIntern(ekPreis);
         }
     }
 
@@ -341,109 +296,18 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         /** If empfVKPreis and ekRabatt are both valid numbers, return true, else false.
          */
         try {
-            new BigDecimal( priceFormatterIntern(empfVKPreis) );
+            new BigDecimal( bc.priceFormatterIntern(empfVKPreis) );
         } catch (NumberFormatException ex) {
             return false;
         }
         try {
-            new BigDecimal( vatParser(ekRabatt) );
+            new BigDecimal( bc.vatParser(ekRabatt) );
         } catch (NumberFormatException ex) {
             return false;
         }
         return true;
     }
 
-    /**
-     * Number formatting methods
-     */
-
-    protected String decimalMark(String value) {
-        /** Use uniform decimal mark */
-        return value.replace('.',',');
-    }
-
-    protected String unifyDecimal(BigDecimal value) {
-        /** Strip trailing zeros and use uniform decimal mark */
-        return decimalMark( value.stripTrailingZeros().toPlainString() );
-    }
-
-    protected String unifyDecimal(String value) {
-        /** Strip trailing zeros and use uniform decimal mark */
-        try {
-            BigDecimal val = new BigDecimal( value.replaceAll("\\s","").replace(',','.') );
-            return unifyDecimal(val);
-        } catch (NumberFormatException nfe) {
-            return "";
-        }
-    }
-
-    protected String priceFormatterIntern(BigDecimal price) {
-        if (price == null){
-            return "";
-        }
-        // for 2 digits after period sign and "0.5-is-rounded-up" rounding:
-        return price.setScale(2, RoundingMode.HALF_UP).toString();
-    }
-
-    protected String priceFormatter(BigDecimal price) {
-        return decimalMark( priceFormatterIntern(price) );
-    }
-
-    protected String priceFormatterIntern(String priceStr) {
-        try {
-            BigDecimal price = new BigDecimal( priceStr.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') );
-            return priceFormatterIntern(price);
-        } catch (NumberFormatException nfe) {
-            return "";
-        }
-    }
-
-    protected String priceFormatter(String priceStr) {
-        try {
-            BigDecimal price = new BigDecimal( priceStr.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') );
-            return priceFormatter(price);
-        } catch (NumberFormatException nfe) {
-            return "";
-        }
-    }
-
-    protected String vatFormatter(String vat) {
-        /** Input `vat` is e.g. "0.01"
-         *  Returns "1%" */
-        vat = vat.replace(',','.');
-        try {
-            String vatFormatted = unifyDecimal(
-                    vatFormat.format( new BigDecimal(vat).multiply(hundred) )
-                    ) + "%";
-            return vatFormatted;
-        } catch (NumberFormatException nfe) {
-            return "";
-        }
-    }
-
-    protected String vatFormatter(BigDecimal vat) {
-        /** Input `vat` is e.g. 0.01
-         *  Returns "1%" */
-        if (vat == null){
-            return "";
-        }
-        return vatFormatter(vat.toString());
-    }
-
-    protected String vatPercentRemover(String vat) {
-        return vat.replace("%","").replaceAll("\\s","");
-    }
-
-    protected String vatParser(String vat) {
-        /** Input `vat` is e.g. "1%"
-         *  Returns "0.01" */
-        try {
-            BigDecimal vatDecimal = new BigDecimal( vatPercentRemover(vat).replace(',','.') ).multiply(percent);
-            return vatDecimal.toString();
-        } catch (NumberFormatException nfe) {
-            return "";
-        }
-    }
 
 
     /**
@@ -480,14 +344,14 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
     }
 
-    protected boolean isItemAlreadyKnown(String lieferant, String nummer) {
+    protected boolean isItemAlreadyKnown(Integer lieferant_id, String nummer) {
         boolean exists = false;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(artikel_id) > 0 FROM artikel INNER JOIN lieferant USING (lieferant_id) "+
-                    "WHERE lieferant_name = ? AND artikel_nr = ? AND artikel.aktiv = TRUE"
+                    "SELECT COUNT(artikel_id) > 0 FROM artikel "+
+                    "WHERE lieferant_id = ? AND artikel_nr = ? AND artikel.aktiv = TRUE"
                     );
-            pstmt.setString(1, lieferant);
+            pstmtSetInteger(pstmt, 1, lieferant_id);
             pstmt.setString(2, nummer);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -541,48 +405,54 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected int insertNewItem(Integer produktgruppen_id, Integer
-            lieferant_id, String nummer, String name, String kurzname,
-            BigDecimal menge, String einheit, String barcode, String herkunft,
-            Integer vpe, Integer setgroesse, String vkpreis, String
-            empfvkpreis, String ekrabatt, String ekpreis, Boolean var_preis,
-            Boolean sortiment, Boolean lieferbar, Integer beliebt, Integer
-            bestand) {
+    protected int insertNewItem(Artikel a) {
         // add row for new item (with updated fields)
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
 
-        if (kurzname.equals("") || kurzname.equals("NULL")){ kurzname = null; }
-        if (einheit.equals("") || einheit.equals("NULL")){ einheit = null; }
-        if (barcode.equals("") || barcode.equals("NULL")){ barcode = null; }
-        if (herkunft.equals("") || herkunft.equals("NULL")){ herkunft = null; }
-        if ( vpe == null || vpe.equals(0) ){ vpe = null; }
-        if ( setgroesse == null || setgroesse.equals(0) ){ setgroesse = 1; }
+        if (a.getKurzname().equals("") || a.getKurzname().equals("NULL")){
+            a.setKurzname(null);
+        }
+        if (a.getEinheit().equals("") || a.getEinheit().equals("NULL")){
+            a.setEinheit(null);
+        }
+        if (a.getBarcode().equals("") || a.getBarcode().equals("NULL")){
+            a.setBarcode(null);
+        }
+        if (a.getHerkunft().equals("") || a.getHerkunft().equals("NULL")){
+            a.setHerkunft(null);
+        }
+        if (a.getVPE() == null || a.getVPE().equals(0)){
+            a.setVPE(null);
+        }
+        if (a.getSetgroesse() == null || a.getSetgroesse().equals(0)){
+            a.setSetgroesse(1);
+        }
 
         BigDecimal vkpDecimal;
         try {
-            vkpDecimal = new BigDecimal(priceFormatterIntern(vkpreis));
+            vkpDecimal = new BigDecimal(bc.priceFormatterIntern(a.getVKP()));
         } catch (NumberFormatException ex) {
             vkpDecimal = null;
         }
 
         BigDecimal empfvkpDecimal;
         try {
-            empfvkpDecimal = new BigDecimal(priceFormatterIntern(empfvkpreis));
+            empfvkpDecimal = new BigDecimal(bc.priceFormatterIntern(a.getEmpfVKP()));
         } catch (NumberFormatException ex) {
             empfvkpDecimal = null;
         }
 
         BigDecimal ekrabattDecimal;
         try {
-            ekrabattDecimal = new BigDecimal( vatParser(ekrabatt) );
+            ekrabattDecimal = new BigDecimal( bc.vatParser(a.getEKRabatt()) );
         } catch (NumberFormatException ex) {
             ekrabattDecimal = null;
         }
 
         BigDecimal ekpDecimal;
         try {
-            ekpDecimal = new BigDecimal(priceFormatterIntern(ekpreis));
+            ekpDecimal = new BigDecimal(bc.priceFormatterIntern(a.getEKP()));
         } catch (NumberFormatException ex) {
             ekpDecimal = null;
         }
@@ -606,26 +476,26 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "bestand = ?, "+
                     "von = NOW(), aktiv = TRUE"
                     );
-            pstmtSetInteger(pstmt, 1, produktgruppen_id);
-            pstmtSetInteger(pstmt, 2, lieferant_id);
-            pstmt.setString(3, nummer);
-            pstmt.setString(4, name);
-            pstmt.setString(5, kurzname);
-            pstmt.setBigDecimal(6, menge);
-            pstmt.setString(7, einheit);
-            pstmt.setString(8, barcode);
-            pstmt.setString(9, herkunft);
-            pstmtSetInteger(pstmt, 10, vpe);
-            pstmtSetInteger(pstmt, 11, setgroesse);
+            pstmtSetInteger(pstmt, 1, a.getProdGrID());
+            pstmtSetInteger(pstmt, 2, a.getLiefID());
+            pstmt.setString(3, a.getNummer());
+            pstmt.setString(4, a.getName());
+            pstmt.setString(5, a.getKurzname());
+            pstmt.setBigDecimal(6, a.getMenge());
+            pstmt.setString(7, a.getEinheit());
+            pstmt.setString(8, a.getBarcode());
+            pstmt.setString(9, a.getHerkunft());
+            pstmtSetInteger(pstmt, 10, a.getVPE());
+            pstmtSetInteger(pstmt, 11, a.getSetgroesse());
             pstmt.setBigDecimal(12, vkpDecimal);
             pstmt.setBigDecimal(13, empfvkpDecimal);
             pstmt.setBigDecimal(14, ekrabattDecimal);
             pstmt.setBigDecimal(15, ekpDecimal);
-            pstmtSetBoolean(pstmt, 16, var_preis);
-            pstmtSetBoolean(pstmt, 17, sortiment);
-            pstmtSetBoolean(pstmt, 18, lieferbar);
-            pstmtSetInteger(pstmt, 19, beliebt);
-            pstmtSetInteger(pstmt, 20, bestand);
+            pstmtSetBoolean(pstmt, 16, a.getVarPreis());
+            pstmtSetBoolean(pstmt, 17, a.getSortiment());
+            pstmtSetBoolean(pstmt, 18, a.getLieferbar());
+            pstmtSetInteger(pstmt, 19, a.getBeliebt());
+            pstmtSetInteger(pstmt, 20, a.getBestand());
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
@@ -633,6 +503,124 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             ex.printStackTrace();
         }
         return result;
+    }
+
+    protected Artikel getArticle(Integer lieferant_id, String artikel_nr) {
+        Artikel a = new Artikel();
+        a.setLiefID(lieferant_id);
+        a.setNummer(artikel_nr);
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT "+
+                    "produktgruppen_id, "+
+                    "artikel_name, "+
+                    "kurzname, "+
+                    "menge, "+
+                    "einheit, "+
+                    "barcode, "+
+                    "herkunft, "+
+                    "vpe, "+
+                    "setgroesse, "+
+                    "vk_preis, empf_vk_preis, "+
+                    "ek_rabatt, ek_preis, "+
+                    "variabler_preis, sortiment, "+
+                    "lieferbar, beliebtheit, "+
+                    "bestand "+
+                    "FROM artikel "+
+                    "WHERE lieferant_id = ? AND "+
+                    "artikel_nr = ? AND artikel.aktiv = TRUE"
+                    );
+            pstmtSetInteger(pstmt, 1, lieferant_id);
+            pstmt.setString(2, artikel_nr);
+            ResultSet rs = pstmt.executeQuery();
+            // Now do something with the ResultSet, should be only one result ...
+            rs.next();
+            a.setProdGrID(rs.getInt(1));
+            a.setName(rs.getString(2));
+            a.setKurzname(rs.getString(3));
+            a.setMenge(rs.getBigDecimal(4));
+            a.setEinheit(rs.getString(5));
+            a.setBarcode(rs.getString(6));
+            a.setHerkunft(rs.getString(7));
+            a.setVPE(rs.getInt(8));
+            a.setSetgroesse(rs.getInt(9));
+            Boolean var = rs.getBoolean(14);
+            a.setVKP(var ? "" : rs.getString(10));
+            a.setEmpfVKP(var ? "" : rs.getString(11));
+            a.setEKRabatt( bc.vatFormatter(rs.getString(12)) );
+            a.setEKP(var ? "" : rs.getString(13));
+            a.setVarPreis(var);
+            a.setSortiment(rs.getBoolean(15));
+            a.setLieferbar(rs.getBoolean(16));
+            a.setBeliebt(rs.getInt(17));
+            a.setBestand(rs.getInt(18));
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return a;
+    }
+
+    protected String getProduktgruppe(Integer produktgruppen_id) {
+        String produktgruppe = "";
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT produktgruppen_name FROM produktgruppe "+
+                    "WHERE produktgruppen_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, produktgruppen_id);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            produktgruppe = rs.getString(1);
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return produktgruppe;
+    }
+
+    protected String getLieferant(Integer lieferant_id) {
+        String lieferant = "";
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT lieferant_name FROM lieferant "+
+                    "WHERE lieferant_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, lieferant_id);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            lieferant = rs.getString(1);
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return lieferant;
+    }
+
+    protected Integer getLieferantID(String lieferant) {
+        Integer lieferant_id = 1;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT lieferant_id FROM lieferant "+
+                    "WHERE lieferant_name = ?"
+                    );
+            pstmt.setString(1, lieferant);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            lieferant_id = rs.getInt(1);
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return lieferant_id;
     }
 
     protected boolean isLieferantAlreadyKnown(String lieferant) {
@@ -698,6 +686,43 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
     protected boolean thereAreActiveArticlesWithLieferant(Integer lieferant_id) {
         return howManyActiveArticlesWithLieferant(lieferant_id) > 0;
+    }
+
+    protected void updateArticle(Artikel oldArticle, Artikel newArticle) {
+        // set old item to inactive:
+        int result = setItemInactive(oldArticle.getLiefID(), oldArticle.getNummer());
+        if (result == 0){
+            JOptionPane.showMessageDialog(this,
+                    "Fehler: Artikel von "+getLieferant( oldArticle.getLiefID() )+" mit "+
+                    "Nummer "+oldArticle.getNummer()+" konnte nicht "+
+                    "geändert werden.",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if ( newArticle.getAktiv() == true ){ // only if the item wasn't
+            // set inactive voluntarily: add new item with new properties
+            String ekpreis = figureOutEKP(newArticle.getEmpfVKP(),
+                    newArticle.getEKRabatt(), newArticle.getEKP());
+            newArticle.setEKP(ekpreis);
+            result = insertNewItem(newArticle);
+            if (result == 0){
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Artikel von "+getLieferant( oldArticle.getLiefID() )+
+                        "mit Nummer "+oldArticle.getNummer()+" konnte "+
+                        "nicht geändert werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                result = setItemActive(oldArticle.getLiefID(), oldArticle.getNummer());
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Artikel von "+
+                            getLieferant( oldArticle.getLiefID() )+" mit Nummer "+
+                            oldArticle.getNummer()+" konnte nicht "+
+                            "wieder hergestellt werden. Artikel ist nun "+
+                            "gelöscht (inaktiv).",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
     }
 
     protected int updateLieferant(Integer lieferant_id, String lieferant_name,

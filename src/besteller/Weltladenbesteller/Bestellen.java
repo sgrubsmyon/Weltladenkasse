@@ -298,7 +298,7 @@ public class Bestellen extends BestellungsGrundlage implements
             chooseArticlePanel2.add(anzahlLabel);
             SpinnerNumberModel anzahlModel = new SpinnerNumberModel(1, // initial value
                                                                     1, // min
-                                                                    smallintMax, // max (null == no max)
+                                                                    bc.smallintMax, // max (null == no max)
                                                                     1); // step
 	    anzahlSpinner = new JSpinner(anzahlModel);
             JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(anzahlSpinner, "###");
@@ -383,7 +383,7 @@ public class Bestellen extends BestellungsGrundlage implements
             preisField.setColumns(6);
             preisField.setHorizontalAlignment(JTextField.RIGHT);
             chooseArticlePanel2.add(preisField);
-            chooseArticlePanel2.add(new JLabel(currencySymbol));
+            chooseArticlePanel2.add(new JLabel(bc.currencySymbol));
             setLabel = new JLabel("");
             chooseArticlePanel2.add(setLabel);
 
@@ -409,7 +409,7 @@ public class Bestellen extends BestellungsGrundlage implements
 
         // set up spinner column:
         TableColumn col = orderTable.getColumn("Stückzahl");
-        SpinnerNumberModel model = new SpinnerNumberModel(1, 1, smallintMax, 1);
+        SpinnerNumberModel model = new SpinnerNumberModel(1, 1, bc.smallintMax, 1);
         col.setCellRenderer(new JSpinnerRenderer(model));
         JSpinnerEditor se = new JSpinnerEditor(model);
         preventSpinnerOverflow(se.getSpinner());
@@ -518,17 +518,17 @@ public class Bestellen extends BestellungsGrundlage implements
     // CSV export:
     public void doCSVBackup() {
         String backupFilename =
-            System.getProperty("user.home")+fileSep+".Weltladenkasse_Bestellung_"+selTyp+".backup";
+            System.getProperty("user.home")+bc.fileSep+".Weltladenkasse_Bestellung_"+selTyp+".backup";
         File file = new File(backupFilename);
 
         String fileStr = "";
         // general infos:
-        fileStr += "#BestellNr;Jahr;KW"+lineSep;
-        fileStr += selBestellNr + delimiter;
-        fileStr += selJahr + delimiter;
-        fileStr += selKW + lineSep;
+        fileStr += "#BestellNr;Jahr;KW"+bc.lineSep;
+        fileStr += selBestellNr + bc.delimiter;
+        fileStr += selJahr + bc.delimiter;
+        fileStr += selKW + bc.lineSep;
         // format of csv file:
-        fileStr += "#Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;sortiment;artikelID"+lineSep;
+        fileStr += "#Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;sortiment;artikelID"+bc.lineSep;
         for (int i=data.size()-1; i>=0; i--){
             String lieferant = data.get(i).get(1).toString();
             String nummer = data.get(i).get(2).toString();
@@ -539,14 +539,14 @@ public class Bestellen extends BestellungsGrundlage implements
             String sortiment = sortimentBools.get(i).toString();
             String artikelID = artikelIDs.get(i).toString();
 
-            fileStr += lieferant + delimiter;
-            fileStr += nummer + delimiter;
-            fileStr += name + delimiter;
-            fileStr += vkp + delimiter;
-            fileStr += vpe + delimiter;
-            fileStr += stueck + delimiter;
-            fileStr += sortiment + delimiter;
-            fileStr += artikelID + lineSep;
+            fileStr += lieferant + bc.delimiter;
+            fileStr += nummer + bc.delimiter;
+            fileStr += name + bc.delimiter;
+            fileStr += vkp + bc.delimiter;
+            fileStr += vpe + bc.delimiter;
+            fileStr += stueck + bc.delimiter;
+            fileStr += sortiment + bc.delimiter;
+            fileStr += artikelID + bc.lineSep;
         }
 
         //System.out.println(fileStr);
@@ -578,7 +578,7 @@ public class Bestellen extends BestellungsGrundlage implements
         updateAll();
 
         String backupFilename =
-            System.getProperty("user.home")+fileSep+".Weltladenkasse_Bestellung_"+selTyp+".backup";
+            System.getProperty("user.home")+bc.fileSep+".Weltladenkasse_Bestellung_"+selTyp+".backup";
         File file = new File(backupFilename);
 
         try {
@@ -589,7 +589,7 @@ public class Bestellen extends BestellungsGrundlage implements
             while ( (line = in.readLine()) != null) {
                 line = line.replaceAll("#.*",""); // remove commented lines
                 // get the fields
-                String[] fields = line.split(delimiter);
+                String[] fields = line.split(bc.delimiter);
                 if (fields.length < 3 ){
                     continue;
                 }
@@ -602,7 +602,7 @@ public class Bestellen extends BestellungsGrundlage implements
             while ( (line = in.readLine()) != null) {
                 line = line.replaceAll("#.*",""); // remove commented lines
                 // get the fields
-                String[] fields = line.split(delimiter);
+                String[] fields = line.split(bc.delimiter);
                 if (fields.length < 7 ){
                     continue;
                 }
@@ -632,10 +632,10 @@ public class Bestellen extends BestellungsGrundlage implements
 
     private void renameCSVBackupFile(String newTyp) {
         String oldBackupFilename =
-            System.getProperty("user.home")+fileSep+".Weltladenkasse_Bestellung_"+selTyp+".backup";
+            System.getProperty("user.home")+bc.fileSep+".Weltladenkasse_Bestellung_"+selTyp+".backup";
         File oldFile = new File(oldBackupFilename);
         String newBackupFilename =
-            System.getProperty("user.home")+fileSep+".Weltladenkasse_Bestellung_"+newTyp+".backup";
+            System.getProperty("user.home")+bc.fileSep+".Weltladenkasse_Bestellung_"+newTyp+".backup";
         File newFile = new File(newBackupFilename);
         if ( newFile.exists() ){
             int answer = JOptionPane.showConfirmDialog(this,
@@ -813,7 +813,7 @@ public class Bestellen extends BestellungsGrundlage implements
                         "Info", JOptionPane.INFORMATION_MESSAGE);
             }
             preisField.getDocument().removeDocumentListener(this);
-            preisField.setText( decimalMark(artikelPreis) );
+            preisField.setText( bc.decimalMark(artikelPreis) );
             preisField.getDocument().addDocumentListener(this);
         }
         else {
@@ -953,10 +953,10 @@ public class Bestellen extends BestellungsGrundlage implements
         String artikelNummer = (String)nummerBox.getSelectedItem();
         String vpe = vpeField.getText();
         Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
-        String artikelPreis = priceFormatterIntern( preisField.getText() );
-        artikelPreis = decimalMark(artikelPreis)+' '+currencySymbol;
+        String artikelPreis = bc.priceFormatterIntern( preisField.getText() );
+        artikelPreis = bc.decimalMark(artikelPreis)+' '+bc.currencySymbol;
         String artikelMwSt = getVAT(selectedArtikelID);
-        artikelMwSt = vatFormatter(artikelMwSt);
+        artikelMwSt = bc.vatFormatter(artikelMwSt);
         Boolean sortimentBool = getSortimentBool(selectedArtikelID);
 
         hinzufuegen(selectedArtikelID, lieferant, artikelNummer, artikelName,

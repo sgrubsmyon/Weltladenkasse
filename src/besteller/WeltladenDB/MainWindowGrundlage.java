@@ -2,10 +2,7 @@ package WeltladenDB;
 
 // Basic Java stuff:
 import java.util.*; // for Vector
-import java.io.InputStream;
-import java.io.FileInputStream;
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
-import java.math.RoundingMode;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -32,11 +29,11 @@ public abstract class MainWindowGrundlage extends JFrame {
     //***************************************************
     // Members
     //***************************************************
+    public BaseClass bc;
 
     // Connection to MySQL database:
     public Connection conn = null;
     public boolean connectionWorks = false;
-    public String currencySymbol;
 
     // Panels:
     protected JPanel holdAll = new JPanel(); // The top level panel which holds all.
@@ -59,27 +56,8 @@ public abstract class MainWindowGrundlage extends JFrame {
      *    The constructor.
      *       */
     public MainWindowGrundlage(String password){
-        // load config file:
-        String filename = "config.properties";
-        try {
-            InputStream fis = new FileInputStream(filename);
-            Properties props = new Properties();
-            props.load(fis);
-
-            this.currencySymbol = props.getProperty("currencySymbol");
-        } catch (Exception ex) {
-            this.currencySymbol = "€";
-        }
-
+        bc = new BaseClass();
         initiate(password);
-    }
-
-    // Needed to copy this from WindowContent:
-    protected String priceFormatter(BigDecimal price) {
-        return priceFormatterIntern(price).replace('.',',');
-    }
-    protected String priceFormatterIntern(BigDecimal price) {
-        return price.setScale(2, RoundingMode.HALF_UP).toString(); // for 2 digits after period sign and "0.5-is-rounded-up" rounding
     }
 
     public void initiate(String password){
@@ -93,7 +71,7 @@ public abstract class MainWindowGrundlage extends JFrame {
 	Date now = new Date();
 	dateTime = now.toString();
 	dateTimeLabel = new JLabel(this.dateTime);
-	kassenstandLabel = new JLabel( priceFormatter(retrieveKassenstand())+" "+this.currencySymbol );
+	kassenstandLabel = new JLabel( bc.priceFormatter(retrieveKassenstand())+" "+bc.currencySymbol );
 	bottomPanel.add(dateTimeLabel);
 	bottomPanel.add(kassenstandLabel);
 
@@ -159,7 +137,7 @@ public abstract class MainWindowGrundlage extends JFrame {
 	Date now = new Date();
 	dateTime = now.toString();
 	dateTimeLabel = new JLabel(dateTime);
-	kassenstandLabel = new JLabel( priceFormatter(retrieveKassenstand())+" "+this.currencySymbol );
+	kassenstandLabel = new JLabel( bc.priceFormatter(retrieveKassenstand())+" "+bc.currencySymbol );
 	this.bottomPanel.add(dateTimeLabel);
 	this.bottomPanel.add(kassenstandLabel);
 	holdAll.add(this.bottomPanel, BorderLayout.SOUTH);

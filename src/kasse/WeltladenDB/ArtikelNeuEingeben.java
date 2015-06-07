@@ -199,8 +199,8 @@ public class ArtikelNeuEingeben extends DialogWindow
                 // fourth row:
                 setPreisVariabelBox(row);
                 setVkpreisField(row);
-                String empfvkpreis = artikelNeu.empfvkPreise.get(row);
-                String ekrabatt = artikelNeu.ekRabatte.get(row);
+                String empfvkpreis = artikelNeu.articles.get(row).getEmpfVKP();
+                String ekrabatt = artikelNeu.articles.get(row).getEKRabatt();
                 if ( empfVKPAndEKPValid(empfvkpreis, ekrabatt) ){
                     setEmpfvkpreisField(row);
                     setEkrabattField(row);
@@ -211,40 +211,40 @@ public class ArtikelNeuEingeben extends DialogWindow
         }
 
         void setProduktgruppenBox(int row){
-            int prodgrID = artikelNeu.selProduktgruppenIDs.get(row);
+            int prodgrID = artikelNeu.articles.get(row).getProdGrID();
             int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(prodgrID);
             artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
         }
 
         void setLieferantBox(int row){
-            int liefID = artikelNeu.selLieferantIDs.get(row);
+            int liefID = artikelNeu.articles.get(row).getLiefID();
             int liefIndex = artikelFormular.lieferantIDs.indexOf(liefID);
             artikelFormular.lieferantBox.setSelectedIndex(liefIndex);
         }
 
         void setNummerField(int row){
-            String nummer = artikelNeu.artikelNummern.get(row);
+            String nummer = artikelNeu.articles.get(row).getNummer();
             artikelFormular.nummerField.setText(nummer);
         }
 
         void setBarcodeField(int row){
-            String barcode = artikelNeu.barcodes.get(row);
+            String barcode = artikelNeu.articles.get(row).getBarcode();
             artikelFormular.barcodeField.setText(barcode);
         }
 
         void setNameField(int row){
-            String name = artikelNeu.artikelNamen.get(row);
+            String name = artikelNeu.articles.get(row).getName();
             artikelFormular.nameField.setText(name);
         }
 
         void setKurznameField(int row){
-            String kurzname = artikelNeu.kurznamen.get(row);
+            String kurzname = artikelNeu.articles.get(row).getKurzname();
             artikelFormular.kurznameField.setText(kurzname);
         }
 
         void setMengeField(int row){
-            if (artikelNeu.mengen.get(row) != null){
-                String menge = unifyDecimal( artikelNeu.mengen.get(row) );
+            if (artikelNeu.articles.get(row).getMenge() != null){
+                String menge = bc.unifyDecimal( artikelNeu.articles.get(row).getMenge() );
                 artikelFormular.mengeField.setText(menge);
             } else {
                 artikelFormular.mengeField.setText("");
@@ -252,18 +252,18 @@ public class ArtikelNeuEingeben extends DialogWindow
         }
 
         void setEinheitField(int row){
-            String einheit = artikelNeu.einheiten.get(row);
+            String einheit = artikelNeu.articles.get(row).getEinheit();
             artikelFormular.einheitField.setText(einheit);
         }
 
         void setHerkunftField(int row){
-            String herkunft = artikelNeu.herkuenfte.get(row);
+            String herkunft = artikelNeu.articles.get(row).getHerkunft();
             artikelFormular.herkunftField.setText(herkunft);
         }
 
         void setVPESpinner(int row){
-            if (artikelNeu.vpes.get(row) != null){
-                Integer vpe = artikelNeu.vpes.get(row);
+            if (artikelNeu.articles.get(row).getVPE() != null){
+                Integer vpe = artikelNeu.articles.get(row).getVPE();
                 artikelFormular.vpeSpinner.setValue(vpe);
             } else {
                 artikelFormular.vpeSpinner.setValue(0);
@@ -271,48 +271,48 @@ public class ArtikelNeuEingeben extends DialogWindow
         }
 
         void setSetSpinner(int row){
-            Integer setgroesse = artikelNeu.sets.get(row);
+            Integer setgroesse = artikelNeu.articles.get(row).getSetgroesse();
             artikelFormular.setSpinner.setValue(setgroesse);
         }
 
         void setSortimentBox(int row){
-            Boolean sortiment = artikelNeu.sortimente.get(row);
+            Boolean sortiment = artikelNeu.articles.get(row).getSortiment();
             artikelFormular.sortimentBox.setSelected(sortiment);
         }
 
         void setLieferbarBox(int row){
-            Boolean lieferbar = artikelNeu.lieferbarBools.get(row);
+            Boolean lieferbar = artikelNeu.articles.get(row).getLieferbar();
             artikelFormular.lieferbarBox.setSelected(lieferbar);
         }
 
         void setBeliebtBox(int row){
-            Integer beliebtWert = artikelNeu.beliebtWerte.get(row);
+            Integer beliebtWert = artikelNeu.articles.get(row).getBeliebt();
             Integer beliebtIndex = artikelFormular.beliebtWerte.indexOf(beliebtWert);
             artikelFormular.beliebtBox.setSelectedIndex(beliebtIndex);
         }
 
         void setVkpreisField(int row){
-            String vkpreis = artikelNeu.vkPreise.get(row);
+            String vkpreis = artikelNeu.articles.get(row).getVKP();
             artikelFormular.vkpreisField.setText(vkpreis);
         }
 
         void setEmpfvkpreisField(int row){
-            String empfvkpreis = artikelNeu.empfvkPreise.get(row);
+            String empfvkpreis = artikelNeu.articles.get(row).getEmpfVKP();
             artikelFormular.empfvkpreisField.setText(empfvkpreis);
         }
 
         void setEkrabattField(int row){
-            String ekrabatt = artikelNeu.ekRabatte.get(row);
+            String ekrabatt = artikelNeu.articles.get(row).getEKRabatt();
             artikelFormular.ekrabattField.setText(ekrabatt);
         }
 
         void setEkpreisField(int row){
-            String ekpreis = artikelNeu.ekPreise.get(row);
+            String ekpreis = artikelNeu.articles.get(row).getEKP();
             artikelFormular.ekpreisField.setText(ekpreis);
         }
 
         void setPreisVariabelBox(int row){
-            Boolean var = artikelNeu.variablePreise.get(row);
+            Boolean var = artikelNeu.articles.get(row).getVarPreis();
             artikelFormular.preisVariabelBox.setSelected(var);
         }
     }
@@ -353,17 +353,18 @@ public class ArtikelNeuEingeben extends DialogWindow
         artikelNeu.emptyTable();
     }
 
-    public int checkIfItemAlreadyKnown(String lieferant, String nummer) {
-        return artikelNeu.checkIfItemAlreadyKnown(lieferant, nummer);
+    public int checkIfItemAlreadyKnown(Integer lieferant_id, String nummer) {
+        return artikelNeu.checkIfItemAlreadyKnown(lieferant_id, nummer);
     }
 
     protected int hinzufuegen() {
         Integer prodgrID = artikelFormular.produktgruppenIDs.get(
                 artikelFormular.produktgruppenBox.getSelectedIndex() );
-        Integer lieferantID = artikelFormular.lieferantIDs.get(artikelFormular.lieferantBox.getSelectedIndex());
+        Integer lieferantID =
+            artikelFormular.lieferantIDs.get(artikelFormular.lieferantBox.getSelectedIndex());
         String lieferant = artikelFormular.lieferantBox.getSelectedItem().toString();
         String nummer = artikelFormular.nummerField.getText();
-        int itemAlreadyKnown = checkIfItemAlreadyKnown(lieferant, nummer);
+        int itemAlreadyKnown = checkIfItemAlreadyKnown(getLieferantID(lieferant), nummer);
         if (itemAlreadyKnown == 1){
             JOptionPane.showMessageDialog(this,
                     "Ein Artikel mit diesem Lieferant und dieser Nummer ist bereits in der Datenbank.",
@@ -389,7 +390,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         String herkunft = artikelFormular.herkunftField.getText();
         Integer vpe = (Integer)artikelFormular.vpeSpinner.getValue();
         vpe = vpe == 0 ? null : vpe;
-        Integer set = (Integer)artikelFormular.setSpinner.getValue();
+        Integer setgroesse = (Integer)artikelFormular.setSpinner.getValue();
         String vkpreis = artikelFormular.vkpreisField.getText();
         String empfvkpreis = artikelFormular.empfvkpreisField.getText();
         String ekrabatt = artikelFormular.ekrabattField.getText();
@@ -400,35 +401,15 @@ public class ArtikelNeuEingeben extends DialogWindow
         Integer beliebtWert = artikelFormular.beliebtWerte.get(artikelFormular.beliebtBox.getSelectedIndex());
         String beliebt = artikelFormular.beliebtBox.getSelectedItem().toString();
 
-        artikelNeu.selProduktgruppenIDs.add(prodgrID);
-        artikelNeu.selLieferantIDs.add(lieferantID);
-        artikelNeu.lieferanten.add(lieferant);
-        artikelNeu.artikelNummern.add(nummer);
-        artikelNeu.artikelNamen.add(name);
-        artikelNeu.kurznamen.add(kurzname);
-        artikelNeu.mengen.add(menge);
-        artikelNeu.einheiten.add(einheit);
-        artikelNeu.barcodes.add(barcode);
-        artikelNeu.herkuenfte.add(herkunft);
-        artikelNeu.vpes.add(vpe);
-        artikelNeu.sets.add(set);
-        if (var){
-            artikelNeu.variablePreise.add(true);
-            artikelNeu.vkPreise.add("");
-            artikelNeu.empfvkPreise.add("");
-            artikelNeu.ekRabatte.add("");
-            artikelNeu.ekPreise.add("");
-        } else {
-            artikelNeu.variablePreise.add(false);
-            artikelNeu.vkPreise.add(vkpreis);
-            artikelNeu.empfvkPreise.add(empfvkpreis);
-            artikelNeu.ekRabatte.add(ekrabatt);
-            artikelNeu.ekPreise.add( priceFormatter(figureOutEKP(empfvkpreis, ekrabatt, ekpreis)) );
-        }
-        artikelNeu.sortimente.add(sortiment);
-        artikelNeu.lieferbarBools.add(lieferbar);
-        artikelNeu.beliebtWerte.add(beliebtWert);
-        artikelNeu.bestaende.add(null);
+        Artikel newArticle = new Artikel(prodgrID, lieferantID, nummer, name,
+                kurzname, menge, einheit, barcode, herkunft, vpe, setgroesse,
+                var ? "" : vkpreis,
+                var ? "" : empfvkpreis,
+                var ? "" : ekrabatt,
+                var ? "" : bc.priceFormatter(figureOutEKP(empfvkpreis, ekrabatt, ekpreis)),
+                var, sortiment, lieferbar, beliebtWert, null, true);
+        artikelNeu.articles.add(newArticle);
+
         artikelNeu.removeButtons.add(new JButton("-"));
         artikelNeu.removeButtons.lastElement().addActionListener(this);
 
@@ -445,7 +426,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         colors.add(Color.black); // beliebt
         colors.add(Color.black); // barcode
         colors.add(Color.black); // vpe
-        colors.add(Color.black); // set
+        colors.add(Color.black); // setgroesse
         colors.add(Color.black); // vkpreis
         colors.add(Color.black); // empfvkpreis
         colors.add(Color.black); // ekrabatt
@@ -469,15 +450,15 @@ public class ArtikelNeuEingeben extends DialogWindow
             row.add(beliebt);
             row.add(barcode);
             row.add( vpe == null ? "" : vpe.toString() );
-            row.add(set);
+            row.add(setgroesse);
             // prices:
-                String vkp = priceFormatter(artikelNeu.vkPreise.lastElement());
-                if (vkp.length() > 0) vkp += " "+currencySymbol;
-                String empfvkp = priceFormatter(artikelNeu.empfvkPreise.lastElement());
-                if (empfvkp.length() > 0) empfvkp += " "+currencySymbol;
-                String rabatt = vatFormatter( vatParser(artikelNeu.ekRabatte.lastElement()) );
-                String ekp = priceFormatter(artikelNeu.ekPreise.lastElement());
-                if (ekp.length() > 0) ekp += " "+currencySymbol;
+                String vkp = bc.priceFormatter(artikelNeu.articles.lastElement().getVKP());
+                if (vkp.length() > 0) vkp += " "+bc.currencySymbol;
+                String empfvkp = bc.priceFormatter(artikelNeu.articles.lastElement().getEmpfVKP());
+                if (empfvkp.length() > 0) empfvkp += " "+bc.currencySymbol;
+                String rabatt = bc.vatFormatter( bc.vatParser(artikelNeu.articles.lastElement().getEKRabatt()) );
+                String ekp = bc.priceFormatter(artikelNeu.articles.lastElement().getEKP());
+                if (ekp.length() > 0) ekp += " "+bc.currencySymbol;
                 row.add(vkp);
                 row.add(empfvkp);
                 row.add(rabatt);

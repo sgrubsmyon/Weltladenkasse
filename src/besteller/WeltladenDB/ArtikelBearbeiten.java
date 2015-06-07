@@ -35,32 +35,18 @@ public class ArtikelBearbeiten extends DialogWindow
     // Attribute:
     protected Artikelliste artikelListe;
     protected ArtikelFormular artikelFormular;
-    protected Vector< Vector<Object> > originalData;
-    protected Vector<Integer> originalProdGrIDs;
-    protected Vector<Integer> originalLiefIDs;
-    protected Vector<Boolean> originalVarPreisBools;
-
-    private final HashMap<String, Integer> indexMap;
+    protected Vector<Artikel> originalArticles;
 
     protected JCheckBox aktivBox;
     protected JButton submitButton;
 
     // Methoden:
     public ArtikelBearbeiten(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia,
-            HashMap<String, Integer> idxMap,
-            Vector< Vector<Object> > origData,
-            Vector<Integer> origPrGrIDs,
-            Vector<Integer> origLiefIDs,
-            Vector<Boolean> origVPBools) {
+            Vector<Artikel> origArties) {
 	super(conn, mw, dia);
         artikelListe = pw;
         artikelFormular = new ArtikelFormular(conn, mw, true, true, true);
-        originalData = new Vector< Vector<Object> >(origData);
-        originalProdGrIDs = new Vector<Integer>(origPrGrIDs);
-        originalLiefIDs = new Vector<Integer>(origLiefIDs);
-        originalVarPreisBools = new Vector<Boolean>(origVPBools);
-
-        this.indexMap = idxMap;
+        originalArticles = new Vector<Artikel>(origArties);
 
         showAll();
     }
@@ -138,108 +124,85 @@ public class ArtikelBearbeiten extends DialogWindow
     }
 
     private void setOriginalValues() {
-        Integer firstGruppenID = originalProdGrIDs.get(0);
-        Integer firstLieferantID = originalLiefIDs.get(0);
-        String firstNummer = (String)originalData.get(0).get(indexMap.get("nummer"));
-        String firstName = (String)originalData.get(0).get(indexMap.get("name"));
-        String firstKurzname = (String)originalData.get(0).get(indexMap.get("kurzname"));
-        String firstMenge = (String)originalData.get(0).get(indexMap.get("menge"));
-        String firstEinheit = (String)originalData.get(0).get(indexMap.get("einheit"));
-        String firstVKP = (String)originalData.get(0).get(indexMap.get("vkp"));
-        Boolean firstSortiment = (Boolean)originalData.get(0).get(indexMap.get("sortiment"));
-        Boolean firstLieferbar = (Boolean)originalData.get(0).get(indexMap.get("lieferbar"));
-        Integer firstBeliebtWert = (Integer)originalData.get(0).get(indexMap.get("beliebt"));
-        String firstBarcode = (String)originalData.get(0).get(indexMap.get("barcode"));
-        Integer firstVPE = (Integer)originalData.get(0).get(indexMap.get("vpe"));
-        Integer firstSetgroesse = (Integer)originalData.get(0).get(indexMap.get("setgroesse"));
-        String firstEVKP = (String)originalData.get(0).get(indexMap.get("evkp"));
-        String firstEKR = (String)originalData.get(0).get(indexMap.get("ekr"));
-        String firstEKP = (String)originalData.get(0).get(indexMap.get("ekp"));
-        Boolean firstVarPreis = originalVarPreisBools.get(0);
-        String firstHerkunft = (String)originalData.get(0).get(indexMap.get("herkunft"));
-        Boolean firstAktiv = (Boolean)originalData.get(0).get(indexMap.get("aktiv"));
+        Artikel firstArticle = originalArticles.get(0);
 
-        if ( allElementsEqual(firstGruppenID, originalProdGrIDs) ){
-            int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(firstGruppenID);
+        if ( allArticlesEqualInAttribute("prodGrID") ){
+            int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(firstArticle.getProdGrID());
             artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
         } else {
             artikelFormular.produktgruppenBox.setSelectedIndex(-1);
         }
-        if ( allElementsEqual(firstLieferantID, originalLiefIDs) ){
-            int liefIndex = artikelFormular.lieferantIDs.indexOf(firstLieferantID);
+        if ( allArticlesEqualInAttribute("liefID") ){
+            int liefIndex = artikelFormular.lieferantIDs.indexOf(firstArticle.getLiefID());
             artikelFormular.lieferantBox.setSelectedIndex(liefIndex);
         } else {
             artikelFormular.lieferantBox.setEnabled(false);
         }
-        if ( allRowsEqual(firstNummer, indexMap.get("nummer")) ){
-            artikelFormular.nummerField.setText(firstNummer);
+        if ( allArticlesEqualInAttribute("nummer") ){
+            artikelFormular.nummerField.setText(firstArticle.getNummer());
         } else {
             artikelFormular.nummerField.setEnabled(false);
         }
-        if ( allRowsEqual(firstName, indexMap.get("name")) ){
-            artikelFormular.nameField.setText(firstName);
+        if ( allArticlesEqualInAttribute("name") ){
+            artikelFormular.nameField.setText(firstArticle.getName());
         } else {
             artikelFormular.nameField.setText("");
         }
-        if ( allRowsEqual(firstKurzname, indexMap.get("kurzname")) ){
-            artikelFormular.kurznameField.setText(firstKurzname);
+        if ( allArticlesEqualInAttribute("kurzname") && firstArticle.getKurzname() != null ){
+            artikelFormular.kurznameField.setText(firstArticle.getKurzname());
         } else {
             artikelFormular.kurznameField.setText("");
         }
-        if ( allRowsEqual(firstMenge, indexMap.get("menge")) ){
-            artikelFormular.mengeField.setText(firstMenge);
+        if ( allArticlesEqualInAttribute("menge") && firstArticle.getMenge() != null ){
+            artikelFormular.mengeField.setText( bc.decimalMark(firstArticle.getMenge().toString()) );
         } else {
             artikelFormular.mengeField.setText("");
         }
-        if ( allRowsEqual(firstEinheit, indexMap.get("einheit")) ){
-            artikelFormular.einheitField.setText(firstEinheit);
+        if ( allArticlesEqualInAttribute("einheit") && firstArticle.getEinheit() != null ){
+            artikelFormular.einheitField.setText(firstArticle.getEinheit());
         } else {
             artikelFormular.einheitField.setText("");
         }
-        if ( allRowsEqual(firstBarcode, indexMap.get("barcode")) ){
-            artikelFormular.barcodeField.setText(firstBarcode);
+        if ( allArticlesEqualInAttribute("barcode") && firstArticle.getBarcode() != null ){
+            artikelFormular.barcodeField.setText(firstArticle.getBarcode());
         } else {
             artikelFormular.barcodeField.setText("");
         }
-        if ( allRowsEqual(firstHerkunft, indexMap.get("herkunft")) ){
-            artikelFormular.herkunftField.setText(firstHerkunft);
+        if ( allArticlesEqualInAttribute("herkunft") && firstArticle.getHerkunft() != null ){
+            artikelFormular.herkunftField.setText(firstArticle.getHerkunft());
         } else {
             artikelFormular.herkunftField.setText("");
         }
-        if ( allRowsEqual(firstVPE, indexMap.get("vpe")) ){
-            if (firstVPE != null){
-                artikelFormular.vpeSpinner.setValue(firstVPE);
-            } else {
-                artikelFormular.vpeSpinner.setValue(0);
-            }
+        if ( allArticlesEqualInAttribute("vpe") && firstArticle.getVPE() != null ){
+            artikelFormular.vpeSpinner.setValue(firstArticle.getVPE());
         } else {
             artikelFormular.vpeSpinner.setValue(0);
         }
-        if ( allRowsEqual(firstSetgroesse, indexMap.get("setgroesse")) ){
-            artikelFormular.setSpinner.setValue(firstSetgroesse);
+        if ( allArticlesEqualInAttribute("setgroesse") ){
+            artikelFormular.setSpinner.setValue(firstArticle.getSetgroesse());
         } else {
             artikelFormular.setSpinner.setValue(1);
         }
-        if ( allElementsEqual(firstVarPreis, originalVarPreisBools) ){
-            artikelFormular.preisVariabelBox.setSelected(firstVarPreis);
-            if (!firstVarPreis){ // if all items have non-variable prices
-                if ( allRowsEqual(firstVKP, indexMap.get("vkp")) ){
-                    artikelFormular.vkpreisField.setText( priceFormatter(firstVKP) );
+        if ( allArticlesEqualInAttribute("varPreis") ){
+            artikelFormular.preisVariabelBox.setSelected(firstArticle.getVarPreis());
+            if (!firstArticle.getVarPreis()){ // if all items have non-variable prices
+                if ( allArticlesEqualInAttribute("vkp") && firstArticle.getVKP() != null ){
+                    artikelFormular.vkpreisField.setText( bc.priceFormatter(firstArticle.getVKP()) );
                 } else {
                     artikelFormular.vkpreisField.setText("");
                 }
-                if ( allRowsEqual(firstEVKP, indexMap.get("evkp")) ){
-                    artikelFormular.empfvkpreisField.setText( priceFormatter(firstEVKP) );
+                if ( allArticlesEqualInAttribute("empfVKP") && firstArticle.getEmpfVKP() != null ){
+                    artikelFormular.empfvkpreisField.setText( bc.priceFormatter(firstArticle.getEmpfVKP()) );
                 } else {
                     artikelFormular.empfvkpreisField.setText("");
                 }
-                if ( allRowsEqual(firstEKR, indexMap.get("ekr")) ){
-                    artikelFormular.ekrabattField.setText( priceFormatter(firstEKR) );
+                if ( allArticlesEqualInAttribute("ekRabatt") && firstArticle.getEKRabatt() != null ){
+                    artikelFormular.ekrabattField.setText( bc.vatPercentRemover(firstArticle.getEKRabatt()) );
                 } else {
                     artikelFormular.ekrabattField.setText("");
                 }
-                if ( allRowsEqual(firstEKP, indexMap.get("ekp")) ){
-                    artikelFormular.ekpreisField.setText( priceFormatter(firstEKP) );
+                if ( allArticlesEqualInAttribute("ekp") && firstArticle.getEKP() != null ){
+                    artikelFormular.ekpreisField.setText( bc.priceFormatter(firstArticle.getEKP()) );
                 } else {
                     artikelFormular.ekpreisField.setText("");
                 }
@@ -256,40 +219,33 @@ public class ArtikelBearbeiten extends DialogWindow
             artikelFormular.ekrabattField.setEnabled(false);
             artikelFormular.ekpreisField.setEnabled(false);
         }
-        if ( allRowsEqual(firstSortiment, indexMap.get("sortiment")) ){
-            artikelFormular.sortimentBox.setSelected(firstSortiment);
+        if ( allArticlesEqualInAttribute("sortiment") ){
+            artikelFormular.sortimentBox.setSelected(firstArticle.getSortiment());
         } else {
             artikelFormular.sortimentBox.setEnabled(false);
         }
-        if ( allRowsEqual(firstLieferbar, indexMap.get("lieferbar")) ){
-            artikelFormular.lieferbarBox.setSelected(firstLieferbar);
+        if ( allArticlesEqualInAttribute("lieferbar") ){
+            artikelFormular.lieferbarBox.setSelected(firstArticle.getLieferbar());
         } else {
             artikelFormular.lieferbarBox.setEnabled(false);
         }
-        if ( allRowsEqual(firstBeliebtWert, indexMap.get("beliebt")) ){
-            artikelFormular.beliebtBox.setSelectedIndex(artikelFormular.beliebtWerte.indexOf(firstBeliebtWert));
+        if ( allArticlesEqualInAttribute("beliebt") ){
+            artikelFormular.beliebtBox.setSelectedIndex(
+                    artikelFormular.beliebtWerte.indexOf(firstArticle.getBeliebt()));
         } else {
             artikelFormular.beliebtBox.setEnabled(false);
         }
-        if ( allRowsEqual(firstAktiv, indexMap.get("aktiv")) ){
-            aktivBox.setSelected(firstAktiv);
+        if ( allArticlesEqualInAttribute("aktiv") ){
+            aktivBox.setSelected(firstArticle.getAktiv());
         } else {
             aktivBox.setEnabled(false);
         }
     }
 
-    private boolean allRowsEqual(Object value, int colIndex) {
-        for (int i=0; i<originalData.size(); i++){
-            if ( ! originalData.get(i).get(colIndex).equals(value) ){
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private <T> boolean allElementsEqual(T element, Vector<T> vector) {
-        for (T elem : vector){
-            if ( ! elem.equals(element) ){
+    private boolean allArticlesEqualInAttribute(String attr) {
+        Artikel article = originalArticles.get(0);
+        for (Artikel a : originalArticles){
+            if ( ! a.equalsInAttribute(attr, article) ){
                 return false;
             }
         }
@@ -298,238 +254,17 @@ public class ArtikelBearbeiten extends DialogWindow
 
     // will data be lost on close?
     public boolean willDataBeLost() {
-        if ( artikelFormular.produktgruppenBox.isEnabled() ){
-            int selIndex = artikelFormular.produktgruppenBox.getSelectedIndex();
-            // -1 means "no selection done"
-            if (selIndex != -1){
-                Integer selProdGrID = artikelFormular.produktgruppenIDs.get(selIndex);
-                if ( !allElementsEqual(selProdGrID, originalProdGrIDs) ){
-                    return true;
-                }
-            }
-        }
-        if ( artikelFormular.lieferantBox.isEnabled() ){
-            int selIndex = artikelFormular.lieferantBox.getSelectedIndex();
-            // -1 means "no selection done"
-            if (selIndex != -1){
-                Integer selLiefID = artikelFormular.lieferantIDs.get(selIndex);
-                if ( !allElementsEqual(selLiefID, originalLiefIDs) ){
-                    return true;
-                }
-            }
-        }
-        if ( artikelFormular.nummerField.isEnabled() ){
-            String origNummer = (String)originalData.get(0).get(indexMap.get("nummer"));
-            if ( !origNummer.equals(artikelFormular.nummerField.getText()) ){
+        for (int index=0; index < originalArticles.size(); index++){
+            Artikel origArticle = originalArticles.get(index);
+            Artikel newArticle = getNewArticle(origArticle);
+            System.out.println("origArticle: "+origArticle);
+            System.out.println("newArticle: "+newArticle);
+            if ( !newArticle.equals(origArticle) ){
+                System.out.println("return true");
                 return true;
             }
         }
-        if ( artikelFormular.nameField.isEnabled() ){
-            String name = artikelFormular.nameField.getText();
-            // "" means "not edited"
-            if (!name.equals("")){
-                Vector<String> origNames = new Vector<String>();
-                for (Vector<Object> v : originalData){
-                    origNames.add((String)v.get(indexMap.get("name")));
-                }
-                if ( !allElementsEqual(name, origNames) ){
-                    return true;
-                }
-            }
-        }
-        if ( artikelFormular.kurznameField.isEnabled() ){
-            String kurzname = artikelFormular.kurznameField.getText();
-            // "" means "not edited"
-            if (!kurzname.equals("")){
-                Vector<String> origKurznames = new Vector<String>();
-                for (Vector<Object> v : originalData){
-                    origKurznames.add((String)v.get(indexMap.get("kurzname")));
-                }
-                if ( !allElementsEqual(kurzname, origKurznames) ){
-                    return true;
-                }
-            }
-        }
-        if ( artikelFormular.mengeField.isEnabled() ){
-            String newMengeStr = artikelFormular.mengeField.getText().replace(',','.');
-            BigDecimal newMenge;
-            try {
-                newMenge = new BigDecimal(newMengeStr).stripTrailingZeros();
-            } catch (NumberFormatException ex) {
-                newMenge = new BigDecimal("0");
-            }
-            if ( !newMenge.equals(new BigDecimal("0")) ){ // means not edited (alt. if !newMengeStr.equals(""))
-                Vector<BigDecimal> origMengen = new Vector<BigDecimal>();
-                for (Vector<Object> v : originalData){
-                    try {
-                        String origMengeStr = ((String)v.get(indexMap.get("menge"))).replace(',','.');
-                        origMengen.add( new BigDecimal(origMengeStr).stripTrailingZeros() );
-                    } catch (NumberFormatException ex) {
-                        origMengen.add( new BigDecimal("0") );
-                    }
-                }
-                if ( !allElementsEqual(newMenge, origMengen) ){
-                    return true;
-                }
-            }
-        }
-        if ( artikelFormular.einheitField.isEnabled() ){
-            String einheit = artikelFormular.einheitField.getText();
-            // "" means "not edited"
-            if (!einheit.equals("")){
-                Vector<String> origEinheiten = new Vector<String>();
-                for (Vector<Object> v : originalData){
-                    origEinheiten.add((String)v.get(indexMap.get("einheit")));
-                }
-                if ( !allElementsEqual(einheit, origEinheiten) ){
-                    return true;
-                }
-            }
-        }
-        if ( artikelFormular.barcodeField.isEnabled() ){
-            String barcode = artikelFormular.barcodeField.getText();
-            // "" means "not edited"
-            if (!barcode.equals("")){
-                Vector<String> origBarcodes = new Vector<String>();
-                for (Vector<Object> v : originalData){
-                    origBarcodes.add((String)v.get(indexMap.get("barcode")));
-                }
-                if ( !allElementsEqual(barcode, origBarcodes) ){
-                    return true;
-                }
-            }
-        }
-        if ( artikelFormular.herkunftField.isEnabled() ){
-            String herkunft = artikelFormular.herkunftField.getText();
-            // "" means "not edited"
-            if (!herkunft.equals("")){
-                Vector<String> origHerkunft = new Vector<String>();
-                for (Vector<Object> v : originalData){
-                    origHerkunft.add((String)v.get(indexMap.get("herkunft")));
-                }
-                if ( !allElementsEqual(herkunft, origHerkunft) ){
-                    return true;
-                }
-            }
-        }
-        if ( artikelFormular.vpeSpinner.isEnabled() ){
-            try {
-                Integer newVPE = (Integer)artikelFormular.vpeSpinner.getValue();
-                // 0 means "not edited"
-                if (newVPE != 0){
-                    Vector<Integer> origVPEs = new Vector<Integer>();
-                    for (Vector<Object> v : originalData){
-                        Integer origVPE = (Integer)v.get(indexMap.get("vpe"));
-                        if ( origVPE == null ){ origVPE = 0; }
-                        origVPEs.add( origVPE );
-                    }
-                    if ( !allElementsEqual(newVPE, origVPEs) ){
-                        return true;
-                    }
-                }
-            } catch (NumberFormatException ex) {
-            }
-        }
-        if ( artikelFormular.setSpinner.isEnabled() ){
-            try {
-                Integer newSetgroesse = (Integer)artikelFormular.setSpinner.getValue();
-                // 0 means "not edited"
-                if (newSetgroesse != 0){
-                    Vector<Integer> origSetgroessen = new Vector<Integer>();
-                    for (Vector<Object> v : originalData){
-                        origSetgroessen.add((Integer)v.get(indexMap.get("setgroesse")));
-                    }
-                    if ( !allElementsEqual(newSetgroesse, origSetgroessen) ){
-                        return true;
-                    }
-                }
-            } catch (NumberFormatException ex) {
-            }
-        }
-        if ( artikelFormular.vkpreisField.isEnabled() ){
-            String newVKP = priceFormatterIntern( artikelFormular.vkpreisField.getText() );
-            // "" means "not edited"
-            if (!newVKP.equals("")){
-                Vector<String> origVKPs = new Vector<String>();
-                for (Vector<Object> v : originalData){
-                    origVKPs.add( priceFormatterIntern((String)v.get(indexMap.get("vkp"))) );
-                }
-                if ( !allElementsEqual(newVKP, origVKPs) ){
-                    return true;
-                }
-            }
-        }
-        if ( artikelFormular.empfvkpreisField.isEnabled() ){
-            String newEVKP = priceFormatterIntern( artikelFormular.empfvkpreisField.getText() );
-            // "" means "not edited"
-            if (!newEVKP.equals("")){
-                Vector<String> origEVKPs = new Vector<String>();
-                for (Vector<Object> v : originalData){
-                    origEVKPs.add( priceFormatterIntern((String)v.get(indexMap.get("evkp"))) );
-                }
-                if ( !allElementsEqual(newEVKP, origEVKPs) ){
-                    return true;
-                }
-            }
-        }
-        if ( artikelFormular.ekrabattField.isEnabled() ){
-            String newEKR = priceFormatterIntern( artikelFormular.ekrabattField.getText() );
-            // "" means "not edited"
-            if (!newEKR.equals("")){
-                Vector<String> origEKRs = new Vector<String>();
-                for (Vector<Object> v : originalData){
-                    origEKRs.add( priceFormatterIntern((String)v.get(indexMap.get("ekr"))) );
-                }
-                if ( !allElementsEqual(newEKR, origEKRs) ){
-                    return true;
-                }
-            }
-        }
-        if ( artikelFormular.ekpreisField.isEnabled() ){
-            String newEKP = priceFormatterIntern( artikelFormular.ekpreisField.getText() );
-            // "" means "not edited"
-            if (!newEKP.equals("")){
-                Vector<String> origEKPs = new Vector<String>();
-                for (Vector<Object> v : originalData){
-                    origEKPs.add( priceFormatterIntern((String)v.get(indexMap.get("ekp"))) );
-                }
-                if ( !allElementsEqual(newEKP, origEKPs) ){
-                    return true;
-                }
-            }
-        }
-        if ( artikelFormular.preisVariabelBox.isEnabled() ){
-            Boolean origVarPreis = originalVarPreisBools.get(0);
-            if ( !origVarPreis.equals(artikelFormular.preisVariabelBox.isSelected()) ){
-                return true;
-            }
-        }
-        if ( artikelFormular.sortimentBox.isEnabled() ){
-            Boolean origSortiment = (Boolean)originalData.get(0).get(indexMap.get("sortiment"));
-            if ( !origSortiment.equals(artikelFormular.sortimentBox.isSelected()) ){
-                return true;
-            }
-        }
-        if ( artikelFormular.lieferbarBox.isEnabled() ){
-            Boolean origLieferbar = (Boolean)originalData.get(0).get(indexMap.get("lieferbar"));
-            if ( !origLieferbar.equals(artikelFormular.lieferbarBox.isSelected()) ){
-                return true;
-            }
-        }
-        if ( artikelFormular.beliebtBox.isEnabled() ){
-            Integer origBeliebtWert = (Integer)originalData.get(0).get(indexMap.get("beliebt"));
-            Integer newBeliebtWert =
-                artikelFormular.beliebtWerte.get( artikelFormular.beliebtBox.getSelectedIndex() );
-            if ( !origBeliebtWert.equals(newBeliebtWert) ){
-                return true;
-            }
-        }
-        if ( aktivBox.isEnabled() ){
-            Boolean origAktiv = (Boolean)originalData.get(0).get(indexMap.get("aktiv"));
-            if ( !origAktiv.equals(aktivBox.isSelected()) ){
-                return true;
-            }
-        }
+        System.out.println("return false");
         return false;
     }
 
@@ -545,226 +280,220 @@ public class ArtikelBearbeiten extends DialogWindow
         return artikelFormular.checkIfFormIsComplete();
     }
 
-    public int submit() {
-        for (int i=0; i<originalData.size(); i++){
-            String origLieferant = (String)originalData.get(i).get(indexMap.get("lieferant"));
-            Integer origLieferantID = originalLiefIDs.get(i);
-            String origNummer = (String)originalData.get(i).get(indexMap.get("nummer"));
-            /////////
-            String newLieferant = origLieferant;
-            Integer newLieferantID = origLieferantID;
-            if (artikelFormular.lieferantBox.isEnabled()){
-                int selIndex = artikelFormular.lieferantBox.getSelectedIndex();
-                // -1 means "no selection done"
-                if (selIndex != -1){
-                    newLieferant = (String)artikelFormular.lieferantBox.getSelectedItem();
-                    newLieferantID = artikelFormular.lieferantIDs.get(selIndex);
-                }
-            }
-            ////////
-            String newNummer = origNummer;
-            if (artikelFormular.nummerField.isEnabled()){
-                String str = artikelFormular.nummerField.getText();
-                // "" means "no selection done"
-                if (!str.equals("")){
-                    newNummer = str;
-                }
-            }
-            ////////
-            if ( (!newLieferant.equals(origLieferant)) || (!newNummer.equals(origNummer)) ){
-                if ( isItemAlreadyKnown(newLieferant, newNummer) ){
-                    // not allowed: changing name and nummer to a pair that is already registered in DB
-                    JOptionPane.showMessageDialog(this,
-                            "Fehler: Kombination Lieferant/Nummer bereits vorhanden! Wird zurückgesetzt.",
-                            "Info", JOptionPane.INFORMATION_MESSAGE);
-                    artikelFormular.lieferantBox.setSelectedIndex(
-                            artikelFormular.lieferantIDs.indexOf(origLieferantID)
-                            );
-                    artikelFormular.nummerField.setText(origNummer);
-                    return 1;
-                }
-            }
-            ////////
-            Integer produktgruppen_id = originalProdGrIDs.get(i);
-            if (artikelFormular.produktgruppenBox.isEnabled()){
-                int selIndex = artikelFormular.produktgruppenBox.getSelectedIndex();
-                // -1 means "no selection done"
-                if (selIndex != -1){
-                    produktgruppen_id = artikelFormular.produktgruppenIDs.get(selIndex);
-                }
-            }
-            ////////
-            String origName = (String)originalData.get(i).get(indexMap.get("name"));
-            String origKurzname = (String)originalData.get(i).get(indexMap.get("kurzname"));
-            ////////
-            String newName = origName;
-            if (artikelFormular.nameField.isEnabled()){
-                String str = artikelFormular.nameField.getText();
-                // "" means "no selection done"
-                if (!str.equals("")){
-                    newName = str;
-                }
-            }
-            ////////
-            String newKurzname = origKurzname;
-            if (artikelFormular.kurznameField.isEnabled()){
-                String str = artikelFormular.kurznameField.getText();
-                // "" means "no selection done"
-                if (!str.equals("")){
-                    newKurzname = str;
-                }
-            }
-            ////////
-            BigDecimal menge;
-            try {
-                menge = new BigDecimal( ((String)originalData.get(i).get(indexMap.get("menge"))).replace(',', '.') );
-            } catch (NumberFormatException ex) {
-                menge = null;
-            }
-            if (artikelFormular.mengeField.isEnabled()){
-                try {
-                    menge = new BigDecimal( artikelFormular.mengeField.getText().replace(',', '.') );
-                } catch (NumberFormatException ex) {
-                }
-            }
-            ////////
-            String einheit = (String)originalData.get(i).get(indexMap.get("einheit"));
-            if (artikelFormular.einheitField.isEnabled()){
-                String str = artikelFormular.einheitField.getText();
-                // "" means "no selection done"
-                if (!str.equals("")){
-                    einheit = str;
-                }
-            }
-            ////////
-            String barcode = (String)originalData.get(i).get(indexMap.get("barcode"));
-            if (artikelFormular.barcodeField.isEnabled()){
-                String str = artikelFormular.barcodeField.getText();
-                // "" means "no selection done"
-                if (!str.equals("")){
-                    barcode = str;
-                }
-            }
-            ////////
-            String herkunft = (String)originalData.get(i).get(indexMap.get("herkunft"));
-            if (artikelFormular.herkunftField.isEnabled()){
-                String str = artikelFormular.herkunftField.getText();
-                // "" means "no selection done"
-                if (!str.equals("")){
-                    herkunft = str;
-                }
-            }
-            ////////
-            Integer vpe = (Integer)originalData.get(i).get(indexMap.get("vpe"));
-            if (artikelFormular.vpeSpinner.isEnabled()){
-                try {
-                    Integer newVPE = (Integer)artikelFormular.vpeSpinner.getValue();
-                    // 0 means "not edited"
-                    if (newVPE != 0){
-                        vpe = newVPE;
-                    }
-                } catch (NumberFormatException ex) {
-                }
-            }
-            ////////
-            Integer setgroesse = (Integer)originalData.get(i).get(indexMap.get("setgroesse"));
-            if (artikelFormular.setSpinner.isEnabled()){
-                try {
-                    Integer newSetgroesse = (Integer)artikelFormular.setSpinner.getValue();
-                    // 0 means "not edited"
-                    if (newSetgroesse != 0){
-                        setgroesse = newSetgroesse;
-                    }
-                } catch (NumberFormatException ex) {
-                }
-            }
-            ////////
-            String vkpreis = (String)originalData.get(i).get(indexMap.get("vkp"));
-            if (artikelFormular.vkpreisField.isEnabled()){
-                String str = artikelFormular.vkpreisField.getText();
-                // "" means "no selection done"
-                if (!str.equals("")){
-                    vkpreis = str;
-                }
-            }
-            ////////
-            String empfvkpreis = (String)originalData.get(i).get(indexMap.get("evkp"));
-            if (artikelFormular.empfvkpreisField.isEnabled()){
-                String str = artikelFormular.empfvkpreisField.getText();
-                // "" means "no selection done"
-                if (!str.equals("")){
-                    empfvkpreis = str;
-                }
-            }
-            ////////
-            String ekrabatt = (String)originalData.get(i).get(indexMap.get("ekr"));
-            if (artikelFormular.ekrabattField.isEnabled()){
-                String str = artikelFormular.ekrabattField.getText();
-                // "" means "no selection done"
-                if (!str.equals("")){
-                    ekrabatt = str;
-                }
-            }
-            ////////
-            String ekpreis = (String)originalData.get(i).get(indexMap.get("ekp"));
-            if (artikelFormular.ekpreisField.isEnabled()){
-                String str = artikelFormular.ekpreisField.getText();
-                // "" means "no selection done"
-                if (!str.equals("")){
-                    ekpreis = str;
-                }
-            }
-            ////////
-            Boolean preisVar = artikelFormular.preisVariabelBox.isEnabled() ?
-                artikelFormular.preisVariabelBox.isSelected() :
-                (Boolean)originalVarPreisBools.get(i);
-            ////////
-            Boolean sortiment = artikelFormular.sortimentBox.isEnabled() ?
-                artikelFormular.sortimentBox.isSelected() :
-                (Boolean)originalData.get(i).get(indexMap.get("sortiment"));
-            ////////
-            Boolean lieferbar = artikelFormular.lieferbarBox.isEnabled() ?
-                artikelFormular.lieferbarBox.isSelected() :
-                (Boolean)originalData.get(i).get(indexMap.get("lieferbar"));
-            ////////
-            Integer beliebtWert = artikelFormular.beliebtBox.isEnabled() ?
-                artikelFormular.beliebtWerte.get(artikelFormular.beliebtBox.getSelectedIndex()) :
-                (Integer)originalData.get(i).get(indexMap.get("beliebt"));
-            ////////
-            Integer bestand; // just keep what it was
-            try {
-                bestand = Integer.parseInt( (String)originalData.get(i).get(indexMap.get("bestand")) );
-            } catch (NumberFormatException ex){ bestand = null; }
-            ////////
-            Boolean aktiv = aktivBox.isEnabled() ?
-                aktivBox.isSelected() :
-                (Boolean)originalData.get(i).get(indexMap.get("aktiv"));
 
-            // set old item to inactive:
-            int result = setItemInactive(origLieferantID, origNummer);
-            if (result == 0){
+    private Artikel getNewArticle(Artikel origArticle) {
+        Artikel a = new Artikel();
+
+        Integer newLieferantID = origArticle.getLiefID();
+        if (artikelFormular.lieferantBox.isEnabled()){
+            int selIndex = artikelFormular.lieferantBox.getSelectedIndex();
+            // -1 means "no selection done"
+            if (selIndex != -1){
+                newLieferantID = artikelFormular.lieferantIDs.get(selIndex);
+            }
+        }
+        a.setLiefID(newLieferantID);
+        ////////
+        String newNummer = origArticle.getNummer();
+        if (artikelFormular.nummerField.isEnabled()){
+            String str = artikelFormular.nummerField.getText();
+            // "" means "no selection done"
+            if (!str.equals("")){
+                newNummer = str;
+            }
+        }
+        a.setNummer(newNummer);
+        ////////
+        if ( (!newLieferantID.equals(origArticle.getLiefID())) || (!newNummer.equals(origArticle.getNummer())) ){
+            if ( isItemAlreadyKnown(newLieferantID, newNummer) ){
+                // not allowed: changing name and nummer to a pair that is already registered in DB
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: Artikel "+origName+" von "+origLieferant+" mit Nummer "+origNummer+" konnte nicht geändert werden.",
-                        "Fehler", JOptionPane.ERROR_MESSAGE);
-                continue; // continue with next item
+                        "Fehler: Kombination Lieferant/Nummer bereits vorhanden! Wird zurückgesetzt.",
+                        "Info", JOptionPane.INFORMATION_MESSAGE);
+                artikelFormular.lieferantBox.setSelectedIndex(
+                        artikelFormular.lieferantIDs.indexOf(origArticle.getLiefID())
+                        );
+                artikelFormular.nummerField.setText(origArticle.getNummer());
+                return null;
             }
-            if ( aktiv == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
-                result = insertNewItem(produktgruppen_id, newLieferantID,
-                        newNummer, newName, newKurzname, menge, einheit, barcode, herkunft, vpe,
-                        setgroesse, vkpreis, empfvkpreis, ekrabatt, ekpreis,
-                        preisVar, sortiment, lieferbar, beliebtWert, bestand);
-                if (result == 0){
-                    JOptionPane.showMessageDialog(this,
-                            "Fehler: Artikel "+origName+" von "+origLieferant+" mit Nummer "+origNummer+" konnte nicht geändert werden.",
-                            "Fehler", JOptionPane.ERROR_MESSAGE);
-                    result = setItemActive(origLieferantID, origNummer);
-                    if (result == 0){
-                        JOptionPane.showMessageDialog(this,
-                                "Fehler: Artikel "+origName+" von "+origLieferant+" mit Nummer "+origNummer+" konnte nicht wieder hergestellt werden. Artikel ist nun gelöscht (inaktiv).",
-                                "Fehler", JOptionPane.ERROR_MESSAGE);
-                    }
+        }
+        ////////
+        Integer produktgruppen_id = origArticle.getProdGrID();
+        if (artikelFormular.produktgruppenBox.isEnabled()){
+            int selIndex = artikelFormular.produktgruppenBox.getSelectedIndex();
+            // -1 means "no selection done"
+            if (selIndex != -1){
+                produktgruppen_id = artikelFormular.produktgruppenIDs.get(selIndex);
+            }
+        }
+        a.setProdGrID(produktgruppen_id);
+        ////////
+        String newName = origArticle.getName();
+        if (artikelFormular.nameField.isEnabled()){
+            String str = artikelFormular.nameField.getText();
+            // "" means "no selection done"
+            if (!str.equals("")){
+                newName = str;
+            }
+        }
+        a.setName(newName);
+        ////////
+        String newKurzname = origArticle.getKurzname();
+        if (artikelFormular.kurznameField.isEnabled()){
+            String str = artikelFormular.kurznameField.getText();
+            // "" means "no selection done"
+            if (!str.equals("")){
+                newKurzname = str;
+            }
+        }
+        a.setKurzname(newKurzname);
+        ////////
+        BigDecimal menge = origArticle.getMenge();
+        if (artikelFormular.mengeField.isEnabled()){
+            try {
+                menge = new BigDecimal( artikelFormular.mengeField.getText().replace(',', '.') );
+            } catch (NumberFormatException ex) {
+            }
+        }
+        a.setMenge(menge);
+        ////////
+        String einheit = origArticle.getEinheit();
+        if (artikelFormular.einheitField.isEnabled()){
+            String str = artikelFormular.einheitField.getText();
+            // "" means "no selection done"
+            if (!str.equals("")){
+                einheit = str;
+            }
+        }
+        a.setEinheit(einheit);
+        ////////
+        String barcode = origArticle.getBarcode();
+        if (artikelFormular.barcodeField.isEnabled()){
+            String str = artikelFormular.barcodeField.getText();
+            // "" means "no selection done"
+            if (!str.equals("")){
+                barcode = str;
+            }
+        }
+        a.setBarcode(barcode);
+        ////////
+        String herkunft = origArticle.getHerkunft();
+        if (artikelFormular.herkunftField.isEnabled()){
+            String str = artikelFormular.herkunftField.getText();
+            // "" means "no selection done"
+            if (!str.equals("")){
+                herkunft = str;
+            }
+        }
+        a.setHerkunft(herkunft);
+        ////////
+        Integer vpe = origArticle.getVPE();
+        if (artikelFormular.vpeSpinner.isEnabled()){
+            try {
+                Integer newVPE = (Integer)artikelFormular.vpeSpinner.getValue();
+                // 0 means "not edited"
+                if (newVPE != 0){
+                    vpe = newVPE;
                 }
+            } catch (NumberFormatException ex) {
             }
+        }
+        a.setVPE(vpe);
+        ////////
+        Integer setgroesse = origArticle.getSetgroesse();
+        if (artikelFormular.setSpinner.isEnabled()){
+            try {
+                Integer newSetgroesse = (Integer)artikelFormular.setSpinner.getValue();
+                // 0 means "not edited"
+                if (newSetgroesse != 0){
+                    setgroesse = newSetgroesse;
+                }
+            } catch (NumberFormatException ex) {
+            }
+        }
+        a.setSetgroesse(setgroesse);
+        ////////
+        String vkpreis = origArticle.getVKP();
+        if (artikelFormular.vkpreisField.isEnabled()){
+            String str = artikelFormular.vkpreisField.getText();
+            // "" means "no selection done"
+            if (!str.equals("")){
+                vkpreis = str;
+            }
+        }
+        a.setVKP(vkpreis);
+        ////////
+        String empfvkpreis = origArticle.getEmpfVKP();
+        if (artikelFormular.empfvkpreisField.isEnabled()){
+            String str = artikelFormular.empfvkpreisField.getText();
+            // "" means "no selection done"
+            if (!str.equals("")){
+                empfvkpreis = str;
+            }
+        }
+        a.setEmpfVKP(empfvkpreis);
+        ////////
+        String ekrabatt = origArticle.getEKRabatt();
+        if (artikelFormular.ekrabattField.isEnabled()){
+            String str = artikelFormular.ekrabattField.getText();
+            // "" means "no selection done"
+            if (!str.equals("")){
+                ekrabatt = str;
+            }
+        }
+        a.setEKRabatt(ekrabatt);
+        ////////
+        String ekpreis = origArticle.getEKP();
+        if (artikelFormular.ekpreisField.isEnabled()){
+            String str = artikelFormular.ekpreisField.getText();
+            // "" means "no selection done"
+            if (!str.equals("")){
+                ekpreis = str;
+            }
+        }
+        a.setEKP(ekpreis);
+        ////////
+        Boolean preisVar = artikelFormular.preisVariabelBox.isEnabled() ?
+            artikelFormular.preisVariabelBox.isSelected() :
+            origArticle.getVarPreis();
+        a.setVarPreis(preisVar);
+        ////////
+        Boolean sortiment = artikelFormular.sortimentBox.isEnabled() ?
+            artikelFormular.sortimentBox.isSelected() :
+            origArticle.getSortiment();
+        a.setSortiment(sortiment);
+        ////////
+        Boolean lieferbar = artikelFormular.lieferbarBox.isEnabled() ?
+            artikelFormular.lieferbarBox.isSelected() :
+            origArticle.getLieferbar();
+        a.setLieferbar(lieferbar);
+        ////////
+        Integer beliebtWert = artikelFormular.beliebtBox.isEnabled() ?
+            artikelFormular.beliebtWerte.get(artikelFormular.beliebtBox.getSelectedIndex()) :
+            origArticle.getBeliebt();
+        a.setBeliebt(beliebtWert);
+        ////////
+        Integer bestand = origArticle.getBestand(); // just keep what it was
+        a.setBestand(bestand);
+        ////////
+        Boolean aktiv = aktivBox.isEnabled() ?
+            aktivBox.isSelected() :
+            origArticle.getAktiv();
+        a.setAktiv(aktiv);
+
+        return a;
+    }
+
+
+    public int submit() {
+        for (int i=0; i < originalArticles.size(); i++){
+            Artikel origArticle = originalArticles.get(i);
+            Artikel newArticle = getNewArticle(origArticle);
+            if (newArticle == null){
+                return 1;
+            }
+
+            updateArticle(origArticle, newArticle);
         }
         return 0;
     }
@@ -809,7 +538,9 @@ public class ArtikelBearbeiten extends DialogWindow
 	if (e.getSource() == submitButton){
             int result = submit();
             if (result == 0){
-                artikelListe.updateAll();
+                if (artikelListe != null){
+                    artikelListe.updateAll();
+                }
                 this.window.dispose(); // close
             }
             return;

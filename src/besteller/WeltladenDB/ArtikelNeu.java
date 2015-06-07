@@ -37,27 +37,7 @@ public class ArtikelNeu extends WindowContent
     public Vector< Vector<Object> > data;
     public Vector<String> columnLabels;
 
-    public Vector<Integer> selProduktgruppenIDs;
-    public Vector<Integer> selLieferantIDs;
-    public Vector<String> lieferanten;
-    public Vector<String> artikelNummern;
-    public Vector<String> artikelNamen;
-    public Vector<String> kurznamen;
-    public Vector<BigDecimal> mengen;
-    public Vector<String> einheiten;
-    public Vector<String> barcodes;
-    public Vector<String> herkuenfte;
-    public Vector<Integer> vpes;
-    public Vector<Integer> sets; // the set size (how many articles in one set)
-    public Vector<String> vkPreise;
-    public Vector<String> empfvkPreise;
-    public Vector<String> ekRabatte;
-    public Vector<String> ekPreise;
-    public Vector<Boolean> variablePreise;
-    public Vector<Boolean> sortimente;
-    public Vector<Boolean> lieferbarBools;
-    public Vector<Integer> beliebtWerte;
-    public Vector<Integer> bestaende;
+    public Vector<Artikel> articles;
     public Vector<JButton> removeButtons;
     public Vector< Vector<Color> > colorMatrix;
 
@@ -90,27 +70,7 @@ public class ArtikelNeu extends WindowContent
     public void emptyTable(){
 	data = new Vector< Vector<Object> >();
 
-        selProduktgruppenIDs = new Vector<Integer>();
-        selLieferantIDs = new Vector<Integer>();
-        lieferanten = new Vector<String>();
-        artikelNummern = new Vector<String>();
-        artikelNamen = new Vector<String>();
-        kurznamen = new Vector<String>();
-        mengen = new Vector<BigDecimal>();
-        einheiten = new Vector<String>();
-        barcodes = new Vector<String>();
-        herkuenfte = new Vector<String>();
-        vpes = new Vector<Integer>();
-        sets = new Vector<Integer>();
-        vkPreise = new Vector<String>();
-        empfvkPreise = new Vector<String>();
-        ekRabatte = new Vector<String>();
-        ekPreise = new Vector<String>();
-        variablePreise = new Vector<Boolean>();
-        sortimente = new Vector<Boolean>();
-        lieferbarBools = new Vector<Boolean>();
-        beliebtWerte = new Vector<Integer>();
-        bestaende = new Vector<Integer>();
+        articles = new Vector<Artikel>();
         removeButtons = new Vector<JButton>();
         colorMatrix = new Vector< Vector<Color> >();
     }
@@ -175,16 +135,16 @@ public class ArtikelNeu extends WindowContent
         table.getColumn("Entf.").setPreferredWidth(30);
     }
 
-    public int checkIfItemAlreadyKnown(String lieferant, String nummer) {
+    public int checkIfItemAlreadyKnown(Integer lieferant_id, String nummer) {
         int exists = 0;
-        if ( isItemAlreadyKnown(lieferant, nummer) ){
+        if ( isItemAlreadyKnown(lieferant_id, nummer) ){
             exists = 1;
         }
         // always look into table, too
         for (int i=0; i<data.size(); i++){
             String tableLieferant = data.get(i).get(1).toString();
             String tableNummer = data.get(i).get(2).toString();
-            if (tableLieferant.equals(lieferant) && tableNummer.equals(nummer)){
+            if (tableLieferant.equals( getLieferant(lieferant_id) ) && tableNummer.equals(nummer)){
                 exists = 2; // item already in table
                 break;
             }
@@ -194,6 +154,7 @@ public class ArtikelNeu extends WindowContent
 
     public int submit() {
         for (int i=0; i<data.size(); i++){
+            Artikel newArticle = articles.get(i);
             boolean itemChanged = false;
             for (int col=0; col<colorMatrix.get(i).size(); col++){
                 if (colorMatrix.get(i).get(col) == Color.red){
@@ -202,35 +163,15 @@ public class ArtikelNeu extends WindowContent
                 }
             }
             if (itemChanged){
-                // set old item to inactive:
-                int result = setItemInactive(selLieferantIDs.get(i), artikelNummern.get(i));
+                updateArticle(newArticle, newArticle);
+            } else {
+                int result = insertNewItem(newArticle);
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Artikel \""+artikelNamen.get(i)+"\" von "+lieferanten.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht geändert werden.",
-                            "Fehler", JOptionPane.ERROR_MESSAGE);
-                    continue; // don't insert this new item, continue with next
-                }
-            }
-            int result = insertNewItem(selProduktgruppenIDs.get(i),
-                    selLieferantIDs.get(i), artikelNummern.get(i),
-                    artikelNamen.get(i), kurznamen.get(i), mengen.get(i), einheiten.get(i), barcodes.get(i),
-                    herkuenfte.get(i), vpes.get(i), sets.get(i), vkPreise.get(i), empfvkPreise.get(i),
-                    ekRabatte.get(i), ekPreise.get(i), variablePreise.get(i),
-                    sortimente.get(i), lieferbarBools.get(i), beliebtWerte.get(i), bestaende.get(i));
-            if (result == 0){
-                if (itemChanged){
-                    JOptionPane.showMessageDialog(this,
-                            "Fehler: Artikel \""+artikelNamen.get(i)+"\" von "+lieferanten.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht geändert werden.",
-                            "Fehler", JOptionPane.ERROR_MESSAGE);
-                    result = setItemActive(selLieferantIDs.get(i), artikelNummern.get(i));
-                    if (result == 0){
-                        JOptionPane.showMessageDialog(this,
-                                "Fehler: Artikel \""+artikelNamen.get(i)+"\" von "+lieferanten.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht wieder hergestellt werden. Artikel ist nun gelöscht (inaktiv).",
-                                "Fehler", JOptionPane.ERROR_MESSAGE);
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            "Fehler: Artikel \""+artikelNamen.get(i)+"\" von "+lieferanten.get(i)+" mit Nummer "+artikelNummern.get(i)+" konnte nicht in DB gespeichert werden.",
+                            "Fehler: Artikel \""+newArticle.getName()+"\" von "+
+                            getLieferant( newArticle.getLiefID() )+" mit Nummer "+
+                            newArticle.getNummer()+" konnte nicht in DB "+
+                            "gespeichert werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
@@ -270,27 +211,7 @@ public class ArtikelNeu extends WindowContent
         if (removeRow > -1){
             data.remove(removeRow);
 
-            selProduktgruppenIDs.remove(removeRow);
-            selLieferantIDs.remove(removeRow);
-            lieferanten.remove(removeRow);
-            artikelNummern.remove(removeRow);
-            artikelNamen.remove(removeRow);
-            kurznamen.remove(removeRow);
-            mengen.remove(removeRow);
-            einheiten.remove(removeRow);
-            barcodes.remove(removeRow);
-            herkuenfte.remove(removeRow);
-            vpes.remove(removeRow);
-            sets.remove(removeRow);
-            vkPreise.remove(removeRow);
-            empfvkPreise.remove(removeRow);
-            ekRabatte.remove(removeRow);
-            ekPreise.remove(removeRow);
-            variablePreise.remove(removeRow);
-            sortimente.remove(removeRow);
-            lieferbarBools.remove(removeRow);
-            beliebtWerte.remove(removeRow);
-            bestaende.remove(removeRow);
+            articles.remove(removeRow);
             removeButtons.remove(removeRow);
             colorMatrix.remove(removeRow);
 

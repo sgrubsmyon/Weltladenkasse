@@ -259,21 +259,21 @@ public abstract class ArtikelGrundlage extends WindowContent {
         }
 
         String menge = "";
-        String preis = priceFormatter(preis_bd)+" "+currencySymbol;
+        String preis = bc.priceFormatter(preis_bd)+" "+bc.currencySymbol;
         String kg_preis = "";
         if (menge_bd.signum() > 0){
             BigDecimal preis_pro_kg = preis_bd.divide(menge_bd, 10, RoundingMode.HALF_UP);
-            kg_preis = priceFormatter(preis_pro_kg)+" "+currencySymbol;
+            kg_preis = bc.priceFormatter(preis_pro_kg)+" "+bc.currencySymbol;
             if ( einheit.equals("kg") || einheit.equals("l") ){
-                if ( menge_bd.compareTo(one) < 0 ){ // if menge < 1 kg or 1 l
-                    menge_bd = menge_bd.multiply(thousand);
+                if ( menge_bd.compareTo(bc.one) < 0 ){ // if menge < 1 kg or 1 l
+                    menge_bd = menge_bd.multiply(bc.thousand);
                     if ( einheit.equals("kg") )
                         einheit = "g";
                     else if ( einheit.equals("l") )
                         einheit = "ml";
                 }
             }
-            menge = (unifyDecimal(menge_bd)+" "+einheit).trim();
+            menge = (bc.unifyDecimal(menge_bd)+" "+einheit).trim();
         }
         return new String[]{menge, preis, kg_preis};
     }

@@ -119,11 +119,11 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
         zeitraumPanel.setBorder(BorderFactory.createTitledBorder("Zeitraum der Abrechnung"));
         zeitraumPanel.setLayout(new GridLayout(3, 2)); // 3 rows, 2 columns
             JLabel fruehLabel = new JLabel("Früheste Rechnung: ");
-            JLabel fruehZeitLabel = new JLabel(firstDateTime.format(dateFormatDate4j));
+            JLabel fruehZeitLabel = new JLabel(firstDateTime.format(bc.dateFormatDate4j));
             JLabel spaetLabel = new JLabel("Späteste Rechnung: ");
-            JLabel spaetZeitLabel = new JLabel(lastDateTime.format(dateFormatDate4j));
+            JLabel spaetZeitLabel = new JLabel(lastDateTime.format(bc.dateFormatDate4j));
             JLabel nowLabel = new JLabel("Jetzt: ");
-            JLabel nowZeitLabel = new JLabel(nowDateTime.format(dateFormatDate4j));
+            JLabel nowZeitLabel = new JLabel(nowDateTime.format(bc.dateFormatDate4j));
             zeitraumPanel.add(fruehLabel);
             zeitraumPanel.add(fruehZeitLabel);
             zeitraumPanel.add(spaetLabel);
@@ -156,7 +156,7 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
         dateChooser = new JDateChooser((Date)nowDate.clone(), null, sdEdit);
         dateChooser.setMinSelectableDate((Date)firstDate.clone());
         dateChooser.setMaxSelectableDate((Date)nowDate.clone());
-        dateChooser.setLocale(myLocale);
+        dateChooser.setLocale(bc.myLocale);
         dateSpinner.setEditor(new JSpinner.DateEditor(dateSpinner, "dd.MM.yyyy"));
 	dateSpinner.addChangeListener(this);
         middlePanel.add(dateChooser);

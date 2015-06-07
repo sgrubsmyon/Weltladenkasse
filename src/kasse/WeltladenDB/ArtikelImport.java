@@ -173,8 +173,8 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         return artikelNeu.willDataBeLost();
     }
 
-    public int checkIfItemAlreadyKnown(String lieferant, String nummer) {
-        return artikelNeu.checkIfItemAlreadyKnown(lieferant, nummer);
+    public int checkIfItemAlreadyKnown(Integer lieferant_id, String nummer) {
+        return artikelNeu.checkIfItemAlreadyKnown(lieferant_id, nummer);
     }
 
     public int submit() {
@@ -207,26 +207,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         return gruppenid;
     }
 
-    private Integer queryLieferantID(String lieferantname) {
-        Integer lieferantid = null;
-        try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT lieferant_id FROM lieferant WHERE lieferant_name = ?"
-                    );
-            pstmt.setString(1, lieferantname);
-            ResultSet rs = pstmt.executeQuery();
-            if ( rs.next() )
-                lieferantid = rs.getString(1) == null ? null : rs.getInt(1);
-            rs.close();
-            pstmt.close();
-        } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-        return lieferantid;
-    }
-
-    private Vector<String> queryAllFields(Integer lieferantid, String artikelnummer) {
+    private Vector<String> queryAllFields(Integer lieferant_id, String artikelnummer) {
         Vector<String> results = new Vector<String>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
@@ -237,7 +218,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
                     "FROM artikel "+
                     "WHERE lieferant_id = ? AND artikel_nr = ? AND aktiv = TRUE"
                     );
-            pstmt.setInt(1, lieferantid);
+            pstmt.setInt(1, lieferant_id);
             pstmt.setString(2, artikelnummer);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -254,7 +235,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             results.add(rs.getString(11) == null ? "" : rs.getString(11)); // setgroesse
             results.add(rs.getString(12) == null ? "" : rs.getString(12)); // vk_preis
             results.add(rs.getString(13) == null ? "" : rs.getString(13)); // empf_vk_preis
-            results.add(rs.getString(14) == null ? "" : vatFormatter(rs.getString(14))); // ek_rabatt
+            results.add(rs.getString(14) == null ? "" : bc.vatFormatter(rs.getString(14))); // ek_rabatt
             results.add(rs.getString(15) == null ? "" : rs.getString(15)); // ek_preis
             results.add(rs.getString(16));                               // variabler_preis
             results.add(rs.getString(17) == null ? "" : rs.getString(17)); // herkunft
@@ -368,8 +349,8 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             return emptyLineCount;
         }
         // Lieferant
-        Integer lieferantid = queryLieferantID(lieferant);
-        if (lieferantid == null){
+        Integer lieferant_id = getLieferantID(lieferant);
+        if (lieferant_id == null){
             logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte B: Lieferant unbekannt).</div>\n";
             log.setText(logString+logStringEnd);
             return emptyLineCount;
@@ -458,7 +439,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         } else {
             variabel = "0";
             if ( !vkpreis.equals("") ){
-                vkpreis = priceFormatterIntern(vkpreis);
+                vkpreis = bc.priceFormatterIntern(vkpreis);
                 if ( vkpreis.equals("") ){
                     // price could not be parsed
                     logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte N: 'VK-Preis').</div>\n";
@@ -467,7 +448,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
                 }
             }
             if ( !empf_vkpreis.equals("") ){
-                empf_vkpreis = priceFormatterIntern(empf_vkpreis);
+                empf_vkpreis = bc.priceFormatterIntern(empf_vkpreis);
                 if ( empf_vkpreis.equals("") ){
                     // price could not be parsed
                     logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte O: 'Empf. VK-Preis').</div>\n";
@@ -476,7 +457,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
                 }
             }
             if ( !ekrabatt.equals("") ){
-                ekrabatt = vatFormatter(ekrabatt);
+                ekrabatt = bc.vatFormatter(ekrabatt);
                 if ( ekrabatt.equals("") ){
                     // rabatt could not be parsed
                     logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte P: 'EK-Rabatt').</div>\n";
@@ -485,7 +466,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
                 }
             }
             if ( !ekpreis.equals("") ){
-                ekpreis = priceFormatterIntern(ekpreis);
+                ekpreis = bc.priceFormatterIntern(ekpreis);
                 if ( ekpreis.equals("") ){
                     // price could not be parsed
                     logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte Q: 'EK-Preis').</div>\n";
@@ -499,10 +480,10 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
                 // if calculated ekpreis according to empf_vkpreis and ekrabatt does not match ekpreis:
                 //    use the calculated ekpreis, but give a warning
                 logString += "<div style=\""+redStyle+"\">EK-Preis von "+
-                    priceFormatter(origEKPreis)+" "+currencySymbol+
+                    bc.priceFormatter(origEKPreis)+" "+bc.currencySymbol+
                     "aus Zeile "+lineCount+" wird durch berechneten "+
-                    "EK-Preis von "+priceFormatter(ekpreis)+" "+
-                    currencySymbol+" ersetzt!.</div>\n";
+                    "EK-Preis von "+bc.priceFormatter(ekpreis)+" "+
+                    bc.currencySymbol+" ersetzt!.</div>\n";
                 log.setText(logString+logStringEnd);
             }
         }
@@ -519,10 +500,10 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         }
 
         Vector<Color> colors = new Vector<Color>();
-        int itemAlreadyKnown = checkIfItemAlreadyKnown(lieferant, nummer);
+        int itemAlreadyKnown = checkIfItemAlreadyKnown(lieferant_id, nummer);
         if (itemAlreadyKnown == 1){ // item already in db
             // compare every field:
-            Vector<String> allFields = queryAllFields(lieferantid, nummer);
+            Vector<String> allFields = queryAllFields(lieferant_id, nummer);
 
             colors.add( gruppenid.equals(allFields.get(0)) ? Color.black : Color.red ); // produktgruppe
             colors.add(Color.black); // lieferant
@@ -567,27 +548,15 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         }
         if ( itemAlreadyKnown == 0 || (itemChanged && itemAlreadyKnown != 2) ){ // if item not known or item changed
             // add new item to the list
-            artikelNeu.selProduktgruppenIDs.add( Integer.parseInt(gruppenid) );
-            artikelNeu.selLieferantIDs.add(lieferantid);
-            artikelNeu.lieferanten.add(lieferant);
-            artikelNeu.artikelNummern.add(nummer);
-            artikelNeu.artikelNamen.add(name);
-            artikelNeu.kurznamen.add(kurzname);
-            artikelNeu.mengen.add(mengeDecimal);
-            artikelNeu.einheiten.add(einheit);
-            artikelNeu.sortimente.add( sortiment.equals("0") ? false : true );
-            artikelNeu.lieferbarBools.add( lieferbar.equals("0") ? false : true );
-            artikelNeu.beliebtWerte.add(beliebtWert);
-            artikelNeu.barcodes.add(barcode);
-            artikelNeu.vpes.add(vpeInt);
-            artikelNeu.sets.add(setgrInt);
-            artikelNeu.vkPreise.add(vkpreis);
-            artikelNeu.empfvkPreise.add(empf_vkpreis);
-            artikelNeu.ekRabatte.add(ekrabatt);
-            artikelNeu.ekPreise.add(ekpreis);
-            artikelNeu.variablePreise.add( variabel.equals("0") ? false : true );
-            artikelNeu.herkuenfte.add(herkunft);
-            artikelNeu.bestaende.add(bestandInt);
+            Artikel newArticle = new Artikel(Integer.parseInt(gruppenid),
+                    lieferant_id, nummer, name, kurzname, mengeDecimal, einheit,
+                    barcode, herkunft, vpeInt, setgrInt, vkpreis,
+                    empf_vkpreis, ekrabatt, ekpreis,
+                    variabel.equals("0") ? false : true,
+                    sortiment.equals("0") ? false : true,
+                    lieferbar.equals("0") ? false : true,
+                    beliebtWert, bestandInt, true);
+            artikelNeu.articles.add(newArticle);
 
             artikelNeu.removeButtons.add(new JButton("-"));
             artikelNeu.removeButtons.lastElement().addActionListener(this);
@@ -599,7 +568,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             row.add(nummer);
             row.add(name);
             row.add(kurzname);
-            row.add( unifyDecimal(menge) );
+            row.add( bc.unifyDecimal(menge) );
             row.add(einheit);
             row.add( sortiment.equals("0") ? false : true );
             row.add( lieferbar.equals("0") ? false : true );
@@ -607,10 +576,10 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             row.add(barcode);
             row.add(vpe);
             row.add(setgroesse);
-            row.add( vkpreis.equals("") ? "" : priceFormatter(vkpreis)+" "+currencySymbol );
-            row.add( empf_vkpreis.equals("") ? "" : priceFormatter(empf_vkpreis)+" "+currencySymbol );
+            row.add( vkpreis.equals("") ? "" : bc.priceFormatter(vkpreis)+" "+bc.currencySymbol );
+            row.add( empf_vkpreis.equals("") ? "" : bc.priceFormatter(empf_vkpreis)+" "+bc.currencySymbol );
             row.add( ekrabatt.equals("") ? "" : ekrabatt );
-            row.add( ekpreis.equals("") ? "" : priceFormatter(ekpreis)+" "+currencySymbol );
+            row.add( ekpreis.equals("") ? "" : bc.priceFormatter(ekpreis)+" "+bc.currencySymbol );
             row.add( variabel.equals("0") ? false : true );
             row.add(herkunft);
             row.add(bestand);

@@ -59,13 +59,9 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
     protected Vector<Integer> displayIndices;
     protected Vector<String> columnLabels;
     protected HashMap<String, Integer> indexMap;
+
+    protected Vector<Artikel> articles;
     protected Vector<Integer> artikelIDs;
-    private Vector<Integer> produktGruppeIDs;
-    private Vector<Integer> lieferantIDs;
-    protected Vector<Boolean> sortimentBools;
-    protected Vector<Boolean> lieferbarBools;
-    protected Vector<Boolean> activeRowBools;
-    protected Vector<Boolean> varPreisBools;
     protected Vector<Integer> beliebtIndices;
 
     protected Vector<String> linksColumns;
@@ -79,26 +75,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
     protected HashMap<String, DocumentFilter> documentFilterMap;
 
     // Vectors storing table edits
-    private Vector<String> editLieferant;
-    private Vector<String> editArtikelNummer;
-    private Vector<String> changedNummer;
-    private Vector<String> changedName;
-    private Vector<String> changedKurzname;
-    private Vector<BigDecimal> changedMenge;
-    private Vector<String> changedEinheit;
-    private Vector<String> changedBarcode;
-    private Vector<String> changedHerkunft;
-    private Vector<Integer> changedVPE;
-    private Vector<Integer> changedSetgroesse;
-    private Vector<String> changedVKP;
-    private Vector<String> changedEmpfVKP;
-    private Vector<String> changedEKRabatt;
-    private Vector<String> changedEKP;
-    private Vector<Boolean> changedSortiment;
-    private Vector<Boolean> changedLieferbar;
-    private Vector<Integer> changedBeliebt;
-    private Vector<Integer> changedBestand;
-    private Vector<Boolean> changedAktiv;
+    private Vector<Artikel> editedArticles;
+    private Vector<Artikel> changedArticles;
 
     // Dialog to read items from file
     private JDialog readFromFileDialog;
@@ -173,14 +151,9 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         indexMap.put("bestand", columnLabels.indexOf("Bestand"));
         indexMap.put("aktiv", columnLabels.indexOf("Aktiv"));
 
+        articles = new Vector<Artikel>();
         artikelIDs = new Vector<Integer>();
-        produktGruppeIDs = new Vector<Integer>();
-        lieferantIDs = new Vector<Integer>();
-        sortimentBools = new Vector<Boolean>();
-        lieferbarBools = new Vector<Boolean>();
-        activeRowBools = new Vector<Boolean>();
-        varPreisBools = new Vector<Boolean>();
-        beliebtIndices = new Vector<Integer>();
+        //beliebtIndices = new Vector<Integer>();
 
         linksColumns = new Vector<String>();
         linksColumns.add("Nummer");
@@ -263,7 +236,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                     "vk_preis, empf_vk_preis, ek_rabatt, ek_preis, variabler_preis, mwst_satz, "+
                     "sortiment, lieferbar, "+
                     "beliebtheit, bestand, "+
-                    "DATE_FORMAT(von, '"+dateFormatSQL+"'), DATE_FORMAT(bis, '"+dateFormatSQL+"'), "+
+                    "DATE_FORMAT(von, '"+bc.dateFormatSQL+"'), DATE_FORMAT(bis, '"+bc.dateFormatSQL+"'), "+
                     "artikel.aktiv "+
                     "FROM artikel LEFT JOIN lieferant USING (lieferant_id) "+
                     "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
@@ -280,10 +253,10 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 String gruppenname = rs.getString(3);
                 Integer lieferant_id = rs.getInt(4);
                 String lieferant = rs.getString(5);
-                String nr = rs.getString(6);
+                String nummer = rs.getString(6);
                 String name = rs.getString(7);
                 String kurzname = rs.getString(8);
-                String menge = rs.getString(9);
+                BigDecimal menge = rs.getBigDecimal(9);
                 String einheit = rs.getString(10);
                 String barcode = rs.getString(11);
                 String herkunft = rs.getString(12);
@@ -291,41 +264,39 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 Integer setgroesse = rs.getInt(14);
                 String vkp = rs.getString(15);
                 String empf_vkp = rs.getString(16);
-                String ek_rabatt = rs.getString(17);
+                String ek_rabatt = bc.vatFormatter( rs.getString(17) );
                 String ekp = rs.getString(18);
                 Boolean var = rs.getBoolean(19);
                 String mwst = rs.getString(20);
-                Boolean sortimentBool = rs.getBoolean(21);
-                Boolean lieferbarBool = rs.getBoolean(22);
+                Boolean sortiment = rs.getBoolean(21);
+                Boolean lieferbar = rs.getBoolean(22);
                 Integer beliebtWert = rs.getInt(23);
-                String bestand = rs.getString(24);
+                Integer bestand = rs.getInt(24);
                 String von = rs.getString(25);
                 String bis = rs.getString(26);
-                Boolean aktivBool = rs.getBoolean(27);
+                Boolean aktiv = rs.getBoolean(27);
 
                 if (lieferant_id == null) lieferant_id = 1; // corresponds to "unknown"
                 if (lieferant == null) lieferant = "";
                 if (kurzname == null) kurzname = "";
-                if (menge == null){ menge = ""; }
-                else { menge = unifyDecimal(menge); }
+                String mengeStr = "";
+                if (menge != null){ mengeStr = bc.unifyDecimal(menge); }
                 if (einheit == null){ einheit = ""; }
                 if (barcode == null){ barcode = ""; }
                 if (herkunft == null) herkunft = "";
                 //if (vpe == null){ vpe = ""; }
                 String vkpOutput = "";
-                if (vkp != null){ vkpOutput = priceFormatter(vkp); }
-                if (empf_vkp == null){ empf_vkp = ""; }
-                else { empf_vkp = priceFormatter(empf_vkp); }
-                if (ek_rabatt == null){ ek_rabatt = ""; }
-                else { ek_rabatt = vatPercentRemover( vatFormatter(ek_rabatt) ); }
-                if (ekp == null){ ekp = ""; }
-                else { ekp = priceFormatter(ekp); }
+                if (vkp != null){ vkpOutput = bc.priceFormatter(vkp); }
+                String empfVKPOutput = "";
+                if (empf_vkp != null){ empfVKPOutput = bc.priceFormatter(empf_vkp); }
+                String ekRabattOutput = "";
+                if (ek_rabatt != null){ ekRabattOutput = bc.vatPercentRemover(ek_rabatt); }
+                String ekpOutput = "";
+                if (ekp != null){ ekpOutput = bc.priceFormatter(ekp); }
                 String mwstOutput = "";
-                if (mwst != null){ mwstOutput = vatFormatter(mwst); }
-                if (vkp == null){ vkpOutput = ""; }
-                if (mwst == null){ mwstOutput = ""; }
-                if (var == true){ vkpOutput = "variabel"; empf_vkp = "variabel";
-                    ek_rabatt = "variabel"; ekp = "variabel"; }
+                if (mwst != null){ mwstOutput = bc.vatFormatter(mwst); }
+                if (var == true){ vkpOutput = "variabel"; empfVKPOutput = "variabel";
+                    ekRabattOutput = "variabel"; ekpOutput = "variabel"; }
                 Integer beliebtIndex = 0;
                 if (beliebtWert != null){
                     try {
@@ -334,34 +305,36 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                         System.out.println("Unknown beliebtWert: "+beliebtWert);
                     }
                 }
-                if (bestand == null){ bestand = ""; }
+                String bestandStr = "";
+                if (bestand != null){ bestandStr = bestand.toString(); }
                 if (von == null) von = "";
                 if (bis == null) bis = "";
 
                 Vector<Object> row = new Vector<Object>();
                     row.add(gruppenname);
-                    row.add(lieferant); row.add(nr);
+                    row.add(lieferant); row.add(nummer);
                     row.add(name); row.add(kurzname);
-                    row.add(menge); row.add(einheit);
+                    row.add(mengeStr); row.add(einheit);
                     row.add(vkpOutput);
-                    row.add(sortimentBool);
-                    row.add(lieferbarBool);
+                    row.add(sortiment);
+                    row.add(lieferbar);
                     row.add(beliebtIndex); row.add(barcode);
                     row.add(vpe); row.add(setgroesse);
-                    row.add(empf_vkp); row.add(ek_rabatt);
-                    row.add(ekp); row.add(mwstOutput);
-                    row.add(herkunft); row.add(bestand);
+                    row.add(empfVKPOutput); row.add(ekRabattOutput);
+                    row.add(ekpOutput); row.add(mwstOutput);
+                    row.add(herkunft); row.add(bestandStr);
                     row.add(von); row.add(bis);
-                    row.add(aktivBool);
+                    row.add(aktiv);
                 data.add(row);
+
+                Artikel article = new Artikel(produktgruppen_id, lieferant_id,
+                        nummer, name, kurzname, menge, einheit, barcode,
+                        herkunft, vpe, setgroesse, vkp, empf_vkp, ek_rabatt,
+                        ekp, var, sortiment, lieferbar, beliebtWert, bestand,
+                        aktiv);
+                articles.add(article);
                 artikelIDs.add(artikel_id);
-                produktGruppeIDs.add(produktgruppen_id);
-                lieferantIDs.add(lieferant_id);
-                sortimentBools.add(sortimentBool);
-                lieferbarBools.add(lieferbarBool);
-                activeRowBools.add(aktivBool);
-                varPreisBools.add(var);
-                beliebtIndices.add(beliebtIndex);
+                //beliebtIndices.add(beliebtIndex);
             }
             rs.close();
             pstmt.close();
@@ -372,26 +345,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         refreshOriginalData();
         displayData = new Vector< Vector<Object> >(data);
         initiateDisplayIndices();
-        editLieferant = new Vector<String>();
-        editArtikelNummer = new Vector<String>();
-        changedNummer = new Vector<String>();
-        changedName = new Vector<String>();
-        changedKurzname = new Vector<String>();
-        changedMenge = new Vector<BigDecimal>();
-        changedEinheit = new Vector<String>();
-        changedBarcode = new Vector<String>();
-        changedHerkunft = new Vector<String>();
-        changedVPE = new Vector<Integer>();
-        changedSetgroesse = new Vector<Integer>();
-        changedVKP = new Vector<String>();
-        changedEmpfVKP = new Vector<String>();
-        changedEKRabatt = new Vector<String>();
-        changedEKP = new Vector<String>();
-        changedSortiment = new Vector<Boolean>();
-        changedLieferbar = new Vector<Boolean>();
-        changedBeliebt = new Vector<Integer>();
-        changedBestand = new Vector<Integer>();
-        changedAktiv = new Vector<Boolean>();
+        editedArticles = new Vector<Artikel>();
+        changedArticles = new Vector<Artikel>();
     }
 
     protected void refreshOriginalData() {
@@ -404,71 +359,10 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
     }
 
     private void putChangesIntoDB() {
-        for (int index=0; index<editLieferant.size(); index++){
-            Integer prod_id = null;
-            Integer lief_id = null;
-            Boolean var_preis = null;
-            try {
-                PreparedStatement pstmt = this.conn.prepareStatement(
-                        "SELECT produktgruppen_id, lieferant_id, variabler_preis FROM artikel "+
-                        "LEFT JOIN lieferant USING (lieferant_id) WHERE "+
-                        "lieferant_name = ? AND "+
-                        "artikel_nr = ? AND artikel.aktiv = TRUE"
-                        );
-                pstmt.setString(1, editLieferant.get(index));
-                pstmt.setString(2, editArtikelNummer.get(index));
-                ResultSet rs = pstmt.executeQuery();
-                // Now do something with the ResultSet, should be only one result ...
-                rs.next();
-                prod_id = rs.getInt(1);
-                lief_id = rs.getInt(2);
-                var_preis = rs.getBoolean(3);
-                rs.close();
-                pstmt.close();
-            } catch (SQLException ex) {
-                System.out.println("Exception: " + ex.getMessage());
-                ex.printStackTrace();
-            }
-
-            // set old item to inactive:
-            int result = setItemInactive(lief_id, editArtikelNummer.get(index));
-            if (result == 0){
-                JOptionPane.showMessageDialog(this,
-                        "Fehler: Artikel von "+editLieferant.get(index)+" mit Nummer "+editArtikelNummer.get(index)+" konnte nicht geändert werden.",
-                        "Fehler", JOptionPane.ERROR_MESSAGE);
-                continue; // continue with next item
-            }
-            if ( changedAktiv.get(index) == true ){ // only if the item wasn't set inactive voluntarily: add new item with new properties
-                String ekpreis = figureOutEKP(changedEmpfVKP.get(index), changedEKRabatt.get(index), changedEKP.get(index));
-                result = insertNewItem(prod_id, lief_id,
-                        changedNummer.get(index), changedName.get(index),
-                        changedKurzname.get(index), changedMenge.get(index),
-                        changedEinheit.get(index),
-                        changedBarcode.get(index), changedHerkunft.get(index),
-                        changedVPE.get(index), changedSetgroesse.get(index),
-                        changedVKP.get(index), changedEmpfVKP.get(index),
-                        changedEKRabatt.get(index), ekpreis, var_preis,
-                        changedSortiment.get(index),
-                        changedLieferbar.get(index), changedBeliebt.get(index),
-                        changedBestand.get(index));
-                if (result == 0){
-                    JOptionPane.showMessageDialog(this,
-                            "Fehler: Artikel von "+editLieferant.get(index)+
-                            "mit Nummer "+editArtikelNummer.get(index)+" konnte "+
-                            "nicht geändert werden.",
-                            "Fehler", JOptionPane.ERROR_MESSAGE);
-                    result = setItemActive(lief_id, editArtikelNummer.get(index));
-                    if (result == 0){
-                        JOptionPane.showMessageDialog(this,
-                                "Fehler: Artikel von "+
-                                editLieferant.get(index)+" mit Nummer "+
-                                editArtikelNummer.get(index)+" konnte nicht "+
-                                "wieder hergestellt werden. Artikel ist nun "+
-                                "gelöscht (inaktiv).",
-                                "Fehler", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-            }
+        for (int index=0; index < editedArticles.size(); index++){
+            Artikel origArticle = editedArticles.get(index);
+            Artikel newArticle = changedArticles.get(index);
+            updateArticle(origArticle, newArticle);
         }
     }
 
@@ -575,12 +469,12 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
 
 
     protected void enableButtons() {
-        saveButton.setEnabled(editLieferant.size() > 0);
-        revertButton.setEnabled(editLieferant.size() > 0);
+        saveButton.setEnabled(editedArticles.size() > 0);
+        revertButton.setEnabled(editedArticles.size() > 0);
         editButton.setEnabled(myTable.getSelectedRowCount() > 0);
-        newButton.setEnabled(editLieferant.size() == 0);
-        importButton.setEnabled(editLieferant.size() == 0);
-        exportButton.setEnabled(editLieferant.size() == 0);
+        newButton.setEnabled(editedArticles.size() == 0);
+        importButton.setEnabled(editedArticles.size() == 0);
+        exportButton.setEnabled(editedArticles.size() == 0);
     }
 
 
@@ -634,7 +528,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         @Override
         public boolean isCellEditable(int row, int col) {
             String header = this.getColumnName(col);
-            if ( activeRowBools.get(row) ){
+            if ( articles.get(row).getAktiv() ){
                 if ( moneyColumns.contains(header) || header.equals("EK-Rabatt") ) {
                     if ( ! displayData.get(row).get(col).equals("variabel") )
                         return true;
@@ -655,12 +549,12 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             realRowIndex = convertRowIndexToModel(realRowIndex);
             realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
             // for rows with inactive items, set color:
-            if ( ! activeRowBools.get(realRowIndex) ){
+            if ( ! articles.get(realRowIndex).getAktiv() ){
                 c.setFont( c.getFont().deriveFont(Font.ITALIC) );
                 c.setForeground(Color.BLUE);
             }
             // for articles not in sortiment, set color:
-            else if ( ! sortimentBools.get(realRowIndex) ){
+            else if ( ! articles.get(realRowIndex).getSortiment() ){
                 c.setFont( c.getFont().deriveFont(Font.PLAIN) );
                 c.setForeground(Color.GRAY);
             }
@@ -690,9 +584,9 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                     if (value != null){
                         valueStr = value.toString();
                         if ( !valueStr.equals("variabel") ){
-                            valueStr = priceFormatter(valueStr);
+                            valueStr = bc.priceFormatter(valueStr);
                             if ( !valueStr.equals("") ){
-                                valueStr += " "+currencySymbol;
+                                valueStr += " "+bc.currencySymbol;
                             }
                         }
                     }
@@ -704,9 +598,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                         valueStr = value.toString();
                         if ( !valueStr.equals("variabel") && !valueStr.equals("") ){
                             BigDecimal fracValue = new BigDecimal(
-                                    vatParser(vatFormatter(valueStr))
-                                    ).multiply(percent);
-                            valueStr = vatFormatter(fracValue);
+                                    bc.vatParser(bc.vatFormatter(valueStr))).multiply(bc.percent);
+                            valueStr = bc.vatFormatter(fracValue);
                         }
                     }
                     label.setText(valueStr);
@@ -861,21 +754,12 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         enableButtons();
     }
 
-    /** Needed for TableModelListener. */
-    public void tableChanged(TableModelEvent e) {
-        // get info about edited cell
-        int row = e.getFirstRow();
-        int dataRow = displayIndices.get(row); // convert from displayData index to data index
-        int column = e.getColumn();
-        AbstractTableModel model = (AbstractTableModel)e.getSource();
-        String origLieferant = originalData.get(dataRow).get(model.findColumn("Lieferant")).toString();
-        String origArtikelNummer = originalData.get(dataRow).get(model.findColumn("Nummer")).toString();
-        int nummerIndex = editArtikelNummer.indexOf(origArtikelNummer); // look up artikelNummer in change list
-        int lieferantIndex = editLieferant.indexOf(origLieferant); // look up lieferant in change list
 
-        //
-        // post-edit edited cell (parse bad mistakes)
-        //
+    private void parseCell(AbstractTableModel model, int row, int column, int dataRow,
+            Artikel origArticle) {
+        /**
+         * post-edit edited cell (parse bad mistakes)
+         */
         String value = model.getValueAt(row, column).toString().replaceAll("\\s","");
         if ( value.equals("") ){
             // replace whitespace only entries with nothing
@@ -888,30 +772,31 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             // user tried to delete the lieferant (not allowed)
             // reset to original value
             model.removeTableModelListener(this); // remove listener before doing changes
-                model.setValueAt(origLieferant, row, column);
+                model.setValueAt(getLieferant(origArticle.getLiefID()), row, column);
             model.addTableModelListener(this);
         }
         if ( header.equals("Nummer") && value.equals("") ){
             // user tried to delete the nummer (not allowed)
             // reset to original value
             model.removeTableModelListener(this); // remove listener before doing changes
-                model.setValueAt(origArtikelNummer, row, column);
+                model.setValueAt(origArticle.getNummer(), row, column);
             model.addTableModelListener(this);
         }
         if ( header.equals("VK-Preis") && value.equals("") ){
             // user tried to delete the vkpreis (not allowed)
             // reset to original value
             model.removeTableModelListener(this); // remove listener before doing changes
-                model.setValueAt(originalData.get(dataRow).get(column).toString(), row, column);
+                model.setValueAt(originalData.get(dataRow).get(column).toString(),
+                        row, column);
             model.addTableModelListener(this);
         }
         // get uniform formatting (otherwise e.g. change of only decimal symbol isn't ignored)
         if ( moneyColumns.contains(header) ){
             model.removeTableModelListener(this); // remove listener before doing changes
-                model.setValueAt(priceFormatter(value), row, column);
+                model.setValueAt(bc.priceFormatter(value), row, column);
             model.addTableModelListener(this);
         } else if ( decimalColumns.contains(header) ){
-            value = unifyDecimal( model.getValueAt(row, column).toString() ); // uniformify decimal number
+            value = bc.unifyDecimal( model.getValueAt(row, column).toString() ); // uniformify decimal number
             model.removeTableModelListener(this); // remove listener before doing changes
                 model.setValueAt(value, row, column);
             model.addTableModelListener(this);
@@ -924,11 +809,15 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 model.addTableModelListener(this);
             }
         }
+    }
 
-        // Compare entire row to original data
+
+    private boolean hasRowChanged(int dataRow) {
+        /**
+         * Compare entire row to original data
+         */
         boolean changed = false;
         for ( int col=0; col<data.get(dataRow).size(); col++){ // compare entire row to original data
-            String colName = model.getColumnName(col);
             String val = data.get(dataRow).get(col).toString();
             String origVal = originalData.get(dataRow).get(col).toString();
             if ( ! val.equals( origVal ) ){
@@ -936,122 +825,125 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 break;
             }
         }
+        return changed;
+    }
+
+
+    private Artikel getNewArticle(AbstractTableModel model, int row, Artikel origArticle,
+            TableModelEvent e) {
+        /**
+         * Get and store all the values of the edited row
+         */
+        Artikel a = new Artikel();
+        a.setProdGrID(origArticle.getProdGrID());
+        a.setVarPreis(origArticle.getVarPreis());
+
+        String lieferant = model.getValueAt(row, model.findColumn("Lieferant")).toString();
+        Integer liefID = getLieferantID(lieferant);
+        a.setLiefID(liefID);
+        String artikelNummer = model.getValueAt(row, model.findColumn("Nummer")).toString();
+        a.setNummer(artikelNummer);
+        if ( !liefID.equals(origArticle.getLiefID()) || !artikelNummer.equals(origArticle.getNummer()) ){
+            if ( isItemAlreadyKnown(liefID, artikelNummer) ){
+                // not allowed: changing name and nummer to a pair that is already registered in DB
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Kombination Lieferant/Nummer bereits vorhanden! Wird zurückgesetzt.",
+                        "Info", JOptionPane.INFORMATION_MESSAGE);
+                model.removeTableModelListener(this); // remove listener before doing changes
+                    model.setValueAt(getLieferant(origArticle.getLiefID()), row, model.findColumn("Lieferant"));
+                    model.setValueAt(origArticle.getNummer(), row, model.findColumn("Nummer"));
+                model.addTableModelListener(this);
+                tableChanged(e);
+                return null;
+            }
+        }
+        a.setName( model.getValueAt(row, model.findColumn("Name")).toString() );
+        a.setKurzname( model.getValueAt(row, model.findColumn("Kurzname")).toString() );
+        BigDecimal menge;
+        try {
+            menge = new BigDecimal(model.getValueAt(row, model.findColumn("Menge")).toString().replace(',','.'));
+            //menge = new BigDecimal( unifyDecimalIntern(model.getValueAt(row, model.findColumn("Menge")).toString()) );
+        } catch (NumberFormatException ex){ menge = null; }
+        a.setMenge(menge);
+        a.setEinheit( model.getValueAt(row, model.findColumn("Einheit")).toString() );
+        a.setBarcode( model.getValueAt(row, model.findColumn("Barcode")).toString() );
+        a.setHerkunft( model.getValueAt(row, model.findColumn("Herkunft")).toString() );
+        Integer vpe;
+        try {
+            vpe = Integer.parseInt( model.getValueAt(row, model.findColumn("VPE")).toString() );
+        } catch (NumberFormatException ex){ vpe = null; }
+        a.setVPE(vpe);
+        Integer setgroesse;
+        try {
+            setgroesse = Integer.parseInt( model.getValueAt(row, model.findColumn("Setgröße")).toString() );
+        } catch (NumberFormatException ex){ setgroesse = 1; }
+        a.setSetgroesse(setgroesse);
+        a.setVKP( model.getValueAt(row, model.findColumn("VK-Preis")).toString() );
+        a.setEmpfVKP( model.getValueAt(row, model.findColumn("Empf. VK-Preis")).toString() );
+        a.setEKRabatt( model.getValueAt(row, model.findColumn("EK-Rabatt")).toString() );
+        a.setEKP( model.getValueAt(row, model.findColumn("EK-Preis")).toString() );
+        boolean sortiment = model.getValueAt(row,
+                model.findColumn("Sortiment")).toString().equals("true") ? true : false;
+        a.setSortiment(sortiment);
+        boolean lieferbar = model.getValueAt(row,
+                model.findColumn("Lieferbar")).toString().equals("true") ? true : false;
+        a.setLieferbar(lieferbar);
+        Integer beliebt;
+        try {
+            beliebt = Integer.parseInt( model.getValueAt(row, model.findColumn("Beliebtheit")).toString() );
+        } catch (NumberFormatException ex){ beliebt = 2; }
+        a.setBeliebt(beliebt);
+        Integer bestand;
+        try {
+            bestand = Integer.parseInt( model.getValueAt(row, model.findColumn("Bestand")).toString() );
+        } catch (NumberFormatException ex){ bestand = null; }
+        a.setBestand(bestand);
+        boolean aktiv = model.getValueAt(row,
+                model.findColumn("Aktiv")).toString().equals("true") ? true : false;
+        a.setAktiv(aktiv);
+
+        return a;
+    }
+
+
+    /** Needed for TableModelListener. */
+    public void tableChanged(TableModelEvent e) {
+        // get info about edited cell
+        int row = e.getFirstRow();
+        int dataRow = displayIndices.get(row); // convert from displayData index to data index
+        int column = e.getColumn();
+        AbstractTableModel model = (AbstractTableModel)e.getSource();
+
+        String origLieferant =
+            originalData.get(dataRow).get(model.findColumn("Lieferant")).toString();
+        Integer origLiefID = getLieferantID(origLieferant);
+        String origArtikelNummer =
+            originalData.get(dataRow).get(model.findColumn("Nummer")).toString();
+        Artikel origArticle = getArticle(origLiefID, origArtikelNummer);
+        int changeIndex = editedArticles.indexOf(origArticle); // look up artikelNummer in change list
+        System.out.println("changeIndex: "+changeIndex);
+
+        parseCell(model, row, column, dataRow, origArticle);
+
+        boolean changed = hasRowChanged(dataRow);
 
         if (changed){
-            // get and store all the values of the edited row
-            String lieferant = model.getValueAt(row, model.findColumn("Lieferant")).toString();
-            String artikelNummer = model.getValueAt(row, model.findColumn("Nummer")).toString();
-            if ( !lieferant.equals(origLieferant) || !artikelNummer.equals(origArtikelNummer) ){
-                if ( isItemAlreadyKnown(lieferant, artikelNummer) ){
-                    // not allowed: changing name and nummer to a pair that is already registered in DB
-                    JOptionPane.showMessageDialog(this, "Fehler: Kombination Lieferant/Nummer bereits vorhanden! Wird zurückgesetzt.",
-                            "Info", JOptionPane.INFORMATION_MESSAGE);
-                    model.removeTableModelListener(this); // remove listener before doing changes
-                        model.setValueAt(origLieferant, row, model.findColumn("Lieferant"));
-                        model.setValueAt(origArtikelNummer, row, model.findColumn("Nummer"));
-                    model.addTableModelListener(this);
-                    tableChanged(e);
-                    return;
-                }
-            }
-            String artikelName = model.getValueAt(row, model.findColumn("Name")).toString();
-            String kurzname = model.getValueAt(row, model.findColumn("Kurzname")).toString();
-            BigDecimal menge;
-            try {
-                menge = new BigDecimal(model.getValueAt(row, model.findColumn("Menge")).toString().replace(',','.'));
-            } catch (NumberFormatException ex){ menge = null; }
-            String einheit = model.getValueAt(row, model.findColumn("Einheit")).toString();
-            String barcode = model.getValueAt(row, model.findColumn("Barcode")).toString();
-            String herkunft = model.getValueAt(row, model.findColumn("Herkunft")).toString();
-            Integer vpe;
-            try {
-                vpe = Integer.parseInt( model.getValueAt(row, model.findColumn("VPE")).toString() );
-            } catch (NumberFormatException ex){ vpe = null; }
-            Integer setgroesse;
-            try {
-                setgroesse = Integer.parseInt( model.getValueAt(row, model.findColumn("Setgröße")).toString() );
-            } catch (NumberFormatException ex){ setgroesse = 1; }
-            String vkpreis = model.getValueAt(row, model.findColumn("VK-Preis")).toString();
-            String empfvkpreis = model.getValueAt(row, model.findColumn("Empf. VK-Preis")).toString();
-            String ekrabatt = model.getValueAt(row, model.findColumn("EK-Rabatt")).toString();
-            String ekpreis = model.getValueAt(row, model.findColumn("EK-Preis")).toString();
-            boolean sortiment = model.getValueAt(row, model.findColumn("Sortiment")).toString().equals("true") ? true : false;
-            boolean lieferbar = model.getValueAt(row, model.findColumn("Lieferbar")).toString().equals("true") ? true : false;
-            Integer beliebt;
-            try {
-                beliebt = Integer.parseInt( model.getValueAt(row, model.findColumn("Beliebtheit")).toString() );
-            } catch (NumberFormatException ex){ beliebt = null; }
-            Integer bestand;
-            try {
-                bestand = Integer.parseInt( model.getValueAt(row, model.findColumn("Bestand")).toString() );
-            } catch (NumberFormatException ex){ bestand = null; }
-            boolean aktiv = model.getValueAt(row, model.findColumn("Aktiv")).toString().equals("true") ? true : false;
+            Artikel newArticle = getNewArticle(model, row, origArticle, e);
+            if (newArticle == null)
+                return;
 
             // update the vectors caching the changes
-            if (nummerIndex == lieferantIndex && nummerIndex != -1){ // this row has been changed before, update the change cache
-                changedNummer.set(nummerIndex, artikelNummer);
-                changedName.set(nummerIndex, artikelName);
-                changedKurzname.set(nummerIndex, kurzname);
-                changedMenge.set(nummerIndex, menge);
-                changedEinheit.set(nummerIndex, einheit);
-                changedBarcode.set(nummerIndex, barcode);
-                changedHerkunft.set(nummerIndex, herkunft);
-                changedVPE.set(nummerIndex, vpe);
-                changedSetgroesse.set(nummerIndex, setgroesse);
-                changedVKP.set(nummerIndex, vkpreis);
-                changedEmpfVKP.set(nummerIndex, empfvkpreis);
-                changedEKRabatt.set(nummerIndex, ekrabatt);
-                changedEKP.set(nummerIndex, ekpreis);
-                changedSortiment.set(nummerIndex, sortiment);
-                changedLieferbar.set(nummerIndex, lieferbar);
-                changedBeliebt.set(nummerIndex, beliebt);
-                changedBestand.set(nummerIndex, bestand);
-                changedAktiv.set(nummerIndex, aktiv);
+            if (changeIndex != -1){ // this row has been changed before, update the change cache
+                changedArticles.set(changeIndex, newArticle);
             } else { // an edit occurred in a row that is not in the list of changes yet
-                editLieferant.add(origLieferant);
-                editArtikelNummer.add(origArtikelNummer);
-                changedNummer.add(artikelNummer);
-                changedName.add(artikelName);
-                changedKurzname.add(kurzname);
-                changedMenge.add(menge);
-                changedEinheit.add(einheit);
-                changedBarcode.add(barcode);
-                changedHerkunft.add(herkunft);
-                changedVPE.add(vpe);
-                changedSetgroesse.add(setgroesse);
-                changedVKP.add(vkpreis);
-                changedEmpfVKP.add(empfvkpreis);
-                changedEKRabatt.add(ekrabatt);
-                changedEKP.add(ekpreis);
-                changedSortiment.add(sortiment);
-                changedLieferbar.add(lieferbar);
-                changedBeliebt.add(beliebt);
-                changedBestand.add(bestand);
-                changedAktiv.add(aktiv);
+                editedArticles.add(origArticle);
+                changedArticles.add(newArticle);
             }
         } else if (!changed) {
             // update the vectors caching the changes
-            if (nummerIndex == lieferantIndex && nummerIndex != -1){ // this row has been changed before, all changes undone
-                editLieferant.remove(nummerIndex); // remove item from list of changes
-                editArtikelNummer.remove(nummerIndex);
-                changedNummer.remove(nummerIndex);
-                changedName.remove(nummerIndex);
-                changedKurzname.remove(nummerIndex);
-                changedMenge.remove(nummerIndex);
-                changedEinheit.remove(nummerIndex);
-                changedBarcode.remove(nummerIndex);
-                changedHerkunft.remove(nummerIndex);
-                changedVPE.remove(nummerIndex);
-                changedSetgroesse.remove(nummerIndex);
-                changedVKP.remove(nummerIndex);
-                changedEmpfVKP.remove(nummerIndex);
-                changedEKRabatt.remove(nummerIndex);
-                changedEKP.remove(nummerIndex);
-                changedSortiment.remove(nummerIndex);
-                changedLieferbar.remove(nummerIndex);
-                changedBeliebt.remove(nummerIndex);
-                changedBestand.remove(nummerIndex);
-                changedAktiv.remove(nummerIndex);
+            if (changeIndex != -1){ // this row has been changed before, all changes undone
+                editedArticles.remove(changeIndex);
+                changedArticles.remove(changeIndex);
             }
         }
         enableButtons();
@@ -1059,22 +951,16 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
 
     void showEditDialog() {
         // get data from the selected rows
-        Vector< Vector<Object> > selectedData = new Vector< Vector<Object> >();
-        Vector<Integer> selectedProdGrIDs = new Vector<Integer>();
-        Vector<Integer> selectedLiefIDs = new Vector<Integer>();
-        Vector<Boolean> selectedVarPreisBools = new Vector<Boolean>();
+        Vector<Artikel> selectedArticles = new Vector<Artikel>();
         int[] selection = myTable.getSelectedRows();
         for (int i = 0; i < selection.length; i++) {
             selection[i] = myTable.convertRowIndexToModel(selection[i]);
             selection[i] = displayIndices.get(selection[i]); // convert from displayData index to data index
-            selectedData.add( data.get(selection[i]) );
-            selectedProdGrIDs.add( produktGruppeIDs.get(selection[i]) );
-            selectedLiefIDs.add( lieferantIDs.get(selection[i]) );
-            selectedVarPreisBools.add( varPreisBools.get(selection[i]) );
+            selectedArticles.add( articles.get(selection[i]) );
         }
         JDialog editDialog = new JDialog(this.mainWindow, "Artikel bearbeiten", true);
         ArtikelBearbeiten bearb = new ArtikelBearbeiten(this.conn, this.mainWindow, this, editDialog,
-                indexMap, selectedData, selectedProdGrIDs, selectedLiefIDs, selectedVarPreisBools);
+                selectedArticles);
         editDialog.getContentPane().add(bearb, BorderLayout.CENTER);
         editDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         WindowAdapterDialog wad = new WindowAdapterDialog(bearb, editDialog,
@@ -1157,7 +1043,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
      **/
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == backButton){
-            if ( editLieferant.size() > 0 ){
+            if ( editedArticles.size() > 0 ){
                 int answer = changeLossConfirmDialog();
                 if (answer == JOptionPane.YES_OPTION){
                     container.switchToProduktgruppenliste();
@@ -1195,7 +1081,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             return;
         }
         if (e.getSource() == inaktivCheckBox){
-            if ( editLieferant.size() > 0 ){
+            if ( editedArticles.size() > 0 ){
                 int answer = changeLossConfirmDialog();
                 if (answer == JOptionPane.YES_OPTION){
                     updateAll();
@@ -1208,7 +1094,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             return;
         }
         if (e.getSource() == sortimentCheckBox){
-            if ( editLieferant.size() > 0 ){
+            if ( editedArticles.size() > 0 ){
                 int answer = changeLossConfirmDialog();
                 if (answer == JOptionPane.YES_OPTION){
                     updateAll();
@@ -1221,7 +1107,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             return;
         }
         if (e.getSource() == internalCheckBox){
-            if ( editLieferant.size() > 0 ){
+            if ( editedArticles.size() > 0 ){
                 int answer = changeLossConfirmDialog();
                 if (answer == JOptionPane.YES_OPTION){
                     updateAll();

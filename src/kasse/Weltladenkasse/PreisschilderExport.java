@@ -52,8 +52,8 @@ public class PreisschilderExport extends WindowContent {
     private JavaScriptFileTemplate loadTemplate() {
         final JavaScriptFileTemplate template;
         try {
-            String filename = "vorlagen"+fileSep+"Preisschilder_Lebensmittel.odt";
-            //String filename = "vorlagen"+fileSep+"Preisschilder_Lebensmittel_Test.odt";
+            String filename = "vorlagen"+bc.fileSep+"Preisschilder_Lebensmittel.odt";
+            //String filename = "vorlagen"+bc.fileSep+"Preisschilder_Lebensmittel_Test.odt";
             File infile = new File(filename);
             if (!infile.exists()){
                 JOptionPane.showMessageDialog(this,
