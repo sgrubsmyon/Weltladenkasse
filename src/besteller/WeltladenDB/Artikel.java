@@ -91,7 +91,7 @@ public class Artikel {
      * Comparators
      */
     private boolean equalsThatHandlesNull(Object a, Object b) {
-        System.out.println(a+" "+b);
+        //System.out.println(a+" "+b);
         if ( (a != null) && (b != null) ){
             if ( a.equals(b) ){ return true; }
         } else {
@@ -106,47 +106,47 @@ public class Artikel {
             return false;
         } else {
             Artikel a = (Artikel)o;
-            System.out.println("prodGrID");
+            //System.out.println("prodGrID");
             if ( !equalsThatHandlesNull(produktgruppen_id, a.getProdGrID()) ){ return false; }
-            System.out.println("liefID");
+            //System.out.println("liefID");
             if ( !equalsThatHandlesNull(lieferant_id, a.getLiefID()) ){ return false; }
-            System.out.println("nummer");
+            //System.out.println("nummer");
             if ( !equalsThatHandlesNull(artikel_nr, a.getNummer()) ){ return false; }
-            System.out.println("name");
+            //System.out.println("name");
             if ( !equalsThatHandlesNull(artikel_name, a.getName()) ){ return false; }
-            System.out.println("kname");
+            //System.out.println("kname");
             if ( !equalsThatHandlesNull(kurzname, a.getKurzname()) ){ return false; }
-            System.out.println("menge");
+            //System.out.println("menge");
             if ( !equalsThatHandlesNull(menge, a.getMenge()) ){ return false; }
-            System.out.println("einheit");
+            //System.out.println("einheit");
             if ( !equalsThatHandlesNull(einheit, a.getEinheit()) ){ return false; }
-            System.out.println("barcode");
+            //System.out.println("barcode");
             if ( !equalsThatHandlesNull(barcode, a.getBarcode()) ){ return false; }
-            System.out.println("herkunft");
+            //System.out.println("herkunft");
             if ( !equalsThatHandlesNull(herkunft, a.getHerkunft()) ){ return false; }
-            System.out.println("vpe");
+            //System.out.println("vpe");
             if ( !equalsThatHandlesNull(vpe, a.getVPE()) ){ return false; }
-            System.out.println("setgr");
+            //System.out.println("setgr");
             if ( !equalsThatHandlesNull(setgroesse, a.getSetgroesse()) ){ return false; }
-            System.out.println("vkp");
+            //System.out.println("vkp");
             if ( !equalsThatHandlesNull(vk_preis, a.getVKP()) ){ return false; }
-            System.out.println("evkp");
+            //System.out.println("evkp");
             if ( !equalsThatHandlesNull(empf_vk_preis, a.getEmpfVKP()) ){ return false; }
-            System.out.println("ekr");
+            //System.out.println("ekr");
             if ( !equalsThatHandlesNull(ek_rabatt, a.getEKRabatt()) ){ return false; }
-            System.out.println("ekp");
+            //System.out.println("ekp");
             if ( !equalsThatHandlesNull(ek_preis, a.getEKP()) ){ return false; }
-            System.out.println("var");
+            //System.out.println("var");
             if ( !equalsThatHandlesNull(variabler_preis, a.getVarPreis()) ){ return false; }
-            System.out.println("sort");
+            //System.out.println("sort");
             if ( !equalsThatHandlesNull(sortiment, a.getSortiment()) ){ return false; }
-            System.out.println("lief");
+            //System.out.println("lief");
             if ( !equalsThatHandlesNull(lieferbar, a.getLieferbar()) ){ return false; }
-            System.out.println("beliebt");
+            //System.out.println("beliebt");
             if ( !equalsThatHandlesNull(beliebtheit, a.getBeliebt()) ){ return false; }
-            System.out.println("bestand");
+            //System.out.println("bestand");
             if ( !equalsThatHandlesNull(bestand, a.getBestand()) ){ return false; }
-            System.out.println("aktiv");
+            //System.out.println("aktiv");
             if ( !equalsThatHandlesNull(aktiv, a.getAktiv()) ){ return false; }
         }
         return true;

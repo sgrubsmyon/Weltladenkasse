@@ -40,6 +40,8 @@ public class ArtikelBearbeiten extends DialogWindow
     protected JCheckBox aktivBox;
     protected JButton submitButton;
 
+    protected boolean updating = false; /** against the "Attempt to mutate in notification" */
+
     // Methoden:
     public ArtikelBearbeiten(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia,
             Vector<Artikel> origArties) {
@@ -240,6 +242,8 @@ public class ArtikelBearbeiten extends DialogWindow
         } else {
             aktivBox.setEnabled(false);
         }
+
+        artikelFormular.updateEKPreisField();
     }
 
     private boolean allArticlesEqualInAttribute(String attr) {
@@ -257,14 +261,10 @@ public class ArtikelBearbeiten extends DialogWindow
         for (int index=0; index < originalArticles.size(); index++){
             Artikel origArticle = originalArticles.get(index);
             Artikel newArticle = getNewArticle(origArticle);
-            System.out.println("origArticle: "+origArticle);
-            System.out.println("newArticle: "+newArticle);
             if ( !newArticle.equals(origArticle) ){
-                System.out.println("return true");
                 return true;
             }
         }
-        System.out.println("return false");
         return false;
     }
 
@@ -500,12 +500,14 @@ public class ArtikelBearbeiten extends DialogWindow
 
     /** Needed for ChangeListener. */
     public void stateChanged(ChangeEvent e) {
+        artikelFormular.updateEKPreisField();
         submitButton.setEnabled( isSubmittable() );
     }
 
     /** Needed for ItemListener. */
     public void itemStateChanged(ItemEvent e) {
         artikelFormular.itemStateChanged(e);
+        artikelFormular.updateEKPreisField();
         submitButton.setEnabled( isSubmittable() );
     }
 
@@ -516,6 +518,19 @@ public class ArtikelBearbeiten extends DialogWindow
      *    @param e the document event.
      **/
     public void insertUpdate(DocumentEvent e) {
+        if (updating){
+            return; // tackle the "Attempt to mutate in notification"
+        }
+        // don't let the ekpreisField update itself:
+        if (e.getDocument() != artikelFormular.ekpreisField.getDocument()){
+            updating = true;
+            artikelFormular.updateEKPreisField();
+            updating = false;
+        } else {
+            // clear the other price boxes
+            artikelFormular.empfvkpreisField.setText("");
+            artikelFormular.ekrabattField.setText("");
+        }
 	// check if form is valid (if item can be added to list)
         submitButton.setEnabled( isSubmittable() );
     }
