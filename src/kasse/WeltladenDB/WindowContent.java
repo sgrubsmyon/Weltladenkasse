@@ -506,33 +506,29 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
 
-    protected Artikel getArticle(Integer artikel_id) {
+    private String selectArticleString() {
+        return "SELECT "+
+            "produktgruppen_id, "+
+            "lieferant_id, "+
+            "artikel_nr, "+
+            "artikel_name, "+
+            "kurzname, "+
+            "menge, "+
+            "einheit, "+
+            "barcode, "+
+            "herkunft, "+
+            "vpe, "+
+            "setgroesse, "+
+            "vk_preis, empf_vk_preis, "+
+            "ek_rabatt, ek_preis, "+
+            "variabler_preis, sortiment, "+
+            "lieferbar, beliebtheit, "+
+            "bestand ";
+    }
+
+    private Artikel parseArticleResultSet(ResultSet rs) {
         Artikel a = new Artikel(bc);
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT "+
-                    "produktgruppen_id, "+
-                    "lieferant_id, "+
-                    "artikel_nr, "+
-                    "artikel_name, "+
-                    "kurzname, "+
-                    "menge, "+
-                    "einheit, "+
-                    "barcode, "+
-                    "herkunft, "+
-                    "vpe, "+
-                    "setgroesse, "+
-                    "vk_preis, empf_vk_preis, "+
-                    "ek_rabatt, ek_preis, "+
-                    "variabler_preis, sortiment, "+
-                    "lieferbar, beliebtheit, "+
-                    "bestand "+
-                    "FROM artikel "+
-                    "WHERE artikel_id = ?"
-                    );
-            pstmtSetInteger(pstmt, 1, artikel_id);
-            ResultSet rs = pstmt.executeQuery();
-            // Now do something with the ResultSet, should be only one result ...
             rs.next();
             a.setProdGrID(rs.getInt(1));
             a.setLiefID(rs.getInt(2));
@@ -555,6 +551,25 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             a.setLieferbar(rs.getBoolean(18));
             a.setBeliebt(rs.getInt(19));
             a.setBestand(rs.getInt(20));
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return a;
+    }
+
+    protected Artikel getArticle(Integer artikel_id) {
+        Artikel a = new Artikel(bc);
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    selectArticleString()+
+                    "FROM artikel "+
+                    "WHERE artikel_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, artikel_id);
+            ResultSet rs = pstmt.executeQuery();
+            // Now do something with the ResultSet, should be only one result ...
+            a = parseArticleResultSet(rs);
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
@@ -567,25 +582,9 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
     protected Artikel getArticle(Integer lieferant_id, String artikel_nr) {
         Artikel a = new Artikel(bc);
-        a.setLiefID(lieferant_id);
-        a.setNummer(artikel_nr);
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT "+
-                    "produktgruppen_id, "+
-                    "artikel_name, "+
-                    "kurzname, "+
-                    "menge, "+
-                    "einheit, "+
-                    "barcode, "+
-                    "herkunft, "+
-                    "vpe, "+
-                    "setgroesse, "+
-                    "vk_preis, empf_vk_preis, "+
-                    "ek_rabatt, ek_preis, "+
-                    "variabler_preis, sortiment, "+
-                    "lieferbar, beliebtheit, "+
-                    "bestand "+
+                    selectArticleString()+
                     "FROM artikel "+
                     "WHERE lieferant_id = ? AND "+
                     "artikel_nr = ? AND artikel.aktiv = TRUE"
@@ -594,26 +593,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             pstmt.setString(2, artikel_nr);
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result ...
-            rs.next();
-            a.setProdGrID(rs.getInt(1));
-            a.setName(rs.getString(2));
-            a.setKurzname(rs.getString(3));
-            a.setMenge(rs.getBigDecimal(4));
-            a.setEinheit(rs.getString(5));
-            a.setBarcode(rs.getString(6));
-            a.setHerkunft(rs.getString(7));
-            a.setVPE(rs.getInt(8));
-            a.setSetgroesse(rs.getInt(9));
-            Boolean var = rs.getBoolean(14);
-            a.setVKP(var ? "" : rs.getString(10));
-            a.setEmpfVKP(var ? "" : rs.getString(11));
-            a.setEKRabatt( bc.vatFormatter(rs.getString(12)) );
-            a.setEKP(var ? "" : rs.getString(13));
-            a.setVarPreis(var);
-            a.setSortiment(rs.getBoolean(15));
-            a.setLieferbar(rs.getBoolean(16));
-            a.setBeliebt(rs.getInt(17));
-            a.setBestand(rs.getInt(18));
+            a = parseArticleResultSet(rs);
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {

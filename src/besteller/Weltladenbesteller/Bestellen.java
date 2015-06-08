@@ -43,7 +43,7 @@ public class Bestellen extends BestellungsGrundlage implements
     protected String artikelNummerText = "";
     protected String barcodeText = "";
 
-    private int selectedArtikelID;
+    private int selectedArticleID;
     private int selectedNumberOfVPEs = 1;
 
     private JSpinner anzahlSpinner;
@@ -797,9 +797,20 @@ public class Bestellen extends BestellungsGrundlage implements
     }
 
 
+    private void updateSelectedArticleID() {
+        // update selected Artikel
+        String[] an = artikelBox.parseArtikelName();
+        String artikelName = an[0];
+        String lieferant = an[1];
+        String artikelNummer = (String)nummerBox.getSelectedItem();
+        selectedArticleID = getArticleID(lieferant, artikelNummer); // get the internal artikelID from the DB
+    }
+
+
     private void showEditDialog(Vector<Artikel> selectedArticles) {
         JDialog editDialog = new JDialog(this.mainWindow, "Artikel bearbeiten", true);
-        ArtikelBearbeiten bearb = new ArtikelBearbeiten(this.conn, this.mainWindow, null, editDialog,
+        ArtikelBearbeiten bearb = new ArtikelBearbeiten(this.conn,
+                this.mainWindow, tabbedPane.getArtikelliste(), editDialog,
                 selectedArticles);
         editDialog.getContentPane().add(bearb, BorderLayout.CENTER);
         editDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
@@ -809,35 +820,30 @@ public class Bestellen extends BestellungsGrundlage implements
         editDialog.pack();
         editDialog.setVisible(true);
 
-        // update selected Artikel
-        String[] an = artikelBox.parseArtikelName();
-        String artikelName = an[0];
-        String lieferant = an[1];
-        String artikelNummer = (String)nummerBox.getSelectedItem();
-        selectedArtikelID = getArticleID(lieferant, artikelNummer); // get the internal artikelID from the DB
+        updateSelectedArticleID();
     }
 
     private void setPriceField() {
-        boolean variablerPreis = getVariablePriceBool(selectedArtikelID);
+        boolean variablerPreis = getVariablePriceBool(selectedArticleID);
         if ( ! variablerPreis ){
-            String artikelPreis = getRecSalePrice(selectedArtikelID);
+            String artikelPreis = getRecSalePrice(selectedArticleID);
             if (artikelPreis == null || artikelPreis.equals("")){
-                artikelPreis = getSalePrice(selectedArtikelID);
+                artikelPreis = getSalePrice(selectedArticleID);
             }
             if (artikelPreis == null || artikelPreis.equals("")){
                 JOptionPane.showMessageDialog(this,
                         "Für diesen Artikel muss erst der Preis festgelegt werden!",
                         "Info", JOptionPane.INFORMATION_MESSAGE);
 
-                Artikel article = getArticle(selectedArtikelID);
+                Artikel article = getArticle(selectedArticleID);
                 Vector<Artikel> selectedArticles = new Vector<Artikel>();
                 selectedArticles.add(article);
 
                 showEditDialog(selectedArticles);
 
-                artikelPreis = getRecSalePrice(selectedArtikelID);
+                artikelPreis = getRecSalePrice(selectedArticleID);
                 if (artikelPreis == null || artikelPreis.equals("")){
-                    artikelPreis = getSalePrice(selectedArtikelID);
+                    artikelPreis = getSalePrice(selectedArticleID);
                 }
                 if (artikelPreis == null)
                     artikelPreis = "";
@@ -850,7 +856,7 @@ public class Bestellen extends BestellungsGrundlage implements
         else {
             preisField.setEditable(true);
         }
-        int setgroesse = getSetSize(selectedArtikelID);
+        int setgroesse = getSetSize(selectedArticleID);
         if (setgroesse > 1){
             setLabel.setText("pro Set ("+setgroesse+"-er Set)");
         } else {
@@ -921,12 +927,8 @@ public class Bestellen extends BestellungsGrundlage implements
         int nummerNumber = nummerBox.getItemCount();
         int artikelNumber = artikelBox.getItemCount();
         if ( artikelNumber == 1 && nummerNumber == 1 ){ // artikel eindeutig festgelegt
-            String[] an = artikelBox.parseArtikelName();
-            String artikelName = an[0];
-            String lieferant = an[1];
-            String artikelNummer = (String)nummerBox.getSelectedItem();
-            selectedArtikelID = getArticleID(lieferant, artikelNummer); // get the internal artikelID from the DB
-            String vpe = getVPE(selectedArtikelID);
+            updateSelectedArticleID();
+            String vpe = getVPE(selectedArticleID);
             Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
             if (vpeInt > 0){
                 anzahlSpinner.setValue(vpeInt);
@@ -986,11 +988,11 @@ public class Bestellen extends BestellungsGrundlage implements
         Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
         String artikelPreis = bc.priceFormatterIntern( preisField.getText() );
         artikelPreis = bc.decimalMark(artikelPreis)+' '+bc.currencySymbol;
-        String artikelMwSt = getVAT(selectedArtikelID);
+        String artikelMwSt = getVAT(selectedArticleID);
         artikelMwSt = bc.vatFormatter(artikelMwSt);
-        Boolean sortimentBool = getSortimentBool(selectedArtikelID);
+        Boolean sortimentBool = getSortimentBool(selectedArticleID);
 
-        hinzufuegen(selectedArtikelID, lieferant, artikelNummer, artikelName,
+        hinzufuegen(selectedArticleID, lieferant, artikelNummer, artikelName,
                 artikelPreis, vpe, stueck, sortimentBool);
         updateAll();
         barcodeBox.requestFocus();
@@ -1227,7 +1229,7 @@ public class Bestellen extends BestellungsGrundlage implements
             //System.out.println("anzahlField DocumentListener fired.");
             //System.out.println("anzahlField.getText(): "+anzahlField.getText());
             //System.out.println("anzahlSpinner.getValue(): "+anzahlSpinner.getValue());
-            String vpe = getVPE(selectedArtikelID);
+            String vpe = getVPE(selectedArticleID);
             Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
             updateAnzahlColor(vpeInt);
             updateVPESpinner(vpeInt);
@@ -1244,7 +1246,7 @@ public class Bestellen extends BestellungsGrundlage implements
             //System.out.println("vpeSpinnerField DocumentListener: vpeOrAnzahlIsChanged = "+vpeOrAnzahlIsChanged);
             //System.out.println("anzahlField.getText(): "+anzahlField.getText());
             //System.out.println("anzahlSpinner.getValue(): "+anzahlSpinner.getValue());
-            String vpe = getVPE(selectedArtikelID);
+            String vpe = getVPE(selectedArticleID);
             Integer vpeInt = vpe.length() > 0 ? Integer.parseInt(vpe) : 0;
             updateAnzahlSpinner(vpeInt);
             return;
