@@ -615,12 +615,10 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 JTextField textField = (JTextField)c;
                 String cname = this.getColumnName(column);
 
-                //System.out.println( "Before: "+((AbstractDocument)textField.getDocument()).getDocumentFilter() );
                 if ( documentFilterMap.containsKey(cname) ){
                     DocumentFilter filter = documentFilterMap.get(cname);
                     ((AbstractDocument)textField.getDocument()).setDocumentFilter(filter);
                 }
-                //System.out.println( "After: "+((AbstractDocument)textField.getDocument()).getDocumentFilter() );
 
                 // select all text in TextField:
                 textField.selectAll();

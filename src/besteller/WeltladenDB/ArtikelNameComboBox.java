@@ -47,11 +47,11 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
         try {
             // construct where clause from the textFeld words, separated by spaces:
             String[] words = textFeld.getText().split("\\s+");
-            System.out.print("Search words: {");
-            for (int i=0; i<words.length; i++){
-                System.out.print("\""+words[i]+"\",");
-            }
-            System.out.println("}");
+            //System.out.print("Search words: {");
+            //for (int i=0; i<words.length; i++){
+            //    System.out.print("\""+words[i]+"\",");
+            //}
+            //System.out.println("}");
             String whereClause = "";
             if (words.length > 0){
                 whereClause += "artikel_name LIKE ? ";

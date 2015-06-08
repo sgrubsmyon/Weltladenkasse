@@ -1,6 +1,8 @@
 mysqlPath =
 sofficePath =
 printerName = quittungsdrucker
+displayManufacturer = Wincor Nixdorf
+displayModel = BA63/USB
 dateFormatSQL = %d.%m.%Y, %H:%i Uhr
 dateFormatJava = dd.MM.yyyy, HH:mm 'Uhr'
 dateFormatDate4j = DD.MM.YYYY, hh:mm |Uhr|
