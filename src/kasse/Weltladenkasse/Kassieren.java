@@ -1411,7 +1411,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         checkForPfand();
         updateAll();
 
-        if (display != null){
+        if (display != null && display.deviceWorks()){
             System.out.println("Going to display article.");
             String zws = bc.priceFormatter(getTotalPrice())+" "+bc.currencySymbol;
             display.printArticle(kurzname, stueck, artikelPreis, zws);

@@ -10,9 +10,11 @@ import java.text.*; // for NumberFormat
 public class BaseClass {
     public final Locale myLocale = Locale.GERMAN;
     public String currencySymbol;
-    public String mysqlPath;
-    public String sofficePath;
-    public String printerName;
+    public String mysqlPath; /** path where mysql and mysqldump lie around */
+    public String sofficePath; /** path where soffice lies around */
+    public String printerName; /** name of receipt printer as set in CUPS */
+    public String displayManufacturer; /** manufacturer of customer display */
+    public String displayModel; /** model name of customer display */
     public String dateFormatSQL;
     public String dateFormatJava;
     public String dateFormatDate4j;
@@ -38,6 +40,10 @@ public class BaseClass {
 	vatFormat = new DecimalFormat("0.####");
     }
 
+    private String removeQuotes() {
+        this.printerName = this.printerName.replaceAll("\"","");
+    }
+
     private void loadConfigFile() {
         // load config file:
         String filename = "config.properties";
@@ -47,9 +53,11 @@ public class BaseClass {
             props.load(fis);
 
             this.currencySymbol = props.getProperty("currencySymbol");
-            this.mysqlPath = props.getProperty("mysqlPath"); // path where mysql and mysqldump lie around
-            this.sofficePath = props.getProperty("sofficePath"); // path where soffice lies around
-            this.printerName = props.getProperty("printerName"); // name of receipt printer
+            this.mysqlPath = props.getProperty("mysqlPath");
+            this.sofficePath = props.getProperty("sofficePath");
+            this.printerName = props.getProperty("printerName");
+            this.displayManufacturer = props.getProperty("displayManufacturer");
+            this.displayModel = props.getProperty("displayModel");
             this.dateFormatSQL = props.getProperty("dateFormatSQL");
             this.dateFormatJava = props.getProperty("dateFormatJava");
             this.dateFormatDate4j = props.getProperty("dateFormatDate4j");
@@ -60,12 +68,16 @@ public class BaseClass {
             this.mysqlPath = "";
             this.sofficePath = "";
             this.printerName = "epson_tmu220";
+            this.displayManufacturer = "Wincor Nixdorf";
+            this.displayModel = "BA63/USB";
             this.dateFormatSQL = "%d.%m.%Y, %H:%i Uhr";
             this.dateFormatJava = "dd.MM.yyyy, HH:mm 'Uhr'";
             this.dateFormatDate4j = "DD.MM.YYYY, hh:mm |Uhr|";
             this.delimiter = ";"; // for CSV export/import
         }
-        this.printerName = this.printerName.replaceAll("\"","");
+        this.printerName = removeQuotes(this.printerName);
+        this.printerName = removeQuotes(this.displayManufacturer);
+        this.printerName = removeQuotes(this.displayModel);
     }
 
     /**

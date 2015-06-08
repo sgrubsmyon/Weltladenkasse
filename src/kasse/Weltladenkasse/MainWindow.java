@@ -61,7 +61,8 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
 
     @Override
     public void dispose() {
-        display.closeDevice();
+        if (display != null)
+            display.closeDevice();
         super.dispose();
     }
 

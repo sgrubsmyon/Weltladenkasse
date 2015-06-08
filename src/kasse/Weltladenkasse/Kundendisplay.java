@@ -14,6 +14,7 @@ import com.codeminders.hidapi.*;
  * USB.
  */
 public class Kundendisplay {
+    pruvate BaseClass bc;
 
     static {
         ClassPathLibraryLoader.loadNativeHIDLibrary();
@@ -45,10 +46,15 @@ public class Kundendisplay {
     /**
      *    The constructor.
      *       */
-    public Kundendisplay() {
+    public Kundendisplay(BaseClass bc_) {
+        bc = bc_;
         listDevices();
         openDevice();
         showWelcomeScreen();
+    }
+
+    public boolean deviceWorks() {
+        return (device != null);
     }
 
     private void listDevices() {
@@ -93,28 +99,39 @@ public class Kundendisplay {
     }
 
     private void openDevice() {
-    /**
-     * Function to open connection to HID device VFD display Nixdorf
-     * BA63 USB. Must be called before starting to work with device.
-     */
+        /**
+         * Function to open connection to HID device VFD display Nixdorf
+         * BA63 USB. Must be called before starting to work with device.
+         */
         try {
             manager = HIDManager.getInstance();
             HIDDeviceInfo[] devs = manager.listDevices();
             if (devs != null){
-                // always use the second device, first is defunct (don't know why)
-                String path = devs[1].getPath();
-                //device = manager.openById(VENDOR_ID, PRODUCT_ID, null);
-                //device = manager.openByPath("0004:0002:01");
-                System.out.println("Trying to open device at path "+path);
-                device = manager.openByPath(path);
-                System.out.print("Manufacturer: " + device.getManufacturerString() + "\n");
-                System.out.print("Product: " + device.getProductString() + "\n");
-                System.out.print("Serial Number: " + device.getSerialNumberString() + "\n");
-                setCodePage();
+                Vector<String> paths = new Vector<String>();
+                for (HIDDeviceInfo dev : devs){
+                    String manufacturer = dev.getManufacturer_string();
+                    String model = dev.getProduct_string();
+                    if ( manufacturer.equals(bc.displayManufacturer) && model.equals(bc.displayModel) ){
+                        paths.add(dev.getPath());
+                    }
+                }
+                if (paths.size() > 0){
+                    // always use the second device, first is defunct (don't know why)
+                    String path = paths.lastElement();
+                    //device = manager.openById(VENDOR_ID, PRODUCT_ID, null);
+                    //device = manager.openByPath("0004:0002:01");
+                    System.out.println("Trying to open device at path "+path);
+                    device = manager.openByPath(path);
+                    System.out.print("Manufacturer: " + device.getManufacturerString() + "\n");
+                    System.out.print("Product: " + device.getProductString() + "\n");
+                    System.out.print("Serial Number: " + device.getSerialNumberString() + "\n");
+                    setCodePage();
+                }
             }
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
+            } catch(IOException e) {
+                e.printStackTrace();
+                device = null;
+            }
     }
 
     public void closeDevice() {
@@ -266,42 +283,5 @@ public class Kundendisplay {
         priceRow += total;
         printToScreen(priceRow);
     }
-
-
-    private void readDevice() {
-        try {
-            try {
-                int n = 1;
-                while (n > 0){
-                    byte[] buf = new byte[BUFSIZE];
-                    //device.enableBlocking();
-                    n = device.readTimeout(buf, 10000);
-                    //n = device.read(buf);
-                    System.out.println("Number of bytes read: "+n);
-                    //device.disableBlocking();
-                    for(int i=0; i<n; i++)
-                    {
-                        int v = buf[i];
-                        if (v<0) v = v+256;
-                        String hs = Integer.toHexString(v);
-                        if (v<16)
-                            System.out.print("0");
-                        System.out.print(hs + " ");
-                    }
-                    System.out.println("");
-                }
-            } finally {
-                device.close();
-                if (null != manager){
-                    manager.release();
-                }
-                System.gc();
-            }
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
 }
 
