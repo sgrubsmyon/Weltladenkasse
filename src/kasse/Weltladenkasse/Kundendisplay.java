@@ -8,13 +8,14 @@ import java.nio.charset.Charset;
 import com.codeminders.hidapi.*;
 
 //import WeltladenDB.JNIFromJar;
+import WeltladenDB.BaseClass;
 
 /**
  * This class is for interaction with VFD customer display Wincor Nixdorf BA63
  * USB.
  */
 public class Kundendisplay {
-    pruvate BaseClass bc;
+    private BaseClass bc;
 
     static {
         ClassPathLibraryLoader.loadNativeHIDLibrary();
@@ -111,8 +112,10 @@ public class Kundendisplay {
                 for (HIDDeviceInfo dev : devs){
                     String manufacturer = dev.getManufacturer_string();
                     String model = dev.getProduct_string();
-                    if ( manufacturer.equals(bc.displayManufacturer) && model.equals(bc.displayModel) ){
-                        paths.add(dev.getPath());
+                    if (manufacturer != null && model != null){
+                        if ( manufacturer.equals(bc.displayManufacturer) && model.equals(bc.displayModel) ){
+                            paths.add(dev.getPath());
+                        }
                     }
                 }
                 if (paths.size() > 0){
