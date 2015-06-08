@@ -40,8 +40,8 @@ public class BaseClass {
 	vatFormat = new DecimalFormat("0.####");
     }
 
-    private String removeQuotes() {
-        this.printerName = this.printerName.replaceAll("\"","");
+    private String removeQuotes(String s) {
+        return s.replaceAll("\"","");
     }
 
     private void loadConfigFile() {
