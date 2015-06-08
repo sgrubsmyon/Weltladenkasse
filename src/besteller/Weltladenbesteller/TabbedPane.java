@@ -18,29 +18,18 @@ import java.awt.*;
 //import java.awt.event.ActionListener;
 import java.awt.event.*;
 
-//import javax.swing.JFrame;
-//import javax.swing.JPanel;
-//import javax.swing.JScrollPane;
-//import javax.swing.JTable;
-//import javax.swing.JTextArea;
-//import javax.swing.JButton;
-//import javax.swing.JCheckBox;
-import javax.swing.*;
+import javax.swing.*; // JFrame, JPanel, JButton...
 import javax.swing.tree.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
+import javax.swing.event.*; // TreeSelectionEvent, TreeSelectionListener
 import javax.swing.table.*;
 
-import WeltladenDB.TabbedPaneGrundlage;
-import WeltladenDB.ArtikellisteContainer;
-import WeltladenDB.Lieferantliste;
-import WeltladenDB.Produktgruppenliste;
-import WeltladenDB.DumpDatabase;
+import WeltladenDB.*;
 
 // Klasse, die Bestellfenster und Artikelliste speichert und anzeigt
 public class TabbedPane extends TabbedPaneGrundlage {
     private BestellAnzeige bestellAnzeige;
     private Bestellen myBestellen;
+    private ArtikellisteContainer myArtikellisteC;
 
     // Methoden:
     public TabbedPane(Connection conn, MainWindow mw) {
@@ -51,7 +40,7 @@ public class TabbedPane extends TabbedPaneGrundlage {
     protected void createTabbedPane() {
         tabbedPane = new JTabbedPane();
         myBestellen = new Bestellen(this.conn, this.mainWindow, this);
-        ArtikellisteContainer myArtikellisteC = new ArtikellisteContainer(this.conn, this.mainWindow);
+        myArtikellisteC = new ArtikellisteContainer(this.conn, this.mainWindow);
         bestellAnzeige = new BestellAnzeige(this.conn, this.mainWindow, this);
         Lieferantliste myLieferant = new Lieferantliste(this.conn, this.mainWindow);
         Produktgruppenliste myProduktgruppe = new Produktgruppenliste(this.conn, this.mainWindow);
@@ -64,6 +53,10 @@ public class TabbedPane extends TabbedPaneGrundlage {
         tabbedPane.addTab("DB Import/Export", null, myDump, "Datenbank exportieren/importieren");
 
         this.add(tabbedPane, BorderLayout.CENTER);
+    }
+
+    public Artikelliste getArtikelliste() {
+        return myArtikellisteC.getArtikelliste();
     }
 
     public void switchToBestellAnzeige(Vector<Object> bestellNrUndTyp) {

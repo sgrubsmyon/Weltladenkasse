@@ -47,6 +47,10 @@ public class ArtikellisteContainer extends WindowContent {
         this.add(prodList, BorderLayout.CENTER);
     }
 
+    public Artikelliste getArtikelliste() {
+        return artList;
+    }
+
     public void switchToArtikelliste(Integer topid, Integer subid, Integer subsubid, String gruppenname) {
         JTree tree = prodList.getTree();
         Enumeration treeCache = tree.getExpandedDescendants(new TreePath(tree.getModel().getRoot()));
