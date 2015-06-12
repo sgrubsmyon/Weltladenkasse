@@ -239,7 +239,7 @@ public class ArtikelFormular extends WindowContent
 
             JPanel sortimentPanel = new JPanel();
             sortimentBox = new JCheckBox("Sortiment");
-            sortimentBox.setSelected(false);
+            sortimentBox.setSelected(true);
             sortimentPanel.add(sortimentBox);
 
             JPanel lieferbarPanel = new JPanel();
