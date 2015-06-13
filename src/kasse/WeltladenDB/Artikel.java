@@ -92,16 +92,6 @@ public class Artikel {
     /**
      * Comparators
      */
-    private boolean equalsThatHandlesNull(Object a, Object b) {
-        //System.out.println(a+" "+b);
-        if ( (a != null) && (b != null) ){
-            if ( a.equals(b) ){ return true; }
-        } else {
-            if ( (a == null) && (b == null) ){ return true; }
-        }
-        return false;
-    }
-
     @Override
     public boolean equals(Object o) {
         if ( !(o instanceof Artikel) ){
@@ -109,53 +99,53 @@ public class Artikel {
         } else {
             Artikel a = (Artikel)o;
             //System.out.println("prodGrID");
-            if ( !equalsThatHandlesNull(produktgruppen_id, a.getProdGrID()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(produktgruppen_id, a.getProdGrID()) ){ return false; }
             //System.out.println("liefID");
-            if ( !equalsThatHandlesNull(lieferant_id, a.getLiefID()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(lieferant_id, a.getLiefID()) ){ return false; }
             //System.out.println("nummer");
-            if ( !equalsThatHandlesNull(artikel_nr, a.getNummer()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(artikel_nr, a.getNummer()) ){ return false; }
             //System.out.println("name");
-            if ( !equalsThatHandlesNull(artikel_name, a.getName()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(artikel_name, a.getName()) ){ return false; }
             //System.out.println("kname");
-            if ( !equalsThatHandlesNull(kurzname, a.getKurzname()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(kurzname, a.getKurzname()) ){ return false; }
             //System.out.println("menge");
-            if ( !equalsThatHandlesNull(menge, a.getMenge()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(menge, a.getMenge()) ){ return false; }
             //System.out.println("einheit");
-            if ( !equalsThatHandlesNull(einheit, a.getEinheit()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(einheit, a.getEinheit()) ){ return false; }
             //System.out.println("barcode");
-            if ( !equalsThatHandlesNull(barcode, a.getBarcode()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(barcode, a.getBarcode()) ){ return false; }
             //System.out.println("herkunft");
-            if ( !equalsThatHandlesNull(herkunft, a.getHerkunft()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(herkunft, a.getHerkunft()) ){ return false; }
             //System.out.println("vpe");
-            if ( !equalsThatHandlesNull(vpe, a.getVPE()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(vpe, a.getVPE()) ){ return false; }
             //System.out.println("setgr");
-            if ( !equalsThatHandlesNull(setgroesse, a.getSetgroesse()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(setgroesse, a.getSetgroesse()) ){ return false; }
             //System.out.println("vkp");
-            if ( !equalsThatHandlesNull(vk_preis, a.getVKP()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(vk_preis, a.getVKP()) ){ return false; }
             //System.out.println("evkp");
-            if ( !equalsThatHandlesNull(empf_vk_preis, a.getEmpfVKP()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(empf_vk_preis, a.getEmpfVKP()) ){ return false; }
             //System.out.println("ekr");
-            if ( !equalsThatHandlesNull(ek_rabatt, a.getEKRabatt()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(ek_rabatt, a.getEKRabatt()) ){ return false; }
             //System.out.println("ekp");
-            if ( !equalsThatHandlesNull(ek_preis, a.getEKP()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(ek_preis, a.getEKP()) ){ return false; }
             //System.out.println("var");
-            if ( !equalsThatHandlesNull(variabler_preis, a.getVarPreis()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(variabler_preis, a.getVarPreis()) ){ return false; }
             //System.out.println("sort");
-            if ( !equalsThatHandlesNull(sortiment, a.getSortiment()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(sortiment, a.getSortiment()) ){ return false; }
             //System.out.println("lief");
-            if ( !equalsThatHandlesNull(lieferbar, a.getLieferbar()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(lieferbar, a.getLieferbar()) ){ return false; }
             //System.out.println("beliebt");
-            if ( !equalsThatHandlesNull(beliebtheit, a.getBeliebt()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(beliebtheit, a.getBeliebt()) ){ return false; }
             //System.out.println("bestand");
-            if ( !equalsThatHandlesNull(bestand, a.getBestand()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(bestand, a.getBestand()) ){ return false; }
             //System.out.println("aktiv");
-            if ( !equalsThatHandlesNull(aktiv, a.getAktiv()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(aktiv, a.getAktiv()) ){ return false; }
         }
         return true;
     }
 
     public boolean equalsInAttribute(String attr, Artikel a) {
-        return equalsThatHandlesNull(get(attr), a.get(attr));
+        return bc.equalsThatHandlesNull(get(attr), a.get(attr));
     }
 
     /**

@@ -65,7 +65,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private JButton hinzufuegenButton;
     private JButton leergutButton;
     private JButton ruecknahmeButton;
-    private Vector<JButton> removeButtons;
     private JButton zwischensummeButton;
     private JButton barButton;
     private JButton ecButton;
@@ -89,13 +88,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private RechnungsTable myTable;
     private JScrollPane scrollPane;
     private Vector< Vector<Object> > data;
-
-    private Vector<Integer> positions;
-    private Vector<Integer> artikelIDs;
-    private Vector<String> articleNames;
-    private Vector<Integer> rabattIDs;
-    private Vector<Integer> stueckzahlen;
-    private Vector<BigDecimal> einzelpreise;
+    private Vector<JButton> removeButtons;
+    private HashSet<BigDecimal> mwsts;
 
     // Methoden:
 
@@ -611,18 +605,18 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
     void updateRabattButtons(){
         boolean enabled = false;
-        if (types.size() > 0){
+        if (kassierArtikel.size() > 0){
             enabled = true;
-            for (int i=types.size()-1; i>=0; i--){
-                if ( types.get(i).equals("rabatt") ){
+            for (int i=kassierArtikel.size()-1; i>=0; i--){
+                if ( kassierArtikel.get(i).getType().equals("rabatt") ){
                     enabled = false; // Artikel hat schon Rabatt, keinen Rabatt mehr erlauben
                     break;
                 }
-                if ( types.get(i).equals("leergut") ){
+                if ( kassierArtikel.get(i).getType().equals("leergut") ){
                     enabled = false; // Es handelt sich um Leergut, kein Rabatt erlauben
                     break;
                 }
-                if ( types.get(i).equals("artikel") ){
+                if ( kassierArtikel.get(i).getType().equals("artikel") ){
                     // Artikel hatte wohl noch keinen Rabatt
                     break;
                 }
@@ -640,22 +634,22 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
     void updateRabattButtonsZwischensumme(){
         boolean enabled = false;
-        if (!types.lastElement().equals("rabattrechnung")){
+        if (!kassierArtikel.lastElement().getType().equals("rabattrechnung")){
             // determine place to start (after last "Rabatt auf Rechnung")
             int startIndex = 0;
-            for (int i=types.size()-1; i>=0; i--){
-                if (types.get(i).equals("rabattrechnung")){
+            for (int i=kassierArtikel.size()-1; i>=0; i--){
+                if (kassierArtikel.get(i).getType().equals("rabattrechnung")){
                     startIndex = i+1;
                     break;
                 }
             }
             // scan through artikel list to search for artikels without rabatt
             int artikelCount = 0;
-            for (int i=startIndex; i<types.size(); i++){
-                if ( types.get(i).equals("artikel") ){
+            for (int i=startIndex; i<kassierArtikel.size(); i++){
+                if ( kassierArtikel.get(i).getType().equals("artikel") ){
                     artikelCount++;
                 }
-                else if ( types.get(i).equals("rabatt") ){
+                else if ( kassierArtikel.get(i).getType().equals("rabatt") ){
                     artikelCount = 0;
                 }
                 if (artikelCount > 1){ // there was an article without Rabatt
@@ -707,31 +701,13 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
     void emptyTable(){
 	data = new Vector< Vector<Object> >();
-        positions = new Vector<Integer>();
-        artikelIDs = new Vector<Integer>();
-        articleNames = new Vector<String>();
-        rabattIDs = new Vector<Integer>();
-        mwsts = new Vector<BigDecimal>();
-        colors = new Vector<String>();
-        types = new Vector<String>();
-        stueckzahlen = new Vector<Integer>();
-        einzelpreise = new Vector<BigDecimal>();
-        preise = new Vector<BigDecimal>();
+        kassierArtikel = new Vector<KassierArtikel>();
         removeButtons = new Vector<JButton>();
     }
 
     private void clearAll(){
         data.clear();
-        positions.clear();
-        artikelIDs.clear();
-        articleNames.clear();
-        rabattIDs.clear();
-        colors.clear();
-        types.clear();
-        mwsts.clear();
-        stueckzahlen.clear();
-        einzelpreise.clear();
-        preise.clear();
+        kassierArtikel.clear();
         removeButtons.clear();
         zahlungsModus = "unbekannt";
     }
@@ -804,7 +780,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
          */
         int artikelID = selectedArtikelID;
         BigDecimal stueck = new BigDecimal(selectedStueck);
-        BigDecimal einzelpreis = new BigDecimal(preisField.getText().replace(',','.').replace("(r) ",""));
+        BigDecimal einzelpreis = new BigDecimal(
+                bc.priceFormatterIntern(preisField.getText())
+                );
         Vector< Vector<Object> > einzelrabattAbsolutVector = new Vector< Vector<Object> >();
         Vector< Vector<Object> > einzelrabattRelativVector = new Vector< Vector<Object> >();
         Vector< Vector<Object> > mengenrabattAnzahlVector = new Vector< Vector<Object> >();
@@ -819,11 +797,16 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
             while ( rs.next() ){
-                BigDecimal einzelAbsolut = rs.getString(1) == null ? null : new BigDecimal(rs.getString(1));
-                BigDecimal einzelRelativ = rs.getString(2) == null ? null : new BigDecimal(rs.getString(2));
-                BigDecimal mengenSchwelle = rs.getString(3) == null ? null : new BigDecimal(rs.getInt(3));
-                BigDecimal mengenAnzahl = rs.getString(4) == null ? null : new BigDecimal(rs.getInt(4));
-                BigDecimal mengenRelativ = rs.getString(5) == null ? null : new BigDecimal(rs.getString(5));
+                BigDecimal einzelAbsolut = rs.getString(1) == null ? null :
+                    new BigDecimal(rs.getString(1));
+                BigDecimal einzelRelativ = rs.getString(2) == null ? null :
+                    new BigDecimal(rs.getString(2));
+                BigDecimal mengenSchwelle = rs.getString(3) == null ? null :
+                    new BigDecimal(rs.getInt(3));
+                BigDecimal mengenAnzahl = rs.getString(4) == null ? null :
+                    new BigDecimal(rs.getInt(4));
+                BigDecimal mengenRelativ = rs.getString(5) == null ? null :
+                    new BigDecimal(rs.getString(5));
                 String aktionsname = rs.getString(6);
                 int rabattID = rs.getInt(7);
                 addRabatteToVectors(einzelAbsolut, einzelRelativ, mengenSchwelle, mengenAnzahl, mengenRelativ, aktionsname, rabattID,
@@ -857,11 +840,16 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             pstmtSetInteger(pstmt, 3, subsubID);
             rs = pstmt.executeQuery();
             while ( rs.next() ){
-                BigDecimal einzelAbsolut = rs.getString(1) == null ? null : new BigDecimal(rs.getString(1));
-                BigDecimal einzelRelativ = rs.getString(2) == null ? null : new BigDecimal(rs.getString(2));
-                BigDecimal mengenSchwelle = rs.getString(3) == null ? null : new BigDecimal(rs.getInt(3));
-                BigDecimal mengenAnzahl = rs.getString(4) == null ? null : new BigDecimal(rs.getInt(4));
-                BigDecimal mengenRelativ = rs.getString(5) == null ? null : new BigDecimal(rs.getString(5));
+                BigDecimal einzelAbsolut = rs.getString(1) == null ? null :
+                    new BigDecimal(rs.getString(1));
+                BigDecimal einzelRelativ = rs.getString(2) == null ? null :
+                    new BigDecimal(rs.getString(2));
+                BigDecimal mengenSchwelle = rs.getString(3) == null ? null :
+                    new BigDecimal(rs.getInt(3));
+                BigDecimal mengenAnzahl = rs.getString(4) == null ? null :
+                    new BigDecimal(rs.getInt(4));
+                BigDecimal mengenRelativ = rs.getString(5) == null ? null :
+                    new BigDecimal(rs.getString(5));
                 String aktionsname = rs.getString(6);
                 int rabattID = rs.getInt(7);
                 addRabatteToVectors(einzelAbsolut, einzelRelativ, mengenSchwelle, mengenAnzahl, mengenRelativ, aktionsname, rabattID,
@@ -897,7 +885,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             String aktionsname = (String) vector.get(1);
             BigDecimal einzelRelRabatt = (BigDecimal) vector.get(2);
             BigDecimal reduktion = new BigDecimal(
-                    bc.priceFormatterIntern( stueck.multiply(einzelRelRabatt).multiply(einzelpreis).multiply(bc.minusOne) )
+                    bc.priceFormatterIntern(
+                        stueck.multiply(einzelRelRabatt).multiply(einzelpreis).
+                        multiply(bc.minusOne)
+                        )
                     );
             einzelpreis = einzelpreis.subtract( einzelRelRabatt.multiply(einzelpreis) );
 
@@ -909,8 +900,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             BigDecimal mengenSchwelle = (BigDecimal) vector.get(2);
             BigDecimal mengenAnzKostenlos = (BigDecimal) vector.get(3);
             if ( stueck.compareTo(mengenSchwelle) >= 0 ){ // if stueck >= mengenSchwelle
-                BigDecimal reduktion = (new BigDecimal(stueck.intValue()/mengenSchwelle.intValue())).
-                        multiply(mengenAnzKostenlos).multiply(einzelpreis).multiply(bc.minusOne);
+                BigDecimal reduktion = (
+                        new BigDecimal(stueck.intValue()/mengenSchwelle.intValue())
+                        ).multiply(mengenAnzKostenlos).multiply(einzelpreis).
+                        multiply(bc.minusOne);
                 stueck = stueck.subtract(mengenAnzKostenlos);
 
                 addRabattRow(rabattID, aktionsname, reduktion, stueck);
@@ -923,7 +916,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             BigDecimal mengenRelRabatt = (BigDecimal) vector.get(3);
             if ( stueck.compareTo(mengenSchwelle) >= 0 ){ // if stueck >= mengenSchwelle
                 BigDecimal reduktion = new BigDecimal(
-                        bc.priceFormatterIntern( stueck.multiply(mengenRelRabatt).multiply(einzelpreis).multiply(bc.minusOne) )
+                        bc.priceFormatterIntern(
+                            stueck.multiply(mengenRelRabatt).multiply(einzelpreis).
+                            multiply(bc.minusOne)
+                            )
                         );
                 einzelpreis = einzelpreis.subtract( mengenRelRabatt.multiply(einzelpreis) );
 
@@ -963,22 +959,28 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     }
 
     private void addRabattRow(int rabattID, String aktionsname, BigDecimal reduktion, BigDecimal stueck){
-        BigDecimal artikelMwSt = mwsts.lastElement();
-        positions.add(null);
-        artikelIDs.add(null);
-        articleNames.add(einrueckung+aktionsname);
-        rabattIDs.add(rabattID);
-        colors.add("red");
-        types.add("rabatt");
+        BigDecimal artikelMwSt = kassierArtikel.lastElement().getMwst();
+
+        KassierArtikel ka = new KassierArtikel(bc);
+        ka.setPosition(null);
+        ka.setArtikelID(null);
+        ka.setRabattID(rabattID);
+        ka.setName(einrueckung+aktionsname);
+        ka.setColor("red");
+        ka.setType("rabatt");
+        ka.setMwst(artikelMwSt);
+        ka.setStueckzahl(stueck.intValue());
+        ka.setEinzelpreis(reduktion);
+        ka.setGesPreis(reduktion);
+        kassierArtikel.add(ka);
+
         mwsts.add(artikelMwSt);
-        stueckzahlen.add(stueck.intValue());
-        einzelpreise.add(reduktion);
-        preise.add(reduktion);
         removeButtons.add(null);
 
         Vector<Object> row = new Vector<Object>();
             row.add(""); // pos
-            row.add(einrueckung+aktionsname); row.add("RABATT"); row.add(stueck.toPlainString());
+            row.add(einrueckung+aktionsname);
+            row.add("RABATT"); row.add(stueck.toPlainString());
             row.add(bc.priceFormatter(reduktion)+" "+bc.currencySymbol);
             row.add(bc.priceFormatter(reduktion)+" "+bc.currencySymbol);
             row.add(bc.vatFormatter(artikelMwSt));
@@ -994,18 +996,22 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             BigDecimal pfand = new BigDecimal( getSalePrice(pfandArtikelID) );
             String pfandName = getArticleName(pfandArtikelID)[0];
             BigDecimal gesamtPfand = pfand.multiply(stueck);
-            BigDecimal pfandMwSt = mwsts.lastElement();
+            BigDecimal pfandMwSt = kassierArtikel.lastElement().getMwst();
 
-            positions.add(null);
-            artikelIDs.add(pfandArtikelID);
-            articleNames.add(einrueckung+pfandName);
-            rabattIDs.add(null);
-            colors.add("blue");
-            types.add("pfand");
+            KassierArtikel ka = new KassierArtikel(bc);
+            ka.setPosition(null);
+            ka.setArtikelID(pfandArtikelID);
+            ka.setRabattID(null);
+            ka.setName(einrueckung+pfandName);
+            ka.setColor("blue");
+            ka.setType("pfand");
+            ka.setMwst(pfandMwSt);
+            ka.setStueckzahl(stueck.intValue());
+            ka.setEinzelpreis(new BigDecimal( bc.priceFormatterIntern(pfand) ));
+            ka.setGesPreis(new BigDecimal( bc.priceFormatterIntern(gesamtPfand) ));
+            kassierArtikel.add(ka);
+
             mwsts.add(pfandMwSt);
-            stueckzahlen.add(stueck.intValue());
-            einzelpreise.add(new BigDecimal( bc.priceFormatterIntern(pfand) ));
-            preise.add(new BigDecimal( bc.priceFormatterIntern(gesamtPfand) ));
             removeButtons.add(null);
 
             Vector<Object> row = new Vector<Object>();
@@ -1109,12 +1115,12 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                         "ges_preis = ?, mwst_satz = ?"
                         );
                 pstmtSetInteger(pstmt, 1, rechnungsNr);
-                pstmtSetInteger(pstmt, 2, positions.get(i));
-                pstmtSetInteger(pstmt, 3, artikelIDs.get(i));
-                pstmtSetInteger(pstmt, 4, rabattIDs.get(i));
-                pstmtSetInteger(pstmt, 5, stueckzahlen.get(i));
-                pstmt.setBigDecimal(6, preise.get(i));
-                pstmt.setBigDecimal(7, mwsts.get(i));
+                pstmtSetInteger(pstmt, 2, kassierArtikel.get(i).getPosition());
+                pstmtSetInteger(pstmt, 3, kassierArtikel.get(i).getArtikelID());
+                pstmtSetInteger(pstmt, 4, kassierArtikel.get(i).getRabattID());
+                pstmtSetInteger(pstmt, 5, kassierArtikel.get(i).getStueckzahl());
+                pstmt.setBigDecimal(6, kassierArtikel.get(i).getGesPreis());
+                pstmt.setBigDecimal(7, kassierArtikel.get(i).getMwst());
                 result = pstmt.executeUpdate();
                 pstmt.close();
                 if (result == 0){
@@ -1369,7 +1375,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         selectedStueck = stueck;
         String artikelPreis = bc.priceFormatterIntern(preisField.getText());
         BigDecimal gesPreis = new BigDecimal(artikelPreis).multiply(new BigDecimal(stueck));
-        String artikelGesamtPreis = bc.priceFormatterIntern(gesPreis);
+        String gesPreisString = bc.priceFormatterIntern(gesPreis);
         String kurzname = getShortName(selectedArtikelID);
         String artikelMwSt = getVAT(selectedArtikelID);
         Boolean sortiment = getSortimentBool(selectedArtikelID);
@@ -1378,33 +1384,38 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
 
         Integer lastPos = 0;
-        for (int i=positions.size()-1; i>=0; i--){
-            Integer val = positions.get(i);
+        for (int i=kassierArtikel.size()-1; i>=0; i--){
+            Integer val = kassierArtikel.get(i).getPosition();
             if (val != null){
                 lastPos = val;
                 break;
             }
         }
-        positions.add(lastPos+1);
-        artikelIDs.add(selectedArtikelID);
-        articleNames.add(kurzname);
-        rabattIDs.add(null);
-        stueckzahlen.add(stueck);
-        einzelpreise.add(new BigDecimal(artikelPreis));
-        preise.add(gesPreis);
-        colors.add(color);
-        types.add("artikel");
+        KassierArtikel ka = new KassierArtikel(bc);
+        ka.setPosition(lastPos+1);
+        ka.setArtikelID(selectedArtikelID);
+        ka.setRabattID(null);
+        ka.setName(kurzname);
+        ka.setColor(color);
+        ka.setType("artikel");
+        ka.setMwst(new BigDecimal(artikelMwSt));
+        ka.setStueckzahl(stueck);
+        ka.setEinzelpreis(new BigDecimal(artikelPreis));
+        ka.setGesPreis(gesPreis);
+        kassierArtikel.add(ka);
+
         mwsts.add(new BigDecimal(artikelMwSt));
         removeButtons.add(new JButton("-"));
         removeButtons.lastElement().addActionListener(this);
 
-        artikelGesamtPreis = bc.decimalMark(artikelGesamtPreis)+' '+bc.currencySymbol;
+        gesPreisString = bc.decimalMark(gesPreisString)+' '+bc.currencySymbol;
         artikelPreis = bc.decimalMark(artikelPreis)+' '+bc.currencySymbol;
 
         Vector<Object> row = new Vector<Object>();
-            row.add(positions.lastElement());
-            row.add(artikelName); row.add(artikelNummer); row.add(stueck.toString());
-            row.add(artikelPreis); row.add(artikelGesamtPreis); row.add(bc.vatFormatter(artikelMwSt));
+            row.add(ka.getPosition()); row.add(kurzname);
+            row.add(artikelNummer); row.add(stueck.toString());
+            row.add(artikelPreis); row.add(gesPreisString);
+            row.add(bc.vatFormatter(artikelMwSt));
             row.add(removeButtons.lastElement());
         data.add(row);
 
@@ -1430,15 +1441,19 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             BigDecimal gesamtPfand = pfand.multiply(new BigDecimal(stueck));
             String pfandMwSt = getVAT(selectedArtikelID);
 
-            positions.add(null);
-            artikelIDs.add(pfandArtikelID);
-            articleNames.add(pfandName);
-            rabattIDs.add(null);
-            stueckzahlen.add(stueck);
-            einzelpreise.add(pfand);
-            preise.add(gesamtPfand);
-            colors.add("green");
-            types.add("leergut");
+            KassierArtikel ka = new KassierArtikel(bc);
+            ka.setPosition(null);
+            ka.setArtikelID(pfandArtikelID);
+            ka.setRabattID(null);
+            ka.setName(pfandName);
+            ka.setColor("green");
+            ka.setType("leergut");
+            ka.setMwst(new BigDecimal(pfandMwSt));
+            ka.setStueckzahl(stueck);
+            ka.setEinzelpreis(pfand);
+            ka.setGesPreis(gesamtPfand);
+            kassierArtikel.add(ka);
+
             mwsts.add(new BigDecimal(pfandMwSt));
             removeButtons.add(new JButton("-"));
             removeButtons.lastElement().addActionListener(this);
@@ -1526,34 +1541,49 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     }
 
     private void artikelRabattierenRelativ(BigDecimal rabattRelativ) {
-        int i=data.size()-1;
-        while ( !types.get(i).equals("artikel") ){
+        // Get data:
+        int i=kassierArtikel.size()-1;
+        while ( !kassierArtikel.get(i).getType().equals("artikel") ){
             i--;
         }
         // Now i points to the Artikel that gets the Rabatt
-        BigDecimal gesPreis = preise.get(i);
-        BigDecimal reduktion = new BigDecimal(
-                bc.priceFormatterIntern( rabattRelativ.multiply(gesPreis).multiply(bc.minusOne) )
+        BigDecimal einzelPreis = kassierArtikel.get(i).getEinzelPreis();
+        BigDecimal gesPreis = kassierArtikel.get(i).getGesPreis();
+        BigDecimal einzelReduktion = new BigDecimal(
+                bc.priceFormatterIntern(
+                    rabattRelativ.multiply(einzelPreis).multiply(bc.minusOne)
+                    )
                 );
-        BigDecimal artikelMwSt = mwsts.get(i);
-        positions.add(i+1, null);
-        artikelIDs.add(i+1, artikelRabattArtikelID);
-        rabattIDs.add(i+1, null);
-        einzelpreise.add(i+1, reduktion);
-        preise.add(i+1, reduktion);
-        colors.add(i+1, "red");
-        types.add(i+1, "rabatt");
-        mwsts.add(i+1, artikelMwSt);
-        stueckzahlen.add(i+1, selectedStueck);
-        removeButtons.add(i+1, null);
-
+        BigDecimal gesReduktion = new BigDecimal(
+                bc.priceFormatterIntern(
+                    rabattRelativ.multiply(gesPreis).multiply(bc.minusOne)
+                    )
+                );
+        BigDecimal artikelMwSt = kassierArtikel.get(i).getMwst();
         String rabattName = getArticleName(artikelRabattArtikelID)[0];
-        articleNames.add(i+1, einrueckung+rabattName);
+
+        KassierArtikel ka = new KassierArtikel(bc);
+        ka.setPosition(null);
+        ka.setArtikelID(artikelRabattArtikelID);
+        ka.setRabattID(null);
+        ka.setName(einrueckung+rabattName);
+        ka.setColor("red");
+        ka.setType("rabatt");
+        ka.setMwst(artikelMwSt);
+        ka.setStueckzahl(selectedStueck);
+        ka.setEinzelpreis(einzelReduktion);
+        ka.setGesPreis(gesReduktion);
+        kassierArtikel.add(i+1, ka);
+
+        mwsts.add(artikelMwSt);
+        removeButtons.add(null);
 
         Vector<Object> rabattRow = new Vector<Object>();
             rabattRow.add(""); // pos
-            rabattRow.add(einrueckung+rabattName); rabattRow.add("RABATT"); rabattRow.add(Integer.toString(selectedStueck));
-            rabattRow.add(""); rabattRow.add(bc.priceFormatter(reduktion)+" "+bc.currencySymbol);
+            rabattRow.add(einrueckung+rabattName); rabattRow.add("RABATT");
+            rabattRow.add(Integer.toString(selectedStueck));
+            rabattRow.add(bc.priceFormatter(einzelReduktion)+" "+bc.currencySymbol);
+            rabattRow.add(bc.priceFormatter(gesReduktion)+" "+bc.currencySymbol);
             rabattRow.add(bc.vatFormatter(artikelMwSt));
             rabattRow.add("");
         data.add(i+1, rabattRow);
@@ -1561,31 +1591,40 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     }
 
     private void artikelRabattierenAbsolut(BigDecimal rabattAbsolut) {
-        int i=data.size()-1;
-        while ( !types.get(i).equals("artikel") ){
+        // Get data
+        int i=kassierArtikel.size()-1;
+        while ( !kassierArtikel.get(i).getType().equals("artikel") ){
             i--;
         }
         // Now i points to the Artikel that gets the Rabatt
-        BigDecimal reduktion = rabattAbsolut.multiply(bc.minusOne);
-        BigDecimal artikelMwSt = mwsts.get(i);
-        positions.add(i+1, null);
-        artikelIDs.add(i+1, artikelRabattArtikelID);
-        rabattIDs.add(i+1, null);
-        einzelpreise.add(i+1, reduktion);
-        preise.add(i+1, reduktion);
-        colors.add(i+1, "red");
-        types.add(i+1, "rabatt");
-        mwsts.add(i+1, artikelMwSt);
-        stueckzahlen.add(i+1, selectedStueck);
-        removeButtons.add(i+1, null);
-
+        BigDecimal einzelReduktion = rabattAbsolut.multiply(bc.minusOne);
+        BigDecimal stueck = new BigDecimal(selectedStueck);
+        BigDecimal gesReduktion = einzelReduktion.multiply(stueck);
+        BigDecimal artikelMwSt = kassierArtikel.get(i).getMwst();
         String rabattName = getArticleName(artikelRabattArtikelID)[0];
-        articleNames.add(i+1, einrueckung+rabattName);
+
+        KassierArtikel ka = new KassierArtikel(bc);
+        ka.setPosition(null);
+        ka.setArtikelID(artikelRabattArtikelID);
+        ka.setRabattID(null);
+        ka.setName(einrueckung+rabattName);
+        ka.setColor("red");
+        ka.setType("rabatt");
+        ka.setMwst(artikelMwSt);
+        ka.setStueckzahl(selectedStueck);
+        ka.setEinzelpreis(einzelReduktion);
+        ka.setGesPreis(gesReduktion);
+        kassierArtikel.add(i+1, ka);
+
+        mwsts.add(artikelMwSt);
+        removeButtons.add(null);
 
         Vector<Object> rabattRow = new Vector<Object>();
             rabattRow.add(""); // pos
-            rabattRow.add(einrueckung+rabattName); rabattRow.add("RABATT"); rabattRow.add(Integer.toString(selectedStueck));
-            rabattRow.add(""); rabattRow.add(bc.priceFormatter(reduktion)+" "+bc.currencySymbol);
+            rabattRow.add(einrueckung+rabattName); rabattRow.add("RABATT");
+            rabattRow.add(Integer.toString(selectedStueck));
+            rabattRow.add(bc.priceFormatter(einzelReduktion)+" "+bc.currencySymbol);
+            rabattRow.add(bc.priceFormatter(gesReduktion)+" "+bc.currencySymbol);
             rabattRow.add(bc.vatFormatter(artikelMwSt));
             rabattRow.add("");
         data.add(i+1, rabattRow);
@@ -1593,7 +1632,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     }
 
     private void addToHashMap(HashMap<BigDecimal, BigDecimal> hashMap, int artikelIndex){
-        BigDecimal mwst = mwsts.get(artikelIndex);
+        BigDecimal mwst = kassierArtikel.get(artikelIndex).getMwst();
         BigDecimal gesPreis = preise.get(artikelIndex);
         boolean found = false;
         for ( Map.Entry<BigDecimal, BigDecimal> entry : hashMap.entrySet() ){
@@ -1611,24 +1650,27 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private void rechnungRabattierenRelativ(BigDecimal rabattRelativ) {
         int artikelIndex = -1;
         int rabattCounter = -1;
-        HashMap<BigDecimal, BigDecimal> rabattArtikelPreise = new HashMap<BigDecimal, BigDecimal>();
+        HashMap<BigDecimal, BigDecimal> rabattArtikelPreise =
+            new HashMap<BigDecimal, BigDecimal>();
+
         // determine place to start (after last "Rabatt auf Rechnung")
         int startIndex = 0;
-        for (int i=types.size()-1; i>=0; i--){
-            if (types.get(i).equals("rabattrechnung")){
+        for (int i=kassierArtikel.size()-1; i>=0; i--){
+            if (kassierArtikel.get(i).getType().equals("rabattrechnung")){
                 startIndex = i+1;
                 break;
             }
         }
+
         // scan through artikel list to search for artikels without rabatt
-        for (int i=startIndex; i<types.size(); i++){
-            if (types.get(i).equals("artikel")){
+        for (int i=startIndex; i<kassierArtikel.size(); i++){
+            if (kassierArtikel.get(i).getType().equals("artikel")){
                 if ( rabattCounter == 0 ){ // previous artikel had no rabatt
                     addToHashMap(rabattArtikelPreise, artikelIndex);
                 }
                 artikelIndex = i;
                 rabattCounter = 0;
-            } else if (types.get(i).equals("rabatt")){
+            } else if (kassierArtikel.get(i).getType().equals("rabatt")){
                 rabattCounter++;
             }
         }
@@ -1641,21 +1683,26 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
         String rabattName = getArticleName(rechnungRabattArtikelID)[0];
 
+        // Loop over the VAT levels:
         for ( Map.Entry<BigDecimal, BigDecimal> entry : rabattArtikelPreise.entrySet() ){
-            positions.add(null);
-            artikelIDs.add(rechnungRabattArtikelID);
-            articleNames.add(rabattName);
-            rabattIDs.add(null);
-            BigDecimal reduktion = new BigDecimal(
-                    bc.priceFormatterIntern( rabattRelativ.multiply(entry.getValue()).multiply(bc.minusOne) )
-                    );
-            einzelpreise.add(reduktion);
-            preise.add(reduktion);
-            colors.add("red");
-            types.add("rabattrechnung");
-            BigDecimal mwst = entry.getKey();
-            mwsts.add(mwst);
-            stueckzahlen.add(1);
+            BigDecimal reduktion = new BigDecimal( bc.priceFormatterIntern(
+                        rabattRelativ.multiply(entry.getValue()).multiply(bc.minusOne)
+                        ));
+
+            KassierArtikel ka = new KassierArtikel(bc);
+            ka.setPosition(null);
+            ka.setArtikelID(rechnungRabattArtikelID);
+            ka.setRabattID(null);
+            ka.setName(rabattName);
+            ka.setColor("red");
+            ka.setType("rabattrechnung");
+            ka.setMwst(entry.getKey());
+            ka.setStueckzahl(1);
+            ka.setEinzelpreis(reduktion);
+            ka.setGesPreis(reduktion);
+            kassierArtikel.add(ka);
+
+            mwsts.add(entry.getKey());
             removeButtons.add(new JButton("-"));
             removeButtons.lastElement().addActionListener(this);
 
@@ -1678,23 +1725,12 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     }
 
     private void removeRabattAufRechnung() {
-        for (int i=types.size()-1; i>=0; i--){
-            if (!types.get(i).equals("rabattrechnung")){
+        for (int i=kassierArtikel.size()-1; i>=0; i--){
+            if (!kassierArtikel.get(i).getType().equals("rabattrechnung")){
                 break; // stop at first row that is no "Rabatt auf Rechnung"
             } else { // remove the rabatt row
                 data.remove(i);
-                artikelIDs.remove(i);
-                articleNames.remove(i);
-                rabattIDs.remove(i);
-                einzelpreise.remove(i);
-                preise.remove(i);
-                colors.remove(i);
-                types.remove(i);
-                mwsts.remove(i);
-                stueckzahlen.remove(i);
-                removeButtons.remove(i);
-
-                positions.remove(i);
+                kassierArtikel.remove(i);
             }
         }
     }
@@ -1861,8 +1897,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     }
 
     void refreshPositionsInData() {
-        for (int i=0; i<positions.size(); i++){
-            data.get(i).set(0, positions.get(i));
+        for (int i=0; i<kassierArtikel.size(); i++){
+            data.get(i).set(0, kassierArtikel.get(i).getPosition());
         }
     }
 
@@ -1944,7 +1980,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	if (e.getSource() == ecButton){
             if ( ( new BigDecimal(getTotalPrice()) ).compareTo(ecSchwelle) < 0 ){
                 int answer = JOptionPane.showConfirmDialog(this,
-                        "ACHTUNG: Gesamtbetrag unter "+bc.priceFormatter(ecSchwelle)+" "+bc.currencySymbol+" !\n"+
+                        "ACHTUNG: Gesamtbetrag unter "+bc.priceFormatter(ecSchwelle)+" "+
+                        bc.currencySymbol+" !\n"+
                         "Wirklich EC-Zahlung erlauben?", "Warnung",
                         JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if (answer == JOptionPane.NO_OPTION){
@@ -1980,7 +2017,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                         Vector<BigDecimal> values = new Vector<BigDecimal>();
                         BigDecimal brutto = calculateTotalVATUmsatz(vat);
                         BigDecimal steuer = calculateTotalVATAmount(vat);
-                        BigDecimal netto = new BigDecimal( bc.priceFormatterIntern(brutto.subtract(steuer)) );
+                        BigDecimal netto = new BigDecimal(
+                                bc.priceFormatterIntern(brutto.subtract(steuer))
+                                );
                         values.add(netto); // Netto
                         values.add(steuer); // Steuer
                         values.add(brutto); // Umsatz
@@ -2024,10 +2063,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	    }
 	}
         if (rabattIndex > -1){
-            BigDecimal rabattAnteil = (new BigDecimal(
-                        rabattButtons.get(rabattIndex).getText().replace("%","").replace(',','.').replaceAll(" ","")
-                        )
-                    ).multiply(bc.percent);
+            BigDecimal rabattAnteil = new BigDecimal(
+                    bc.vatParser( rabattButtons.get(rabattIndex).getText() )
+                    );
             if (barButton.isEnabled()){
                 rechnungRabattierenRelativ(rabattAnteil);
             }
@@ -2037,8 +2075,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             return;
         }
 	if (e.getSource() == individuellRabattRelativButton){
-            BigDecimal rabattAnteil = (
-                    new BigDecimal( individuellRabattRelativField.getText().replace(',','.') )).multiply(bc.percent);
+            BigDecimal rabattAnteil = new BigDecimal(
+                    bc.vatParser( individuellRabattRelativField.getText() )
+                    );
             if (barButton.isEnabled()){
                 rechnungRabattierenRelativ(rabattAnteil);
             }
@@ -2049,7 +2088,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	    return;
 	}
 	if (e.getSource() == individuellRabattAbsolutButton){
-            BigDecimal rabatt = new BigDecimal(individuellRabattAbsolutField.getText().replace(',','.'));
+            BigDecimal rabatt = new BigDecimal(
+                    bc.priceFormatterIntern( individuellRabattAbsolutField.getText() )
+                    );
             if (barButton.isEnabled()){
                 // do nothing
             }
@@ -2060,7 +2101,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	    return;
 	}
 	int removeRow = -1;
-	for (int i=0; i<removeButtons.size(); i++){
+	for (int i=0; i<kassierArtikel.size(); i++){
 	    if (e.getSource() == removeButtons.get(i) ){
 		removeRow = i;
 		break;
@@ -2068,40 +2109,19 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	}
         if (removeRow > -1){
             data.remove(removeRow);
-            artikelIDs.remove(removeRow);
-            articleNames.remove(removeRow);
-            rabattIDs.remove(removeRow);
-            einzelpreise.remove(removeRow);
-            preise.remove(removeRow);
-            colors.remove(removeRow);
-            types.remove(removeRow);
-            mwsts.remove(removeRow);
-            stueckzahlen.remove(removeRow);
-            removeButtons.remove(removeRow);
-
-            positions.remove(removeRow);
+            kassierArtikel.remove(removeRow);
 
             // remove extra rows (Rabatt oder Pfand):
-            while ( removeRow < removeButtons.size() && removeButtons.get(removeRow) == null ){
+            while ( removeRow < kassierArtikel.size() &&
+                    removeButtons.get(removeRow) == null ){
                 data.remove(removeRow);
-                artikelIDs.remove(removeRow);
-                articleNames.remove(removeRow);
-                rabattIDs.remove(removeRow);
-                einzelpreise.remove(removeRow);
-                preise.remove(removeRow);
-                colors.remove(removeRow);
-                types.remove(removeRow);
-                mwsts.remove(removeRow);
-                stueckzahlen.remove(removeRow);
-                removeButtons.remove(removeRow);
-
-                positions.remove(removeRow);
+                kassierArtikel.remove(removeRow);
             }
 
-            for (int i=removeRow; i<positions.size(); i++){
-                Integer oldVal = positions.get(i);
+            for (int i=removeRow; i<kassierArtikel.size(); i++){
+                Integer oldVal = kassierArtikel.get(i).getPosition();
                 if (oldVal != null){
-                    positions.set(i, oldVal-1);
+                    kassierArtikel.get(i).setPosition(oldVal-1);
                 }
             }
 
