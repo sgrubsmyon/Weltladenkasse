@@ -30,14 +30,8 @@ import WeltladenDB.AnyJComponentJTable;
 public abstract class RechnungsGrundlage extends ArtikelGrundlage {
 
     protected JTextField totalPriceField;
-
-    protected Vector<BigDecimal> preise;
-    protected Vector<BigDecimal> mwsts;
-    protected Vector<String> colors;
-    protected Vector<String> types;
-
+    protected Vector<KassierArtikel> kassierArtikel;
     protected Vector<String> columnLabels;
-
     protected HashMap< BigDecimal, Vector<BigDecimal> > vatMap;
 
     // Die Ausrichter:
@@ -56,10 +50,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         columnLabels.add("Pos.");
 	columnLabels.add("Artikel-Name"); columnLabels.add("Artikel-Nr."); columnLabels.add("Stückzahl");
         columnLabels.add("Einzelpreis"); columnLabels.add("Gesamtpreis"); columnLabels.add("MwSt.");
-        preise = new Vector<BigDecimal>();
-        mwsts = new Vector<BigDecimal>();
-        colors = new Vector<String>();
-        types = new Vector<String>();
+        kassierArtikel = new Vector<KassierArtikel>();
     }
 
     //////////////////////////////////
@@ -89,8 +80,8 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     //////////////////////////////////
     protected String calculateTotalPrice() {
         BigDecimal totalPrice = new BigDecimal(0);
-        for ( BigDecimal preis : preise ){
-            totalPrice = totalPrice.add(preis);
+        for ( KassierArtikel ka : kassierArtikel ){
+            totalPrice = totalPrice.add(ka.getGesPreis());
         }
         return bc.priceFormatter(totalPrice);
     }
@@ -99,10 +90,10 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         /** Returns the total amount (brutto prices) that VAT tax is included
          *  in for entire Rechnung (MwSt.-Umsatz). */
         BigDecimal priceForVAT = new BigDecimal(0);
-        for (int i=0; i<mwsts.size(); i++){
-            BigDecimal mwst = mwsts.get(i);
+        for (int i=0; i<kassierArtikel.size(); i++){
+            BigDecimal mwst = kassierArtikel.get(i).getMwst();
             if ( mwst.equals(vat) ){
-                BigDecimal preis = preise.get(i);
+                BigDecimal preis = kassierArtikel.get(i).getGesPreis();
                 priceForVAT = priceForVAT.add(preis);
             }
         }
@@ -166,7 +157,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
             Component c = super.prepareRenderer(renderer, row, column);
             // add custom rendering here
             c.setFont( c.getFont().deriveFont(Font.BOLD) );
-            String color = colors.get(row);
+            String color = kassierArtikel.get(row).getColor();
             if (color.equals("red")){ c.setForeground(Color.RED); }
             else if (color.equals("blue")){ c.setForeground(Color.BLUE); }
             else if (color.equals("green")){ c.setForeground(Color.GREEN.darker().darker()); }
