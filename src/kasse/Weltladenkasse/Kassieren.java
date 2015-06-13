@@ -972,14 +972,15 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         types.add("rabatt");
         mwsts.add(artikelMwSt);
         stueckzahlen.add(stueck.intValue());
-        einzelpreise.add(null);
+        einzelpreise.add(reduktion);
         preise.add(reduktion);
         removeButtons.add(null);
 
         Vector<Object> row = new Vector<Object>();
             row.add(""); // pos
             row.add(einrueckung+aktionsname); row.add("RABATT"); row.add(stueck.toPlainString());
-            row.add(""); row.add(bc.priceFormatter(reduktion)+" "+bc.currencySymbol);
+            row.add(bc.priceFormatter(reduktion)+" "+bc.currencySymbol);
+            row.add(bc.priceFormatter(reduktion)+" "+bc.currencySymbol);
             row.add(bc.vatFormatter(artikelMwSt));
             row.add("");
         data.add(row);
@@ -1538,7 +1539,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         positions.add(i+1, null);
         artikelIDs.add(i+1, artikelRabattArtikelID);
         rabattIDs.add(i+1, null);
-        einzelpreise.add(i+1, null);
+        einzelpreise.add(i+1, reduktion);
         preise.add(i+1, reduktion);
         colors.add(i+1, "red");
         types.add(i+1, "rabatt");
@@ -1570,7 +1571,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         positions.add(i+1, null);
         artikelIDs.add(i+1, artikelRabattArtikelID);
         rabattIDs.add(i+1, null);
-        einzelpreise.add(i+1, null);
+        einzelpreise.add(i+1, reduktion);
         preise.add(i+1, reduktion);
         colors.add(i+1, "red");
         types.add(i+1, "rabatt");
@@ -1648,20 +1649,21 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             BigDecimal reduktion = new BigDecimal(
                     bc.priceFormatterIntern( rabattRelativ.multiply(entry.getValue()).multiply(bc.minusOne) )
                     );
-            einzelpreise.add(null);
+            einzelpreise.add(reduktion);
             preise.add(reduktion);
             colors.add("red");
             types.add("rabattrechnung");
             BigDecimal mwst = entry.getKey();
             mwsts.add(mwst);
-            stueckzahlen.add(null);
+            stueckzahlen.add(1);
             removeButtons.add(new JButton("-"));
             removeButtons.lastElement().addActionListener(this);
 
             Vector<Object> rabattRow = new Vector<Object>();
                 rabattRow.add(""); // pos
-                rabattRow.add(rabattName); rabattRow.add("RABATT"); rabattRow.add("");
-                rabattRow.add(""); rabattRow.add(bc.priceFormatter(reduktion)+" "+bc.currencySymbol);
+                rabattRow.add(rabattName); rabattRow.add("RABATT"); rabattRow.add(1);
+                rabattRow.add(bc.priceFormatter(reduktion)+" "+bc.currencySymbol);
+                rabattRow.add(bc.priceFormatter(reduktion)+" "+bc.currencySymbol);
                 rabattRow.add(bc.vatFormatter(mwst));
                 rabattRow.add(removeButtons.lastElement());
             data.add(rabattRow);
