@@ -31,11 +31,7 @@ import WeltladenDB.*;
 
 public class Quittung extends WindowContent {
     private DateTime datetime;
-    private Vector<String> articleNames;
-    private Vector<Integer> stueckzahlen;
-    private Vector<BigDecimal> einzelpreise;
-    private Vector<BigDecimal> preise;
-    private Vector<BigDecimal> mwsts;
+    private Vector<KassierArtikel> kassierArtikel;
     private LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues;
     private String zahlungsModus;
     private BigDecimal totalPrice;
@@ -51,16 +47,13 @@ public class Quittung extends WindowContent {
      *       */
     public Quittung(Connection conn, MainWindowGrundlage mw,
             DateTime dt,
-            Vector<String> an, Vector<Integer> sz,
-            Vector<BigDecimal> ep, Vector<BigDecimal> p,
-            Vector<BigDecimal> m,
+            Vector<KassierArtikel> ka,
             LinkedHashMap< BigDecimal, Vector<BigDecimal> > matv,
             String zm, BigDecimal tp, BigDecimal kgb, BigDecimal rg) {
 	super(conn, mw);
         this.datetime = dt;
-        this.articleNames = an; this.stueckzahlen = sz;
-        this.einzelpreise = ep; this.preise = p;
-        this.mwsts = m; this.mwstsAndTheirValues = matv;
+        this.kassierArtikel = ka;
+        this.mwstsAndTheirValues = matv;
         this.zahlungsModus = zm;
         this.totalPrice = tp;
         this.kundeGibt = kgb; this.rueckgeld = rg;
@@ -103,15 +96,15 @@ public class Quittung extends WindowContent {
 
     private int insertItems(Sheet sheet) {
         int row = rowOffset; // start here in ods document
-        for (int i=artikelIndex; i<articleNames.size(); i++){
-            if (stueckzahlen.get(i) > 1){
-                sheet.setValueAt(stueckzahlen.get(i).toString()+" x", 1, row);
-                sheet.setValueAt(einzelpreise.get(i), 2, row);
+        for (int i=artikelIndex; i<kassierArtikel.size(); i++){
+            if (kassierArtikel.get(i).getStueckzahl() > 1){
+                sheet.setValueAt(kassierArtikel.get(i).getStueckzahl().toString()+" x", 1, row);
+                sheet.setValueAt(kassierArtikel.get(i).getEinzelPreis(), 2, row);
                 row++;
             }
-            sheet.setValueAt(articleNames.get(i), 0, row);
-            sheet.setValueAt(preise.get(i), 3, row);
-            Integer mwstIndex = mwstList.indexOf(mwsts.get(i))+1;
+            sheet.setValueAt(kassierArtikel.get(i).getName(), 0, row);
+            sheet.setValueAt(kassierArtikel.get(i).getGesPreis(), 3, row);
+            Integer mwstIndex = mwstList.indexOf(kassierArtikel.get(i).getMwst())+1;
             sheet.setValueAt(mwstIndex, 4, row);
             row++;
             artikelIndex = i+1; // index of next item
@@ -125,7 +118,7 @@ public class Quittung extends WindowContent {
 
     private void editFooter(Sheet sheet) {
         // if this is not the last page:
-        if (artikelIndex < articleNames.size()){
+        if (artikelIndex < kassierArtikel.size()){
             // Delete footer
             sheet.removeRow(215+rowOffset);
         } else {
@@ -246,7 +239,7 @@ public class Quittung extends WindowContent {
         // Create a list from the set of mwst values
         mwstList = new Vector<BigDecimal>(mwstsAndTheirValues.keySet());
         artikelIndex = 0;
-        while (artikelIndex < articleNames.size()) {
+        while (artikelIndex < kassierArtikel.size()) {
             // Create a new sheet from the template file
             final Sheet sheet = createSheetFromTemplate();
             if (sheet == null) return;
