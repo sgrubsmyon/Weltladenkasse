@@ -185,9 +185,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	this.revalidate();
 	tablePanel = new JPanel();
 	tablePanel.setLayout(new BoxLayout(tablePanel, BoxLayout.Y_AXIS));
-        colors.clear();
-        preise.clear();
-        mwsts.clear();
+        kassierArtikel.clear();
 
 	// First row: Show total of invoice
 	Vector<String> coolRow = new Vector<String>(5);
@@ -252,13 +250,11 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                     stueckDec = new BigDecimal(stueck);
                 String gesPreis = rs.getString(9);
                 BigDecimal gesPreisDec = new BigDecimal(gesPreis);
-                preise.add(gesPreisDec);
-                String mwst = rs.getString(10);
-                mwsts.add(new BigDecimal(mwst));
-                mwst = bc.vatFormatter(mwst);
+                BigDecimal mwst = new BigDecimal(rs.getString(10));
                 String einzelPreis = "";
                 if (stueck != null){
-                    einzelPreis = bc.priceFormatter( gesPreisDec.divide( stueckDec, 10, RoundingMode.HALF_UP ) )+' '+bc.currencySymbol;
+                    einzelPreis = bc.priceFormatter(
+                            gesPreisDec.divide(stueckDec, 10, RoundingMode.HALF_UP ) )+' '+bc.currencySymbol;
                 }
                 gesPreis = gesPreis.replace('.',',')+' '+bc.currencySymbol;
                 String name = "";
@@ -271,21 +267,42 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                     name = artikelname; color = "red";
                     artikelnummer = "RABATT"; einzelPreis = "";
                 }
-                else if ( manuRabatt ){ name = einrueckung+artikelname; color = "red"; artikelnummer = "RABATT"; } // Manueller Rabatt auf Artikel
-                else if ( pfand && stueckDec.signum() > 0 ){ name = einrueckung+artikelname; color = "blue"; artikelnummer = "PFAND"; }
-                else if ( pfand && stueckDec.signum() < 0 ){ name = artikelname; color = "green"; artikelnummer = "LEERGUT"; }
-                else if ( stueckDec.signum() < 0 ){ name = artikelname; color = "green"; }
+                else if ( manuRabatt ){
+                    name = einrueckung+artikelname; color = "red"; artikelnummer = "RABATT";
+                } // Manueller Rabatt auf Artikel
+                else if ( pfand && stueckDec.signum() > 0 ){
+                    name = einrueckung+artikelname; color = "blue"; artikelnummer = "PFAND";
+                }
+                else if ( pfand && stueckDec.signum() < 0 ){
+                    name = artikelname; color = "green"; artikelnummer = "LEERGUT";
+                }
+                else if ( stueckDec.signum() < 0 ){
+                    name = artikelname; color = "green";
+                }
                 else if ( artikelname != null ){
                     name = artikelname;
                     if ( !sortiment ){ color = "gray"; }
                     else { color = "default"; }
                 }
-                colors.add(color);
+
+                KassierArtikel ka = new KassierArtikel(bc);
+                ka.setPosition(pos);
+                ka.setArtikelID(null);
+                ka.setRabattID(null);
+                ka.setName(name);
+                ka.setColor(color);
+                ka.setType(null);
+                ka.setMwst(mwst);
+                ka.setStueckzahl(stueckDec.intValue());
+                ka.setEinzelpreis(new BigDecimal( bc.priceFormatterIntern(einzelPreis) ));
+                ka.setGesPreis(gesPreisDec);
+                kassierArtikel.add(ka);
+
 		Vector<Object> row = new Vector<Object>();
                     // add units
                     row.add(pos);
                     row.add(name); row.add(artikelnummer); row.add(stueck);
-                    row.add(einzelPreis); row.add(gesPreis); row.add(mwst);
+                    row.add(einzelPreis); row.add(gesPreis); row.add(bc.vatFormatter(mwst));
 		detailData.add(row);
 	    }
 	    rs.close();

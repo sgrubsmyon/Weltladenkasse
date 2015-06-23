@@ -1108,7 +1108,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
-            for (int i=0; i<artikelIDs.size(); i++){
+            for (int i=0; i<kassierArtikel.size(); i++){
                 pstmt = this.conn.prepareStatement(
                         "INSERT INTO verkauf_details SET rechnungs_nr = ?, position = ?, "+
                         "artikel_id = ?, rabatt_id = ?, stueckzahl = ?, "+
@@ -1125,7 +1125,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 pstmt.close();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Artikel mit ID "+artikelIDs.get(i)+" konnte nicht abgespeichert werden.",
+                            "Fehler: Artikel mit ID "+
+                            kassierArtikel.get(i).getArtikelID()+" konnte "+
+                            "nicht abgespeichert werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
@@ -1633,7 +1635,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
     private void addToHashMap(HashMap<BigDecimal, BigDecimal> hashMap, int artikelIndex){
         BigDecimal mwst = kassierArtikel.get(artikelIndex).getMwst();
-        BigDecimal gesPreis = preise.get(artikelIndex);
+        BigDecimal gesPreis = kassierArtikel.get(artikelIndex).getGesPreis();
         boolean found = false;
         for ( Map.Entry<BigDecimal, BigDecimal> entry : hashMap.entrySet() ){
             if (entry.getKey().compareTo(mwst) == 0){
@@ -1688,6 +1690,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             BigDecimal reduktion = new BigDecimal( bc.priceFormatterIntern(
                         rabattRelativ.multiply(entry.getValue()).multiply(bc.minusOne)
                         ));
+            BigDecimal mwst = entry.getKey();
 
             KassierArtikel ka = new KassierArtikel(bc);
             ka.setPosition(null);
@@ -1696,13 +1699,13 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             ka.setName(rabattName);
             ka.setColor("red");
             ka.setType("rabattrechnung");
-            ka.setMwst(entry.getKey());
+            ka.setMwst(mwst);
             ka.setStueckzahl(1);
             ka.setEinzelpreis(reduktion);
             ka.setGesPreis(reduktion);
             kassierArtikel.add(ka);
 
-            mwsts.add(entry.getKey());
+            mwsts.add(mwst);
             removeButtons.add(new JButton("-"));
             removeButtons.lastElement().addActionListener(this);
 
@@ -2034,8 +2037,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 rueckgeld = kundeGibt.subtract(totalPrice);
             }
             Quittung myQuittung = new Quittung(this.conn, this.mainWindow,
-                    DateTime.now(TimeZone.getDefault()), articleNames, stueckzahlen,
-                    einzelpreise, preise, mwsts, mwstsAndTheirValues, zahlungsModus,
+                    DateTime.now(TimeZone.getDefault()), kassierArtikel,
+                    mwstsAndTheirValues, zahlungsModus,
                     totalPrice, kundeGibt, rueckgeld);
             myQuittung.printReceipt();
 	    return;
