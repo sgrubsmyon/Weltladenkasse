@@ -89,7 +89,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private JScrollPane scrollPane;
     private Vector< Vector<Object> > data;
     private Vector<JButton> removeButtons;
-    private HashSet<BigDecimal> mwsts;
+    private Vector<BigDecimal> mwsts;
 
     // Methoden:
 
@@ -703,12 +703,14 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	data = new Vector< Vector<Object> >();
         kassierArtikel = new Vector<KassierArtikel>();
         removeButtons = new Vector<JButton>();
+        mwsts = new Vector<BigDecimal>();
     }
 
     private void clearAll(){
         data.clear();
         kassierArtikel.clear();
         removeButtons.clear();
+        mwsts.clear();
         zahlungsModus = "unbekannt";
     }
 
@@ -1734,6 +1736,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             } else { // remove the rabatt row
                 data.remove(i);
                 kassierArtikel.remove(i);
+                mwsts.remove(i);
+                removeButtons.remove(i);
             }
         }
     }
@@ -2113,12 +2117,16 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         if (removeRow > -1){
             data.remove(removeRow);
             kassierArtikel.remove(removeRow);
+            mwsts.remove(removeRow);
+            removeButtons.remove(removeRow);
 
             // remove extra rows (Rabatt oder Pfand):
             while ( removeRow < kassierArtikel.size() &&
                     removeButtons.get(removeRow) == null ){
                 data.remove(removeRow);
                 kassierArtikel.remove(removeRow);
+                mwsts.remove(removeRow);
+                removeButtons.remove(removeRow);
             }
 
             for (int i=removeRow; i<kassierArtikel.size(); i++){
