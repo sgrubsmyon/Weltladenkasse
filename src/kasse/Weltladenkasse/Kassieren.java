@@ -1932,7 +1932,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             return;
         }
         if (e.getSource() == sonstigesButton){
-            artikelField.setText("Sonstige");
+            artikelField.setText(", Sonstige");
             return;
         }
         if (e.getSource() == sevenPercentButton){
