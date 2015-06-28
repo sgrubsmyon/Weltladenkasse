@@ -49,9 +49,10 @@ public abstract class ArtikelGrundlage extends WindowContent {
     protected String[] getArticleName(int artikelID) {
         String artikelName = new String();
         String lieferant = new String();
+        Boolean sortiment = false;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT a.artikel_name, l.lieferant_name FROM artikel AS a " +
+                    "SELECT a.artikel_name, l.lieferant_name, a.sortiment FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
                     "WHERE a.artikel_id = ? " +
                     "AND a.aktiv = TRUE"
@@ -61,13 +62,14 @@ public abstract class ArtikelGrundlage extends WindowContent {
             rs.next();
             artikelName = rs.getString(1);
             lieferant = rs.getString(2) != null ? rs.getString(2) : "";
+            sortiment = rs.getBoolean(3);
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
-        return new String[]{artikelName, lieferant};
+        return new String[]{artikelName, lieferant, sortiment.toString()};
     }
 
     protected String[] getArticleNumber(int artikelID) {
