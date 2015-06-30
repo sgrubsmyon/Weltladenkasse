@@ -81,6 +81,21 @@ public class BaseClass {
     }
 
     /**
+     * General helper functions
+     */
+
+    public static boolean equalsThatHandlesNull(Object a, Object b) {
+        //System.out.println(a+" "+b);
+        if ( (a != null) && (b != null) ){
+            if ( a.equals(b) ){ return true; }
+        } else {
+            if ( (a == null) && (b == null) ){ return true; }
+        }
+        return false;
+    }
+
+
+    /**
      * Number formatting methods
      */
 
@@ -136,7 +151,9 @@ public class BaseClass {
         if (priceStr == null)
             return "";
         try {
-            BigDecimal price = new BigDecimal( priceStr.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.') );
+            BigDecimal price = new BigDecimal(
+                    priceStr.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.')
+                    );
             return priceFormatterIntern(price);
         } catch (NumberFormatException nfe) {
             return "";
@@ -184,7 +201,9 @@ public class BaseClass {
         if (vat == null)
             return "";
         try {
-            BigDecimal vatDecimal = new BigDecimal( vatPercentRemover(vat).replace(',','.') ).multiply(percent);
+            BigDecimal vatDecimal = new BigDecimal(
+                    vatPercentRemover(vat).replace(',','.')
+                    ).multiply(percent);
             return vatDecimal.toString();
         } catch (NumberFormatException nfe) {
             return "";
