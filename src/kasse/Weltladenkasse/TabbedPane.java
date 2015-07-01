@@ -67,6 +67,8 @@ public class TabbedPane extends TabbedPaneGrundlage {
         tabbedPane.addTab("Optionen", null, myOptPane, "Artikelliste/Rabattaktionen/Import/Export");
 
         this.add(tabbedPane, BorderLayout.CENTER);
+
+        myKassieren.barcodeBox.requestFocus();
     }
 
     @Override
