@@ -292,7 +292,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
     }
 
-    protected boolean empfVKPAndEKPValid(String empfVKPreis, String ekRabatt) {
+    protected boolean empfVKPAndEKRabattValid(String empfVKPreis, String ekRabatt) {
         /** If empfVKPreis and ekRabatt are both valid numbers, return true, else false.
          */
         try {
