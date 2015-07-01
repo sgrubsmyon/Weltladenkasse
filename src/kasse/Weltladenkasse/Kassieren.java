@@ -35,7 +35,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private Kassieren myKassieren;
 
     // Text Fields
-    private BarcodeComboBox barcodeBox;
+    public BarcodeComboBox barcodeBox;
     private ArtikelNameComboBox artikelBox;
     private ArtikelNummerComboBox nummerBox;
     private JTextComponent barcodeField;
