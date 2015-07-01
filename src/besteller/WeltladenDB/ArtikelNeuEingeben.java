@@ -199,14 +199,9 @@ public class ArtikelNeuEingeben extends DialogWindow
                 // fourth row:
                 setPreisVariabelBox(row);
                 setVkpreisField(row);
-                String empfvkpreis = artikelNeu.articles.get(row).getEmpfVKP();
-                String ekrabatt = artikelNeu.articles.get(row).getEKRabatt();
-                if ( empfVKPAndEKPValid(empfvkpreis, ekrabatt) ){
-                    setEmpfvkpreisField(row);
-                    setEkrabattField(row);
-                } else {
-                    setEkpreisField(row);
-                }
+                setEkpreisField(row);
+                setEmpfvkpreisField(row);
+                setEkrabattField(row);
             }
         }
 
@@ -302,7 +297,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         }
 
         void setEkrabattField(int row){
-            String ekrabatt = artikelNeu.articles.get(row).getEKRabatt();
+            String ekrabatt = bc.vatPercentRemover( artikelNeu.articles.get(row).getEKRabatt() );
             artikelFormular.ekrabattField.setText(ekrabatt);
         }
 

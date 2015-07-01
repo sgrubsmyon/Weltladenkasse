@@ -336,7 +336,7 @@ public class ArtikelFormular extends WindowContent
             // we have a variable price, don't touch it!
             return;
         }
-        if ( empfVKPAndEKPValid(empfvkpreisField.getText(), ekrabattField.getText()) ){
+        if ( empfVKPAndEKRabattValid(empfvkpreisField.getText(), ekrabattField.getText()) ){
             ekpreisField.setEnabled(false);
             BigDecimal ekpreis = calculateEKP(empfvkpreisField.getText(), ekrabattField.getText());
             ekpreisField.setText( bc.priceFormatter(ekpreis) );
