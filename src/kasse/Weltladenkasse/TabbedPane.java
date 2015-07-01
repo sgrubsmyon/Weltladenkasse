@@ -69,6 +69,12 @@ public class TabbedPane extends TabbedPaneGrundlage {
         this.add(tabbedPane, BorderLayout.CENTER);
     }
 
+    @Override
+    public void recreateTabbedPane() {
+        super.recreateTabbedPane();
+        myKassieren.barcodeBox.requestFocus();
+    }
+
     public boolean isThereIncompleteAbrechnungTag() {
         return myAbrech.isThereIncompleteAbrechnungTag();
     }
