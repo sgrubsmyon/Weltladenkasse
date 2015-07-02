@@ -31,15 +31,11 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.*;
 
-import WeltladenDB.MainWindowGrundlage;
-import WeltladenDB.TabbedPaneGrundlage;
-import WeltladenDB.ArtikellisteContainer;
-import WeltladenDB.Lieferantliste;
-import WeltladenDB.Produktgruppenliste;
-import WeltladenDB.DumpDatabase;
+import WeltladenDB.*;
 
 // Klasse, die Produktgruppenliste und Artikelliste speichert und anzeigt
 public class OptionTabbedPane extends TabbedPaneGrundlage {
+    private ArtikellisteContainer myArtikellisteC;
 
     // Methoden:
     public OptionTabbedPane(Connection conn, MainWindowGrundlage mw, TabbedPaneGrundlage ptp) {
@@ -50,7 +46,7 @@ public class OptionTabbedPane extends TabbedPaneGrundlage {
     protected void createTabbedPane() {
         tabbedPane = new JTabbedPane();
 
-        ArtikellisteContainer myArtikellisteC = new ArtikellisteContainer(this.conn, this.mainWindow);
+        myArtikellisteC = new ArtikellisteContainer(this.conn, this.mainWindow);
         Rabattaktionen myRabattaktionen = new Rabattaktionen(this.conn, this.mainWindow);
         Lieferantliste myLieferant = new Lieferantliste(this.conn, this.mainWindow);
         Produktgruppenliste myProduktgruppe = new Produktgruppenliste(this.conn, this.mainWindow);
@@ -62,6 +58,10 @@ public class OptionTabbedPane extends TabbedPaneGrundlage {
         tabbedPane.addTab("DB Import/Export", null, myDump, "Datenbank exportieren/importieren");
 
         this.add(tabbedPane, BorderLayout.CENTER);
+    }
+
+    public Artikelliste getArtikelliste() {
+        return myArtikellisteC.getArtikelliste();
     }
 
     /**

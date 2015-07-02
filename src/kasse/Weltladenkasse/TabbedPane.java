@@ -31,9 +31,7 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.*;
 
-import WeltladenDB.TabbedPaneGrundlage;
-import WeltladenDB.ArtikellisteContainer;
-import WeltladenDB.DumpDatabase;
+import WeltladenDB.*;
 
 // Klasse, die Bestellfenster und Artikelliste speichert und anzeigt
 public class TabbedPane extends TabbedPaneGrundlage {
@@ -69,6 +67,10 @@ public class TabbedPane extends TabbedPaneGrundlage {
         this.add(tabbedPane, BorderLayout.CENTER);
 
         myKassieren.barcodeBox.requestFocus();
+    }
+
+    public Artikelliste getArtikelliste() {
+        return myOptPane.getArtikelliste();
     }
 
     public boolean isThereIncompleteAbrechnungTag() {
