@@ -71,12 +71,6 @@ public class TabbedPane extends TabbedPaneGrundlage {
         myKassieren.barcodeBox.requestFocus();
     }
 
-    @Override
-    public void recreateTabbedPane() {
-        super.recreateTabbedPane();
-        myKassieren.barcodeBox.requestFocus();
-    }
-
     public boolean isThereIncompleteAbrechnungTag() {
         return myAbrech.isThereIncompleteAbrechnungTag();
     }
