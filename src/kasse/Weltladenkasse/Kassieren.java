@@ -44,7 +44,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     protected String artikelNameText = "";
     protected String artikelNummerText = "";
     protected String barcodeText = "";
-    private int selectedArtikelID;
+    private int selectedArticleID;
     private int selectedStueck;
     private JButton sonstigesButton;
     private JButton sevenPercentButton;
@@ -780,7 +780,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
          * (produktgruppen_id) WHERE (toplevel_id) = x AND (sub_id = y OR sub_id
          * IS NULL) AND (subsub_id = z OR subsub_id IS NULL);
          */
-        int artikelID = selectedArtikelID;
+        int artikelID = selectedArticleID;
         BigDecimal stueck = new BigDecimal(selectedStueck);
         BigDecimal einzelpreis = new BigDecimal(
                 bc.priceFormatterIntern(preisField.getText())
@@ -992,7 +992,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
     private void checkForPfand(){
         BigDecimal stueck = new BigDecimal(selectedStueck);
-        int pfandArtikelID = queryPfandArtikelID(selectedArtikelID);
+        int pfandArtikelID = queryPfandArtikelID(selectedArticleID);
         // gab es Pfand? Wenn ja, fuege Zeile in Tabelle:
         if ( pfandArtikelID > 0 ){
             BigDecimal pfand = new BigDecimal( getSalePrice(pfandArtikelID) );
@@ -1050,7 +1050,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     }
 
     private boolean artikelHasPfand(){
-        int artikelID = selectedArtikelID;
+        int artikelID = selectedArticleID;
         boolean hasPfand = false;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
@@ -1306,13 +1306,39 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     }
 
 
+    private void updateSelectedArticleID() {
+        // update selected Artikel
+        String[] an = artikelBox.parseArtikelName();
+        String artikelName = an[0];
+        String lieferant = an[1];
+        String artikelNummer = (String)nummerBox.getSelectedItem();
+        selectedArticleID = getArticleID(lieferant, artikelNummer); // get the internal artikelID from the DB
+    }
+
 
     private void setPriceField() {
-        boolean variablerPreis = getVariablePriceBool(selectedArtikelID);
+        boolean variablerPreis = getVariablePriceBool(selectedArticleID);
         if ( ! variablerPreis ){
-            String artikelPreis = getSalePrice(selectedArtikelID);
-            if (artikelPreis == null){
+            String artikelPreis = getSalePrice(selectedArticleID);
+            if (artikelPreis == null || artikelPreis.equals("")){
                 artikelPreis = handleMissingSalePrice("Bitte Verkaufspreis eingeben");
+            }
+            if (artikelPreis != null && !artikelPreis.equals("")){
+                Artikel origArticle = getArticle(selectedArticleID);
+                Artikel newArticle = getArticle(selectedArticleID);
+                newArticle.setVKP(artikelPreis);
+                newArticle.setEmpfVKP(artikelPreis);
+                updateArticle(origArticle, newArticle);
+
+                updateSelectedArticleID();
+                Artikelliste artikelListe = tabbedPane.getArtikelliste();
+                if (artikelListe != null){
+                    artikelListe.updateAll();
+                }
+
+                artikelPreis = getSalePrice(selectedArticleID);
+                if (artikelPreis == null)
+                    artikelPreis = "";
             }
             preisField.getDocument().removeDocumentListener(this);
             preisField.setText( bc.decimalMark(artikelPreis) );
@@ -1340,11 +1366,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         int nummerNumber = nummerBox.getItemCount();
         int artikelNumber = artikelBox.getItemCount();
         if ( artikelNumber == 1 && nummerNumber == 1 ){ // artikel eindeutig festgelegt
-            String[] an = artikelBox.parseArtikelName();
-            String artikelName = an[0];
-            String lieferant = an[1];
-            String artikelNummer = (String)nummerBox.getSelectedItem();
-            selectedArtikelID = getArticleID(lieferant, artikelNummer); // get the internal artikelID from the DB
+            updateSelectedArticleID();
             setPriceField();
             anzahlField.requestFocus();
             SwingUtilities.invokeLater(new Runnable() {
@@ -1380,9 +1402,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         String artikelPreis = bc.priceFormatterIntern(preisField.getText());
         BigDecimal gesPreis = new BigDecimal(artikelPreis).multiply(new BigDecimal(stueck));
         String gesPreisString = bc.priceFormatterIntern(gesPreis);
-        String kurzname = getShortName(selectedArtikelID);
-        String artikelMwSt = getVAT(selectedArtikelID);
-        Boolean sortiment = getSortimentBool(selectedArtikelID);
+        String kurzname = getShortName(selectedArticleID);
+        String artikelMwSt = getVAT(selectedArticleID);
+        Boolean sortiment = getSortimentBool(selectedArticleID);
         if (color == "default"){
             color = sortiment ? "default" : "gray";
         }
@@ -1397,7 +1419,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
         KassierArtikel ka = new KassierArtikel(bc);
         ka.setPosition(lastPos+1);
-        ka.setArtikelID(selectedArtikelID);
+        ka.setArtikelID(selectedArticleID);
         ka.setRabattID(null);
         ka.setName(kurzname);
         ka.setColor(color);
@@ -1435,7 +1457,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     }
 
     private void leergutHinzufuegen() {
-        int pfandArtikelID = queryPfandArtikelID(selectedArtikelID);
+        int pfandArtikelID = queryPfandArtikelID(selectedArticleID);
         // gab es Pfand? Wenn ja, fuege Zeile in Tabelle:
         if ( pfandArtikelID > 0 ){
             BigDecimal pfand = new BigDecimal( getSalePrice(pfandArtikelID) );
@@ -1443,7 +1465,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             Integer stueck = -(Integer)anzahlSpinner.getValue();
             selectedStueck = stueck;
             BigDecimal gesamtPfand = pfand.multiply(new BigDecimal(stueck));
-            String pfandMwSt = getVAT(selectedArtikelID);
+            String pfandMwSt = getVAT(selectedArticleID);
 
             KassierArtikel ka = new KassierArtikel(bc);
             ka.setPosition(null);
@@ -1517,9 +1539,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     }
 
     private void gutschein() {
-        selectedArtikelID = 3; // internal Gutschein artikel_id
-        artikelBox.setBox( getArticleName(selectedArtikelID) );
-        nummerBox.setBox( getArticleNumber(selectedArtikelID) );
+        selectedArticleID = 3; // internal Gutschein artikel_id
+        artikelBox.setBox( getArticleName(selectedArticleID) );
+        nummerBox.setBox( getArticleNumber(selectedArticleID) );
         preisField.setText( gutscheinField.getText() );
         anzahlSpinner.setValue(1);
         ruecknahmeHinzufuegen();
