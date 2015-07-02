@@ -115,7 +115,7 @@ public abstract class Abrechnungen extends WindowContent {
 
     public boolean isThereIncompleteAbrechnung() {
         BigDecimal totalBrutto = incompleteAbrechnungsTotals.get(0);
-        return totalBrutto.signum() > 0;
+        return totalBrutto.signum() != 0;
     }
 
     Integer id() {
