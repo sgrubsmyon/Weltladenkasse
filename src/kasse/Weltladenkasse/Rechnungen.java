@@ -341,12 +341,22 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	//footer.setEditable(false);
 	//tablePanel.add(footer);
 
-        JPanel totalPricePanel = createTotalPricePanel();
-        quittungsButton = new JButton("Quittung");
-        quittungsButton.setMnemonic(KeyEvent.VK_Q);
-        quittungsButton.addActionListener(this);
-        totalPricePanel.add(quittungsButton);
-	tablePanel.add(totalPricePanel);
+        JPanel footerPanel = new JPanel();
+        footerPanel.setLayout(new BorderLayout());
+            // center
+            JPanel centerPanel = new JPanel();
+                JPanel totalPricePanel = createTotalPricePanel();
+                centerPanel.add(totalPricePanel);
+            footerPanel.add(centerPanel, BorderLayout.CENTER);
+            // right
+            JPanel rightPanel = new JPanel();
+            rightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
+                quittungsButton = new JButton("Quittung");
+                quittungsButton.setMnemonic(KeyEvent.VK_Q);
+                quittungsButton.addActionListener(this);
+                rightPanel.add(quittungsButton);
+            footerPanel.add(rightPanel, BorderLayout.EAST);
+	tablePanel.add(footerPanel);
 
 	this.add(tablePanel, BorderLayout.CENTER);
     }
@@ -381,7 +391,6 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             //    kundeGibt = new BigDecimal( getKundeGibt() );
             //    rueckgeld = kundeGibt.subtract(totalPrice);
             //}
-            System.out.println("zahlungsModus: "+zahlungsModus);
             Quittung myQuittung = new Quittung(this.conn, this.mainWindow,
                     DateTime.now(TimeZone.getDefault()), kassierArtikel,
                     mwstsAndTheirValues, zahlungsModus,
