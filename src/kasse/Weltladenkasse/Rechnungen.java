@@ -31,6 +31,9 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.table.*;
 
+// DateTime from date4j (http://www.date4j.net/javadoc/index.html)
+import hirondelle.date4j.DateTime;
+
 import WeltladenDB.MainWindowGrundlage;
 import WeltladenDB.AnyJComponentJTable;
 
@@ -60,6 +63,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     protected Vector<String> overviewLabels;
     protected String rechnungsZahl;
     protected int rechnungsZahlInt;
+    protected JButton quittungsButton;
 
     // Methoden:
 
@@ -84,14 +88,15 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	this.data = new Vector< Vector<String> >();
 	overviewLabels = new Vector<String>();
 	overviewLabels.add("");
-	overviewLabels.add("Rechnungs-Nr."); overviewLabels.add("Betrag"); overviewLabels.add("Datum");
+	overviewLabels.add("Rechnungs-Nr."); overviewLabels.add("Betrag");
+        overviewLabels.add("Zahlung"); overviewLabels.add("Datum");
 	overviewLabels.add("");
 	try {
 	    // Create statement for MySQL database
 	    Statement stmt = this.conn.createStatement();
 	    // Run MySQL command
 	    ResultSet rs = stmt.executeQuery(
-		    "SELECT vd.rechnungs_nr, SUM(vd.ges_preis) AS rechnungs_betrag, " +
+		    "SELECT vd.rechnungs_nr, SUM(vd.ges_preis) AS rechnungs_betrag, verkauf.ec_zahlung, " +
 		    "DATE_FORMAT(verkauf.verkaufsdatum, '"+bc.dateFormatSQL+"') " +
 		    "FROM verkauf_details AS vd " +
                     "INNER JOIN verkauf USING (rechnungs_nr) " +
@@ -104,7 +109,10 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    while (rs.next()) {
 		Vector<String> row = new Vector<String>();
 		row.add("");
-		row.add(rs.getString(1)); row.add(rs.getString(2) + ' ' + bc.currencySymbol); row.add(rs.getString(3));
+		row.add(rs.getString(1));
+                row.add(rs.getString(2) + ' ' + bc.currencySymbol);
+                row.add(rs.getBoolean(3) ? "EC" : "Bar");
+                row.add(rs.getString(4));
 		row.add("");
 		// change dots to commas
 		row.set(2, row.get(2).replace('.',','));
@@ -186,17 +194,15 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	tablePanel = new JPanel();
 	tablePanel.setLayout(new BoxLayout(tablePanel, BoxLayout.Y_AXIS));
         kassierArtikel.clear();
+        mwsts.clear();
 
 	// First row: Show total of invoice
-	Vector<String> coolRow = new Vector<String>(5);
-	coolRow.add("");
-	coolRow.add(this.data.get(detailRow).get(1));
-	coolRow.add(this.data.get(detailRow).get(2));
-	coolRow.add(this.data.get(detailRow).get(3));
-	coolRow.add("");
+	Vector<String> coolRow = this.data.get(detailRow);
+	coolRow.set(0, "");
+	coolRow.set(coolRow.size()-1, "");
 	Vector<Vector> overviewData = new Vector<Vector>(1);
-//	overviewData.add(this.data.get(detailRow));
 	overviewData.add(coolRow);
+        zahlungsModus = coolRow.get(3).toLowerCase();
 
         AnyJComponentJTable overviewTable = new AnyJComponentJTable(overviewData, overviewLabels){
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
@@ -298,6 +304,8 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 ka.setGesPreis(gesPreisDec);
                 kassierArtikel.add(ka);
 
+                mwsts.add(mwst);
+
 		Vector<Object> row = new Vector<Object>();
                     // add units
                     row.add(pos);
@@ -334,6 +342,10 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	//tablePanel.add(footer);
 
         JPanel totalPricePanel = createTotalPricePanel();
+        quittungsButton = new JButton("Quittung");
+        quittungsButton.setMnemonic(KeyEvent.VK_Q);
+        quittungsButton.addActionListener(this);
+        totalPricePanel.add(quittungsButton);
 	tablePanel.add(totalPricePanel);
 
 	this.add(tablePanel, BorderLayout.CENTER);
@@ -359,5 +371,23 @@ public abstract class Rechnungen extends RechnungsGrundlage {
      *
      *    @param e the action event.
      **/
-    public abstract void actionPerformed(ActionEvent e);
+    public void actionPerformed(ActionEvent e) {
+	if (e.getSource() == quittungsButton){
+            LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
+                getMwstsAndTheirValues();
+            BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
+            BigDecimal kundeGibt = null, rueckgeld = null;
+            //if (kundeGibtField.getDocument().getLength() > 0){
+            //    kundeGibt = new BigDecimal( getKundeGibt() );
+            //    rueckgeld = kundeGibt.subtract(totalPrice);
+            //}
+            System.out.println("zahlungsModus: "+zahlungsModus);
+            Quittung myQuittung = new Quittung(this.conn, this.mainWindow,
+                    DateTime.now(TimeZone.getDefault()), kassierArtikel,
+                    mwstsAndTheirValues, zahlungsModus,
+                    totalPrice, kundeGibt, rueckgeld);
+            myQuittung.printReceipt();
+	    return;
+	}
+    }
 }

@@ -89,7 +89,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private JScrollPane scrollPane;
     private Vector< Vector<Object> > data;
     private Vector<JButton> removeButtons;
-    private Vector<BigDecimal> mwsts;
 
     // Methoden:
 
@@ -747,10 +746,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             }
             rueckgeldField.setText( bc.priceFormatter(rueckgeld) );
         }
-    }
-
-    String getTotalPrice() {
-        return bc.priceFormatterIntern( totalPriceField.getText() );
     }
 
     String getKundeGibt() {
@@ -2035,27 +2030,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     return;
                 }
             }
-            Vector<BigDecimal> vats = retrieveVATs();
-            // LinkedHashMap preserves insertion order
             LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
-                new LinkedHashMap< BigDecimal, Vector<BigDecimal> >();
-            for ( BigDecimal vat : vats ){
-                //if (vat.signum() != 0){
-                    if ( mwsts.contains(vat) ){
-                        System.out.println(vat);
-                        Vector<BigDecimal> values = new Vector<BigDecimal>();
-                        BigDecimal brutto = calculateTotalVATUmsatz(vat);
-                        BigDecimal steuer = calculateTotalVATAmount(vat);
-                        BigDecimal netto = new BigDecimal(
-                                bc.priceFormatterIntern(brutto.subtract(steuer))
-                                );
-                        values.add(netto); // Netto
-                        values.add(steuer); // Steuer
-                        values.add(brutto); // Umsatz
-                        mwstsAndTheirValues.put(vat, values);
-                    }
-                //}
-            }
+                getMwstsAndTheirValues();
             BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
             BigDecimal kundeGibt = null, rueckgeld = null;
             if (kundeGibtField.getDocument().getLength() > 0){

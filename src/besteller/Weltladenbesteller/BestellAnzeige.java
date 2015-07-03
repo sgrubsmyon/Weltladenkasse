@@ -132,7 +132,14 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         orderLabels.add("KW");
         orderLabels.add("Datum");
         retrieveOrderData();
-        orderTable = new AnyJComponentJTable(orderData, orderLabels);
+        orderTable = new AnyJComponentJTable(orderData, orderLabels){
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                Component c = super.prepareRenderer(renderer, row, column);
+                // add custom rendering here
+                c.setForeground(Color.black); // keep it black
+                return c;
+            }
+        };
         // selection listener:
         //orderTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
         orderTable.setFillsViewportHeight(true);

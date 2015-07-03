@@ -254,8 +254,8 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
      *
      *    @param e the action event.
      **/
-    public void actionPerformed(ActionEvent e)
-    {
+    public void actionPerformed(ActionEvent e) {
+        super.actionPerformed(e);
 	if (e.getSource() == changeDateButton){
 	    SpinnerModel startDateModel = startSpinner.getModel();
 	    SpinnerModel endDateModel = endSpinner.getModel();
