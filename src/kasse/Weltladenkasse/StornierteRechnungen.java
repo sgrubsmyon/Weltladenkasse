@@ -50,8 +50,8 @@ public class StornierteRechnungen extends Rechnungen {
      *
      *    @param e the action event.
      **/
-    public void actionPerformed(ActionEvent e)
-    {
+    public void actionPerformed(ActionEvent e) {
+        super.actionPerformed(e);
 	if (e.getSource() == removeDetailButton){
 	    updateTable();
 	    return;

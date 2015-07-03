@@ -6,6 +6,8 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 import java.math.RoundingMode;
 
 // GUI stuff:
+import javax.swing.*; // JButton
+import javax.swing.event.*; // ActionEvent
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.Color;
@@ -14,7 +16,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.table.*;
-import java.awt.event.MouseEvent;
+import java.awt.event.*; // MouseEvent, ActionEvent, ActionListener
 import java.awt.Point;
 
 // MySQL Connector/J stuff:
@@ -28,9 +30,10 @@ import WeltladenDB.ArtikelGrundlage;
 import WeltladenDB.AnyJComponentJTable;
 
 public abstract class RechnungsGrundlage extends ArtikelGrundlage {
-
     protected JTextField totalPriceField;
     protected Vector<KassierArtikel> kassierArtikel;
+    protected Vector<BigDecimal> mwsts;
+    protected String zahlungsModus;
     protected Vector<String> columnLabels;
     protected HashMap< BigDecimal, Vector<BigDecimal> > vatMap;
 
@@ -51,6 +54,8 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
 	columnLabels.add("Artikel-Name"); columnLabels.add("Artikel-Nr."); columnLabels.add("Stückzahl");
         columnLabels.add("Einzelpreis"); columnLabels.add("Gesamtpreis"); columnLabels.add("MwSt.");
         kassierArtikel = new Vector<KassierArtikel>();
+        mwsts = new Vector<BigDecimal>();
+        zahlungsModus = "unbekannt";
     }
 
     //////////////////////////////////
@@ -189,5 +194,35 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
 	TableColumn mwst = table.getColumn("MwSt.");
 	mwst.setCellRenderer(rechtsAusrichter);
 	mwst.setPreferredWidth(5);
+    }
+
+
+    protected LinkedHashMap< BigDecimal, Vector<BigDecimal> > getMwstsAndTheirValues() {
+        Vector<BigDecimal> vats = retrieveVATs();
+        // LinkedHashMap preserves insertion order
+        LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
+            new LinkedHashMap< BigDecimal, Vector<BigDecimal> >();
+        for ( BigDecimal vat : vats ){
+            //if (vat.signum() != 0){
+            if ( mwsts.contains(vat) ){
+                Vector<BigDecimal> values = new Vector<BigDecimal>();
+                BigDecimal brutto = calculateTotalVATUmsatz(vat);
+                BigDecimal steuer = calculateTotalVATAmount(vat);
+                BigDecimal netto = new BigDecimal(
+                        bc.priceFormatterIntern(brutto.subtract(steuer))
+                        );
+                values.add(netto); // Netto
+                values.add(steuer); // Steuer
+                values.add(brutto); // Umsatz
+                mwstsAndTheirValues.put(vat, values);
+            }
+            //}
+        }
+        return mwstsAndTheirValues;
+    }
+
+
+    protected String getTotalPrice() {
+        return bc.priceFormatterIntern( totalPriceField.getText() );
     }
 }

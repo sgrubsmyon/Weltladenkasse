@@ -123,15 +123,15 @@ public class Quittung extends WindowContent {
             sheet.removeRow(215+rowOffset);
         } else {
             // Fill footer
-            if (zahlungsModus == "bar"){
+            if ( zahlungsModus.equals("bar") ){
                 sheet.setValueAt("Bar", 0, 215+rowOffset);
                 if (kundeGibt != null && rueckgeld != null){
-                    sheet.setValueAt("Kunde gibt", 0, 217+rowOffset);
-                    sheet.setValueAt("Rückgeld", 0, 218+rowOffset);
-                    sheet.setValueAt(kundeGibt, 3, 217+rowOffset);
-                    sheet.setValueAt(rueckgeld, 3, 218+rowOffset);
+                    sheet.setValueAt("Kunde gibt", 0, 216+rowOffset);
+                    sheet.setValueAt("Rückgeld", 0, 217+rowOffset);
+                    sheet.setValueAt(kundeGibt, 3, 216+rowOffset);
+                    sheet.setValueAt(rueckgeld, 3, 217+rowOffset);
                 }
-            } else if (zahlungsModus == "ec"){
+            } else if ( zahlungsModus.equals("ec") ){
                 sheet.setValueAt("EC", 0, 215+rowOffset);
             }
             sheet.setValueAt(totalPrice, 2, 215+rowOffset);
@@ -203,27 +203,9 @@ public class Quittung extends WindowContent {
         String program = constructProgramPath(bc.sofficePath, "soffice");
         String[] executeCmd = new String[] {program, "--headless",
             "-pt", bc.printerName, filename};
-        //for (String s : executeCmd){
-        //    System.out.println(s);
-        //}
         try {
             Runtime shell = Runtime.getRuntime();
             Process proc = shell.exec(executeCmd);
-            /*
-            BufferedReader stdInput = new BufferedReader(new
-                    InputStreamReader(proc.getInputStream()));
-            BufferedReader stdError = new BufferedReader(new
-                    InputStreamReader(proc.getErrorStream()));
-            System.out.println("Here is the standard output of the soffice print command (if any):");
-            String s = null;
-            while ((s = stdInput.readLine()) != null) {
-                System.out.println(s);
-            }
-            System.out.println("Here is the standard error of the command (if any):");
-            while ((s = stdError.readLine()) != null) {
-                System.out.println(s);
-            }
-            */
             int processComplete = proc.waitFor();
             if (processComplete == 0) {
                 System.out.println("Printing of file '"+filename+"' with soffice was successful");
