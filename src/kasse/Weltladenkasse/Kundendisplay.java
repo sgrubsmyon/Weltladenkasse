@@ -74,7 +74,10 @@ public class Kundendisplay {
             if (devs != null){
                 for(int i=0; i<devs.length; i++)
                 {
-                    System.out.println(""+i+":\t"+devs[i]);
+                    System.out.println(i+":\t"+devs[i]);
+                    System.out.print("Manufacturer: " + devs[i].getManufacturer_string() + "\n");
+                    System.out.print("Product: " + devs[i].getProduct_string() + "\n");
+                    System.out.print("Serial Number: " + devs[i].getSerial_number() + "\n");
                     System.out.println("---------------------------------------------\n");
                 }
             } else {
@@ -162,8 +165,7 @@ public class Kundendisplay {
      *
      * @throws Throwable
      */
-    protected void finalize() throws Throwable
-    {
+    protected void finalize() throws Throwable {
         // It is important to call closeDevice() if user forgot to do so.
         try {
            closeDevice();
