@@ -37,9 +37,14 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
     }
 
     public String[] parseArtikelName() {
-        //System.out.println("this.getSelectedIndex(): "+this.getSelectedIndex());
-        String[] item = this.items.get(this.getSelectedIndex());
-        return new String[]{item[0], item[1]};
+        try {
+            String[] item = this.items.get(this.getSelectedIndex());
+            return new String[]{item[0], item[1]};
+        } catch (ArrayIndexOutOfBoundsException ex){
+            System.out.println("For some reason, selected index in ArtikelNameComboBox is "+
+                    this.getSelectedIndex()+", which is out of bounds for array `items`.");
+            return new String[]{"", ""};
+        }
     }
 
     public Vector<String[]> doQuery() {
