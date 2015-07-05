@@ -369,6 +369,8 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	rechnungsNr.setPreferredWidth(50);
 	TableColumn betrag = table.getColumn("Betrag");
 	betrag.setCellRenderer(rechtsAusrichter);
+	TableColumn zahlung = table.getColumn("Zahlung");
+	zahlung.setCellRenderer(rechtsAusrichter);
 	TableColumn datum = table.getColumn("Datum");
 	datum.setCellRenderer(rechtsAusrichter);
 	datum.setPreferredWidth(100);

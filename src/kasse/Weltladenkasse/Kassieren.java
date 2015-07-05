@@ -12,6 +12,7 @@ import java.awt.*; // BorderLayout, FlowLayout, Dimension
 import java.awt.event.*; // ActionEvent, ActionListener
 
 import javax.swing.*; // JFrame, JPanel, JTable, JButton, ...
+import javax.swing.Timer; // ambiguity with java.util.Timer
 import javax.swing.table.*;
 import javax.swing.text.*; // for DocumentFilter
 import javax.swing.event.*;
@@ -31,6 +32,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private String zahlungsModus = "unbekannt";
 
     private Kundendisplay display;
+    protected Boolean esWirdKassiert = false;
     private TabbedPane tabbedPane;
     private Kassieren myKassieren;
 
@@ -720,7 +722,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         barcodeBox.requestFocus();
 
         // scroll the table scroll pane to bottom:
-        scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum()); 
+        scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum());
     }
 
     private void updateTable(){
@@ -733,6 +735,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         if (kundeGibtField.getDocument().getLength() == 0){
             rueckgeldField.setText("");
             //neuerKundeButton.setEnabled(false);
+
+            if (display != null && display.deviceWorks()){
+                display.printZWS(bigPriceField.getText());
+            }
         } else {
             BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
             BigDecimal kundeGibt = new BigDecimal( getKundeGibt() );
@@ -745,6 +751,12 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 //neuerKundeButton.setEnabled(true);
             }
             rueckgeldField.setText( bc.priceFormatter(rueckgeld) );
+
+            if (display != null && display.deviceWorks()){
+                String kundeGibtStr = bc.priceFormatter(kundeGibt)+' '+bc.currencySymbol;
+                String rueckgeldStr = bc.priceFormatter(rueckgeld)+' '+bc.currencySymbol;
+                display.printReturnMoney(kundeGibtStr, rueckgeldStr);
+            }
         }
     }
 
@@ -1384,6 +1396,28 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         return true;
     }
 
+    private Integer getLastPosition() {
+        Integer lastPos = 0;
+        for (int i=kassierArtikel.size()-1; i>=0; i--){
+            Integer val = kassierArtikel.get(i).getPosition();
+            if (val != null){
+                lastPos = val;
+                break;
+            }
+        }
+        return lastPos;
+    }
+
+    private void updateDisplay(String kurzname, Integer stueck, String artikelPreis) {
+        if (display != null && display.deviceWorks()){
+            //System.out.println("Going to display article.");
+            String zws = totalPriceField.getText();
+            display.printArticle(kurzname, stueck, artikelPreis, zws);
+            esWirdKassiert = true;
+            System.out.println("esWirdKassiert: "+esWirdKassiert);
+        }
+    }
+
     private void hinzufuegen(Integer stueck, String color) {
         if (artikelBox.getItemCount() != 1 || nummerBox.getItemCount() != 1){
             System.out.println("Error: article not selected unambiguously.");
@@ -1404,14 +1438,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             color = sortiment ? "default" : "gray";
         }
 
-        Integer lastPos = 0;
-        for (int i=kassierArtikel.size()-1; i>=0; i--){
-            Integer val = kassierArtikel.get(i).getPosition();
-            if (val != null){
-                lastPos = val;
-                break;
-            }
-        }
+        Integer lastPos = getLastPosition();
         KassierArtikel ka = new KassierArtikel(bc);
         ka.setPosition(lastPos+1);
         ka.setArtikelID(selectedArticleID);
@@ -1443,12 +1470,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         checkForRabatt();
         checkForPfand();
         updateAll();
-
-        if (display != null && display.deviceWorks()){
-            System.out.println("Going to display article.");
-            String zws = bc.priceFormatter(getTotalPrice())+" "+bc.currencySymbol;
-            display.printArticle(kurzname, stueck, artikelPreis, zws);
-        }
+        updateDisplay(kurzname, stueck, artikelPreis);
     }
 
     private void leergutHinzufuegen() {
@@ -1462,8 +1484,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             BigDecimal gesamtPfand = pfand.multiply(new BigDecimal(stueck));
             String pfandMwSt = getVAT(selectedArticleID);
 
+            Integer lastPos = getLastPosition();
             KassierArtikel ka = new KassierArtikel(bc);
-            ka.setPosition(null);
+            ka.setPosition(lastPos+1);
             ka.setArtikelID(pfandArtikelID);
             ka.setRabattID(null);
             ka.setName(pfandName);
@@ -1479,16 +1502,21 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             removeButtons.add(new JButton("-"));
             removeButtons.lastElement().addActionListener(this);
 
+            String gesPfandString = bc.priceFormatter(gesamtPfand)+' '+bc.currencySymbol;
+            String pfandString = bc.priceFormatter(pfand)+' '+bc.currencySymbol;
+
             Vector<Object> row = new Vector<Object>();
-                row.add(""); // pos
-                row.add(pfandName); row.add("LEERGUT"); row.add(stueck.toString());
-                row.add( bc.priceFormatter(pfand)+' '+bc.currencySymbol );
-                row.add( bc.priceFormatter(gesamtPfand)+' '+bc.currencySymbol );
+                row.add(ka.getPosition()); // pos
+                row.add(pfandName); row.add("LEERGUT");
+                row.add(stueck.toString());
+                row.add(pfandString);
+                row.add(gesPfandString);
                 row.add(bc.vatFormatter(pfandMwSt));
                 row.add(removeButtons.lastElement());
             data.add(row);
 
             updateAll();
+            updateDisplay(pfandName, stueck, pfandString);
         }
     }
 
@@ -1509,6 +1537,10 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         barButton.setEnabled(true);
         ecButton.setEnabled(true);
         stornoButton.setEnabled(true);
+
+        if (display != null && display.deviceWorks()){
+            display.printZWS(bigPriceField.getText());
+        }
     }
 
     private void bar() {
@@ -1554,6 +1586,21 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
         clearAll();
         updateAll();
+
+        if (display != null && display.deviceWorks()){
+            ActionListener displayResetter = new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    System.out.println("esWirdKassiert: "+esWirdKassiert);
+                    if ( (!esWirdKassiert) && display != null && display.deviceWorks()){
+                        display.showWelcomeScreen();
+                    }
+                }
+            };
+            Timer t = new Timer(bc.displayClearInterval, displayResetter);
+            t.setRepeats(false);
+            esWirdKassiert = false;
+            t.start();
+        }
     }
 
     private void stornieren() {
@@ -2140,6 +2187,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
             refreshPositionsInData();
             updateAll();
+            if (display != null && display.deviceWorks()){
+                display.clearScreen();
+            }
             return;
         }
     }

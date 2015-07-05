@@ -36,13 +36,6 @@ public class Kundendisplay {
 
     private HIDManager manager;
     private HIDDevice device = null;
-    //private static final long READ_UPDATE_DELAY_MS = 50L;
-
-    // Wincor Nixdorf International GmbH Operator Display, BA63-USB
-    static final int VENDOR_ID = 2727;
-    static final int PRODUCT_ID = 512;
-    //private static final int BUFSIZE = 2048;
-    private static final int BUFSIZE = 32;
 
     /**
      *    The constructor.
@@ -124,7 +117,6 @@ public class Kundendisplay {
                 if (paths.size() > 0){
                     // always use the second device, first is defunct (don't know why)
                     String path = paths.lastElement();
-                    //device = manager.openById(VENDOR_ID, PRODUCT_ID, null);
                     //device = manager.openByPath("0004:0002:01");
                     System.out.println("Trying to open device at path "+path);
                     device = manager.openByPath(path);
@@ -134,10 +126,10 @@ public class Kundendisplay {
                     setCodePage();
                 }
             }
-            } catch(IOException e) {
-                e.printStackTrace();
-                device = null;
-            }
+        } catch(IOException e) {
+            e.printStackTrace();
+            device = null;
+        }
     }
 
     public void closeDevice() {
@@ -178,12 +170,12 @@ public class Kundendisplay {
     private void writeToDevice(byte[] data) {
         if (device != null){
             try {
-                for (byte b : data){
-                    System.out.print(b+" ");
-                }
-                System.out.println();
+                //for (byte b : data){
+                //    System.out.print(b+" ");
+                //}
+                //System.out.println();
                 int n = device.write(data);
-                System.out.println("Number of bytes written to BA63 device: "+n);
+                //System.out.println("Number of bytes written to BA63 device: "+n);
             } catch(IOException e) {
                 e.printStackTrace();
             }
@@ -226,7 +218,7 @@ public class Kundendisplay {
     private void printToScreen(String text) {
         /**
          * Print text on the current row of the screen. Text cannot be longer
-         * than 20 chars.
+         * than `displayWidth` chars (set in config.properties).
          */
         // Print available charsets:
         //SortedMap<String, Charset> charsets = Charset.availableCharsets();
@@ -234,7 +226,7 @@ public class Kundendisplay {
         //    System.out.println(entry.getKey());
         //}
         byte[] textAsBytes = text.getBytes(Charset.forName("IBM00858")); // default charset of BA63/USB is Codepage 437
-        int nchars = text.length() > 20 ? 20 : text.length();
+        int nchars = text.length() > bc.displayWidth ? bc.displayWidth : text.length();
         int nbytes = 3+nchars;
         byte[] data = new byte[nbytes];
         data[0] = 0x02; data[1] = 0x00; data[2] = (byte)nchars;
@@ -244,7 +236,28 @@ public class Kundendisplay {
         writeToDevice(data);
     }
 
+    private void printFrontAndRear(String front, String rear) {
+        /**
+         * Print `front` to beginning and `rear` to end of the row.
+         */
+        String row = front;
+        int nspaces = bc.displayWidth - row.length() - rear.length();
+        for (int i=0; i<nspaces; i++){ row += " "; }
+        row += rear;
+        printToScreen(row);
+    }
 
+    private String parseString(String str) {
+        /**
+         * Remove problem characters.
+         */
+        //str = str.replaceAll("€", "EUR");
+        return str;
+    }
+
+    
+
+    /* Public print methods: */
 
     public void clearScreen() {
         byte[] data = new byte[]{0x02, 0x00, 0x07,
@@ -256,17 +269,9 @@ public class Kundendisplay {
 
     public void showWelcomeScreen() {
         clearScreen();
-        printToScreen("     Wällkömménßü€  ");
+        printToScreen("     Willkommen     ");
         oneRowDown();
-        printToScreen(" im  Weltladen Bonn ");
-    }
-
-    private String parseString(String str) {
-        /**
-         * Remove problem characters.
-         */
-        //str = str.replaceAll("€", "EUR");
-        return str;
+        printToScreen("  im Weltladen Bonn ");
     }
 
     public void printArticle(String name, Integer stueck, String preis, String total) {
@@ -281,12 +286,33 @@ public class Kundendisplay {
         clearScreen();
         printToScreen(name);
         oneRowDown();
+        printFrontAndRear(stueck.toString()+"x"+preis, total);
+    }
 
-        String priceRow = stueck.toString()+"x"+preis;
-        int nspaces = 20 - priceRow.length() - total.length();
-        for (int i=0; i<nspaces; i++){ priceRow += " "; }
-        priceRow += total;
-        printToScreen(priceRow);
+    public void printZWS(String zws) {
+        /**
+         * Convenience method for printing subtotal (ZWS). Interface
+         * method exposed to the public.
+         */
+        zws = parseString(zws);
+
+        clearScreen();
+        printToScreen("ZU ZAHLEN");
+        oneRowDown();
+        printFrontAndRear("", zws);
+    }
+
+    public void printReturnMoney(String kundeGibt, String rueckgeld) {
+        /**
+         * Convenience method for printing amount given by customer (kundeGibt)
+         * and return money (rueckgeld). Interface method exposed to the public.
+         */
+        kundeGibt = parseString(kundeGibt);
+        rueckgeld = parseString(rueckgeld);
+
+        clearScreen();
+        printFrontAndRear("KUNDE GIBT", kundeGibt);
+        oneRowDown();
+        printFrontAndRear("RÜCKGELD", rueckgeld);
     }
 }
-
