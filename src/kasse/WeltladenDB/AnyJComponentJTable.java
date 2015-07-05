@@ -125,9 +125,13 @@ public class AnyJComponentJTable extends JTable {
         //int realRowIndex = convertRowIndexToModel(rowIndex); // user might have changed row order
         //int realColIndex = convertColumnIndexToModel(colIndex); // user might have changed column order
         String tip = null;
-        if ( getValueAt(rowIndex, colIndex) instanceof JComponent ){
-            // no tool tip for Components
-            return tip;
+        try {
+            if ( getValueAt(rowIndex, colIndex) instanceof JComponent ){
+                // no tool tip for Components
+                return tip;
+            }
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            tip = null;
         }
         try { tip = getValueAt(rowIndex, colIndex).toString(); }
         catch (Exception ex) { } // e.g. catch if cell contains NullPointer
