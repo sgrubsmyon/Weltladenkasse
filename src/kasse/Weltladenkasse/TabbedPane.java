@@ -41,6 +41,9 @@ public class TabbedPane extends TabbedPaneGrundlage {
     private Kassenstand myKassenstand;
     private PreisschilderTabbedPane myPreisschild;
     private OptionTabbedPane myOptPane;
+    public Boolean esWirdKassiert = false; /** This need to live in TabbedPane (which does not get recreated)
+                                             and cannot be local to Kassieren, even though it is only used
+                                             inside Kassieren. */
 
     // Methoden:
     public TabbedPane(Connection conn, MainWindow mw) {

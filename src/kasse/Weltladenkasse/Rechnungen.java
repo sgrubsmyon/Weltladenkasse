@@ -229,7 +229,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	String artikelZahl = "";
 	try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT vd.position, a.artikel_name, ra.aktionsname, " +
+                    "SELECT vd.position, a.kurzname, ra.aktionsname, " +
                     "a.artikel_nr, a.sortiment, " +
                     "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, " +
                     "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +

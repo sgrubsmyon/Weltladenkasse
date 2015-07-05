@@ -32,7 +32,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private String zahlungsModus = "unbekannt";
 
     private Kundendisplay display;
-    protected Boolean esWirdKassiert = false;
     private TabbedPane tabbedPane;
     private Kassieren myKassieren;
 
@@ -1413,8 +1412,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             //System.out.println("Going to display article.");
             String zws = totalPriceField.getText();
             display.printArticle(kurzname, stueck, artikelPreis, zws);
-            esWirdKassiert = true;
-            System.out.println("esWirdKassiert: "+esWirdKassiert);
+            tabbedPane.esWirdKassiert = true;
         }
     }
 
@@ -1590,15 +1588,14 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         if (display != null && display.deviceWorks()){
             ActionListener displayResetter = new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    System.out.println("esWirdKassiert: "+esWirdKassiert);
-                    if ( (!esWirdKassiert) && display != null && display.deviceWorks()){
+                    if ( !tabbedPane.esWirdKassiert && display != null && display.deviceWorks()){
                         display.showWelcomeScreen();
                     }
                 }
             };
             Timer t = new Timer(bc.displayClearInterval, displayResetter);
             t.setRepeats(false);
-            esWirdKassiert = false;
+            tabbedPane.esWirdKassiert = false;
             t.start();
         }
     }

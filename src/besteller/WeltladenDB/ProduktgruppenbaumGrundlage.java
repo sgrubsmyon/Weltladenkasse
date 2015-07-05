@@ -66,7 +66,8 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
 	groupListPanel.setBorder(BorderFactory.createTitledBorder(titleStr));
 
         Integer artikelCount = queryArtikelCount(null,null,null); // how many artikel are there in total?
-        DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new Gruppe(null,null,null, "Alle Artikel ("+artikelCount+")"));
+        DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(
+                new Gruppe(null,null,null, "Alle Artikel ("+artikelCount+")"));
         addProduktgruppenToRootNode(rootNode);
         tree = new JTree(rootNode);
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION); // set the tree so that only one node is selectable
