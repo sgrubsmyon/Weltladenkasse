@@ -78,3 +78,25 @@ SELECT artikel_name, menge, einheit FROM artikel WHERE artikel_name LIKE "%teebe
 SELECT produktgruppen_name, produktgruppen_id, toplevel_id, sub_id, subsub_id FROM produktgruppe WHERE produktgruppen_id = 92;
 UPDATE produktgruppe SET toplevel_id = 4, sub_id = 17 WHERE produktgruppen_id = 92;
 SELECT produktgruppen_name, produktgruppen_id, toplevel_id, sub_id, subsub_id FROM produktgruppe WHERE produktgruppen_id = 92;
+
+
+
+
+# Add new columns `std_einheit` and `n_artikel`:
+uriuri@dollie:~$ mysql-kasse-admin
+mysql> SELECT * FROM produktgruppe;
+ALTER TABLE produktgruppe ADD COLUMN std_einheit VARCHAR(10) DEFAULT NULL;
+ALTER TABLE produktgruppe ADD COLUMN n_artikel INTEGER(10) UNSIGNED DEFAULT NULL;
+SELECT * FROM produktgruppe;
+UPDATE produktgruppe SET std_einheit = "kg" WHERE toplevel_id = 2;
+UPDATE produktgruppe SET std_einheit = "l" WHERE produktgruppen_id = 56;
+UPDATE produktgruppe SET std_einheit = "l" WHERE toplevel_id = 3;
+UPDATE produktgruppe SET std_einheit = "St." WHERE toplevel_id = 4;
+UPDATE produktgruppe SET std_einheit = "St." WHERE toplevel_id = 5;
+SELECT * FROM produktgruppe;
+
+# Add new column `kunde_gibt`:
+mysql> DESCRIBE verkauf;
+ALTER TABLE verkauf ADD COLUMN kunde_gibt DECIMAL(13,2) DEFAULT NULL;
+DESCRIBE verkauf;
+

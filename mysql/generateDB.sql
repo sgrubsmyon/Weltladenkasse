@@ -92,6 +92,7 @@ CREATE TABLE verkauf (
     verkaufsdatum DATETIME NOT NULL,
     storniert BOOLEAN NOT NULL DEFAULT FALSE,
     ec_zahlung BOOLEAN NOT NULL DEFAULT FALSE,
+    kunde_gibt DECIMAL(13,2) DEFAULT NULL,
     PRIMARY KEY (rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE verkauf_mwst (
