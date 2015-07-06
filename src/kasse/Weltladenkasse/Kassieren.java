@@ -399,9 +399,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             stornoButton.addActionListener(this);
             zwischensummePanel.add(stornoButton);
 
-            JPanel gridPanel = new JPanel();
-            gridPanel.setLayout(new GridLayout(0, 2));
-                JLabel kundeGibtLabel = new JLabel("Kunde gibt:");
+            JPanel inputPanel = new JPanel();
+            inputPanel.setLayout(new GridLayout(0, 2));
+                JLabel kundeGibtLabel = new JLabel("KUNDE GIBT:");
                 kundeGibtField = new JTextField("");
                 kundeGibtField.setEditable(false);
                 kundeGibtField.setColumns(7);
@@ -427,9 +427,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 kundeGibtPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
                 kundeGibtPanel.add(kundeGibtField);
                 kundeGibtPanel.add(new JLabel(bc.currencySymbol));
-                kundeGibtPanel.add(Box.createRigidArea(new Dimension(40, 0)));
+                //kundeGibtPanel.add(Box.createRigidArea(new Dimension(40, 0)));
 
-                JLabel gutscheinLabel = new JLabel("Gutschein:");
+                JLabel gutscheinLabel = new JLabel("GUTSCHEIN:");
                 gutscheinField = new JTextField("");
                 gutscheinField.setEditable(false);
                 gutscheinField.setColumns(7);
@@ -451,9 +451,27 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 gutscheinButton.setEnabled(false);
                 gutscheinButton.addActionListener(this);
                 gutscheinPanel.add(gutscheinButton);
-                gutscheinPanel.add(Box.createHorizontalGlue());
+                //gutscheinPanel.add(Box.createHorizontalGlue());
 
-                JLabel rueckgeldLabel = new JLabel("Rückgeld:");
+                inputPanel.add(kundeGibtLabel);
+                inputPanel.add(kundeGibtPanel);
+                inputPanel.add(gutscheinLabel);
+                inputPanel.add(gutscheinPanel);
+
+            JPanel outputPanel = new JPanel();
+            outputPanel.setLayout(new GridLayout(0, 2));
+                JLabel zuZahlenLabel = new JLabel("ZU ZAHLEN:");
+                bigPriceField = new JTextField("");
+                bigPriceField.setEditable(false);
+                bigPriceField.setColumns(7);
+                bigPriceField.setHorizontalAlignment(JTextField.RIGHT);
+                bigPriceField.setFont(new Font("Tahoma", Font.BOLD, 32));
+                JPanel zuZahlenPanel = new JPanel();
+                zuZahlenPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
+                zuZahlenPanel.add(bigPriceField);
+                //zuZahlenPanel.add(Box.createRigidArea(new Dimension(40, 0)));
+
+                JLabel rueckgeldLabel = new JLabel("RÜCKGELD:");
                 JPanel rueckgeldPanel = new JPanel();
                 rueckgeldPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
                 rueckgeldField = new JTextField("");
@@ -463,23 +481,15 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 rueckgeldField.setFont(new Font("Tahoma", Font.BOLD, 12));
                 rueckgeldPanel.add(rueckgeldField);
                 rueckgeldPanel.add(new JLabel(bc.currencySymbol));
-                rueckgeldPanel.add(Box.createRigidArea(new Dimension(40, 0)));
+                //rueckgeldPanel.add(Box.createRigidArea(new Dimension(40, 0)));
 
-                gridPanel.add(kundeGibtLabel);
-                gridPanel.add(kundeGibtPanel);
-                gridPanel.add(gutscheinLabel);
-                gridPanel.add(gutscheinPanel);
-                gridPanel.add(rueckgeldLabel);
-                gridPanel.add(rueckgeldPanel);
+                outputPanel.add(zuZahlenLabel);
+                outputPanel.add(zuZahlenPanel);
+                outputPanel.add(rueckgeldLabel);
+                outputPanel.add(rueckgeldPanel);
 
-            zwischensummePanel.add(gridPanel);
-
-            bigPriceField = new JTextField("");
-            bigPriceField.setEditable(false);
-            bigPriceField.setColumns(7);
-            bigPriceField.setHorizontalAlignment(JTextField.RIGHT);
-            bigPriceField.setFont(new Font("Tahoma", Font.BOLD, 32));
-            zwischensummePanel.add(bigPriceField);
+            zwischensummePanel.add(inputPanel);
+            zwischensummePanel.add(outputPanel);
         allPanel.add(zwischensummePanel);
 
         JPanel neuerKundePanel = new JPanel();
@@ -1387,7 +1397,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private boolean checkKundeGibtField() {
         if ( kundeGibtField.getDocument().getLength() == 0 ){
             JOptionPane.showMessageDialog(this,
-                    "Bitte Betrag bei 'Kunde gibt:' eintragen!",
+                    "Bitte Betrag bei 'KUNDE GIBT:' eintragen!",
                     "Fehlender Kundenbetrag", JOptionPane.WARNING_MESSAGE);
             kundeGibtField.requestFocus();
             return false;
