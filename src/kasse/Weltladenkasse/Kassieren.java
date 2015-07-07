@@ -204,6 +204,24 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         spinnerField.setDocument(doc);
     }
 
+    private class BigPriceField extends JTextField {
+        public BigPriceField() {
+            super();
+            initialize();
+        }
+
+        public BigPriceField(String str) {
+            super(str);
+            initialize();
+        }
+
+        private void initialize() {
+            this.setColumns(5);
+            this.setHorizontalAlignment(JTextField.RIGHT);
+            this.setFont(new Font("Tahoma", Font.BOLD, 32));
+        }
+    }
+
     void showAll(){
         updateRabattButtons();
 
@@ -399,14 +417,12 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             stornoButton.addActionListener(this);
             zwischensummePanel.add(stornoButton);
 
-            JPanel inputPanel = new JPanel();
-            inputPanel.setLayout(new GridLayout(0, 2));
+            JPanel gridPanel = new JPanel();
+            gridPanel.setLayout(new GridLayout(2, 4));
                 JPanel kundeGibtPanel = new JPanel();
                 kundeGibtPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-                kundeGibtField = new JTextField("");
+                kundeGibtField = new BigPriceField("");
                 kundeGibtField.setEditable(false);
-                kundeGibtField.setColumns(7);
-                kundeGibtField.setHorizontalAlignment(JTextField.RIGHT);
                 kundeGibtField.getDocument().addDocumentListener(new DocumentListener(){
                     public void insertUpdate(DocumentEvent e) {
                         updateRueckgeld();
@@ -426,14 +442,12 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 ((AbstractDocument)kundeGibtField.getDocument()).setDocumentFilter(geldFilter);
                 kundeGibtPanel.add(kundeGibtField);
                 kundeGibtPanel.add(new JLabel(bc.currencySymbol));
-                //kundeGibtPanel.add(Box.createRigidArea(new Dimension(40, 0)));
+                kundeGibtPanel.add(Box.createRigidArea(new Dimension(40, 0)));
 
                 JPanel gutscheinPanel = new JPanel();
                 gutscheinPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-                gutscheinField = new JTextField("");
+                gutscheinField = new BigPriceField("");
                 gutscheinField.setEditable(false);
-                gutscheinField.setColumns(7);
-                gutscheinField.setHorizontalAlignment(JTextField.RIGHT);
                 gutscheinField.addKeyListener(new KeyAdapter() {
                     public void keyPressed(KeyEvent e) {
                         if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
@@ -451,55 +465,48 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 gutscheinPanel.add(gutscheinButton);
                 //gutscheinPanel.add(Box.createHorizontalGlue());
 
-                inputPanel.add(new JLabel("KUNDE GIBT:"));
-                inputPanel.add(kundeGibtPanel);
-                inputPanel.add(new JLabel("GUTSCHEIN:"));
-                inputPanel.add(gutscheinPanel);
-
-            JPanel outputPanel = new JPanel();
-            outputPanel.setLayout(new GridLayout(0, 2));
                 JPanel zuZahlenPanel = new JPanel();
                 zuZahlenPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-                bigPriceField = new JTextField("");
+                bigPriceField = new BigPriceField("");
                 bigPriceField.setEditable(false);
-                bigPriceField.setColumns(7);
-                bigPriceField.setHorizontalAlignment(JTextField.RIGHT);
-                bigPriceField.setFont(new Font("Tahoma", Font.BOLD, 32));
                 zuZahlenPanel.add(bigPriceField);
                 //zuZahlenPanel.add(Box.createRigidArea(new Dimension(40, 0)));
 
                 JPanel rueckgeldPanel = new JPanel();
                 rueckgeldPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-                rueckgeldField = new JTextField("");
+                rueckgeldField = new BigPriceField("");
                 rueckgeldField.setEditable(false);
-                rueckgeldField.setColumns(7);
-                rueckgeldField.setHorizontalAlignment(JTextField.RIGHT);
-                rueckgeldField.setFont(new Font("Tahoma", Font.BOLD, 12));
                 rueckgeldPanel.add(rueckgeldField);
                 rueckgeldPanel.add(new JLabel(bc.currencySymbol));
                 //rueckgeldPanel.add(Box.createRigidArea(new Dimension(40, 0)));
 
-                outputPanel.add(new JLabel("ZU ZAHLEN:"));
-                outputPanel.add(zuZahlenPanel);
-                outputPanel.add(new JLabel("RÜCKGELD:"));
-                outputPanel.add(rueckgeldPanel);
+                gridPanel.add(new JLabel("KUNDE GIBT:"));
+                gridPanel.add(kundeGibtPanel);
+                gridPanel.add(new JLabel("ZU ZAHLEN:"));
+                gridPanel.add(zuZahlenPanel);
+                gridPanel.add(new JLabel("GUTSCHEIN:"));
+                gridPanel.add(gutscheinPanel);
+                gridPanel.add(new JLabel("RÜCKGELD:"));
+                gridPanel.add(rueckgeldPanel);
 
-            //zwischensummePanel.add(inputPanel);
-            //zwischensummePanel.add(outputPanel);
+            zwischensummePanel.add(gridPanel);
 
+            /*
             JPanel testPanel = new JPanel();
             testPanel.setLayout(new GridLayout(0, 2));
                 JPanel testTestPanel1 = new JPanel();
                 //testTestPanel1.setLayout(new FlowLayout(FlowLayout.LEADING));
                 //testTestPanel1.add(Box.createRigidArea(new Dimension(-40, 0)));
                 testTestPanel1.add(kundeGibtField);
-                testTestPanel1.add(new JLabel(bc.currencySymbol));
+                //testTestPanel1.add(new JLabel(bc.currencySymbol));
+                //testTestPanel1.add(new JLabel("TEST2"));
 
                 testPanel.add(new JLabel("TEST1"));
-                testPanel.add(testTestPanel1);
+                testPanel.add(kundeGibtPanel);
                 testPanel.add(new JLabel("TEST3"));
                 testPanel.add(new JLabel("TEST4"));
             zwischensummePanel.add(testPanel);
+            */
         allPanel.add(zwischensummePanel);
 
         JPanel neuerKundePanel = new JPanel();
