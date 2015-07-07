@@ -54,9 +54,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private JFormattedTextField anzahlField;
     private JTextField preisField;
     private JTextField kundeGibtField;
-    private JTextField rueckgeldField;
     private JTextField gutscheinField;
     private JTextField bigPriceField;
+    private JTextField rueckgeldField;
     private JTextField individuellRabattRelativField;
     private JTextField individuellRabattAbsolutField;
     // Buttons
@@ -135,11 +135,11 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
 
         rabattButtons = new Vector<JButton>();
-        rabattButtons.add(new JButton("  5%"));
-        rabattButtons.add(new JButton("10%"));
-        rabattButtons.add(new JButton("15%"));
-        rabattButtons.add(new JButton("20%"));
-        rabattButtons.add(new JButton("25%"));
+        rabattButtons.add(new BigButton("  5%"));
+        rabattButtons.add(new BigButton("10%"));
+        rabattButtons.add(new BigButton("15%"));
+        rabattButtons.add(new BigButton("20%"));
+        rabattButtons.add(new BigButton("25%"));
 
         showButtons();
         emptyTable();
@@ -216,9 +216,41 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
 
         private void initialize() {
-            this.setColumns(5);
+            this.setColumns(6);
             this.setHorizontalAlignment(JTextField.RIGHT);
             this.setFont(new Font("Tahoma", Font.BOLD, 32));
+        }
+    }
+
+    private class BigButton extends JButton {
+        public BigButton() {
+            super();
+            initialize();
+        }
+
+        public BigButton(String str) {
+            super(str);
+            initialize();
+        }
+
+        private void initialize() {
+            this.setFont(new Font("Tahoma", Font.BOLD, 16));
+        }
+    }
+
+    private class BigLabel extends JLabel {
+        public BigLabel() {
+            super();
+            initialize();
+        }
+
+        public BigLabel(String str) {
+            super(str);
+            initialize();
+        }
+
+        private void initialize() {
+            this.setFont(new Font("Tahoma", Font.BOLD, 16));
         }
     }
 
@@ -236,7 +268,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
                 JPanel barcodePanel = new JPanel();
                 barcodePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
-                    JLabel barcodeLabel = new JLabel("Barcode: ");
+                    BigLabel barcodeLabel = new BigLabel("Barcode: ");
                     barcodeLabel.setLabelFor(barcodeBox);
                     barcodeLabel.setDisplayedMnemonic(KeyEvent.VK_C);
                     barcodePanel.add(barcodeLabel);
@@ -256,7 +288,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     emptyBarcodeButton.addActionListener(this);
                     barcodePanel.add(emptyBarcodeButton);
 
-                    JLabel nummerLabel = new JLabel("Artikelnr.: ");
+                    BigLabel nummerLabel = new BigLabel("Artikelnr.: ");
                     nummerLabel.setLabelFor(nummerBox);
                     nummerLabel.setDisplayedMnemonic(KeyEvent.VK_N);
                     barcodePanel.add(nummerLabel);
@@ -280,7 +312,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 comboBoxPanel.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
 
                 JPanel artikelNamePanel = new JPanel();
-                    JLabel artikelLabel = new JLabel("Artikelname: ");
+                    BigLabel artikelLabel = new BigLabel("Artikelname: ");
                     artikelLabel.setLabelFor(artikelBox);
                     artikelLabel.setDisplayedMnemonic(KeyEvent.VK_A);
                     artikelNamePanel.add(artikelLabel);
@@ -301,31 +333,37 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
             articleSelectPanel.add(comboBoxPanel);
 
-            JPanel sonstigesPanel = new JPanel();
-            sonstigesPanel.setLayout(new BoxLayout(sonstigesPanel, BoxLayout.Y_AXIS));
+            JPanel sonstigesPanel = new JPanel(new GridBagLayout());
+            GridBagConstraints c1 = new GridBagConstraints();
+            c1.anchor = GridBagConstraints.CENTER;
+            c1.fill = GridBagConstraints.HORIZONTAL;
+            c1.ipady = 5;
+            c1.insets = new Insets(1, 0, 1, 0);
             sonstigesPanel.setBorder(BorderFactory.createTitledBorder("Variabler Preis"));
-                sonstigesButton = new JButton("Sonstiges...");
-                sevenPercentButton = new JButton("7% MwSt.");
-                nineteenPercentButton = new JButton("19% MwSt.");
+                sonstigesButton = new BigButton("Sonstiges...");
+                sevenPercentButton = new BigButton("7% MwSt.");
+                nineteenPercentButton = new BigButton("19% MwSt.");
                 sonstigesButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
                 sevenPercentButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
                 nineteenPercentButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
                 sonstigesButton.addActionListener(this);
                 sevenPercentButton.addActionListener(this);
                 nineteenPercentButton.addActionListener(this);
-                sonstigesPanel.add(sonstigesButton);
-                sonstigesPanel.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
-                sonstigesPanel.add(sevenPercentButton);
-                sonstigesPanel.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
-                sonstigesPanel.add(nineteenPercentButton);
-                sonstigesPanel.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
+
+                int i=0;
+                c1.gridy = i; i++;
+                sonstigesPanel.add(sonstigesButton, c1);
+                c1.gridy = i; i++;
+                sonstigesPanel.add(sevenPercentButton, c1);
+                c1.gridy = i; i++;
+                sonstigesPanel.add(nineteenPercentButton, c1);
             articleSelectPanel.add(sonstigesPanel);
 
         allPanel.add(articleSelectPanel);
 
 	JPanel spinnerPanel = new JPanel();
 	spinnerPanel.setLayout(new FlowLayout());
-	    JLabel anzahlLabel = new JLabel("Anzahl: ");
+	    BigLabel anzahlLabel = new BigLabel("Anzahl: ");
             spinnerPanel.add(anzahlLabel);
             SpinnerNumberModel anzahlModel = new SpinnerNumberModel(1, // initial value
                                                                     1, // min
@@ -358,7 +396,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	    anzahlLabel.setLabelFor(anzahlSpinner);
             spinnerPanel.add(anzahlSpinner);
 
-	    JLabel preisLabel = new JLabel("Preis: ");
+	    BigLabel preisLabel = new BigLabel("Preis: ");
             spinnerPanel.add(preisLabel);
             preisField = new JTextField("");
             preisField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
@@ -376,21 +414,21 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             preisField.setColumns(6);
             preisField.setHorizontalAlignment(JTextField.RIGHT);
             spinnerPanel.add(preisField);
-            spinnerPanel.add(new JLabel(bc.currencySymbol));
+            spinnerPanel.add(new BigLabel(bc.currencySymbol));
 
-	    hinzufuegenButton = new JButton("Hinzufügen");
+	    hinzufuegenButton = new BigButton("Hinzufügen");
             hinzufuegenButton.setMnemonic(KeyEvent.VK_H);
 	    hinzufuegenButton.addActionListener(this);
 	    hinzufuegenButton.setEnabled(false);
 	    spinnerPanel.add(hinzufuegenButton);
 
-	    leergutButton = new JButton("Als Leergut");
+	    leergutButton = new BigButton("Als Leergut");
             leergutButton.setMnemonic(KeyEvent.VK_L);
 	    leergutButton.addActionListener(this);
 	    leergutButton.setEnabled(false);
 	    spinnerPanel.add(leergutButton);
 
-	    ruecknahmeButton = new JButton("Rückgabe");
+	    ruecknahmeButton = new BigButton("Rückgabe");
             ruecknahmeButton.setMnemonic(KeyEvent.VK_R);
 	    ruecknahmeButton.addActionListener(this);
 	    ruecknahmeButton.setEnabled(false);
@@ -401,27 +439,41 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
         JPanel zwischensummePanel = new JPanel();
         zwischensummePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
-            barButton = new JButton("Bar");
-            barButton.setMnemonic(KeyEvent.VK_B);
-            barButton.setEnabled(false);
-            barButton.addActionListener(this);
-            zwischensummePanel.add(barButton);
-            ecButton = new JButton("EC");
-            ecButton.setMnemonic(KeyEvent.VK_E);
-            ecButton.setEnabled(false);
-            ecButton.addActionListener(this);
-            zwischensummePanel.add(ecButton);
-            stornoButton = new JButton("Storno");
-            stornoButton.setMnemonic(KeyEvent.VK_S);
-            if (data.size() == 0) stornoButton.setEnabled(false);
-            stornoButton.addActionListener(this);
-            zwischensummePanel.add(stornoButton);
+            JPanel zahlungsButtonPanel = new JPanel(new GridBagLayout());
+            GridBagConstraints c2 = new GridBagConstraints();
+            c2.anchor = GridBagConstraints.CENTER;
+            c2.fill = GridBagConstraints.HORIZONTAL;
+            c2.ipady = 10;
+            c2.insets = new Insets(3, 0, 3, 0);
+                barButton = new BigButton("Bar");
+                barButton.setMnemonic(KeyEvent.VK_B);
+                barButton.setEnabled(false);
+                barButton.addActionListener(this);
 
-            JPanel gridPanel = new JPanel();
-            gridPanel.setLayout(new GridLayout(2, 4));
+                ecButton = new BigButton("EC");
+                ecButton.setMnemonic(KeyEvent.VK_E);
+                ecButton.setEnabled(false);
+                ecButton.addActionListener(this);
+
+                stornoButton = new BigButton("Storno");
+                stornoButton.setMnemonic(KeyEvent.VK_S);
+                if (data.size() == 0) stornoButton.setEnabled(false);
+                stornoButton.addActionListener(this);
+
+                c2.gridy = 0;
+                zahlungsButtonPanel.add(barButton, c2);
+                c2.gridy = 1;
+                zahlungsButtonPanel.add(ecButton, c2);
+                c2.gridy = 2;
+                zahlungsButtonPanel.add(stornoButton, c2);
+            zwischensummePanel.add(zahlungsButtonPanel);
+
+            JPanel gridPanel = new JPanel(new GridBagLayout());
+            GridBagConstraints c3 = new GridBagConstraints();
                 JPanel kundeGibtPanel = new JPanel();
                 kundeGibtPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
                 kundeGibtField = new BigPriceField("");
+                kundeGibtField.setColumns(5);
                 kundeGibtField.setEditable(false);
                 kundeGibtField.getDocument().addDocumentListener(new DocumentListener(){
                     public void insertUpdate(DocumentEvent e) {
@@ -441,12 +493,12 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 });
                 ((AbstractDocument)kundeGibtField.getDocument()).setDocumentFilter(geldFilter);
                 kundeGibtPanel.add(kundeGibtField);
-                kundeGibtPanel.add(new JLabel(bc.currencySymbol));
-                kundeGibtPanel.add(Box.createRigidArea(new Dimension(40, 0)));
+                kundeGibtPanel.add(new BigLabel(bc.currencySymbol));
 
                 JPanel gutscheinPanel = new JPanel();
                 gutscheinPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
                 gutscheinField = new BigPriceField("");
+                gutscheinField.setColumns(5);
                 gutscheinField.setEditable(false);
                 gutscheinField.addKeyListener(new KeyAdapter() {
                     public void keyPressed(KeyEvent e) {
@@ -458,67 +510,69 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 ((AbstractDocument)gutscheinField.getDocument()).setDocumentFilter(geldFilter);
                 gutscheinField.getDocument().addDocumentListener(this);
                 gutscheinPanel.add(gutscheinField);
-                gutscheinPanel.add(new JLabel(bc.currencySymbol));
-                gutscheinButton = new JButton("OK");
+                gutscheinPanel.add(new BigLabel(bc.currencySymbol));
+                gutscheinButton = new BigButton("OK");
                 gutscheinButton.setEnabled(false);
                 gutscheinButton.addActionListener(this);
                 gutscheinPanel.add(gutscheinButton);
-                //gutscheinPanel.add(Box.createHorizontalGlue());
 
                 JPanel zuZahlenPanel = new JPanel();
                 zuZahlenPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
                 bigPriceField = new BigPriceField("");
                 bigPriceField.setEditable(false);
                 zuZahlenPanel.add(bigPriceField);
-                //zuZahlenPanel.add(Box.createRigidArea(new Dimension(40, 0)));
 
                 JPanel rueckgeldPanel = new JPanel();
                 rueckgeldPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
                 rueckgeldField = new BigPriceField("");
                 rueckgeldField.setEditable(false);
                 rueckgeldPanel.add(rueckgeldField);
-                rueckgeldPanel.add(new JLabel(bc.currencySymbol));
-                //rueckgeldPanel.add(Box.createRigidArea(new Dimension(40, 0)));
 
-                gridPanel.add(new JLabel("KUNDE GIBT:"));
-                gridPanel.add(kundeGibtPanel);
-                gridPanel.add(new JLabel("ZU ZAHLEN:"));
-                gridPanel.add(zuZahlenPanel);
-                gridPanel.add(new JLabel("GUTSCHEIN:"));
-                gridPanel.add(gutscheinPanel);
-                gridPanel.add(new JLabel("RÜCKGELD:"));
-                gridPanel.add(rueckgeldPanel);
+                c3.gridy = 0; c3.gridx = 0;
+                c3.anchor = GridBagConstraints.EAST;
+                gridPanel.add(new BigLabel("KUNDE GIBT:"), c3);
+
+                c3.gridy = 0; c3.gridx = 1;
+                c3.anchor = GridBagConstraints.WEST;
+                gridPanel.add(kundeGibtPanel, c3);
+
+                c3.gridy = 0; c3.gridx = 2;
+                c3.anchor = GridBagConstraints.EAST;
+                gridPanel.add(new BigLabel("ZU ZAHLEN:"), c3);
+
+                c3.gridy = 0; c3.gridx = 3;
+                c3.anchor = GridBagConstraints.WEST;
+                gridPanel.add(zuZahlenPanel, c3);
+
+                c3.gridy = 1; c3.gridx = 0;
+                c3.anchor = GridBagConstraints.EAST;
+                gridPanel.add(new BigLabel("GUTSCHEIN:"), c3);
+
+                c3.gridy = 1; c3.gridx = 1;
+                c3.anchor = GridBagConstraints.WEST;
+                gridPanel.add(gutscheinPanel, c3);
+
+                c3.gridy = 1; c3.gridx = 2;
+                c3.anchor = GridBagConstraints.EAST;
+                gridPanel.add(new BigLabel("RÜCKGELD:"), c3);
+
+                c3.gridy = 1; c3.gridx = 3;
+                c3.anchor = GridBagConstraints.EAST;
+                gridPanel.add(rueckgeldPanel, c3);
 
             zwischensummePanel.add(gridPanel);
-
-            /*
-            JPanel testPanel = new JPanel();
-            testPanel.setLayout(new GridLayout(0, 2));
-                JPanel testTestPanel1 = new JPanel();
-                //testTestPanel1.setLayout(new FlowLayout(FlowLayout.LEADING));
-                //testTestPanel1.add(Box.createRigidArea(new Dimension(-40, 0)));
-                testTestPanel1.add(kundeGibtField);
-                //testTestPanel1.add(new JLabel(bc.currencySymbol));
-                //testTestPanel1.add(new JLabel("TEST2"));
-
-                testPanel.add(new JLabel("TEST1"));
-                testPanel.add(kundeGibtPanel);
-                testPanel.add(new JLabel("TEST3"));
-                testPanel.add(new JLabel("TEST4"));
-            zwischensummePanel.add(testPanel);
-            */
         allPanel.add(zwischensummePanel);
 
         JPanel neuerKundePanel = new JPanel();
         neuerKundePanel.setLayout(new BoxLayout(neuerKundePanel, BoxLayout.Y_AXIS));
-            zahlungsLabel = new JLabel(" ");
+            zahlungsLabel = new BigLabel(" ");
             zahlungsLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
             neuerKundePanel.add(zahlungsLabel);
             JPanel buttonPanel = new JPanel();
             buttonPanel.setLayout(new BorderLayout());
                 // center
                 JPanel centerPanel = new JPanel();
-                    neuerKundeButton = new JButton("Fertig/Nächster Kunde");
+                    neuerKundeButton = new BigButton("Fertig/Nächster Kunde");
                     neuerKundeButton.setEnabled(false);
                     neuerKundeButton.addActionListener(this);
                     centerPanel.add(neuerKundeButton);
@@ -526,7 +580,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 // right
                 JPanel rightPanel = new JPanel();
                 rightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
-                    quittungsButton = new JButton("Quittung");
+                    quittungsButton = new BigButton("Quittung");
                     quittungsButton.setMnemonic(KeyEvent.VK_Q);
                     quittungsButton.setEnabled(false);
                     quittungsButton.addActionListener(this);
@@ -540,19 +594,23 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
     void showButtons(){
 	rabattPanel = new JPanel();
-	rabattPanel.setLayout(new BoxLayout(rabattPanel, BoxLayout.Y_AXIS));
+	rabattPanel.setLayout(new GridBagLayout());
 	rabattPanel.setBorder(BorderFactory.createTitledBorder("Rabatt"));
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.NORTH;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.ipady = 10;
+        c.insets = new Insets(3, 0, 3, 0);
+        int i=0;
         for (JButton rbutton : rabattButtons){
             rbutton.addActionListener(this);
-            rbutton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-            rabattPanel.add(rbutton);
-            rabattPanel.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
+            c.gridy = i; i++;
+            rabattPanel.add(rbutton, c);
         }
-        mitarbeiterRabattButton = new JButton("Mitarbeiter");
+        mitarbeiterRabattButton = new BigButton("Mitarbeiter");
         mitarbeiterRabattButton.addActionListener(this);
-        mitarbeiterRabattButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-        rabattPanel.add(mitarbeiterRabattButton);
-        rabattPanel.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
+        c.gridy = i; i++;
+        rabattPanel.add(mitarbeiterRabattButton, c);
 
         JPanel individuellRabattPanel = new JPanel();
             individuellRabattPanel.setBorder(BorderFactory.createTitledBorder("individuell"));
@@ -586,8 +644,8 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 }
             });
             relativPanel.add(individuellRabattRelativField);
-            relativPanel.add(new JLabel("%"));
-            individuellRabattRelativButton = new JButton("OK");
+            relativPanel.add(new BigLabel("%"));
+            individuellRabattRelativButton = new BigButton("OK");
             individuellRabattRelativButton.addActionListener(this);
             relativPanel.add(individuellRabattRelativButton);
 
@@ -619,14 +677,18 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 }
             });
             absolutPanel.add(individuellRabattAbsolutField);
-            absolutPanel.add(new JLabel(bc.currencySymbol));
-            individuellRabattAbsolutButton = new JButton("OK");
+            absolutPanel.add(new BigLabel(bc.currencySymbol));
+            individuellRabattAbsolutButton = new BigButton("OK");
             individuellRabattAbsolutButton.addActionListener(this);
             absolutPanel.add(individuellRabattAbsolutButton);
 
             individuellRabattPanel.add(relativPanel);
             individuellRabattPanel.add(absolutPanel);
-        rabattPanel.add(individuellRabattPanel);
+        c.gridy = i; i++;
+        rabattPanel.add(individuellRabattPanel, c);
+        c.weighty = 1.;
+        c.gridy = i; i++;
+        rabattPanel.add(Box.createVerticalGlue(), c);
 	this.add(rabattPanel, BorderLayout.WEST);
     }
 
@@ -716,7 +778,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
             articleListPanel.add(scrollPane);
 
             JPanel totalPricePanel = createTotalPricePanel();
-            zwischensummeButton = new JButton("Zwischensumme");
+            zwischensummeButton = new BigButton("ZWS");
             zwischensummeButton.setMnemonic(KeyEvent.VK_Z);
 	    zwischensummeButton.addActionListener(this);
 	    if (data.size() == 0) zwischensummeButton.setEnabled(false);
@@ -776,7 +838,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                 rueckgeldField.setForeground(Color.green.darker().darker());
                 //neuerKundeButton.setEnabled(true);
             }
-            rueckgeldField.setText( bc.priceFormatter(rueckgeld) );
+            rueckgeldField.setText( bc.priceFormatter(rueckgeld)+' '+bc.currencySymbol );
 
             if (display != null && display.deviceWorks()){
                 String kundeGibtStr = bc.priceFormatter(kundeGibt)+' '+bc.currencySymbol;
