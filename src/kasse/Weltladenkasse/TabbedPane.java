@@ -39,7 +39,7 @@ public class TabbedPane extends TabbedPaneGrundlage {
     private RechnungenTabbedPane myRech;
     private AbrechnungenTabbedPane myAbrech;
     private Kassenstand myKassenstand;
-    private PreisschilderTabbedPane myPreisschild;
+    private PreisschilderFormular myPreisschild;
     private OptionTabbedPane myOptPane;
     public Boolean esWirdKassiert = false; /** This need to live in TabbedPane (which does not get recreated)
                                              and cannot be local to Kassieren, even though it is only used
@@ -58,7 +58,7 @@ public class TabbedPane extends TabbedPaneGrundlage {
         myRech = new RechnungenTabbedPane(this.conn, this.mainWindow, this);
         myAbrech = new AbrechnungenTabbedPane(this.conn, this.mainWindow, this);
         myKassenstand = new Kassenstand(this.conn, this.mainWindow, this);
-        myPreisschild = new PreisschilderTabbedPane(this.conn, this.mainWindow, this);
+        myPreisschild = new PreisschilderFormular(this.conn, this.mainWindow, this);
         myOptPane = new OptionTabbedPane(this.conn, this.mainWindow, this);
         tabbedPane.addTab("Kassieren", null, myKassieren, "Kunden abkassieren");
         tabbedPane.addTab("Rechnungen", null, myRech, "Rechnungen ansehen/stornieren");
