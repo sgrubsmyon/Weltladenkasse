@@ -22,7 +22,7 @@ import hirondelle.date4j.DateTime;
 
 import WeltladenDB.*;
 
-public class Kassieren extends RechnungsGrundlage implements ItemListener, DocumentListener {
+public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     // Attribute:
     private final BigDecimal mitarbeiterRabatt = new BigDecimal("0.1");
     private final boolean allowMitarbeiterRabatt = true;
@@ -39,9 +39,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     public BarcodeComboBox barcodeBox;
     private ArtikelNameComboBox artikelBox;
     private ArtikelNummerComboBox nummerBox;
-    private JTextComponent barcodeField;
-    private JTextComponent artikelField;
-    private JTextComponent nummerField;
+    private JTextField barcodeField;
+    private JTextField artikelField;
+    private JTextField nummerField;
     protected String artikelNameText = "";
     protected String artikelNummerText = "";
     protected String barcodeText = "";
@@ -90,6 +90,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     private JScrollPane scrollPane;
     private Vector< Vector<Object> > data;
     private Vector<JButton> removeButtons;
+
+    private Font mediumFont = new Font("Tahoma", Font.BOLD, 16);
+    private Font bigFont = new Font("Tahoma", Font.BOLD, 32);
 
     // Methoden:
 
@@ -218,7 +221,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         private void initialize() {
             this.setColumns(6);
             this.setHorizontalAlignment(JTextField.RIGHT);
-            this.setFont(new Font("Tahoma", Font.BOLD, 32));
+            this.setFont(bigFont);
         }
     }
 
@@ -234,7 +237,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
 
         private void initialize() {
-            this.setFont(new Font("Tahoma", Font.BOLD, 16));
+            this.setFont(mediumFont);
         }
     }
 
@@ -250,7 +253,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
         }
 
         private void initialize() {
-            this.setFont(new Font("Tahoma", Font.BOLD, 16));
+            this.setFont(mediumFont);
         }
     }
 
@@ -275,11 +278,11 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     String filterStr = " AND (toplevel_id IS NOT NULL OR sub_id = 2) ";
                            // show all 'normal' items (toplevel_id IS NOT NULL), and in addition Gutscheine (where toplevel_id is NULL and sub_id is 2)
                     barcodeBox = new BarcodeComboBox(this.conn, filterStr);
+                    barcodeBox.setFont(mediumFont);
                     barcodeBox.addActionListener(this);
-                    //barcodeBox.addItemListener(this);
                     barcodeBox.addPopupMouseListener(new MouseListenerBarcodeBox());
-                    barcodeBox.setPrototypeDisplayValue("qqqqqqqqqqqqqq");
-                    barcodeField = (JTextComponent)barcodeBox.getEditor().getEditorComponent();
+                    barcodeField = (JTextField)barcodeBox.getEditor().getEditorComponent();
+                    barcodeField.setColumns(9);
                     barcodeField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
                         // remove Ctrl-A key binding
                     barcodeField.getDocument().addDocumentListener(this);
@@ -293,13 +296,13 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     nummerLabel.setDisplayedMnemonic(KeyEvent.VK_N);
                     barcodePanel.add(nummerLabel);
                     nummerBox = new ArtikelNummerComboBox(this.conn, filterStr);
+                    nummerBox.setFont(mediumFont);
                     nummerBox.addActionListener(this);
-                    //nummerBox.addItemListener(this);
                     nummerBox.addPopupMouseListener(new MouseListenerNummerBox());
                     // set preferred width etc.:
                     nummerBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 30, false));
-                    nummerBox.setPrototypeDisplayValue("qqqqqqq");
-                    nummerField = (JTextComponent)nummerBox.getEditor().getEditorComponent();
+                    nummerField = (JTextField)nummerBox.getEditor().getEditorComponent();
+                    nummerField.setColumns(7);
                     nummerField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
                         // remove Ctrl-A key binding
                     nummerField.getDocument().addDocumentListener(this);
@@ -317,13 +320,13 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     artikelLabel.setDisplayedMnemonic(KeyEvent.VK_A);
                     artikelNamePanel.add(artikelLabel);
                     artikelBox = new ArtikelNameComboBox(this.conn, filterStr);
+                    artikelBox.setFont(mediumFont);
                     artikelBox.addActionListener(this);
-                    //artikelBox.addItemListener(this);
                     artikelBox.addPopupMouseListener(new MouseListenerArtikelBox());
                     // set preferred width etc.:
                     artikelBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 50, false));
-                    artikelBox.setPrototypeDisplayValue("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
-                    artikelField = (JTextComponent)artikelBox.getEditor().getEditorComponent();
+                    artikelField = (JTextField)artikelBox.getEditor().getEditorComponent();
+                    artikelField.setColumns(25);
                     artikelField.getDocument().addDocumentListener(this);
                     artikelNamePanel.add(artikelBox);
                     emptyArtikelButton = new JButton("x");
@@ -370,6 +373,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                                                                     bc.smallintMax, // max (null == no max)
                                                                     1); // step
 	    anzahlSpinner = new JSpinner(anzahlModel);
+            anzahlSpinner.setFont(mediumFont);
             JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(anzahlSpinner, "###");
             anzahlSpinner.setEditor(anzahlEditor);
             anzahlField = anzahlEditor.getTextField();
@@ -399,6 +403,7 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	    BigLabel preisLabel = new BigLabel("Preis: ");
             spinnerPanel.add(preisLabel);
             preisField = new JTextField("");
+            preisField.setFont(mediumFont);
             preisField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
                 // remove Ctrl-A key binding
             preisField.addKeyListener(new KeyAdapter() {
@@ -596,28 +601,28 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 	rabattPanel = new JPanel();
 	rabattPanel.setLayout(new GridBagLayout());
 	rabattPanel.setBorder(BorderFactory.createTitledBorder("Rabatt"));
-        GridBagConstraints c = new GridBagConstraints();
-        c.anchor = GridBagConstraints.NORTH;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.ipady = 10;
-        c.insets = new Insets(3, 0, 3, 0);
+        GridBagConstraints c1 = new GridBagConstraints();
+        c1.anchor = GridBagConstraints.NORTH;
+        c1.fill = GridBagConstraints.HORIZONTAL;
+        c1.ipady = 10;
+        c1.insets = new Insets(3, 0, 3, 0);
         int i=0;
         for (JButton rbutton : rabattButtons){
             rbutton.addActionListener(this);
-            c.gridy = i; i++;
-            rabattPanel.add(rbutton, c);
+            c1.gridy = i; i++;
+            rabattPanel.add(rbutton, c1);
         }
         mitarbeiterRabattButton = new BigButton("Mitarbeiter");
         mitarbeiterRabattButton.addActionListener(this);
-        c.gridy = i; i++;
-        rabattPanel.add(mitarbeiterRabattButton, c);
+        c1.gridy = i; i++;
+        rabattPanel.add(mitarbeiterRabattButton, c1);
 
-        JPanel individuellRabattPanel = new JPanel();
+        JPanel individuellRabattPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints c2 = new GridBagConstraints();
+        c2.fill = GridBagConstraints.HORIZONTAL;
+        c2.insets = new Insets(3, 3, 3, 3);
             individuellRabattPanel.setBorder(BorderFactory.createTitledBorder("individuell"));
-            individuellRabattPanel.setLayout(new BoxLayout(individuellRabattPanel, BoxLayout.Y_AXIS));
 
-            JPanel relativPanel = new JPanel();
-            relativPanel.setLayout(new FlowLayout());
             individuellRabattRelativField = new JTextField("");
             individuellRabattRelativField.setColumns(3);
             individuellRabattRelativField.getDocument().addDocumentListener(new DocumentListener(){
@@ -643,14 +648,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     }
                 }
             });
-            relativPanel.add(individuellRabattRelativField);
-            relativPanel.add(new BigLabel("%"));
             individuellRabattRelativButton = new BigButton("OK");
             individuellRabattRelativButton.addActionListener(this);
-            relativPanel.add(individuellRabattRelativButton);
 
-            JPanel absolutPanel = new JPanel();
-            absolutPanel.setLayout(new FlowLayout());
             individuellRabattAbsolutField = new JTextField("");
             individuellRabattAbsolutField.setColumns(3);
             individuellRabattAbsolutField.getDocument().addDocumentListener(new DocumentListener(){
@@ -676,19 +676,32 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
                     }
                 }
             });
-            absolutPanel.add(individuellRabattAbsolutField);
-            absolutPanel.add(new BigLabel(bc.currencySymbol));
             individuellRabattAbsolutButton = new BigButton("OK");
             individuellRabattAbsolutButton.addActionListener(this);
-            absolutPanel.add(individuellRabattAbsolutButton);
 
-            individuellRabattPanel.add(relativPanel);
-            individuellRabattPanel.add(absolutPanel);
-        c.gridy = i; i++;
-        rabattPanel.add(individuellRabattPanel, c);
-        c.weighty = 1.;
-        c.gridy = i; i++;
-        rabattPanel.add(Box.createVerticalGlue(), c);
+            c2.anchor = GridBagConstraints.EAST;
+            c2.gridy = 0; c2.gridx = 0;
+            individuellRabattPanel.add(individuellRabattRelativField, c2);
+            c2.anchor = GridBagConstraints.WEST;
+            c2.gridy = 0; c2.gridx = 1;
+            individuellRabattPanel.add(new BigLabel("%"), c2);
+            c2.anchor = GridBagConstraints.EAST;
+            c2.gridy = 0; c2.gridx = 2;
+            individuellRabattPanel.add(individuellRabattRelativButton, c2);
+            c2.anchor = GridBagConstraints.EAST;
+            c2.gridy = 1; c2.gridx = 0;
+            individuellRabattPanel.add(individuellRabattAbsolutField, c2);
+            c2.anchor = GridBagConstraints.WEST;
+            c2.gridy = 1; c2.gridx = 1;
+            individuellRabattPanel.add(new BigLabel(bc.currencySymbol), c2);
+            c2.anchor = GridBagConstraints.EAST;
+            c2.gridy = 1; c2.gridx = 2;
+            individuellRabattPanel.add(individuellRabattAbsolutButton, c2);
+        c1.gridy = i; i++;
+        rabattPanel.add(individuellRabattPanel, c1);
+        c1.weighty = 1.;
+        c1.gridy = i; i++;
+        rabattPanel.add(Box.createVerticalGlue(), c1);
 	this.add(rabattPanel, BorderLayout.WEST);
     }
 
@@ -763,8 +776,9 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
 
     void showTable(){
 	myTable = new RechnungsTable(data, columnLabels);
+        myTable.setFont(mediumFont);
+        myTable.setRowHeight(20);
 //	myTable.setBounds(71,53,150,100);
-//	myTable.setToolTipText("Tabelle kann nur gelesen werden.");
 	setTableProperties(myTable);
 	TableColumn entf = myTable.getColumn("Entfernen");
 	entf.setPreferredWidth(2);
@@ -2032,27 +2046,6 @@ public class Kassieren extends RechnungsGrundlage implements ItemListener, Docum
     }
     public void changedUpdate(DocumentEvent e) {
 	// Plain text components do not fire these events
-    }
-
-    /**
-     *    * Each non abstract class that implements the ItemListener
-     *      must have this method.
-     *
-     *    @param e the item event.
-     **/
-    public void itemStateChanged(ItemEvent e) {
-        //if (e.getSource() == barcodeBox){
-        //    checkBarcodeBox();
-        //    return;
-        //}
-        //if (e.getSource() == artikelBox){
-        //    checkArtikelBox();
-        //    return;
-        //}
-        //if (e.getSource() == nummerBox){
-        //    checkNummerBox();
-        //    return;
-        //}
     }
 
     void refreshPositionsInData() {
