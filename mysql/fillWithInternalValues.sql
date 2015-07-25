@@ -2,7 +2,7 @@ USE kasse;
 
 LOCK TABLES `lieferant` WRITE;
 /*!40000 ALTER TABLE `lieferant` DISABLE KEYS */;
-INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `aktiv`) VALUES (1,'unbekannt','unbekannt',1);
+INSERT INTO `lieferant` (`lieferant_id`, `lieferant_name`, `lieferant_kurzname`, `n_artikel`, `aktiv`) VALUES (1,'unbekannt','unbekannt',NULL,1);
 /*!40000 ALTER TABLE `lieferant` ENABLE KEYS */;
 UNLOCK TABLES;
 

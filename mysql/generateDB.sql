@@ -7,6 +7,7 @@ CREATE TABLE lieferant (
     lieferant_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     lieferant_name VARCHAR(50) NOT NULL,
     lieferant_kurzname VARCHAR(10) DEFAULT NULL,
+    n_artikel INTEGER(10) UNSIGNED DEFAULT NULL,
     aktiv BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY (lieferant_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
