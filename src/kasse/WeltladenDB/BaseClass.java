@@ -16,7 +16,8 @@ public class BaseClass {
     public String displayManufacturer; /** manufacturer of customer display */
     public String displayModel; /** model name of customer display */
     public Integer displayWidth; /** number of chars on one row */
-    public Integer displayClearInterval; /** number of milliseconds after which to clear screen */
+    public Integer displayShowWelcomeInterval; /** number of milliseconds after which to show welcome screen */
+    public Integer displayBlankInterval; /** number of milliseconds after which to blank screen to prevent burn-in */
     public String dateFormatSQL;
     public String dateFormatJava;
     public String dateFormatDate4j;
@@ -61,7 +62,8 @@ public class BaseClass {
             this.displayManufacturer = props.getProperty("displayManufacturer");
             this.displayModel = props.getProperty("displayModel");
             this.displayWidth = Integer.parseInt(props.getProperty("displayWidth"));
-            this.displayClearInterval = Integer.parseInt(props.getProperty("displayClearInterval"));
+            this.displayShowWelcomeInterval = Integer.parseInt(props.getProperty("displayShowWelcomeInterval"));
+            this.displayBlankInterval = Integer.parseInt(props.getProperty("displayBlankInterval"));
             this.dateFormatSQL = props.getProperty("dateFormatSQL");
             this.dateFormatJava = props.getProperty("dateFormatJava");
             this.dateFormatDate4j = props.getProperty("dateFormatDate4j");
@@ -75,7 +77,8 @@ public class BaseClass {
             this.displayManufacturer = "Wincor Nixdorf";
             this.displayModel = "BA63/USB";
             this.displayWidth = 20;
-            this.displayClearInterval = 60000;
+            this.displayShowWelcomeInterval = 30000;
+            this.displayBlankInterval = 300000;
             this.dateFormatSQL = "%d.%m.%Y, %H:%i Uhr";
             this.dateFormatJava = "dd.MM.yyyy, HH:mm 'Uhr'";
             this.dateFormatDate4j = "DD.MM.YYYY, hh:mm |Uhr|";
