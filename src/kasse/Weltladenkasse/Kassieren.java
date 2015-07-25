@@ -1678,7 +1678,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         else if (zahlungsModus == "ec"){ ec(); }
     }
 
-    void setDisplayWelcomeTimer() {
+    private void setDisplayWelcomeTimer() {
         if (display != null && display.deviceWorks()){
             ActionListener displayResetter = new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
@@ -1690,9 +1690,10 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
             Timer t1 = new Timer(bc.displayShowWelcomeInterval, displayResetter);
             t1.setRepeats(false);
             t1.start();
+        }
     }
 
-    void setDisplayBlankTimer() {
+    private void setDisplayBlankTimer() {
         if (display != null && display.deviceWorks()){
             ActionListener displayBlanker = new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
@@ -1704,6 +1705,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
             Timer t2 = new Timer(bc.displayBlankInterval, displayBlanker);
             t2.setRepeats(false);
             t2.start();
+        }
     }
 
     private void neuerKunde() {
@@ -1719,7 +1721,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         tabbedPane.esWirdKassiert = false;
         setDisplayWelcomeTimer();
         setDisplayBlankTimer();
-        }
     }
 
     private void stornieren() {
