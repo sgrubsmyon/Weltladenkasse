@@ -1678,6 +1678,34 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         else if (zahlungsModus == "ec"){ ec(); }
     }
 
+    void setDisplayWelcomeTimer() {
+        if (display != null && display.deviceWorks()){
+            ActionListener displayResetter = new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    if ( !tabbedPane.esWirdKassiert && display != null && display.deviceWorks()){
+                        display.showWelcomeScreen();
+                    }
+                }
+            };
+            Timer t1 = new Timer(bc.displayShowWelcomeInterval, displayResetter);
+            t1.setRepeats(false);
+            t1.start();
+    }
+
+    void setDisplayBlankTimer() {
+        if (display != null && display.deviceWorks()){
+            ActionListener displayBlanker = new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    if ( !tabbedPane.esWirdKassiert && display != null && display.deviceWorks()){
+                        display.clearScreen();
+                    }
+                }
+            };
+            Timer t2 = new Timer(bc.displayBlankInterval, displayBlanker);
+            t2.setRepeats(false);
+            t2.start();
+    }
+
     private void neuerKunde() {
         if ( kundeGibtField.isEditable() ){ // if Barzahlung
             int rechnungsNr = insertIntoVerkauf(false);
@@ -1688,24 +1716,20 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         clearAll();
         updateAll();
 
-        if (display != null && display.deviceWorks()){
-            ActionListener displayResetter = new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    if ( !tabbedPane.esWirdKassiert && display != null && display.deviceWorks()){
-                        display.showWelcomeScreen();
-                    }
-                }
-            };
-            Timer t = new Timer(bc.displayClearInterval, displayResetter);
-            t.setRepeats(false);
-            tabbedPane.esWirdKassiert = false;
-            t.start();
+        tabbedPane.esWirdKassiert = false;
+        setDisplayWelcomeTimer();
+        setDisplayBlankTimer();
         }
     }
 
     private void stornieren() {
         clearAll();
         updateAll();
+        if (display != null && display.deviceWorks()){
+            display.showWelcomeScreen();
+        }
+        tabbedPane.esWirdKassiert = false;
+        setDisplayBlankTimer();
     }
 
     private void artikelRabattierenRelativ(BigDecimal rabattRelativ) {
