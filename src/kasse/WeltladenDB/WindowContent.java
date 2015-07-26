@@ -812,7 +812,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                 }
             }
             rs.close();
-            pstmt.close();
+            stmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -1080,7 +1080,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                 }
             }
             rs.close();
-            pstmt.close();
+            stmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
