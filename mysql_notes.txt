@@ -109,3 +109,9 @@ uriuri@dollie:~$ mysql-kasse-admin
 mysql> SELECT * FROM lieferant;
 ALTER TABLE lieferant ADD COLUMN n_artikel INTEGER(10) UNSIGNED DEFAULT NULL;
 SELECT * FROM lieferant;
+
+# Add new column `n_artikel_rekursiv` in produktgruppe:
+uriuri@dollie:~$ mysql-kasse-admin
+mysql> DESCRIBE produktgruppe;
+ALTER TABLE produktgruppe ADD COLUMN n_artikel_rekursiv INTEGER(10) UNSIGNED DEFAULT NULL;
+DESCRIBE produktgruppe;

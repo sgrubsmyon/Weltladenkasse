@@ -790,7 +790,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected void updateNArticleInLieferant() {
+    protected void updateNArtikelInLieferant() {
         /**
          * For all rows in `lieferant` that have `n_artikel` = NULL,
          * query for the number of active articles and set `n_artikel`.
@@ -1039,6 +1039,62 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return nArticles;
     }
 
+    protected Vector<Integer> queryProdGrHierarchy(Integer produktgruppen_id) {
+        Vector<Integer> ids = new Vector<Integer>();
+        ids.add(null); ids.add(null); ids.add(null);
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT toplevel_id, sub_id, subsub_id FROM produktgruppe "+
+                    "WHERE produktgruppen_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, produktgruppen_id);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            ids.set(0, rs.getString(1) == null ? null : rs.getInt(1));
+            ids.set(1, rs.getString(2) == null ? null : rs.getInt(2));
+            ids.set(2, rs.getString(3) == null ? null : rs.getInt(3));
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return ids;
+    }
+
+    protected int queryRecursiveActiveArticlesWithProduktgruppe(Integer produktgruppen_id) {
+        int nArticles = 0;
+        try {
+            Vector<Integer> ids = queryProdGrHierarchy(produktgruppen_id);
+            Integer topid = ids.get(0), subid = ids.get(1), subsubid = ids.get(2);
+
+            String filter = "";
+            if (topid == null)
+                filter = "produktgruppe.toplevel_id > 0 ";
+            else
+                filter = "produktgruppe.toplevel_id = " + topid + " ";
+            if (subid != null)
+                filter += " AND produktgruppe.sub_id = " + subid + " ";
+            if (subsubid != null)
+                filter += " AND produktgruppe.subsub_id = " + subsubid + " ";
+
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT COUNT(a.artikel_id) FROM artikel AS a "+
+                    "INNER JOIN produktgruppe USING (produktgruppen_id) " +
+                    "WHERE a.aktiv = TRUE AND " + filter
+                    );
+            rs.next();
+            nArticles = rs.getInt(1);
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return nArticles;
+    }
+
     protected int setNArtikelForProduktgruppe(int prodGrID, int nArticles) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
@@ -1058,7 +1114,26 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected void updateNArticleInProduktgruppe() {
+    protected int setNArtikelRekursivForProduktgruppe(int prodGrID, int nArticles) {
+        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        int result = 0;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "UPDATE produktgruppe SET n_artikel_rekursiv = ? WHERE "+
+                    "produktgruppen_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, nArticles);
+            pstmtSetInteger(pstmt, 2, prodGrID);
+            result = pstmt.executeUpdate();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    protected void updateNArtikelInProduktgruppe() {
         /**
          * For all rows in `produktgruppe` that have `n_artikel` = NULL,
          * query for the number of active articles and set `n_artikel`.
@@ -1076,6 +1151,35 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                 result = setNArtikelForProduktgruppe(prodGrID, nArticles);
                 if (result == 0){
                     System.err.println("ERROR: Could not set `n_artikel` to "+nArticles+
+                            " for produktgruppen_id = "+prodGrID);
+                }
+            }
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    protected void updateNArtikelRekursivInProduktgruppe() {
+        /**
+         * For all rows in `produktgruppe` that have `n_artikel_rekursiv` = NULL,
+         * query for the recursive number of active articles and set `n_artikel_rekursiv`.
+         */
+        try {
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT produktgruppen_id FROM "+
+                    "produktgruppe WHERE n_artikel_rekursiv IS NULL");
+            while (rs.next()) {
+                int prodGrID = rs.getInt(1);
+                System.out.print("Upating produktgruppen_id "+prodGrID+" to n_artikel_rekursiv = ");
+                int nArticles = queryRecursiveActiveArticlesWithProduktgruppe(prodGrID);
+                System.out.println(nArticles);
+                int result = 0;
+                result = setNArtikelRekursivForProduktgruppe(prodGrID, nArticles);
+                if (result == 0){
+                    System.err.println("ERROR: Could not set `n_artikel_rekursiv` to "+nArticles+
                             " for produktgruppen_id = "+prodGrID);
                 }
             }
