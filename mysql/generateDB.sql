@@ -34,6 +34,7 @@ CREATE TABLE produktgruppe (
     pfand_id INTEGER(10) UNSIGNED DEFAULT NULL,
     std_einheit VARCHAR(10) DEFAULT NULL,
     n_artikel INTEGER(10) UNSIGNED DEFAULT NULL,
+    n_artikel_rekursiv INTEGER(10) UNSIGNED DEFAULT NULL,
     aktiv BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY (produktgruppen_id),
     FOREIGN KEY (mwst_id) REFERENCES mwst(mwst_id),
