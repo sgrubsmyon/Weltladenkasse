@@ -200,7 +200,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    }
 	    rs.close();
 	    rs = stmt.executeQuery(
-		    "SELECT COUNT(buchungsdatum) FROM kassenstand WHERE TRUE " +
+		    "SELECT COUNT(*) FROM kassenstand WHERE TRUE " +
 		    filterStr
 		    );
 	    // Now do something with the ResultSet ...

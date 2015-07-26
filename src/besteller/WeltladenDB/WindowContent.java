@@ -348,7 +348,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         boolean exists = false;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(artikel_id) > 0 FROM artikel "+
+                    "SELECT COUNT(*) > 0 FROM artikel "+
                     "WHERE lieferant_id = ? AND artikel_nr = ? AND artikel.aktiv = TRUE"
                     );
             pstmtSetInteger(pstmt, 1, lieferant_id);
@@ -365,7 +365,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return exists;
     }
 
-    protected int setItemInactive(Integer lieferant_id, String nummer) {
+    protected int setItemInactive(Artikel a) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
@@ -374,10 +374,15 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "lieferant_id = ? AND "+
                     "artikel_nr = ? AND aktiv = TRUE"
                     );
-            pstmtSetInteger(pstmt, 1, lieferant_id);
-            pstmt.setString(2, nummer);
+            pstmtSetInteger(pstmt, 1, a.getLiefID());
+            pstmt.setString(2, a.getNummer());
             result = pstmt.executeUpdate();
             pstmt.close();
+
+            // update the `n_artikel` fields
+            updateNArtikelInProduktgruppeFor(a.getProdGrID());
+            updateNArtikelRekursivInProduktgruppeFor(a.getProdGrID());
+            updateNArtikelInLieferantFor(a.getLiefID());
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -385,7 +390,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected int setItemActive(Integer lieferant_id, String nummer) {
+    protected int setItemActive(Artikel a) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
@@ -394,10 +399,15 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "lieferant_id = ? AND "+
                     "artikel_nr = ? AND aktiv = FALSE"
                     );
-            pstmtSetInteger(pstmt, 1, lieferant_id);
-            pstmt.setString(2, nummer);
+            pstmtSetInteger(pstmt, 1, a.getLiefID());
+            pstmt.setString(2, a.getNummer());
             result = pstmt.executeUpdate();
             pstmt.close();
+
+            // update the `n_artikel` fields
+            updateNArtikelInProduktgruppeFor(a.getProdGrID());
+            updateNArtikelRekursivInProduktgruppeFor(a.getProdGrID());
+            updateNArtikelInLieferantFor(a.getLiefID());
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -405,7 +415,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected int insertNewItem(Artikel a) {
+    protected int insertNewArticle(Artikel a) {
         // add row for new item (with updated fields)
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
@@ -498,6 +508,11 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             pstmtSetInteger(pstmt, 20, a.getBestand());
             result = pstmt.executeUpdate();
             pstmt.close();
+
+            // update the `n_artikel` fields
+            updateNArtikelInProduktgruppeFor(a.getProdGrID());
+            updateNArtikelRekursivInProduktgruppeFor(a.getProdGrID());
+            updateNArtikelInLieferantFor(a.getLiefID());
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -690,7 +705,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         boolean exists = false;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(lieferant_id) > 0 FROM lieferant "+
+                    "SELECT COUNT(*) > 0 FROM lieferant "+
                     "WHERE lieferant_name = ?"
                     );
             pstmt.setString(1, lieferant);
@@ -754,7 +769,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         int nArticles = 0;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(a.artikel_id) FROM artikel AS a "+
+                    "SELECT COUNT(*) FROM artikel AS a "+
                     "INNER JOIN lieferant USING (lieferant_id) "+
                     "WHERE a.lieferant_id = ? AND a.aktiv = TRUE"
                     );
@@ -790,6 +805,22 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
+    protected void updateNArtikelInLieferantFor(int lieferant_id) {
+        System.out.print("Upating lieferant_id "+lieferant_id+" to n_artikel = ");
+        int nArticles = queryActiveArticlesWithLieferant(lieferant_id);
+        System.out.println(nArticles);
+        int result = 0;
+        result = setNArtikelForLieferant(lieferant_id, nArticles);
+        if (result == 0){
+            System.err.println("ERROR: Could not set `n_artikel` to "+nArticles+
+                    " for lieferant_id = "+lieferant_id);
+            JOptionPane.showMessageDialog(this,
+                    "Fehler: Lieferant mit ID "+lieferant_id+": `n_artikel` konnte nicht "+
+                    "auf "+nArticles+" gesetzt werden.",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     protected void updateNArtikelInLieferant() {
         /**
          * For all rows in `lieferant` that have `n_artikel` = NULL,
@@ -801,15 +832,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "lieferant WHERE n_artikel IS NULL");
             while (rs.next()) {
                 int liefID = rs.getInt(1);
-                System.out.print("Upating lieferant_id "+liefID+" to n_artikel = ");
-                int nArticles = queryActiveArticlesWithLieferant(liefID);
-                System.out.println(nArticles);
-                int result = 0;
-                result = setNArtikelForLieferant(liefID, nArticles);
-                if (result == 0){
-                    System.err.println("ERROR: Could not set `n_artikel` to "+nArticles+
-                            " for lieferant_id = "+liefID);
-                }
+                updateNArtikelInLieferantFor(liefID);
             }
             rs.close();
             stmt.close();
@@ -821,7 +844,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
     protected void updateArticle(Artikel oldArticle, Artikel newArticle) {
         // set old item to inactive:
-        int result = setItemInactive(oldArticle.getLiefID(), oldArticle.getNummer());
+        int result = setItemInactive(oldArticle);
         if (result == 0){
             JOptionPane.showMessageDialog(this,
                     "Fehler: Artikel von "+getLieferant( oldArticle.getLiefID() )+" mit "+
@@ -835,14 +858,14 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             String ekpreis = figureOutEKP(newArticle.getEmpfVKP(),
                     newArticle.getEKRabatt(), newArticle.getEKP());
             newArticle.setEKP(ekpreis);
-            result = insertNewItem(newArticle);
+            result = insertNewArticle(newArticle);
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Artikel von "+getLieferant( oldArticle.getLiefID() )+
                         "mit Nummer "+oldArticle.getNummer()+" konnte "+
                         "nicht geändert werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
-                result = setItemActive(oldArticle.getLiefID(), oldArticle.getNummer());
+                result = setItemActive(oldArticle);
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Artikel von "+
@@ -958,7 +981,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         boolean exists = false;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(produktgruppen_id) > 0 FROM produktgruppe "+
+                    "SELECT COUNT(*) > 0 FROM produktgruppe "+
                     "WHERE produktgruppen_name = ?"
                     );
             pstmt.setString(1, produktgruppe);
@@ -1022,7 +1045,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         int nArticles = 0;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(a.artikel_id) FROM artikel AS a "+
+                    "SELECT COUNT(*) FROM artikel AS a "+
                     "INNER JOIN produktgruppe USING (produktgruppen_id) "+
                     "WHERE a.produktgruppen_id = ? AND a.aktiv = TRUE"
                     );
@@ -1080,7 +1103,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT COUNT(a.artikel_id) FROM artikel AS a "+
+                    "SELECT COUNT(*) FROM artikel AS a "+
                     "INNER JOIN produktgruppe USING (produktgruppen_id) " +
                     "WHERE a.aktiv = TRUE AND " + filter
                     );
@@ -1133,6 +1156,22 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
+    protected void updateNArtikelInProduktgruppeFor(int produktgruppen_id) {
+        System.out.print("Upating produktgruppen_id "+produktgruppen_id+" to n_artikel = ");
+        int nArticles = queryActiveArticlesWithProduktgruppe(produktgruppen_id);
+        System.out.println(nArticles);
+        int result = 0;
+        result = setNArtikelForProduktgruppe(produktgruppen_id, nArticles);
+        if (result == 0){
+            System.err.println("ERROR: Could not set `n_artikel` to "+nArticles+
+                    " for produktgruppen_id = "+produktgruppen_id);
+            JOptionPane.showMessageDialog(this,
+                    "Fehler: Produktgruppe mit ID "+produktgruppen_id+": `n_artikel` konnte nicht "+
+                    "auf "+nArticles+" gesetzt werden.",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     protected void updateNArtikelInProduktgruppe() {
         /**
          * For all rows in `produktgruppe` that have `n_artikel` = NULL,
@@ -1144,21 +1183,29 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "produktgruppe WHERE n_artikel IS NULL");
             while (rs.next()) {
                 int prodGrID = rs.getInt(1);
-                System.out.print("Upating produktgruppen_id "+prodGrID+" to n_artikel = ");
-                int nArticles = queryActiveArticlesWithProduktgruppe(prodGrID);
-                System.out.println(nArticles);
-                int result = 0;
-                result = setNArtikelForProduktgruppe(prodGrID, nArticles);
-                if (result == 0){
-                    System.err.println("ERROR: Could not set `n_artikel` to "+nArticles+
-                            " for produktgruppen_id = "+prodGrID);
-                }
+                updateNArtikelInProduktgruppeFor(prodGrID);
             }
             rs.close();
             stmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+        }
+    }
+
+    protected void updateNArtikelRekursivInProduktgruppeFor(int produktgruppen_id) {
+        System.out.print("Upating produktgruppen_id "+produktgruppen_id+" to n_artikel_rekursiv = ");
+        int nArticles = queryRecursiveActiveArticlesWithProduktgruppe(produktgruppen_id);
+        System.out.println(nArticles);
+        int result = 0;
+        result = setNArtikelRekursivForProduktgruppe(produktgruppen_id, nArticles);
+        if (result == 0){
+            System.err.println("ERROR: Could not set `n_artikel_rekursiv` to "+nArticles+
+                    " for produktgruppen_id = "+produktgruppen_id);
+            JOptionPane.showMessageDialog(this,
+                    "Fehler: Produktgruppe mit ID "+produktgruppen_id+": `n_artikel_rekursiv` konnte nicht "+
+                    "auf "+nArticles+" gesetzt werden.",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -1173,15 +1220,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "produktgruppe WHERE n_artikel_rekursiv IS NULL");
             while (rs.next()) {
                 int prodGrID = rs.getInt(1);
-                System.out.print("Upating produktgruppen_id "+prodGrID+" to n_artikel_rekursiv = ");
-                int nArticles = queryRecursiveActiveArticlesWithProduktgruppe(prodGrID);
-                System.out.println(nArticles);
-                int result = 0;
-                result = setNArtikelRekursivForProduktgruppe(prodGrID, nArticles);
-                if (result == 0){
-                    System.err.println("ERROR: Could not set `n_artikel_rekursiv` to "+nArticles+
-                            " for produktgruppen_id = "+prodGrID);
-                }
+                updateNArtikelRekursivInProduktgruppeFor(prodGrID);
             }
             rs.close();
             stmt.close();

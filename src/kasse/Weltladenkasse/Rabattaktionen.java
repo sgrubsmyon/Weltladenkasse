@@ -251,7 +251,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    }
 	    rs.close();
 	    rs = stmt.executeQuery(
-		    "SELECT COUNT(aktionsname) FROM rabattaktion AS r " +
+		    "SELECT COUNT(*) FROM rabattaktion AS r " +
 		    this.filterStr
 		    );
 	    // Now do something with the ResultSet ...

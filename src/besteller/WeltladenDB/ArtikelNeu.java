@@ -165,7 +165,7 @@ public class ArtikelNeu extends WindowContent
             if (itemChanged){
                 updateArticle(newArticle, newArticle);
             } else {
-                int result = insertNewItem(newArticle);
+                int result = insertNewArticle(newArticle);
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Artikel \""+newArticle.getName()+"\" von "+

@@ -120,7 +120,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    }
 	    rs.close();
 	    rs = stmt.executeQuery(
-		    "SELECT COUNT(verkauf.rechnungs_nr) FROM verkauf " +
+		    "SELECT COUNT(*) FROM verkauf " +
 		    filterStr
 		    );
 	    // Now do something with the ResultSet ...
@@ -316,7 +316,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    rs.close();
             pstmt.close();
             pstmt = this.conn.prepareStatement(
-		    "SELECT COUNT(vd.artikel_id) FROM verkauf_details AS vd " +
+		    "SELECT COUNT(*) FROM verkauf_details AS vd " +
 		    "WHERE vd.rechnungs_nr = ?"
 		    );
             pstmtSetInteger(pstmt, 1, Integer.parseInt(this.data.get(detailRow).get(1)));
