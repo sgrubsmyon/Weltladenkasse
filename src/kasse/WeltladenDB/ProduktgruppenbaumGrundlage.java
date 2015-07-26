@@ -65,7 +65,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
 	groupListPanel.setLayout(new BoxLayout(groupListPanel, BoxLayout.Y_AXIS));
 	groupListPanel.setBorder(BorderFactory.createTitledBorder(titleStr));
 
-        Integer artikelCount = returnArtikelCount(null,null,null); // how many artikel are there in total?
+        Integer artikelCount = returnTotalArticleCount(); // how many artikel are there in total?
         DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(
                 new Gruppe(null,null,null, "Alle Artikel ("+artikelCount+")"));
         addProduktgruppenToRootNode(rootNode);
@@ -109,7 +109,12 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
             subid = group.get(1) == null ? null : Integer.parseInt(group.get(1));
             subsubid = group.get(2) == null ? null : Integer.parseInt(group.get(2));
             groupname = group.get(3);
-            artikelCount = returnArtikelCount(topid, subid, subsubid); // how many artikel are there in this gruppe?
+            try {
+                artikelCount = Integer.parseInt(group.get(4)); // how many artikel are there in this gruppe?
+            } catch (NumberFormatException ex) {
+                System.out.println("Exception: " + ex.getMessage());
+                artikelCount = null;
+            }
             groupNode = new DefaultMutableTreeNode(new Gruppe(topid, subid, subsubid, groupname+" ("+artikelCount+")"));
             Vector< Vector<String> > subgroups = querySubGruppen(topid);
             for ( Vector<String> subgroup : subgroups ){
@@ -117,7 +122,12 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
                 subid = subgroup.get(1) == null ? null : Integer.parseInt(subgroup.get(1));
                 subsubid = subgroup.get(2) == null ? null : Integer.parseInt(subgroup.get(2));
                 groupname = subgroup.get(3);
-                artikelCount = returnArtikelCount(topid, subid, subsubid);
+                try {
+                    artikelCount = Integer.parseInt(subgroup.get(4));
+                } catch (NumberFormatException ex) {
+                    System.out.println("Exception: " + ex.getMessage());
+                    artikelCount = null;
+                }
                 subgroupNode = new DefaultMutableTreeNode(new Gruppe(topid, subid, subsubid, groupname+" ("+artikelCount+")"));
                 Vector< Vector<String> > subsubgroups = querySubSubGruppen(topid, subid);
                 for ( Vector<String> subsubgroup : subsubgroups ){
@@ -125,7 +135,12 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
                     subid = subsubgroup.get(1) == null ? null : Integer.parseInt(subsubgroup.get(1));
                     subsubid = subsubgroup.get(2) == null ? null : Integer.parseInt(subsubgroup.get(2));
                     groupname = subsubgroup.get(3);
-                    artikelCount = returnArtikelCount(topid, subid, subsubid);
+                    try {
+                        artikelCount = Integer.parseInt(subsubgroup.get(4));
+                    } catch (NumberFormatException ex) {
+                        System.out.println("Exception: " + ex.getMessage());
+                        artikelCount = null;
+                    }
                     subsubgroupNode = new DefaultMutableTreeNode(new Gruppe(topid, subid, subsubid, groupname+" ("+artikelCount+")"));
                     subgroupNode.add(subsubgroupNode);
                 }
@@ -152,7 +167,8 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
 	    Statement stmt = this.conn.createStatement();
 	    // Run MySQL command
 	    ResultSet rs = stmt.executeQuery(
-		    "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name FROM produktgruppe " +
+		    "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name, n_artikel_rekursiv "+
+                    "FROM produktgruppe " +
                     "WHERE toplevel_id IS NOT NULL AND sub_id IS NULL " + aktivFilterStr +
                     "ORDER BY toplevel_id"
 		    );
@@ -163,6 +179,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
                 rowVector.add(rs.getString(2));
                 rowVector.add(rs.getString(3));
                 rowVector.add(rs.getString(4));
+                rowVector.add(rs.getString(5));
                 produktgruppen.add(rowVector);
             }
 	    rs.close();
@@ -178,7 +195,8 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
         Vector< Vector<String> > subgruppen = new Vector< Vector<String> >();
 	try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-		    "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name FROM produktgruppe " +
+		    "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name, n_artikel_rekursiv "+
+                    "FROM produktgruppe " +
                     "WHERE toplevel_id = ? " +
                     "AND sub_id IS NOT NULL AND subsub_id IS NULL " + aktivFilterStr +
                     "ORDER BY sub_id"
@@ -192,6 +210,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
                 rowVector.add(rs.getString(2));
                 rowVector.add(rs.getString(3));
                 rowVector.add(rs.getString(4));
+                rowVector.add(rs.getString(5));
                 subgruppen.add(rowVector);
             }
 	    rs.close();
@@ -207,7 +226,8 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
         Vector< Vector<String> > subsubgruppen = new Vector< Vector<String> >();
 	try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-		    "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name FROM produktgruppe " +
+		    "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name, n_artikel_rekursiv "+
+                    "FROM produktgruppe " +
                     "WHERE toplevel_id = ? " +
                     "AND sub_id = ? AND subsub_id IS NOT NULL " + aktivFilterStr +
                     "ORDER BY subsub_id"
@@ -222,6 +242,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
                 rowVector.add(rs.getString(2));
                 rowVector.add(rs.getString(3));
                 rowVector.add(rs.getString(4));
+                rowVector.add(rs.getString(5));
                 subsubgruppen.add(rowVector);
             }
 	    rs.close();
@@ -265,30 +286,25 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
         return produktgruppen_id;
     }
 
-    private Integer returnArtikelCount(Integer topid, Integer subid, Integer subsubid) {
+    private Integer returnTotalArticleCount() {
         Integer artikelCount = new Integer(0);
-        if (topid == null){
-            try {
-                // Create statement for MySQL database
-                Statement stmt = this.conn.createStatement();
-                // Run MySQL command
-                ResultSet rs = stmt.executeQuery(
-                        "SELECT COUNT(artikel_id) FROM artikel INNER JOIN produktgruppe " +
-                        "USING (produktgruppen_id) " +
-                        "WHERE artikel.aktiv = TRUE AND produktgruppe.toplevel_id > 0"
-                        );
-                // Now do something with the ResultSet ...
-                rs.next();
-                artikelCount = rs.getInt(1);
-                rs.close();
-                stmt.close();
-            } catch (SQLException ex) {
-                System.out.println("Exception: " + ex.getMessage());
-                ex.printStackTrace();
-            }
-        } else {
-            Integer prodGrID = queryProduktgruppenID(topid, subid, subsubid);
-            artikelCount = howManyActiveArticlesWithProduktgruppe(prodGrID);
+        try {
+            // Create statement for MySQL database
+            Statement stmt = this.conn.createStatement();
+            // Run MySQL command
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT COUNT(*) FROM artikel INNER JOIN produktgruppe " +
+                    "USING (produktgruppen_id) " +
+                    "WHERE artikel.aktiv = TRUE AND produktgruppe.toplevel_id > 0"
+                    );
+            // Now do something with the ResultSet ...
+            rs.next();
+            artikelCount = rs.getInt(1);
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
         }
         return artikelCount;
     }

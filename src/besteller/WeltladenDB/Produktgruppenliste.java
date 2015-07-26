@@ -97,7 +97,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT p.produktgruppen_id, p.toplevel_id, p.sub_id, p.subsub_id, "+
-                    "p.produktgruppen_name, "+
+                    "p.produktgruppen_name, p.n_artikel, "+
                     "p.aktiv, "+
                     "p.mwst_id, m.mwst_satz, p.pfand_id, a.artikel_name "+
                     "FROM produktgruppe AS p "+
@@ -117,17 +117,16 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
                 ids.add( rs.getString(3) == null ? null : rs.getInt(3) );
                 ids.add( rs.getString(4) == null ? null : rs.getInt(4) );
                 String produktgruppe = rs.getString(5);
-                Boolean aktivBool = rs.getBoolean(6);
-                Integer mwst_id = rs.getString(7) == null ? null : rs.getInt(7);
-                BigDecimal mwst_satz = rs.getBigDecimal(8);
-                Integer pfand_id = rs.getString(9) == null ? null : rs.getInt(9);
-                String pfand_name = rs.getString(10) == null ? "" : rs.getString(10);
+                Integer nArticles = rs.getString(6) == null ? null : rs.getInt(6);
+                Boolean aktivBool = rs.getBoolean(7);
+                Integer mwst_id = rs.getString(8) == null ? null : rs.getInt(8);
+                BigDecimal mwst_satz = rs.getBigDecimal(9);
+                Integer pfand_id = rs.getString(10) == null ? null : rs.getInt(10);
+                String pfand_name = rs.getString(11) == null ? "" : rs.getString(11);
                 String produktgruppenNumber = "";
                 if (ids.get(0) != null) produktgruppenNumber += ids.get(0).toString();
                 if (ids.get(1) != null) produktgruppenNumber += "."+ids.get(1).toString();
                 if (ids.get(2) != null) produktgruppenNumber += "."+ids.get(2).toString();
-
-                Integer nArticles = howManyActiveArticlesWithProduktgruppe(produktgruppen_id);
 
                 Vector<Object> row = new Vector<Object>();
                     row.add(produktgruppenNumber);

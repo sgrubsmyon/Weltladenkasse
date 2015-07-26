@@ -90,7 +90,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
         String filter = "lieferant_id != 1 "; // exclude 'unbekannt'
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT lieferant_id, lieferant_name, lieferant_kurzname, aktiv "+
+                    "SELECT lieferant_id, lieferant_name, lieferant_kurzname, n_artikel, aktiv "+
                     "FROM lieferant "+
                     "WHERE " + filter +
                     aktivFilterStr +
@@ -101,9 +101,8 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
                 Integer lieferant_id = rs.getInt(1);
                 String lieferant = rs.getString(2);
                 String kurzname = rs.getString(3);
-                Boolean aktivBool = rs.getBoolean(4);
-
-                Integer nArticles = howManyActiveArticlesWithLieferant(lieferant_id);
+                Integer nArticles = rs.getString(4) == null ? null : rs.getInt(4);
+                Boolean aktivBool = rs.getBoolean(5);
 
                 Vector<Object> row = new Vector<Object>();
                     row.add(lieferant_id);
