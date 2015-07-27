@@ -1,3 +1,7 @@
+MySQL duplicates löschen:
+http://stackoverflow.com/questions/4685173/delete-all-duplicate-rows-except-for-one-in-mysql
+
+
 Download JavaPOS code from:
 http://www.javapos.com/samplecode.html
 Create docs from src:

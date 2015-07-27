@@ -31,6 +31,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     private int rechnungRabattArtikelID = 2;
     private String zahlungsModus = "unbekannt";
 
+    private MainWindow mw;
     private Kundendisplay display;
     private TabbedPane tabbedPane;
     private Kassieren myKassieren;
@@ -102,8 +103,10 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     public Kassieren(Connection conn, MainWindowGrundlage mw, TabbedPane tp) {
 	super(conn, mw);
         if (mw instanceof MainWindow){
-            display = ( (MainWindow)mw ).getDisplay();
+            this.mw = (MainWindow)mw;
+            display = this.mw.getDisplay();
         } else {
+            this.mw = null;
             display = null;
         }
         myKassieren = this;
@@ -1678,36 +1681,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         else if (zahlungsModus == "ec"){ ec(); }
     }
 
-    private void setDisplayWelcomeTimer() {
-        if (display != null && display.deviceWorks()){
-            ActionListener displayResetter = new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    if ( !tabbedPane.esWirdKassiert && display != null && display.deviceWorks()){
-                        display.showWelcomeScreen();
-                    }
-                }
-            };
-            Timer t1 = new Timer(bc.displayShowWelcomeInterval, displayResetter);
-            t1.setRepeats(false);
-            t1.start();
-        }
-    }
-
-    private void setDisplayBlankTimer() {
-        if (display != null && display.deviceWorks()){
-            ActionListener displayBlanker = new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    if ( !tabbedPane.esWirdKassiert && display != null && display.deviceWorks()){
-                        display.clearScreen();
-                    }
-                }
-            };
-            Timer t2 = new Timer(bc.displayBlankInterval, displayBlanker);
-            t2.setRepeats(false);
-            t2.start();
-        }
-    }
-
     private void neuerKunde() {
         if ( kundeGibtField.isEditable() ){ // if Barzahlung
             int rechnungsNr = insertIntoVerkauf(false);
@@ -1719,8 +1692,10 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         updateAll();
 
         tabbedPane.esWirdKassiert = false;
-        setDisplayWelcomeTimer();
-        setDisplayBlankTimer();
+        if (mw != null){
+            mw.setDisplayWelcomeTimer();
+            mw.setDisplayBlankTimer();
+        }
     }
 
     private void stornieren() {
@@ -1730,7 +1705,9 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
             display.showWelcomeScreen();
         }
         tabbedPane.esWirdKassiert = false;
-        setDisplayBlankTimer();
+        if (mw != null){
+            mw.setDisplayBlankTimer();
+        }
     }
 
     private void artikelRabattierenRelativ(BigDecimal rabattRelativ) {
