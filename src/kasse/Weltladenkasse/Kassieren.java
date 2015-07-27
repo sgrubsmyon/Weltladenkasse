@@ -1431,23 +1431,23 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
             String artikelPreis = getSalePrice(selectedArticleID);
             if (artikelPreis == null || artikelPreis.equals("")){
                 artikelPreis = handleMissingSalePrice("Bitte Verkaufspreis eingeben");
-            }
-            if (artikelPreis != null && !artikelPreis.equals("")){
-                Artikel origArticle = getArticle(selectedArticleID);
-                Artikel newArticle = getArticle(selectedArticleID);
-                newArticle.setVKP(artikelPreis);
-                newArticle.setEmpfVKP(artikelPreis);
-                updateArticle(origArticle, newArticle);
+                if (artikelPreis != null && !artikelPreis.equals("")){
+                    Artikel origArticle = getArticle(selectedArticleID);
+                    Artikel newArticle = getArticle(selectedArticleID);
+                    newArticle.setVKP(artikelPreis);
+                    newArticle.setEmpfVKP(artikelPreis);
+                    updateArticle(origArticle, newArticle);
 
-                updateSelectedArticleID();
-                Artikelliste artikelListe = tabbedPane.getArtikelliste();
-                if (artikelListe != null){
-                    artikelListe.updateAll();
+                    updateSelectedArticleID();
+                    Artikelliste artikelListe = tabbedPane.getArtikelliste();
+                    if (artikelListe != null){
+                        artikelListe.updateAll();
+                    }
+
+                    artikelPreis = getSalePrice(selectedArticleID);
+                    if (artikelPreis == null)
+                        artikelPreis = "";
                 }
-
-                artikelPreis = getSalePrice(selectedArticleID);
-                if (artikelPreis == null)
-                    artikelPreis = "";
             }
             preisField.getDocument().removeDocumentListener(this);
             preisField.setText( bc.decimalMark(artikelPreis) );
