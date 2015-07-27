@@ -365,7 +365,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return exists;
     }
 
-    protected int setItemInactive(Artikel a) {
+    protected int setArticleInactive(Artikel a) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
@@ -381,7 +381,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
             // update the `n_artikel` fields
             updateNArtikelInProduktgruppeFor(a.getProdGrID());
-            updateNArtikelRekursivInProduktgruppeFor(a.getProdGrID());
+            updateNArtikelRekursivRecursivelyInProduktgruppeFor(a.getProdGrID());
             updateNArtikelInLieferantFor(a.getLiefID());
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
@@ -390,7 +390,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected int setItemActive(Artikel a) {
+    protected int setArticleActive(Artikel a) {
         // returns 0 if there was an error, otherwise number of rows affected (>0)
         int result = 0;
         try {
@@ -406,7 +406,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
             // update the `n_artikel` fields
             updateNArtikelInProduktgruppeFor(a.getProdGrID());
-            updateNArtikelRekursivInProduktgruppeFor(a.getProdGrID());
+            updateNArtikelRekursivRecursivelyInProduktgruppeFor(a.getProdGrID());
             updateNArtikelInLieferantFor(a.getLiefID());
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
@@ -511,7 +511,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
             // update the `n_artikel` fields
             updateNArtikelInProduktgruppeFor(a.getProdGrID());
-            updateNArtikelRekursivInProduktgruppeFor(a.getProdGrID());
+            updateNArtikelRekursivRecursivelyInProduktgruppeFor(a.getProdGrID());
             updateNArtikelInLieferantFor(a.getLiefID());
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
@@ -844,7 +844,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
     protected void updateArticle(Artikel oldArticle, Artikel newArticle) {
         // set old item to inactive:
-        int result = setItemInactive(oldArticle);
+        int result = setArticleInactive(oldArticle);
         if (result == 0){
             JOptionPane.showMessageDialog(this,
                     "Fehler: Artikel von "+getLieferant( oldArticle.getLiefID() )+" mit "+
@@ -865,7 +865,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                         "mit Nummer "+oldArticle.getNummer()+" konnte "+
                         "nicht geändert werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
-                result = setItemActive(oldArticle);
+                result = setArticleActive(oldArticle);
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Artikel von "+
@@ -1085,6 +1085,38 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return ids;
     }
 
+    protected Integer queryProdGrID(Integer topid, Integer subid, Integer subsubid) {
+        Integer produktgruppen_id = null;
+        try {
+            if (topid == null){
+                return produktgruppen_id;
+            }
+            String subid_str = (subid == null) ? "IS NULL" : "= ?";
+            String subsubid_str = (subsubid == null) ? "IS NULL" : "= ?";
+            System.out.println(topid+" "+subid+" "+subsubid);
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT produktgruppen_id FROM produktgruppe "+
+                    "WHERE toplevel_id = ? AND sub_id "+subid_str+" AND subsub_id "+subsubid_str
+                    );
+            int i=1;
+            pstmtSetInteger(pstmt, i, topid); i++;
+            if (subid != null)
+                pstmtSetInteger(pstmt, i, subid); i++;
+            if (subsubid != null)
+                pstmtSetInteger(pstmt, i, subsubid); i++;
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            produktgruppen_id = rs.getInt(1);
+            System.out.println(produktgruppen_id);
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return produktgruppen_id;
+    }
+
     protected int queryRecursiveActiveArticlesWithProduktgruppe(Integer produktgruppen_id) {
         int nArticles = 0;
         try {
@@ -1206,6 +1238,24 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                     "Fehler: Produktgruppe mit ID "+produktgruppen_id+": `n_artikel_rekursiv` konnte nicht "+
                     "auf "+nArticles+" gesetzt werden.",
                     "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    protected void updateNArtikelRekursivRecursivelyInProduktgruppeFor(int produktgruppen_id) {
+        Vector<Integer> prodGrIDs = new Vector<Integer>();
+        prodGrIDs.add(produktgruppen_id);
+
+        Vector<Integer> ids = queryProdGrHierarchy(produktgruppen_id);
+        Integer topid = ids.get(0), subid = ids.get(1), subsubid = ids.get(2);
+        if (topid != null && subid != null && subsubid != null){
+            prodGrIDs.add( queryProdGrID(topid, subid, null) );
+        }
+        if (topid != null && subid != null){
+            prodGrIDs.add( queryProdGrID(topid, null, null) );
+        }
+
+        for (Integer id : prodGrIDs){
+            updateNArtikelRekursivInProduktgruppeFor(id);
         }
     }
 

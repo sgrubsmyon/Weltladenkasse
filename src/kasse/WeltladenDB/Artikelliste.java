@@ -693,6 +693,10 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         scrollPane = new JScrollPane(myTable);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         artikelListPanel.add(scrollPane);
+        // replace general number of items with displayed number of items:
+        String borderLabel = this.produktgruppenname.
+            replaceAll(" \\([0-9]*\\)$", " ("+displayData.size()+")");
+        artikelListPanel.setBorder(BorderFactory.createTitledBorder(borderLabel));
         enableButtons();
     }
 

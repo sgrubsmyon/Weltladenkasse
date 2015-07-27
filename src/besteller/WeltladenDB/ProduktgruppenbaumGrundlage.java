@@ -254,38 +254,6 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
         return subsubgruppen;
     }
 
-    private Integer queryProduktgruppenID(Integer topid, Integer subid, Integer subsubid) {
-        Integer produktgruppen_id = 0;
-        try {
-            if (topid == null){
-                return produktgruppen_id;
-            }
-            String subid_str = (subid == null) ? "IS NULL" : "= ?";
-            String subsubid_str = (subsubid == null) ? "IS NULL" : "= ?";
-            System.out.println(topid+" "+subid+" "+subsubid);
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT produktgruppen_id FROM produktgruppe "+
-                    "WHERE toplevel_id = ? AND sub_id "+subid_str+" AND subsub_id "+subsubid_str
-                    );
-            int i=1;
-            pstmtSetInteger(pstmt, i, topid); i++;
-            if (subid != null)
-                pstmtSetInteger(pstmt, i, subid); i++;
-            if (subsubid != null)
-                pstmtSetInteger(pstmt, i, subsubid); i++;
-            ResultSet rs = pstmt.executeQuery();
-            rs.next();
-            produktgruppen_id = rs.getInt(1);
-            System.out.println(produktgruppen_id);
-            rs.close();
-            pstmt.close();
-        } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-        return produktgruppen_id;
-    }
-
     private Integer returnTotalArticleCount() {
         Integer artikelCount = new Integer(0);
         try {
