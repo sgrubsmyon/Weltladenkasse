@@ -4,12 +4,7 @@ package Weltladenkasse;
 import java.util.*; // for Vector
 
 // MySQL Connector/J stuff:
-import java.sql.SQLException;
-import java.sql.DriverManager;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.ResultSet;
-//import java.sql.*;
+import java.sql.*;
 
 // GUI stuff:
 import java.awt.BorderLayout;
@@ -17,11 +12,8 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
+import javax.swing.*; // JFrame, JPanel, JButton, JLabel, ...
+import javax.swing.Timer; // ambiguity with java.util.Timer
 
 import WeltladenDB.MainWindowGrundlage;
 
@@ -48,6 +40,7 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
         super(password);
 
         display = new Kundendisplay(bc);
+        setDisplayBlankTimer();
 
         if (connectionWorks){
             myTabbedPane = new TabbedPane(this.conn, this);
@@ -57,6 +50,36 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
 	//beendenButton.addActionListener(this);
 	//topPanel.add(beendenButton);
 	//holdAll.add(topPanel, BorderLayout.NORTH);
+    }
+
+    public void setDisplayWelcomeTimer() {
+        if (display != null && display.deviceWorks()){
+            ActionListener displayResetter = new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    if ( !myTabbedPane.esWirdKassiert && display != null && display.deviceWorks()){
+                        display.showWelcomeScreen();
+                    }
+                }
+            };
+            Timer t1 = new Timer(bc.displayShowWelcomeInterval, displayResetter);
+            t1.setRepeats(false);
+            t1.start();
+        }
+    }
+
+    public void setDisplayBlankTimer() {
+        if (display != null && display.deviceWorks()){
+            ActionListener displayBlanker = new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    if ( !myTabbedPane.esWirdKassiert && display != null && display.deviceWorks()){
+                        display.clearScreen();
+                    }
+                }
+            };
+            Timer t2 = new Timer(bc.displayBlankInterval, displayBlanker);
+            t2.setRepeats(false);
+            t2.start();
+        }
     }
 
     @Override
