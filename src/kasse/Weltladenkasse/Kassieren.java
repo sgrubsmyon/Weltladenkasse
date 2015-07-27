@@ -1185,13 +1185,14 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     //////////////////////////////////
     // DB insert functions
     //////////////////////////////////
-    private int insertIntoVerkauf(boolean ec) {
+    private int insertIntoVerkauf(boolean ec, BigDecimal kundeGibt) {
         int rechnungsNr = -1;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "INSERT INTO verkauf SET verkaufsdatum = NOW(), ec_zahlung = ?"
+                    "INSERT INTO verkauf SET verkaufsdatum = NOW(), ec_zahlung = ?, kunde_gibt = ?"
                     );
             pstmtSetBoolean(pstmt, 1, ec);
+            pstmt.setBigDecimal(2, kundeGibt);
             int result = pstmt.executeUpdate();
             pstmt.close();
             if (result == 0){
@@ -1683,10 +1684,11 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 
     private void neuerKunde() {
         if ( kundeGibtField.isEditable() ){ // if Barzahlung
-            int rechnungsNr = insertIntoVerkauf(false);
+            int rechnungsNr = insertIntoVerkauf(false,
+                    new BigDecimal( getKundeGibt() ));
             insertIntoKassenstand(rechnungsNr);
         } else {
-            insertIntoVerkauf(true);
+            insertIntoVerkauf(true, null);
         }
         clearAll();
         updateAll();
