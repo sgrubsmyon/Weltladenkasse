@@ -89,14 +89,16 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	overviewLabels = new Vector<String>();
 	overviewLabels.add("");
 	overviewLabels.add("Rechnungs-Nr."); overviewLabels.add("Betrag");
-        overviewLabels.add("Zahlung"); overviewLabels.add("Datum");
+        overviewLabels.add("Zahlung"); overviewLabels.add("Kunde gibt");
+        overviewLabels.add("Datum");
 	overviewLabels.add("");
 	try {
 	    // Create statement for MySQL database
 	    Statement stmt = this.conn.createStatement();
 	    // Run MySQL command
 	    ResultSet rs = stmt.executeQuery(
-		    "SELECT vd.rechnungs_nr, SUM(vd.ges_preis) AS rechnungs_betrag, verkauf.ec_zahlung, " +
+		    "SELECT vd.rechnungs_nr, SUM(vd.ges_preis) AS rechnungs_betrag, "+
+                    "verkauf.ec_zahlung, verkauf.kunde_gibt, " +
 		    "DATE_FORMAT(verkauf.verkaufsdatum, '"+bc.dateFormatSQL+"') " +
 		    "FROM verkauf_details AS vd " +
                     "INNER JOIN verkauf USING (rechnungs_nr) " +
@@ -110,12 +112,15 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 		Vector<String> row = new Vector<String>();
 		row.add("");
 		row.add(rs.getString(1));
-                row.add(rs.getString(2) + ' ' + bc.currencySymbol);
+                String p = bc.priceFormatter(rs.getString(2));
+                if (!p.equals("")) p += ' ' + bc.currencySymbol;
+                row.add(p);
                 row.add(rs.getBoolean(3) ? "EC" : "Bar");
-                row.add(rs.getString(4));
+                p = bc.priceFormatter(rs.getString(4));
+                if (!p.equals("")) p += ' ' + bc.currencySymbol;
+                row.add( bc.priceFormatter(rs.getString(4)) + ' ' + bc.currencySymbol );
+                row.add(rs.getString(5));
 		row.add("");
-		// change dots to commas
-		row.set(2, row.get(2).replace('.',','));
 		data.add(row);
 	    }
 	    rs.close();
@@ -262,7 +267,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                     einzelPreis = bc.priceFormatter(
                             gesPreisDec.divide(stueckDec, 10, RoundingMode.HALF_UP ) )+' '+bc.currencySymbol;
                 }
-                gesPreis = gesPreis.replace('.',',')+' '+bc.currencySymbol;
+                gesPreis = bc.priceFormatter(gesPreis)+' '+bc.currencySymbol;
                 String name = "";
                 String color = "default";
                 if ( aktionsname != null ) { // Aktionsrabatt
@@ -371,6 +376,8 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	betrag.setCellRenderer(rechtsAusrichter);
 	TableColumn zahlung = table.getColumn("Zahlung");
 	zahlung.setCellRenderer(rechtsAusrichter);
+	TableColumn kgibt = table.getColumn("Kunde gibt");
+	kgibt.setCellRenderer(rechtsAusrichter);
 	TableColumn datum = table.getColumn("Datum");
 	datum.setCellRenderer(rechtsAusrichter);
 	datum.setPreferredWidth(100);
