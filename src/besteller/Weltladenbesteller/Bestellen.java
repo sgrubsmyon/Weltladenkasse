@@ -812,6 +812,7 @@ public class Bestellen extends BestellungsGrundlage implements
         ArtikelBearbeiten bearb = new ArtikelBearbeiten(this.conn,
                 this.mainWindow, tabbedPane.getArtikelliste(), editDialog,
                 selectedArticles);
+        bearb.getArtikelFormular().sortimentBox.setSelected(true);
         editDialog.getContentPane().add(bearb, BorderLayout.CENTER);
         editDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         WindowAdapterDialog wad = new WindowAdapterDialog(bearb, editDialog,
