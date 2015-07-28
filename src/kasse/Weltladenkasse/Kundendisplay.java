@@ -27,17 +27,6 @@ public class Kundendisplay {
         // Optionally copy the files contained in the subfolders of `native` in
         // the hidapi jar file to `resources/natives` if JNIFromJar.loadLibraryFromJar()
         // is used.
-
-        //try {
-        //    System.loadLibrary("hidapi-jni"); // used for tests. This library in classpath only
-        //} catch (UnsatisfiedLinkError e) {
-        //    try {
-        //        JNIFromJar.loadLibraryFromJar("/resources/natives/"+System.mapLibraryName("hidapi-jni-32"));
-        //                                        // during runtime. .DLL within .JAR
-        //    } catch (IOException e1) {
-        //        throw new RuntimeException(e1);
-        //    }
-        //}
     }
 
     private HIDManager manager;
