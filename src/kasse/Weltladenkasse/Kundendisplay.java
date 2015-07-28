@@ -18,9 +18,15 @@ public class Kundendisplay {
     private BaseClass bc;
 
     static {
+        // it seems that this method works if the hidapi jar file is included in
+        // the overall jar file!
         ClassPathLibraryLoader.loadNativeHIDLibrary();
 
         // or:
+
+        // Optionally copy the files contained in the subfolders of `native` in
+        // the hidapi jar file to `resources/natives` if JNIFromJar.loadLibraryFromJar()
+        // is used.
 
         //try {
         //    System.loadLibrary("hidapi-jni"); // used for tests. This library in classpath only
@@ -255,7 +261,7 @@ public class Kundendisplay {
         return str;
     }
 
-    
+
 
     /* Public print methods: */
 

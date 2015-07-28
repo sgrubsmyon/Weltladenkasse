@@ -29,7 +29,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     private final BigDecimal ecSchwelle = new BigDecimal("20.00");
     private int artikelRabattArtikelID = 1;
     private int rechnungRabattArtikelID = 2;
-    private String zahlungsModus = "unbekannt";
 
     private MainWindow mw;
     private Kundendisplay display;
