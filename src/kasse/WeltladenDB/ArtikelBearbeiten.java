@@ -53,6 +53,10 @@ public class ArtikelBearbeiten extends DialogWindow
         showAll();
     }
 
+    public ArtikelFormular getArtikelFormular() {
+        return artikelFormular;
+    }
+
     protected void showHeader() {
         headerPanel = new JPanel();
         artikelFormular.showHeader(headerPanel, allPanel);
