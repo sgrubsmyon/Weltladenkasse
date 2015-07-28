@@ -245,9 +245,10 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	String artikelZahl = "";
 	try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT vd.position, a.kurzname, ra.aktionsname, " +
+                    "SELECT vd.position, a.kurzname, a.artikel_name, ra.aktionsname, " +
                     "a.artikel_nr, a.sortiment, " +
                     "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, " +
+                    "(p.toplevel_id IS NULL AND p.sub_id = 1 AND a.artikel_id = 2) AS rechnung_rabatt, " +
                     "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
                     "vd.stueckzahl, vd.ges_preis, vd.mwst_satz " +
                     "FROM verkauf_details AS vd LEFT JOIN artikel AS a USING (artikel_id) " +
@@ -260,19 +261,21 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    // Now do something with the ResultSet ...
 	    while (rs.next()) {
                 Integer pos = rs.getString(1) == null ? null : rs.getInt(1);
-                String artikelname = rs.getString(2);
-                String aktionsname = rs.getString(3);
-                String artikelnummer = rs.getString(4);
-                boolean sortiment = rs.getBoolean(5);
-                boolean manuRabatt = rs.getBoolean(6);
-                boolean pfand = rs.getBoolean(7);
-                String stueck = rs.getString(8);
+                String kurzname = rs.getString(2);
+                String artikelname = rs.getString(3);
+                String aktionsname = rs.getString(4);
+                String artikelnummer = rs.getString(5);
+                boolean sortiment = rs.getBoolean(6);
+                boolean manuRabatt = rs.getBoolean(7);
+                boolean rechnungRabatt = rs.getBoolean(8);
+                boolean pfand = rs.getBoolean(9);
+                String stueck = rs.getString(10);
                 BigDecimal stueckDec = new BigDecimal(0);
                 if (stueck != null)
                     stueckDec = new BigDecimal(stueck);
-                String gesPreis = rs.getString(9);
+                String gesPreis = rs.getString(11);
                 BigDecimal gesPreisDec = new BigDecimal(gesPreis);
-                BigDecimal mwst = new BigDecimal(rs.getString(10));
+                BigDecimal mwst = new BigDecimal(rs.getString(12));
                 String einzelPreis = "";
                 if (stueck != null){
                     einzelPreis = bc.priceFormatter(
@@ -283,27 +286,31 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 String color = "default";
                 if ( aktionsname != null ) { // Aktionsrabatt
                     name = einrueckung+aktionsname;
-                    color = "red"; artikelnummer = "RABATT"; einzelPreis = "";
+                    color = "red"; artikelnummer = "RABATT";// einzelPreis = "";
                 }
-                else if ( stueck == null && manuRabatt ){ // Manueller Rabatt auf Rechnung
+                else if ( rechnungRabatt ){ // Manueller Rabatt auf Rechnung
                     name = artikelname; color = "red";
-                    artikelnummer = "RABATT"; einzelPreis = "";
+                    artikelnummer = "RABATT";// einzelPreis = "";
                 }
-                else if ( manuRabatt ){
+                else if ( manuRabatt ){ // Manueller Rabatt auf Artikel
                     name = einrueckung+artikelname; color = "red"; artikelnummer = "RABATT";
-                } // Manueller Rabatt auf Artikel
+                }
                 else if ( pfand && stueckDec.signum() > 0 ){
                     name = einrueckung+artikelname; color = "blue"; artikelnummer = "PFAND";
                 }
                 else if ( pfand && stueckDec.signum() < 0 ){
                     name = artikelname; color = "green"; artikelnummer = "LEERGUT";
                 }
-                else if ( stueckDec.signum() < 0 ){
-                    name = artikelname; color = "green";
-                }
-                else if ( artikelname != null ){
-                    name = artikelname;
-                    if ( !sortiment ){ color = "gray"; }
+                else {
+                    if ( kurzname != null && !kurzname.equals("") ){
+                        name = kurzname;
+                    } else if (artikelname != null ){
+                        name = artikelname;
+                    }
+                    if ( stueckDec.signum() < 0 ){
+                        color = "green";
+                    }
+                    else if ( !sortiment ){ color = "gray"; }
                     else { color = "default"; }
                 }
 
