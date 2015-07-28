@@ -34,6 +34,8 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     protected Vector<KassierArtikel> kassierArtikel;
     protected Vector<BigDecimal> mwsts;
     protected String zahlungsModus;
+    protected BigDecimal kundeGibt;
+    protected String datum;
     protected Vector<String> columnLabels;
     protected HashMap< BigDecimal, Vector<BigDecimal> > vatMap;
 
@@ -56,6 +58,8 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         kassierArtikel = new Vector<KassierArtikel>();
         mwsts = new Vector<BigDecimal>();
         zahlungsModus = "unbekannt";
+        kundeGibt = null;
+        datum = "";
     }
 
     //////////////////////////////////

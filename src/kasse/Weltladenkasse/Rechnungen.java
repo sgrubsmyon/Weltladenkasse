@@ -60,6 +60,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     protected Vector<JButton> stornoButtons;
 
     protected Vector< Vector<String> > data;
+    protected Vector<String> dates;
     protected Vector<String> overviewLabels;
     protected String rechnungsZahl;
     protected int rechnungsZahlInt;
@@ -86,6 +87,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 
     void fillDataArray(){
 	this.data = new Vector< Vector<String> >();
+	this.dates = new Vector<String>();
 	overviewLabels = new Vector<String>();
 	overviewLabels.add("");
 	overviewLabels.add("Rechnungs-Nr."); overviewLabels.add("Betrag");
@@ -99,7 +101,8 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    ResultSet rs = stmt.executeQuery(
 		    "SELECT vd.rechnungs_nr, SUM(vd.ges_preis) AS rechnungs_betrag, "+
                     "verkauf.ec_zahlung, verkauf.kunde_gibt, " +
-		    "DATE_FORMAT(verkauf.verkaufsdatum, '"+bc.dateFormatSQL+"') " +
+		    "DATE_FORMAT(verkauf.verkaufsdatum, '"+bc.dateFormatSQL+"'), " +
+		    "verkauf.verkaufsdatum " +
 		    "FROM verkauf_details AS vd " +
                     "INNER JOIN verkauf USING (rechnungs_nr) " +
 		    filterStr +
@@ -118,10 +121,12 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 row.add(rs.getBoolean(3) ? "EC" : "Bar");
                 p = bc.priceFormatter(rs.getString(4));
                 if (!p.equals("")) p += ' ' + bc.currencySymbol;
-                row.add( bc.priceFormatter(rs.getString(4)) + ' ' + bc.currencySymbol );
+                row.add(p);
                 row.add(rs.getString(5));
 		row.add("");
 		data.add(row);
+
+                dates.add(rs.getString(6));
 	    }
 	    rs.close();
 	    rs = stmt.executeQuery(
@@ -208,6 +213,12 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	Vector<Vector> overviewData = new Vector<Vector>(1);
 	overviewData.add(coolRow);
         zahlungsModus = coolRow.get(3).toLowerCase();
+        try {
+            kundeGibt = new BigDecimal( bc.priceFormatterIntern(coolRow.get(4)) );
+        } catch (NumberFormatException ex) {
+            kundeGibt = null;
+        }
+	datum = this.dates.get(detailRow);
 
         AnyJComponentJTable overviewTable = new AnyJComponentJTable(overviewData, overviewLabels){
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
@@ -395,13 +406,17 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
                 getMwstsAndTheirValues();
             BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
-            BigDecimal kundeGibt = null, rueckgeld = null;
-            //if (kundeGibtField.getDocument().getLength() > 0){
-            //    kundeGibt = new BigDecimal( getKundeGibt() );
-            //    rueckgeld = kundeGibt.subtract(totalPrice);
-            //}
+            BigDecimal rueckgeld = null;
+            if (kundeGibt != null){
+                rueckgeld = kundeGibt.subtract(totalPrice);
+            }
+            DateTime datet = null;
+            if (!datum.equals(""))
+                datet = new DateTime(datum);
+            else
+                datet = DateTime.now(TimeZone.getDefault());
             Quittung myQuittung = new Quittung(this.conn, this.mainWindow,
-                    DateTime.now(TimeZone.getDefault()), kassierArtikel,
+                    datet, kassierArtikel,
                     mwstsAndTheirValues, zahlungsModus,
                     totalPrice, kundeGibt, rueckgeld);
             myQuittung.printReceipt();
