@@ -1433,7 +1433,11 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         if ( ! variablerPreis ){
             String artikelPreis = getSalePrice(selectedArticleID);
             if (artikelPreis == null || artikelPreis.equals("")){
-                artikelPreis = handleMissingSalePrice("Bitte Verkaufspreis eingeben");
+                artikelPreis = handleMissingSalePrice("Bitte Verkaufspreis eingeben",
+                        getShortName(selectedArticleID),
+                        getArticleNumber(selectedArticleID)[0],
+                        getArticleName(selectedArticleID)[1],
+                        getBarcode(selectedArticleID));
                 if (artikelPreis != null && !artikelPreis.equals("")){
                     Artikel origArticle = getArticle(selectedArticleID);
                     Artikel newArticle = getArticle(selectedArticleID);
@@ -1535,7 +1539,8 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         String artikelPreis = bc.priceFormatterIntern(preisField.getText());
         BigDecimal gesPreis = new BigDecimal(artikelPreis).multiply(new BigDecimal(stueck));
         String gesPreisString = bc.priceFormatterIntern(gesPreis);
-        String kurzname = getShortName(selectedArticleID);
+        Artikel a = getArticle(selectedArticleID);
+        String kurzname = a.getKurzname();
         String artikelMwSt = getVAT(selectedArticleID);
         Boolean sortiment = getSortimentBool(selectedArticleID);
         if (color == "default"){

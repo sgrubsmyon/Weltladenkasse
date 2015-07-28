@@ -218,9 +218,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
     }
 
-    protected String handleMissingSalePrice(String title) {
-        JLabel label = new JLabel("Wie viel kostet dieser Artikel?");
-
+    protected String handleMissingSalePrice(String title, String artikelname, String artikelnummer,
+            String lieferant, String barcode) {
         JPanel preisPanel = new JPanel();
         JTextField preisField = new JTextField("");
         ((AbstractDocument)preisField.getDocument()).setDocumentFilter(geldFilter);
@@ -229,7 +228,20 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         preisPanel.add(preisField);
         preisPanel.add(new JLabel(bc.currencySymbol));
 
-        JOptionPane jop = new JOptionPane(new Object[]{label, preisPanel},
+        ArrayList<Object> objects = new ArrayList<Object>();
+        objects.add(new JLabel("Wie viel kostet der Artikel?"));
+        objects.add(new JLabel("\""+artikelname+"\""));
+        JPanel labelPanel = new JPanel();
+        if (artikelnummer != null)
+            labelPanel.add(new JLabel("Artikel-Nr.: "+artikelnummer));
+        if (lieferant != null)
+            labelPanel.add(new JLabel("    von: "+lieferant));
+        objects.add(labelPanel);
+        if (barcode != null)
+            objects.add(new JLabel("Barcode: "+barcode));
+        objects.add(preisPanel);
+
+        JOptionPane jop = new JOptionPane(objects.toArray(),
                     JOptionPane.QUESTION_MESSAGE,
                     JOptionPane.OK_CANCEL_OPTION);
         JDialog dialog = jop.createDialog(title);
