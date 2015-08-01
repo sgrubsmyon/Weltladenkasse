@@ -259,6 +259,13 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         }
     }
 
+    private void removeDefaultKeyBindings(JTextComponent field) {
+        // remove Ctrl-A key binding:
+        field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
+        // remove Ctrl-C key binding:
+        field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK), "none");
+    }
+
     void showAll(){
         updateRabattButtons();
 
@@ -285,8 +292,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
                     barcodeBox.addPopupMouseListener(new MouseListenerBarcodeBox());
                     barcodeField = (JTextField)barcodeBox.getEditor().getEditorComponent();
                     barcodeField.setColumns(9);
-                    barcodeField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-                        // remove Ctrl-A key binding
+                    removeDefaultKeyBindings(barcodeField);
                     barcodeField.getDocument().addDocumentListener(this);
                     barcodePanel.add(barcodeBox);
                     emptyBarcodeButton = new JButton("x");
@@ -305,8 +311,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
                     nummerBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 30, false));
                     nummerField = (JTextField)nummerBox.getEditor().getEditorComponent();
                     nummerField.setColumns(7);
-                    nummerField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-                        // remove Ctrl-A key binding
+                    removeDefaultKeyBindings(nummerField);
                     nummerField.getDocument().addDocumentListener(this);
                     barcodePanel.add(nummerBox);
                     emptyNummerButton = new JButton("x");
@@ -381,9 +386,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
             anzahlField = anzahlEditor.getTextField();
             preventSpinnerOverflow(anzahlField);
             ( (NumberFormatter) anzahlField.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
-            //anzahlField.getDocument().addDocumentListener(this);
-            anzahlField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-                // remove Ctrl-A key binding
+            removeDefaultKeyBindings(anzahlField);
             anzahlField.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) {
                     if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
@@ -406,8 +409,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
             spinnerPanel.add(preisLabel);
             preisField = new JTextField("");
             preisField.setFont(mediumFont);
-            preisField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-                // remove Ctrl-A key binding
+            removeDefaultKeyBindings(preisField);
             preisField.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) { if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
                     if (hinzufuegenButton.isEnabled()){
