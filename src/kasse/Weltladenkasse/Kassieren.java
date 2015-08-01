@@ -122,22 +122,20 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         KeyStroke ecShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK); // Ctrl-E
         KeyStroke stornierenShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK); // Ctrl-S
 
-        ShortcutListener shortcutListener = new ShortcutListener();
-
-        this.registerKeyboardAction(shortcutListener, "barcode", barcodeShortcut,
-                JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "name", artikelNameShortcut,
-                JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "nummer", artikelNummerShortcut,
-                JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "zws", zwischensummeShortcut,
-                JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "bar", barShortcut,
-                JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "ec", ecShortcut,
-                JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "stornieren", stornierenShortcut,
-                JComponent.WHEN_IN_FOCUSED_WINDOW);
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barcodeShortcut, "barcode");
+        this.getActionMap().put("barcode", new BarcodeAction());
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(artikelNameShortcut, "name");
+        this.getActionMap().put("name", new NameAction());
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(artikelNummerShortcut, "nummer");
+        this.getActionMap().put("nummer", new NummerAction());
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(zwischensummeShortcut, "zws");
+        this.getActionMap().put("zws", new ZWSAction());
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barShortcut, "bar");
+        this.getActionMap().put("bar", new BarAction());
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(ecShortcut, "ec");
+        this.getActionMap().put("ec", new ECAction());
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(stornierenShortcut, "stornieren");
+        this.getActionMap().put("stornieren", new StornoAction());
 
         rabattButtons = new Vector<JButton>();
         rabattButtons.add(new BigButton("  5%"));
@@ -152,43 +150,52 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         barcodeBox.requestFocus();
     }
 
-    // listener for keyboard shortcuts
-    private class ShortcutListener implements ActionListener {
+    private class BarcodeAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
-            if (e.getActionCommand() == "barcode"){
-                barcodeBox.requestFocus();
-                return;
-            }
-            if (e.getActionCommand() == "name"){
-                artikelBox.requestFocus();
-                return;
-            }
-            if (e.getActionCommand() == "nummer"){
-                nummerBox.requestFocus();
-                return;
-            }
-            if (e.getActionCommand() == "zws"){
-                if (zwischensummeButton.isEnabled())
-                    zwischensumme();
-                return;
-            }
-            if (e.getActionCommand() == "bar"){
-                if (barButton.isEnabled())
-                    bar();
-                return;
-            }
-            if (e.getActionCommand() == "ec"){
-                if (ecButton.isEnabled())
-                    ec();
-                return;
-            }
-            if (e.getActionCommand() == "stornieren"){
-                if (stornoButton.isEnabled())
-                    stornieren();
-                return;
-            }
+            barcodeBox.requestFocus();
         }
     }
+
+    private class NameAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            artikelBox.requestFocus();
+        }
+    }
+
+    private class NummerAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            nummerBox.requestFocus();
+        }
+    }
+
+    private class ZWSAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            if (zwischensummeButton.isEnabled())
+                zwischensumme();
+        }
+    }
+
+    private class BarAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            if (barButton.isEnabled())
+                bar();
+        }
+    }
+
+    private class ECAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            if (ecButton.isEnabled())
+                ec();
+        }
+    }
+
+    private class StornoAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            if (stornoButton.isEnabled())
+                stornieren();
+        }
+    }
+
 
     void preventSpinnerOverflow(JFormattedTextField spinnerField) {
         AbstractDocument doc = new PlainDocument() {
@@ -259,7 +266,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         }
     }
 
-    private void removeDefaultKeyBindings(JTextComponent field) {
+    private void removeDefaultKeyBindings(JComponent field) {
         // remove Ctrl-A key binding:
         field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
         // remove Ctrl-C key binding:
@@ -334,6 +341,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
                     artikelBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 50, false));
                     artikelField = (JTextField)artikelBox.getEditor().getEditorComponent();
                     artikelField.setColumns(25);
+                    removeDefaultKeyBindings(artikelField);
                     artikelField.getDocument().addDocumentListener(this);
                     artikelNamePanel.add(artikelBox);
                     emptyArtikelButton = new JButton("x");
@@ -386,7 +394,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
             anzahlField = anzahlEditor.getTextField();
             preventSpinnerOverflow(anzahlField);
             ( (NumberFormatter) anzahlField.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
-            removeDefaultKeyBindings(anzahlField);
             anzahlField.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) {
                     if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
@@ -402,6 +409,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
                 }
             });
             anzahlField.setColumns(4);
+            removeDefaultKeyBindings(anzahlField);
 	    anzahlLabel.setLabelFor(anzahlSpinner);
             spinnerPanel.add(anzahlSpinner);
 
@@ -409,7 +417,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
             spinnerPanel.add(preisLabel);
             preisField = new JTextField("");
             preisField.setFont(mediumFont);
-            removeDefaultKeyBindings(preisField);
             preisField.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) { if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
                     if (hinzufuegenButton.isEnabled()){
@@ -421,6 +428,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 	    ((AbstractDocument)preisField.getDocument()).setDocumentFilter(geldFilter);
             preisField.setEditable(false);
             preisField.setColumns(6);
+            removeDefaultKeyBindings(preisField);
             preisField.setHorizontalAlignment(JTextField.RIGHT);
             spinnerPanel.add(preisField);
             spinnerPanel.add(new BigLabel(bc.currencySymbol));
@@ -483,6 +491,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
                 kundeGibtPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
                 kundeGibtField = new BigPriceField("");
                 kundeGibtField.setColumns(5);
+                removeDefaultKeyBindings(kundeGibtField);
                 kundeGibtField.setEditable(false);
                 kundeGibtField.getDocument().addDocumentListener(new DocumentListener(){
                     public void insertUpdate(DocumentEvent e) {
@@ -508,6 +517,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
                 gutscheinPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
                 gutscheinField = new BigPriceField("");
                 gutscheinField.setColumns(5);
+                removeDefaultKeyBindings(gutscheinField);
                 gutscheinField.setEditable(false);
                 gutscheinField.addKeyListener(new KeyAdapter() {
                     public void keyPressed(KeyEvent e) {
@@ -529,12 +539,14 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
                 zuZahlenPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
                 bigPriceField = new BigPriceField("");
                 bigPriceField.setEditable(false);
+                removeDefaultKeyBindings(bigPriceField);
                 zuZahlenPanel.add(bigPriceField);
 
                 JPanel rueckgeldPanel = new JPanel();
                 rueckgeldPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
                 rueckgeldField = new BigPriceField("");
                 rueckgeldField.setEditable(false);
+                removeDefaultKeyBindings(rueckgeldField);
                 rueckgeldPanel.add(rueckgeldField);
 
                 c3.gridy = 0; c3.gridx = 0;
@@ -629,6 +641,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 
             individuellRabattRelativField = new JTextField("");
             individuellRabattRelativField.setColumns(3);
+            removeDefaultKeyBindings(individuellRabattRelativField);
             individuellRabattRelativField.getDocument().addDocumentListener(new DocumentListener(){
                 public void insertUpdate(DocumentEvent e) {
                     if (individuellRabattRelativField.getText().length() > 0){
@@ -657,6 +670,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 
             individuellRabattAbsolutField = new JTextField("");
             individuellRabattAbsolutField.setColumns(3);
+            removeDefaultKeyBindings(individuellRabattAbsolutField);
             individuellRabattAbsolutField.getDocument().addDocumentListener(new DocumentListener(){
                 public void insertUpdate(DocumentEvent e) {
                     if (individuellRabattAbsolutField.getText().length() > 0){
@@ -780,6 +794,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 
     void showTable(){
 	myTable = new RechnungsTable(data, columnLabels);
+        removeDefaultKeyBindings(myTable);
         myTable.setFont(mediumFont);
         myTable.setRowHeight(20);
 //	myTable.setBounds(71,53,150,100);
@@ -2012,9 +2027,9 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         }
         if (e.getDocument() == barcodeField.getDocument()){
             if (barcodeBox.setBoxMode){ return; }
-            System.out.println("\nbarcodeField DocumentListener fired!");
-            System.out.println("selectedItem: "+barcodeBox.getSelectedItem());
-            System.out.println("barcodeField text: "+barcodeField.getText()+"   barcodeText: "+barcodeText);
+            //System.out.println("\nbarcodeField DocumentListener fired!");
+            //System.out.println("selectedItem: "+barcodeBox.getSelectedItem());
+            //System.out.println("barcodeField text: "+barcodeField.getText()+"   barcodeText: "+barcodeText);
             if ( !barcodeField.getText().equals(barcodeText) ) { // some editing change in box
                 resetFormFromBarcodeBox();
                 barcodeText = barcodeField.getText();
@@ -2024,9 +2039,9 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         }
         if (e.getDocument() == artikelField.getDocument()){
             if (artikelBox.setBoxMode){ return; }
-            System.out.println("\nartikelField DocumentListener fired!");
-            System.out.println("selectedItem: "+artikelBox.getSelectedItem());
-            System.out.println("artikelField text: "+artikelField.getText()+"   artikelNameText: "+artikelNameText);
+            //System.out.println("\nartikelField DocumentListener fired!");
+            //System.out.println("selectedItem: "+artikelBox.getSelectedItem());
+            //System.out.println("artikelField text: "+artikelField.getText()+"   artikelNameText: "+artikelNameText);
             if ( !artikelField.getText().equals(artikelNameText) ) { // some editing change in box
                 resetFormFromArtikelBox();
                 artikelNameText = artikelField.getText();
@@ -2036,9 +2051,9 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         }
         if (e.getDocument() == nummerField.getDocument()){
             if (nummerBox.setBoxMode){ return; }
-            System.out.println("\nnummerField DocumentListener fired!");
-            System.out.println("selectedItem: "+nummerBox.getSelectedItem());
-            System.out.println("nummerField text: "+nummerField.getText()+"   artikelNummerText: "+artikelNummerText);
+            //System.out.println("\nnummerField DocumentListener fired!");
+            //System.out.println("selectedItem: "+nummerBox.getSelectedItem());
+            //System.out.println("nummerField text: "+nummerField.getText()+"   artikelNummerText: "+artikelNummerText);
             if ( !nummerField.getText().equals(artikelNummerText) ) { // some editing change in box
                 resetFormFromNummerBox();
                 artikelNummerText = nummerField.getText();
