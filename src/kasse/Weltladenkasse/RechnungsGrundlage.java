@@ -6,18 +6,15 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 import java.math.RoundingMode;
 
 // GUI stuff:
+import java.awt.*; // BorderLayout, FlowLayout, Dimension, Event, Component, Color, Font
+import java.awt.event.*; // MouseEvent, ActionEvent, ActionListener
+
 import javax.swing.*; // JButton
 import javax.swing.event.*; // ActionEvent
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.Color;
-import java.awt.FlowLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.table.*;
-import java.awt.event.*; // MouseEvent, ActionEvent, ActionListener
-import java.awt.Point;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -60,6 +57,13 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         zahlungsModus = "unbekannt";
         kundeGibt = null;
         datum = "";
+    }
+
+    protected void removeDefaultKeyBindings(JComponent field) {
+        // remove Ctrl-A key binding:
+        field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
+        // remove Ctrl-C key binding:
+        field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK), "none");
     }
 
     //////////////////////////////////
@@ -125,6 +129,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         totalPriceField = new JTextField(calculateTotalPrice()+" "+bc.currencySymbol);
         totalPriceField.setEditable(false);
         totalPriceField.setColumns(7);
+        removeDefaultKeyBindings(totalPriceField);
         totalPriceField.setHorizontalAlignment(JTextField.RIGHT);
         totalPricePanel.add(totalPriceField);
 
@@ -146,6 +151,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
                 JTextField vatField = new JTextField(bc.priceFormatter(vatAmount)+" "+bc.currencySymbol);
                 vatField.setEditable(false);
                 vatField.setColumns(7);
+                removeDefaultKeyBindings(vatField);
                 vatField.setHorizontalAlignment(JTextField.RIGHT);
                 totalPricePanel.add(vatField);
             }
