@@ -60,6 +60,7 @@ public class ArtikelFormular extends WindowContent
     private Vector<String> produktgruppenNamen;
     public Vector<Integer> produktgruppenIDs;
     private Vector< Vector<Integer> > produktgruppenIDsList;
+    private Vector<String> produktgruppenEinheiten;
     private Vector<String> lieferantNamen;
     public Vector<Integer> lieferantIDs;
 
@@ -79,12 +80,13 @@ public class ArtikelFormular extends WindowContent
         produktgruppenNamen = new Vector<String>();
         produktgruppenIDs = new Vector<Integer>();
         produktgruppenIDsList = new Vector< Vector<Integer> >();
+        produktgruppenEinheiten = new Vector<String>();
         lieferantNamen = new Vector<String>();
         lieferantIDs = new Vector<Integer>();
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT produktgruppen_id, toplevel_id, sub_id, subsub_id, produktgruppen_name "+
+                    "SELECT produktgruppen_id, toplevel_id, sub_id, subsub_id, produktgruppen_name, std_einheit "+
                     "FROM produktgruppe WHERE mwst_id IS NOT NULL AND toplevel_id IS NOT NULL "+
                     "AND aktiv = TRUE ORDER BY toplevel_id, sub_id, subsub_id"
                     );
@@ -95,10 +97,12 @@ public class ArtikelFormular extends WindowContent
                 ids.add( rs.getString(3) == null ? null : rs.getInt(3) );
                 ids.add( rs.getString(4) == null ? null : rs.getInt(4) );
                 String name = rs.getString(5);
+                String einheit = rs.getString(6) == null ? "" : rs.getString(6);
 
                 produktgruppenIDs.add(id);
                 produktgruppenIDsList.add(ids);
                 produktgruppenNamen.add(name);
+                produktgruppenEinheiten.add(einheit);
             }
             rs.close();
             rs = stmt.executeQuery(
@@ -127,6 +131,7 @@ public class ArtikelFormular extends WindowContent
             produktgruppenBox = new JComboBox(produktgruppenNamen);
             produktgruppenBox.setRenderer(new ProduktgruppenIndentedRenderer(produktgruppenIDsList));
             produktgruppenBox.setPrototypeDisplayValue("   Kakao und Trinkschokolade");
+            produktgruppenBox.addActionListener(this);
             produktgruppenPanel.add(produktgruppenBox);
 
             JPanel lieferantPanel = new JPanel();
@@ -367,5 +372,11 @@ public class ArtikelFormular extends WindowContent
      *    @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == produktgruppenBox){
+            int prodGrIndex = produktgruppenBox.getSelectedIndex();
+            String einheit = produktgruppenEinheiten.get(prodGrIndex);
+            System.out.println(einheit);
+            einheitField.setText(einheit);
+        }
     }
 }
