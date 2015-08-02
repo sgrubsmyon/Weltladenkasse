@@ -55,12 +55,12 @@ public class DumpDatabase extends WindowContent {
         this.add(buttonPanel);
     }
 
-    void initializeSaveChooser() {
+    void initializeSaveChooser(String filename) {
         sqlSaveChooser = new FileExistsAwareFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "SQL Dokumente", "sql");
         sqlSaveChooser.setFileFilter(filter);
-        sqlSaveChooser.setSelectedFile(new File("DB_Dump.sql"));
+        sqlSaveChooser.setSelectedFile(new File(filename));
     }
 
     void initializeLoadChooser() {
@@ -272,6 +272,29 @@ public class DumpDatabase extends WindowContent {
         }
     }
 
+    private String[] queryMostRecentOrderYearAndWeek() {
+        String year = "", week = "";
+        try {
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT jahr, kw "+
+                    "FROM bestellung ORDER BY "+
+                    "bestell_nr DESC LIMIT 1"
+                    );
+            // Now do something with the ResultSet, should be only one result ...
+	    rs.next();
+	    year = rs.getString(1).substring(0,4);
+	    week = rs.getString(2);
+	    rs.close();
+	    stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        String[] yw = {year, week};
+        return yw;
+    }
+
     /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.
@@ -284,7 +307,9 @@ public class DumpDatabase extends WindowContent {
             if (password == null){
                 return;
             }
-            initializeSaveChooser();
+            String[] yw = queryMostRecentOrderYearAndWeek();
+            String year = yw[0], week = yw[1];
+            initializeSaveChooser("DB_Dump_"+year+"_KW"+week+".sql");
             String filename = askForDumpFilename();
             if (filename != null){
                 dumpDatabase(password, filename);
