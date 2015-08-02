@@ -266,13 +266,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         }
     }
 
-    private void removeDefaultKeyBindings(JComponent field) {
-        // remove Ctrl-A key binding:
-        field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-        // remove Ctrl-C key binding:
-        field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK), "none");
-    }
-
     void showAll(){
         updateRabattButtons();
 
@@ -287,10 +280,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 
                 JPanel barcodePanel = new JPanel();
                 barcodePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
-                    BigLabel barcodeLabel = new BigLabel("Barcode: ");
-                    barcodeLabel.setLabelFor(barcodeBox);
-                    barcodeLabel.setDisplayedMnemonic(KeyEvent.VK_C);
-                    barcodePanel.add(barcodeLabel);
                     String filterStr = " AND (toplevel_id IS NOT NULL OR sub_id = 2) ";
                            // show all 'normal' items (toplevel_id IS NOT NULL), and in addition Gutscheine (where toplevel_id is NULL and sub_id is 2)
                     barcodeBox = new BarcodeComboBox(this.conn, filterStr);
@@ -301,15 +290,15 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
                     barcodeField.setColumns(9);
                     removeDefaultKeyBindings(barcodeField);
                     barcodeField.getDocument().addDocumentListener(this);
+                    BigLabel barcodeLabel = new BigLabel("Barcode: ");
+                    barcodeLabel.setLabelFor(barcodeBox);
+                    barcodeLabel.setDisplayedMnemonic(KeyEvent.VK_C);
+                    barcodePanel.add(barcodeLabel);
                     barcodePanel.add(barcodeBox);
                     emptyBarcodeButton = new JButton("x");
                     emptyBarcodeButton.addActionListener(this);
                     barcodePanel.add(emptyBarcodeButton);
 
-                    BigLabel nummerLabel = new BigLabel("Artikelnr.: ");
-                    nummerLabel.setLabelFor(nummerBox);
-                    nummerLabel.setDisplayedMnemonic(KeyEvent.VK_N);
-                    barcodePanel.add(nummerLabel);
                     nummerBox = new ArtikelNummerComboBox(this.conn, filterStr);
                     nummerBox.setFont(mediumFont);
                     nummerBox.addActionListener(this);
@@ -320,6 +309,10 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
                     nummerField.setColumns(7);
                     removeDefaultKeyBindings(nummerField);
                     nummerField.getDocument().addDocumentListener(this);
+                    BigLabel nummerLabel = new BigLabel("Artikelnr.: ");
+                    nummerLabel.setLabelFor(nummerBox);
+                    nummerLabel.setDisplayedMnemonic(KeyEvent.VK_N);
+                    barcodePanel.add(nummerLabel);
                     barcodePanel.add(nummerBox);
                     emptyNummerButton = new JButton("x");
                     emptyNummerButton.addActionListener(this);
@@ -329,10 +322,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
                 comboBoxPanel.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
 
                 JPanel artikelNamePanel = new JPanel();
-                    BigLabel artikelLabel = new BigLabel("Artikelname: ");
-                    artikelLabel.setLabelFor(artikelBox);
-                    artikelLabel.setDisplayedMnemonic(KeyEvent.VK_A);
-                    artikelNamePanel.add(artikelLabel);
                     artikelBox = new ArtikelNameComboBox(this.conn, filterStr);
                     artikelBox.setFont(mediumFont);
                     artikelBox.addActionListener(this);
@@ -343,6 +332,10 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
                     artikelField.setColumns(25);
                     removeDefaultKeyBindings(artikelField);
                     artikelField.getDocument().addDocumentListener(this);
+                    BigLabel artikelLabel = new BigLabel("Artikelname: ");
+                    artikelLabel.setLabelFor(artikelBox);
+                    artikelLabel.setDisplayedMnemonic(KeyEvent.VK_A);
+                    artikelNamePanel.add(artikelLabel);
                     artikelNamePanel.add(artikelBox);
                     emptyArtikelButton = new JButton("x");
                     emptyArtikelButton.addActionListener(this);
