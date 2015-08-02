@@ -117,6 +117,17 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return kurzname;
     }
 
+    protected String getShortName(Artikel a) {
+        String kurzname = a.getKurzname();
+        if ( kurzname == null || kurzname.equals("") ){
+            kurzname = a.getName();
+        }
+        if ( kurzname == null ){
+            kurzname = "";
+        }
+        return kurzname;
+    }
+
     protected String getShortLieferantName(int artikelID) {
         String liefkurz = new String();
         try {

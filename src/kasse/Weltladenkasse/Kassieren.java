@@ -1557,9 +1557,9 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         BigDecimal gesPreis = new BigDecimal(artikelPreis).multiply(new BigDecimal(stueck));
         String gesPreisString = bc.priceFormatterIntern(gesPreis);
         Artikel a = getArticle(selectedArticleID);
-        String kurzname = a.getKurzname();
+        String kurzname = getShortName(a);
         String artikelMwSt = getVAT(selectedArticleID);
-        Boolean sortiment = getSortimentBool(selectedArticleID);
+        Boolean sortiment = a.getSortiment();
         if (color == "default"){
             color = sortiment ? "default" : "gray";
         }
