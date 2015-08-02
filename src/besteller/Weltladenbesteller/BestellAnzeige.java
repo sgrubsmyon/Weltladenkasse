@@ -285,7 +285,6 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     "bestell_nr DESC LIMIT " +
                     (currentPage-1)*bestellungenProSeite + "," + bestellungenProSeite
                     );
-            // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
                 Vector<Object> bestNrUndTyp = new Vector<Object>();
                     bestNrUndTyp.add(rs.getInt(1)); bestNrUndTyp.add(rs.getString(2));
