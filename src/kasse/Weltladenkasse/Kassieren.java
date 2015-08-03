@@ -152,18 +152,21 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 
     private class BarcodeAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
+            emptyBarcodeBox();
             barcodeBox.requestFocus();
         }
     }
 
     private class NameAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
+            emptyArtikelBox();
             artikelBox.requestFocus();
         }
     }
 
     private class NummerAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
+            emptyNummerBox();
             nummerBox.requestFocus();
         }
     }
@@ -2068,6 +2071,21 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         }
     }
 
+    void emptyBarcodeBox() {
+        barcodeText = "";
+        barcodeBox.emptyBox();
+    }
+
+    void emptyArtikelBox() {
+        artikelNameText = "";
+        artikelBox.emptyBox();
+    }
+
+    void emptyNummerBox() {
+        artikelNummerText = "";
+        nummerBox.emptyBox();
+    }
+
     /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.
@@ -2118,20 +2136,17 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 	    return;
 	}
         if (e.getSource() == emptyBarcodeButton){
-            barcodeText = "";
-            barcodeBox.emptyBox();
+            emptyBarcodeBox();
             barcodeBox.requestFocus();
 	    return;
 	}
         if (e.getSource() == emptyArtikelButton){
-            artikelNameText = "";
-            artikelBox.emptyBox();
+            emptyArtikelBox();
             artikelBox.requestFocus();
 	    return;
 	}
         if (e.getSource() == emptyNummerButton){
-            artikelNummerText = "";
-            nummerBox.emptyBox();
+            emptyNummerBox();
             nummerBox.requestFocus();
 	    return;
 	}
