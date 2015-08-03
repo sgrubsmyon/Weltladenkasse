@@ -59,20 +59,6 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         datum = "";
     }
 
-    protected void removeDefaultKeyBindings(JComponent field) {
-        // remove Ctrl-A key binding:
-        field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-        // remove Ctrl-C key binding:
-        field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK), "none");
-    }
-
-    protected void removeDefaultKeyBindings(JComponent field, int condition) {
-        // remove Ctrl-A key binding:
-        field.getInputMap(condition).put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-        // remove Ctrl-C key binding:
-        field.getInputMap(condition).put(KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK), "none");
-    }
-
     //////////////////////////////////
     // DB query functions:
     //////////////////////////////////

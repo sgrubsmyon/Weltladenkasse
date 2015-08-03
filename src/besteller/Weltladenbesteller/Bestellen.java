@@ -102,18 +102,16 @@ public class Bestellen extends BestellungsGrundlage implements
         columnLabels.add("Entfernen");
 
         // keyboard shortcuts:
-        KeyStroke barcodeShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK); // Ctrl-C
-        KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK); // Ctrl-A
-        KeyStroke artikelNummerShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_N, Event.CTRL_MASK); // Ctrl-N
+        KeyStroke barcodeShortcut = KeyStroke.getKeyStroke("ctrl C");
+        KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke("ctrl A");
+        KeyStroke artikelNummerShortcut = KeyStroke.getKeyStroke("ctrl N");
 
-        ShortcutListener shortcutListener = new ShortcutListener();
-
-        this.registerKeyboardAction(shortcutListener, "barcode", barcodeShortcut,
-                JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "name", artikelNameShortcut,
-                JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "nummer", artikelNummerShortcut,
-                JComponent.WHEN_IN_FOCUSED_WINDOW);
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barcodeShortcut, "barcode");
+        this.getActionMap().put("barcode", new BarcodeAction());
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(artikelNameShortcut, "name");
+        this.getActionMap().put("name", new NameAction());
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(artikelNummerShortcut, "nummer");
+        this.getActionMap().put("nummer", new NummerAction());
 
         emptyTable();
 	showAll();
@@ -121,21 +119,24 @@ public class Bestellen extends BestellungsGrundlage implements
         barcodeBox.requestFocus();
     }
 
-    // listener for keyboard shortcuts
-    private class ShortcutListener implements ActionListener {
+    private class BarcodeAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
-            if (e.getActionCommand().equals("barcode")){
-                barcodeBox.requestFocus();
-                return;
-            }
-            if (e.getActionCommand().equals("name")){
-                artikelBox.requestFocus();
-                return;
-            }
-            if (e.getActionCommand().equals("nummer")){
-                nummerBox.requestFocus();
-                return;
-            }
+            emptyBarcodeBox();
+            barcodeBox.requestFocus();
+        }
+    }
+
+    private class NameAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            emptyArtikelBox();
+            artikelBox.requestFocus();
+        }
+    }
+
+    private class NummerAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            emptyNummerBox();
+            nummerBox.requestFocus();
         }
     }
 
@@ -186,6 +187,7 @@ public class Bestellen extends BestellungsGrundlage implements
             ( (NumberFormatter) jahrField.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
             jahrField.getDocument().addDocumentListener(this);
             jahrField.setColumns(4);
+            removeDefaultKeyBindings(jahrField);
 	    jahrLabel.setLabelFor(jahrSpinner);
             datePanel.add(jahrSpinner);
             /////
@@ -206,6 +208,7 @@ public class Bestellen extends BestellungsGrundlage implements
             ( (NumberFormatter) kwField.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
             kwField.getDocument().addDocumentListener(this);
             kwField.setColumns(2);
+            removeDefaultKeyBindings(kwField);
 	    kwLabel.setLabelFor(kwSpinner);
             datePanel.add(kwSpinner);
             ///////
@@ -216,6 +219,7 @@ public class Bestellen extends BestellungsGrundlage implements
 	    ((AbstractDocument)typField.getDocument()).setDocumentFilter(sdf);
             typField.getDocument().addDocumentListener(this);
             typField.setColumns(6);
+            removeDefaultKeyBindings(typField);
 	    typLabel.setLabelFor(typField);
             datePanel.add(typField);
             changeTypButton = new JButton("Typ ändern");
@@ -225,6 +229,7 @@ public class Bestellen extends BestellungsGrundlage implements
             datePanel.add(new JLabel("Bestell-Nr.:"));
             JTextField bestNrField = new JTextField("");
             bestNrField.setColumns(6);
+            removeDefaultKeyBindings(bestNrField);
             bestNrField.setHorizontalAlignment(JTextField.RIGHT);
             if (selBestellNr > 0){
                 bestNrField.setText(new Integer(selBestellNr).toString());
@@ -235,18 +240,17 @@ public class Bestellen extends BestellungsGrundlage implements
 
         JPanel barcodePanel = new JPanel();
 	barcodePanel.setLayout(new FlowLayout());
-	    JLabel barcodeLabel = new JLabel("Barcode: ");
-            barcodeLabel.setLabelFor(barcodeBox);
-            barcodeLabel.setDisplayedMnemonic(KeyEvent.VK_C);
-            barcodePanel.add(barcodeLabel);
             String comboBoxFilterStr = " AND variabler_preis = FALSE AND toplevel_id IS NOT NULL ";
             barcodeBox = new BarcodeComboBox(this.conn, comboBoxFilterStr);
             barcodeBox.addActionListener(this);
             barcodeBox.addPopupMouseListener(new MouseListenerBarcodeBox());
             barcodeField = (JTextComponent)barcodeBox.getEditor().getEditorComponent();
-            barcodeField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-                // remove Ctrl-A key binding
 	    barcodeField.getDocument().addDocumentListener(this);
+            removeDefaultKeyBindings(barcodeField);
+	    JLabel barcodeLabel = new JLabel("Barcode: ");
+            barcodeLabel.setLabelFor(barcodeBox);
+            barcodeLabel.setDisplayedMnemonic(KeyEvent.VK_C);
+            barcodePanel.add(barcodeLabel);
             barcodePanel.add(barcodeBox);
 	    emptyBarcodeButton = new JButton("x");
 	    emptyBarcodeButton.addActionListener(this);
@@ -255,10 +259,6 @@ public class Bestellen extends BestellungsGrundlage implements
 
 	JPanel chooseArticlePanel1 = new JPanel();
 	chooseArticlePanel1.setLayout(new FlowLayout());
-	    JLabel artikelLabel = new JLabel("Artikelname: ");
-            artikelLabel.setLabelFor(artikelBox);
-            artikelLabel.setDisplayedMnemonic(KeyEvent.VK_A);
-            chooseArticlePanel1.add(artikelLabel);
             artikelBox = new ArtikelNameComboBox(this.conn, comboBoxFilterStr);
             artikelBox.addActionListener(this);
             artikelBox.addPopupMouseListener(new MouseListenerArtikelBox());
@@ -267,15 +267,16 @@ public class Bestellen extends BestellungsGrundlage implements
             artikelBox.setPrototypeDisplayValue("qqqqqqqqqqqqqqqqqqqq");
             artikelField = (JTextComponent)artikelBox.getEditor().getEditorComponent();
 	    artikelField.getDocument().addDocumentListener(this);
+            removeDefaultKeyBindings(artikelField);
+	    JLabel artikelLabel = new JLabel("Artikelname: ");
+            artikelLabel.setLabelFor(artikelBox);
+            artikelLabel.setDisplayedMnemonic(KeyEvent.VK_A);
+            chooseArticlePanel1.add(artikelLabel);
             chooseArticlePanel1.add(artikelBox);
 	    emptyArtikelButton = new JButton("x");
 	    emptyArtikelButton.addActionListener(this);
 	    chooseArticlePanel1.add(emptyArtikelButton);
 
-	    JLabel nummerLabel = new JLabel("Artikelnr.: ");
-            nummerLabel.setLabelFor(nummerBox);
-            nummerLabel.setDisplayedMnemonic(KeyEvent.VK_N);
-            chooseArticlePanel1.add(nummerLabel);
             nummerBox = new ArtikelNummerComboBox(this.conn, comboBoxFilterStr);
             nummerBox.addActionListener(this);
             nummerBox.addPopupMouseListener(new MouseListenerNummerBox());
@@ -283,9 +284,12 @@ public class Bestellen extends BestellungsGrundlage implements
             nummerBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 30, false));
             nummerBox.setPrototypeDisplayValue("qqqqqqqq");
             nummerField = (JTextComponent)nummerBox.getEditor().getEditorComponent();
-            nummerField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-                // remove Ctrl-A key binding
 	    nummerField.getDocument().addDocumentListener(this);
+            removeDefaultKeyBindings(nummerField);
+	    JLabel nummerLabel = new JLabel("Artikelnr.: ");
+            nummerLabel.setLabelFor(nummerBox);
+            nummerLabel.setDisplayedMnemonic(KeyEvent.VK_N);
+            chooseArticlePanel1.add(nummerLabel);
             chooseArticlePanel1.add(nummerBox);
 	    emptyNummerButton = new JButton("x");
 	    emptyNummerButton.addActionListener(this);
@@ -306,8 +310,6 @@ public class Bestellen extends BestellungsGrundlage implements
             anzahlField = anzahlEditor.getTextField();
             ( (NumberFormatter) anzahlField.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
             anzahlField.getDocument().addDocumentListener(this);
-            anzahlField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-                // remove Ctrl-A key binding
             anzahlField.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) {
                     if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
@@ -323,6 +325,7 @@ public class Bestellen extends BestellungsGrundlage implements
                 }
             });
             anzahlField.setColumns(4);
+            removeDefaultKeyBindings(anzahlField);
             preventSpinnerOverflow(anzahlSpinner);
 	    anzahlLabel.setLabelFor(anzahlSpinner);
             chooseArticlePanel2.add(anzahlSpinner);
@@ -337,8 +340,6 @@ public class Bestellen extends BestellungsGrundlage implements
             vpeSpinnerField = vpeEditor.getTextField();
             ( (NumberFormatter) vpeSpinnerField.getFormatter() ).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
             vpeSpinnerField.getDocument().addDocumentListener(this);
-            vpeSpinnerField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-                // remove Ctrl-A key binding
             vpeSpinnerField.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) {
                     if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
@@ -354,6 +355,7 @@ public class Bestellen extends BestellungsGrundlage implements
                 }
             });
             vpeSpinnerField.setColumns(3);
+            removeDefaultKeyBindings(vpeSpinnerField);
             chooseArticlePanel2.add(vpeSpinner);
 
             JLabel vpeLabel = new JLabel("VPE: ");
@@ -361,6 +363,7 @@ public class Bestellen extends BestellungsGrundlage implements
             vpeField = new JTextField("");
             vpeField.setEditable(false);
             vpeField.setColumns(3);
+            removeDefaultKeyBindings(vpeField);
             vpeField.setHorizontalAlignment(JTextField.RIGHT);
             vpeLabel.setLabelFor(vpeField);
             chooseArticlePanel2.add(vpeField);
@@ -368,8 +371,6 @@ public class Bestellen extends BestellungsGrundlage implements
 	    JLabel preisLabel = new JLabel("VK-Preis: ");
             chooseArticlePanel2.add(preisLabel);
             preisField = new JTextField("");
-            preisField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
-                // remove Ctrl-A key binding
             preisField.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) { if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
                     if (hinzufuegenButton.isEnabled()){
@@ -381,6 +382,7 @@ public class Bestellen extends BestellungsGrundlage implements
 	    ((AbstractDocument)preisField.getDocument()).setDocumentFilter(geldFilter);
             preisField.setEditable(false);
             preisField.setColumns(6);
+            removeDefaultKeyBindings(preisField);
             preisField.setHorizontalAlignment(JTextField.RIGHT);
             chooseArticlePanel2.add(preisField);
             chooseArticlePanel2.add(new JLabel(bc.currencySymbol));
@@ -402,6 +404,7 @@ public class Bestellen extends BestellungsGrundlage implements
     void initiateTable() {
         orderTable = new BestellungsTable(displayData, columnLabels,
                 displayIndices, sortimentBools);
+        removeDefaultKeyBindings(orderTable, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         orderTable.getModel().addTableModelListener(this);
 	setTableProperties(orderTable);
 	TableColumn entf = orderTable.getColumn("Entfernen");
@@ -451,6 +454,7 @@ public class Bestellen extends BestellungsGrundlage implements
             filterField = new JTextField("");
             filterStr = "";
             filterField.setColumns(20);
+            removeDefaultKeyBindings(filterField);
             filterField.getDocument().addDocumentListener(this);
             filterField.setAlignmentX(JComponent.RIGHT_ALIGNMENT);
             abschliessenPanel.add(filterField);
@@ -1320,6 +1324,21 @@ public class Bestellen extends BestellungsGrundlage implements
         return okTyp;
     }
 
+    void emptyBarcodeBox() {
+        barcodeText = "";
+        barcodeBox.emptyBox();
+    }
+
+    void emptyArtikelBox() {
+        artikelNameText = "";
+        artikelBox.emptyBox();
+    }
+
+    void emptyNummerBox() {
+        artikelNummerText = "";
+        nummerBox.emptyBox();
+    }
+
     /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.
@@ -1348,20 +1367,17 @@ public class Bestellen extends BestellungsGrundlage implements
 	    return;
 	}
         if (e.getSource() == emptyBarcodeButton){
-            barcodeText = "";
-            barcodeBox.emptyBox();
+            emptyBarcodeBox();
             barcodeBox.requestFocus();
 	    return;
 	}
         if (e.getSource() == emptyArtikelButton){
-            artikelNameText = "";
-            artikelBox.emptyBox();
+            emptyArtikelBox();
             artikelBox.requestFocus();
 	    return;
 	}
         if (e.getSource() == emptyNummerButton){
-            artikelNummerText = "";
-            nummerBox.emptyBox();
+            emptyNummerBox();
             nummerBox.requestFocus();
 	    return;
 	}

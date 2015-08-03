@@ -7,12 +7,31 @@ import java.math.*; // for BigDecimal and RoundingMode
 // MySQL Connector/J stuff:
 import java.sql.*; // Connection, Statement, ResultSet ...
 
+// GUI stuff:
+import java.awt.Event;
+import java.awt.event.KeyEvent;
+import javax.swing.*; // JComponent, KeyStroke
+
 public abstract class ArtikelGrundlage extends WindowContent {
     /**
      *    The constructor.
      *       */
     public ArtikelGrundlage(Connection conn, MainWindowGrundlage mw) {
 	super(conn, mw);
+    }
+
+    protected void removeDefaultKeyBindings(JComponent field) {
+        // remove Ctrl-A key binding:
+        field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
+        // remove Ctrl-C key binding:
+        field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK), "none");
+    }
+
+    protected void removeDefaultKeyBindings(JComponent field, int condition) {
+        // remove Ctrl-A key binding:
+        field.getInputMap(condition).put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
+        // remove Ctrl-C key binding:
+        field.getInputMap(condition).put(KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK), "none");
     }
 
     //////////////////////////////////
