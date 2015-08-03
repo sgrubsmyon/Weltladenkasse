@@ -114,13 +114,13 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         columnLabels.add("Entfernen");
 
         // keyboard shortcuts:
-        KeyStroke barcodeShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK); // Ctrl-C
-        KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK); // Ctrl-A
-        KeyStroke artikelNummerShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_N, Event.CTRL_MASK); // Ctrl-N
-        KeyStroke zwischensummeShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_Z, Event.CTRL_MASK); // Ctrl-Z
-        KeyStroke barShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_B, Event.CTRL_MASK); // Ctrl-B
-        KeyStroke ecShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK); // Ctrl-E
-        KeyStroke stornierenShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK); // Ctrl-S
+        KeyStroke barcodeShortcut = KeyStroke.getKeyStroke("ctrl C");
+        KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke("ctrl A");
+        KeyStroke artikelNummerShortcut = KeyStroke.getKeyStroke("ctrl N");
+        KeyStroke zwischensummeShortcut = KeyStroke.getKeyStroke("ctrl Z");
+        KeyStroke barShortcut = KeyStroke.getKeyStroke("ctrl B");
+        KeyStroke ecShortcut = KeyStroke.getKeyStroke("ctrl E");
+        KeyStroke stornierenShortcut = KeyStroke.getKeyStroke("ctrl S");
 
         this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barcodeShortcut, "barcode");
         this.getActionMap().put("barcode", new BarcodeAction());
@@ -170,29 +170,25 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 
     private class ZWSAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
-            if (zwischensummeButton.isEnabled())
-                zwischensumme();
+            zwischensummeButton.doClick();
         }
     }
 
     private class BarAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
-            if (barButton.isEnabled())
-                bar();
+            barButton.doClick();
         }
     }
 
     private class ECAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
-            if (ecButton.isEnabled())
-                ec();
+            ecButton.doClick();
         }
     }
 
     private class StornoAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
-            if (stornoButton.isEnabled())
-                stornieren();
+            stornoButton.doClick();
         }
     }
 
@@ -787,7 +783,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 
     void showTable(){
 	myTable = new RechnungsTable(data, columnLabels);
-        removeDefaultKeyBindings(myTable);
+        removeDefaultKeyBindings(myTable, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         myTable.setFont(mediumFont);
         myTable.setRowHeight(20);
 //	myTable.setBounds(71,53,150,100);
