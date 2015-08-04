@@ -22,16 +22,16 @@ public abstract class ArtikelGrundlage extends WindowContent {
 
     protected void removeDefaultKeyBindings(JComponent field) {
         // remove Ctrl-A key binding:
-        field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
+        field.getInputMap().put(KeyStroke.getKeyStroke("ctrl A"), "none");
         // remove Ctrl-C key binding:
-        field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK), "none");
+        field.getInputMap().put(KeyStroke.getKeyStroke("ctrl C"), "none");
     }
 
     protected void removeDefaultKeyBindings(JComponent field, int condition) {
         // remove Ctrl-A key binding:
-        field.getInputMap(condition).put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK), "none");
+        field.getInputMap(condition).put(KeyStroke.getKeyStroke("ctrl A"), "none");
         // remove Ctrl-C key binding:
-        field.getInputMap(condition).put(KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK), "none");
+        field.getInputMap(condition).put(KeyStroke.getKeyStroke("ctrl C"), "none");
     }
 
     //////////////////////////////////
