@@ -73,7 +73,7 @@ public class BaseClass {
             this.currencySymbol = "€";
             this.mysqlPath = "";
             this.sofficePath = "";
-            this.printerName = "epson_tmu220";
+            this.printerName = "quittungsdrucker";
             this.displayManufacturer = "Wincor Nixdorf";
             this.displayModel = "BA63/USB";
             this.displayWidth = 20;
@@ -85,8 +85,8 @@ public class BaseClass {
             this.delimiter = ";"; // for CSV export/import
         }
         this.printerName = removeQuotes(this.printerName);
-        this.printerName = removeQuotes(this.displayManufacturer);
-        this.printerName = removeQuotes(this.displayModel);
+        this.displayManufacturer = removeQuotes(this.displayManufacturer);
+        this.displayModel = removeQuotes(this.displayModel);
     }
 
     /**
