@@ -203,6 +203,11 @@ public class Quittung extends WindowContent {
         String program = constructProgramPath(bc.sofficePath, "soffice");
         String[] executeCmd = new String[] {program, "--headless",
             "-pt", bc.printerName, filename};
+        System.out.print("Print command: ");
+        for (String s : executeCmd){
+            System.out.print(s+" ");
+        }
+        System.out.println();
         try {
             Runtime shell = Runtime.getRuntime();
             Process proc = shell.exec(executeCmd);
