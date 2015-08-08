@@ -280,7 +280,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
                                               * ("true"/"false"), rather
                                               * than a check box.
                                               */
-            return getValueAt(0, c).getClass();
+            return getValueAt(0, c) == null ? String.class : getValueAt(0, c).getClass();
         }
 
         public void setValueAt(Object value, int row, int col) {

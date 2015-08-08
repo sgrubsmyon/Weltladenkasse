@@ -248,7 +248,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
                                               * ("true"/"false"), rather
                                               * than a check box.
                                               */
-            return getValueAt(0, c).getClass();
+            return getValueAt(0, c) == null ? String.class : getValueAt(0, c).getClass();
         }
 
         public void setValueAt(Object value, int row, int col) {

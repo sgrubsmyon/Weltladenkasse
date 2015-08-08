@@ -16,10 +16,10 @@ public abstract class TabbedPaneGrundlage extends WindowContent {
     public TabbedPaneGrundlage(Connection conn, MainWindowGrundlage mw, TabbedPaneGrundlage ptp) {
 	super(conn, mw);
         parentTabbedPane = ptp;
-        createTabbedPane();
         updateNArtikelInProduktgruppe();
         updateNArtikelRekursivInProduktgruppe();
         updateNArtikelInLieferant();
+        createTabbedPane();
     }
 
     protected abstract void createTabbedPane();
