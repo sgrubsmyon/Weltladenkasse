@@ -10,6 +10,7 @@ import java.text.*; // for NumberFormat
 public class BaseClass {
     public final Locale myLocale = Locale.GERMAN;
     public String currencySymbol;
+    public String mysqlHost; /** hostname of mysql server */
     public String mysqlPath; /** path where mysql and mysqldump lie around */
     public String sofficePath; /** path where soffice lies around */
     public String printerName; /** name of receipt printer as set in CUPS */
@@ -56,6 +57,7 @@ public class BaseClass {
             props.load(fis);
 
             this.currencySymbol = props.getProperty("currencySymbol");
+            this.mysqlHost = props.getProperty("mysqlHost");
             this.mysqlPath = props.getProperty("mysqlPath");
             this.sofficePath = props.getProperty("sofficePath");
             this.printerName = props.getProperty("printerName");
@@ -71,6 +73,7 @@ public class BaseClass {
         } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
             this.currencySymbol = "€";
+            this.mysqlHost = "localhost";
             this.mysqlPath = "";
             this.sofficePath = "";
             this.printerName = "quittungsdrucker";
@@ -84,6 +87,7 @@ public class BaseClass {
             this.dateFormatDate4j = "DD.MM.YYYY, hh:mm |Uhr|";
             this.delimiter = ";"; // for CSV export/import
         }
+        this.mysqlHost = removeQuotes(this.mysqlHost);
         this.printerName = removeQuotes(this.printerName);
         this.displayManufacturer = removeQuotes(this.displayManufacturer);
         this.displayModel = removeQuotes(this.displayModel);

@@ -2,15 +2,11 @@ package WeltladenDB;
 
 // Basic Java stuff:
 import java.util.*; // for Vector
+import java.util.Date; // Date is ambiguous
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
-import java.sql.SQLException;
-import java.sql.DriverManager;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.ResultSet;
-//import java.sql.*;
+import java.sql.*; // SQLException, DriverManager, Connection, Statement, ResultSet
 
 // GUI stuff:
 import java.awt.BorderLayout;
@@ -32,8 +28,8 @@ public abstract class MainWindowGrundlage extends JFrame {
     public BaseClass bc;
 
     // Connection to MySQL database:
+    public DBConnection dbconn = null;
     public Connection conn = null;
-    public boolean connectionWorks = false;
 
     // Panels:
     protected JPanel holdAll = new JPanel(); // The top level panel which holds all.
@@ -55,14 +51,15 @@ public abstract class MainWindowGrundlage extends JFrame {
     /**
      *    The constructor.
      *       */
-    public MainWindowGrundlage(String password){
+    public MainWindowGrundlage() {
         bc = new BaseClass();
-        initiate(password);
+        initiate();
     }
 
-    public void initiate(String password){
-        createConnection(password);
-        if (!connectionWorks) return;
+    public void initiate(){
+        this.dbconn = new DBConnection(bc);
+        if (!dbconn.connectionWorks) return;
+        this.conn = dbconn.conn;
 
 	holdAll.setLayout(new BorderLayout());
 
@@ -79,21 +76,6 @@ public abstract class MainWindowGrundlage extends JFrame {
 	this.getContentPane().add(holdAll, BorderLayout.CENTER);
     }
 
-    protected void createConnection(String password) {
-        connectionWorks = true;
-	try {
-	    // Load JDBC driver and register with DriverManager
-	    Class.forName("com.mysql.jdbc.Driver").newInstance();
-	    // Obtain connection to MySQL database from DriverManager
-	    this.conn = DriverManager.getConnection("jdbc:mysql://localhost/kasse",
-		    "mitarbeiter", password);
-	} catch (Exception ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    System.out.println("Probably password wrong.");
-	    //ex.printStackTrace();
-            connectionWorks = false;
-	}
-    }
 
 
     public BigDecimal retrieveKassenstand(){

@@ -1,3 +1,4 @@
+mysqlHost = localhost
 mysqlPath =
 sofficePath =
 printerName = quittungsdrucker
