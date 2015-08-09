@@ -96,90 +96,9 @@ public class DumpDatabase extends WindowContent {
         return null;
     }
 
-    boolean createAdminConnection(String password) {
-        boolean connectionWorks = true;
-	try {
-	    // Load JDBC driver and register with DriverManager
-	    Class.forName("com.mysql.jdbc.Driver").newInstance();
-	    // Obtain connection to MySQL database from DriverManager
-	    adminConn = DriverManager.getConnection("jdbc:mysql://localhost/kasse",
-		    "kassenadmin", password);
-	} catch (Exception ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    System.out.println("Probably password wrong.");
-	    //ex.printStackTrace();
-            connectionWorks = false;
-	}
-        return connectionWorks;
-    }
-
     String askForAdminPassword() {
-        boolean passwdIncorrect = false;
-        while (true){
-            JLabel label = new JLabel("");
-            if (passwdIncorrect){ label = new JLabel("Falsches Passwort!"); }
-            Vector<String> result = showPasswordWindow(label);
-            if (result.get(0) == "CANCEL"){
-                return null;
-            }
-            if (result.get(0) == "OK"){
-                String password = result.get(1);
-
-                if ( createAdminConnection(password) ){
-                    System.out.println("Admin password was correct.");
-                    return password;
-                } else {
-                    System.out.println("Admin password was incorrect.");
-                    passwdIncorrect = true;
-                }
-            }
-        }
-    }
-
-    private static Vector<String> showPasswordWindow(JLabel label) {
-        // retrieve the password from the user, set focus to password field
-        // gracefully taken from http://blogger.ziesemer.com/2007/03/java-password-dialog.html,
-        // @ack credit: Mark A. Ziesemer, Anonymous, Akerbos (see comments)
-        final JPasswordField pf = new JPasswordField();
-        JOptionPane jop = null;
-        if (label.getText().length() > 0){
-            jop = new JOptionPane(new Object[]{label, pf},
-                    JOptionPane.QUESTION_MESSAGE,
-                    JOptionPane.OK_CANCEL_OPTION);
-        } else {
-            jop = new JOptionPane(pf,
-                    JOptionPane.QUESTION_MESSAGE,
-                    JOptionPane.OK_CANCEL_OPTION);
-        }
-        JDialog dialog = jop.createDialog("Bitte Admin-Passwort eingeben");
-        dialog.addWindowFocusListener(new WindowAdapter(){
-            @Override
-            public void windowGainedFocus(WindowEvent e){
-                pf.requestFocusInWindow();
-            }
-        });
-        pf.addFocusListener(new FocusListener() {
-            public void focusGained( FocusEvent e ) {
-                pf.selectAll();
-            }
-            public void focusLost( FocusEvent e ) {
-                if ( pf.getPassword().length == 0 ) {
-                    pf.requestFocusInWindow();
-                }
-            }
-        });
-        dialog.setVisible(true);
-        int result = (Integer)jop.getValue();
-        dialog.dispose();
-
-        Vector<String> okPassword = new Vector<String>(2);
-        String ok;
-        if (result == JOptionPane.OK_OPTION){ ok = "OK"; }
-        else { ok = "CANCEL"; }
-        String password = new String(pf.getPassword());
-        okPassword.add(ok);
-        okPassword.add(password);
-        return okPassword;
+        DBConnectionAdmin dbconna = new DBConnectionAdmin(bc);
+        return dbconna.password;
     }
 
     void dumpDatabase(String password, String filename) {
@@ -188,7 +107,7 @@ public class DumpDatabase extends WindowContent {
         System.out.println("MySQL path from config.properties: *"+program+"*");
         // 'destructive' dump, resulting in exact copy of DB:
         String[] executeCmd = new String[] {program,
-            "-ukassenadmin", "-p"+password, "kasse", "-r", filename};
+            "-h"+bc.mysqlHost, "-ukassenadmin", "-p"+password, "kasse", "-r", filename};
         // 'non-destructive' (incremental) dump using replace:
         //String[] executeCmd = new String[] {program, "--no-create-info", "--replace",
         //    "-ukassenadmin", "-p"+password, "kasse", "-r", filename};
@@ -237,7 +156,7 @@ public class DumpDatabase extends WindowContent {
         String program = constructProgramPath(bc.mysqlPath, "mysql");
         System.out.println("MySQL path from config.properties: *"+program+"*");
         String[] executeCmd = new String[] {program, "--local-infile",
-            "-hlocalhost", "-ukassenadmin", "-p"+password,
+            "-h"+bc.mysqlHost, "-ukassenadmin", "-p"+password,
             "-e", "source "+filename, "kasse"};
         try {
             Runtime shell = Runtime.getRuntime();

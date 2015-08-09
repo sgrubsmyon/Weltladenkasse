@@ -36,13 +36,13 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
     /**
      *    The constructor.
      *       */
-    public MainWindow(String password){
-        super(password);
+    public MainWindow(){
+        super();
 
         display = new Kundendisplay(bc);
         setDisplayBlankTimer();
 
-        if (connectionWorks){
+        if (dbconn.connectionWorks){
             myTabbedPane = new TabbedPane(this.conn, this);
             setContentPanel(myTabbedPane);
         }
