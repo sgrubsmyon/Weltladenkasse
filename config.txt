@@ -1,4 +1,4 @@
-mysqlHost = localhost
+mysqlHost = 192.168.178.130
 mysqlPath =
 sofficePath =
 printerName = quittungsdrucker
