@@ -173,8 +173,8 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         return artikelNeu.willDataBeLost();
     }
 
-    public int checkIfItemAlreadyKnown(Integer lieferant_id, String nummer) {
-        return artikelNeu.checkIfItemAlreadyKnown(lieferant_id, nummer);
+    public int checkIfArticleAlreadyKnown(Integer lieferant_id, String nummer) {
+        return artikelNeu.checkIfArticleAlreadyKnown(lieferant_id, nummer);
     }
 
     public int submit() {
@@ -500,7 +500,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         }
 
         Vector<Color> colors = new Vector<Color>();
-        int itemAlreadyKnown = checkIfItemAlreadyKnown(lieferant_id, nummer);
+        int itemAlreadyKnown = checkIfArticleAlreadyKnown(lieferant_id, nummer);
         if (itemAlreadyKnown == 1){ // item already in db
             // compare every field:
             Vector<String> allFields = queryAllFields(lieferant_id, nummer);

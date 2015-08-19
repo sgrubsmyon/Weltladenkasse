@@ -846,7 +846,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         String artikelNummer = model.getValueAt(row, model.findColumn("Nummer")).toString();
         a.setNummer(artikelNummer);
         if ( !liefID.equals(origArticle.getLiefID()) || !artikelNummer.equals(origArticle.getNummer()) ){
-            if ( isItemAlreadyKnown(liefID, artikelNummer) ){
+            if ( isArticleAlreadyKnown(liefID, artikelNummer) ){
                 // not allowed: changing name and nummer to a pair that is already registered in DB
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Kombination Lieferant/Nummer bereits vorhanden! Wird zurückgesetzt.",

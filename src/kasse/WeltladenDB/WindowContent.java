@@ -356,7 +356,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
     }
 
-    protected boolean isItemAlreadyKnown(Integer lieferant_id, String nummer) {
+    protected boolean isArticleAlreadyKnown(Integer lieferant_id, String nummer) {
         boolean exists = false;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
@@ -375,6 +375,26 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             ex.printStackTrace();
         }
         return exists;
+    }
+
+    protected boolean doesArticleHaveBarcode(Integer artikel_id) {
+        boolean hasBarcode = false;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT barcode IS NOT NULL FROM artikel "+
+                    "WHERE artikel_id = ?"
+                    );
+            pstmtSetInteger(pstmt, 1, artikel_id);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            hasBarcode = rs.getBoolean(1);
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return hasBarcode;
     }
 
     protected int setArticleInactive(Artikel a) {
@@ -695,7 +715,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT lieferant_id, artikel_nr FROM artikel "+
-                    "WHERE artikel_id = ? AND artikel.aktiv = TRUE"
+                    "WHERE artikel_id = ?"
                     );
             pstmtSetInteger(pstmt, 1, artikel_id);
             ResultSet rs = pstmt.executeQuery();

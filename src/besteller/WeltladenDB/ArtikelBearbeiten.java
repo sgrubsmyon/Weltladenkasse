@@ -309,7 +309,7 @@ public class ArtikelBearbeiten extends DialogWindow
         a.setNummer(newNummer);
         ////////
         if ( (!newLieferantID.equals(origArticle.getLiefID())) || (!newNummer.equals(origArticle.getNummer())) ){
-            if ( isItemAlreadyKnown(newLieferantID, newNummer) ){
+            if ( isArticleAlreadyKnown(newLieferantID, newNummer) ){
                 // not allowed: changing name and nummer to a pair that is already registered in DB
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Kombination Lieferant/Nummer bereits vorhanden! Wird zurückgesetzt.",
