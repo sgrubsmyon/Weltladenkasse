@@ -45,6 +45,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     protected String artikelNameText = "";
     protected String artikelNummerText = "";
     protected String barcodeText = "";
+    private String barcodeMemory = "";
     private int selectedArticleID;
     private int selectedStueck;
     private JButton sonstigesButton;
@@ -1299,12 +1300,11 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 
 
 
-
-
-    private void setArtikelNameAndNummerForBarcode() {
+    private Vector< Vector<String[]> > getArtikelNameAndNummerForBarcode() {
         String barcode = (String)barcodeBox.getSelectedItem();
         Vector<String[]> artikelNamen = new Vector<String[]>();
         Vector<String[]> artikelNummern = new Vector<String[]>();
+        Vector< Vector<String[]> > result = new Vector< Vector<String[]> >();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.sortiment, "+
@@ -1328,6 +1328,30 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+        result.add(artikelNamen);
+        result.add(artikelNummern);
+        if (artikelNamen.size() == 0){
+            // This barcode is not known to the DB.
+            // Remember this barcode and possibly enter it in DB later.
+            System.out.println();
+            System.out.println("barcodeMemory before: "+barcodeMemory);
+            barcodeMemory = barcode;
+            System.out.println("barcodeMemory after: "+barcodeMemory);
+            System.out.println();
+        } else {
+            // Forget the remembered barcode.
+            System.out.println();
+            System.out.println("barcodeMemory before: "+barcodeMemory);
+            barcodeMemory = "";
+            System.out.println("barcodeMemory after: "+barcodeMemory);
+            System.out.println();
+        }
+        return result;
+    }
+
+
+    private void setArtikelNameAndNummerForBarcode(Vector<String[]> artikelNamen,
+            Vector<String[]> artikelNummern) {
         if (artikelBox.getItemCount() != 1){
             //artikelBox.removeActionListener(this);
                 if (artikelNamen.size() == 1){
@@ -1474,6 +1498,33 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         }
     }
 
+    private void rememberBarcode() {
+        if (barcodeMemory != "") {
+            int answer = JOptionPane.showConfirmDialog(mainWindow,
+                    "Der zuletzt gescannte Barcode\n"+
+                    "    "+barcodeMemory+"\n"+
+                    "könnte mit dem ausgewählten Artikel\n"+
+                    "    "+getShortName(selectedArticleID)+"\n"+
+                    "übereinstimmen.\n"+
+                    "Falls ja, dann kann der Barcode jetzt unter diesem Artikel gespeichert werden.\n\n"+
+                    "Ist das erwünscht? (Bei Unsicherheit 'Nein' wählen)", "Barcode speichern?",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            System.out.println(answer);
+            if (answer == JOptionPane.YES_OPTION) {
+                Artikel origArticle = getArticle(selectedArticleID);
+                Artikel newArticle = getArticle(selectedArticleID);
+                newArticle.setBarcode(barcodeMemory);
+                updateArticle(origArticle, newArticle);
+
+                System.out.println("old selectedArticleID: "+selectedArticleID);
+                updateSelectedArticleID();
+                System.out.println("new selectedArticleID: "+selectedArticleID);
+            }
+            // Forget about it.
+            barcodeMemory = "";
+        }
+    }
+
     private void setButtonsEnabled() {
         if (preisField.getText().length() > 0) {
             hinzufuegenButton.setEnabled(true);
@@ -1493,6 +1544,15 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         if ( artikelNumber == 1 && nummerNumber == 1 ){ // artikel eindeutig festgelegt
             updateSelectedArticleID();
             setPriceField();
+            boolean hasBarcode = doesArticleHaveBarcode(selectedArticleID);
+            if (hasBarcode) {
+                // Forget the remembered barcode. Another article was selected
+                // that already has a barcode.
+                barcodeMemory = "";
+            } else {
+                rememberBarcode();
+            }
+
             anzahlField.requestFocus();
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
@@ -1951,14 +2011,15 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     }
 
     private void checkBarcodeBox(ActionEvent e) {
+        Vector< Vector<String[]> > res = getArtikelNameAndNummerForBarcode();
         if ( barcodeBox.getItemCount() == 1 ){ // if selection is correct and unique
-            setArtikelNameAndNummerForBarcode();
+            setArtikelNameAndNummerForBarcode(res.get(0), res.get(1));
         }
         checkIfFormIsComplete();
     }
 
     private void checkArtikelBox(ActionEvent e) {
-        System.out.println("actionPerformed in artikelBox, actionCommand: "+e.getActionCommand()+", modifiers: "+e.getModifiers()+", itemCount: "+artikelBox.getItemCount()+", selectedItem: "+artikelBox.getSelectedItem()+"   artikelNameText: "+artikelNameText);
+        //System.out.println("actionPerformed in artikelBox, actionCommand: "+e.getActionCommand()+", modifiers: "+e.getModifiers()+", itemCount: "+artikelBox.getItemCount()+", selectedItem: "+artikelBox.getSelectedItem()+"   artikelNameText: "+artikelNameText);
         if ( artikelBox.getItemCount() == 1 ){ // if selection is correct and unique
             setArtikelNummerForName();
         }

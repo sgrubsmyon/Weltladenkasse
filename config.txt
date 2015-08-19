@@ -1,4 +1,4 @@
-mysqlHost = 192.168.178.130
+mysqlHost = mangopi
 mysqlPath =
 sofficePath =
 printerName = quittungsdrucker

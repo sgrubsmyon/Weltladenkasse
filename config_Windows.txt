@@ -1,4 +1,4 @@
-mysqlHost = 192.168.178.130
+mysqlHost = mangopi
 mysqlPath = "C:\\Program Files\\MySQL\\MySQL Server 5.6\\bin"
 sofficePath = "C:\\Program Files\\LibreOffice\\LibreOffice 5.6\\bin"
 printerName = quittungsdrucker

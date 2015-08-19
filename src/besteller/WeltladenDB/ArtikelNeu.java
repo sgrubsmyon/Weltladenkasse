@@ -135,9 +135,9 @@ public class ArtikelNeu extends WindowContent
         table.getColumn("Entf.").setPreferredWidth(30);
     }
 
-    public int checkIfItemAlreadyKnown(Integer lieferant_id, String nummer) {
+    public int checkIfArticleAlreadyKnown(Integer lieferant_id, String nummer) {
         int exists = 0;
-        if ( isItemAlreadyKnown(lieferant_id, nummer) ){
+        if ( isArticleAlreadyKnown(lieferant_id, nummer) ){
             exists = 1;
         }
         // always look into table, too

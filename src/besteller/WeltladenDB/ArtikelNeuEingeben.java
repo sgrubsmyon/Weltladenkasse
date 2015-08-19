@@ -348,8 +348,8 @@ public class ArtikelNeuEingeben extends DialogWindow
         artikelNeu.emptyTable();
     }
 
-    public int checkIfItemAlreadyKnown(Integer lieferant_id, String nummer) {
-        return artikelNeu.checkIfItemAlreadyKnown(lieferant_id, nummer);
+    public int checkIfArticleAlreadyKnown(Integer lieferant_id, String nummer) {
+        return artikelNeu.checkIfArticleAlreadyKnown(lieferant_id, nummer);
     }
 
     protected int hinzufuegen() {
@@ -359,7 +359,7 @@ public class ArtikelNeuEingeben extends DialogWindow
             artikelFormular.lieferantIDs.get(artikelFormular.lieferantBox.getSelectedIndex());
         String lieferant = artikelFormular.lieferantBox.getSelectedItem().toString();
         String nummer = artikelFormular.nummerField.getText();
-        int itemAlreadyKnown = checkIfItemAlreadyKnown(getLieferantID(lieferant), nummer);
+        int itemAlreadyKnown = checkIfArticleAlreadyKnown(getLieferantID(lieferant), nummer);
         if (itemAlreadyKnown == 1){
             JOptionPane.showMessageDialog(this,
                     "Ein Artikel mit diesem Lieferant und dieser Nummer ist bereits in der Datenbank.",
