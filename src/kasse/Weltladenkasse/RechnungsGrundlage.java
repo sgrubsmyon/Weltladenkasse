@@ -17,14 +17,9 @@ import javax.swing.JTextField;
 import javax.swing.table.*;
 
 // MySQL Connector/J stuff:
-import java.sql.SQLException;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.ResultSet;
+import java.sql.*;
 
-import WeltladenDB.MainWindowGrundlage;
-import WeltladenDB.ArtikelGrundlage;
-import WeltladenDB.AnyJComponentJTable;
+import WeltladenDB.*;
 
 public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     protected JTextField totalPriceField;
@@ -152,31 +147,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         return totalPricePanel;
     }
 
-    protected class RechnungsTable extends AnyJComponentJTable {
-        /**
-         *    The constructor.
-         *       */
-        public RechnungsTable(Vector< Vector<Object> > data, Vector<String> columns) {
-            super(data, columns);
-        }
-
-        @Override
-        public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-            Component c = super.prepareRenderer(renderer, row, column);
-            // add custom rendering here
-            c.setFont( c.getFont().deriveFont(Font.BOLD) );
-            String color = kassierArtikel.get(row).getColor();
-            if (color.equals("red")){ c.setForeground(Color.RED); }
-            else if (color.equals("blue")){ c.setForeground(Color.BLUE); }
-            else if (color.equals("green")){ c.setForeground(Color.GREEN.darker().darker()); }
-            else if (color.equals("gray")){ c.setForeground(Color.GRAY); }
-            else { c.setForeground(Color.BLACK); }
-            //c.setBackground(Color.LIGHT_GRAY);
-            return c;
-        }
-    }
-
-    protected void setTableProperties(RechnungsTable table) {
+    protected void setTableProperties(ArticleSelectTable table) {
 	// Spalteneigenschaften:
 //	table.getColumnModel().getColumn(0).setPreferredWidth(10);
 	TableColumn pos = table.getColumn("Pos.");

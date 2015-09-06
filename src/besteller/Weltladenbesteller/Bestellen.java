@@ -84,7 +84,7 @@ public class Bestellen extends BestellungsGrundlage implements
                                                     // (after applying filter)
     private Vector<Integer> displayIndices; // holding indices that rows in displayData have in data
     private Vector<Integer> artikelIDs;
-    private Vector<Boolean> sortimentBools;
+    private Vector<String> colors;
     private Vector<Integer> positions;
 
     private String filterStr = "";
@@ -402,8 +402,7 @@ public class Bestellen extends BestellungsGrundlage implements
     }
 
     void initiateTable() {
-        orderTable = new BestellungsTable(displayData, columnLabels,
-                displayIndices, sortimentBools);
+        orderTable = new BestellungsTable(displayData, columnLabels, colors);
         removeDefaultKeyBindings(orderTable, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         orderTable.getModel().addTableModelListener(this);
 	setTableProperties(orderTable);
@@ -468,7 +467,7 @@ public class Bestellen extends BestellungsGrundlage implements
 	data = new Vector< Vector<Object> >();
         displayData = new Vector< Vector<Object> >();
         displayIndices = new Vector<Integer>();
-        sortimentBools = new Vector<Boolean>();
+        colors = new Vector<String>();
         initiateTable();
         artikelIDs = new Vector<Integer>();
         positions = new Vector<Integer>();
@@ -480,7 +479,7 @@ public class Bestellen extends BestellungsGrundlage implements
         displayData.clear();
         displayIndices.clear();
         artikelIDs.clear();
-        sortimentBools.clear();
+        colors.clear();
         positions.clear();
         removeButtons.clear();
         selBestellNr = -1;
@@ -532,7 +531,7 @@ public class Bestellen extends BestellungsGrundlage implements
         fileStr += selJahr + bc.delimiter;
         fileStr += selKW + bc.lineSep;
         // format of csv file:
-        fileStr += "#Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;sortiment;artikelID"+bc.lineSep;
+        fileStr += "#Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;color;artikelID"+bc.lineSep;
         for (int i=data.size()-1; i>=0; i--){
             String lieferant = data.get(i).get(1).toString();
             String nummer = data.get(i).get(2).toString();
@@ -540,7 +539,7 @@ public class Bestellen extends BestellungsGrundlage implements
             String vkp = data.get(i).get(4).toString(); vkp = vkp == null ? "" : vkp;
             String vpe = data.get(i).get(5).toString(); vpe = vpe == null ? "" : vpe;
             String stueck = data.get(i).get(6).toString();
-            String sortiment = sortimentBools.get(i).toString();
+            String color = colors.get(i);
             String artikelID = artikelIDs.get(i).toString();
 
             fileStr += lieferant + bc.delimiter;
@@ -549,7 +548,7 @@ public class Bestellen extends BestellungsGrundlage implements
             fileStr += vkp + bc.delimiter;
             fileStr += vpe + bc.delimiter;
             fileStr += stueck + bc.delimiter;
-            fileStr += sortiment + bc.delimiter;
+            fileStr += color + bc.delimiter;
             fileStr += artikelID + bc.lineSep;
         }
 
@@ -617,11 +616,11 @@ public class Bestellen extends BestellungsGrundlage implements
                 String vkp = fields[3];
                 String vpe = fields[4];
                 Integer stueck = Integer.parseInt(fields[5]);
-                Boolean sortimentBool = fields[6].equals("true") ? true : false;
+                String color = fields[6];
                 Integer artikelID = Integer.parseInt(fields[7]);
 
                 hinzufuegen(artikelID, lieferant, nummer, name,
-                        vkp, vpe, stueck, sortimentBool);
+                        vkp, vpe, stueck, color);
             }
             updateAll();
         } catch (FileNotFoundException ex) {
@@ -955,9 +954,9 @@ public class Bestellen extends BestellungsGrundlage implements
 
     protected void hinzufuegen(Integer artikelID,
             String lieferant, String artikelNummer, String artikelName,
-            String vkp, String vpe, Integer stueck, Boolean sortiment) {
+            String vkp, String vpe, Integer stueck, String color) {
         artikelIDs.add(0, artikelID);
-        sortimentBools.add(0, sortiment);
+        colors.add(0, color);
         Integer lastPos = 0;
         try {
             lastPos = positions.firstElement();
@@ -996,9 +995,10 @@ public class Bestellen extends BestellungsGrundlage implements
         String artikelMwSt = getVAT(selectedArticleID);
         artikelMwSt = bc.vatFormatter(artikelMwSt);
         Boolean sortimentBool = getSortimentBool(selectedArticleID);
+        String color = sortimentBool ? "default" : "gray";
 
         hinzufuegen(selectedArticleID, lieferant, artikelNummer, artikelName,
-                artikelPreis, vpe, stueck, sortimentBool);
+                artikelPreis, vpe, stueck, color);
         updateAll();
         barcodeBox.requestFocus();
 
@@ -1412,7 +1412,7 @@ public class Bestellen extends BestellungsGrundlage implements
         if (removeIndex > -1){
             data.remove(removeIndex);
             artikelIDs.remove(removeIndex);
-            sortimentBools.remove(removeIndex);
+            colors.remove(removeIndex);
             removeButtons.remove(removeIndex);
 
             positions.remove(removeIndex);

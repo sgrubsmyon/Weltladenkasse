@@ -49,7 +49,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
     private JPanel articleListPanel;
 
     // The table holding the purchase articles.
-    private ArtikelSelectTable myTable;
+    private ArticleSelectTable myTable;
     private JScrollPane scrollPane;
     private Vector<String> columnLabels;
     private Vector< Vector<Object> > data;
@@ -257,31 +257,8 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
     }
 
 
-    protected class ArtikelSelectTable extends AnyJComponentJTable {
-        /**
-         *    The constructor.
-         *       */
-        public ArtikelSelectTable(Vector< Vector<Object> > data, Vector<String> columns) {
-            super(data, columns);
-        }
 
-        @Override
-        public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-            Component c = super.prepareRenderer(renderer, row, column);
-            // add custom rendering here
-            c.setFont( c.getFont().deriveFont(Font.BOLD) );
-            String color = colors.get(row);
-            if (color.equals("red")){ c.setForeground(Color.RED); }
-            else if (color.equals("blue")){ c.setForeground(Color.BLUE); }
-            else if (color.equals("green")){ c.setForeground(Color.GREEN.darker().darker()); }
-            else if (color.equals("gray")){ c.setForeground(Color.GRAY); }
-            else { c.setForeground(Color.BLACK); }
-            //c.setBackground(Color.LIGHT_GRAY);
-            return c;
-        }
-    }
-
-    protected void setTableProperties(ArtikelSelectTable table) {
+    protected void setTableProperties(ArticleSelectTable table) {
 	// Spalteneigenschaften:
 //	table.getColumnModel().getColumn(0).setPreferredWidth(10);
 	TableColumn pos = table.getColumn("Lieferant");
@@ -304,7 +281,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
 
 
     void showTable(){
-	myTable = new ArtikelSelectTable(data, columnLabels);
+	myTable = new ArticleSelectTable(data, columnLabels, colors);
 	setTableProperties(myTable);
 	TableColumn entf = myTable.getColumn("Entfernen");
 	entf.setPreferredWidth(2);

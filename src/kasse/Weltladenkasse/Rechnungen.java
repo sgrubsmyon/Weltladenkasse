@@ -34,8 +34,7 @@ import javax.swing.table.*;
 // DateTime from date4j (http://www.date4j.net/javadoc/index.html)
 import hirondelle.date4j.DateTime;
 
-import WeltladenDB.MainWindowGrundlage;
-import WeltladenDB.AnyJComponentJTable;
+import WeltladenDB.*;
 
 public abstract class Rechnungen extends RechnungsGrundlage {
     // Attribute:
@@ -354,7 +353,11 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    ex.printStackTrace();
 	}
 
-	RechnungsTable detailTable = new RechnungsTable(detailData, columnLabels);
+        Vector<String> colors = new Vector<String>();
+        for (KassierArtikel a : kassierArtikel) {
+            colors.add(a.getColor());
+        }
+	ArticleSelectTable detailTable = new ArticleSelectTable(detailData, columnLabels, colors);
 	setTableProperties(detailTable);
 
 	JScrollPane detailScrollPane = new JScrollPane(detailTable);
