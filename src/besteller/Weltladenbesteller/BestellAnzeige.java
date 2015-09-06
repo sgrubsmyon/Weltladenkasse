@@ -72,7 +72,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     private Vector<String> orderLabels;
     private Vector< Vector<Object> > orderDetailData;
     private Vector<Integer> orderDetailArtikelIDs;
-    private Vector<Boolean> orderDetailSortimentBools;
+    private Vector<String> orderDetailColors;
     private Vector< Vector<Object> > orderDetailDisplayData;
     private Vector<Integer> orderDetailDisplayIndices;
 
@@ -211,8 +211,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 // Table with order details:
                 retrieveOrderDetailData(bestellNrUndTyp);
                 orderDetailTable = new BestellungsTable(orderDetailDisplayData,
-                        columnLabels, orderDetailDisplayIndices,
-                        orderDetailSortimentBools);
+                        columnLabels, orderDetailColors);
                 setTableProperties(orderDetailTable);
 
                 orderDetailScrollPane = new JScrollPane(orderDetailTable);
@@ -266,8 +265,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 	orderDetailTablePanel.revalidate();
 
         orderDetailTable = new BestellungsTable(orderDetailDisplayData,
-                columnLabels, orderDetailDisplayIndices,
-                orderDetailSortimentBools);
+                columnLabels, orderDetailColors);
         setTableProperties(orderDetailTable);
 
         orderDetailScrollPane = new JScrollPane(orderDetailTable);
@@ -317,7 +315,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     void retrieveOrderDetailData(Vector<Object> bestellNrUndTyp) {
         orderDetailData = new Vector< Vector<Object> >();
         orderDetailArtikelIDs = new Vector<Integer>();
-        orderDetailSortimentBools = new Vector<Boolean>();
+        orderDetailColors = new Vector<String>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT bd.position, l.lieferant_name, a.artikel_nr, a.artikel_name, "+
@@ -344,6 +342,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 //vpeInt = vpeInt > 0 ? vpeInt : 0;
                 Integer stueck = rs.getInt(8);
                 Boolean sortimentBool = rs.getBoolean(9);
+                String color = sortimentBool ? "default" : "gray";
                 Integer artikelID = rs.getInt(10);
 
                 String vkp;
@@ -360,7 +359,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     row.add(""); // row.add(removeButtons.lastElement())
                 orderDetailData.add(row);
                 orderDetailArtikelIDs.add(artikelID);
-                orderDetailSortimentBools.add(sortimentBool);
+                orderDetailColors.add(color);
             }
 	    rs.close();
 	    pstmt.close();
@@ -611,7 +610,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 int kw = Integer.parseInt(bestellung.get(3));
                 // put order data into Bestellen tab
                 tabbedPane.setBestellenTable(selBestellNrUndTyp, jahr, kw,
-                        orderDetailArtikelIDs, orderDetailSortimentBools,
+                        orderDetailArtikelIDs, orderDetailColors,
                         orderDetailData);
                 // clear the BestellAnzeige
                 updateAll();

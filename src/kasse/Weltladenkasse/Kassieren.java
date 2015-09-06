@@ -87,7 +87,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     private JPanel articleListPanel;
 
     // The table holding the purchase articles.
-    private RechnungsTable myTable;
+    private ArticleSelectTable myTable;
     private JScrollPane scrollPane;
     private Vector< Vector<Object> > data;
     private Vector<JButton> removeButtons;
@@ -786,7 +786,11 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 
 
     void showTable(){
-	myTable = new RechnungsTable(data, columnLabels);
+        Vector<String> colors = new Vector<String>();
+        for (KassierArtikel a : kassierArtikel) {
+            colors.add(a.getColor());
+        }
+	myTable = new ArticleSelectTable(data, columnLabels, colors);
         removeDefaultKeyBindings(myTable, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         myTable.setFont(mediumFont);
         myTable.setRowHeight(20);

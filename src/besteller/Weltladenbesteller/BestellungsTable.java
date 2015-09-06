@@ -4,37 +4,26 @@ package Weltladenbesteller;
 import java.util.*; // for Vector
 
 // GUI stuff:
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.Color;
-import java.awt.Point;
-import java.awt.event.MouseEvent;
+import java.awt.*;
 
 import javax.swing.*;
 import javax.swing.table.*;
 
-import WeltladenDB.AnyJComponentJTable;
+import WeltladenDB.ArticleSelectTable;
 
-public class BestellungsTable extends AnyJComponentJTable {
-    private Vector<Boolean> sortimentBools;
-    private Vector<Integer> displayIndices;
-
+public class BestellungsTable extends ArticleSelectTable {
     /**
      *    The constructor.
      *       */
-    public BestellungsTable(Vector< Vector<Object> > data, Vector<String>
-            columns, Vector<Integer> dispInd, Vector<Boolean> sortBools)
-    {
-        super(data, columns);
-        displayIndices = dispInd;
-        sortimentBools = sortBools;
+    public BestellungsTable(Vector< Vector<Object> > data, Vector<String> columns,
+            Vector<String> colors) {
+        super(data, columns, colors);
     }
 
     @Override
     public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
         Component c = super.prepareRenderer(renderer, row, column);
         // add custom rendering here
-        c.setFont( c.getFont().deriveFont(Font.BOLD) );
         if ( getColumnName(column).equals("Stückzahl") ){
             Component cc;
             if (renderer instanceof JSpinner){
@@ -54,14 +43,6 @@ public class BestellungsTable extends AnyJComponentJTable {
                 }
             } catch (Exception ex) {
                 cc.setForeground(Color.black); // if sth. goes wrong: default color
-            }
-        } else {
-            int realRowIndex = convertRowIndexToModel(row);
-            realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
-            if ( sortimentBools.get( realRowIndex ) == false ){
-                c.setForeground(Color.GRAY); // not in sortiment
-            } else {
-                c.setForeground(Color.BLACK); // in sortiment
             }
         }
         //c.setBackground(Color.LIGHT_GRAY);
