@@ -5,7 +5,7 @@ import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
-import java.sql.*; // Connection, Statment, ResultSet
+import java.sql.*; // Connection, Statement, ResultSet
 
 // GUI stuff:
 import java.awt.*; // BorderLayout, FlowLayout, Dimension
@@ -16,7 +16,7 @@ import javax.swing.table.*;
 import javax.swing.text.*; // for DocumentFilter
 import javax.swing.event.*;
 
-public class Kassieren extends JPanel implements ActionListener, DocumentListener {
+public abstract class ArticleSelectPanelGrundlage extends WindowContent implements ActionListener, DocumentListener {
     // Text Fields
     private BarcodeComboBox barcodeBox;
     public ArtikelNameComboBox artikelBox;
@@ -29,22 +29,22 @@ public class Kassieren extends JPanel implements ActionListener, DocumentListene
     public String barcodeText = "";
     public String barcodeMemory = "";
 
-    public JTextField preisField;
-
     // Buttons
     private JButton emptyBarcodeButton;
     private JButton emptyArtikelButton;
     private JButton emptyNummerButton;
 
-    public ArticleSelectPanel(JTextField preisField) {
-        super();
-        this.preisField = preisField;
+    private int selectedArticleID;
+    // show all 'normal' items (toplevel_id IS NOT NULL), and in addition
+    // Gutscheine (where toplevel_id is NULL and sub_id is 2):
+    private String filterStr = " AND (toplevel_id IS NOT NULL OR sub_id = 2) ";
+
+    public ArticleSelectPanelGrundlage(Connection conn, MainWindowGrundlage mw) {
+        super(conn, mw);
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         JPanel barcodePanel = new JPanel();
         barcodePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
-            String filterStr = " AND (toplevel_id IS NOT NULL OR sub_id = 2) ";
-                   // show all 'normal' items (toplevel_id IS NOT NULL), and in addition Gutscheine (where toplevel_id is NULL and sub_id is 2)
             barcodeBox = new BarcodeComboBox(this.conn, filterStr);
             barcodeBox.setFont(mediumFont);
             barcodeBox.addActionListener(this);
@@ -104,9 +104,48 @@ public class Kassieren extends JPanel implements ActionListener, DocumentListene
             emptyArtikelButton.addActionListener(this);
             artikelNamePanel.add(emptyArtikelButton);
         this.add(artikelNamePanel);
+
+        setupKeyboardShortcuts();
     }
 
-    public void updateSelectedArticleID() {
+    private void setupKeyboardShortcuts() {
+        // keyboard shortcuts:
+        KeyStroke barcodeShortcut = KeyStroke.getKeyStroke("ctrl C");
+        KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke("ctrl A");
+        KeyStroke artikelNummerShortcut = KeyStroke.getKeyStroke("ctrl N");
+
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barcodeShortcut, "barcode");
+        this.getActionMap().put("barcode", new BarcodeAction());
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(artikelNameShortcut, "name");
+        this.getActionMap().put("name", new NameAction());
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(artikelNummerShortcut, "nummer");
+        this.getActionMap().put("nummer", new NummerAction());
+    }
+
+    private class BarcodeAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            emptyBarcodeBox();
+        }
+    }
+
+    private class NameAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            emptyArtikelBox();
+        }
+    }
+
+    private class NummerAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            emptyNummerBox();
+        }
+    }
+
+
+    public int getSelectedArticleID() {
+        return selectedArticleID;
+    }
+
+    private void updateSelectedArticleID() {
         // update selected Artikel
         String[] an = artikelBox.parseArtikelName();
         String artikelName = an[0];
@@ -129,16 +168,14 @@ public class Kassieren extends JPanel implements ActionListener, DocumentListene
             } else {
                 rememberBarcode();
             }
-
-            anzahlField.requestFocus();
-            SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
-                    anzahlField.selectAll();
-                }
-            });
+            articleSelectFinishedFocus();
         }
         setButtonsEnabled();
     }
+
+    protected abstract void setPriceField();
+
+    protected abstract void articleSelectFinishedFocus();
 
     private void rememberBarcode() {
         if (barcodeMemory != "") {
@@ -321,8 +358,7 @@ public class Kassieren extends JPanel implements ActionListener, DocumentListene
         artikelNummerText = "";
         artikelBox.emptyBox();
         nummerBox.emptyBox();
-        preisField.setText("");
-        preisField.setEditable(false);
+        resetOther();
     }
     private void resetFormFromArtikelBox() {
         System.out.println("resetting form from artikel box.");
@@ -330,8 +366,7 @@ public class Kassieren extends JPanel implements ActionListener, DocumentListene
         artikelNummerText = "";
         barcodeBox.emptyBox();
         nummerBox.emptyBox();
-        preisField.setText("");
-        preisField.setEditable(false);
+        resetOther();
     }
     private void resetFormFromNummerBox() {
         System.out.println("resetting form from nummer box.");
@@ -339,9 +374,10 @@ public class Kassieren extends JPanel implements ActionListener, DocumentListene
         artikelNameText = "";
         barcodeBox.emptyBox();
         artikelBox.emptyBox();
-        preisField.setText("");
-        preisField.setEditable(false);
+        resetOther();
     }
+
+    protected abstract void resetOther();
 
     public void emptyBarcodeBox() {
         barcodeText = "";

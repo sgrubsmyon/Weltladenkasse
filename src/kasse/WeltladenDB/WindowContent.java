@@ -55,6 +55,41 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected Vector<String> beliebtKuerzel;
     protected Vector<Color> beliebtFarben;
 
+    protected Font mediumFont = new Font("Tahoma", Font.BOLD, 16);
+    protected Font bigFont = new Font("Tahoma", Font.BOLD, 32);
+
+    protected class BigButton extends JButton {
+        public BigButton() {
+            super();
+            initialize();
+        }
+
+        public BigButton(String str) {
+            super(str);
+            initialize();
+        }
+
+        private void initialize() {
+            this.setFont(mediumFont);
+        }
+    }
+
+    protected class BigLabel extends JLabel {
+        public BigLabel() {
+            super();
+            initialize();
+        }
+
+        public BigLabel(String str) {
+            super(str);
+            initialize();
+        }
+
+        private void initialize() {
+            this.setFont(mediumFont);
+        }
+    }
+
     // Methoden:
     // Setter:
     void setConnection(Connection conn){

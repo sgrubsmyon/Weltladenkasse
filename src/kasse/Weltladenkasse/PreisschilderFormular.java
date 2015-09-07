@@ -25,8 +25,8 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
     // Text Fields
     private int selectedArtikelID;
 
-    private ArticleSelectPanel asPanel;
-    private JTextField preisField;
+    private ArticleSelectPanelPreisschilder asPanel;
+    protected JTextField preisField;
 
     // Buttons
     private JButton hinzufuegenButton;
@@ -65,8 +65,6 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
         initiateVectors();
         columnLabels.add("Entfernen");
 
-        setupKeyboardShortcuts();
-
         emptyTable();
 	showAll();
         asPanel.emptyBarcodeBox();
@@ -81,45 +79,11 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
         types = new Vector<String>();
     }
 
-    private void setupKeyboardShortcuts() {
-        // keyboard shortcuts:
-        KeyStroke barcodeShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.CTRL_MASK); // Ctrl-C
-        KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK); // Ctrl-A
-        KeyStroke artikelNummerShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_N, Event.CTRL_MASK); // Ctrl-N
-
-        ShortcutListener shortcutListener = new ShortcutListener();
-
-        this.registerKeyboardAction(shortcutListener, "barcode", barcodeShortcut,
-                JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "name", artikelNameShortcut,
-                JComponent.WHEN_IN_FOCUSED_WINDOW);
-        this.registerKeyboardAction(shortcutListener, "nummer", artikelNummerShortcut,
-                JComponent.WHEN_IN_FOCUSED_WINDOW);
-    }
-
-    // listener for keyboard shortcuts
-    private class ShortcutListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-            if (e.getActionCommand() == "barcode"){
-                asPanel.emptyBarcodeBox();
-                return;
-            }
-            if (e.getActionCommand() == "name"){
-                asPanel.emptyArtikelBox();
-                return;
-            }
-            if (e.getActionCommand() == "nummer"){
-                asPanel.emptyNummerBox();
-                return;
-            }
-        }
-    }
-
     void showAll(){
 	allPanel = new JPanel();
 	allPanel.setLayout(new BoxLayout(allPanel, BoxLayout.Y_AXIS));
 
-        asPanel = new ArticleSelectPanel(preisField);
+        asPanel = new ArticleSelectPanelPreisschilder(preisField);
         allPanel.add(asPanel);
 
 	JPanel hinzufuegenPanel = new JPanel();
@@ -259,21 +223,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
 
 
 
-    private void setPriceField() {
-        boolean variablerPreis = getVariablePriceBool(selectedArtikelID);
-        if ( ! variablerPreis ){
-            String artikelPreis = getSalePrice(selectedArtikelID);
-            preisField.getDocument().removeDocumentListener(this);
-            preisField.setText("");
-            preisField.setText( bc.decimalMark(artikelPreis) );
-            preisField.getDocument().addDocumentListener(this);
-        }
-        else {
-            preisField.setEditable(true);
-        }
-    }
-
-    private void setButtonsEnabled() {
+    public void setButtonsEnabled() {
         if (preisField.getText().length() > 0) {
             hinzufuegenButton.setEnabled(true);
             hinzufuegenButton.requestFocus();
@@ -281,20 +231,6 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
         else {
             hinzufuegenButton.setEnabled(false);
         }
-    }
-
-    private void checkIfFormIsComplete() {
-        int nummerNumber = nummerBox.getItemCount();
-        int artikelNumber = artikelBox.getItemCount();
-        if ( artikelNumber == 1 && nummerNumber == 1 ){ // artikel eindeutig festgelegt
-            String[] an = artikelBox.parseArtikelName();
-            String artikelName = an[0];
-            String lieferant = an[1];
-            String artikelNummer = (String)nummerBox.getSelectedItem();
-            selectedArtikelID = getArticleID(lieferant, artikelNummer); // get the internal artikelID from the DB
-            setPriceField();
-        }
-        setButtonsEnabled();
     }
 
     private void hinzufuegen() {
