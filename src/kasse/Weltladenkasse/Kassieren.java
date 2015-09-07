@@ -36,18 +36,10 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     private Kassieren myKassieren;
 
     // Text Fields
-    public BarcodeComboBox barcodeBox;
-    private ArtikelNameComboBox artikelBox;
-    private ArtikelNummerComboBox nummerBox;
-    private JTextField barcodeField;
-    private JTextField artikelField;
-    private JTextField nummerField;
-    protected String artikelNameText = "";
-    protected String artikelNummerText = "";
-    protected String barcodeText = "";
-    private String barcodeMemory = "";
     private int selectedArticleID;
     private int selectedStueck;
+
+    private ArticleSelectPanel asPanel;
     private JButton sonstigesButton;
     private JButton sevenPercentButton;
     private JButton nineteenPercentButton;
@@ -61,9 +53,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     private JTextField individuellRabattRelativField;
     private JTextField individuellRabattAbsolutField;
     // Buttons
-    private JButton emptyBarcodeButton;
-    private JButton emptyArtikelButton;
-    private JButton emptyNummerButton;
     private JButton hinzufuegenButton;
     private JButton leergutButton;
     private JButton ruecknahmeButton;
@@ -114,6 +103,22 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 
         columnLabels.add("Entfernen");
 
+        setupKeyboardShortcuts();
+
+        rabattButtons = new Vector<JButton>();
+        rabattButtons.add(new BigButton("  5%"));
+        rabattButtons.add(new BigButton("10%"));
+        rabattButtons.add(new BigButton("15%"));
+        rabattButtons.add(new BigButton("20%"));
+        rabattButtons.add(new BigButton("25%"));
+
+        showButtons();
+        emptyTable();
+	showAll();
+        asPanel.emptyBarcodeBox();
+    }
+
+    private void setupKeyboardShortcuts() {
         // keyboard shortcuts:
         KeyStroke barcodeShortcut = KeyStroke.getKeyStroke("ctrl C");
         KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke("ctrl A");
@@ -137,38 +142,23 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         this.getActionMap().put("ec", new ECAction());
         this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(stornierenShortcut, "stornieren");
         this.getActionMap().put("stornieren", new StornoAction());
-
-        rabattButtons = new Vector<JButton>();
-        rabattButtons.add(new BigButton("  5%"));
-        rabattButtons.add(new BigButton("10%"));
-        rabattButtons.add(new BigButton("15%"));
-        rabattButtons.add(new BigButton("20%"));
-        rabattButtons.add(new BigButton("25%"));
-
-        showButtons();
-        emptyTable();
-	showAll();
-        barcodeBox.requestFocus();
     }
 
     private class BarcodeAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
-            emptyBarcodeBox();
-            barcodeBox.requestFocus();
+            asPanel.emptyBarcodeBox();
         }
     }
 
     private class NameAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
-            emptyArtikelBox();
-            artikelBox.requestFocus();
+            asPanel.emptyArtikelBox();
         }
     }
 
     private class NummerAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
-            emptyNummerBox();
-            nummerBox.requestFocus();
+            asPanel.emptyNummerBox();
         }
     }
 
@@ -275,74 +265,8 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         JPanel articleSelectPanel = new JPanel();
         articleSelectPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
 
-            JPanel comboBoxPanel = new JPanel();
-            comboBoxPanel.setLayout(new BoxLayout(comboBoxPanel, BoxLayout.Y_AXIS));
-
-                JPanel barcodePanel = new JPanel();
-                barcodePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
-                    String filterStr = " AND (toplevel_id IS NOT NULL OR sub_id = 2) ";
-                           // show all 'normal' items (toplevel_id IS NOT NULL), and in addition Gutscheine (where toplevel_id is NULL and sub_id is 2)
-                    barcodeBox = new BarcodeComboBox(this.conn, filterStr);
-                    barcodeBox.setFont(mediumFont);
-                    barcodeBox.addActionListener(this);
-                    barcodeBox.addPopupMouseListener(new MouseListenerBarcodeBox());
-                    barcodeField = (JTextField)barcodeBox.getEditor().getEditorComponent();
-                    barcodeField.setColumns(9);
-                    removeDefaultKeyBindings(barcodeField);
-                    barcodeField.getDocument().addDocumentListener(this);
-                    BigLabel barcodeLabel = new BigLabel("Barcode: ");
-                    barcodeLabel.setLabelFor(barcodeBox);
-                    barcodeLabel.setDisplayedMnemonic(KeyEvent.VK_C);
-                    barcodePanel.add(barcodeLabel);
-                    barcodePanel.add(barcodeBox);
-                    emptyBarcodeButton = new JButton("x");
-                    emptyBarcodeButton.addActionListener(this);
-                    barcodePanel.add(emptyBarcodeButton);
-
-                    nummerBox = new ArtikelNummerComboBox(this.conn, filterStr);
-                    nummerBox.setFont(mediumFont);
-                    nummerBox.addActionListener(this);
-                    nummerBox.addPopupMouseListener(new MouseListenerNummerBox());
-                    // set preferred width etc.:
-                    nummerBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 30, false));
-                    nummerField = (JTextField)nummerBox.getEditor().getEditorComponent();
-                    nummerField.setColumns(7);
-                    removeDefaultKeyBindings(nummerField);
-                    nummerField.getDocument().addDocumentListener(this);
-                    BigLabel nummerLabel = new BigLabel("Artikelnr.: ");
-                    nummerLabel.setLabelFor(nummerBox);
-                    nummerLabel.setDisplayedMnemonic(KeyEvent.VK_N);
-                    barcodePanel.add(nummerLabel);
-                    barcodePanel.add(nummerBox);
-                    emptyNummerButton = new JButton("x");
-                    emptyNummerButton.addActionListener(this);
-                    barcodePanel.add(emptyNummerButton);
-                comboBoxPanel.add(barcodePanel);
-
-                comboBoxPanel.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
-
-                JPanel artikelNamePanel = new JPanel();
-                    artikelBox = new ArtikelNameComboBox(this.conn, filterStr);
-                    artikelBox.setFont(mediumFont);
-                    artikelBox.addActionListener(this);
-                    artikelBox.addPopupMouseListener(new MouseListenerArtikelBox());
-                    // set preferred width etc.:
-                    artikelBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 50, false));
-                    artikelField = (JTextField)artikelBox.getEditor().getEditorComponent();
-                    artikelField.setColumns(25);
-                    removeDefaultKeyBindings(artikelField);
-                    artikelField.getDocument().addDocumentListener(this);
-                    BigLabel artikelLabel = new BigLabel("Artikelname: ");
-                    artikelLabel.setLabelFor(artikelBox);
-                    artikelLabel.setDisplayedMnemonic(KeyEvent.VK_A);
-                    artikelNamePanel.add(artikelLabel);
-                    artikelNamePanel.add(artikelBox);
-                    emptyArtikelButton = new JButton("x");
-                    emptyArtikelButton.addActionListener(this);
-                    artikelNamePanel.add(emptyArtikelButton);
-                comboBoxPanel.add(artikelNamePanel);
-
-            articleSelectPanel.add(comboBoxPanel);
+            asPanel = new ArticleSelectPanel(preisField);
+            articleSelectPanel.add(asPanel);
 
             JPanel sonstigesPanel = new JPanel(new GridBagLayout());
             GridBagConstraints c1 = new GridBagConstraints();
@@ -837,7 +761,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 	this.remove(allPanel);
 	this.revalidate();
 	showAll();
-        barcodeBox.requestFocus();
+        asPanel.emptyBarcodeBox();
 
         // scroll the table scroll pane to bottom:
         scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum());
@@ -1304,165 +1228,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 
 
 
-    private Vector< Vector<String[]> > getArtikelNameAndNummerForBarcode() {
-        String barcode = (String)barcodeBox.getSelectedItem();
-        Vector<String[]> artikelNamen = new Vector<String[]>();
-        Vector<String[]> artikelNummern = new Vector<String[]>();
-        Vector< Vector<String[]> > result = new Vector< Vector<String[]> >();
-        try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.sortiment, "+
-                    "a.artikel_nr FROM artikel AS a " +
-                    "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.barcode = ? " +
-                    "AND a.aktiv = TRUE"
-                    );
-            pstmt.setString(1, barcode);
-            ResultSet rs = pstmt.executeQuery();
-            // Now do something with the ResultSet, should be only one result ...
-            while ( rs.next() ){
-                String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
-                Boolean sortiment = rs.getBoolean(3);
-                artikelNamen.add( new String[]{rs.getString(1), lieferant, sortiment.toString()} );
-                artikelNummern.add( new String[]{rs.getString(4)} );
-            }
-            rs.close();
-            pstmt.close();
-        } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-        result.add(artikelNamen);
-        result.add(artikelNummern);
-        if (artikelNamen.size() == 0){
-            // This barcode is not known to the DB.
-            // Remember this barcode and possibly enter it in DB later.
-            System.out.println();
-            System.out.println("barcodeMemory before: "+barcodeMemory);
-            barcodeMemory = barcode;
-            System.out.println("barcodeMemory after: "+barcodeMemory);
-            System.out.println();
-        } else {
-            // Forget the remembered barcode.
-            System.out.println();
-            System.out.println("barcodeMemory before: "+barcodeMemory);
-            barcodeMemory = "";
-            System.out.println("barcodeMemory after: "+barcodeMemory);
-            System.out.println();
-        }
-        return result;
-    }
-
-
-    private void setArtikelNameAndNummerForBarcode(Vector<String[]> artikelNamen,
-            Vector<String[]> artikelNummern) {
-        if (artikelBox.getItemCount() != 1){
-            //artikelBox.removeActionListener(this);
-                if (artikelNamen.size() == 1){
-                    // update internal cache string before changing name in text field (otherwise document listener causes problems)
-                    artikelNameText = artikelNamen.get(0)[0];
-                }
-                artikelBox.setItems(artikelNamen);
-            //artikelBox.addActionListener(this);
-        }
-        if (nummerBox.getItemCount() != 1){
-            //nummerBox.removeActionListener(this);
-                if (artikelNummern.size() == 1){
-                    // update internal cache string before changing name in text field (otherwise document listener causes problems)
-                    artikelNummerText = artikelNummern.get(0)[0];
-                }
-                nummerBox.setItems(artikelNummern);
-            //nummerBox.addActionListener(this);
-        }
-    }
-
-    private void setArtikelNameForNummer() {
-        // get artikelNummer
-        String artikelNummer = (String)nummerBox.getSelectedItem();
-        Vector<String[]> artikelNamen = new Vector<String[]>();
-        // get artikelName for artikelNummer
-        try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.sortiment FROM artikel AS a " +
-                    "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.artikel_nr = ? " +
-                    "AND a.aktiv = TRUE"
-                    );
-            pstmt.setString(1, artikelNummer);
-            ResultSet rs = pstmt.executeQuery();
-            // Now do something with the ResultSet, should be only one result ...
-            while ( rs.next() ){
-                String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
-                Boolean sortiment = rs.getBoolean(3);
-                artikelNamen.add( new String[]{rs.getString(1), lieferant, sortiment.toString()} );
-            }
-            rs.close();
-            pstmt.close();
-        } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-        if (artikelBox.getItemCount() != 1){
-            //artikelBox.removeActionListener(this);
-                if (artikelNamen.size() == 1){
-                    // update internal cache string before changing name in text field (otherwise document listener causes problems)
-                    artikelNameText = artikelNamen.get(0)[0];
-                }
-                artikelBox.setItems(artikelNamen);
-            //artikelBox.addActionListener(this);
-        }
-    }
-
-    private void setArtikelNummerForName() {
-        // get artikelName
-        String[] an = artikelBox.parseArtikelName();
-        String artikelName = an[0];
-        String lieferant = an[1];
-        String lieferantQuery = lieferant.equals("") ? "IS NULL" : "= ?";
-        Vector<String[]> artikelNummern = new Vector<String[]>();
-        // get artikelNummer for artikelName
-        try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT DISTINCT a.artikel_nr FROM artikel AS a " +
-                    "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.artikel_name = ? AND l.lieferant_name "+lieferantQuery+" " +
-                    "AND a.aktiv = TRUE"
-                    );
-            pstmt.setString(1, artikelName);
-            if (!lieferant.equals("")){
-                pstmt.setString(2, lieferant);
-            }
-            ResultSet rs = pstmt.executeQuery();
-            // Now do something with the ResultSet, should be only one result ...
-            while ( rs.next() ){
-                artikelNummern.add( new String[]{rs.getString(1)} );
-            }
-            rs.close();
-            pstmt.close();
-        } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-        if (nummerBox.getItemCount() != 1){
-            //nummerBox.removeActionListener(this);
-                if (artikelNummern.size() == 1){
-                    // update internal cache string before changing name in text field (otherwise document listener causes problems)
-                    artikelNummerText = artikelNummern.get(0)[0];
-                }
-                nummerBox.setItems(artikelNummern);
-            //nummerBox.addActionListener(this);
-        }
-    }
-
-
-    private void updateSelectedArticleID() {
-        // update selected Artikel
-        String[] an = artikelBox.parseArtikelName();
-        String artikelName = an[0];
-        String lieferant = an[1];
-        String artikelNummer = (String)nummerBox.getSelectedItem();
-        selectedArticleID = getArticleID(lieferant, artikelNummer); // get the internal artikelID from the DB
-    }
 
 
     private void setPriceField() {
@@ -1482,7 +1247,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
                     newArticle.setEmpfVKP(artikelPreis);
                     updateArticle(origArticle, newArticle);
 
-                    updateSelectedArticleID();
+                    asPanel.updateSelectedArticleID();
                     Artikelliste artikelListe = tabbedPane.getArtikelliste();
                     if (artikelListe != null){
                         artikelListe.updateAll();
@@ -1502,33 +1267,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         }
     }
 
-    private void rememberBarcode() {
-        if (barcodeMemory != "") {
-            int answer = JOptionPane.showConfirmDialog(mainWindow,
-                    "Der zuletzt gescannte Barcode\n"+
-                    "    "+barcodeMemory+"\n"+
-                    "könnte mit dem ausgewählten Artikel\n"+
-                    "    "+getShortName(selectedArticleID)+"\n"+
-                    "übereinstimmen.\n"+
-                    "Falls ja, dann kann der Barcode jetzt unter diesem Artikel gespeichert werden.\n\n"+
-                    "Ist das erwünscht? (Bei Unsicherheit 'Nein' wählen)", "Barcode speichern?",
-                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-            System.out.println(answer);
-            if (answer == JOptionPane.YES_OPTION) {
-                Artikel origArticle = getArticle(selectedArticleID);
-                Artikel newArticle = getArticle(selectedArticleID);
-                newArticle.setBarcode(barcodeMemory);
-                updateArticle(origArticle, newArticle);
-
-                System.out.println("old selectedArticleID: "+selectedArticleID);
-                updateSelectedArticleID();
-                System.out.println("new selectedArticleID: "+selectedArticleID);
-            }
-            // Forget about it.
-            barcodeMemory = "";
-        }
-    }
-
     private void setButtonsEnabled() {
         if (preisField.getText().length() > 0) {
             hinzufuegenButton.setEnabled(true);
@@ -1540,31 +1278,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
             leergutButton.setEnabled(false);
             ruecknahmeButton.setEnabled(false);
         }
-    }
-
-    private void checkIfFormIsComplete() {
-        int nummerNumber = nummerBox.getItemCount();
-        int artikelNumber = artikelBox.getItemCount();
-        if ( artikelNumber == 1 && nummerNumber == 1 ){ // artikel eindeutig festgelegt
-            updateSelectedArticleID();
-            setPriceField();
-            boolean hasBarcode = doesArticleHaveBarcode(selectedArticleID);
-            if (hasBarcode) {
-                // Forget the remembered barcode. Another article was selected
-                // that already has a barcode.
-                barcodeMemory = "";
-            } else {
-                rememberBarcode();
-            }
-
-            anzahlField.requestFocus();
-            SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
-                    anzahlField.selectAll();
-                }
-            });
-        }
-        setButtonsEnabled();
     }
 
     private boolean checkKundeGibtField() {
@@ -1600,19 +1313,17 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     }
 
     private void hinzufuegen(Integer stueck, String color) {
-        if (artikelBox.getItemCount() != 1 || nummerBox.getItemCount() != 1){
+        if (asPanel.artikelBox.getItemCount() != 1 || nummerBox.getItemCount() != 1){
             System.out.println("Error: article not selected unambiguously.");
             return;
         }
-        String[] an = artikelBox.parseArtikelName();
-        String artikelName = an[0];
-        String lieferant = an[1];
-        String artikelNummer = (String)nummerBox.getSelectedItem();
+        selectedArticleID = asPanel.getSelectedArticleID();
+        Artikel a = getArticle(selectedArticleID);
+        String artikelNummer = a.getNumber();
         selectedStueck = stueck;
         String artikelPreis = bc.priceFormatterIntern(preisField.getText());
         BigDecimal gesPreis = new BigDecimal(artikelPreis).multiply(new BigDecimal(stueck));
         String gesPreisString = bc.priceFormatterIntern(gesPreis);
-        Artikel a = getArticle(selectedArticleID);
         String kurzname = getShortName(a);
         String artikelMwSt = getVAT(selectedArticleID);
         Boolean sortiment = a.getSortiment();
@@ -1749,8 +1460,8 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 
     private void gutschein() {
         selectedArticleID = 3; // internal Gutschein artikel_id
-        artikelBox.setBox( getArticleName(selectedArticleID) );
-        nummerBox.setBox( getArticleNumber(selectedArticleID) );
+        asPanel.artikelBox.setBox( getArticleName(selectedArticleID) );
+        asPanel.nummerBox.setBox( getArticleNumber(selectedArticleID) );
         preisField.setText( gutscheinField.getText() );
         anzahlSpinner.setValue(1);
         ruecknahmeHinzufuegen();
@@ -1987,89 +1698,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         }
     }
 
-    private void resetFormFromBarcodeBox() {
-        artikelNameText = "";
-        artikelNummerText = "";
-        artikelBox.emptyBox();
-        nummerBox.emptyBox();
-        preisField.setText("");
-        preisField.setEditable(false);
-    }
-    private void resetFormFromArtikelBox() {
-        System.out.println("resetting form from artikel box.");
-        barcodeText = "";
-        artikelNummerText = "";
-        barcodeBox.emptyBox();
-        nummerBox.emptyBox();
-        preisField.setText("");
-        preisField.setEditable(false);
-    }
-    private void resetFormFromNummerBox() {
-        System.out.println("resetting form from nummer box.");
-        barcodeText = "";
-        artikelNameText = "";
-        barcodeBox.emptyBox();
-        artikelBox.emptyBox();
-        preisField.setText("");
-        preisField.setEditable(false);
-    }
-
-    private void checkBarcodeBox(ActionEvent e) {
-        Vector< Vector<String[]> > res = getArtikelNameAndNummerForBarcode();
-        if ( barcodeBox.getItemCount() == 1 ){ // if selection is correct and unique
-            setArtikelNameAndNummerForBarcode(res.get(0), res.get(1));
-        }
-        checkIfFormIsComplete();
-    }
-
-    private void checkArtikelBox(ActionEvent e) {
-        //System.out.println("actionPerformed in artikelBox, actionCommand: "+e.getActionCommand()+", modifiers: "+e.getModifiers()+", itemCount: "+artikelBox.getItemCount()+", selectedItem: "+artikelBox.getSelectedItem()+"   artikelNameText: "+artikelNameText);
-        if ( artikelBox.getItemCount() == 1 ){ // if selection is correct and unique
-            setArtikelNummerForName();
-        }
-        checkIfFormIsComplete();
-    }
-
-    private void checkNummerBox(ActionEvent e) {
-        if ( nummerBox.getItemCount() == 1 ){ // if selection is correct and unique
-            setArtikelNameForNummer();
-        }
-        checkIfFormIsComplete();
-    }
-
-    // need a low-level mouse listener to remove DocumentListeners upon mouse click
-    public class MouseListenerBarcodeBox extends MouseAdapter {
-        @Override
-            public void mousePressed(MouseEvent e) {
-                barcodeBox.setBoxMode = true;
-            }
-        @Override
-            public void mouseReleased(MouseEvent e) {
-                barcodeBox.setBoxMode = false;
-            }
-    }
-    // need a low-level mouse listener to remove DocumentListeners upon mouse click
-    public class MouseListenerArtikelBox extends MouseAdapter {
-        @Override
-            public void mousePressed(MouseEvent e) {
-                artikelBox.setBoxMode = true;
-            }
-        @Override
-            public void mouseReleased(MouseEvent e) {
-                artikelBox.setBoxMode = false;
-            }
-    }
-    // need a low-level mouse listener to remove DocumentListeners upon mouse click
-    public class MouseListenerNummerBox extends MouseAdapter {
-        @Override
-            public void mousePressed(MouseEvent e) {
-                nummerBox.setBoxMode = true;
-            }
-        @Override
-            public void mouseReleased(MouseEvent e) {
-                nummerBox.setBoxMode = false;
-            }
-    }
 
     /**
      *    * Each non abstract class that implements the DocumentListener
@@ -2080,42 +1708,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     public void insertUpdate(DocumentEvent e) {
         if (e.getDocument() == preisField.getDocument()){
             setButtonsEnabled();
-            return;
-        }
-        if (e.getDocument() == barcodeField.getDocument()){
-            if (barcodeBox.setBoxMode){ return; }
-            //System.out.println("\nbarcodeField DocumentListener fired!");
-            //System.out.println("selectedItem: "+barcodeBox.getSelectedItem());
-            //System.out.println("barcodeField text: "+barcodeField.getText()+"   barcodeText: "+barcodeText);
-            if ( !barcodeField.getText().equals(barcodeText) ) { // some editing change in box
-                resetFormFromBarcodeBox();
-                barcodeText = barcodeField.getText();
-            }
-            checkIfFormIsComplete();
-            return;
-        }
-        if (e.getDocument() == artikelField.getDocument()){
-            if (artikelBox.setBoxMode){ return; }
-            //System.out.println("\nartikelField DocumentListener fired!");
-            //System.out.println("selectedItem: "+artikelBox.getSelectedItem());
-            //System.out.println("artikelField text: "+artikelField.getText()+"   artikelNameText: "+artikelNameText);
-            if ( !artikelField.getText().equals(artikelNameText) ) { // some editing change in box
-                resetFormFromArtikelBox();
-                artikelNameText = artikelField.getText();
-            }
-            checkIfFormIsComplete();
-            return;
-        }
-        if (e.getDocument() == nummerField.getDocument()){
-            if (nummerBox.setBoxMode){ return; }
-            //System.out.println("\nnummerField DocumentListener fired!");
-            //System.out.println("selectedItem: "+nummerBox.getSelectedItem());
-            //System.out.println("nummerField text: "+nummerField.getText()+"   artikelNummerText: "+artikelNummerText);
-            if ( !nummerField.getText().equals(artikelNummerText) ) { // some editing change in box
-                resetFormFromNummerBox();
-                artikelNummerText = nummerField.getText();
-            }
-            checkIfFormIsComplete();
             return;
         }
         if (e.getDocument() == gutscheinField.getDocument()){
@@ -2136,21 +1728,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         }
     }
 
-    void emptyBarcodeBox() {
-        barcodeText = "";
-        barcodeBox.emptyBox();
-    }
-
-    void emptyArtikelBox() {
-        artikelNameText = "";
-        artikelBox.emptyBox();
-    }
-
-    void emptyNummerBox() {
-        artikelNummerText = "";
-        nummerBox.emptyBox();
-    }
-
     /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.
@@ -2158,21 +1735,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
      *    @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == barcodeBox){
-            if (barcodeBox.changeMode){ return; }
-            checkBarcodeBox(e);
-            return;
-        }
-        if (e.getSource() == artikelBox){
-            if (artikelBox.changeMode){ return; }
-            checkArtikelBox(e);
-            return;
-        }
-        if (e.getSource() == nummerBox){
-            if (nummerBox.changeMode){ return; }
-            checkNummerBox(e);
-            return;
-        }
         if (e.getSource() == sonstigesButton){
             artikelField.setText(", Sonstige");
             return;
@@ -2198,21 +1760,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         if (e.getSource() == ruecknahmeButton){
             removeRabattAufRechnung();
             ruecknahmeHinzufuegen();
-	    return;
-	}
-        if (e.getSource() == emptyBarcodeButton){
-            emptyBarcodeBox();
-            barcodeBox.requestFocus();
-	    return;
-	}
-        if (e.getSource() == emptyArtikelButton){
-            emptyArtikelBox();
-            artikelBox.requestFocus();
-	    return;
-	}
-        if (e.getSource() == emptyNummerButton){
-            emptyNummerBox();
-            nummerBox.requestFocus();
 	    return;
 	}
         if (e.getSource() == zwischensummeButton){
@@ -2328,7 +1875,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 	    return;
 	}
 	int removeRow = -1;
-	for (int i=0; i<kassierArtikel.size(); i++){
+	for (int i=0; i<removeButtons.size(); i++){
 	    if (e.getSource() == removeButtons.get(i) ){
 		removeRow = i;
 		break;
