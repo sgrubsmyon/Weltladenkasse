@@ -39,13 +39,13 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     private int selectedArticleID;
     private int selectedStueck;
 
-    private ArticleSelectPanel asPanel;
+    private ArticleSelectPanelKassieren asPanel;
     private JButton sonstigesButton;
     private JButton sevenPercentButton;
     private JButton nineteenPercentButton;
     private JSpinner anzahlSpinner;
-    private JFormattedTextField anzahlField;
-    private JTextField preisField;
+    protected JFormattedTextField anzahlField;
+    protected JTextField preisField;
     private JTextField kundeGibtField;
     private JTextField gutscheinField;
     private JTextField bigPriceField;
@@ -80,9 +80,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     private JScrollPane scrollPane;
     private Vector< Vector<Object> > data;
     private Vector<JButton> removeButtons;
-
-    private Font mediumFont = new Font("Tahoma", Font.BOLD, 16);
-    private Font bigFont = new Font("Tahoma", Font.BOLD, 32);
 
     // Methoden:
 
@@ -120,20 +117,11 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 
     private void setupKeyboardShortcuts() {
         // keyboard shortcuts:
-        KeyStroke barcodeShortcut = KeyStroke.getKeyStroke("ctrl C");
-        KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke("ctrl A");
-        KeyStroke artikelNummerShortcut = KeyStroke.getKeyStroke("ctrl N");
         KeyStroke zwischensummeShortcut = KeyStroke.getKeyStroke("ctrl Z");
         KeyStroke barShortcut = KeyStroke.getKeyStroke("ctrl B");
         KeyStroke ecShortcut = KeyStroke.getKeyStroke("ctrl E");
         KeyStroke stornierenShortcut = KeyStroke.getKeyStroke("ctrl S");
 
-        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barcodeShortcut, "barcode");
-        this.getActionMap().put("barcode", new BarcodeAction());
-        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(artikelNameShortcut, "name");
-        this.getActionMap().put("name", new NameAction());
-        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(artikelNummerShortcut, "nummer");
-        this.getActionMap().put("nummer", new NummerAction());
         this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(zwischensummeShortcut, "zws");
         this.getActionMap().put("zws", new ZWSAction());
         this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barShortcut, "bar");
@@ -142,24 +130,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         this.getActionMap().put("ec", new ECAction());
         this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(stornierenShortcut, "stornieren");
         this.getActionMap().put("stornieren", new StornoAction());
-    }
-
-    private class BarcodeAction extends AbstractAction {
-        public void actionPerformed(ActionEvent e) {
-            asPanel.emptyBarcodeBox();
-        }
-    }
-
-    private class NameAction extends AbstractAction {
-        public void actionPerformed(ActionEvent e) {
-            asPanel.emptyArtikelBox();
-        }
-    }
-
-    private class NummerAction extends AbstractAction {
-        public void actionPerformed(ActionEvent e) {
-            asPanel.emptyNummerBox();
-        }
     }
 
     private class ZWSAction extends AbstractAction {
@@ -224,38 +194,6 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         }
     }
 
-    private class BigButton extends JButton {
-        public BigButton() {
-            super();
-            initialize();
-        }
-
-        public BigButton(String str) {
-            super(str);
-            initialize();
-        }
-
-        private void initialize() {
-            this.setFont(mediumFont);
-        }
-    }
-
-    private class BigLabel extends JLabel {
-        public BigLabel() {
-            super();
-            initialize();
-        }
-
-        public BigLabel(String str) {
-            super(str);
-            initialize();
-        }
-
-        private void initialize() {
-            this.setFont(mediumFont);
-        }
-    }
-
     void showAll(){
         updateRabattButtons();
 
@@ -265,7 +203,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         JPanel articleSelectPanel = new JPanel();
         articleSelectPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
 
-            asPanel = new ArticleSelectPanel(preisField);
+            asPanel = new ArticleSelectPanelKassieren(this);
             articleSelectPanel.add(asPanel);
 
             JPanel sonstigesPanel = new JPanel(new GridBagLayout());
@@ -1230,44 +1168,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
 
 
 
-    private void setPriceField() {
-        boolean variablerPreis = getVariablePriceBool(selectedArticleID);
-        if ( ! variablerPreis ){
-            String artikelPreis = getSalePrice(selectedArticleID);
-            if (artikelPreis == null || artikelPreis.equals("")){
-                artikelPreis = handleMissingSalePrice("Bitte Verkaufspreis eingeben",
-                        getShortName(selectedArticleID),
-                        getArticleNumber(selectedArticleID)[0],
-                        getArticleName(selectedArticleID)[1],
-                        getBarcode(selectedArticleID));
-                if (artikelPreis != null && !artikelPreis.equals("")){
-                    Artikel origArticle = getArticle(selectedArticleID);
-                    Artikel newArticle = getArticle(selectedArticleID);
-                    newArticle.setVKP(artikelPreis);
-                    newArticle.setEmpfVKP(artikelPreis);
-                    updateArticle(origArticle, newArticle);
-
-                    asPanel.updateSelectedArticleID();
-                    Artikelliste artikelListe = tabbedPane.getArtikelliste();
-                    if (artikelListe != null){
-                        artikelListe.updateAll();
-                    }
-
-                    artikelPreis = getSalePrice(selectedArticleID);
-                    if (artikelPreis == null)
-                        artikelPreis = "";
-                }
-            }
-            preisField.getDocument().removeDocumentListener(this);
-            preisField.setText( bc.decimalMark(artikelPreis) );
-            preisField.getDocument().addDocumentListener(this);
-        }
-        else {
-            preisField.setEditable(true);
-        }
-    }
-
-    private void setButtonsEnabled() {
+    public void setButtonsEnabled() {
         if (preisField.getText().length() > 0) {
             hinzufuegenButton.setEnabled(true);
             leergutButton.setEnabled( artikelHasPfand() );
