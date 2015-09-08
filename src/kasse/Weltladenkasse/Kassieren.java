@@ -22,7 +22,7 @@ import hirondelle.date4j.DateTime;
 
 import WeltladenDB.*;
 
-public class Kassieren extends RechnungsGrundlage implements DocumentListener {
+public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, DocumentListener {
     // Attribute:
     private final BigDecimal mitarbeiterRabatt = new BigDecimal("0.1");
     private final boolean allowMitarbeiterRabatt = true;
@@ -35,11 +35,10 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     private TabbedPane tabbedPane;
     private Kassieren myKassieren;
 
-    // Text Fields
     private int selectedArticleID;
     private int selectedStueck;
 
-    private ArticleSelectPanelKassieren asPanel;
+    protected ArticleSelectPanelKassieren asPanel;
     private JButton sonstigesButton;
     private JButton sevenPercentButton;
     private JButton nineteenPercentButton;
@@ -95,8 +94,8 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
             this.mw = null;
             display = null;
         }
-        myKassieren = this;
-        tabbedPane = tp;
+        this.myKassieren = this;
+        this.tabbedPane = tp;
 
         columnLabels.add("Entfernen");
 
@@ -203,7 +202,7 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         JPanel articleSelectPanel = new JPanel();
         articleSelectPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
 
-            asPanel = new ArticleSelectPanelKassieren(this);
+            asPanel = new ArticleSelectPanelKassieren(conn, mainWindow, this, tabbedPane);
             articleSelectPanel.add(asPanel);
 
             JPanel sonstigesPanel = new JPanel(new GridBagLayout());
@@ -1041,9 +1040,11 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
         boolean hasPfand = false;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT p.pfand_id IS NOT NULL FROM artikel AS a INNER JOIN produktgruppe AS p USING (produktgruppen_id) "+
+                    "SELECT p.pfand_id IS NOT NULL FROM artikel AS a "+
+                    "INNER JOIN produktgruppe AS p USING (produktgruppen_id) "+
                     "WHERE a.artikel_id = ?"
                     );
+            System.out.println("artikel_id = "+artikelID);
             pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -1214,13 +1215,12 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     }
 
     private void hinzufuegen(Integer stueck, String color) {
-        if (asPanel.artikelBox.getItemCount() != 1 || nummerBox.getItemCount() != 1){
+        if (asPanel.artikelBox.getItemCount() != 1 || asPanel.nummerBox.getItemCount() != 1){
             System.out.println("Error: article not selected unambiguously.");
             return;
         }
-        selectedArticleID = asPanel.getSelectedArticleID();
         Artikel a = getArticle(selectedArticleID);
-        String artikelNummer = a.getNumber();
+        String artikelNummer = a.getNummer();
         selectedStueck = stueck;
         String artikelPreis = bc.priceFormatterIntern(preisField.getText());
         BigDecimal gesPreis = new BigDecimal(artikelPreis).multiply(new BigDecimal(stueck));
@@ -1360,9 +1360,9 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     }
 
     private void gutschein() {
-        selectedArticleID = 3; // internal Gutschein artikel_id
-        asPanel.artikelBox.setBox( getArticleName(selectedArticleID) );
-        asPanel.nummerBox.setBox( getArticleNumber(selectedArticleID) );
+        int gutscheinArticleID = 3; // internal Gutschein artikel_id
+        asPanel.artikelBox.setBox( getArticleName(gutscheinArticleID) );
+        asPanel.nummerBox.setBox( getArticleNumber(gutscheinArticleID) );
         preisField.setText( gutscheinField.getText() );
         anzahlSpinner.setValue(1);
         ruecknahmeHinzufuegen();
@@ -1630,6 +1630,14 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
     }
 
     /**
+     * A class implementing ArticleSelectUser must have this method.
+     */
+    public void updateSelectedArticleID(int selectedArticleID) {
+        this.selectedArticleID = selectedArticleID;
+    }
+ 
+
+    /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.
      *
@@ -1637,15 +1645,15 @@ public class Kassieren extends RechnungsGrundlage implements DocumentListener {
      **/
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == sonstigesButton){
-            artikelField.setText(", Sonstige");
+            asPanel.artikelField.setText(", Sonstige");
             return;
         }
         if (e.getSource() == sevenPercentButton){
-            artikelField.setText("Variabler Preis 7%");
+            asPanel.artikelField.setText("Variabler Preis 7%");
             return;
         }
         if (e.getSource() == nineteenPercentButton){
-            artikelField.setText("Variabler Preis 19%");
+            asPanel.artikelField.setText("Variabler Preis 19%");
             return;
         }
         if (e.getSource() == hinzufuegenButton){

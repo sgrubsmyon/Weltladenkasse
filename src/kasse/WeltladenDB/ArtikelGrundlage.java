@@ -289,7 +289,15 @@ public abstract class ArtikelGrundlage extends WindowContent {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+        return calculatePricePerKg(menge_bd, einheit, preis_bd);
+    }
 
+    protected String[] getMengePriceAndPricePerKg(Artikel a) {
+        return calculatePricePerKg(a.getMenge(), a.getEinheit(),
+                new BigDecimal(a.getVKP()));
+    }
+
+    private String[] calculatePricePerKg(BigDecimal menge_bd, String einheit, BigDecimal preis_bd) {
         String menge = "";
         String preis = bc.priceFormatter(preis_bd)+" "+bc.currencySymbol;
         String kg_preis = "";

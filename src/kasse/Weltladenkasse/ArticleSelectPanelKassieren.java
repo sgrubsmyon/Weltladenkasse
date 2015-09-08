@@ -6,15 +6,20 @@ import java.util.*; // for String
 // MySQL Connector/J stuff:
 import java.sql.*; // Connection, Statement, ResultSet
 
+// GUI stuff:
+import javax.swing.SwingUtilities;
+
 import WeltladenDB.*;
 
 public class ArticleSelectPanelKassieren extends ArticleSelectPanelGrundlage {
-    Kassieren kassieren;
+    private Kassieren kassieren;
+    private TabbedPane tabbedPane;
 
     public ArticleSelectPanelKassieren(Connection conn, MainWindowGrundlage mw,
-            Kassieren kassieren) {
-        super(conn, mw);
+            Kassieren kassieren, TabbedPane tabbedPane) {
+        super(conn, mw, kassieren);
         this.kassieren = kassieren;
+        this.tabbedPane = tabbedPane;
     }
 
     protected void resetOther() {
