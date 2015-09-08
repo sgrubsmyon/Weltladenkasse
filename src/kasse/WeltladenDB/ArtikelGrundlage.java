@@ -147,6 +147,26 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return kurzname;
     }
 
+    protected String getLieferantName(int artikelID) {
+        String lieferant = new String();
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT lieferant_name "+
+                    "FROM lieferant AS l INNER JOIN artikel AS a USING (lieferant_id) WHERE artikel_id = ? "+
+                    "AND a.aktiv = TRUE"
+                    );
+            pstmtSetInteger(pstmt, 1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); lieferant = rs.getString(1); rs.close();
+            if ( lieferant == null ) { lieferant = ""; }
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return lieferant;
+    }
+
     protected String getShortLieferantName(int artikelID) {
         String liefkurz = new String();
         try {

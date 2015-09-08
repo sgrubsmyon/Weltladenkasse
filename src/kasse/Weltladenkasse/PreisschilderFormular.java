@@ -223,7 +223,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
 
 
 
-    public void setButtonsEnabled() {
+    protected void setButtonsEnabled() {
         if (preisField.getText().length() > 0) {
             hinzufuegenButton.setEnabled(true);
             hinzufuegenButton.requestFocus();
