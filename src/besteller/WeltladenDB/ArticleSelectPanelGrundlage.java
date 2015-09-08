@@ -25,10 +25,10 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage
     private JTextField barcodeField;
     public JTextField artikelField;
     private JTextField nummerField;
-    public String artikelNameText = "";
-    public String artikelNummerText = "";
-    public String barcodeText = "";
-    public String barcodeMemory = "";
+    private String artikelNameText = "";
+    private String artikelNummerText = "";
+    private String barcodeText = "";
+    private String barcodeMemory = "";
 
     private ArticleSelectUser articleSelectUser;
 
@@ -196,16 +196,15 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage
                     "Falls ja, dann kann der Barcode jetzt unter diesem Artikel gespeichert werden.\n\n"+
                     "Ist das erwünscht? (Bei Unsicherheit 'Nein' wählen)", "Barcode speichern?",
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-            System.out.println(answer);
             if (answer == JOptionPane.YES_OPTION) {
                 Artikel origArticle = getArticle(selectedArticleID);
                 Artikel newArticle = getArticle(selectedArticleID);
                 newArticle.setBarcode(barcodeMemory);
                 updateArticle(origArticle, newArticle);
 
-                System.out.println("old selectedArticleID: "+selectedArticleID);
+                //System.out.println("old selectedArticleID: "+selectedArticleID);
                 updateSelectedArticleID();
-                System.out.println("new selectedArticleID: "+selectedArticleID);
+                //System.out.println("new selectedArticleID: "+selectedArticleID);
             }
             // Forget about it.
             barcodeMemory = "";
@@ -245,18 +244,18 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage
         if (artikelNamen.size() == 0){
             // This barcode is not known to the DB.
             // Remember this barcode and possibly enter it in DB later.
-            System.out.println();
-            System.out.println("barcodeMemory before: "+barcodeMemory);
+            //System.out.println();
+            //System.out.println("barcodeMemory before: "+barcodeMemory);
             barcodeMemory = barcode;
-            System.out.println("barcodeMemory after: "+barcodeMemory);
-            System.out.println();
+            //System.out.println("barcodeMemory after: "+barcodeMemory);
+            //System.out.println();
         } else {
             // Forget the remembered barcode.
-            System.out.println();
-            System.out.println("barcodeMemory before: "+barcodeMemory);
+            //System.out.println();
+            //System.out.println("barcodeMemory before: "+barcodeMemory);
             barcodeMemory = "";
-            System.out.println("barcodeMemory after: "+barcodeMemory);
-            System.out.println();
+            //System.out.println("barcodeMemory after: "+barcodeMemory);
+            //System.out.println();
         }
         return result;
     }
@@ -369,7 +368,6 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage
         resetOther();
     }
     private void resetFormFromArtikelBox() {
-        System.out.println("resetting form from artikel box.");
         barcodeText = "";
         artikelNummerText = "";
         barcodeBox.emptyBox();
@@ -377,7 +375,6 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage
         resetOther();
     }
     private void resetFormFromNummerBox() {
-        System.out.println("resetting form from nummer box.");
         barcodeText = "";
         artikelNameText = "";
         barcodeBox.emptyBox();
@@ -414,7 +411,6 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage
     }
 
     private void checkArtikelBox(ActionEvent e) {
-        //System.out.println("actionPerformed in artikelBox, actionCommand: "+e.getActionCommand()+", modifiers: "+e.getModifiers()+", itemCount: "+artikelBox.getItemCount()+", selectedItem: "+artikelBox.getSelectedItem()+"   artikelNameText: "+artikelNameText);
         if ( artikelBox.getItemCount() == 1 ){ // if selection is correct and unique
             setArtikelNummerForName();
         }
@@ -472,9 +468,6 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage
     public void insertUpdate(DocumentEvent e) {
         if (e.getDocument() == barcodeField.getDocument()){
             if (barcodeBox.setBoxMode){ return; }
-            //System.out.println("\nbarcodeField DocumentListener fired!");
-            //System.out.println("selectedItem: "+barcodeBox.getSelectedItem());
-            //System.out.println("barcodeField text: "+barcodeField.getText()+"   barcodeText: "+barcodeText);
             if ( !barcodeField.getText().equals(barcodeText) ) { // some editing change in box
                 resetFormFromBarcodeBox();
                 barcodeText = barcodeField.getText();
@@ -484,9 +477,6 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage
         }
         if (e.getDocument() == artikelField.getDocument()){
             if (artikelBox.setBoxMode){ return; }
-            //System.out.println("\nartikelField DocumentListener fired!");
-            //System.out.println("selectedItem: "+artikelBox.getSelectedItem());
-            //System.out.println("artikelField text: "+artikelField.getText()+"   artikelNameText: "+artikelNameText);
             if ( !artikelField.getText().equals(artikelNameText) ) { // some editing change in box
                 resetFormFromArtikelBox();
                 artikelNameText = artikelField.getText();
@@ -496,9 +486,6 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage
         }
         if (e.getDocument() == nummerField.getDocument()){
             if (nummerBox.setBoxMode){ return; }
-            //System.out.println("\nnummerField DocumentListener fired!");
-            //System.out.println("selectedItem: "+nummerBox.getSelectedItem());
-            //System.out.println("nummerField text: "+nummerField.getText()+"   artikelNummerText: "+artikelNummerText);
             if ( !nummerField.getText().equals(artikelNummerText) ) { // some editing change in box
                 resetFormFromNummerBox();
                 artikelNummerText = nummerField.getText();

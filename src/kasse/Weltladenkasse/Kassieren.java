@@ -1169,7 +1169,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
 
 
-    public void setButtonsEnabled() {
+    protected void setButtonsEnabled() {
         if (preisField.getText().length() > 0) {
             hinzufuegenButton.setEnabled(true);
             leergutButton.setEnabled( artikelHasPfand() );
@@ -1215,10 +1215,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     }
 
     private void hinzufuegen(Integer stueck, String color) {
-        if (asPanel.artikelBox.getItemCount() != 1 || asPanel.nummerBox.getItemCount() != 1){
-            System.out.println("Error: article not selected unambiguously.");
-            return;
-        }
         Artikel a = getArticle(selectedArticleID);
         String artikelNummer = a.getNummer();
         selectedStueck = stueck;
@@ -1316,6 +1312,13 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     private void artikelHinzufuegen() {
         Integer stueck = (Integer)anzahlSpinner.getValue();
+        if (asPanel.artikelBox.getItemCount() != 1 || asPanel.nummerBox.getItemCount() != 1){
+            System.out.println("Error: article not selected unambiguously.");
+            JOptionPane.showMessageDialog(this,
+                    "Fehler: Artikel nicht eindeutig ausgewählt.",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         hinzufuegen(stueck, "default");
     }
 
@@ -1360,9 +1363,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     }
 
     private void gutschein() {
-        int gutscheinArticleID = 3; // internal Gutschein artikel_id
-        asPanel.artikelBox.setBox( getArticleName(gutscheinArticleID) );
-        asPanel.nummerBox.setBox( getArticleNumber(gutscheinArticleID) );
+        selectedArticleID = 3; // internal Gutschein artikel_id
         preisField.setText( gutscheinField.getText() );
         anzahlSpinner.setValue(1);
         ruecknahmeHinzufuegen();
