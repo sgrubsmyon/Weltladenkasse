@@ -18,12 +18,12 @@ import javax.swing.event.*;
 
 import WeltladenDB.*;
 
-public class PreisschilderFormular extends ArtikelGrundlage implements DocumentListener {
+public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSelectUser, DocumentListener {
     // Attribute:
     private TabbedPaneGrundlage tabbedPane;
 
     // Text Fields
-    private int selectedArtikelID;
+    private int selectedArticleID;
 
     private ArticleSelectPanelPreisschilder asPanel;
     protected JTextField preisField;
@@ -83,7 +83,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
 	allPanel = new JPanel();
 	allPanel.setLayout(new BoxLayout(allPanel, BoxLayout.Y_AXIS));
 
-        asPanel = new ArticleSelectPanelPreisschilder(preisField);
+        asPanel = new ArticleSelectPanelPreisschilder(conn, mainWindow, this);
         allPanel.add(asPanel);
 
 	JPanel hinzufuegenPanel = new JPanel();
@@ -234,27 +234,25 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
     }
 
     private void hinzufuegen() {
-        if (artikelBox.getItemCount() != 1 || nummerBox.getItemCount() != 1){
+        if (asPanel.artikelBox.getItemCount() != 1 || asPanel.nummerBox.getItemCount() != 1){
             System.out.println("Error: article not selected unambiguously.");
             return;
         }
-        String[] an = artikelBox.parseArtikelName();
-        String artikelName = an[0];
-        String lieferant = an[1];
-        String artikelNummer = (String)nummerBox.getSelectedItem();
-        String kurzname = getShortName(selectedArtikelID);
-        String liefkurz = getShortLieferantName(selectedArtikelID);
-        String barcode = getBarcode(selectedArtikelID);
-        String artikelMwSt = getVAT(selectedArtikelID);
-        Boolean sortiment = getSortimentBool(selectedArtikelID);
+        Artikel a = getArticle(selectedArticleID);
+        String artikelNummer = a.getNummer();
+        String kurzname = getShortName(a);
+        String liefkurz = getShortLieferantName(selectedArticleID);
+        String barcode = a.getBarcode();
+        String artikelMwSt = getVAT(selectedArticleID);
+        Boolean sortiment = a.getSortiment();
         String color = sortiment ? "default" : "gray";
-        String[] menge_preis_kg_preis = getMengePriceAndPricePerKg(selectedArtikelID);
+        String[] menge_preis_kg_preis = getMengePriceAndPricePerKg(a);
         String menge = menge_preis_kg_preis[0];
         String preis = menge_preis_kg_preis[1];
         String kg_preis = menge_preis_kg_preis[2];
 
         // for PreisschilderExport:
-        artikelIDs.add(selectedArtikelID);
+        artikelIDs.add(selectedArticleID);
         articleNames.add(kurzname);
         mengen.add(menge);
         preise.add(preis);
@@ -268,7 +266,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
 
         Vector<Object> row = new Vector<Object>();
             row.add(liefkurz);
-            row.add(artikelName); row.add(artikelNummer); row.add(barcode);
+            row.add(kurzname); row.add(artikelNummer); row.add(barcode);
             row.add(preis); row.add(bc.vatFormatter(artikelMwSt));
             row.add(removeButtons.lastElement());
         data.add(row);
@@ -283,6 +281,13 @@ public class PreisschilderFormular extends ArtikelGrundlage implements DocumentL
     private void delete() {
         clearAll();
         updateAll();
+    }
+
+    /**
+     * A class implementing ArticleSelectUser must have this method.
+     */
+    public void updateSelectedArticleID(int selectedArticleID) {
+        this.selectedArticleID = selectedArticleID;
     }
 
     /**

@@ -69,7 +69,7 @@ public class TabbedPane extends TabbedPaneGrundlage {
 
         this.add(tabbedPane, BorderLayout.CENTER);
 
-        myKassieren.barcodeBox.requestFocus();
+        myKassieren.asPanel.barcodeBox.requestFocus();
     }
 
     public Artikelliste getArtikelliste() {

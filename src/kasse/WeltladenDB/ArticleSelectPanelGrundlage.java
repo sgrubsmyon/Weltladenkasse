@@ -16,32 +16,37 @@ import javax.swing.table.*;
 import javax.swing.text.*; // for DocumentFilter
 import javax.swing.event.*;
 
-public abstract class ArticleSelectPanelGrundlage extends WindowContent implements ActionListener, DocumentListener {
+public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage
+    implements ActionListener, DocumentListener {
     // Text Fields
-    private BarcodeComboBox barcodeBox;
+    public BarcodeComboBox barcodeBox;
     public ArtikelNameComboBox artikelBox;
     public ArtikelNummerComboBox nummerBox;
-    private JTextComponent barcodeField;
-    private JTextComponent artikelField;
-    private JTextComponent nummerField;
+    private JTextField barcodeField;
+    public JTextField artikelField;
+    private JTextField nummerField;
     public String artikelNameText = "";
     public String artikelNummerText = "";
     public String barcodeText = "";
     public String barcodeMemory = "";
+
+    private ArticleSelectUser articleSelectUser;
 
     // Buttons
     private JButton emptyBarcodeButton;
     private JButton emptyArtikelButton;
     private JButton emptyNummerButton;
 
-    private int selectedArticleID;
+    protected int selectedArticleID;
     // show all 'normal' items (toplevel_id IS NOT NULL), and in addition
     // Gutscheine (where toplevel_id is NULL and sub_id is 2):
     private String filterStr = " AND (toplevel_id IS NOT NULL OR sub_id = 2) ";
 
-    public ArticleSelectPanelGrundlage(Connection conn, MainWindowGrundlage mw) {
+    public ArticleSelectPanelGrundlage(Connection conn, MainWindowGrundlage mw,
+            ArticleSelectUser asu) {
         super(conn, mw);
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        this.articleSelectUser = asu;
 
         JPanel barcodePanel = new JPanel();
         barcodePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
@@ -145,13 +150,14 @@ public abstract class ArticleSelectPanelGrundlage extends WindowContent implemen
         return selectedArticleID;
     }
 
-    private void updateSelectedArticleID() {
+    protected void updateSelectedArticleID() {
         // update selected Artikel
         String[] an = artikelBox.parseArtikelName();
         String artikelName = an[0];
         String lieferant = an[1];
         String artikelNummer = (String)nummerBox.getSelectedItem();
         selectedArticleID = getArticleID(lieferant, artikelNummer); // get the internal artikelID from the DB
+        articleSelectUser.updateSelectedArticleID(selectedArticleID);
     }
 
     private void checkIfFormIsComplete() {
@@ -176,6 +182,8 @@ public abstract class ArticleSelectPanelGrundlage extends WindowContent implemen
     protected abstract void setPriceField();
 
     protected abstract void articleSelectFinishedFocus();
+
+    protected abstract void setButtonsEnabled();
 
     private void rememberBarcode() {
         if (barcodeMemory != "") {
@@ -498,6 +506,12 @@ public abstract class ArticleSelectPanelGrundlage extends WindowContent implemen
             checkIfFormIsComplete();
             return;
         }
+    }
+    public void removeUpdate(DocumentEvent e) {
+        insertUpdate(e);
+    }
+    public void changedUpdate(DocumentEvent e) {
+	// Plain text components do not fire these events
     }
 
     /**

@@ -13,7 +13,7 @@ public class ArticleSelectPanelPreisschilder extends ArticleSelectPanelGrundlage
 
     public ArticleSelectPanelPreisschilder(Connection conn, MainWindowGrundlage mw,
             PreisschilderFormular preisschilder) {
-        super(conn, mw);
+        super(conn, mw, preisschilder);
         this.preisschilder = preisschilder;
     }
 
@@ -23,16 +23,16 @@ public class ArticleSelectPanelPreisschilder extends ArticleSelectPanelGrundlage
     }
 
     protected void setPriceField() {
-        boolean variablerPreis = getVariablePriceBool(selectedArtikelID);
+        boolean variablerPreis = getVariablePriceBool(selectedArticleID);
         if ( ! variablerPreis ){
-            String artikelPreis = getSalePrice(selectedArtikelID);
-            preisField.getDocument().removeDocumentListener(this);
-            preisField.setText("");
-            preisField.setText( bc.decimalMark(artikelPreis) );
-            preisField.getDocument().addDocumentListener(this);
+            String artikelPreis = getSalePrice(selectedArticleID);
+            preisschilder.preisField.getDocument().removeDocumentListener(this);
+            preisschilder.preisField.setText("");
+            preisschilder.preisField.setText( bc.decimalMark(artikelPreis) );
+            preisschilder.preisField.getDocument().addDocumentListener(this);
         }
         else {
-            preisField.setEditable(true);
+            preisschilder.preisField.setEditable(true);
         }
     }
 
