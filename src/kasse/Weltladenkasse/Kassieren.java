@@ -519,6 +519,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     }
                 }
             });
+            individuellRabattRelativField.setHorizontalAlignment(JTextField.RIGHT);
             individuellRabattRelativButton = new BigButton("OK");
             individuellRabattRelativButton.addActionListener(this);
 
@@ -548,6 +549,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     }
                 }
             });
+            individuellRabattAbsolutField.setHorizontalAlignment(JTextField.RIGHT);
             individuellRabattAbsolutButton = new BigButton("OK");
             individuellRabattAbsolutButton.addActionListener(this);
 

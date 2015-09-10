@@ -26,7 +26,8 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
     private int selectedArticleID;
 
     private ArticleSelectPanelPreisschilder asPanel;
-    protected JTextField preisField;
+    protected JTextField vkPreisField;
+    protected JTextField ekPreisField;
 
     // Buttons
     private JButton hinzufuegenButton;
@@ -86,54 +87,70 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         asPanel = new ArticleSelectPanelPreisschilder(conn, mainWindow, this);
         allPanel.add(asPanel);
 
-	JPanel hinzufuegenPanel = new JPanel();
-	hinzufuegenPanel.setLayout(new FlowLayout());
-	    JLabel preisLabel = new JLabel("Preis: ");
-            hinzufuegenPanel.add(preisLabel);
-            preisField = new JTextField("");
-            preisField.addKeyListener(new KeyAdapter() {
+        JPanel propertiesPanel = new JPanel();
+            JLabel vkPreisLabel = new JLabel("VK-Preis: ");
+            vkPreisField = new JTextField("");
+            vkPreisField.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) { if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
                     if (hinzufuegenButton.isEnabled()){
                         hinzufuegenButton.doClick();
                     }
                 } }
             });
-            preisField.getDocument().addDocumentListener(this);
-	    ((AbstractDocument)preisField.getDocument()).setDocumentFilter(geldFilter);
-            preisField.setEditable(false);
-            preisField.setColumns(6);
-            preisField.setHorizontalAlignment(JTextField.RIGHT);
-            hinzufuegenPanel.add(preisField);
-            hinzufuegenPanel.add(new JLabel(bc.currencySymbol));
+            vkPreisField.getDocument().addDocumentListener(this);
+            ((AbstractDocument)vkPreisField.getDocument()).setDocumentFilter(geldFilter);
+            vkPreisField.setEditable(false);
+            vkPreisField.setColumns(6);
+            vkPreisField.setHorizontalAlignment(JTextField.RIGHT);
+        propertiesPanel.add(vkPreisLabel);
+        propertiesPanel.add(vkPreisField);
+        propertiesPanel.add(new JLabel(bc.currencySymbol));
+            JLabel ekPreisLabel = new JLabel("EK-Preis: ");
+            ekPreisField = new JTextField("");
+            ekPreisField.addKeyListener(new KeyAdapter() {
+                public void keyPressed(KeyEvent e) { if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
+                    if (hinzufuegenButton.isEnabled()){
+                        hinzufuegenButton.doClick();
+                    }
+                } }
+            });
+            ekPreisField.getDocument().addDocumentListener(this);
+            ((AbstractDocument)ekPreisField.getDocument()).setDocumentFilter(geldFilter);
+            ekPreisField.setEditable(false);
+            ekPreisField.setColumns(6);
+            ekPreisField.setHorizontalAlignment(JTextField.RIGHT);
+        propertiesPanel.add(ekPreisLabel);
+        propertiesPanel.add(ekPreisField);
+        propertiesPanel.add(new JLabel(bc.currencySymbol));
 
-	    hinzufuegenButton = new JButton("Hinzufügen");
+        JPanel hinzufuegenButtonPanel = new JPanel();
+            hinzufuegenButton = new JButton("Hinzufügen");
             hinzufuegenButton.setMnemonic(KeyEvent.VK_H);
-	    hinzufuegenButton.addActionListener(this);
-	    hinzufuegenButton.setEnabled(false);
-	    hinzufuegenPanel.add(hinzufuegenButton);
-        allPanel.add(hinzufuegenPanel);
+            hinzufuegenButton.addActionListener(this);
+            hinzufuegenButton.setEnabled(false);
+        hinzufuegenButtonPanel.add(hinzufuegenButton);
+
+        allPanel.add(propertiesPanel);
+        allPanel.add(hinzufuegenButtonPanel);
 
 	showTable();
 
-        JPanel neuerKundePanel = new JPanel();
-        neuerKundePanel.setLayout(new BoxLayout(neuerKundePanel, BoxLayout.Y_AXIS));
-            JPanel buttonPanel = new JPanel();
-            buttonPanel.setLayout(new BorderLayout());
-                JPanel centerPanel = new JPanel();
-                    deleteButton = new JButton("Löschen");
-                    deleteButton.setMnemonic(KeyEvent.VK_L);
-                    if (data.size() == 0) deleteButton.setEnabled(false);
-                    deleteButton.addActionListener(this);
-                    centerPanel.add(deleteButton);
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BorderLayout());
+            JPanel centerPanel = new JPanel();
+                deleteButton = new JButton("Löschen");
+                deleteButton.setMnemonic(KeyEvent.VK_L);
+                if (data.size() == 0) deleteButton.setEnabled(false);
+                deleteButton.addActionListener(this);
+                centerPanel.add(deleteButton);
 
-                    printButton = new JButton("Artikel drucken");
-                    printButton.setMnemonic(KeyEvent.VK_D);
-                    if (data.size() == 0) printButton.setEnabled(false);
-                    printButton.addActionListener(this);
-                    centerPanel.add(printButton);
-                buttonPanel.add(centerPanel, BorderLayout.CENTER);
-            neuerKundePanel.add(buttonPanel);
-        allPanel.add(neuerKundePanel);
+                printButton = new JButton("Artikel drucken");
+                printButton.setMnemonic(KeyEvent.VK_D);
+                if (data.size() == 0) printButton.setEnabled(false);
+                printButton.addActionListener(this);
+                centerPanel.add(printButton);
+            buttonPanel.add(centerPanel, BorderLayout.CENTER);
+        allPanel.add(buttonPanel);
 
 	this.add(allPanel, BorderLayout.CENTER);
     }
@@ -224,7 +241,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
 
 
     protected void setButtonsEnabled() {
-        if (preisField.getText().length() > 0) {
+        if (vkPreisField.getText().length() > 0) {
             hinzufuegenButton.setEnabled(true);
             hinzufuegenButton.requestFocus();
         }
@@ -297,7 +314,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
      *    @param e the document event.
      **/
     public void insertUpdate(DocumentEvent e) {
-        if (e.getDocument() == preisField.getDocument()){
+        if (e.getDocument() == vkPreisField.getDocument()){
             setButtonsEnabled();
             return;
         }
