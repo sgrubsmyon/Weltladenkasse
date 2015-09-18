@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--<project name="Weltladenkasse" default="jar" basedir=".">-->
 <project name="Weltladenkasse" default="debug-jar" basedir=".">
-    <property name="src-kasse" location="src/kasse"/>
-    <property name="src-besteller" location="src/besteller"/>
+    <property name="src" location="src"/>
     <property name="build" location="build"/>
-    <property name="build-kasse" location="build/kasse"/>
-    <property name="build-besteller" location="build/besteller"/>
-    <property name="build-kasse-resources" location="build/kasse/resources"/>
-    <property name="build-besteller-resources" location="build/besteller/resources"/>
+    <property name="build-resources" location="build/resources"/>
     <property name="lib" location="lib"/>
     <property name="resources" location="resources"/>
     <property name="jarfile-kasse" location="Weltladenkasse_v0.9.9.jar"/>
@@ -23,19 +19,12 @@
         <tstamp/>
         <!-- Create the build directory structure used by compile -->
         <mkdir dir="${build}"/>
-        <mkdir dir="${build-kasse}"/>
-        <mkdir dir="${build-kasse-resources}"/>
-        <mkdir dir="${build-besteller}"/>
-        <mkdir dir="${build-besteller-resources}"/>
     </target>
 
     <target name="copy" depends="init" description="copy the resources">
-        <copy todir="${build-kasse-resources}">
+        <copy todir="${build-resources}">
             <fileset dir="${resources}"/>
                                  <!-- excludes="**/*.java" -->
-        </copy>
-        <copy todir="${build-besteller-resources}">
-            <fileset dir="${resources}"/>
         </copy>
     </target>
 
@@ -45,18 +34,18 @@
     </target>
 
     <target name="compile" depends="convert" description="compile the source">
-        <javac srcdir="${src-kasse}" destdir="${build-kasse}" includeantruntime="false"
+        <javac srcdir="${src}" destdir="${build}" includeantruntime="false"
             classpathref="classpath"/>
-        <javac srcdir="${src-besteller}" destdir="${build-besteller}" includeantruntime="false"
+        <javac srcdir="${src}" destdir="${build}" includeantruntime="false"
             classpathref="classpath"/>
     </target>
 
     <target name="debug-compile" depends="convert" description="compile the source in debugging mode">
-        <javac srcdir="${src-kasse}" destdir="${build-kasse}" debug="on" debuglevel="lines,vars,source"
+        <javac srcdir="${src}" destdir="${build}" debug="on" debuglevel="lines,vars,source"
             includeantruntime="false" classpathref="classpath">
             <compilerarg value="-Xlint:unchecked"/>
         </javac>
-        <javac srcdir="${src-besteller}" destdir="${build-besteller}" debug="on" debuglevel="lines,vars,source"
+        <javac srcdir="${src}" destdir="${build}" debug="on" debuglevel="lines,vars,source"
             includeantruntime="false" classpathref="classpath">
             <compilerarg value="-Xlint:unchecked"/>
         </javac>
@@ -64,9 +53,9 @@
 
     <target name="jar" depends="compile" description="generate the distribution .jar file">
         <!-- destfile="Weltladenkasse-${DSTAMP}.jar" -->
-        <jar destfile="${jarfile-kasse}" basedir="${build-kasse}">
+        <jar destfile="${jarfile-kasse}" basedir="${build}">
             <manifest>
-                <attribute name="Main-Class" value="Weltladenkasse.Kasse"/>
+                <attribute name="Main-Class" value="org.weltladen_bonn.pos.kasse.Kasse"/>
             </manifest>
             <!-- with this solution, the external jars in lib are (unzipped? and?) included in the
                  program's jar http://stackoverflow.com/questions/183292/classpath-including-jar-within-a-jar -->
@@ -75,9 +64,9 @@
                  META-INF dir entirely) and recreate jar (jar cvf file.jar *) -->
             <zipgroupfileset dir="${lib}"/>
         </jar>
-        <jar destfile="${jarfile-besteller}" basedir="${build-besteller}">
+        <jar destfile="${jarfile-besteller}" basedir="${build}">
             <manifest>
-                <attribute name="Main-Class" value="Weltladenbesteller.Besteller"/>
+                <attribute name="Main-Class" value="org.weltladen_bonn.pos.besteller.Besteller"/>
             </manifest>
             <zipgroupfileset dir="${lib}"/>
         </jar>
