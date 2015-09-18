@@ -9,6 +9,12 @@ import javax.swing.table.*;
 
 // for putting any JComponent (e.g. JButton) into a JTable: Code from http://www.codeguru.com/java/articles/162.shtml
 public class AnyJComponentJTable extends JTable {
+    /**
+     * For putting any JComponent (e.g. JButton) into a JTable:
+     * Code from http://www.codeguru.com/java/articles/162.shtml
+     */
+    private static final long serialVersionUID = 1L;
+
     // attributes:
     private HashSet<Integer> editableCols = new HashSet<Integer>();
 
@@ -29,11 +35,11 @@ public class AnyJComponentJTable extends JTable {
         }
     }
 
-    public AnyJComponentJTable(Vector data, Vector labels){
+    public AnyJComponentJTable(Vector<Object> data, Vector<Object> labels){
         super(data, labels);
     }
 
-    public AnyJComponentJTable(Vector data, Vector labels, Integer
+    public AnyJComponentJTable(Vector<Object> data, Vector<Object> labels, Integer
             columnMargin, Integer minColumnWidth, Integer maxColumnWidth){
         super(data, labels);
         for (int colIndex=0; colIndex<this.getColumnCount(); colIndex++){
@@ -41,7 +47,7 @@ public class AnyJComponentJTable extends JTable {
         }
     }
 
-    public AnyJComponentJTable(Vector data, Vector labels, Set<Integer> edCol){
+    public AnyJComponentJTable(Vector<Object> data, Vector<Object> labels, Set<Integer> edCol){
         super(data, labels);
         editableCols = new HashSet<Integer>(edCol);
     }
