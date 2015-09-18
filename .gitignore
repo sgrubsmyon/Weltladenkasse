@@ -7,3 +7,4 @@ upload_software.sh
 *.dll
 *.so
 *.jnilib
+/bin/
