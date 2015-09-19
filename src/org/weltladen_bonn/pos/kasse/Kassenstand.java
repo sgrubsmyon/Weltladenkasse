@@ -42,11 +42,10 @@ import org.weltladen_bonn.pos.jcalendarbutton.JCalendarButton;
 import org.weltladen_bonn.pos.WindowContent;
 import org.weltladen_bonn.pos.MainWindowGrundlage;
 import org.weltladen_bonn.pos.AnyJComponentJTable;
-import org.weltladen_bonn.pos.NumberDocumentFilter;
 import org.weltladen_bonn.pos.StringDocumentFilter;
 
 public class Kassenstand extends WindowContent implements ChangeListener, DocumentListener, ItemListener {
-    // Attribute:
+    // Attributes:
     private int kassenstaendeProSeite = 25;
     private int currentPage = 1;
     private int totalPage;
@@ -83,14 +82,14 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
     // The table holding the invoices. This is "anonymously subclassed" and two method are overridden
     private AnyJComponentJTable myTable;
 
-    private Vector<Vector> data;
+    private Vector<Vector<Object>> data;
     private Vector<String> columnLabels;
     private String kassenstandZahl;
     private int kassenstandZahlInt;
 
     private TabbedPane tabbedPane;
 
-    // Methoden:
+    // Methods:
 
     /**
      *    The constructor.
@@ -165,7 +164,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
     }
 
     void fillDataArray(String filterStr){
-	data = new Vector<Vector>();
+	data = new Vector<Vector<Object>>();
 	columnLabels = new Vector<String>();
 	columnLabels.add("Buchungsdatum"); columnLabels.add("Neuer Kassenstand"); columnLabels.add("Manuell?");
 	columnLabels.add("Rechnungsnr."); columnLabels.add("Erläuternder Kommentar");
@@ -180,8 +179,8 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             }
 	    // Run MySQL command
 	    ResultSet rs = stmt.executeQuery(
-		    "SELECT DATE_FORMAT(buchungsdatum,'"+bc.dateFormatSQL+"'), neuer_kassenstand, " +
-		    "manuell, rechnungs_nr, kommentar " +
+		    "SELECT DATE_FORMAT(buchungsdatum,'"+bc.dateFormatSQL+"'), "+
+		    "neuer_kassenstand, manuell, rechnungs_nr, kommentar " +
 		    "FROM kassenstand " +
                     "WHERE " + ausblendeString +
 		    filterStr +
@@ -190,12 +189,12 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 		    );
 	    // Now do something with the ResultSet ...
 	    while (rs.next()) {
-		Vector<String> row = new Vector<String>();
-		row.add(rs.getString(1)); row.add(rs.getString(2)+" "+bc.currencySymbol);
-		row.add(rs.getString(3).contentEquals("0") ? "Nein" : "Ja"); row.add(rs.getString(4));
+		Vector<Object> row = new Vector<Object>();
+		row.add(rs.getString(1));
+		row.add(bc.priceFormatter(rs.getString(2))+" "+bc.currencySymbol);
+		row.add(rs.getString(3).contentEquals("0") ? "Nein" : "Ja");
+		row.add(rs.getString(4));
 		row.add(rs.getString(5));
-		// change dots to commas
-		row.set(1, row.get(1).replace('.',','));
 		data.add(row);
 	    }
 	    rs.close();
@@ -699,28 +698,3 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
     }
 
 }
-
-    /**
-     *    * Each non abstract class that implements the PropertyChangeListener
-     *      must have this method.
-     *
-     *    @param e the property change event.
-     **/
-/*
-    public void propertyChange(PropertyChangeEvent e){
-        if (e.getSource() == neuerKassenstandField){
-            // replace illegal characters with nothing
-            String legalText = neuerKassenstandField.getText().replaceAll("[^0-9]","");
-            neuerKassenstandField.setText(
-                    neuerKassenstandField.getText().replaceAll(".",","));
-        }
-	else if (e.getSource() == differenzField){
-            // replace illegal characters with nothing
-            //differenzField.setText(
-            //        differenzField.getText().replaceAll("[^0-9]",""));
-        }
-	else if (e.getSource() == kommentarField){
-            // check if entered string is not wihtespace-only
-        }
-    }
-*/
