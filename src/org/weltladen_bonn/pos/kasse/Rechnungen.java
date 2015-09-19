@@ -37,7 +37,11 @@ import hirondelle.date4j.DateTime;
 import org.weltladen_bonn.pos.*;
 
 public abstract class Rechnungen extends RechnungsGrundlage {
-    // Attribute:
+    /**
+	 * Base class for displaying orders
+	 */
+	private static final long serialVersionUID = 1L;
+	// Attribute:
     protected int rechnungenProSeite = 25;
     protected int currentPage = 1;
     protected int totalPage;
@@ -58,7 +62,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     protected Vector<JButton> detailButtons;
     protected Vector<JButton> stornoButtons;
 
-    protected Vector< Vector<String> > data;
+    protected Vector<Vector<Object>> data;
     protected Vector<String> dates;
     protected Vector<String> overviewLabels;
     protected String rechnungsZahl;
@@ -85,7 +89,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     }
 
     void fillDataArray(){
-	this.data = new Vector< Vector<String> >();
+	this.data = new Vector< Vector<Object> >();
 	this.dates = new Vector<String>();
 	overviewLabels = new Vector<String>();
 	overviewLabels.add("");
@@ -111,7 +115,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 		    );
 	    // Now do something with the ResultSet ...
 	    while (rs.next()) {
-		Vector<String> row = new Vector<String>();
+		Vector<Object> row = new Vector<Object>();
 		row.add("");
 		row.add(rs.getString(1));
                 String p = bc.priceFormatter(rs.getString(2));
@@ -206,21 +210,23 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         mwsts.clear();
 
 	// First row: Show total of invoice
-	Vector<String> coolRow = this.data.get(detailRow);
+	Vector<Object> coolRow = this.data.get(detailRow);
 	coolRow.set(0, "");
 	coolRow.set(coolRow.size()-1, "");
-	Vector<Vector> overviewData = new Vector<Vector>(1);
+	Vector<Vector<Object>> overviewData = new Vector<Vector<Object>>(1);
 	overviewData.add(coolRow);
-        zahlungsModus = coolRow.get(3).toLowerCase();
+        zahlungsModus = coolRow.get(3).toString().toLowerCase();
         try {
-            kundeGibt = new BigDecimal( bc.priceFormatterIntern(coolRow.get(4)) );
+            kundeGibt = new BigDecimal( bc.priceFormatterIntern(coolRow.get(4).toString()) );
         } catch (NumberFormatException ex) {
             kundeGibt = null;
         }
 	datum = this.dates.get(detailRow);
 
         AnyJComponentJTable overviewTable = new AnyJComponentJTable(overviewData, overviewLabels){
-            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+			private static final long serialVersionUID = 1L;
+
+			public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component c = super.prepareRenderer(renderer, row, column);
                 // add custom rendering here
                 c.setForeground(Color.black); // keep it black
@@ -241,7 +247,6 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 
 	// Now select details of the invoice
 	Vector< Vector<Object> > detailData = new Vector< Vector<Object> >();
-	String artikelZahl = "";
 	try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT vd.position, a.kurzname, a.artikel_name, ra.aktionsname, " +
@@ -255,7 +260,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                     "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
                     "WHERE vd.rechnungs_nr = ?"
 		    );
-            pstmtSetInteger(pstmt, 1, Integer.parseInt(this.data.get(detailRow).get(1)));
+            pstmtSetInteger(pstmt, 1, Integer.parseInt(this.data.get(detailRow).get(1).toString()));
 	    ResultSet rs = pstmt.executeQuery();
 	    // Now do something with the ResultSet ...
 	    while (rs.next()) {
@@ -336,18 +341,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 		detailData.add(row);
 	    }
 	    rs.close();
-            pstmt.close();
-            pstmt = this.conn.prepareStatement(
-		    "SELECT COUNT(*) FROM verkauf_details AS vd " +
-		    "WHERE vd.rechnungs_nr = ?"
-		    );
-            pstmtSetInteger(pstmt, 1, Integer.parseInt(this.data.get(detailRow).get(1)));
-	    rs = pstmt.executeQuery();
-	    // Now do something with the ResultSet ...
-	    rs.next();
-	    artikelZahl = rs.getString(1);
-	    rs.close();
-	    pstmt.close();
+        pstmt.close();
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();

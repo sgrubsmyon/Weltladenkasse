@@ -80,7 +80,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
     // The table holding the invoices. This is "anonymously subclassed" and two method are overridden
     private AnyJComponentJTable myTable;
 
-    private Vector<Vector> data;
+    private Vector<Vector<Object>> data;
     private Vector<String> columnLabels;
     private Vector<JButton> editButtons;
     private Vector<JButton> deleteButtons;
@@ -171,7 +171,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
     }
 
     void fillDataArray(){
-	data = new Vector<Vector>();
+	data = new Vector<Vector<Object>>();
 	columnLabels = new Vector<String>();
         editButtons = new Vector<JButton>();
         deleteButtons = new Vector<JButton>();

@@ -56,7 +56,7 @@ public class HeutigeRechnungen extends Rechnungen {
     }
 
     private void stornieren(int stornoRow) {
-	Integer rechnungsnummer = Integer.parseInt(data.get(stornoRow).get(1));
+	Integer rechnungsnummer = Integer.parseInt(data.get(stornoRow).get(1).toString());
 	try {
             PreparedStatement pstmt = this.conn.prepareStatement(
 		    "UPDATE verkauf SET verkauf.storniert = 1 WHERE verkauf.rechnungs_nr = ?"

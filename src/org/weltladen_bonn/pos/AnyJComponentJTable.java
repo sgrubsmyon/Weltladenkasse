@@ -31,28 +31,31 @@ public class AnyJComponentJTable extends JTable {
             Integer minColumnWidth, Integer maxColumnWidth){
         super(m);
         for (int colIndex=0; colIndex<this.getColumnCount(); colIndex++){
-            resizeColumnToFitContent(colIndex, columnMargin, minColumnWidth, maxColumnWidth);
+            resizeColumnToFitContent(colIndex, columnMargin, minColumnWidth,
+                    maxColumnWidth);
         }
     }
 
-    public AnyJComponentJTable(Vector<Object> data, Vector<Object> labels){
-        super(data, labels);
+    public AnyJComponentJTable(Vector< Vector<Object> > data, Vector<String> columns){
+        super(data, columns);
     }
 
-    public AnyJComponentJTable(Vector<Object> data, Vector<Object> labels, Integer
-            columnMargin, Integer minColumnWidth, Integer maxColumnWidth){
+    public AnyJComponentJTable(Vector< Vector<Object> > data, Vector<String> labels,
+            Integer columnMargin, Integer minColumnWidth, Integer maxColumnWidth){
         super(data, labels);
         for (int colIndex=0; colIndex<this.getColumnCount(); colIndex++){
-            resizeColumnToFitContent(colIndex, columnMargin, minColumnWidth, maxColumnWidth);
+            resizeColumnToFitContent(colIndex, columnMargin, minColumnWidth,
+                    maxColumnWidth);
         }
     }
 
-    public AnyJComponentJTable(Vector<Object> data, Vector<Object> labels, Set<Integer> edCol){
+    public AnyJComponentJTable(Vector< Vector<Object> > data, Vector<String> labels,
+            Set<Integer> edCol){
         super(data, labels);
         editableCols = new HashSet<Integer>(edCol);
     }
 
-    public void setColEditable(int colNumber, boolean editable){
+	public void setColEditable(int colNumber, boolean editable){
         if ( colNumber < 0 || colNumber >= this.getColumnCount() )
             throw new IllegalArgumentException();
         if (editable)

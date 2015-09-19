@@ -68,7 +68,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
     private Vector<Object> selBestellNrUndTyp;
     protected Vector< Vector<Object> > bestellNummernUndTyp;
-    private Vector< Vector<String> > orderData;
+    private Vector<Vector<Object>> orderData;
     private Vector<String> orderLabels;
     private Vector< Vector<Object> > orderDetailData;
     private Vector<Integer> orderDetailArtikelIDs;
@@ -273,7 +273,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     }
 
     void retrieveOrderData() {
-        orderData = new Vector< Vector<String> >();
+        orderData = new Vector< Vector<Object> >();
         bestellNummernUndTyp = new Vector< Vector<Object> >();
         try {
             Statement stmt = this.conn.createStatement();
@@ -287,7 +287,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 Vector<Object> bestNrUndTyp = new Vector<Object>();
                     bestNrUndTyp.add(rs.getInt(1)); bestNrUndTyp.add(rs.getString(2));
                 bestellNummernUndTyp.add(bestNrUndTyp);
-                Vector<String> row = new Vector<String>();
+                Vector<Object> row = new Vector<Object>();
                 row.add(rs.getString(1));
                 row.add(rs.getString(2));
                 row.add(rs.getString(3).substring(0,4));
@@ -491,11 +491,11 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
     void writeSpreadSheet(File file) {
         // Get general order data
-        Vector<String> bestellung = orderData.get(bestellNummernUndTyp.indexOf(selBestellNrUndTyp));
-        String typ = bestellung.get(1);
+        Vector<Object> bestellung = orderData.get(bestellNummernUndTyp.indexOf(selBestellNrUndTyp));
+        String typ = bestellung.get(1).toString();
         //int jahr = Integer.parseInt(bestellung.get(2));
-        Integer kw = Integer.parseInt(bestellung.get(3));
-        String oldDate = bestellung.get(4);
+        Integer kw = Integer.parseInt(bestellung.get(3).toString());
+        String oldDate = bestellung.get(4).toString();
         String newDate = oldDate;
         try {
             // reformat the date to be without hour:
@@ -605,9 +605,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     }
                 }
                 deleteOrderFromDB(selBestellNrUndTyp);
-                Vector<String> bestellung = orderData.get(bestellNummernUndTyp.indexOf(selBestellNrUndTyp));
-                int jahr = Integer.parseInt(bestellung.get(2));
-                int kw = Integer.parseInt(bestellung.get(3));
+                Vector<Object> bestellung = orderData.get(bestellNummernUndTyp.indexOf(selBestellNrUndTyp));
+                int jahr = Integer.parseInt(bestellung.get(2).toString());
+                int kw = Integer.parseInt(bestellung.get(3).toString());
                 // put order data into Bestellen tab
                 tabbedPane.setBestellenTable(selBestellNrUndTyp, jahr, kw,
                         orderDetailArtikelIDs, orderDetailColors,
@@ -621,8 +621,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 	}
         if (e.getSource() == exportButton){
             String typ = (String)selBestellNrUndTyp.get(1);
-            Vector<String> bestellung = orderData.get(bestellNummernUndTyp.indexOf(selBestellNrUndTyp));
-            Integer kw = Integer.parseInt(bestellung.get(3));
+            Vector<Object> bestellung = orderData.get(bestellNummernUndTyp.indexOf(selBestellNrUndTyp));
+            Integer kw = Integer.parseInt(bestellung.get(3).toString());
             odsChooser.setSelectedFile(new File("Bestellung_WL_Bonn_"+typ+"_KW"+kw+".ods"));
             int returnVal = odsChooser.showSaveDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION){
