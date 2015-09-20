@@ -2,6 +2,7 @@ package org.weltladen_bonn.pos.kasse;
 
 // Basic Java stuff:
 import java.util.*; // for String
+import java.awt.Color;
 import java.math.BigDecimal;
 // MySQL Connector/J stuff:
 import java.sql.*; // Connection, Statement, ResultSet
@@ -29,14 +30,22 @@ public class ArticleSelectPanelPreisschilder extends ArticleSelectPanelGrundlage
         String empfVkPreis = a.getEmpfVKP();
         String kurzname = a.getKurzname();
         BigDecimal menge = a.getMenge();
+        String herkunft = a.getHerkunft();
+        Boolean sortiment = a.getSortiment();
         preisschilder.vkPreisField.setText(bc.priceFormatter(vkPreis));
         preisschilder.empfVkPreisField.setText(bc.priceFormatter(empfVkPreis));
         preisschilder.kurznameField.setText(kurzname);
         preisschilder.mengeField.setText(bc.unifyDecimal(menge));
+        preisschilder.herkunftField.setText(herkunft);
+        preisschilder.sortimentBox.setSelected(sortiment);
+        
         preisschilder.vkPreisField.setEditable(true);
         preisschilder.empfVkPreisField.setEditable(true);
         preisschilder.kurznameField.setEditable(true);
         preisschilder.mengeField.setEditable(true);
+        preisschilder.herkunftField.setEditable(true);
+        preisschilder.sortimentBox.setEnabled(true);
+        
         preisschilder.vkPreisField.requestFocus();
         preisschilder.vkPreisField.selectAll();
         
@@ -48,10 +57,15 @@ public class ArticleSelectPanelPreisschilder extends ArticleSelectPanelGrundlage
         preisschilder.empfVkPreisField.setText("");
         preisschilder.kurznameField.setText("");
         preisschilder.mengeField.setText("");
+        preisschilder.herkunftField.setText("");
+        preisschilder.sortimentBox.setSelected(false);
+        
         preisschilder.vkPreisField.setEditable(false);
         preisschilder.empfVkPreisField.setEditable(false);
         preisschilder.kurznameField.setEditable(false);
         preisschilder.mengeField.setEditable(false);
+        preisschilder.herkunftField.setEditable(false);
+        preisschilder.sortimentBox.setEnabled(false);
     }
 
     protected void articleSelectFinishedFocus() {
