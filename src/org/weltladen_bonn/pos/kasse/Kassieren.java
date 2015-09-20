@@ -12,7 +12,6 @@ import java.awt.*; // BorderLayout, FlowLayout, Dimension
 import java.awt.event.*; // ActionEvent, ActionListener
 
 import javax.swing.*; // JFrame, JPanel, JTable, JButton, ...
-import javax.swing.Timer; // ambiguity with java.util.Timer
 import javax.swing.table.*;
 import javax.swing.text.*; // for DocumentFilter
 import javax.swing.event.*;
@@ -23,6 +22,10 @@ import hirondelle.date4j.DateTime;
 import org.weltladen_bonn.pos.*;
 
 public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, DocumentListener {
+    /**
+     * Main class of the cashier POS software
+     */
+    private static final long serialVersionUID = 1L;
     // Attribute:
     private final BigDecimal mitarbeiterRabatt = new BigDecimal("0.1");
     private final boolean allowMitarbeiterRabatt = true;
@@ -33,7 +36,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private MainWindow mw;
     private Kundendisplay display;
     private TabbedPane tabbedPane;
-    private Kassieren myKassieren;
 
     private int selectedArticleID;
     private int selectedStueck;
@@ -94,7 +96,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             this.mw = null;
             display = null;
         }
-        this.myKassieren = this;
         this.tabbedPane = tp;
 
         columnLabels.add("Entfernen");
@@ -117,18 +118,18 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private void setupKeyboardShortcuts() {
         // keyboard shortcuts:
         KeyStroke zwischensummeShortcut = KeyStroke.getKeyStroke("ctrl Z");
-        KeyStroke barShortcut = KeyStroke.getKeyStroke("ctrl B");
-        KeyStroke ecShortcut = KeyStroke.getKeyStroke("ctrl E");
-        KeyStroke stornierenShortcut = KeyStroke.getKeyStroke("ctrl S");
+//        KeyStroke barShortcut = KeyStroke.getKeyStroke("ctrl B");
+//        KeyStroke ecShortcut = KeyStroke.getKeyStroke("ctrl E");
+//        KeyStroke stornierenShortcut = KeyStroke.getKeyStroke("ctrl S");
 
         this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(zwischensummeShortcut, "zws");
         this.getActionMap().put("zws", new ZWSAction());
-        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barShortcut, "bar");
-        this.getActionMap().put("bar", new BarAction());
-        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(ecShortcut, "ec");
-        this.getActionMap().put("ec", new ECAction());
-        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(stornierenShortcut, "stornieren");
-        this.getActionMap().put("stornieren", new StornoAction());
+//        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barShortcut, "bar");
+//        this.getActionMap().put("bar", new BarAction());
+//        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(ecShortcut, "ec");
+//        this.getActionMap().put("ec", new ECAction());
+//        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(stornierenShortcut, "stornieren");
+//        this.getActionMap().put("stornieren", new StornoAction());
     }
 
     private class ZWSAction extends AbstractAction {
@@ -137,23 +138,23 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
-    private class BarAction extends AbstractAction {
-        public void actionPerformed(ActionEvent e) {
-            barButton.doClick();
-        }
-    }
-
-    private class ECAction extends AbstractAction {
-        public void actionPerformed(ActionEvent e) {
-            ecButton.doClick();
-        }
-    }
-
-    private class StornoAction extends AbstractAction {
-        public void actionPerformed(ActionEvent e) {
-            stornoButton.doClick();
-        }
-    }
+//    private class BarAction extends AbstractAction {
+//        public void actionPerformed(ActionEvent e) {
+//            barButton.doClick();
+//        }
+//    }
+//
+//    private class ECAction extends AbstractAction {
+//        public void actionPerformed(ActionEvent e) {
+//            ecButton.doClick();
+//        }
+//    }
+//
+//    private class StornoAction extends AbstractAction {
+//        public void actionPerformed(ActionEvent e) {
+//            stornoButton.doClick();
+//        }
+//    }
 
 
     void preventSpinnerOverflow(JFormattedTextField spinnerField) {
@@ -1676,6 +1677,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 	}
         if (e.getSource() == zwischensummeButton){
             zwischensumme();
+            bar();
 	    return;
 	}
 	if (e.getSource() == barButton){

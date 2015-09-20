@@ -422,7 +422,6 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                     produktgruppenBox = new JComboBox<String>(produktgruppenNamen);
                     produktgruppenBox.setRenderer(new ProduktgruppenIndentedRenderer(produktgruppenIDsList));
                     ( (JTextComponent)produktgruppenBox.getEditor().getEditorComponent() ).getDocument().addDocumentListener(this);
-                    //produktgruppenBox.addKeyListener(enterAdapter);
                     produktgruppenBox.addItemListener(this);
                     produktgruppenPanel.add(produktgruppenBox);
                 produktgruppenCard.add(produktgruppenPanel);

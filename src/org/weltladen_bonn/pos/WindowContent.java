@@ -75,6 +75,11 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected class BigLabel extends JLabel {
+        /**
+         * JLabel with bigger than normal font
+         */
+        private static final long serialVersionUID = 1L;
+
         public BigLabel() {
             super();
             initialize();

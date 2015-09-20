@@ -41,6 +41,7 @@ public class ArticleSelectPanelBestellen extends ArticleSelectPanelGrundlage {
         bestellen.updateAnzahlColor(vpeInt);
     }
 
+    @Override
     protected void setPriceField() {
         setAnzahlSpinner();
 
@@ -84,6 +85,10 @@ public class ArticleSelectPanelBestellen extends ArticleSelectPanelGrundlage {
         }
     }
 
+    @Override
+    protected void resetPriceField() {
+    }
+
     private void showEditDialog(Vector<Artikel> selectedArticles) {
         JDialog editDialog = new JDialog(mainWindow, "Artikel bearbeiten", true);
         ArtikelBearbeiten bearb = new ArtikelBearbeiten(conn,
@@ -113,4 +118,5 @@ public class ArticleSelectPanelBestellen extends ArticleSelectPanelGrundlage {
     protected void setButtonsEnabled() {
         bestellen.setButtonsEnabled();
     }
+
 }

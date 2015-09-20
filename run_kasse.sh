@@ -5,9 +5,9 @@ if [ "$1" == "-p" ]; then
     runprofiler=true
 fi
 
-build_dir=build/kasse
-lib_dir=../../lib
-main_class=Weltladenkasse.Kasse
+build_dir=build
+lib_dir=../lib
+main_class=org.weltladen_bonn.pos.kasse.Kasse
 
 cp config.properties $build_dir
 cp -r vorlagen $build_dir
