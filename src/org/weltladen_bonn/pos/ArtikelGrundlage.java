@@ -24,14 +24,14 @@ public abstract class ArtikelGrundlage extends WindowContent {
         // remove Ctrl-A key binding:
         field.getInputMap().put(KeyStroke.getKeyStroke("ctrl A"), "none");
         // remove Ctrl-C key binding:
-        field.getInputMap().put(KeyStroke.getKeyStroke("ctrl C"), "none");
+//        field.getInputMap().put(KeyStroke.getKeyStroke("ctrl C"), "none");
     }
 
     protected void removeDefaultKeyBindings(JComponent field, int condition) {
         // remove Ctrl-A key binding:
         field.getInputMap(condition).put(KeyStroke.getKeyStroke("ctrl A"), "none");
         // remove Ctrl-C key binding:
-        field.getInputMap(condition).put(KeyStroke.getKeyStroke("ctrl C"), "none");
+//        field.getInputMap(condition).put(KeyStroke.getKeyStroke("ctrl C"), "none");
     }
 
     //////////////////////////////////

@@ -27,6 +27,7 @@ public class ArticleSelectPanelKassieren extends ArticleSelectPanelGrundlage {
         kassieren.preisField.setEditable(false);
     }
 
+    @Override
     protected void setPriceField() {
         boolean variablerPreis = getVariablePriceBool(selectedArticleID);
         if ( ! variablerPreis ){
@@ -62,6 +63,12 @@ public class ArticleSelectPanelKassieren extends ArticleSelectPanelGrundlage {
         else {
             kassieren.preisField.setEditable(true);
         }
+    }
+
+    @Override
+    protected void resetPriceField() {
+        kassieren.preisField.setText("");
+        kassieren.preisField.setEditable(false);
     }
 
     protected void articleSelectFinishedFocus() {
