@@ -149,6 +149,7 @@ public class ArtikelExport extends WindowContent {
             String varStr = var ? "Ja" : "Nein";
             String herkunft = artikelListe.articles.get(i).getHerkunft();
             Integer bestand = artikelListe.articles.get(i).getBestand();
+//            String bestandStr = bestand == null ? "" : bestand.toString();
 
             Vector<Object> row = new Vector<Object>();
             row.add(produktgruppe);
