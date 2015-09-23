@@ -12,10 +12,14 @@ main_class=org.weltladen_bonn.pos.besteller.Besteller
 cp config.properties $build_dir
 cp -r vorlagen $build_dir
 cd $build_dir
+java=java
+if [ "$JAVA_HOME" != "" ]; then
+    java="$JAVA_HOME/bin/java"
+fi
 if [ $runprofiler == true ]; then
-    java -javaagent:$HOME/bin/profiler4j-1.0-beta2/agent.jar -cp "$lib_dir/*":. $main_class
+    $java -javaagent:$HOME/bin/profiler4j-1.0-beta2/agent.jar -cp "$lib_dir/*":. $main_class
 else
-    java -cp "$lib_dir/*":. $main_class
+    $java -cp "$lib_dir/*":. $main_class
 fi
 rm config.properties
 rm -r vorlagen
