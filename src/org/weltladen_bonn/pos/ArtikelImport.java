@@ -534,7 +534,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             colors.add( bestand.equals(allFields.get(17)) ? Color.black : Color.red ); // bestand
             colors.add(Color.black); // entfernen
         } else {
-            for (int i=0; i<20; i++){
+            for (int i=0; i<21; i++){
                 colors.add(Color.black);
             }
         }

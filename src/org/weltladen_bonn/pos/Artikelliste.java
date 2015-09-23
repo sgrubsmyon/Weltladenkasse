@@ -62,7 +62,6 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
 
     protected Vector<Artikel> articles;
     protected Vector<Integer> artikelIDs;
-    protected Vector<Integer> beliebtIndices;
 
     protected Vector<String> linksColumns;
     protected Vector<String> rechtsColumns;
@@ -153,7 +152,6 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
 
         articles = new Vector<Artikel>();
         artikelIDs = new Vector<Integer>();
-        //beliebtIndices = new Vector<Integer>();
 
         linksColumns = new Vector<String>();
         linksColumns.add("Nummer");
@@ -334,7 +332,6 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                         aktiv);
                 articles.add(article);
                 artikelIDs.add(artikel_id);
-                //beliebtIndices.add(beliebtIndex);
             }
             rs.close();
             pstmt.close();
@@ -575,7 +572,6 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 String valueStr = "";
                 if ( cname.equals("Beliebtheit") ){
                     // BeliebtRenderer:
-                    //Integer index = beliebtIndices.get(realRowIndex);
                     Integer index = Integer.parseInt(value.toString());
                     label.setText( beliebtKuerzel.get(index) );
                 }
@@ -648,7 +644,6 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 //int realRowIndex = rowIndex;
                 //realRowIndex = convertRowIndexToModel(realRowIndex);
                 //realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
-                //Integer index = beliebtIndices.get(realRowIndex);
                 Integer index = Integer.parseInt(this.getValueAt(rowIndex, colIndex).toString());
                 String name = beliebtNamen.get(index);
                 return name+" ("+index+")";

@@ -34,9 +34,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected DefaultTableCellRenderer rechtsAusrichter = new DefaultTableCellRenderer();
     protected DefaultTableCellRenderer linksAusrichter = new DefaultTableCellRenderer();
     protected DefaultTableCellRenderer zentralAusrichter = new DefaultTableCellRenderer();
-    protected final int columnMargin = 20; /** number of pixels of space between table columns */
-    protected final int minColumnWidth = 20; /** minimally allowed pixel width of table columns */
-    protected final int maxColumnWidth = 150; /** maximally allowed pixel width of table columns */
+    protected final int columnMargin = 20;
+    /** number of pixels of space between table columns */
+    protected final int minColumnWidth = 20;
+    /** minimally allowed pixel width of table columns */
+    protected final int maxColumnWidth = 150;
+    /** maximally allowed pixel width of table columns */
 
     protected PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
     protected PositiveNumberDocumentFilter relFilter = new PositiveNumberDocumentFilter(3, 6);
@@ -97,36 +100,39 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
     // Methoden:
     // Setter:
-    void setConnection(Connection conn){
-	this.conn = conn;
+    void setConnection(Connection conn) {
+        this.conn = conn;
     }
-    void setMainWindowPointer(MainWindowGrundlage mw){
-	this.mainWindow = mw;
+
+    void setMainWindowPointer(MainWindowGrundlage mw) {
+        this.mainWindow = mw;
         this.bc = mw.bc;
     }
+
     // Getter:
-    public Connection getConnection(){
-	return this.conn;
+    public Connection getConnection() {
+        return this.conn;
     }
-    public MainWindowGrundlage getMainWindowPointer(){
-	return this.mainWindow;
+
+    public MainWindowGrundlage getMainWindowPointer() {
+        return this.mainWindow;
     }
 
     /**
-     *    The constructors.
-     *       */
+     * The constructors.
+     */
     public WindowContent(Connection conn, MainWindowGrundlage mw) {
-	this.conn = conn;
-	this.mainWindow = mw;
+        this.conn = conn;
+        this.mainWindow = mw;
         this.bc = mw.bc;
 
         intFilter = new IntegerDocumentFilter(-bc.smallintMax, bc.smallintMax, this);
         vpeFilter = new IntegerDocumentFilter(1, bc.smallintMax, this);
 
-	rechtsAusrichter.setHorizontalAlignment(JLabel.RIGHT);
-	linksAusrichter.setHorizontalAlignment(JLabel.LEFT);
-	zentralAusrichter.setHorizontalAlignment(JLabel.CENTER);
-	this.setLayout(new BorderLayout());
+        rechtsAusrichter.setHorizontalAlignment(JLabel.RIGHT);
+        linksAusrichter.setHorizontalAlignment(JLabel.LEFT);
+        zentralAusrichter.setHorizontalAlignment(JLabel.CENTER);
+        this.setLayout(new BorderLayout());
 
         fillBeliebtWerte();
     }
@@ -136,33 +142,45 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         beliebtNamen = new Vector<String>();
         beliebtKuerzel = new Vector<String>();
         beliebtFarben = new Vector<Color>();
-        beliebtWerte.add(0); beliebtNamen.add("keine Angabe"); beliebtKuerzel.add("●"); beliebtFarben.add(Color.GRAY);
-        beliebtWerte.add(1); beliebtNamen.add("niedrig");      beliebtKuerzel.add("●"); beliebtFarben.add(Color.RED);
-        beliebtWerte.add(2); beliebtNamen.add("mittel");       beliebtKuerzel.add("●"); beliebtFarben.add(Color.YELLOW);
-        beliebtWerte.add(3); beliebtNamen.add("hoch");         beliebtKuerzel.add("●"); beliebtFarben.add(Color.GREEN);
+        beliebtWerte.add(0);
+        beliebtNamen.add("keine Angabe");
+        beliebtKuerzel.add("●");
+        beliebtFarben.add(Color.GRAY);
+        beliebtWerte.add(1);
+        beliebtNamen.add("niedrig");
+        beliebtKuerzel.add("●");
+        beliebtFarben.add(Color.RED);
+        beliebtWerte.add(2);
+        beliebtNamen.add("mittel");
+        beliebtKuerzel.add("●");
+        beliebtFarben.add(Color.YELLOW);
+        beliebtWerte.add(3);
+        beliebtNamen.add("hoch");
+        beliebtKuerzel.add("●");
+        beliebtFarben.add(Color.GREEN);
         Integer minBeliebt = Collections.min(beliebtWerte);
         Integer maxBeliebt = Collections.max(beliebtWerte);
         beliebtFilter = new IntegerDocumentFilter(minBeliebt, maxBeliebt, this);
     }
 
-
     protected class WindowAdapterDialog extends WindowAdapter {
         private DialogWindow dwindow;
         private JDialog dialog;
         private String warnMessage;
+
         public WindowAdapterDialog(DialogWindow dw, JDialog dia, String wm) {
             super();
             this.dwindow = dw;
             this.dialog = dia;
             this.warnMessage = wm;
         }
+
         @Override
         public void windowClosing(WindowEvent we) {
-            if ( this.dwindow.willDataBeLost() ){
-                int answer = JOptionPane.showConfirmDialog(dialog,
-                        warnMessage, "Warnung",
-                        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-                if (answer == JOptionPane.YES_OPTION){
+            if (this.dwindow.willDataBeLost()) {
+                int answer = JOptionPane.showConfirmDialog(dialog, warnMessage, "Warnung", JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE);
+                if (answer == JOptionPane.YES_OPTION) {
                     dialog.dispose();
                 } else {
                     // do nothing
@@ -179,13 +197,14 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
     protected Date dateFromDateTime(DateTime dt) {
         /** Returns Date constructed from this DateTime */
-        return new Date( dt.getMilliseconds(TimeZone.getDefault()) );
+        return new Date(dt.getMilliseconds(TimeZone.getDefault()));
     }
 
     protected Date dateFromDateTime(DateTime dt, DateTime zeroPoint) {
-        /** Returns Date constructed from this DateTime, relative to zeroPoint */
-        return new Date( dt.getMilliseconds(TimeZone.getDefault()) -
-                zeroPoint.getMilliseconds(TimeZone.getDefault()) );
+        /**
+         * Returns Date constructed from this DateTime, relative to zeroPoint
+         */
+        return new Date(dt.getMilliseconds(TimeZone.getDefault()) - zeroPoint.getMilliseconds(TimeZone.getDefault()));
     }
 
     protected JTextArea makeLabelStyle(JTextArea textArea) {
@@ -200,69 +219,73 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
         // important so that with LineWrap, textArea doesn't become huge:
-        //    (set it to sth. small, it will expand as much as needed)
+        // (set it to sth. small, it will expand as much as needed)
         textArea.setPreferredSize(new Dimension(10, 10));
         return textArea;
     }
 
     protected String constructProgramPath(String dir, String program) {
         String path = "";
-        if (dir.length() == 0){
+        if (dir.length() == 0) {
             path = program;
         } else {
-            if ( dir.endsWith("\"") ){
-                path = dir.substring(0, dir.length()-1)+bc.fileSep+program+"\"";
+            if (dir.endsWith("\"")) {
+                path = dir.substring(0, dir.length() - 1) + bc.fileSep + program + "\"";
             } else {
-                path = dir+bc.fileSep+program;
+                path = dir + bc.fileSep + program;
             }
         }
         return path;
     }
 
-    protected void applyFilter(String filterStr, Vector< Vector<Object> > data, Vector<Integer> indices) {
-        /** Filter all rows in `data` using the filter strings given in `filterStr`, which
-         *  are space separated. Each filter string must be present (case insensitive).
-         *  This behaviour is the same as an SQL query using 'foo LIKE "%str1%" AND foo LIKE "%str2%" AND ...'.
-         *  Returns only the rows of `data` and `indices` that correspond to rows in `data`
-         *  containing all the filter strings. */
-        if (filterStr.length() < 3){
+    protected void applyFilter(String filterStr, Vector<Vector<Object>> data, Vector<Integer> indices) {
+        /**
+         * Filter all rows in `data` using the filter strings given in
+         * `filterStr`, which are space separated. Each filter string must be
+         * present (case insensitive). This behaviour is the same as an SQL
+         * query using 'foo LIKE "%str1%" AND foo LIKE "%str2%" AND ...'.
+         * Returns only the rows of `data` and `indices` that correspond to rows
+         * in `data` containing all the filter strings.
+         */
+        if (filterStr.length() < 3) {
             return;
         }
         // Search in each row
-        final Vector< Vector<Object> > fullData = new Vector< Vector<Object> >(data);
+        final Vector<Vector<Object>> fullData = new Vector<Vector<Object>>(data);
         final Vector<Integer> fullIndices = new Vector<Integer>(indices);
-        for (int i=0; i<fullData.size(); i++){
+        for (int i = 0; i < fullData.size(); i++) {
             boolean contains = true;
             String row = "";
-            for ( Object obj : fullData.get(i) ){
+            for (Object obj : fullData.get(i)) {
                 // omit UI components:
-                if ( !(obj instanceof JComponent) ){
+                if (!(obj instanceof JComponent)) {
                     String str = obj.toString().toLowerCase();
-                    row = row.concat(str+" ");
+                    row = row.concat(str + " ");
                 }
             }
-            // row must contain (somewhere) each whitespace separated filter word
-            for ( String fstr : filterStr.split(" ") ){
-                if ( fstr.equals("") )
+            // row must contain (somewhere) each whitespace separated filter
+            // word
+            for (String fstr : filterStr.split(" ")) {
+                if (fstr.equals(""))
                     continue;
-                if ( ! row.contains(fstr.toLowerCase()) ){
+                if (!row.contains(fstr.toLowerCase())) {
                     contains = false;
                     break;
                 }
             }
-            if (!contains){
-                int display_index = indices.indexOf( fullIndices.get(i) );
+            if (!contains) {
+                int display_index = indices.indexOf(fullIndices.get(i));
                 data.remove(display_index);
                 indices.remove(display_index);
             }
         }
     }
 
-    protected String handleMissingSalePrice(String title, String artikelname, String artikelnummer,
-            String lieferant, String barcode) {
+    protected String handleMissingSalePrice(String title, String artikelname, String artikelnummer, String lieferant,
+            String barcode) {
         JPanel preisPanel = new JPanel();
         JTextField preisField = new JTextField("");
-        ((AbstractDocument)preisField.getDocument()).setDocumentFilter(geldFilter);
+        ((AbstractDocument) preisField.getDocument()).setDocumentFilter(geldFilter);
         preisField.setColumns(6);
         preisField.setHorizontalAlignment(JTextField.RIGHT);
         preisPanel.add(preisField);
@@ -270,27 +293,26 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
         ArrayList<Object> objects = new ArrayList<Object>();
         objects.add(new JLabel("Wie viel kostet der Artikel?"));
-        objects.add(new JLabel("\""+artikelname+"\""));
+        objects.add(new JLabel("\"" + artikelname + "\""));
         JPanel labelPanel = new JPanel();
         if (artikelnummer != null)
-            labelPanel.add(new JLabel("Artikel-Nr.: "+artikelnummer));
+            labelPanel.add(new JLabel("Artikel-Nr.: " + artikelnummer));
         if (lieferant != null)
-            labelPanel.add(new JLabel("    von: "+lieferant));
+            labelPanel.add(new JLabel("    von: " + lieferant));
         objects.add(labelPanel);
         if (barcode != null)
-            objects.add(new JLabel("Barcode: "+barcode));
+            objects.add(new JLabel("Barcode: " + barcode));
         objects.add(preisPanel);
 
-        JOptionPane jop = new JOptionPane(objects.toArray(),
-                    JOptionPane.QUESTION_MESSAGE,
-                    JOptionPane.OK_CANCEL_OPTION);
+        JOptionPane jop = new JOptionPane(objects.toArray(), JOptionPane.QUESTION_MESSAGE,
+                JOptionPane.OK_CANCEL_OPTION);
         JDialog dialog = jop.createDialog(title);
         dialog.setVisible(true);
-        int result = (Integer)jop.getValue();
+        int result = (Integer) jop.getValue();
         dialog.dispose();
 
         String artikelPreis = "";
-        if (result == JOptionPane.OK_OPTION){
+        if (result == JOptionPane.OK_OPTION) {
             artikelPreis = new String(preisField.getText());
             if (artikelPreis == null)
                 return "";
@@ -298,24 +320,35 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return artikelPreis;
     }
 
-
     /**
      * Price calculation methods
      */
 
     protected BigDecimal calculateVAT(BigDecimal totalPrice, BigDecimal mwst) {
-        //return totalPrice.multiply( one.subtract( one.divide(one.add(mwst), 10, RoundingMode.HALF_UP) ) ); // VAT = bruttoPreis * ( 1. - 1./(1.+mwst) );
-        return totalPrice.divide(bc.one.add(mwst), 10, RoundingMode.HALF_UP).multiply(mwst); // VAT = bruttoPreis / (1.+mwst) * mwst;
+        // return totalPrice.multiply( one.subtract( one.divide(one.add(mwst),
+        // 10, RoundingMode.HALF_UP) ) ); // VAT = bruttoPreis * ( 1. -
+        // 1./(1.+mwst) );
+        return totalPrice.divide(bc.one.add(mwst), 10, RoundingMode.HALF_UP).multiply(mwst); // VAT
+                                                                                             // =
+                                                                                             // bruttoPreis
+                                                                                             // /
+                                                                                             // (1.+mwst)
+                                                                                             // *
+                                                                                             // mwst;
     }
 
     protected BigDecimal calculateEKP(BigDecimal empfVKPreis, BigDecimal ekRabatt) {
-        return ( bc.one.subtract(ekRabatt) ).multiply(empfVKPreis); // Einkaufspreis = (1 - rabatt) * Empf. VK-Preis
+        return (bc.one.subtract(ekRabatt)).multiply(empfVKPreis); // Einkaufspreis
+                                                                  // = (1 -
+                                                                  // rabatt) *
+                                                                  // Empf.
+                                                                  // VK-Preis
     }
 
     protected BigDecimal calculateEKP(String empfVKPreis, BigDecimal ekRabatt) {
         BigDecimal empfvkpDecimal;
         try {
-            empfvkpDecimal = new BigDecimal( bc.priceFormatterIntern(empfVKPreis) );
+            empfvkpDecimal = new BigDecimal(bc.priceFormatterIntern(empfVKPreis));
         } catch (NumberFormatException ex) {
             return null;
         }
@@ -325,7 +358,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected BigDecimal calculateEKP(String empfVKPreis, String ekRabatt) {
         BigDecimal rabatt;
         try {
-            rabatt = new BigDecimal( bc.vatParser(ekRabatt) );
+            rabatt = new BigDecimal(bc.vatParser(ekRabatt));
         } catch (NumberFormatException ex) {
             return null;
         }
@@ -333,11 +366,13 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected String figureOutEKP(String empfVKPreis, String ekRabatt, String ekPreis) {
-        /** If empfVKPreis and ekRabatt are both valid numbers, calculate EK-Preis
-         *  from them and return it. Otherwise, fall back to using ekPreis.
+        /**
+         * If empfVKPreis and ekRabatt are both valid numbers, calculate
+         * EK-Preis from them and return it. Otherwise, fall back to using
+         * ekPreis.
          */
         BigDecimal preis = calculateEKP(empfVKPreis, ekRabatt);
-        if (preis != null){
+        if (preis != null) {
             return bc.priceFormatterIntern(preis);
         } else {
             return bc.priceFormatterIntern(ekPreis);
@@ -345,32 +380,34 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected boolean empfVKPAndEKRabattValid(String empfVKPreis, String ekRabatt) {
-        /** If empfVKPreis and ekRabatt are both valid numbers, return true, else false.
+        /**
+         * If empfVKPreis and ekRabatt are both valid numbers, return true, else
+         * false.
          */
         try {
-            new BigDecimal( bc.priceFormatterIntern(empfVKPreis) );
+            new BigDecimal(bc.priceFormatterIntern(empfVKPreis));
         } catch (NumberFormatException ex) {
             return false;
         }
         try {
-            new BigDecimal( bc.vatParser(ekRabatt) );
+            new BigDecimal(bc.vatParser(ekRabatt));
         } catch (NumberFormatException ex) {
             return false;
         }
         return true;
     }
 
-
-
     /**
      * DB methods
      */
 
     protected void pstmtSetInteger(PreparedStatement pstmt, int paramIndex, Integer x) {
-        /** Home made method to put Integer class instances (that can be null)
-         *  into a DB and treat them accordingly (Java null becomes SQL NULL) */
+        /**
+         * Home made method to put Integer class instances (that can be null)
+         * into a DB and treat them accordingly (Java null becomes SQL NULL)
+         */
         try {
-            if (x == null){
+            if (x == null) {
                 pstmt.setNull(paramIndex, Types.INTEGER);
             } else {
                 pstmt.setInt(paramIndex, x);
@@ -382,10 +419,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected void pstmtSetBoolean(PreparedStatement pstmt, int paramIndex, Boolean x) {
-        /** Home made method to put Boolean class instances (that can be null)
-         *  into a DB and treat them accordingly (Java null becomes SQL NULL) */
+        /**
+         * Home made method to put Boolean class instances (that can be null)
+         * into a DB and treat them accordingly (Java null becomes SQL NULL)
+         */
         try {
-            if (x == null){
+            if (x == null) {
                 pstmt.setNull(paramIndex, Types.INTEGER);
             } else {
                 pstmt.setBoolean(paramIndex, x);
@@ -399,10 +438,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected boolean isArticleAlreadyKnown(Integer lieferant_id, String nummer) {
         boolean exists = false;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(*) > 0 FROM artikel "+
-                    "WHERE lieferant_id = ? AND artikel_nr = ? AND artikel.aktiv = TRUE"
-                    );
+            PreparedStatement pstmt = this.conn.prepareStatement("SELECT COUNT(*) > 0 FROM artikel "
+                    + "WHERE lieferant_id = ? AND artikel_nr = ? AND artikel.aktiv = TRUE");
             pstmtSetInteger(pstmt, 1, lieferant_id);
             pstmt.setString(2, nummer);
             ResultSet rs = pstmt.executeQuery();
@@ -420,10 +457,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected boolean doesArticleHaveBarcode(Integer artikel_id) {
         boolean hasBarcode = false;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT barcode IS NOT NULL FROM artikel "+
-                    "WHERE artikel_id = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("SELECT barcode IS NOT NULL FROM artikel " + "WHERE artikel_id = ?");
             pstmtSetInteger(pstmt, 1, artikel_id);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -438,14 +473,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected int setArticleInactive(Artikel a) {
-        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        // returns 0 if there was an error, otherwise number of rows affected
+        // (>0)
         int result = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "UPDATE artikel SET aktiv = FALSE, bis = NOW() WHERE "+
-                    "lieferant_id = ? AND "+
-                    "artikel_nr = ? AND aktiv = TRUE"
-                    );
+            PreparedStatement pstmt = this.conn.prepareStatement("UPDATE artikel SET aktiv = FALSE, bis = NOW() WHERE "
+                    + "lieferant_id = ? AND " + "artikel_nr = ? AND aktiv = TRUE");
             pstmtSetInteger(pstmt, 1, a.getLiefID());
             pstmt.setString(2, a.getNummer());
             result = pstmt.executeUpdate();
@@ -463,14 +496,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected int setArticleActive(Artikel a) {
-        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        // returns 0 if there was an error, otherwise number of rows affected
+        // (>0)
         int result = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "UPDATE artikel SET aktiv = TRUE, bis = NOW() WHERE "+
-                    "lieferant_id = ? AND "+
-                    "artikel_nr = ? AND aktiv = FALSE"
-                    );
+            PreparedStatement pstmt = this.conn.prepareStatement("UPDATE artikel SET aktiv = TRUE, bis = NOW() WHERE "
+                    + "lieferant_id = ? AND " + "artikel_nr = ? AND aktiv = FALSE");
             pstmtSetInteger(pstmt, 1, a.getLiefID());
             pstmt.setString(2, a.getNummer());
             result = pstmt.executeUpdate();
@@ -489,25 +520,26 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
     protected int insertNewArticle(Artikel a) {
         // add row for new item (with updated fields)
-        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        // returns 0 if there was an error, otherwise number of rows affected
+        // (>0)
         int result = 0;
 
-        if (a.getKurzname().equals("") || a.getKurzname().equals("NULL")){
+        if (a.getKurzname().equals("") || a.getKurzname().equals("NULL")) {
             a.setKurzname(null);
         }
-        if (a.getEinheit().equals("") || a.getEinheit().equals("NULL")){
+        if (a.getEinheit().equals("") || a.getEinheit().equals("NULL")) {
             a.setEinheit(null);
         }
-        if (a.getBarcode().equals("") || a.getBarcode().equals("NULL")){
+        if (a.getBarcode().equals("") || a.getBarcode().equals("NULL")) {
             a.setBarcode(null);
         }
-        if (a.getHerkunft().equals("") || a.getHerkunft().equals("NULL")){
+        if (a.getHerkunft().equals("") || a.getHerkunft().equals("NULL")) {
             a.setHerkunft(null);
         }
-        if (a.getVPE() == null || a.getVPE().equals(0)){
+        if (a.getVPE() == null || a.getVPE().equals(0)) {
             a.setVPE(null);
         }
-        if (a.getSetgroesse() == null || a.getSetgroesse().equals(0)){
+        if (a.getSetgroesse() == null || a.getSetgroesse().equals(0)) {
             a.setSetgroesse(1);
         }
 
@@ -527,7 +559,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
         BigDecimal ekrabattDecimal;
         try {
-            ekrabattDecimal = new BigDecimal( bc.vatParser(a.getEKRabatt()) );
+            ekrabattDecimal = new BigDecimal(bc.vatParser(a.getEKRabatt()));
         } catch (NumberFormatException ex) {
             ekrabattDecimal = null;
         }
@@ -540,24 +572,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
 
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "INSERT INTO artikel SET "+
-                    "produktgruppen_id = ?, lieferant_id = ?, "+
-                    "artikel_nr = ?, artikel_name = ?, "+
-                    "kurzname = ?, "+
-                    "menge = ?, "+
-                    "einheit = ?, "+
-                    "barcode = ?, "+
-                    "herkunft = ?, "+
-                    "vpe = ?, "+
-                    "setgroesse = ?, "+
-                    "vk_preis = ?, empf_vk_preis = ?, "+
-                    "ek_rabatt = ?, ek_preis = ?, "+
-                    "variabler_preis = ?, sortiment = ?, "+
-                    "lieferbar = ?, beliebtheit = ?, "+
-                    "bestand = ?, "+
-                    "von = NOW(), aktiv = TRUE"
-                    );
+            PreparedStatement pstmt = this.conn.prepareStatement("INSERT INTO artikel SET "
+                    + "produktgruppen_id = ?, lieferant_id = ?, " + "artikel_nr = ?, artikel_name = ?, "
+                    + "kurzname = ?, " + "menge = ?, " + "einheit = ?, " + "barcode = ?, " + "herkunft = ?, "
+                    + "vpe = ?, " + "setgroesse = ?, " + "vk_preis = ?, empf_vk_preis = ?, "
+                    + "ek_rabatt = ?, ek_preis = ?, " + "variabler_preis = ?, sortiment = ?, "
+                    + "lieferbar = ?, beliebtheit = ?, " + "bestand = ?, " + "von = NOW(), aktiv = TRUE");
             pstmtSetInteger(pstmt, 1, a.getProdGrID());
             pstmtSetInteger(pstmt, 2, a.getLiefID());
             pstmt.setString(3, a.getNummer());
@@ -592,25 +612,11 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-
     private String selectArticleString() {
-        return "SELECT "+
-            "produktgruppen_id, "+
-            "lieferant_id, "+
-            "artikel_nr, "+
-            "artikel_name, "+
-            "kurzname, "+
-            "menge, "+
-            "einheit, "+
-            "barcode, "+
-            "herkunft, "+
-            "vpe, "+
-            "setgroesse, "+
-            "vk_preis, empf_vk_preis, "+
-            "ek_rabatt, ek_preis, "+
-            "variabler_preis, sortiment, "+
-            "lieferbar, beliebtheit, "+
-            "bestand ";
+        return "SELECT " + "produktgruppen_id, " + "lieferant_id, " + "artikel_nr, " + "artikel_name, " + "kurzname, "
+                + "menge, " + "einheit, " + "barcode, " + "herkunft, " + "vpe, " + "setgroesse, "
+                + "vk_preis, empf_vk_preis, " + "ek_rabatt, ek_preis, " + "variabler_preis, sortiment, "
+                + "lieferbar, beliebtheit, " + "bestand ";
     }
 
     private Artikel parseArticleResultSet(ResultSet rs) {
@@ -631,7 +637,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             Boolean var = rs.getBoolean(16);
             a.setVKP(var ? "" : rs.getString(12));
             a.setEmpfVKP(var ? "" : rs.getString(13));
-            a.setEKRabatt( bc.vatFormatter(rs.getString(14)) );
+            a.setEKRabatt(bc.vatFormatter(rs.getString(14)));
             a.setEKP(var ? "" : rs.getString(15));
             a.setVarPreis(var);
             a.setSortiment(rs.getBoolean(17));
@@ -648,14 +654,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected Artikel getArticle(Integer artikel_id) {
         Artikel a = new Artikel(bc);
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    selectArticleString()+
-                    "FROM artikel "+
-                    "WHERE artikel_id = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement(selectArticleString() + "FROM artikel " + "WHERE artikel_id = ?");
             pstmtSetInteger(pstmt, 1, artikel_id);
             ResultSet rs = pstmt.executeQuery();
-            // Now do something with the ResultSet, should be only one result ...
+            // Now do something with the ResultSet, should be only one result
+            // ...
             a = parseArticleResultSet(rs);
             rs.close();
             pstmt.close();
@@ -666,20 +670,16 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return a;
     }
 
-
     protected Artikel getArticle(Integer lieferant_id, String artikel_nr) {
         Artikel a = new Artikel(bc);
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    selectArticleString()+
-                    "FROM artikel "+
-                    "WHERE lieferant_id = ? AND "+
-                    "artikel_nr = ? AND artikel.aktiv = TRUE"
-                    );
+            PreparedStatement pstmt = this.conn.prepareStatement(selectArticleString() + "FROM artikel "
+                    + "WHERE lieferant_id = ? AND " + "artikel_nr = ? AND artikel.aktiv = TRUE");
             pstmtSetInteger(pstmt, 1, lieferant_id);
             pstmt.setString(2, artikel_nr);
             ResultSet rs = pstmt.executeQuery();
-            // Now do something with the ResultSet, should be only one result ...
+            // Now do something with the ResultSet, should be only one result
+            // ...
             a = parseArticleResultSet(rs);
             rs.close();
             pstmt.close();
@@ -693,10 +693,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected String getProduktgruppe(Integer produktgruppen_id) {
         String produktgruppe = "";
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT produktgruppen_name FROM produktgruppe "+
-                    "WHERE produktgruppen_id = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("SELECT produktgruppen_name FROM produktgruppe " + "WHERE produktgruppen_id = ?");
             pstmtSetInteger(pstmt, 1, produktgruppen_id);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -713,10 +711,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected String getLieferant(Integer lieferant_id) {
         String lieferant = "";
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT lieferant_name FROM lieferant "+
-                    "WHERE lieferant_id = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("SELECT lieferant_name FROM lieferant " + "WHERE lieferant_id = ?");
             pstmtSetInteger(pstmt, 1, lieferant_id);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -733,14 +729,13 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected Integer getLieferantID(String lieferant) {
         Integer lieferant_id = 1;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT lieferant_id FROM lieferant "+
-                    "WHERE lieferant_name = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("SELECT lieferant_id FROM lieferant " + "WHERE lieferant_name = ?");
             pstmt.setString(1, lieferant);
             ResultSet rs = pstmt.executeQuery();
-            rs.next();
-            lieferant_id = rs.getInt(1);
+            if (rs.next()) {
+                lieferant_id = rs.getInt(1);
+            }
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
@@ -753,10 +748,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected Vector<Object> getLieferantIDArtikelNummer(Integer artikel_id) {
         Vector<Object> liefIDAndNr = new Vector<Object>();
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT lieferant_id, artikel_nr FROM artikel "+
-                    "WHERE artikel_id = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("SELECT lieferant_id, artikel_nr FROM artikel " + "WHERE artikel_id = ?");
             pstmtSetInteger(pstmt, 1, artikel_id);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -776,10 +769,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected boolean isLieferantAlreadyKnown(String lieferant) {
         boolean exists = false;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(*) > 0 FROM lieferant "+
-                    "WHERE lieferant_name = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("SELECT COUNT(*) > 0 FROM lieferant " + "WHERE lieferant_name = ?");
             pstmt.setString(1, lieferant);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -796,10 +787,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected boolean isLieferantInactive(String lieferant) {
         boolean inactive = false;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT aktiv FROM lieferant "+
-                    "WHERE lieferant_name = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("SELECT aktiv FROM lieferant " + "WHERE lieferant_name = ?");
             pstmt.setString(1, lieferant);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -816,10 +805,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected int howManyActiveArticlesWithLieferant(Integer lieferant_id) {
         int nArticles = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT n_artikel FROM lieferant "+
-                    "WHERE lieferant_id = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("SELECT n_artikel FROM lieferant " + "WHERE lieferant_id = ?");
             pstmtSetInteger(pstmt, 1, lieferant_id);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -840,11 +827,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected int queryActiveArticlesWithLieferant(Integer lieferant_id) {
         int nArticles = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(*) FROM artikel AS a "+
-                    "INNER JOIN lieferant USING (lieferant_id) "+
-                    "WHERE a.lieferant_id = ? AND a.aktiv = TRUE"
-                    );
+            PreparedStatement pstmt = this.conn.prepareStatement("SELECT COUNT(*) FROM artikel AS a "
+                    + "INNER JOIN lieferant USING (lieferant_id) " + "WHERE a.lieferant_id = ? AND a.aktiv = TRUE");
             pstmtSetInteger(pstmt, 1, lieferant_id);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -859,13 +843,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected int setNArtikelForLieferant(int liefID, int nArticles) {
-        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        // returns 0 if there was an error, otherwise number of rows affected
+        // (>0)
         int result = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "UPDATE lieferant SET n_artikel = ? WHERE "+
-                    "lieferant_id = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("UPDATE lieferant SET n_artikel = ? WHERE " + "lieferant_id = ?");
             pstmtSetInteger(pstmt, 1, nArticles);
             pstmtSetInteger(pstmt, 2, liefID);
             result = pstmt.executeUpdate();
@@ -878,30 +861,28 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected void updateNArtikelInLieferantFor(int lieferant_id) {
-        System.out.print("Upating lieferant_id "+lieferant_id+" to n_artikel = ");
+        System.out.print("Upating lieferant_id " + lieferant_id + " to n_artikel = ");
         int nArticles = queryActiveArticlesWithLieferant(lieferant_id);
         System.out.println(nArticles);
         int result = 0;
         result = setNArtikelForLieferant(lieferant_id, nArticles);
-        if (result == 0){
-            System.err.println("ERROR: Could not set `n_artikel` to "+nArticles+
-                    " for lieferant_id = "+lieferant_id);
-            JOptionPane.showMessageDialog(this,
-                    "Fehler: Lieferant mit ID "+lieferant_id+": `n_artikel` konnte nicht "+
-                    "auf "+nArticles+" gesetzt werden.",
-                    "Fehler", JOptionPane.ERROR_MESSAGE);
+        if (result == 0) {
+            System.err.println(
+                    "ERROR: Could not set `n_artikel` to " + nArticles + " for lieferant_id = " + lieferant_id);
+            JOptionPane.showMessageDialog(this, "Fehler: Lieferant mit ID " + lieferant_id
+                    + ": `n_artikel` konnte nicht " + "auf " + nArticles + " gesetzt werden.", "Fehler",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
     protected void updateNArtikelInLieferant() {
         /**
-         * For all rows in `lieferant` that have `n_artikel` = NULL,
-         * query for the number of active articles and set `n_artikel`.
+         * For all rows in `lieferant` that have `n_artikel` = NULL, query for
+         * the number of active articles and set `n_artikel`.
          */
         try {
             Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT lieferant_id FROM "+
-                    "lieferant WHERE n_artikel IS NULL");
+            ResultSet rs = stmt.executeQuery("SELECT lieferant_id FROM " + "lieferant WHERE n_artikel IS NULL");
             while (rs.next()) {
                 int liefID = rs.getInt(1);
                 updateNArtikelInLieferantFor(liefID);
@@ -917,58 +898,53 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected void updateArticle(Artikel oldArticle, Artikel newArticle) {
         // set old item to inactive:
         int result = setArticleInactive(oldArticle);
-        if (result == 0){
+        if (result == 0) {
             JOptionPane.showMessageDialog(this,
-                    "Fehler: Artikel von "+getLieferant( oldArticle.getLiefID() )+" mit "+
-                    "Nummer "+oldArticle.getNummer()+" konnte nicht "+
-                    "geändert werden.",
+                    "Fehler: Artikel von " + getLieferant(oldArticle.getLiefID()) + " mit " + "Nummer "
+                            + oldArticle.getNummer() + " konnte nicht " + "geändert werden.",
                     "Fehler", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        if ( newArticle.getAktiv() == true ){ // only if the item wasn't
+        if (newArticle.getAktiv() == true) { // only if the item wasn't
             // set inactive voluntarily: add new item with new properties
-            String ekpreis = figureOutEKP(newArticle.getEmpfVKP(),
-                    newArticle.getEKRabatt(), newArticle.getEKP());
+            String ekpreis = figureOutEKP(newArticle.getEmpfVKP(), newArticle.getEKRabatt(), newArticle.getEKP());
             newArticle.setEKP(ekpreis);
             result = insertNewArticle(newArticle);
-            if (result == 0){
+            if (result == 0) {
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: Artikel von "+getLieferant( oldArticle.getLiefID() )+
-                        "mit Nummer "+oldArticle.getNummer()+" konnte "+
-                        "nicht geändert werden.",
+                        "Fehler: Artikel von " + getLieferant(oldArticle.getLiefID()) + "mit Nummer "
+                                + oldArticle.getNummer() + " konnte " + "nicht geändert werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
                 result = setArticleActive(oldArticle);
-                if (result == 0){
+                if (result == 0) {
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Artikel von "+
-                            getLieferant( oldArticle.getLiefID() )+" mit Nummer "+
-                            oldArticle.getNummer()+" konnte nicht "+
-                            "wieder hergestellt werden. Artikel ist nun "+
-                            "gelöscht (inaktiv).",
+                            "Fehler: Artikel von " + getLieferant(oldArticle.getLiefID()) + " mit Nummer "
+                                    + oldArticle.getNummer() + " konnte nicht "
+                                    + "wieder hergestellt werden. Artikel ist nun " + "gelöscht (inaktiv).",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
         }
     }
 
-    protected int updateLieferant(Integer lieferant_id, String lieferant_name,
-            String lieferant_kurzname, Boolean aktiv) {
-        // returns 0 if there was an error, otherwise number of rows affected (>0)
+    protected int updateLieferant(Integer lieferant_id, String lieferant_name, String lieferant_kurzname,
+            Boolean aktiv) {
+        // returns 0 if there was an error, otherwise number of rows affected
+        // (>0)
         int result = 0;
-        if (aktiv == false){
+        if (aktiv == false) {
             // check if there are still active articles with this lieferant
-            if (thereAreActiveArticlesWithLieferant(lieferant_id)){
+            if (thereAreActiveArticlesWithLieferant(lieferant_id)) {
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: Es gibt noch aktive Artikel mit dem Lieferanten "+lieferant_name+".",
-                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                        "Fehler: Es gibt noch aktive Artikel mit dem Lieferanten " + lieferant_name + ".", "Fehler",
+                        JOptionPane.ERROR_MESSAGE);
                 return result;
             }
         }
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "UPDATE lieferant SET lieferant_name = ?, lieferant_kurzname = ?, aktiv = ? "+
-                    "WHERE lieferant_id = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("UPDATE lieferant SET lieferant_name = ?, lieferant_kurzname = ?, aktiv = ? "
+                            + "WHERE lieferant_id = ?");
             pstmt.setString(1, lieferant_name);
             pstmt.setString(2, lieferant_kurzname);
             pstmt.setBoolean(3, aktiv);
@@ -983,20 +959,19 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected int setLieferantInactive(Integer lieferant_id) {
-        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        // returns 0 if there was an error, otherwise number of rows affected
+        // (>0)
         int result = 0;
         // check if there are still active articles with this lieferant
-        if (thereAreActiveArticlesWithLieferant(lieferant_id)){
+        if (thereAreActiveArticlesWithLieferant(lieferant_id)) {
             JOptionPane.showMessageDialog(this,
-                "Fehler: Es gibt noch aktive Artikel mit dem Lieferanten Nr. "+lieferant_id+".",
-                "Fehler", JOptionPane.ERROR_MESSAGE);
+                    "Fehler: Es gibt noch aktive Artikel mit dem Lieferanten Nr. " + lieferant_id + ".", "Fehler",
+                    JOptionPane.ERROR_MESSAGE);
             return result;
         }
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "UPDATE lieferant SET aktiv = FALSE WHERE "+
-                    "lieferant_id = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("UPDATE lieferant SET aktiv = FALSE WHERE " + "lieferant_id = ?");
             pstmtSetInteger(pstmt, 1, lieferant_id);
             result = pstmt.executeUpdate();
             pstmt.close();
@@ -1008,13 +983,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected int setLieferantActive(Integer lieferant_id) {
-        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        // returns 0 if there was an error, otherwise number of rows affected
+        // (>0)
         int result = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "UPDATE lieferant SET aktiv = TRUE WHERE "+
-                    "lieferant_id = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("UPDATE lieferant SET aktiv = TRUE WHERE " + "lieferant_id = ?");
             pstmtSetInteger(pstmt, 1, lieferant_id);
             result = pstmt.executeUpdate();
             pstmt.close();
@@ -1027,17 +1001,15 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
     protected int insertNewLieferant(String lieferantName, String lieferantKurzname) {
         // add row for new item (with updated fields)
-        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        // returns 0 if there was an error, otherwise number of rows affected
+        // (>0)
         int result = 0;
-        if ( isLieferantAlreadyKnown(lieferantName) ) return 0;
+        if (isLieferantAlreadyKnown(lieferantName))
+            return 0;
 
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "INSERT INTO lieferant SET "+
-                    "lieferant_name = ?, "+
-                    "lieferant_kurzname = ?, "+
-                    "aktiv = TRUE"
-                    );
+            PreparedStatement pstmt = this.conn.prepareStatement("INSERT INTO lieferant SET " + "lieferant_name = ?, "
+                    + "lieferant_kurzname = ?, " + "aktiv = TRUE");
             pstmt.setString(1, lieferantName);
             pstmt.setString(2, lieferantKurzname);
             result = pstmt.executeUpdate();
@@ -1052,10 +1024,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected boolean isProdGrAlreadyKnown(String produktgruppe) {
         boolean exists = false;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(*) > 0 FROM produktgruppe "+
-                    "WHERE produktgruppen_name = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("SELECT COUNT(*) > 0 FROM produktgruppe " + "WHERE produktgruppen_name = ?");
             pstmt.setString(1, produktgruppe);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -1072,10 +1042,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected boolean isProdGrInactive(String produktgruppe) {
         boolean inactive = false;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT aktiv FROM produktgruppe "+
-                    "WHERE produktgruppen_name = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("SELECT aktiv FROM produktgruppe " + "WHERE produktgruppen_name = ?");
             pstmt.setString(1, produktgruppe);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -1092,10 +1060,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected int howManyActiveArticlesWithProduktgruppe(Integer produktgruppen_id) {
         int nArticles = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT n_artikel FROM produktgruppe "+
-                    "WHERE produktgruppen_id = ? "
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("SELECT n_artikel FROM produktgruppe " + "WHERE produktgruppen_id = ? ");
             pstmtSetInteger(pstmt, 1, produktgruppen_id);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -1117,10 +1083,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         int nArticles = 0;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT COUNT(*) FROM artikel AS a "+
-                    "INNER JOIN produktgruppe USING (produktgruppen_id) "+
-                    "WHERE a.produktgruppen_id = ? AND a.aktiv = TRUE"
-                    );
+                    "SELECT COUNT(*) FROM artikel AS a " + "INNER JOIN produktgruppe USING (produktgruppen_id) "
+                            + "WHERE a.produktgruppen_id = ? AND a.aktiv = TRUE");
             pstmtSetInteger(pstmt, 1, produktgruppen_id);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -1136,12 +1100,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
     protected Vector<Integer> queryProdGrHierarchy(Integer produktgruppen_id) {
         Vector<Integer> ids = new Vector<Integer>();
-        ids.add(null); ids.add(null); ids.add(null);
+        ids.add(null);
+        ids.add(null);
+        ids.add(null);
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT toplevel_id, sub_id, subsub_id FROM produktgruppe "+
-                    "WHERE produktgruppen_id = ?"
-                    );
+                    "SELECT toplevel_id, sub_id, subsub_id FROM produktgruppe " + "WHERE produktgruppen_id = ?");
             pstmtSetInteger(pstmt, 1, produktgruppen_id);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -1160,22 +1124,23 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected Integer queryProdGrID(Integer topid, Integer subid, Integer subsubid) {
         Integer produktgruppen_id = null;
         try {
-            if (topid == null){
+            if (topid == null) {
                 return produktgruppen_id;
             }
             String subid_str = (subid == null) ? "IS NULL" : "= ?";
             String subsubid_str = (subsubid == null) ? "IS NULL" : "= ?";
-            System.out.println(topid+" "+subid+" "+subsubid);
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT produktgruppen_id FROM produktgruppe "+
-                    "WHERE toplevel_id = ? AND sub_id "+subid_str+" AND subsub_id "+subsubid_str
-                    );
-            int i=1;
-            pstmtSetInteger(pstmt, i, topid); i++;
+            System.out.println(topid + " " + subid + " " + subsubid);
+            PreparedStatement pstmt = this.conn.prepareStatement("SELECT produktgruppen_id FROM produktgruppe "
+                    + "WHERE toplevel_id = ? AND sub_id " + subid_str + " AND subsub_id " + subsubid_str);
+            int i = 1;
+            pstmtSetInteger(pstmt, i, topid);
+            i++;
             if (subid != null)
-                pstmtSetInteger(pstmt, i, subid); i++;
+                pstmtSetInteger(pstmt, i, subid);
+            i++;
             if (subsubid != null)
-                pstmtSetInteger(pstmt, i, subsubid); i++;
+                pstmtSetInteger(pstmt, i, subsubid);
+            i++;
             ResultSet rs = pstmt.executeQuery();
             rs.next();
             produktgruppen_id = rs.getInt(1);
@@ -1206,11 +1171,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                 filter += " AND produktgruppe.subsub_id = " + subsubid + " ";
 
             Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT COUNT(*) FROM artikel AS a "+
-                    "INNER JOIN produktgruppe USING (produktgruppen_id) " +
-                    "WHERE a.aktiv = TRUE AND " + filter
-                    );
+            ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM artikel AS a "
+                    + "INNER JOIN produktgruppe USING (produktgruppen_id) " + "WHERE a.aktiv = TRUE AND " + filter);
             rs.next();
             nArticles = rs.getInt(1);
             rs.close();
@@ -1223,13 +1185,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected int setNArtikelForProduktgruppe(int prodGrID, int nArticles) {
-        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        // returns 0 if there was an error, otherwise number of rows affected
+        // (>0)
         int result = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "UPDATE produktgruppe SET n_artikel = ? WHERE "+
-                    "produktgruppen_id = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("UPDATE produktgruppe SET n_artikel = ? WHERE " + "produktgruppen_id = ?");
             pstmtSetInteger(pstmt, 1, nArticles);
             pstmtSetInteger(pstmt, 2, prodGrID);
             result = pstmt.executeUpdate();
@@ -1242,13 +1203,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected int setNArtikelRekursivForProduktgruppe(int prodGrID, int nArticles) {
-        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        // returns 0 if there was an error, otherwise number of rows affected
+        // (>0)
         int result = 0;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "UPDATE produktgruppe SET n_artikel_rekursiv = ? WHERE "+
-                    "produktgruppen_id = ?"
-                    );
+                    "UPDATE produktgruppe SET n_artikel_rekursiv = ? WHERE " + "produktgruppen_id = ?");
             pstmtSetInteger(pstmt, 1, nArticles);
             pstmtSetInteger(pstmt, 2, prodGrID);
             result = pstmt.executeUpdate();
@@ -1261,30 +1221,29 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected void updateNArtikelInProduktgruppeFor(int produktgruppen_id) {
-        System.out.print("Upating produktgruppen_id "+produktgruppen_id+" to n_artikel = ");
+        System.out.print("Upating produktgruppen_id " + produktgruppen_id + " to n_artikel = ");
         int nArticles = queryActiveArticlesWithProduktgruppe(produktgruppen_id);
         System.out.println(nArticles);
         int result = 0;
         result = setNArtikelForProduktgruppe(produktgruppen_id, nArticles);
-        if (result == 0){
-            System.err.println("ERROR: Could not set `n_artikel` to "+nArticles+
-                    " for produktgruppen_id = "+produktgruppen_id);
-            JOptionPane.showMessageDialog(this,
-                    "Fehler: Produktgruppe mit ID "+produktgruppen_id+": `n_artikel` konnte nicht "+
-                    "auf "+nArticles+" gesetzt werden.",
-                    "Fehler", JOptionPane.ERROR_MESSAGE);
+        if (result == 0) {
+            System.err.println("ERROR: Could not set `n_artikel` to " + nArticles + " for produktgruppen_id = "
+                    + produktgruppen_id);
+            JOptionPane.showMessageDialog(this, "Fehler: Produktgruppe mit ID " + produktgruppen_id
+                    + ": `n_artikel` konnte nicht " + "auf " + nArticles + " gesetzt werden.", "Fehler",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
     protected void updateNArtikelInProduktgruppe() {
         /**
-         * For all rows in `produktgruppe` that have `n_artikel` = NULL,
-         * query for the number of active articles and set `n_artikel`.
+         * For all rows in `produktgruppe` that have `n_artikel` = NULL, query
+         * for the number of active articles and set `n_artikel`.
          */
         try {
             Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT produktgruppen_id FROM "+
-                    "produktgruppe WHERE n_artikel IS NULL");
+            ResultSet rs = stmt
+                    .executeQuery("SELECT produktgruppen_id FROM " + "produktgruppe WHERE n_artikel IS NULL");
             while (rs.next()) {
                 int prodGrID = rs.getInt(1);
                 updateNArtikelInProduktgruppeFor(prodGrID);
@@ -1298,18 +1257,19 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected void updateNArtikelRekursivInProduktgruppeFor(int produktgruppen_id) {
-        System.out.print("Upating produktgruppen_id "+produktgruppen_id+" to n_artikel_rekursiv = ");
+        System.out.print("Upating produktgruppen_id " + produktgruppen_id + " to n_artikel_rekursiv = ");
         int nArticles = queryRecursiveActiveArticlesWithProduktgruppe(produktgruppen_id);
         System.out.println(nArticles);
         int result = 0;
         result = setNArtikelRekursivForProduktgruppe(produktgruppen_id, nArticles);
-        if (result == 0){
-            System.err.println("ERROR: Could not set `n_artikel_rekursiv` to "+nArticles+
-                    " for produktgruppen_id = "+produktgruppen_id);
-            JOptionPane.showMessageDialog(this,
-                    "Fehler: Produktgruppe mit ID "+produktgruppen_id+": `n_artikel_rekursiv` konnte nicht "+
-                    "auf "+nArticles+" gesetzt werden.",
-                    "Fehler", JOptionPane.ERROR_MESSAGE);
+        if (result == 0) {
+            System.err.println("ERROR: Could not set `n_artikel_rekursiv` to " + nArticles + " for produktgruppen_id = "
+                    + produktgruppen_id);
+            JOptionPane
+                    .showMessageDialog(
+                            this, "Fehler: Produktgruppe mit ID " + produktgruppen_id
+                                    + ": `n_artikel_rekursiv` konnte nicht " + "auf " + nArticles + " gesetzt werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -1319,27 +1279,28 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
         Vector<Integer> ids = queryProdGrHierarchy(produktgruppen_id);
         Integer topid = ids.get(0), subid = ids.get(1), subsubid = ids.get(2);
-        if (topid != null && subid != null && subsubid != null){
-            prodGrIDs.add( queryProdGrID(topid, subid, null) );
+        if (topid != null && subid != null && subsubid != null) {
+            prodGrIDs.add(queryProdGrID(topid, subid, null));
         }
-        if (topid != null && subid != null){
-            prodGrIDs.add( queryProdGrID(topid, null, null) );
+        if (topid != null && subid != null) {
+            prodGrIDs.add(queryProdGrID(topid, null, null));
         }
 
-        for (Integer id : prodGrIDs){
+        for (Integer id : prodGrIDs) {
             updateNArtikelRekursivInProduktgruppeFor(id);
         }
     }
 
     protected void updateNArtikelRekursivInProduktgruppe() {
         /**
-         * For all rows in `produktgruppe` that have `n_artikel_rekursiv` = NULL,
-         * query for the recursive number of active articles and set `n_artikel_rekursiv`.
+         * For all rows in `produktgruppe` that have `n_artikel_rekursiv` =
+         * NULL, query for the recursive number of active articles and set
+         * `n_artikel_rekursiv`.
          */
         try {
             Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT produktgruppen_id FROM "+
-                    "produktgruppe WHERE n_artikel_rekursiv IS NULL");
+            ResultSet rs = stmt
+                    .executeQuery("SELECT produktgruppen_id FROM " + "produktgruppe WHERE n_artikel_rekursiv IS NULL");
             while (rs.next()) {
                 int prodGrID = rs.getInt(1);
                 updateNArtikelRekursivInProduktgruppeFor(prodGrID);
@@ -1353,22 +1314,21 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected int updateProdGr(Integer produktgruppen_id, String produktgruppen_name, Boolean aktiv) {
-        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        // returns 0 if there was an error, otherwise number of rows affected
+        // (>0)
         int result = 0;
-        if (aktiv == false){
+        if (aktiv == false) {
             // check if there are still active articles with this lieferant
-            if (thereAreActiveArticlesWithProduktgruppe(produktgruppen_id)){
+            if (thereAreActiveArticlesWithProduktgruppe(produktgruppen_id)) {
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: Es gibt noch aktive Artikel mit der Produktgruppe "+produktgruppen_name+".",
+                        "Fehler: Es gibt noch aktive Artikel mit der Produktgruppe " + produktgruppen_name + ".",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
                 return result;
             }
         }
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "UPDATE produktgruppe SET produktgruppen_name = ?, aktiv = ? WHERE "+
-                    "produktgruppen_id = ?"
-                    );
+                    "UPDATE produktgruppe SET produktgruppen_name = ?, aktiv = ? WHERE " + "produktgruppen_id = ?");
             pstmt.setString(1, produktgruppen_name);
             pstmt.setBoolean(2, aktiv);
             pstmtSetInteger(pstmt, 3, produktgruppen_id);
@@ -1381,25 +1341,25 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected int updateProdGr(Integer produktgruppen_id, Integer topid, Integer subid, Integer
-            subsubid, String newName, Integer mwst_id, Integer pfand_id, Boolean aktiv) {
-        // returns 0 if there was an error, otherwise number of rows affected (>0)
+    protected int updateProdGr(Integer produktgruppen_id, Integer topid, Integer subid, Integer subsubid,
+            String newName, Integer mwst_id, Integer pfand_id, Boolean aktiv) {
+        // returns 0 if there was an error, otherwise number of rows affected
+        // (>0)
         int result = 0;
-        if (aktiv == false){
+        if (aktiv == false) {
             // check if there are still active articles with this lieferant
-            if (thereAreActiveArticlesWithProduktgruppe(produktgruppen_id)){
+            if (thereAreActiveArticlesWithProduktgruppe(produktgruppen_id)) {
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: Es gibt noch aktive Artikel mit der Produktgruppe "+newName+".",
-                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                        "Fehler: Es gibt noch aktive Artikel mit der Produktgruppe " + newName + ".", "Fehler",
+                        JOptionPane.ERROR_MESSAGE);
                 return result;
             }
         }
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "UPDATE produktgruppe SET toplevel_id = ?, sub_id = ?, subsub_id = ?, "+
-                    "produktgruppen_name = ?, mwst_id = ?, pfand_id = ?, aktiv = ? WHERE "+
-                    "produktgruppen_id = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("UPDATE produktgruppe SET toplevel_id = ?, sub_id = ?, subsub_id = ?, "
+                            + "produktgruppen_name = ?, mwst_id = ?, pfand_id = ?, aktiv = ? WHERE "
+                            + "produktgruppen_id = ?");
             pstmtSetInteger(pstmt, 1, topid);
             pstmtSetInteger(pstmt, 2, subid);
             pstmtSetInteger(pstmt, 3, subsubid);
@@ -1418,20 +1378,19 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected int setProdGrInactive(Integer produktgruppen_id) {
-        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        // returns 0 if there was an error, otherwise number of rows affected
+        // (>0)
         int result = 0;
         // check if there are still active articles with this lieferant
-        if (thereAreActiveArticlesWithProduktgruppe(produktgruppen_id)){
+        if (thereAreActiveArticlesWithProduktgruppe(produktgruppen_id)) {
             JOptionPane.showMessageDialog(this,
-                "Fehler: Es gibt noch aktive Artikel mit der Produktgruppe Nr. "+produktgruppen_id+".",
-                "Fehler", JOptionPane.ERROR_MESSAGE);
+                    "Fehler: Es gibt noch aktive Artikel mit der Produktgruppe Nr. " + produktgruppen_id + ".",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
             return result;
         }
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "UPDATE produktgruppe SET aktiv = FALSE WHERE "+
-                    "produktgruppen_id = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("UPDATE produktgruppe SET aktiv = FALSE WHERE " + "produktgruppen_id = ?");
             pstmtSetInteger(pstmt, 1, produktgruppen_id);
             result = pstmt.executeUpdate();
             pstmt.close();
@@ -1443,13 +1402,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     protected int setProdGrActive(Integer produktgruppen_id) {
-        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        // returns 0 if there was an error, otherwise number of rows affected
+        // (>0)
         int result = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "UPDATE produktgruppe SET aktiv = TRUE WHERE "+
-                    "produktgruppen_id = ?"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("UPDATE produktgruppe SET aktiv = TRUE WHERE " + "produktgruppen_id = ?");
             pstmtSetInteger(pstmt, 1, produktgruppen_id);
             result = pstmt.executeUpdate();
             pstmt.close();
@@ -1460,20 +1418,19 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
-    protected int insertNewProdGr(Integer topid, Integer subid, Integer
-            subsubid, String newName, Integer mwst_id, Integer pfand_id) {
+    protected int insertNewProdGr(Integer topid, Integer subid, Integer subsubid, String newName, Integer mwst_id,
+            Integer pfand_id) {
         // add row for new item (with updated fields)
-        // returns 0 if there was an error, otherwise number of rows affected (>0)
+        // returns 0 if there was an error, otherwise number of rows affected
+        // (>0)
         int result = 0;
-        if ( isProdGrAlreadyKnown(newName) ) return 0;
+        if (isProdGrAlreadyKnown(newName))
+            return 0;
 
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "INSERT INTO produktgruppe SET "+
-                    "toplevel_id = ?, sub_id = ?, subsub_id = ?, "+
-                    "produktgruppen_name = ?, mwst_id = ?, pfand_id = ?, "+
-                    "aktiv = TRUE"
-                    );
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("INSERT INTO produktgruppe SET " + "toplevel_id = ?, sub_id = ?, subsub_id = ?, "
+                            + "produktgruppen_name = ?, mwst_id = ?, pfand_id = ?, " + "aktiv = TRUE");
             pstmtSetInteger(pstmt, 1, topid);
             pstmtSetInteger(pstmt, 2, subid);
             pstmtSetInteger(pstmt, 3, subsubid);
@@ -1495,26 +1452,27 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
     protected void setCalButtFromSpinner(SpinnerModel m, JCalendarButton b) {
         if (m instanceof SpinnerDateModel) {
-            b.setTargetDate(((SpinnerDateModel)m).getDate());
+            b.setTargetDate(((SpinnerDateModel) m).getDate());
         }
     }
+
     protected void setSpinnerFromCalButt(SpinnerModel m, JCalendarButton b, Date earliestDate, Date latestDate) {
         Date newDate = b.getTargetDate();
-        if ( earliestDate != null ){
-            if ( newDate.before(earliestDate) ){
+        if (earliestDate != null) {
+            if (newDate.before(earliestDate)) {
                 newDate = earliestDate;
                 b.setTargetDate(newDate);
             }
         }
-        if ( latestDate != null ){
-            if ( newDate.after(latestDate) ){
+        if (latestDate != null) {
+            if (newDate.after(latestDate)) {
                 newDate = latestDate;
                 b.setTargetDate(newDate);
             }
         }
         if (m instanceof SpinnerDateModel) {
-            if (newDate != null){
-                ((SpinnerDateModel)m).setValue(newDate);
+            if (newDate != null) {
+                ((SpinnerDateModel) m).setValue(newDate);
             }
         }
     }
