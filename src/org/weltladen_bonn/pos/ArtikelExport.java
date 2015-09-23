@@ -45,21 +45,20 @@ public class ArtikelExport extends WindowContent {
 
     // Methoden:
     public ArtikelExport(Connection conn, MainWindowGrundlage mw, Artikelliste pw, HashMap<String, Integer> idxMap) {
-	super(conn, mw);
+        super(conn, mw);
         this.artikelListe = pw;
         this.indexMap = idxMap;
 
         odsChooser = new FileExistsAwareFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                "ODS Spreadsheet-Dokumente", "ods");
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("ODS Spreadsheet-Dokumente", "ods");
         odsChooser.setFileFilter(filter);
-        odsChooser.setSelectedFile(new File("vorlagen"+bc.fileSep+"Artikelliste.ods"));
+        odsChooser.setSelectedFile(new File("vorlagen" + bc.fileSep + "Artikelliste.ods"));
 
         int returnVal = odsChooser.showSaveDialog(pw);
-        if (returnVal == JFileChooser.APPROVE_OPTION){
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
             final File file = odsChooser.getSelectedFile();
 
-            //writeCSVToFile(file);
+            // writeCSVToFile(file);
             writeToODSFile(file);
 
             System.out.println("Written to " + file.getName());
@@ -71,35 +70,35 @@ public class ArtikelExport extends WindowContent {
     void writeToODSFile(File file) {
         // table header
         final Vector<String> columnLabels = new Vector<String>();
-            columnLabels.add("Produktgruppe");
-            columnLabels.add("Lieferant");
-            columnLabels.add("Artikelnummer");
-            columnLabels.add("Bezeichnung | Einheit");
-            columnLabels.add("Kurzname");
-            columnLabels.add("Menge (kg/l/Stk.)");
-            columnLabels.add("Einheit");
-            columnLabels.add("Sortiment");
-            columnLabels.add("Sofort lieferbar");
-            columnLabels.add("Beliebtheit");
-            columnLabels.add("Barcode");
-            columnLabels.add("VPE");
-            columnLabels.add("Setgröße");
-            columnLabels.add("VK-Preis");
-            columnLabels.add("Empf. VK-Preis");
-            columnLabels.add("EK-Rabatt");
-            columnLabels.add("EK-Preis");
-            columnLabels.add("Variabel");
-            columnLabels.add("Herkunftsland");
-            columnLabels.add("Bestand");
+        columnLabels.add("Produktgruppe");
+        columnLabels.add("Lieferant");
+        columnLabels.add("Artikelnummer");
+        columnLabels.add("Bezeichnung | Einheit");
+        columnLabels.add("Kurzname");
+        columnLabels.add("Menge (kg/l/Stk.)");
+        columnLabels.add("Einheit");
+        columnLabels.add("Sortiment");
+        columnLabels.add("Sofort lieferbar");
+        columnLabels.add("Beliebtheit");
+        columnLabels.add("Barcode");
+        columnLabels.add("VPE");
+        columnLabels.add("Setgröße");
+        columnLabels.add("VK-Preis");
+        columnLabels.add("Empf. VK-Preis");
+        columnLabels.add("EK-Rabatt");
+        columnLabels.add("EK-Preis");
+        columnLabels.add("Variabel");
+        columnLabels.add("Herkunftsland");
+        columnLabels.add("Bestand");
         // table rows
-        final Vector< Vector<Object> > data = new Vector< Vector<Object> >();
-        for (int i=0; i < artikelListe.articles.size(); i++){
-            if (artikelListe.articles.get(i).getAktiv() == false){
+        final Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+        for (int i = 0; i < artikelListe.articles.size(); i++) {
+            if (artikelListe.articles.get(i).getAktiv() == false) {
                 // skip deactivated articles
                 continue;
             }
-            String produktgruppe = getProduktgruppe( artikelListe.articles.get(i).getProdGrID() );
-            String lieferant = getLieferant( artikelListe.articles.get(i).getLiefID() );
+            String produktgruppe = getProduktgruppe(artikelListe.articles.get(i).getProdGrID());
+            String lieferant = getLieferant(artikelListe.articles.get(i).getLiefID());
             String nummer = artikelListe.articles.get(i).getNummer();
             String name = artikelListe.articles.get(i).getName();
             String kurzname = artikelListe.articles.get(i).getKurzname();
@@ -107,7 +106,16 @@ public class ArtikelExport extends WindowContent {
             String einheit = artikelListe.articles.get(i).getEinheit();
             String sortimentStr = artikelListe.articles.get(i).getSortiment() ? "Ja" : "Nein";
             String lieferbarStr = artikelListe.articles.get(i).getLieferbar() ? "Ja" : "Nein";
-            String beliebtheit = beliebtNamen.get(artikelListe.beliebtIndices.get(i));
+            Integer beliebtWert = artikelListe.articles.get(i).getBeliebt();
+            Integer beliebtIndex = 0;
+            if (beliebtWert != null) {
+                try {
+                    beliebtIndex = beliebtWerte.indexOf(beliebtWert);
+                } catch (ArrayIndexOutOfBoundsException ex) {
+                    System.out.println("Unknown beliebtWert: " + beliebtWert);
+                }
+            }
+            String beliebtheit = beliebtNamen.get(beliebtIndex);
             String barcode = artikelListe.articles.get(i).getBarcode();
             Integer vpe = artikelListe.articles.get(i).getVPE();
             Integer setgroesse = artikelListe.articles.get(i).getSetgroesse();
@@ -116,28 +124,53 @@ public class ArtikelExport extends WindowContent {
             BigDecimal empf_vkp = null;
             BigDecimal ekrabatt = null;
             BigDecimal ekp = null;
-            if (!var){
-                try { vkp = new BigDecimal(artikelListe.articles.get(i).getVKP()); }
-                catch (NumberFormatException ex) { vkp = null; }
-                try { empf_vkp = new BigDecimal(artikelListe.articles.get(i).getEmpfVKP()); }
-                catch (NumberFormatException ex) { empf_vkp = null; }
-                try { ekrabatt = new BigDecimal(artikelListe.articles.get(i).getEKRabatt()); }
-                catch (NumberFormatException ex) { ekrabatt = null; }
-                try { ekp = new BigDecimal(artikelListe.articles.get(i).getEKP()); }
-                catch (NumberFormatException ex) { ekp = null; }
+            if (!var) {
+                try {
+                    vkp = new BigDecimal(artikelListe.articles.get(i).getVKP());
+                } catch (NumberFormatException|NullPointerException ex) {
+                    vkp = null;
+                }
+                try {
+                    empf_vkp = new BigDecimal(artikelListe.articles.get(i).getEmpfVKP());
+                } catch (NumberFormatException|NullPointerException ex) {
+                    empf_vkp = null;
+                }
+                try {
+                    ekrabatt = new BigDecimal(artikelListe.articles.get(i).getEKRabatt());
+                } catch (NumberFormatException|NullPointerException ex) {
+                    ekrabatt = null;
+                }
+                try {
+                    ekp = new BigDecimal(artikelListe.articles.get(i).getEKP());
+                } catch (NumberFormatException|NullPointerException ex) {
+                    ekp = null;
+                }
             }
             String varStr = var ? "Ja" : "Nein";
             String herkunft = artikelListe.articles.get(i).getHerkunft();
             Integer bestand = artikelListe.articles.get(i).getBestand();
 
             Vector<Object> row = new Vector<Object>();
-                row.add(produktgruppe); row.add(lieferant); row.add(nummer);
-                row.add(name); row.add(kurzname); row.add(menge);
-                row.add(einheit); row.add(sortimentStr); row.add(lieferbarStr);
-                row.add(beliebtheit); row.add(barcode); row.add(vpe);
-                row.add(setgroesse); row.add(vkp); row.add(empf_vkp);
-                row.add(ekrabatt); row.add(ekp); row.add(varStr);
-                row.add(herkunft); row.add(bestand);
+            row.add(produktgruppe);
+            row.add(lieferant);
+            row.add(nummer);
+            row.add(name);
+            row.add(kurzname);
+            row.add(menge);
+            row.add(einheit);
+            row.add(sortimentStr);
+            row.add(lieferbarStr);
+            row.add(beliebtheit);
+            row.add(barcode);
+            row.add(vpe);
+            row.add(setgroesse);
+            row.add(vkp);
+            row.add(empf_vkp);
+            row.add(ekrabatt);
+            row.add(ekp);
+            row.add(varStr);
+            row.add(herkunft);
+            row.add(bestand);
             data.add(row);
         }
 
@@ -157,10 +190,11 @@ public class ArtikelExport extends WindowContent {
     }
 
     /**
-     *    * Each non abstract class that implements the ActionListener
-     *      must have this method.
+     * * Each non abstract class that implements the ActionListener must have
+     * this method.
      *
-     *    @param e the action event.
+     * @param e
+     *            the action event.
      **/
     public void actionPerformed(ActionEvent e) {
     }
