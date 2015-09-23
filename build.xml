@@ -35,14 +35,12 @@
 
     <target name="compile" depends="convert" description="compile the source">
         <javac srcdir="${src}" destdir="${build}" includeantruntime="false"
-            classpathref="classpath"
-            executable="${javac.executable}" fork="${fork}" compiler="${compiler}"/>
+            classpathref="classpath"/>
     </target>
 
     <target name="debug-compile" depends="convert" description="compile the source in debugging mode">
         <javac srcdir="${src}" destdir="${build}" debug="on" debuglevel="lines,vars,source"
-            includeantruntime="false" classpathref="classpath"
-            executable="${javac.executable}" fork="${fork}" compiler="${compiler}">
+            includeantruntime="false" classpathref="classpath">
             <compilerarg value="-Xlint:unchecked"/>
         </javac>
     </target>
