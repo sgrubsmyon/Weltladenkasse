@@ -31,18 +31,31 @@ for i in range(len(fhz)):
         print('FHZ:', fhz_preis, 'WLB:', wlb_preis,
                 '('+str(fhz['Bezeichnung | Einheit'][i]).replace('\n',' ')+')',
                 '('+str(wlb['Bezeichnung | Einheit'][i_wlb]).replace('\n',' ')+')')
-print(count)
-#for i in range(len(fhz)):
-#    fhz_preis = fhz['Empf. VK-Preis'][i]
-#    i_wlb = (wlb.Lieferant == fhz.Lieferant[i]) & (wlb_nummer_lower == str(fhz.Artikelnummer[i]).lower())
-#    wlb_preis = wlb['VK-Preis'][i_wlb].values
-#    wlb_preis = wlb_preis[0] if len(wlb_preis) > 0 else np.nan
-#    if ( np.isnan(fhz_preis) or np.isnan(wlb_preis) or abs(fhz_preis - wlb_preis) > 0.01):
-#        print('FHZ:', fhz.iloc[i], 'WLB:', wlb.iloc[i_wlb])
-#for i in range(len(fhz)):
-#    fhz_preis = fhz['Empf. VK-Preis'][i]; i_wlb = (wlb.Lieferant == fhz.Lieferant[i]) & (wlb_nummer_lower == str(fhz.Artikelnummer[i]).lower())
-#    wlb_preis = wlb['VK-Preis'][i_wlb].values
-#    wlb_preis = wlb_preis[0] if len(wlb_preis) > 0 else np.nan
+print(count, "Differenzen gefunden.")
+
+# adopt the rec. sale price and the "Lieferbarkeit" directly and completely
+wlb_neu = wlb.copy()
+for i in range(len(fhz)):
+    fhz_preis = fhz['Empf. VK-Preis'][i]
+    i_wlb = (wlb_neu.Lieferant == fhz.Lieferant[i]) & (wlb_nummer_lower == str(fhz.Artikelnummer[i]).lower())
+    wlb_neu['Empf. VK-Preis'][i_wlb] = fhz_preis
+    wlb_neu['Sofort lieferbar'][i_wlb] = fhz['Sofort lieferbar'][i]
+
+count = 0
+for i in range(len(fhz)):
+    fhz_preis = fhz['Empf. VK-Preis'][i]
+    i_wlb = (wlb_neu.Lieferant == fhz.Lieferant[i]) & (wlb_nummer_lower == str(fhz.Artikelnummer[i]).lower())
+#    wlb_preis = wlb_neu['VK-Preis'][ (wlb_neu.Lieferant == fhz.Lieferant[i]) & (wlb_nummer_lower == str(fhz.Artikelnummer[i]).lower()) ].values
+    wlb_preis = wlb_neu['Empf. VK-Preis'][i_wlb].values
+    wlb_preis = wlb_preis[0] if len(wlb_preis) > 0 else np.nan
+    if ( np.isnan(fhz_preis) or np.isnan(wlb_preis) or abs(fhz_preis - wlb_preis) > 0.01):
+        count += 1
+        print('FHZ:', fhz_preis, 'WLB:', wlb_preis,
+                '('+str(fhz['Bezeichnung | Einheit'][i]).replace('\n',' ')+')',
+                '('+str(wlb_neu['Bezeichnung | Einheit'][i_wlb]).replace('\n',' ')+')')
+print(count, "Differenzen gefunden.")
+
+wlb_neu.to_csv('test.csv', sep=';', index=False)
 #    if ( np.isnan(fhz_preis) or np.isnan(wlb_preis) or abs(fhz_preis - wlb_preis) > 0.01):
 #        print('FHZ:', fhz.iloc[i])
 #fhz['Bezeichnung | Einheit'][5]
