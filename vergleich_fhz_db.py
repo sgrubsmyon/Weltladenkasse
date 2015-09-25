@@ -10,11 +10,11 @@ wlb = pd.read_csv('Artikelliste_DB_Dump_2015_KW39.csv', sep=';')
 # homogenize data
 print(set(fhz['Lieferant']))
 print(set(wlb['Lieferant']))
-fhz.Lieferant[ fhz.Lieferant == 'ftc' ] = 'Fairtrade Center Breisgau'
-fhz.Lieferant[ fhz.Lieferant == 'Café\nLibertad' ] = 'Café Libertad'
-fhz.Lieferant[ fhz.Lieferant == 'ethiquable' ] = 'Ethiquable'
-fhz.Lieferant[ fhz.Lieferant == 'Libera\nTerra' ] = 'Libera Terra'
-fhz.Lieferant[ fhz.Lieferant.isnull() ] = 'unbekannt'
+fhz.loc[ fhz.Lieferant == 'ftc' ] = 'Fairtrade Center Breisgau'
+fhz.loc[ fhz.Lieferant == 'Café\nLibertad' ] = 'Café Libertad'
+fhz.loc[ fhz.Lieferant == 'ethiquable' ] = 'Ethiquable'
+fhz.loc[ fhz.Lieferant == 'Libera\nTerra' ] = 'Libera Terra'
+fhz.loc[ fhz.Lieferant.isnull() ] = 'unbekannt'
 print(set(fhz['Lieferant']))
 print(set(wlb['Lieferant']))
 
@@ -26,6 +26,8 @@ for i in range(len(fhz)):
 #    wlb_preis = wlb['VK-Preis'][ (wlb.Lieferant == fhz.Lieferant[i]) & (wlb_nummer_lower == str(fhz.Artikelnummer[i]).lower()) ].values
     wlb_preis = wlb['VK-Preis'][i_wlb].values
     wlb_preis = wlb_preis[0] if len(wlb_preis) > 0 else np.nan
+    print("types", type(fhz_preis), type(wlb_preis))
+    print(fhz_preis, wlb_preis)
     if ( np.isnan(fhz_preis) or np.isnan(wlb_preis) or abs(fhz_preis - wlb_preis) > 0.01):
         count += 1
         print('FHZ:', fhz_preis, 'WLB:', wlb_preis,
