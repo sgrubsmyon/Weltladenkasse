@@ -20,6 +20,11 @@ fhz.Lieferant[ fhz.Lieferant.isnull() ] = 'unbekannt'
 print(set(fhz['Lieferant']))
 print(set(wlb['Lieferant']))
 
+# TODO
+# * Remove all newlines ('\n') from all fields
+# * Round up all prices that end with '9' by adding 0.01
+
+'''
 #wlb_nummer_lower = np.array(list(map(lambda s: str(s).lower(), wlb.Artikelnummer.values)))
 count = 0
 for i in range(len(fhz)):
@@ -34,6 +39,7 @@ for i in range(len(fhz)):
                 '('+str(fhz['Bezeichnung | Einheit'][i]).replace('\n',' ')+')',
                 '('+str(wlb['Bezeichnung | Einheit'][i_wlb]).replace('\n',' ')+')')
 print(count, "Differenzen gefunden.\n")
+'''
 
 # Adopt values from FHZ (for existing articles):
 wlb_neu = wlb.copy()
@@ -93,27 +99,32 @@ for i in range(len(fhz)):
                 '('+str(fhz['Bezeichnung | Einheit'][i]).replace('\n',' ')+')',
                 '('+str(wlb_neu['Bezeichnung | Einheit'][i_wlb]).replace('\n',' ')+')')
 print(count, "Differenzen gefunden.")
-
 wlb_neu.to_csv('test.csv', sep=';', index=False)
 #    if ( np.isnan(fhz_preis) or np.isnan(wlb_preis) or abs(fhz_preis - wlb_preis) > 0.011):
 #        print('FHZ:', fhz.iloc[i])
 #fhz['Bezeichnung | Einheit'][5]
 #fhz.iloc[5]
 
-# Add new, so far unknown articles from FHZ:
+# Add new, so far unknown articles from FHZ
+# Get empty df:
 wlb_neue_artikel = pd.DataFrame()
+# Just add column definitions:
+wlb_neue_artikel = wlb_neue_artikel.add(wlb.iloc[0])
 for i in range(len(fhz)):
     fhz_preis = float(fhz['Empf. VK-Preis'][i])
-    #i_wlb = (wlb.Lieferant == fhz.Lieferant[i]) & (wlb_nummer_lower == str(fhz.Artikelnummer[i]).lower())
     i_wlb = (wlb.Lieferant == fhz.Lieferant[i]) & (wlb.Artikelnummer == fhz.Artikelnummer[i])
     wlb_preis = wlb['VK-Preis'][i_wlb].values
     if (len(wlb_preis) == 0):
-        wlb_neue_artikel = wlb_neue_artikel.add(fhz.iloc[i])
+        # From:
+        # http://stackoverflow.com/questions/30989531/how-do-i-copy-a-row-from-one-pandas-dataframe-to-another-pandas-dataframe
+        wlb_neue_artikel.loc[fhz.index[i]] = fhz.iloc[i]
         fhz_preis_str = str(fhz_preis)
-        cent_index = fhz_preis_str.index('.') + 2
-        if ( (len(fhz_preis_str) > cent_index) and
-                (fhz_preis_str[cent_index] == '9') ):
-            # round up, i.e. add one cent:
-            fhz_preis += 0.01
+        if ('.' in fhz_preis_str):
+            cent_index = fhz_preis_str.index('.') + 2
+            if ( (len(fhz_preis_str) > cent_index) and
+                    (fhz_preis_str[cent_index] == '9') ):
+                # round up, i.e. add one cent:
+                fhz_preis += 0.01
         wlb_neue_artikel['VK-Preis'][-1] = str(fhz_preis)
+wlb_neue_artikel.to_csv('test_neue_artikel.csv', sep=';', index=False)
 
