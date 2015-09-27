@@ -23,6 +23,9 @@ print(set(wlb['Lieferant']))
 # TODO
 # * Remove all newlines ('\n') from all fields
 # * Round up all prices that end with '9' by adding 0.01
+# * Show list of articles missing in FHZ (so not orderable!), in this case,
+#   input CSV list must contain only Lebensmittel and Getränke
+# * Make function doing the '9' ending check and rounding up
 
 '''
 #wlb_nummer_lower = np.array(list(map(lambda s: str(s).lower(), wlb.Artikelnummer.values)))
