@@ -6,19 +6,35 @@ import pandas as pd
 
 # load data
 fhz = pd.read_csv('Artikelliste_Bestellvorlage_Lebensmittelpreisliste_1.2-2015.csv',
-        sep=';', dtype=str)
-wlb = pd.read_csv('Artikelliste_DB_Dump_2015_KW39.csv', sep=';', dtype=str)
+        sep=';', dtype=str, index_col=(1,2))
+wlb = pd.read_csv('Artikelliste_DB_Dump_2015_KW39.csv', sep=';', dtype=str,
+        index_col=(1,2))
 
 # homogenize data
-print(set(fhz['Lieferant']))
-print(set(wlb['Lieferant']))
-fhz.Lieferant[ fhz.Lieferant == 'ftc' ] = 'Fairtrade Center Breisgau'
-fhz.Lieferant[ fhz.Lieferant == 'Café\nLibertad' ] = 'Café Libertad'
-fhz.Lieferant[ fhz.Lieferant == 'ethiquable' ] = 'Ethiquable'
-fhz.Lieferant[ fhz.Lieferant == 'Libera\nTerra' ] = 'Libera Terra'
-fhz.Lieferant[ fhz.Lieferant.isnull() ] = 'unbekannt'
-print(set(fhz['Lieferant']))
-print(set(wlb['Lieferant']))
+# print Lieferanten:
+print(set(map(lambda i: i[0], fhz.index)))
+print(set(map(lambda i: i[0], wlb.index)))
+fhz.replace(to_replace='ftc', value='Fairtrade Center Breisgau', inplace=True)
+fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Fairtrade Center Breisgau', i[1])
+    if i[0] == 'ftc' else i, fhz.index.tolist())), names=fhz.index.names)
+fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Café Libertad', i[1])
+    if i[0] == 'Café\nLibertad' else i, fhz.index.tolist())), names=fhz.index.names)
+fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Ethiquable', i[1])
+    if i[0] == 'ethiquable' else i, fhz.index.tolist())), names=fhz.index.names)
+fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Libera Terra', i[1])
+    if i[0] == 'Libera\nTerra' else i, fhz.index.tolist())), names=fhz.index.names)
+fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('unbekannt', i[1])
+    if type(i[0]) == float and np.isnan(i[0]) else i, fhz.index.tolist())), names=fhz.index.names)
+#fhz.Lieferant[ fhz.Lieferant == 'ftc' ] = 'Fairtrade Center Breisgau'
+#fhz.Lieferant[ fhz.Lieferant == 'Café\nLibertad' ] = 'Café Libertad'
+#fhz.Lieferant[ fhz.Lieferant == 'ethiquable' ] = 'Ethiquable'
+#fhz.Lieferant[ fhz.Lieferant == 'Libera\nTerra' ] = 'Libera Terra'
+#fhz.Lieferant[ fhz.Lieferant.isnull() ] = 'unbekannt'
+print(set(map(lambda i: i[0], fhz.index)))
+print(set(map(lambda i: i[0], wlb.index)))
+
+#for column in fhz.columns:
+#    fhz[column]
 
 # TODO
 # * Remove all newlines ('\n') from all fields
