@@ -3,18 +3,50 @@
 import sys
 import numpy as np
 import pandas as pd
+from decimal import Decimal
+
+def returnRoundedPrice(preis):
+    '''
+    `preis`: Price as Decimal
+    '''
+    preis_str = str(preis)
+    if ('.' in preis_str):
+        cent_index = preis_str.index('.') + 2
+        if ( (len(preis_str) > cent_index) and
+                (preis_str[cent_index] == '9') ):
+            # round up, i.e. add one cent:
+            preis += Decimal('0.01')
+    return preis
+
+
+def writeOutAsCSV(df, filename):
+    print(df.columns)
+    out = df.reset_index()
+    c = out.columns.tolist()
+    # change column order: first Produktgruppe, then index (Lieferant,
+    # Artikelnummer)
+    c = c[2:3] + c[0:2] + c[3:]
+    out = out.reindex_axis(c, axis=1)
+    print(out.columns)
+    out.to_csv(filename, sep=';', index=False)
+
 
 # load data
 fhz = pd.read_csv('Artikelliste_Bestellvorlage_Lebensmittelpreisliste_1.2-2015.csv',
         sep=';', dtype=str, index_col=(1,2))
-wlb = pd.read_csv('Artikelliste_DB_Dump_2015_KW39.csv', sep=';', dtype=str,
+#   input CSV list must contain only Lebensmittel and Getränke (LM) and not
+#   Kunsthandwerk and other (KHW), if that's the case also for the FHZ CSV list
+wlb = pd.read_csv('Artikelliste_DB_Dump_2015_KW39_LM.csv', sep=';', dtype=str,
         index_col=(1,2))
+
+# Remove all newlines ('\n') from all fields
+fhz.replace(to_replace='\n', value=', ', inplace=True, regex=True)
+wlb.replace(to_replace='\n', value=', ', inplace=True, regex=True)
 
 # homogenize data
 # print Lieferanten:
-print(set(map(lambda i: i[0], fhz.index)))
-print(set(map(lambda i: i[0], wlb.index)))
-fhz.replace(to_replace='ftc', value='Fairtrade Center Breisgau', inplace=True)
+print("WLB:", set(map(lambda i: i[0], wlb.index)))
+print("FHZ:", set(map(lambda i: i[0], fhz.index)))
 fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Fairtrade Center Breisgau', i[1])
     if i[0] == 'ftc' else i, fhz.index.tolist())), names=fhz.index.names)
 fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Café Libertad', i[1])
@@ -25,23 +57,7 @@ fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Libera Terra', i[1])
     if i[0] == 'Libera\nTerra' else i, fhz.index.tolist())), names=fhz.index.names)
 fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('unbekannt', i[1])
     if type(i[0]) == float and np.isnan(i[0]) else i, fhz.index.tolist())), names=fhz.index.names)
-#fhz.Lieferant[ fhz.Lieferant == 'ftc' ] = 'Fairtrade Center Breisgau'
-#fhz.Lieferant[ fhz.Lieferant == 'Café\nLibertad' ] = 'Café Libertad'
-#fhz.Lieferant[ fhz.Lieferant == 'ethiquable' ] = 'Ethiquable'
-#fhz.Lieferant[ fhz.Lieferant == 'Libera\nTerra' ] = 'Libera Terra'
-#fhz.Lieferant[ fhz.Lieferant.isnull() ] = 'unbekannt'
-print(set(map(lambda i: i[0], fhz.index)))
-print(set(map(lambda i: i[0], wlb.index)))
-
-#for column in fhz.columns:
-#    fhz[column]
-
-# TODO
-# * Remove all newlines ('\n') from all fields
-# * Round up all prices that end with '9' by adding 0.01
-# * Show list of articles missing in FHZ (so not orderable!), in this case,
-#   input CSV list must contain only Lebensmittel and Getränke
-# * Make function doing the '9' ending check and rounding up
+print("FHZ neu:", set(map(lambda i: i[0], fhz.index)))
 
 '''
 #wlb_nummer_lower = np.array(list(map(lambda s: str(s).lower(), wlb.Artikelnummer.values)))
@@ -61,89 +77,118 @@ print(count, "Differenzen gefunden.\n")
 '''
 
 # Adopt values from FHZ (for existing articles):
+count = 0
 wlb_neu = wlb.copy()
+# Loop over fhz numerical index
 for i in range(len(fhz)):
-    fhz_preis = float(fhz['Empf. VK-Preis'][i])
-    #i_wlb = (wlb_neu.Lieferant == fhz.Lieferant[i]) & (wlb_nummer_lower == str(fhz.Artikelnummer[i]).lower())
-    i_wlb = (wlb.Lieferant == fhz.Lieferant[i]) & (wlb.Artikelnummer == fhz.Artikelnummer[i])
-    # adopt the rec. sale price and the "Lieferbarkeit" directly and completely
-    wlb_neu['Empf. VK-Preis'][i_wlb] = str(fhz_preis)
-    wlb_neu['Sofort lieferbar'][i_wlb] = fhz['Sofort lieferbar'][i]
-    # adopt the sale price only if significantly changed:
-    wlb_preis = wlb['VK-Preis'][i_wlb].values
-    if (len(wlb_preis) > 1):
-        print("Multiple articles with Lieferant %s and Nummer %s" %
-                (fhz.Lieferant[i], fhz.Artikelnummer[i]))
-        sys.exit()
-    wlb_preis = float(wlb_preis[0]) if len(wlb_preis) > 0 else np.nan
-    if ( fhz_preis >= 2.*wlb_preis ):
-        # price is at least twice, this indicates that this is a set:
-        print("WLB price:", wlb_preis, "FHZ price:", fhz_preis,
-                "(%s)" % fhz['Bezeichnung | Einheit'][i])
-        setgroesse = round(fhz_preis / wlb_preis)
-        fhz_preis = round(fhz_preis / setgroesse, 2)
-        old_setgroesse = wlb['Setgröße'][i_wlb].values
-        old_setgroesse = old_setgroesse[0] if len(old_setgroesse) > 0 else np.nan
-        if (setgroesse != old_setgroesse):
-            print("Old (WLB) setgroesse:", old_setgroesse,
-                    "   New guessed setgroesse:", setgroesse)
-            print("Changing setgroesse from:", old_setgroesse, " to:",
-                    setgroesse)
-            wlb_neu['Setgröße'][i_wlb] = str(setgroesse)
-    if ( abs(fhz_preis - wlb_preis) > 0.011 ):
-        # price seems to deviate more than usual
-        print("Old (WLB) price:", wlb_preis, "   New (FHZ) price:", fhz_preis,
-                "(%s)" % fhz['Bezeichnung | Einheit'][i])
-        fhz_preis_str = str(fhz_preis)
-        cent_index = fhz_preis_str.index('.') + 2
-        if ( (len(fhz_preis_str) > cent_index) and
-                (fhz_preis_str[cent_index] == '9') ):
-            # round up, i.e. add one cent:
-            fhz_preis += 0.01
-        print("Changing price from:", wlb_preis, " to:", fhz_preis)
-        wlb_neu['VK-Preis'][i_wlb] = str(fhz_preis)
-    print("\n")
+    fhz_row = fhz.iloc[i]
+    fhz_preis = Decimal(fhz_row['Empf. VK-Preis'])
+    name = fhz_row.name
+    try:
+        wlb_row = wlb_neu.loc[name]
+        # adopt the rec. sale price and the "Lieferbarkeit" directly and completely
+        # See
+        # http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy,
+        # very bottom
+        wlb_neu.loc[name, 'Empf. VK-Preis'] = str(fhz_preis)
+        wlb_neu.loc[name, 'Sofort lieferbar'] = fhz_row['Sofort lieferbar']
+        wlb_preis = Decimal(wlb_row['VK-Preis'])
+        setgroesse = int(wlb_row['Setgröße'])
+
+        # adopt the sale price only if significantly changed:
+        if not fhz_preis.is_nan() and not wlb_preis.is_nan():
+            if (fhz_preis >= Decimal('2.')*wlb_preis) or (setgroesse > 1):
+                # price is at least twice, this indicates that this is a set:
+                print("Setgröße > 1 detektiert.")
+                print("WLB-Preis:", wlb_preis, "FHZ-Preis:", fhz_preis,
+                        "(%s)" % fhz_row['Bezeichnung | Einheit'])
+                fhz_preis = round(fhz_preis / setgroesse, 2)
+                print("Alte (WLB) setgroesse:", setgroesse,
+                        "   (Bitte prüfen, ob korrekt!)")
+                print("Ändere FHZ-Preis zu FHZ-Preis / %s = %s" % (setgroesse,
+                    fhz_preis))
+                print("")
+            if ( abs(fhz_preis - wlb_preis) > 0.011 ):
+                # price seems to deviate more than usual
+                count += 1
+                print("Alter (WLB) Preis:", wlb_preis, "   Neuer (FHZ) Preis:", fhz_preis,
+                        "(%s)" % fhz_row['Bezeichnung | Einheit'])
+                fhz_preis = returnRoundedPrice(fhz_preis)
+                print("Ändere Preis von:", str(wlb_preis), " zu:", str(fhz_preis))
+                wlb_neu.loc[name, 'VK-Preis'] = str(fhz_preis)
+                print("---------------")
+    except KeyError:
+        pass
+print(count, "Artikel haben geänderten Preis.")
+
+# Round up all articles' prices:
+count = 0
+print('\n')
+for i in range(len(wlb_neu)):
+    wlb_row = wlb_neu.iloc[i]
+    alter_preis = Decimal(wlb_row['VK-Preis'])
+    neuer_preis = returnRoundedPrice(alter_preis)
+    if (neuer_preis != alter_preis):
+        count += 1
+        print("Runde Preis von:", str(alter_preis), " zu:", str(neuer_preis),
+                '(%s, %s)' % (wlb_row['Bezeichnung | Einheit'],
+                wlb_row['Sortiment']))
+        wlb_neu.loc[name, 'VK-Preis'] = str(neuer_preis)
+print(count, "VK-Preise wurden gerundet.")
 
 count = 0
+print('\n')
 for i in range(len(fhz)):
-    fhz_preis = float(fhz['Empf. VK-Preis'][i])
-    #i_wlb = (wlb_neu.Lieferant == fhz.Lieferant[i]) & (wlb_nummer_lower == str(fhz.Artikelnummer[i]).lower())
-    i_wlb = (wlb.Lieferant == fhz.Lieferant[i]) & (wlb.Artikelnummer == fhz.Artikelnummer[i])
-    wlb_preis = wlb_neu['Empf. VK-Preis'][i_wlb].values
-    wlb_preis = float(wlb_preis[0]) if len(wlb_preis) > 0 else np.nan
-    if ( not np.isnan(fhz_preis) and not np.isnan(wlb_preis) and abs(fhz_preis -
-        wlb_preis) > 0.011 ):
+    fhz_row = fhz.iloc[i]
+    fhz_preis = Decimal(fhz_row['Empf. VK-Preis'])
+    try:
+        wlb_row = wlb_neu.loc[name]
+        wlb_preis = Decimal(wlb_row['Empf. VK-Preis'])
+    except KeyError:
+        wlb_preis = Decimal(np.nan)
+    if ( not fhz_preis.is_nan() and not wlb_preis.is_nan() and
+            abs(fhz_preis - wlb_preis) > 0.011 ):
         count += 1
-        print('FHZ:', fhz_preis, 'WLB:', wlb_preis,
-                '('+str(fhz['Bezeichnung | Einheit'][i]).replace('\n',' ')+')',
-                '('+str(wlb_neu['Bezeichnung | Einheit'][i_wlb]).replace('\n',' ')+')')
+        print('FHZ: %s WLB: %s' % (fhz_preis, wlb_preis),
+                '(%s) (%s)' % (fhz_row['Bezeichnung | Einheit'],
+                    wlb_row['Bezeichnung | Einheit']))
 print(count, "Differenzen gefunden.")
-wlb_neu.to_csv('test.csv', sep=';', index=False)
-#    if ( np.isnan(fhz_preis) or np.isnan(wlb_preis) or abs(fhz_preis - wlb_preis) > 0.011):
-#        print('FHZ:', fhz.iloc[i])
-#fhz['Bezeichnung | Einheit'][5]
-#fhz.iloc[5]
+writeOutAsCSV(wlb_neu, 'test.csv')
 
 # Add new, so far unknown articles from FHZ
 # Get empty df:
-wlb_neue_artikel = pd.DataFrame()
-# Just add column definitions:
-wlb_neue_artikel = wlb_neue_artikel.add(wlb.iloc[0])
+count = 0
+print('\n')
+wlb_neue_artikel = pd.DataFrame(columns=wlb_neu.columns,
+        index=pd.MultiIndex.from_tuples([('','')], names=wlb.index.names))
 for i in range(len(fhz)):
-    fhz_preis = float(fhz['Empf. VK-Preis'][i])
-    i_wlb = (wlb.Lieferant == fhz.Lieferant[i]) & (wlb.Artikelnummer == fhz.Artikelnummer[i])
-    wlb_preis = wlb['VK-Preis'][i_wlb].values
-    if (len(wlb_preis) == 0):
+    fhz_row = fhz.iloc[i]
+    fhz_preis = Decimal(fhz_row['Empf. VK-Preis'])
+    name = fhz_row.name
+    try:
+        wlb_neu.loc[name]
+    except KeyError:
+        count += 1
         # From:
-        # http://stackoverflow.com/questions/30989531/how-do-i-copy-a-row-from-one-pandas-dataframe-to-another-pandas-dataframe
-        wlb_neue_artikel.loc[fhz.index[i]] = fhz.iloc[i]
-        fhz_preis_str = str(fhz_preis)
-        if ('.' in fhz_preis_str):
-            cent_index = fhz_preis_str.index('.') + 2
-            if ( (len(fhz_preis_str) > cent_index) and
-                    (fhz_preis_str[cent_index] == '9') ):
-                # round up, i.e. add one cent:
-                fhz_preis += 0.01
-        wlb_neue_artikel['VK-Preis'][-1] = str(fhz_preis)
-wlb_neue_artikel.to_csv('test_neue_artikel.csv', sep=';', index=False)
+        # http://stackoverflow.com/questions/10715965/add-one-row-in-a-pandas-dataframe
+        wlb_neue_artikel = wlb_neue_artikel.append(fhz_row)
+        wlb_row = wlb_neue_artikel.iloc[-1]
+        fhz_preis = returnRoundedPrice(fhz_preis)
+        wlb_neue_artikel.loc[name, 'VK-Preis'] = str(fhz_preis)
+        print('"%s" nicht in WLB. (%s)' % (fhz_row['Bezeichnung | Einheit'], name))
+print(count, "Artikel nicht in WLB.")
+writeOutAsCSV(wlb_neue_artikel, 'test_neue_artikel.csv')
 
+# Show list of articles missing in FHZ (so not orderable!)
+count = 0
+print('\n')
+# Loop over wlb numerical index
+for i in range(len(wlb_neu)):
+    wlb_row = wlb_neu.iloc[i]
+    name = wlb_row.name
+    try:
+        fhz.loc[name]
+    except KeyError:
+        count += 1
+        print('"%s" nicht in FHZ. (%s)' % (wlb_row['Bezeichnung | Einheit'], name))
+print(count, "Artikel nicht in FHZ.")
