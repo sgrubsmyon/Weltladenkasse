@@ -2,6 +2,7 @@
 build
 *.jar
 Artikelliste_*
+*.csv
 *.properties
 upload_software.sh
 *.dll
