@@ -20,14 +20,12 @@ def returnRoundedPrice(preis):
 
 
 def writeOutAsCSV(df, filename):
-    print(df.columns)
     out = df.reset_index()
     c = out.columns.tolist()
     # change column order: first Produktgruppe, then index (Lieferant,
     # Artikelnummer)
     c = c[2:3] + c[0:2] + c[3:]
     out = out.reindex_axis(c, axis=1)
-    print(out.columns)
     out.to_csv(filename, sep=';', index=False)
 
 
@@ -78,6 +76,7 @@ print(count, "Differenzen gefunden.\n")
 
 # Adopt values from FHZ (for existing articles):
 count = 0
+print("---------------")
 wlb_neu = wlb.copy()
 # Loop over fhz numerical index
 for i in range(len(fhz)):
@@ -126,6 +125,7 @@ count = 0
 print('\n')
 for i in range(len(wlb_neu)):
     wlb_row = wlb_neu.iloc[i]
+    name = wlb_row.name
     alter_preis = Decimal(wlb_row['VK-Preis'])
     neuer_preis = returnRoundedPrice(alter_preis)
     if (neuer_preis != alter_preis):
@@ -153,6 +153,7 @@ for i in range(len(fhz)):
                 '(%s) (%s)' % (fhz_row['Bezeichnung | Einheit'],
                     wlb_row['Bezeichnung | Einheit']))
 print(count, "Differenzen gefunden.")
+
 writeOutAsCSV(wlb_neu, 'test.csv')
 
 # Add new, so far unknown articles from FHZ
