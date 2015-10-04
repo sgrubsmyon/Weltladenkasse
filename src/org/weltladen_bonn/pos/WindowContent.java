@@ -413,7 +413,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                 pstmt.setInt(paramIndex, x);
             }
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -430,7 +430,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                 pstmt.setBoolean(paramIndex, x);
             }
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -448,7 +448,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return exists;
@@ -466,7 +466,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return hasBarcode;
@@ -489,7 +489,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             updateNArtikelRekursivRecursivelyInProduktgruppeFor(a.getProdGrID());
             updateNArtikelInLieferantFor(a.getLiefID());
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -512,7 +512,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             updateNArtikelRekursivRecursivelyInProduktgruppeFor(a.getProdGrID());
             updateNArtikelInLieferantFor(a.getLiefID());
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -606,7 +606,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             updateNArtikelRekursivRecursivelyInProduktgruppeFor(a.getProdGrID());
             updateNArtikelInLieferantFor(a.getLiefID());
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -645,7 +645,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             a.setBeliebt(rs.getInt(19));
             a.setBestand(rs.getInt(20));
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return a;
@@ -664,7 +664,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return a;
@@ -684,7 +684,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return a;
@@ -702,7 +702,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return produktgruppe;
@@ -720,7 +720,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return lieferant;
@@ -739,7 +739,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return lieferant_id;
@@ -760,7 +760,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return liefIDAndNr;
@@ -778,7 +778,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return exists;
@@ -796,7 +796,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return inactive;
@@ -814,7 +814,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return nArticles;
@@ -836,7 +836,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return nArticles;
@@ -854,16 +854,16 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
     }
 
     protected void updateNArtikelInLieferantFor(int lieferant_id) {
-        System.out.print("Upating lieferant_id " + lieferant_id + " to n_artikel = ");
+        //System.out.print("Upating lieferant_id " + lieferant_id + " to n_artikel = ");
         int nArticles = queryActiveArticlesWithLieferant(lieferant_id);
-        System.out.println(nArticles);
+        //System.out.println(nArticles);
         int result = 0;
         result = setNArtikelForLieferant(lieferant_id, nArticles);
         if (result == 0) {
@@ -890,7 +890,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             stmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -952,7 +952,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -976,7 +976,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -993,7 +993,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -1015,7 +1015,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -1033,7 +1033,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return exists;
@@ -1051,7 +1051,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return inactive;
@@ -1069,7 +1069,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return nArticles;
@@ -1092,7 +1092,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return nArticles;
@@ -1115,7 +1115,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return ids;
@@ -1129,7 +1129,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             }
             String subid_str = (subid == null) ? "IS NULL" : "= ?";
             String subsubid_str = (subsubid == null) ? "IS NULL" : "= ?";
-            System.out.println(topid + " " + subid + " " + subsubid);
+            //System.out.println(topid + " " + subid + " " + subsubid);
             PreparedStatement pstmt = this.conn.prepareStatement("SELECT produktgruppen_id FROM produktgruppe "
                     + "WHERE toplevel_id = ? AND sub_id " + subid_str + " AND subsub_id " + subsubid_str);
             int i = 1;
@@ -1144,11 +1144,11 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             ResultSet rs = pstmt.executeQuery();
             rs.next();
             produktgruppen_id = rs.getInt(1);
-            System.out.println(produktgruppen_id);
+            //System.out.println(produktgruppen_id);
             rs.close();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return produktgruppen_id;
@@ -1178,7 +1178,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             stmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return nArticles;
@@ -1196,7 +1196,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -1214,16 +1214,16 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
     }
 
     protected void updateNArtikelInProduktgruppeFor(int produktgruppen_id) {
-        System.out.print("Upating produktgruppen_id " + produktgruppen_id + " to n_artikel = ");
+        //System.out.print("Upating produktgruppen_id " + produktgruppen_id + " to n_artikel = ");
         int nArticles = queryActiveArticlesWithProduktgruppe(produktgruppen_id);
-        System.out.println(nArticles);
+        //System.out.println(nArticles);
         int result = 0;
         result = setNArtikelForProduktgruppe(produktgruppen_id, nArticles);
         if (result == 0) {
@@ -1251,15 +1251,15 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             stmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
 
     protected void updateNArtikelRekursivInProduktgruppeFor(int produktgruppen_id) {
-        System.out.print("Upating produktgruppen_id " + produktgruppen_id + " to n_artikel_rekursiv = ");
+        //System.out.print("Upating produktgruppen_id " + produktgruppen_id + " to n_artikel_rekursiv = ");
         int nArticles = queryRecursiveActiveArticlesWithProduktgruppe(produktgruppen_id);
-        System.out.println(nArticles);
+        //System.out.println(nArticles);
         int result = 0;
         result = setNArtikelRekursivForProduktgruppe(produktgruppen_id, nArticles);
         if (result == 0) {
@@ -1308,7 +1308,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             rs.close();
             stmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -1335,7 +1335,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -1371,7 +1371,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -1395,7 +1395,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -1412,7 +1412,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -1440,7 +1440,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
