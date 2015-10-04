@@ -37,6 +37,18 @@ fhz = pd.read_csv('Artikelliste_Bestellvorlage_Lebensmittelpreisliste_1.2-2015.c
 wlb = pd.read_csv('Artikelliste_DB_Dump_2015_KW39_LM.csv', sep=';', dtype=str,
         index_col=(1,2))
 
+# Check for duplicates in fhz:
+fl = fhz.index.tolist()
+fl_dup_indices = set()
+for i in fl:
+    count = 0
+    for ii in fl:
+        if i == ii:
+            count += 1
+    if count != 1:
+        fl_dup_indices.add(i)
+fl_dup_indices = list(fl_dup_indices)
+
 # Remove all newlines ('\n') from all fields
 fhz.replace(to_replace='\n', value=', ', inplace=True, regex=True)
 wlb.replace(to_replace='\n', value=', ', inplace=True, regex=True)
@@ -78,6 +90,8 @@ print(count, "Differenzen gefunden.\n")
 count = 0
 print("---------------")
 wlb_neu = wlb.copy()
+geaenderte_preise = pd.DataFrame(columns=wlb_neu.columns,
+        index=pd.MultiIndex.from_tuples([('','')], names=wlb_neu.index.names))
 # Loop over fhz numerical index
 for i in range(len(fhz)):
     fhz_row = fhz.iloc[i]
@@ -115,6 +129,7 @@ for i in range(len(fhz)):
                 fhz_preis = returnRoundedPrice(fhz_preis)
                 print("Ändere Preis von:", str(wlb_preis), " zu:", str(fhz_preis))
                 wlb_neu.loc[name, 'VK-Preis'] = str(fhz_preis)
+                geaenderte_preise = geaenderte_preise.append(wlb_row)
                 print("---------------")
     except KeyError:
         pass
@@ -134,6 +149,7 @@ for i in range(len(wlb_neu)):
                 '(%s, %s)' % (wlb_row['Bezeichnung | Einheit'],
                 wlb_row['Sortiment']))
         wlb_neu.loc[name, 'VK-Preis'] = str(neuer_preis)
+        geaenderte_preise = geaenderte_preise.append(wlb_row)
 print(count, "VK-Preise wurden gerundet.")
 
 count = 0
@@ -161,7 +177,7 @@ writeOutAsCSV(wlb_neu, 'test.csv')
 count = 0
 print('\n')
 wlb_neue_artikel = pd.DataFrame(columns=wlb_neu.columns,
-        index=pd.MultiIndex.from_tuples([('','')], names=wlb.index.names))
+        index=pd.MultiIndex.from_tuples([('','')], names=wlb_neu.index.names))
 for i in range(len(fhz)):
     fhz_row = fhz.iloc[i]
     fhz_preis = Decimal(fhz_row['Empf. VK-Preis'])
@@ -173,7 +189,6 @@ for i in range(len(fhz)):
         # From:
         # http://stackoverflow.com/questions/10715965/add-one-row-in-a-pandas-dataframe
         wlb_neue_artikel = wlb_neue_artikel.append(fhz_row)
-        wlb_row = wlb_neue_artikel.iloc[-1]
         fhz_preis = returnRoundedPrice(fhz_preis)
         wlb_neue_artikel.loc[name, 'VK-Preis'] = str(fhz_preis)
         print('"%s" nicht in WLB. (%s)' % (fhz_row['Bezeichnung | Einheit'], name))
@@ -193,3 +208,16 @@ for i in range(len(wlb_neu)):
         count += 1
         print('"%s" nicht in FHZ. (%s)' % (wlb_row['Bezeichnung | Einheit'], name))
 print(count, "Artikel nicht in FHZ.")
+
+# Check for duplicates in geaenderte_preise:
+l = geaenderte_preise.index.tolist()
+l_dup_indices = set()
+for i in l:
+    count = 0
+    for ii in l:
+        if i == ii:
+            count += 1
+    if count != 1:
+        l_dup_indices.add(i)
+l_dup_indices = list(l_dup_indices)
+
