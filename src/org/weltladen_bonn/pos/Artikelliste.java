@@ -544,7 +544,13 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             Object value = this.getValueAt(row, column);
             int realRowIndex = row;
             realRowIndex = convertRowIndexToModel(realRowIndex);
-            realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
+            try {
+                realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
+            } catch (ArrayIndexOutOfBoundsException ex){
+                System.out.println("No display data at row "+realRowIndex);
+                System.out.println("No special rendering possible.");
+                return c;
+            }
             // for rows with inactive items, set color:
             if ( ! articles.get(realRowIndex).getAktiv() ){
                 c.setFont( c.getFont().deriveFont(Font.ITALIC) );
