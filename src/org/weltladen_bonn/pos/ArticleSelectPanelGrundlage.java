@@ -17,6 +17,10 @@ import javax.swing.text.*; // for DocumentFilter
 import javax.swing.event.*;
 
 public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage implements ActionListener, DocumentListener {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     // Text Fields
     public BarcodeComboBox barcodeBox;
     public ArtikelNameComboBox artikelBox;
@@ -265,16 +269,6 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
     }
 
     private void setArtikelNameAndNummerForBarcode(Vector<String[]> artikelNamen, Vector<String[]> artikelNummern) {
-        if (artikelBox.getItemCount() != 1) {
-            // artikelBox.removeActionListener(this);
-            if (artikelNamen.size() == 1) {
-                // update internal cache string before changing name in text
-                // field (otherwise document listener causes problems)
-                artikelNameText = artikelNamen.get(0)[0];
-            }
-            artikelBox.setItems(artikelNamen);
-            // artikelBox.addActionListener(this);
-        }
         if (nummerBox.getItemCount() != 1) {
             // nummerBox.removeActionListener(this);
             if (artikelNummern.size() == 1) {
@@ -284,6 +278,28 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
             }
             nummerBox.setItems(artikelNummern);
             // nummerBox.addActionListener(this);
+        }
+        if (artikelBox.getItemCount() != 1) {
+            // artikelBox.removeActionListener(this);
+            if (artikelNamen.size() == 1) {
+                // update internal cache string before changing name in text
+                // field (otherwise document listener causes problems)
+                artikelNameText = artikelNamen.get(0)[0];
+            }
+            artikelBox.setItems(artikelNamen);
+            // artikelBox.addActionListener(this);
+            if (artikelNamen.size() > 1) {
+                // ambiguous barcode: show drop down for selection of correct article
+                // need to hack this with a robot, because pop-up vanishes otherwise
+                Robot robot = null;
+                try {
+                    robot = new Robot();
+                } catch (AWTException e) {
+                    e.printStackTrace();
+                }
+                // Simulate a key press
+                robot.keyPress(KeyEvent.VK_DOWN);
+            }
         }
     }
 
