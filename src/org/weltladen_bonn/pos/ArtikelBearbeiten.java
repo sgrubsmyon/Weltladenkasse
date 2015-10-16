@@ -237,7 +237,7 @@ public class ArtikelBearbeiten extends DialogWindow
         }
         if ( allArticlesEqualInAttribute("beliebt") ){
             artikelFormular.beliebtBox.setSelectedIndex(
-                    artikelFormular.beliebtWerte.indexOf(firstArticle.getBeliebt()));
+                    bc.beliebtWerte.indexOf(firstArticle.getBeliebt()));
         } else {
             artikelFormular.beliebtBox.setEnabled(false);
         }
@@ -473,7 +473,7 @@ public class ArtikelBearbeiten extends DialogWindow
         a.setLieferbar(lieferbar);
         ////////
         Integer beliebtWert = artikelFormular.beliebtBox.isEnabled() ?
-            artikelFormular.beliebtWerte.get(artikelFormular.beliebtBox.getSelectedIndex()) :
+            bc.beliebtWerte.get(artikelFormular.beliebtBox.getSelectedIndex()) :
             origArticle.getBeliebt();
         a.setBeliebt(beliebtWert);
         ////////

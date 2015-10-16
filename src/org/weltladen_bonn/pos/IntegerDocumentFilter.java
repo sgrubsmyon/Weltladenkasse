@@ -14,6 +14,12 @@ public class IntegerDocumentFilter extends DocumentFilter {
         super();
     }
 
+    public IntegerDocumentFilter(Integer theMinValue, Integer theMaxValue) {
+        super();
+        minValue = theMinValue;
+        maxValue = theMaxValue;
+    }
+
     public IntegerDocumentFilter(Integer theMaxValue, WindowContent theWC) {
         super();
         maxValue = theMaxValue;
@@ -63,18 +69,22 @@ public class IntegerDocumentFilter extends DocumentFilter {
         }
         Integer value = Integer.parseInt(text);
         if (maxValue != null && value > maxValue){
-            for (int i=0; i<2; i++){
+            //for (int i=0; i<2; i++){
+            if (parentWindow != null) {
                 JOptionPane.showMessageDialog(parentWindow,
                         valueName+" von "+value+" übersteigt den maximal erlaubten Wert von "+maxValue+"!",
                         valueName+" zu groß", JOptionPane.WARNING_MESSAGE);
             }
+            //}
             return false;
         } if (minValue != null && value < minValue){
-            for (int i=0; i<2; i++){
+            //for (int i=0; i<2; i++){
+            if (parentWindow != null) {
                 JOptionPane.showMessageDialog(parentWindow,
                         valueName+" von "+value+" unterschreitet den minimal erlaubten Wert von "+minValue+"!",
                         valueName+" zu klein", JOptionPane.WARNING_MESSAGE);
             }
+            //}
             return false;
         }
         return true;

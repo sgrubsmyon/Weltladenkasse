@@ -6,6 +6,8 @@ import java.math.*; // for monetary value representation and arithmetic with cor
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.text.*; // for NumberFormat
+import java.awt.*; // for Color
+import javax.swing.text.*; // for DocumentFilter
 
 public class BaseClass {
     public final Locale myLocale = Locale.GERMAN;
@@ -36,12 +38,61 @@ public class BaseClass {
     //protected NumberFormat amountFormat;
     protected NumberFormat vatFormat;
 
+    public PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
+    public PositiveNumberDocumentFilter relFilter = new PositiveNumberDocumentFilter(3, 6);
+    public PositiveNumberDocumentFilter mengeFilter = new PositiveNumberDocumentFilter(5, 8);
+    public StringDocumentFilter einheitFilter = new StringDocumentFilter(10);
+    public StringDocumentFilter nummerFilter = new StringDocumentFilter(30);
+    public StringDocumentFilter nameFilter = new StringDocumentFilter(180);
+    public StringDocumentFilter kurznameFilter = new StringDocumentFilter(50);
+    public StringDocumentFilter herkunftFilter = new StringDocumentFilter(100);
+    public IntegerDocumentFilter intFilter;
+    public IntegerDocumentFilter vpeFilter;
+    public IntegerDocumentFilter beliebtFilter;
+
+    protected Vector<Integer> beliebtWerte;
+    protected Vector<String> beliebtNamen;
+    protected Vector<String> beliebtKuerzel;
+    protected Vector<Color> beliebtFarben;
+    protected Integer minBeliebt, maxBeliebt;
+
     public BaseClass() {
         loadConfigFile();
 
 	//amountFormat = new DecimalFormat("0.00");
 	//amountFormat = NumberFormat.getCurrencyInstance(myLocale);
 	vatFormat = new DecimalFormat("0.####");
+
+        intFilter = new IntegerDocumentFilter(-smallintMax, smallintMax);
+        vpeFilter = new IntegerDocumentFilter(1, smallintMax);
+
+        fillBeliebtWerte();
+    }
+
+    protected void fillBeliebtWerte() {
+        beliebtWerte = new Vector<Integer>();
+        beliebtNamen = new Vector<String>();
+        beliebtKuerzel = new Vector<String>();
+        beliebtFarben = new Vector<Color>();
+        beliebtWerte.add(0);
+        beliebtNamen.add("keine Angabe");
+        beliebtKuerzel.add("●");
+        beliebtFarben.add(Color.GRAY);
+        beliebtWerte.add(1);
+        beliebtNamen.add("niedrig");
+        beliebtKuerzel.add("●");
+        beliebtFarben.add(Color.RED);
+        beliebtWerte.add(2);
+        beliebtNamen.add("mittel");
+        beliebtKuerzel.add("●");
+        beliebtFarben.add(Color.YELLOW);
+        beliebtWerte.add(3);
+        beliebtNamen.add("hoch");
+        beliebtKuerzel.add("●");
+        beliebtFarben.add(Color.GREEN);
+        minBeliebt = Collections.min(beliebtWerte);
+        maxBeliebt = Collections.max(beliebtWerte);
+        beliebtFilter = new IntegerDocumentFilter(minBeliebt, maxBeliebt);
     }
 
     private String removeQuotes(String s) {

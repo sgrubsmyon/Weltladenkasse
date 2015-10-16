@@ -247,7 +247,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    neuerKassenstandField.setColumns(10);
             neuerKassenstandField.setHorizontalAlignment(JTextField.RIGHT);
 	    neuerKassenstandField.getDocument().addDocumentListener(this);
-	    ((AbstractDocument)neuerKassenstandField.getDocument()).setDocumentFilter(geldFilter);
+	    ((AbstractDocument)neuerKassenstandField.getDocument()).setDocumentFilter(bc.geldFilter);
 	    neuerKassenstandLabel.setLabelFor(neuerKassenstandField);
 	    kassenstandAendernPanel.add(neuerKassenstandField);
 	    kassenstandAendernPanel.add(new JLabel(bc.currencySymbol));

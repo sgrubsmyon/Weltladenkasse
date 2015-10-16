@@ -281,7 +281,7 @@ public class Bestellen extends BestellungsGrundlage implements
                 } }
             });
             preisField.getDocument().addDocumentListener(this);
-	    ((AbstractDocument)preisField.getDocument()).setDocumentFilter(geldFilter);
+	    ((AbstractDocument)preisField.getDocument()).setDocumentFilter(bc.geldFilter);
             preisField.setEditable(false);
             preisField.setColumns(6);
             removeDefaultKeyBindings(preisField);

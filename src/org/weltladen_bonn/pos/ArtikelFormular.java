@@ -144,14 +144,14 @@ public class ArtikelFormular extends WindowContent
             nummerPanel.setBorder(BorderFactory.createTitledBorder("Artikelnummer"));
             nummerField = new JTextField("");
             nummerField.setColumns(10);
-            ((AbstractDocument)nummerField.getDocument()).setDocumentFilter(nummerFilter);
+            ((AbstractDocument)nummerField.getDocument()).setDocumentFilter(bc.nummerFilter);
             nummerPanel.add(nummerField);
 
             JPanel barcodePanel = new JPanel();
             barcodePanel.setBorder(BorderFactory.createTitledBorder("Barcode"));
             barcodeField = new JTextField("");
             barcodeField.setColumns(20);
-            ((AbstractDocument)barcodeField.getDocument()).setDocumentFilter(nummerFilter);
+            ((AbstractDocument)barcodeField.getDocument()).setDocumentFilter(bc.nummerFilter);
             barcodePanel.add(barcodeField);
 
         JPanel identPanel = new JPanel(); identPanel.setLayout(new FlowLayout());
@@ -165,26 +165,26 @@ public class ArtikelFormular extends WindowContent
             namePanel.setBorder(BorderFactory.createTitledBorder("Bezeichnung | Einheit"));
             nameField = new JTextField("");
             nameField.setColumns(30);
-            ((AbstractDocument)nameField.getDocument()).setDocumentFilter(nameFilter);
+            ((AbstractDocument)nameField.getDocument()).setDocumentFilter(bc.nameFilter);
             namePanel.add(nameField);
 
             JPanel kurznamePanel = new JPanel();
             kurznamePanel.setBorder(BorderFactory.createTitledBorder("Kurzname"));
             kurznameField = new JTextField("");
             kurznameField.setColumns(10);
-            ((AbstractDocument)kurznameField.getDocument()).setDocumentFilter(kurznameFilter);
+            ((AbstractDocument)kurznameField.getDocument()).setDocumentFilter(bc.kurznameFilter);
             kurznamePanel.add(kurznameField);
 
             JPanel herkunftPanel = new JPanel();
             herkunftPanel.setBorder(BorderFactory.createTitledBorder("Herkunft"));
             herkunftField = new JTextField("");
             herkunftField.setColumns(20);
-            ((AbstractDocument)herkunftField.getDocument()).setDocumentFilter(herkunftFilter);
+            ((AbstractDocument)herkunftField.getDocument()).setDocumentFilter(bc.herkunftFilter);
             herkunftPanel.add(herkunftField);
 
             JPanel beliebtPanel = new JPanel();
             beliebtPanel.setBorder(BorderFactory.createTitledBorder("Beliebtheit"));
-            beliebtBox = new JComboBox<String>(beliebtNamen);
+            beliebtBox = new JComboBox<String>(bc.beliebtNamen);
             beliebtPanel.add(beliebtBox);
 
         JPanel describePanel = new JPanel();
@@ -198,7 +198,7 @@ public class ArtikelFormular extends WindowContent
             mengePanel.setBorder(BorderFactory.createTitledBorder("Menge (pro Artikel)"));
             mengeField = new JTextField("");
             mengeField.setColumns(10);
-            ((AbstractDocument)mengeField.getDocument()).setDocumentFilter(mengeFilter);
+            ((AbstractDocument)mengeField.getDocument()).setDocumentFilter(bc.mengeFilter);
             mengeField.setHorizontalAlignment(JTextField.RIGHT);
             mengePanel.add(mengeField);
             mengePanel.add(new JLabel("kg/l/St."));
@@ -207,7 +207,7 @@ public class ArtikelFormular extends WindowContent
             einheitPanel.setBorder(BorderFactory.createTitledBorder("Einheit (kg/l/St.)"));
             einheitField = new JTextField("kg");
             einheitField.setColumns(10);
-            ((AbstractDocument)einheitField.getDocument()).setDocumentFilter(einheitFilter);
+            ((AbstractDocument)einheitField.getDocument()).setDocumentFilter(bc.einheitFilter);
             einheitPanel.add(einheitField);
 
             JPanel vpePanel = new JPanel();
@@ -265,7 +265,7 @@ public class ArtikelFormular extends WindowContent
             vkpreisPanel.setBorder(BorderFactory.createTitledBorder("VK-Preis (für Artikel)"));
             vkpreisField = new JTextField("");
             vkpreisField.setColumns(15);
-            ((AbstractDocument)vkpreisField.getDocument()).setDocumentFilter(geldFilter);
+            ((AbstractDocument)vkpreisField.getDocument()).setDocumentFilter(bc.geldFilter);
             vkpreisField.setHorizontalAlignment(JTextField.RIGHT);
             vkpreisPanel.add(vkpreisField);
             vkpreisPanel.add(new JLabel(bc.currencySymbol));
@@ -274,7 +274,7 @@ public class ArtikelFormular extends WindowContent
             empfvkpreisPanel.setBorder(BorderFactory.createTitledBorder("Empf. VK-Preis (für Set)"));
             empfvkpreisField = new JTextField("");
             empfvkpreisField.setColumns(15);
-            ((AbstractDocument)empfvkpreisField.getDocument()).setDocumentFilter(geldFilter);
+            ((AbstractDocument)empfvkpreisField.getDocument()).setDocumentFilter(bc.geldFilter);
             empfvkpreisField.setHorizontalAlignment(JTextField.RIGHT);
             empfvkpreisPanel.add(empfvkpreisField);
             empfvkpreisPanel.add(new JLabel(bc.currencySymbol));
@@ -283,7 +283,7 @@ public class ArtikelFormular extends WindowContent
             ekrabattPanel.setBorder(BorderFactory.createTitledBorder("EK-Rabatt"));
             ekrabattField = new JTextField("");
             ekrabattField.setColumns(6);
-            ((AbstractDocument)ekrabattField.getDocument()).setDocumentFilter(relFilter);
+            ((AbstractDocument)ekrabattField.getDocument()).setDocumentFilter(bc.relFilter);
             ekrabattField.setHorizontalAlignment(JTextField.RIGHT);
             ekrabattPanel.add(ekrabattField);
             ekrabattPanel.add(new JLabel("%"));
@@ -292,7 +292,7 @@ public class ArtikelFormular extends WindowContent
             ekpreisPanel.setBorder(BorderFactory.createTitledBorder("EK-Preis (für Set)"));
             ekpreisField = new JTextField("");
             ekpreisField.setColumns(15);
-            ((AbstractDocument)ekpreisField.getDocument()).setDocumentFilter(geldFilter);
+            ((AbstractDocument)ekpreisField.getDocument()).setDocumentFilter(bc.geldFilter);
             ekpreisField.setHorizontalAlignment(JTextField.RIGHT);
             ekpreisPanel.add(ekpreisField);
             ekpreisPanel.add(new JLabel(bc.currencySymbol));

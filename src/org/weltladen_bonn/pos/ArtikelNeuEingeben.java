@@ -118,7 +118,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(gruppenID);
         artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
 
-        artikelFormular.beliebtBox.setSelectedIndex(artikelFormular.beliebtNamen.indexOf("keine Angabe"));
+        artikelFormular.beliebtBox.setSelectedIndex(bc.beliebtNamen.indexOf("keine Angabe"));
 
         KeyAdapter enterAdapter = new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
@@ -282,7 +282,7 @@ public class ArtikelNeuEingeben extends DialogWindow
 
         void setBeliebtBox(int row){
             Integer beliebtWert = artikelNeu.articles.get(row).getBeliebt();
-            Integer beliebtIndex = artikelFormular.beliebtWerte.indexOf(beliebtWert);
+            Integer beliebtIndex = bc.beliebtWerte.indexOf(beliebtWert);
             artikelFormular.beliebtBox.setSelectedIndex(beliebtIndex);
         }
 
@@ -393,7 +393,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         Boolean var = artikelFormular.preisVariabelBox.isSelected();
         Boolean sortiment = artikelFormular.sortimentBox.isSelected();
         Boolean lieferbar = artikelFormular.lieferbarBox.isSelected();
-        Integer beliebtWert = artikelFormular.beliebtWerte.get(artikelFormular.beliebtBox.getSelectedIndex());
+        Integer beliebtWert = bc.beliebtWerte.get(artikelFormular.beliebtBox.getSelectedIndex());
         String beliebt = artikelFormular.beliebtBox.getSelectedItem().toString();
 
         Artikel newArticle = new Artikel(bc, prodgrID, lieferantID, nummer, name,

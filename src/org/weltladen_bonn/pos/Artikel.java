@@ -3,6 +3,8 @@ package org.weltladen_bonn.pos;
 // Basic Java stuff:
 import java.util.*; // for Vector, Collections, String
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
+import javax.swing.JTextField; // JFrame, JPanel, JTable, JButton, ...
+import javax.swing.text.*; // for DocumentFilter
 
 public class Artikel {
     /**
@@ -87,6 +89,16 @@ public class Artikel {
         setBeliebt(beliebt);
         setBestand(bestand_);
         setAktiv(aktiv_);
+    }
+
+    String parseValueWithFilter(String value, DocumentFilter filter) {
+        // parse the value with DocumentFilter
+        JTextField c = new JTextField();
+        ((AbstractDocument)c.getDocument()).setDocumentFilter(filter);
+        c.setText(value);
+        value = c.getText();
+        //
+        return value;
     }
 
     /**
@@ -293,46 +305,67 @@ public class Artikel {
     }
 
     public void setNummer(String nummer) {
+        // parse the value
+        nummer = parseValueWithFilter(nummer, bc.nummerFilter);
         artikel_nr = nummer;
     }
 
     public void setName(String name) {
+        // parse the value
+        name = parseValueWithFilter(name, bc.nameFilter);
         artikel_name = name;
     }
 
     public void setKurzname(String kname) {
         if (kname == null)
             kurzname = "";
-        else
+        else {
+            // parse the value
+            kname = parseValueWithFilter(kname, bc.kurznameFilter);
             kurzname = kname;
+        }
     }
 
-    public void setMenge(BigDecimal menge_) {
-        if (menge_ == null)
-            menge = null;
-        else
-            menge = new BigDecimal( bc.unifyDecimalIntern(menge_) );
+    public void setMenge(BigDecimal menge) {
+        if (menge == null)
+            this.menge = null;
+        else {
+            // parse the value
+            //menge = new BigDecimal(
+            //        parseValueWithFilter(menge.toString(), bc.mengeFilter)
+            //        );
+            this.menge = new BigDecimal( bc.unifyDecimalIntern(menge) );
+        }
     }
 
     public void setEinheit(String einh) {
         if (einh == null)
             einheit = "";
-        else
+        else {
+            // parse the value
+            einh = parseValueWithFilter(einh, bc.einheitFilter);
             einheit = einh;
+        }
     }
 
     public void setBarcode(String bcode) {
         if (bcode == null)
             barcode = "";
-        else
+        else {
+            // parse the value
+            //bcode = parseValueWithFilter(bcode, bc.nummerFilter);
             barcode = bcode;
+        }
     }
 
     public void setHerkunft(String herk) {
         if (herk == null)
             herkunft = "";
-        else
+        else {
+            // parse the value
+            herk = parseValueWithFilter(herk, bc.herkunftFilter);
             herkunft = herk;
+        }
     }
 
     public void setVPE(Integer vpe_) {

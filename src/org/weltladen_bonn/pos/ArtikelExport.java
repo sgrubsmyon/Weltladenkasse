@@ -110,12 +110,12 @@ public class ArtikelExport extends WindowContent {
             Integer beliebtIndex = 0;
             if (beliebtWert != null) {
                 try {
-                    beliebtIndex = beliebtWerte.indexOf(beliebtWert);
+                    beliebtIndex = bc.beliebtWerte.indexOf(beliebtWert);
                 } catch (ArrayIndexOutOfBoundsException ex) {
                     System.out.println("Unknown beliebtWert: " + beliebtWert);
                 }
             }
-            String beliebtheit = beliebtNamen.get(beliebtIndex);
+            String beliebtheit = bc.beliebtNamen.get(beliebtIndex);
             String barcode = artikelListe.articles.get(i).getBarcode();
             Integer vpe = artikelListe.articles.get(i).getVPE();
             Integer setgroesse = artikelListe.articles.get(i).getSetgroesse();
@@ -149,7 +149,7 @@ public class ArtikelExport extends WindowContent {
             String varStr = var ? "Ja" : "Nein";
             String herkunft = artikelListe.articles.get(i).getHerkunft();
             Integer bestand = artikelListe.articles.get(i).getBestand();
-//            String bestandStr = bestand == null ? "" : bestand.toString();
+            String bestandStr = bestand == null ? "" : bestand.toString();
 
             Vector<Object> row = new Vector<Object>();
             row.add(produktgruppe);
@@ -171,7 +171,7 @@ public class ArtikelExport extends WindowContent {
             row.add(ekp);
             row.add(varStr);
             row.add(herkunft);
-            row.add(bestand);
+            row.add(bestandStr);
             data.add(row);
         }
 
