@@ -280,7 +280,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 } }
             });
             preisField.getDocument().addDocumentListener(this);
-	    ((AbstractDocument)preisField.getDocument()).setDocumentFilter(geldFilter);
+	    ((AbstractDocument)preisField.getDocument()).setDocumentFilter(bc.geldFilter);
             preisField.setEditable(false);
             preisField.setColumns(6);
             removeDefaultKeyBindings(preisField);
@@ -364,7 +364,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                         if (barButton.isEnabled()) bar(); }
                     }
                 });
-                ((AbstractDocument)kundeGibtField.getDocument()).setDocumentFilter(geldFilter);
+                ((AbstractDocument)kundeGibtField.getDocument()).setDocumentFilter(bc.geldFilter);
                 kundeGibtPanel.add(kundeGibtField);
                 kundeGibtPanel.add(new BigLabel(bc.currencySymbol));
 
@@ -381,7 +381,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                         }
                     }
                 });
-                ((AbstractDocument)gutscheinField.getDocument()).setDocumentFilter(geldFilter);
+                ((AbstractDocument)gutscheinField.getDocument()).setDocumentFilter(bc.geldFilter);
                 gutscheinField.getDocument().addDocumentListener(this);
                 gutscheinPanel.add(gutscheinField);
                 gutscheinPanel.add(new BigLabel(bc.currencySymbol));
@@ -512,7 +512,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     // Plain text components do not fire these events
                 }
             });
-            ((AbstractDocument)individuellRabattRelativField.getDocument()).setDocumentFilter(relFilter);
+            ((AbstractDocument)individuellRabattRelativField.getDocument()).setDocumentFilter(bc.relFilter);
             individuellRabattRelativField.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) {
                     if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
@@ -542,7 +542,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     // Plain text components do not fire these events
                 }
             });
-	    ((AbstractDocument)individuellRabattAbsolutField.getDocument()).setDocumentFilter(geldFilter);
+	    ((AbstractDocument)individuellRabattAbsolutField.getDocument()).setDocumentFilter(bc.geldFilter);
             individuellRabattAbsolutField.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) {
                     if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){

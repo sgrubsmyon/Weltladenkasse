@@ -152,7 +152,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         vkPreisField = new JTextField("");
         vkPreisField.addKeyListener(enterAdapter);
         vkPreisField.getDocument().addDocumentListener(this);
-        ((AbstractDocument) vkPreisField.getDocument()).setDocumentFilter(geldFilter);
+        ((AbstractDocument) vkPreisField.getDocument()).setDocumentFilter(bc.geldFilter);
         vkPreisField.setEditable(false);
         vkPreisField.setColumns(6);
         vkPreisField.setHorizontalAlignment(JTextField.RIGHT);
@@ -161,7 +161,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         empfVkPreisField = new JTextField("");
         empfVkPreisField.addKeyListener(enterAdapter);
         empfVkPreisField.getDocument().addDocumentListener(this);
-        ((AbstractDocument) empfVkPreisField.getDocument()).setDocumentFilter(geldFilter);
+        ((AbstractDocument) empfVkPreisField.getDocument()).setDocumentFilter(bc.geldFilter);
         empfVkPreisField.setEditable(false);
         empfVkPreisField.setColumns(6);
         empfVkPreisField.setHorizontalAlignment(JTextField.RIGHT);
@@ -170,7 +170,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         kurznameField = new JTextField("");
         kurznameField.addKeyListener(enterAdapter);
         kurznameField.getDocument().addDocumentListener(this);
-        ((AbstractDocument) kurznameField.getDocument()).setDocumentFilter(kurznameFilter);
+        ((AbstractDocument) kurznameField.getDocument()).setDocumentFilter(bc.kurznameFilter);
         kurznameField.setEditable(false);
         kurznameField.setColumns(20);
         removeDefaultKeyBindings(kurznameField);
@@ -178,7 +178,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         mengeField = new JTextField("");
         mengeField.addKeyListener(enterAdapter);
         mengeField.getDocument().addDocumentListener(this);
-        ((AbstractDocument) mengeField.getDocument()).setDocumentFilter(mengeFilter);
+        ((AbstractDocument) mengeField.getDocument()).setDocumentFilter(bc.mengeFilter);
         mengeField.setEditable(false);
         mengeField.setColumns(10);
         mengeField.setHorizontalAlignment(JTextField.RIGHT);
@@ -187,7 +187,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         herkunftField = new JTextField("");
         herkunftField.addKeyListener(enterAdapter);
         herkunftField.getDocument().addDocumentListener(this);
-        ((AbstractDocument) herkunftField.getDocument()).setDocumentFilter(herkunftFilter);
+        ((AbstractDocument) herkunftField.getDocument()).setDocumentFilter(bc.herkunftFilter);
         herkunftField.setEditable(false);
         herkunftField.setColumns(20);
         removeDefaultKeyBindings(herkunftField);

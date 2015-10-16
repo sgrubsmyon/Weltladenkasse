@@ -14,6 +14,14 @@ public class StringDocumentFilter extends DocumentFilter {
         numchars = nchar;
     }
 
+    public void setNChar(int nchar) {
+        numchars = nchar;
+    }
+
+    public int getNChar() {
+        return numchars;
+    }
+
     private boolean test(String text) {
         return text.length() <= numchars;
     }
@@ -26,11 +34,15 @@ public class StringDocumentFilter extends DocumentFilter {
         sb.append(doc.getText(0, doc.getLength()));
         sb.insert(offset, newText);
 
-        if (test(sb.toString())) {
-            super.insertString(fb, offset, newText, attr);
-        } else {
-            // warn the user and don't allow the insert
+        if (!test(sb.toString())) {
+            // truncate the new text up to threshold
+            try {
+                newText = newText.substring(0, numchars-offset);
+            } catch (IndexOutOfBoundsException ex) {
+                newText = "";
+            }
         }
+        super.insertString(fb, offset, newText, attr);
     }
 
     @Override
@@ -41,11 +53,15 @@ public class StringDocumentFilter extends DocumentFilter {
         sb.append(doc.getText(0, doc.getLength()));
         sb.replace(offset, offset + length, newText);
 
-        if (test(sb.toString())) {
-            super.replace(fb, offset, length, newText, attrs);
-        } else {
-            // warn the user and don't allow the insert
+        if (!test(sb.toString())) {
+            // truncate the new text up to threshold
+            try {
+                newText = newText.substring(0, numchars-offset);
+            } catch (IndexOutOfBoundsException ex) {
+                newText = "";
+            }
         }
+        super.replace(fb, offset, length, newText, attrs);
     }
 
     @Override

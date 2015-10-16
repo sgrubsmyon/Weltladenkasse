@@ -41,22 +41,9 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected final int maxColumnWidth = 150;
     /** maximally allowed pixel width of table columns */
 
-    protected PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
-    protected PositiveNumberDocumentFilter relFilter = new PositiveNumberDocumentFilter(3, 6);
-    protected PositiveNumberDocumentFilter mengeFilter = new PositiveNumberDocumentFilter(5, 8);
-    protected StringDocumentFilter einheitFilter = new StringDocumentFilter(10);
-    protected StringDocumentFilter nummerFilter = new StringDocumentFilter(30);
-    protected StringDocumentFilter nameFilter = new StringDocumentFilter(180);
-    protected StringDocumentFilter kurznameFilter = new StringDocumentFilter(50);
-    protected StringDocumentFilter herkunftFilter = new StringDocumentFilter(100);
     protected IntegerDocumentFilter intFilter;
     protected IntegerDocumentFilter vpeFilter;
     protected IntegerDocumentFilter beliebtFilter;
-
-    protected Vector<Integer> beliebtWerte;
-    protected Vector<String> beliebtNamen;
-    protected Vector<String> beliebtKuerzel;
-    protected Vector<Color> beliebtFarben;
 
     protected Font mediumFont = new Font("Tahoma", Font.BOLD, 16);
     protected Font bigFont = new Font("Tahoma", Font.BOLD, 32);
@@ -128,39 +115,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
         intFilter = new IntegerDocumentFilter(-bc.smallintMax, bc.smallintMax, this);
         vpeFilter = new IntegerDocumentFilter(1, bc.smallintMax, this);
+        beliebtFilter = new IntegerDocumentFilter(bc.minBeliebt, bc.maxBeliebt, this);
 
         rechtsAusrichter.setHorizontalAlignment(JLabel.RIGHT);
         linksAusrichter.setHorizontalAlignment(JLabel.LEFT);
         zentralAusrichter.setHorizontalAlignment(JLabel.CENTER);
         this.setLayout(new BorderLayout());
-
-        fillBeliebtWerte();
-    }
-
-    protected void fillBeliebtWerte() {
-        beliebtWerte = new Vector<Integer>();
-        beliebtNamen = new Vector<String>();
-        beliebtKuerzel = new Vector<String>();
-        beliebtFarben = new Vector<Color>();
-        beliebtWerte.add(0);
-        beliebtNamen.add("keine Angabe");
-        beliebtKuerzel.add("●");
-        beliebtFarben.add(Color.GRAY);
-        beliebtWerte.add(1);
-        beliebtNamen.add("niedrig");
-        beliebtKuerzel.add("●");
-        beliebtFarben.add(Color.RED);
-        beliebtWerte.add(2);
-        beliebtNamen.add("mittel");
-        beliebtKuerzel.add("●");
-        beliebtFarben.add(Color.YELLOW);
-        beliebtWerte.add(3);
-        beliebtNamen.add("hoch");
-        beliebtKuerzel.add("●");
-        beliebtFarben.add(Color.GREEN);
-        Integer minBeliebt = Collections.min(beliebtWerte);
-        Integer maxBeliebt = Collections.max(beliebtWerte);
-        beliebtFilter = new IntegerDocumentFilter(minBeliebt, maxBeliebt, this);
     }
 
     protected class WindowAdapterDialog extends WindowAdapter {
@@ -285,7 +245,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             String barcode) {
         JPanel preisPanel = new JPanel();
         JTextField preisField = new JTextField("");
-        ((AbstractDocument) preisField.getDocument()).setDocumentFilter(geldFilter);
+        ((AbstractDocument) preisField.getDocument()).setDocumentFilter(bc.geldFilter);
         preisField.setColumns(6);
         preisField.setHorizontalAlignment(JTextField.RIGHT);
         preisPanel.add(preisField);

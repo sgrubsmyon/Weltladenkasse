@@ -68,7 +68,7 @@ public class LieferantNeuEingeben extends DialogWindow
         namePanel.setBorder(BorderFactory.createTitledBorder("Lieferant-Name"));
         lieferantNameField = new JTextField("");
         lieferantNameField.setColumns(30);
-        ((AbstractDocument)lieferantNameField.getDocument()).setDocumentFilter(kurznameFilter);
+        ((AbstractDocument)lieferantNameField.getDocument()).setDocumentFilter(bc.kurznameFilter);
         namePanel.add(lieferantNameField);
         headerPanel.add(namePanel);
 
@@ -76,13 +76,13 @@ public class LieferantNeuEingeben extends DialogWindow
         kurznamePanel.setBorder(BorderFactory.createTitledBorder("Kurzname (bis 10 Zeichen)"));
         lieferantKurznameField = new JTextField("");
         lieferantKurznameField.setColumns(15);
-        ((AbstractDocument)lieferantKurznameField.getDocument()).setDocumentFilter(einheitFilter);
+        ((AbstractDocument)lieferantKurznameField.getDocument()).setDocumentFilter(bc.einheitFilter);
         kurznamePanel.add(lieferantKurznameField);
         headerPanel.add(kurznamePanel);
 
         KeyAdapter enterAdapter = new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
-                if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
+                if ( e.getKeyCode() == KeyEvent.VK_ENTER ){
                     if (submitButton.isEnabled()){
                         submitButton.doClick();
                     }

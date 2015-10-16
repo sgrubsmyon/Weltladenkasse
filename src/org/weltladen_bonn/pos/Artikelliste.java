@@ -193,21 +193,21 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         decimalColumns.add("Menge"); decimalColumns.add("EK-Rabatt");
 
         documentFilterMap = new HashMap<String, DocumentFilter>();
-        documentFilterMap.put("Nummer", nummerFilter);
-        documentFilterMap.put("Name", nameFilter);
-        documentFilterMap.put("Kurzname", kurznameFilter);
-        documentFilterMap.put("Menge", mengeFilter);
-        documentFilterMap.put("Einheit", einheitFilter);
+        documentFilterMap.put("Nummer", bc.nummerFilter);
+        documentFilterMap.put("Name", bc.nameFilter);
+        documentFilterMap.put("Kurzname", bc.kurznameFilter);
+        documentFilterMap.put("Menge", bc.mengeFilter);
+        documentFilterMap.put("Einheit", bc.einheitFilter);
         for (String cname : moneyColumns){
-            documentFilterMap.put(cname, geldFilter);
+            documentFilterMap.put(cname, bc.geldFilter);
         }
-        documentFilterMap.put("Beliebtheit", beliebtFilter);
-        documentFilterMap.put("Barcode", nummerFilter);
-        documentFilterMap.put("VPE", vpeFilter);
-        documentFilterMap.put("Setgröße", vpeFilter);
-        documentFilterMap.put("EK-Rabatt", relFilter);
-        documentFilterMap.put("Herkunft", herkunftFilter);
-        documentFilterMap.put("Bestand", intFilter);
+        documentFilterMap.put("Beliebtheit", bc.beliebtFilter);
+        documentFilterMap.put("Barcode", bc.nummerFilter);
+        documentFilterMap.put("VPE", bc.vpeFilter);
+        documentFilterMap.put("Setgröße", bc.vpeFilter);
+        documentFilterMap.put("EK-Rabatt", bc.relFilter);
+        documentFilterMap.put("Herkunft", bc.herkunftFilter);
+        documentFilterMap.put("Bestand", bc.intFilter);
 
         String filter = "";
         if (toplevel_id == null){ // if user clicked on "Alle Artikel"
@@ -258,8 +258,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 String einheit = rs.getString(10);
                 String barcode = rs.getString(11);
                 String herkunft = rs.getString(12);
-                Integer vpe = rs.getInt(13);
-                Integer setgroesse = rs.getInt(14);
+                Integer vpe = rs.getString(13) == null ? null : rs.getInt(13);
+                Integer setgroesse = rs.getString(14) == null ? null : rs.getInt(14);
                 String vkp = rs.getString(15);
                 String empf_vkp = rs.getString(16);
                 String ek_rabatt = bc.vatFormatter( rs.getString(17) );
@@ -269,7 +269,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 Boolean sortiment = rs.getBoolean(21);
                 Boolean lieferbar = rs.getBoolean(22);
                 Integer beliebtWert = rs.getInt(23);
-                Integer bestand = rs.getInt(24);
+                Integer bestand = rs.getString(24) == null ? null : rs.getInt(24);
                 String von = rs.getString(25);
                 String bis = rs.getString(26);
                 Boolean aktiv = rs.getBoolean(27);
@@ -282,7 +282,10 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 if (einheit == null){ einheit = ""; }
                 if (barcode == null){ barcode = ""; }
                 if (herkunft == null) herkunft = "";
-                //if (vpe == null){ vpe = ""; }
+                String vpeStr = "";
+                if (vpe != null){ vpeStr = vpe.toString(); }
+                String setgrStr = "";
+                if (setgroesse != null){ setgrStr = setgroesse.toString(); }
                 String vkpOutput = "";
                 if (vkp != null){ vkpOutput = bc.priceFormatter(vkp); }
                 String empfVKPOutput = "";
@@ -298,7 +301,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 Integer beliebtIndex = 0;
                 if (beliebtWert != null){
                     try {
-                        beliebtIndex = beliebtWerte.indexOf(beliebtWert);
+                        beliebtIndex = bc.beliebtWerte.indexOf(beliebtWert);
                     } catch (ArrayIndexOutOfBoundsException ex){
                         System.out.println("Unknown beliebtWert: "+beliebtWert);
                     }
@@ -317,7 +320,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                     row.add(sortiment);
                     row.add(lieferbar);
                     row.add(beliebtIndex); row.add(barcode);
-                    row.add(vpe); row.add(setgroesse);
+                    row.add(vpeStr); row.add(setgrStr);
                     row.add(empfVKPOutput); row.add(ekRabattOutput);
                     row.add(ekpOutput); row.add(mwstOutput);
                     row.add(herkunft); row.add(bestandStr);
@@ -569,7 +572,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             if ( this.getColumnName(column).equals("Beliebtheit") ){
                 Integer index = Integer.parseInt(value.toString());
                 c.setFont( c.getFont().deriveFont(Font.PLAIN) );
-                c.setForeground( beliebtFarben.get(index) );
+                c.setForeground( bc.beliebtFarben.get(index) );
             }
             // now, render the text:
             if (c instanceof JLabel){
@@ -579,7 +582,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 if ( cname.equals("Beliebtheit") ){
                     // BeliebtRenderer:
                     Integer index = Integer.parseInt(value.toString());
-                    label.setText( beliebtKuerzel.get(index) );
+                    label.setText( bc.beliebtKuerzel.get(index) );
                 }
                 if ( moneyColumns.contains(cname) ){
                     // GeldRenderer:
@@ -651,7 +654,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 //realRowIndex = convertRowIndexToModel(realRowIndex);
                 //realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
                 Integer index = Integer.parseInt(this.getValueAt(rowIndex, colIndex).toString());
-                String name = beliebtNamen.get(index);
+                String name = bc.beliebtNamen.get(index);
                 return name+" ("+index+")";
             }
             return defaultTip;

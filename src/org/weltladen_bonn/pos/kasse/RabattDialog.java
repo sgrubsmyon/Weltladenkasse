@@ -446,7 +446,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                     absolutField.setColumns(10);
                     absolutField.setHorizontalAlignment(JTextField.RIGHT);
                     absolutField.getDocument().addDocumentListener(this);
-                    ((AbstractDocument)absolutField.getDocument()).setDocumentFilter(geldFilter);
+                    ((AbstractDocument)absolutField.getDocument()).setDocumentFilter(bc.geldFilter);
                     absolutPanel.add(absolutField);
                     absolutPanel.add(new JLabel(bc.currencySymbol));
                     einzelCard.add(absolutPanel);
@@ -460,7 +460,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                     relativField.setColumns(10);
                     relativField.setHorizontalAlignment(JTextField.RIGHT);
                     relativField.getDocument().addDocumentListener(this);
-                    ((AbstractDocument)relativField.getDocument()).setDocumentFilter(relFilter);
+                    ((AbstractDocument)relativField.getDocument()).setDocumentFilter(bc.relFilter);
                     relativPanel.add(relativField);
                     relativPanel.add(new JLabel("%"));
                     einzelCard.add(relativPanel);
@@ -508,7 +508,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                     mengenrabattRelativField.setColumns(10);
                     mengenrabattRelativField.setHorizontalAlignment(JTextField.RIGHT);
                     mengenrabattRelativField.getDocument().addDocumentListener(this);
-                    ((AbstractDocument)mengenrabattRelativField.getDocument()).setDocumentFilter(relFilter);
+                    ((AbstractDocument)mengenrabattRelativField.getDocument()).setDocumentFilter(bc.relFilter);
                     mengenrabattRelativPanel.add(mengenrabattRelativField);
                     mengenrabattRelativPanel.add(new JLabel("%"));
                     mengenCard.add(mengenrabattRelativPanel);

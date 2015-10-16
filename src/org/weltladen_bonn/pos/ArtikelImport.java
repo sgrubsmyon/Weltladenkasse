@@ -231,7 +231,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             results.add(rs.getString(7) == null ? "" : rs.getString(7)); // lieferbar
             results.add(rs.getString(8) == null ? "" : rs.getString(8)); // beliebtheit
             results.add(rs.getString(9) == null ? "" : rs.getString(9)); // barcode
-            results.add(rs.getString(10) == null ? "0" : rs.getString(10)); // vpe
+            results.add(rs.getString(10) == null ? "" : rs.getString(10)); // vpe
             results.add(rs.getString(11) == null ? "" : rs.getString(11)); // setgroesse
             results.add(rs.getString(12) == null ? "" : rs.getString(12)); // vk_preis
             results.add(rs.getString(13) == null ? "" : rs.getString(13)); // empf_vk_preis
@@ -393,7 +393,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         Integer beliebtWert = 0;
         if (!beliebt.equals("")){
             try {
-                beliebtWert = beliebtWerte.get( beliebtNamen.indexOf(beliebt) );
+                beliebtWert = bc.beliebtWerte.get( bc.beliebtNamen.indexOf(beliebt) );
             } catch (ArrayIndexOutOfBoundsException ex) {
                 logString += "<div style=\""+redStyle+"\">Zeile "+lineCount+" wurde ignoriert (Fehler in Spalte J: 'Beliebtheit').</div>\n";
                 log.setText(logString+logStringEnd);
@@ -499,6 +499,23 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             }
         }
 
+        // for parsing (e.g. maximum length of kurzname):
+        Artikel newArticle = new Artikel(bc, Integer.parseInt(gruppenid),
+                lieferant_id, nummer, name, kurzname, mengeDecimal, einheit,
+                barcode, herkunft, vpeInt, setgrInt, vkpreis,
+                empf_vkpreis, ekrabatt, ekpreis,
+                variabel.equals("0") ? false : true,
+                sortiment.equals("0") ? false : true,
+                lieferbar.equals("0") ? false : true,
+                beliebtWert, bestandInt, true);
+        nummer = newArticle.getNummer();
+        name = newArticle.getName();
+        kurzname = newArticle.getKurzname();
+        mengeDecimal = newArticle.getMenge();
+        einheit = newArticle.getEinheit();
+        barcode = newArticle.getBarcode();
+        herkunft = newArticle.getHerkunft();
+
         Vector<Color> colors = new Vector<Color>();
         int itemAlreadyKnown = checkIfArticleAlreadyKnown(lieferant_id, nummer);
         if (itemAlreadyKnown == 1){ // item already in db
@@ -548,14 +565,6 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         }
         if ( itemAlreadyKnown == 0 || (itemChanged && itemAlreadyKnown != 2) ){ // if item not known or item changed
             // add new item to the list
-            Artikel newArticle = new Artikel(bc, Integer.parseInt(gruppenid),
-                    lieferant_id, nummer, name, kurzname, mengeDecimal, einheit,
-                    barcode, herkunft, vpeInt, setgrInt, vkpreis,
-                    empf_vkpreis, ekrabatt, ekpreis,
-                    variabel.equals("0") ? false : true,
-                    sortiment.equals("0") ? false : true,
-                    lieferbar.equals("0") ? false : true,
-                    beliebtWert, bestandInt, true);
             artikelNeu.articles.add(newArticle);
 
             artikelNeu.removeButtons.add(new JButton("-"));
