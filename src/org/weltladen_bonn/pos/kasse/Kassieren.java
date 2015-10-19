@@ -1187,11 +1187,16 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     private boolean checkKundeGibtField() {
         if ( kundeGibtField.getDocument().getLength() == 0 ){
-            JOptionPane.showMessageDialog(this,
-                    "Bitte Betrag bei 'KUNDE GIBT:' eintragen!",
-                    "Fehlender Kundenbetrag", JOptionPane.WARNING_MESSAGE);
-            kundeGibtField.requestFocus();
-            return false;
+            BigDecimal price = new BigDecimal(getTotalPrice());
+            if (price.compareTo(bc.zero) <= 0) {
+                kundeGibtField.setText(bc.priceFormatter(bc.zero));
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Bitte Betrag bei 'KUNDE GIBT:' eintragen!",
+                        "Fehlender Kundenbetrag", JOptionPane.WARNING_MESSAGE);
+                kundeGibtField.requestFocus();
+                return false;
+            }
         }
         return true;
     }

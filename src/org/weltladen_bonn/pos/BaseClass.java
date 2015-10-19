@@ -28,6 +28,7 @@ public class BaseClass {
     public final String fileSep = System.getProperty("file.separator");
     public final String lineSep = System.getProperty("line.separator");
     public final int smallintMax = 32767;
+    public final BigDecimal zero = new BigDecimal("0");
     public final BigDecimal one = new BigDecimal("1");
     public final BigDecimal minusOne = new BigDecimal("-1");
     public final BigDecimal percent = new BigDecimal("0.01");
