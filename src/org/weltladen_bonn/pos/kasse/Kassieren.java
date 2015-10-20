@@ -199,8 +199,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     void showAll() {
         updateRabattButtons();
 
-        allPanel = new JPanel();
-        allPanel.setLayout(new BoxLayout(allPanel, BoxLayout.Y_AXIS));
+        allPanel = new JPanel(new BorderLayout());
+
+        JPanel artikelFormularPanel = new JPanel();
+        artikelFormularPanel.setLayout(new BoxLayout(artikelFormularPanel, BoxLayout.PAGE_AXIS));
 
         JPanel articleSelectPanel = new JPanel();
         articleSelectPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
@@ -237,7 +239,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         sonstigesPanel.add(nineteenPercentButton, c1);
         articleSelectPanel.add(sonstigesPanel);
 
-        allPanel.add(articleSelectPanel);
+        artikelFormularPanel.add(articleSelectPanel);
 
         JPanel spinnerPanel = new JPanel();
         spinnerPanel.setLayout(new FlowLayout());
@@ -318,12 +320,18 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         ruecknahmeButton.addActionListener(this);
         ruecknahmeButton.setEnabled(false);
         spinnerPanel.add(ruecknahmeButton);
-        allPanel.add(spinnerPanel);
+        artikelFormularPanel.add(spinnerPanel);
+
+        allPanel.add(artikelFormularPanel, BorderLayout.NORTH);
 
         showTable();
 
+        JPanel bezahlPanel = new JPanel();
+        bezahlPanel.setLayout(new BoxLayout(bezahlPanel, BoxLayout.PAGE_AXIS));
+
         JPanel zwischensummePanel = new JPanel();
         zwischensummePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
+
         JPanel zahlungsButtonPanel = new JPanel(new GridBagLayout());
         GridBagConstraints c2 = new GridBagConstraints();
         c2.anchor = GridBagConstraints.CENTER;
@@ -352,6 +360,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         zahlungsButtonPanel.add(ecButton, c2);
         c2.gridy = 2;
         zahlungsButtonPanel.add(stornoButton, c2);
+
         zwischensummePanel.add(zahlungsButtonPanel);
 
         JPanel gridPanel = new JPanel(new GridBagLayout());
@@ -466,15 +475,14 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         gridPanel.add(rueckgeldPanel, c3);
 
         zwischensummePanel.add(gridPanel);
-        allPanel.add(zwischensummePanel);
+        bezahlPanel.add(zwischensummePanel);
 
         JPanel neuerKundePanel = new JPanel();
-        neuerKundePanel.setLayout(new BoxLayout(neuerKundePanel, BoxLayout.Y_AXIS));
+        neuerKundePanel.setLayout(new BoxLayout(neuerKundePanel, BoxLayout.PAGE_AXIS));
         zahlungsLabel = new BigLabel(" ");
         zahlungsLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         neuerKundePanel.add(zahlungsLabel);
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new BorderLayout());
+        JPanel buttonPanel = new JPanel(new BorderLayout());
         // center
         JPanel centerPanel = new JPanel();
         neuerKundeButton = new BigButton("Fertig/Nächster Kunde");
@@ -492,7 +500,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         rightPanel.add(quittungsButton);
         buttonPanel.add(rightPanel, BorderLayout.EAST);
         neuerKundePanel.add(buttonPanel);
-        allPanel.add(neuerKundePanel);
+        bezahlPanel.add(neuerKundePanel);
+
+        allPanel.add(bezahlPanel, BorderLayout.SOUTH);
 
         this.add(allPanel, BorderLayout.CENTER);
     }
@@ -710,12 +720,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         entf.setPreferredWidth(2);
         // myTable.setAutoResizeMode(5);
 
-        articleListPanel = new JPanel();
-        articleListPanel.setLayout(new BoxLayout(articleListPanel, BoxLayout.Y_AXIS));
+        articleListPanel = new JPanel(new BorderLayout());
         articleListPanel.setBorder(BorderFactory.createTitledBorder("Gewählte Artikel"));
 
         scrollPane = new JScrollPane(myTable);
-        articleListPanel.add(scrollPane);
+        articleListPanel.add(scrollPane, BorderLayout.CENTER);
 
         JPanel totalPricePanel = createTotalPricePanel();
         zwischensummeButton = new BigButton("ZWS");
@@ -724,9 +733,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (data.size() == 0)
             zwischensummeButton.setEnabled(false);
         totalPricePanel.add(zwischensummeButton);
-        articleListPanel.add(totalPricePanel);
+        articleListPanel.add(totalPricePanel, BorderLayout.SOUTH);
 
-        allPanel.add(articleListPanel);
+        allPanel.add(articleListPanel, BorderLayout.CENTER);
     }
 
     void emptyTable() {
