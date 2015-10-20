@@ -222,6 +222,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             kundeGibt = null;
         }
 	datum = this.dates.get(detailRow);
+	rechnungsNr = Integer.parseInt(coolRow.get(1).toString());
 
         AnyJComponentJTable overviewTable = new AnyJComponentJTable(overviewData, overviewLabels){
 			private static final long serialVersionUID = 1L;
@@ -384,9 +385,9 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     protected void setOverviewTableProperties(AnyJComponentJTable table){
 	// Spalteneigenschaften:
 	table.getColumnModel().getColumn(0).setPreferredWidth(10);
-	TableColumn rechnungsNr = table.getColumn("Rechnungs-Nr.");
-	rechnungsNr.setCellRenderer(rechtsAusrichter);
-	rechnungsNr.setPreferredWidth(50);
+	TableColumn rechnr = table.getColumn("Rechnungs-Nr.");
+	rechnr.setCellRenderer(rechtsAusrichter);
+	rechnr.setPreferredWidth(50);
 	TableColumn betrag = table.getColumn("Betrag");
 	betrag.setCellRenderer(rechtsAusrichter);
 	TableColumn zahlung = table.getColumn("Zahlung");
@@ -420,7 +421,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             else
                 datet = DateTime.now(TimeZone.getDefault());
             Quittung myQuittung = new Quittung(this.conn, this.mainWindow,
-                    datet, kassierArtikel,
+                    datet, rechnungsNr, kassierArtikel,
                     mwstsAndTheirValues, zahlungsModus,
                     totalPrice, kundeGibt, rueckgeld);
             myQuittung.printReceipt();

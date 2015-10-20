@@ -150,11 +150,11 @@ public class HeutigeRechnungen extends Rechnungen {
 	    return;
 	}
 	if (stornoRow > -1){
-	    int answer = JOptionPane.showConfirmDialog(this,
-		    "Rechnung " + (String)data.get(stornoRow).get(1) + " wirklich stornieren?", "Storno",
-		    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-	    if (answer == JOptionPane.YES_OPTION){
-		stornieren(stornoRow);
+            int answer = JOptionPane.showConfirmDialog(this,
+                    "Rechnung " + (String) data.get(stornoRow).get(1) + " wirklich stornieren?", "Storno",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (answer == JOptionPane.YES_OPTION) {
+                stornieren(stornoRow);
                 tabbedPane.recreateTabbedPane();
             }
 	    return;

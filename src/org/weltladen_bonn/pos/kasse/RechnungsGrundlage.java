@@ -28,6 +28,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     protected String zahlungsModus;
     protected BigDecimal kundeGibt;
     protected String datum;
+    protected Integer rechnungsNr;
     protected Vector<String> columnLabels;
     protected HashMap< BigDecimal, Vector<BigDecimal> > vatMap;
 
@@ -52,6 +53,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         zahlungsModus = "unbekannt";
         kundeGibt = null;
         datum = "";
+        rechnungsNr = null;
     }
 
     //////////////////////////////////

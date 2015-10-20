@@ -31,6 +31,7 @@ import org.weltladen_bonn.pos.*;
 
 public class Quittung extends WindowContent {
     private DateTime datetime;
+    private Integer rechnungsNr;
     private Vector<KassierArtikel> kassierArtikel;
     private LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues;
     private String zahlungsModus;
@@ -46,12 +47,13 @@ public class Quittung extends WindowContent {
      *    The constructor.
      *       */
     public Quittung(Connection conn, MainWindowGrundlage mw,
-            DateTime dt,
+            DateTime dt, Integer rechnungsNr,
             Vector<KassierArtikel> ka,
             LinkedHashMap< BigDecimal, Vector<BigDecimal> > matv,
             String zm, BigDecimal tp, BigDecimal kgb, BigDecimal rg) {
 	super(conn, mw);
         this.datetime = dt;
+        this.rechnungsNr = rechnungsNr;
         this.kassierArtikel = ka;
         this.mwstsAndTheirValues = matv;
         this.zahlungsModus = zm;
@@ -89,7 +91,14 @@ public class Quittung extends WindowContent {
             rowOffset = 0;
         } else {
             // Fill header
-            sheet.getCellAt("A5").setValue(datetime.format(bc.dateFormatDate4j));
+            if (datetime != null) {
+                sheet.getCellAt("A5").setValue(datetime.format(bc.dateFormatDate4j));
+            }
+            if (rechnungsNr != null) {
+                sheet.getCellAt("D6").setValue(rechnungsNr);
+            } else {
+                sheet.getCellAt("A6").setValue("");
+            }
             rowOffset = 7;
         }
     }
