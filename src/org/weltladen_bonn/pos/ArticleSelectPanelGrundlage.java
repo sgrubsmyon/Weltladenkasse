@@ -18,7 +18,7 @@ import javax.swing.event.*;
 
 public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage implements ActionListener, DocumentListener {
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
     // Text Fields
@@ -176,6 +176,9 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
             if (hasBarcode) {
                 // Forget the remembered barcode. Another article was selected
                 // that already has a barcode.
+                //System.out.println();
+                //System.out.println("Another article was selected "+
+                //        "that already has a barcode ("++". barcodeMemory is forgotten.");
                 barcodeMemory = "";
             } else {
                 rememberBarcode();
@@ -188,7 +191,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
     }
 
     protected abstract void setPriceField();
-    
+
     protected abstract void resetPriceField();
 
     protected abstract void articleSelectFinishedFocus();
@@ -210,13 +213,13 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
                 newArticle.setBarcode(barcodeMemory);
                 updateArticle(origArticle, newArticle);
 
-                // System.out.println("old selectedArticleID:
-                // "+selectedArticleID);
+                //System.out.println("old selectedArticleID: "+selectedArticleID);
                 updateSelectedArticleID();
-                // System.out.println("new selectedArticleID:
-                // "+selectedArticleID);
+                //System.out.println("new selectedArticleID: "+selectedArticleID);
             }
             // Forget about it.
+            //System.out.println();
+            //System.out.println("barcodeMemory is forgotten.");
             barcodeMemory = "";
         }
     }
@@ -252,18 +255,18 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         if (artikelNamen.size() == 0) {
             // This barcode is not known to the DB.
             // Remember this barcode and possibly enter it in DB later.
-            // System.out.println();
-            // System.out.println("barcodeMemory before: "+barcodeMemory);
+            //System.out.println();
+            //System.out.println("barcodeMemory before: "+barcodeMemory);
             barcodeMemory = barcode;
-            // System.out.println("barcodeMemory after: "+barcodeMemory);
-            // System.out.println();
+            //System.out.println("barcodeMemory after: "+barcodeMemory);
+            //System.out.println();
         } else {
             // Forget the remembered barcode.
-            // System.out.println();
-            // System.out.println("barcodeMemory before: "+barcodeMemory);
+            //System.out.println();
+            //System.out.println("barcodeMemory before: "+barcodeMemory);
             barcodeMemory = "";
-            // System.out.println("barcodeMemory after: "+barcodeMemory);
-            // System.out.println();
+            //System.out.println("barcodeMemory after: "+barcodeMemory);
+            //System.out.println();
         }
         return result;
     }
@@ -403,7 +406,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         artikelBox.emptyBox();
         resetOther();
     }
-    
+
     private void resetForm() {
         barcodeText = "";
         artikelNameText = "";

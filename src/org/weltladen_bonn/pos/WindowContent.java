@@ -417,8 +417,10 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected boolean doesArticleHaveBarcode(Integer artikel_id) {
         boolean hasBarcode = false;
         try {
+            // barcode shall not be NULL and not contain only whitespace
             PreparedStatement pstmt = this.conn
-                    .prepareStatement("SELECT barcode IS NOT NULL FROM artikel " + "WHERE artikel_id = ?");
+                    .prepareStatement("SELECT (barcode IS NOT NULL AND barcode NOT REGEXP '^[[:blank:]]*$') "+
+                            "FROM artikel WHERE artikel_id = ?");
             pstmtSetInteger(pstmt, 1, artikel_id);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
