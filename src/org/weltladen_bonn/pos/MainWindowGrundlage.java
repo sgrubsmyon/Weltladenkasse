@@ -42,6 +42,7 @@ public abstract class MainWindowGrundlage extends JFrame {
     //Labels:
     protected JLabel dateTimeLabel;
     protected JLabel kassenstandLabel;
+    protected JLabel hostLabel;
 
 
     //***************************************************
@@ -64,15 +65,9 @@ public abstract class MainWindowGrundlage extends JFrame {
 	holdAll.setLayout(new BorderLayout());
 
 	bottomPanel.setLayout(new FlowLayout());
-
-	Date now = new Date();
-	dateTime = now.toString();
-	dateTimeLabel = new JLabel(this.dateTime);
-	kassenstandLabel = new JLabel( bc.priceFormatter(retrieveKassenstand())+" "+bc.currencySymbol );
-	bottomPanel.add(dateTimeLabel);
-	bottomPanel.add(kassenstandLabel);
-
 	holdAll.add(bottomPanel, BorderLayout.SOUTH);
+        updateBottomPanel();
+
 	this.getContentPane().add(holdAll, BorderLayout.CENTER);
     }
 
@@ -120,8 +115,10 @@ public abstract class MainWindowGrundlage extends JFrame {
 	dateTime = now.toString();
 	dateTimeLabel = new JLabel(dateTime);
 	kassenstandLabel = new JLabel( bc.priceFormatter(retrieveKassenstand())+" "+bc.currencySymbol );
+	hostLabel = new JLabel("("+bc.mysqlHost+")");
 	this.bottomPanel.add(dateTimeLabel);
 	this.bottomPanel.add(kassenstandLabel);
+	this.bottomPanel.add(hostLabel);
 	holdAll.add(this.bottomPanel, BorderLayout.SOUTH);
     }
 

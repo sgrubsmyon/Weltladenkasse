@@ -1,50 +1,30 @@
 package org.weltladen_bonn.pos.kasse;
 
-// GUI stuff:
-// for BorderLayout, FlowLayout, Dimension
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+// Basic Java stuff:
+import java.util.Vector;
+import java.io.*; // for File
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
+
+// GUI stuff:
+// for BorderLayout, FlowLayout, Dimension:
+import java.awt.*;
+// ActionEvent, KeyAdapter, ...
+import java.awt.event.*;
+
 // MySQL Connector/J stuff:
 // Connection, Statement, ResultSet
-import java.sql.Connection;
-// Basic Java stuff:
-// for Vector
-import java.util.Vector;
+import java.sql.*;
 
 // JFrame, JPanel, JTable, JButton etc.
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
+import javax.swing.*;
+// ChangeEvent, DocumentEvent, ...
+import javax.swing.event.*;
 import javax.swing.table.TableColumn;
 // for DocumentFilter
 import javax.swing.text.AbstractDocument;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.weltladen_bonn.pos.ArticleSelectTable;
-import org.weltladen_bonn.pos.ArticleSelectUser;
-import org.weltladen_bonn.pos.Artikel;
-import org.weltladen_bonn.pos.ArtikelGrundlage;
-import org.weltladen_bonn.pos.MainWindowGrundlage;
-import org.weltladen_bonn.pos.TabbedPaneGrundlage;
+import org.weltladen_bonn.pos.*;
 
 public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSelectUser, DocumentListener {
     /**
@@ -65,7 +45,10 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
 
     // Buttons
     private JButton hinzufuegenButton;
+    private JButton csvListReadinButton;
+    private JFileChooser csvChooser;
     private Vector<JButton> removeButtons;
+    private Vector<JButton> editButtons;
     private JButton deleteButton;
     private JButton printButton;
     private JRadioButton lmButton;
@@ -81,10 +64,12 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
     private Vector<String> columnLabels;
     private Vector<Vector<Object>> data;
 
-    private Vector<Integer> artikelIDs;
+    //private Vector<Integer> artikelIDs;
+    private Vector<String> articleNumbers;
     private Vector<String> lieferanten;
     private Vector<String> articleNames;
-    private Vector<String> articleNumbers;
+    private Vector<String> kurzlieferanten;
+    private Vector<String> kurznamen;
     private Vector<String> mengen;
     private Vector<String> preise;
     private Vector<String> kgPreise;
@@ -100,6 +85,11 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
     public PreisschilderFormular(Connection conn, MainWindowGrundlage mw, TabbedPaneGrundlage tp) {
         super(conn, mw);
         initiateVectors();
+
+        csvChooser = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "CSV Text-Dokumente", "csv");
+        csvChooser.setFileFilter(filter);
 
         emptyTable();
         showAll();
@@ -117,6 +107,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         columnLabels.add("Herkunft");
         columnLabels.add("MwSt.");
         columnLabels.add("Entfernen");
+        columnLabels.add("Ändern");
         colors = new Vector<String>();
         types = new Vector<String>();
     }
@@ -292,15 +283,22 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         c.gridx = 6;
         propertiesPanel.add(new JLabel(""), c);
 
+        JPanel hinzufuegenPanel = new JPanel(new BorderLayout());
         JPanel hinzufuegenButtonPanel = new JPanel();
         hinzufuegenButton = new JButton("Hinzufügen");
         hinzufuegenButton.setMnemonic(KeyEvent.VK_H);
         hinzufuegenButton.addActionListener(this);
         hinzufuegenButton.setEnabled(false);
         hinzufuegenButtonPanel.add(hinzufuegenButton);
+        hinzufuegenPanel.add(hinzufuegenButtonPanel, BorderLayout.CENTER);
+        JPanel csvButtonPanel = new JPanel();
+        csvListReadinButton = new JButton("Datei einlesen");
+        csvListReadinButton.addActionListener(this);
+        csvButtonPanel.add(csvListReadinButton);
+        hinzufuegenPanel.add(csvButtonPanel, BorderLayout.EAST);
 
         formPanel.add(propertiesPanel);
-        formPanel.add(hinzufuegenButtonPanel);
+        formPanel.add(hinzufuegenPanel);
 
         allPanel.add(formPanel, BorderLayout.NORTH);
 
@@ -369,6 +367,8 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         mwst.setPreferredWidth(30);
         TableColumn entf = table.getColumn("Entfernen");
         entf.setPreferredWidth(2);
+        TableColumn aend = table.getColumn("Ändern");
+        aend.setPreferredWidth(2);
     }
 
     void showTable() {
@@ -385,10 +385,12 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
 
     void emptyTable() {
         data = new Vector<Vector<Object>>();
-        artikelIDs = new Vector<Integer>();
+        //artikelIDs = new Vector<Integer>();
+        articleNumbers = new Vector<String>();
         lieferanten = new Vector<String>();
         articleNames = new Vector<String>();
-        articleNumbers = new Vector<String>();
+        kurzlieferanten = new Vector<String>();
+        kurznamen = new Vector<String>();
         mengen = new Vector<String>();
         preise = new Vector<String>();
         kgPreise = new Vector<String>();
@@ -396,14 +398,17 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         colors = new Vector<String>();
         types = new Vector<String>();
         removeButtons = new Vector<JButton>();
+        editButtons = new Vector<JButton>();
     }
 
     private void clearAll() {
         data.clear();
-        artikelIDs.clear();
+        //artikelIDs.clear();
+        articleNumbers.clear();
         lieferanten.clear();
         articleNames.clear();
-        articleNumbers.clear();
+        kurzlieferanten.clear();
+        kurznamen.clear();
         mengen.clear();
         preise.clear();
         kgPreise.clear();
@@ -411,6 +416,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         colors.clear();
         types.clear();
         removeButtons.clear();
+        editButtons.clear();
     }
 
     private void updateAll() {
@@ -426,10 +432,9 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         allPanel.remove(articleListPanel);
         allPanel.revalidate();
         showTable();
-        asPanel.emptyBarcodeBox();
         // scroll the table scroll pane to bottom:
         scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum());
-        
+
         deleteButton.setEnabled(data.size() > 0);
         printButton.setEnabled(data.size() > 0);
     }
@@ -478,18 +483,11 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         }
     }
 
-    private void hinzufuegen() {
-        if (asPanel.artikelBox.getItemCount() != 1 || asPanel.nummerBox.getItemCount() != 1) {
-            System.out.println("Error: article not selected unambiguously.");
-            return;
-        }
-        Artikel origArticle = getArticle(selectedArticleID);
-        // check if user has changed any of the editable values
-        checkIfArticleChanged(origArticle);
-        Artikel a = getArticle(selectedArticleID);
-
-        String liefkurz = getShortLieferantName(selectedArticleID);
+    private void hinzufuegen(Artikel a) {
         String artikelNummer = a.getNummer();
+        String lieferant = getLieferantName(selectedArticleID);
+        String artikelName = a.getName();
+        String liefkurz = getShortLieferantName(selectedArticleID);
         String kurzname = getShortName(a);
         String artikelMwSt = getVAT(selectedArticleID);
         Boolean sortiment = a.getSortiment();
@@ -501,10 +499,12 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         String herkunft = a.getHerkunft() == null ? "" : a.getHerkunft();
 
         // for PreisschilderExport:
-        artikelIDs.add(selectedArticleID);
-        lieferanten.add(liefkurz);
-        articleNames.add(kurzname);
+        //artikelIDs.add(selectedArticleID);
         articleNumbers.add(artikelNummer);
+        lieferanten.add(lieferant);
+        articleNames.add(artikelName);
+        kurzlieferanten.add(liefkurz);
+        kurznamen.add(kurzname);
         mengen.add(menge);
         preise.add(preis);
         kgPreise.add(kgPreis);
@@ -512,8 +512,10 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
 
         colors.add(color);
         types.add("artikel");
-        removeButtons.add(new JButton("-"));
+        removeButtons.add(new JButton("Entfernen"));
         removeButtons.lastElement().addActionListener(this);
+        editButtons.add(new JButton("Ändern"));
+        editButtons.lastElement().addActionListener(this);
 
         Vector<Object> row = new Vector<Object>();
         row.add(liefkurz);
@@ -525,19 +527,67 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         row.add(herkunft);
         row.add(bc.vatFormatter(artikelMwSt));
         row.add(removeButtons.lastElement());
+        row.add(editButtons.lastElement());
         data.add(row);
 
         updateTable();
     }
 
     private void artikelHinzufuegen() {
-        hinzufuegen();
+        if (asPanel.artikelBox.getItemCount() != 1 || asPanel.nummerBox.getItemCount() != 1) {
+            System.out.println("Error: article not selected unambiguously.");
+            return;
+        }
+        Artikel origArticle = getArticle(selectedArticleID);
+        // check if user has changed any of the editable values
+        checkIfArticleChanged(origArticle);
+        Artikel a = getArticle(selectedArticleID);
+
+        hinzufuegen(a);
+        asPanel.emptyBarcodeBox();
     }
 
     private void delete() {
         clearAll();
         updateAll();
     }
+
+
+    private void doCSVListReadin(File file) {
+        try {
+            // use Reader classes for text files:
+            BufferedReader in = new BufferedReader(new FileReader(file)); // Lesen einer Textdatei mit Default Zeichensatz-Codierung, see http://www.wsoftware.de/practices/charsets.html
+            // ignore the first line as header line:
+            String firstLine = in.readLine();
+            // parse file:
+            String line;
+            while ( (line = in.readLine()) != null) {
+                line = line.replaceAll("#.*",""); // remove comment
+                // get the fields
+                String[] fields = line.split(bc.delimiter);
+
+                String lieferant = fields[0];
+                String nummer = fields[1];
+                System.out.println(lieferant+"   "+nummer);
+
+                selectedArticleID = getArticleID(lieferant, nummer);
+                if (selectedArticleID < 0) {
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Artikel von '"+lieferant+"' mit Nummer '"+nummer+"' nicht in Datenbank gefunden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    Artikel a = getArticle(selectedArticleID);
+                    hinzufuegen(a);
+                }
+            }
+        } catch (FileNotFoundException ex) {
+            System.out.println("CSV list file for price tags not found.");
+        } catch (IOException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
 
     /**
      * A class implementing ArticleSelectUser must have this method.
@@ -565,6 +615,44 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         // Plain text components do not fire these events
     }
 
+    void removeRow(int rowIndex) {
+        data.remove(rowIndex);
+        //artikelIDs.remove(rowIndex);
+        articleNumbers.remove(rowIndex);
+        lieferanten.remove(rowIndex);
+        articleNames.remove(rowIndex);
+        kurzlieferanten.remove(rowIndex);
+        kurznamen.remove(rowIndex);
+        mengen.remove(rowIndex);
+        preise.remove(rowIndex);
+        kgPreise.remove(rowIndex);
+        herkuenfte.remove(rowIndex);
+        colors.remove(rowIndex);
+        types.remove(rowIndex);
+        removeButtons.remove(rowIndex);
+        editButtons.remove(rowIndex);
+
+        // remove extra rows (Rabatt oder Pfand):
+        while (rowIndex < removeButtons.size() && removeButtons.get(rowIndex) == null) {
+            data.remove(rowIndex);
+            //artikelIDs.remove(rowIndex);
+            articleNumbers.remove(rowIndex);
+            lieferanten.remove(rowIndex);
+            articleNames.remove(rowIndex);
+            kurzlieferanten.remove(rowIndex);
+            kurznamen.remove(rowIndex);
+            mengen.remove(rowIndex);
+            preise.remove(rowIndex);
+            kgPreise.remove(rowIndex);
+            herkuenfte.remove(rowIndex);
+            colors.remove(rowIndex);
+            types.remove(rowIndex);
+            removeButtons.remove(rowIndex);
+            editButtons.remove(rowIndex);
+        }
+        updateTable();
+    }
+
     /**
      * * Each non abstract class that implements the ActionListener must have
      * this method.
@@ -577,56 +665,61 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
             artikelHinzufuegen();
             return;
         }
+        if (e.getSource() == csvListReadinButton) {
+            int returnVal = csvChooser.showOpenDialog(this);
+            if (returnVal == JFileChooser.APPROVE_OPTION){
+                File file = csvChooser.getSelectedFile();
+                doCSVListReadin(file);
+                System.out.println("Opened " + file.getName());
+            } else {
+                System.out.println("Open command cancelled by user.");
+            }
+            return;
+        }
         if (e.getSource() == deleteButton) {
-            delete();
+            int answer = JOptionPane.showConfirmDialog(this,
+                    "Wirklich löschen?", "Löschen",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (answer == JOptionPane.YES_OPTION) {
+                delete();
+            }
             return;
         }
         if (e.getSource() == printButton) {
             String type = lmButton.isSelected() ? "lm" : khwButton.isSelected() ? "khw" : "";
-            new PreisschilderExport(this.conn, this.mainWindow, type, lieferanten, articleNames, articleNumbers, mengen,
+            new PreisschilderExport(this.conn, this.mainWindow, type, kurzlieferanten, kurznamen, articleNumbers, mengen,
                     preise, kgPreise, herkuenfte);
             return;
         }
-        int removeRow = -1;
+        int rowIndex = -1;
         for (int i = 0; i < removeButtons.size(); i++) {
             if (e.getSource() == removeButtons.get(i)) {
-                removeRow = i;
+                rowIndex = i;
                 break;
             }
         }
-        if (removeRow > -1) {
-            data.remove(removeRow);
-            artikelIDs.remove(removeRow);
-            lieferanten.remove(removeRow);
-            articleNames.remove(removeRow);
-            articleNumbers.remove(removeRow);
-            mengen.remove(removeRow);
-            preise.remove(removeRow);
-            kgPreise.remove(removeRow);
-            herkuenfte.remove(removeRow);
-            colors.remove(removeRow);
-            types.remove(removeRow);
-            removeButtons.remove(removeRow);
-
-            // remove extra rows (Rabatt oder Pfand):
-            while (removeRow < removeButtons.size() && removeButtons.get(removeRow) == null) {
-                data.remove(removeRow);
-                artikelIDs.remove(removeRow);
-                lieferanten.remove(removeRow);
-                articleNames.remove(removeRow);
-                articleNumbers.remove(removeRow);
-                mengen.remove(removeRow);
-                preise.remove(removeRow);
-                kgPreise.remove(removeRow);
-                herkuenfte.remove(removeRow);
-                colors.remove(removeRow);
-                types.remove(removeRow);
-                removeButtons.remove(removeRow);
+        if (rowIndex > -1) {
+            removeRow(rowIndex);
+            return;
+        }
+        rowIndex = -1;
+        for (int i = 0; i < editButtons.size(); i++) {
+            if (e.getSource() == editButtons.get(i)) {
+                rowIndex = i;
+                break;
             }
-
-            updateTable();
+        }
+        if (rowIndex > -1) {
+            Boolean sortiment = colors.get(rowIndex).equals("gray") ? false : true;
+            String[] nummer = new String[]{articleNumbers.get(rowIndex)};
+            String[] name = new String[]{articleNames.get(rowIndex),
+                lieferanten.get(rowIndex),
+                sortiment.toString()};
+            removeRow(rowIndex);
+            asPanel.nummerBox.setBox(nummer);
+            asPanel.artikelBox.setBox(name);
+            asPanel.checkIfFormIsComplete();
             return;
         }
     }
-
 }
