@@ -1,5 +1,5 @@
-mysqlHost = mangopi
-#mysqlHost = localhost
+#mysqlHost = mangopi
+mysqlHost = localhost
 mysqlPath =
 sofficePath =
 printerName = quittungsdrucker

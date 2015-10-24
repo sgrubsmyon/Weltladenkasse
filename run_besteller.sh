@@ -9,7 +9,7 @@ build_dir=build
 lib_dir=../lib
 main_class=org.weltladen_bonn.pos.besteller.Besteller
 
-cp config.properties $build_dir
+cp config_local.properties $build_dir/config.properties
 cp -r vorlagen $build_dir
 cd $build_dir
 java=java
