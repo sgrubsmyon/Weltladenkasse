@@ -165,7 +165,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         articleSelectUser.updateSelectedArticleID(selectedArticleID);
     }
 
-    private void checkIfFormIsComplete() {
+    public void checkIfFormIsComplete() {
         int nummerNumber = nummerBox.getItemCount();
         int artikelNumber = artikelBox.getItemCount();
         if (artikelNumber == 1 && nummerNumber == 1) { // artikel eindeutig

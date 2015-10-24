@@ -1,12 +1,24 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import sys
 import numpy as np
 import pandas as pd
 from decimal import Decimal
 
-fhz_filename = 'Artikelliste_Bestellvorlage_Lebensmittelpreisliste_1.2-2015.csv'
-wlb_filename = 'Artikelliste_DB_Dump_2015_KW40_LM.csv'
+from optparse import OptionParser
+
+# install parser
+usage = "Usage: %prog   [OPTIONS]"
+parser = OptionParser(usage)
+
+parser.add_option("--fhz", type="string", default='Artikelliste_Bestellvorlage_Lebensmittelpreisliste_1.2-2015.csv',
+        dest="FHZ", help="The path to FHZ .csv file.")
+parser.add_option("--wlb", type="string", default='Artikelliste_DB_Dump_2015_KW40_LM.csv',
+        dest="WLB", help="The path to WLB .csv file.")
+
+# get parsed args
+(options, args) = parser.parse_args()
 
 def indexDuplicationCheck(df):
     '''
@@ -74,14 +86,14 @@ def removeEmptyRow(df):
 
 
 # load data
-fhz = pd.read_csv(fhz_filename, sep=';', dtype=str, index_col=(1, 2))
+fhz = pd.read_csv(options.FHZ, sep=';', dtype=str, index_col=(1, 2))
 #   input CSV list must contain only Lebensmittel and Getränke (LM) and not
 #   Kunsthandwerk and other (KHW), if that's the case also for the FHZ CSV list
-wlb = pd.read_csv(wlb_filename, sep=';', dtype=str, index_col=(1, 2))
+wlb = pd.read_csv(options.WLB, sep=';', dtype=str, index_col=(1, 2))
 
 # Check for duplicates in fhz:
 fhz_dup_indices = indexDuplicationCheck(fhz)
-print("Folgende Artikel kommen mehrfach in '%s' vor:" % fhz_filename)
+print("Folgende Artikel kommen mehrfach in '%s' vor:" % options.FHZ)
 for i in fhz_dup_indices:
     print(fhz.loc[i])
     print("---------------")
@@ -159,8 +171,14 @@ for i in range(len(fhz)):
                 geaenderte_preise = geaenderte_preise.append(wlb_row)
                 if wlb_row['Sortiment'] == 'Ja':
                     print("---------------")
+
         # adopt the article name
         wlb_neu.loc[name, 'Bezeichnung | Einheit'] = fhz_row['Bezeichnung | Einheit']
+
+        # TODO adopt more, e.g. VPE!
+        if fhz_row['VPE'] != wlb_row['VPE']:
+            print("VPEs for %s differ: %s (FHZ) and %s (WLB)" % (name,
+                    fhz_row['VPE'], wlb_row['VPE']))
     except KeyError:
         pass
 print(count, "Artikel haben geänderten Preis.")
