@@ -121,7 +121,7 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             this.setForeground(foreground);
 
             if (index >= 0 && index < items.size()){
-                column[0].setText(items.get(index)[0]);
+                column[0].setText( parseName(items.get(index)[0]) );
                 column[1].setText("   "+items.get(index)[1]);
                 if ( ! Boolean.parseBoolean(items.get(index)[2]) ){
                     foreground = Color.GRAY;
