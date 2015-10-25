@@ -73,18 +73,28 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
         return dim;
     }
 
+    protected String parseName(String name) {
+        int widthCut = 65;
+        int endIndex = name.length() > widthCut ? widthCut : name.length();
+        return name.substring(0, endIndex);
+    }
+
     public int getWidestItemWidth() {
         Font font = this.getFont();
         FontMetrics metrics = this.getFontMetrics(font);
         int widest = 0;
         for (int i=0; i<items.size(); i++) {
             int lineWidth = 0;
-            for (String s : items.get(i)){
-                lineWidth += metrics.stringWidth(s);
+            String[] itm = items.get(i);
+            //for (String s : items.get(i)){
+            int end = Math.min(2, itm.length); // only consider first 2 items for width
+            for (int j=0; j<end; j++) {
+                String s = itm[j];
+                lineWidth += metrics.stringWidth( parseName(s) );
             }
             widest = Math.max(widest, lineWidth);
         }
-        return widest+50;
+        return widest-50;
     }
 
     public void doLayout() {

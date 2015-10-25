@@ -309,7 +309,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         hinzufuegenButton.setEnabled(false);
         spinnerPanel.add(hinzufuegenButton);
 
-        leergutButton = new BigButton("Als Leergut");
+        leergutButton = new BigButton("Leergut");
         leergutButton.setMnemonic(KeyEvent.VK_L);
         leergutButton.addActionListener(this);
         leergutButton.setEnabled(false);
