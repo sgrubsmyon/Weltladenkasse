@@ -1700,6 +1700,17 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         myQuittung.printReceipt();
     }
 
+    private void setSelectedArticle(int id) {
+        Artikel a = getArticle(id);
+        String[] nummer = new String[]{a.getNummer()};
+        String[] name = new String[]{a.getName(),
+            getLieferantName(id),
+            a.getSortiment().toString()};
+        asPanel.nummerBox.setBox(nummer);
+        asPanel.artikelBox.setBox(name);
+        asPanel.checkIfFormIsComplete();
+    }
+
     /**
      * * Each non abstract class that implements the ActionListener must have
      * this method.
@@ -1713,11 +1724,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             return;
         }
         if (e.getSource() == sevenPercentButton) {
-            asPanel.artikelField.setText("Variabler Preis 7%");
+            setSelectedArticle(10); // Variabler Preis 7%
             return;
         }
         if (e.getSource() == nineteenPercentButton) {
-            asPanel.artikelField.setText("Variabler Preis 19%");
+            setSelectedArticle(11); // Variabler Preis 19%
             return;
         }
         if (e.getSource() == hinzufuegenButton) {
