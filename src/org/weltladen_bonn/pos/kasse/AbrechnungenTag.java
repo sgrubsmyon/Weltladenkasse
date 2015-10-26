@@ -66,7 +66,7 @@ public class AbrechnungenTag extends Abrechnungen {
         submitButton.addActionListener(this);
         otherPanel.add(submitButton);
         otherPanel.add(new JLabel("(Zahlen in rot werden als neue Tagesabrechnung gespeichert.)"));
-        tablePanel.add(otherPanel);
+        headerPanel.add(otherPanel);
     }
 
     String queryEarliestVerkauf() {

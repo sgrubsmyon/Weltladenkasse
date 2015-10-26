@@ -34,6 +34,9 @@ public class StornierteRechnungen extends Rechnungen {
 	showTable();
     }
 
+    void addOtherStuff() {
+    }
+
     void addButtonsToTable(){
 	// create the buttons for each row:
 	detailButtons = new Vector<JButton>();
@@ -52,7 +55,7 @@ public class StornierteRechnungen extends Rechnungen {
      **/
     public void actionPerformed(ActionEvent e) {
         super.actionPerformed(e);
-	if (e.getSource() == removeDetailButton){
+	if (e.getSource() == backButton){
 	    updateTable();
 	    return;
 	}

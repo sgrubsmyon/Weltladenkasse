@@ -62,6 +62,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
     private JButton returnButton;
 
     // for date change
+    private JButton tagesabschlussButton;
     private JSpinner startSpinner;
     private JSpinner endSpinner;
     private SpinnerDateModel startDateModel;
@@ -219,75 +220,111 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
     }
 
     void showAll(){
-	allPanel = new JPanel();
-	allPanel.setLayout(new BoxLayout(allPanel, BoxLayout.Y_AXIS));
+	allPanel = new JPanel(new BorderLayout());
 
-	allPanel.add(Box.createRigidArea(new Dimension(0,10))); // add empty space
+	JPanel headerPanel = new JPanel();
+	headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
+
+	headerPanel.add(Box.createRigidArea(new Dimension(0,10))); // add empty space
 	JPanel kassenstandPanel = new JPanel();
 	kassenstandPanel.setLayout(new FlowLayout());
 	JLabel kassenstandLabel = new JLabel("Aktueller Kassenstand:");
 	kassenstandPanel.add(kassenstandLabel);
 	JTextField kassenstandField = new JTextField("", 10);
         kassenstandField.setHorizontalAlignment(JTextField.RIGHT);
-	kassenstandField.setText( bc.priceFormatter(mainWindow.retrieveKassenstand())+bc.currencySymbol );
+	kassenstandField.setText( bc.priceFormatter(mainWindow.retrieveKassenstand()) );
 	kassenstandField.setEditable(false);
 	kassenstandLabel.setLabelFor(kassenstandField);
 	kassenstandPanel.add(kassenstandField);
-	allPanel.add(kassenstandPanel);
+        kassenstandPanel.add(new JLabel(bc.currencySymbol));
+	headerPanel.add(kassenstandPanel);
 
-	JPanel manuellAendernPanel = new JPanel();
-	manuellAendernPanel.setLayout(new BoxLayout(manuellAendernPanel, BoxLayout.Y_AXIS));
-	manuellAendernPanel.setBorder(BorderFactory.createTitledBorder("Kassenstand manuell ändern"));
+	JPanel aendernPanel = new JPanel(new BorderLayout());
+	aendernPanel.setBorder(BorderFactory.createTitledBorder("Kassenstand ändern"));
 
-	JPanel kassenstandAendernPanel = new JPanel();
-	kassenstandAendernPanel.setLayout(new FlowLayout());
-	    JLabel neuerKassenstandLabel = new JLabel("Neuer Kassenstand:");
-	    kassenstandAendernPanel.add(neuerKassenstandLabel);
-	    neuerKassenstandField = new JTextField();
-	    neuerKassenstandField.setColumns(10);
-            neuerKassenstandField.setHorizontalAlignment(JTextField.RIGHT);
-	    neuerKassenstandField.getDocument().addDocumentListener(this);
-	    ((AbstractDocument)neuerKassenstandField.getDocument()).setDocumentFilter(bc.geldFilter);
-	    neuerKassenstandLabel.setLabelFor(neuerKassenstandField);
-	    kassenstandAendernPanel.add(neuerKassenstandField);
-	    kassenstandAendernPanel.add(new JLabel(bc.currencySymbol));
+	JPanel kassenstandAendernPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints c1 = new GridBagConstraints();
+        c1.anchor = GridBagConstraints.CENTER;
+        c1.fill = GridBagConstraints.HORIZONTAL;
+        c1.ipadx = 10;
+        c1.ipady = 5;
+        c1.insets = new Insets(1, 2, 1, 2);
 
-	    kassenstandAendernPanel.add(Box.createRigidArea(new Dimension(12,0)));
+        c1.gridy = 0;
+        c1.gridx = 0;
+        c1.anchor = GridBagConstraints.EAST;
+        JLabel neuerKassenstandLabel = new JLabel("Neuer Kassenstand:");
+        kassenstandAendernPanel.add(neuerKassenstandLabel, c1);
 
-            /*
-	    JLabel differenzLabel = new JLabel("ODER zu addierender Betrag:");
-	    kassenstandAendernPanel.add(differenzLabel);
-            */
-	    differenzField = new JTextField();
-            /*
-	    differenzField.setColumns(10);
-            differenzField.setHorizontalAlignment(JTextField.RIGHT);
-	    differenzField.getDocument().addDocumentListener(this);
-            NumberDocumentFilter df = new NumberDocumentFilter(2, 13); // also allow negative values
-	    ((AbstractDocument)differenzField.getDocument()).setDocumentFilter(df);
-	    differenzLabel.setLabelFor(differenzField);
-	    kassenstandAendernPanel.add(differenzField);
-	    kassenstandAendernPanel.add(new JLabel(bc.currencySymbol));
-            */
-	manuellAendernPanel.add(kassenstandAendernPanel);
-	//
-	JPanel kommentarPanel = new JPanel();
-	kommentarPanel.setLayout(new FlowLayout());
-	    JLabel kommentarLabel = new JLabel("Erläuternder Kommentar:");
-	    kommentarPanel.add(kommentarLabel);
-	    kommentarField = new JTextField("", 25);
-	    kommentarField.getDocument().addDocumentListener(this);
-	    StringDocumentFilter sdf = new StringDocumentFilter(70);
-	    ((AbstractDocument)kommentarField.getDocument()).setDocumentFilter(sdf);
-	    kommentarLabel.setLabelFor(kommentarField);
-	    kommentarPanel.add(kommentarField);
-	    //
-	    returnButton = new JButton("Abschicken");
-	    returnButton.addActionListener(this);
-	    returnButton.setEnabled(false);
-	    kommentarPanel.add(returnButton);
-	manuellAendernPanel.add(kommentarPanel);
-	allPanel.add(manuellAendernPanel);
+        c1.gridy = 0;
+        c1.gridx = 1;
+        c1.anchor = GridBagConstraints.WEST;
+        neuerKassenstandField = new JTextField();
+        neuerKassenstandField.setColumns(10);
+        neuerKassenstandField.setHorizontalAlignment(JTextField.RIGHT);
+        neuerKassenstandField.getDocument().addDocumentListener(this);
+        ((AbstractDocument)neuerKassenstandField.getDocument()).setDocumentFilter(bc.geldFilter);
+        neuerKassenstandLabel.setLabelFor(neuerKassenstandField);
+        kassenstandAendernPanel.add(neuerKassenstandField, c1);
+
+        c1.gridy = 0;
+        c1.gridx = 2;
+        kassenstandAendernPanel.add(new JLabel(bc.currencySymbol), c1);
+
+        // ---
+
+        /*
+        JLabel differenzLabel = new JLabel("ODER zu addierender Betrag:");
+        kassenstandAendernPanel.add(differenzLabel);
+        */
+        differenzField = new JTextField();
+        /*
+        differenzField.setColumns(10);
+        differenzField.setHorizontalAlignment(JTextField.RIGHT);
+        differenzField.getDocument().addDocumentListener(this);
+        NumberDocumentFilter df = new NumberDocumentFilter(2, 13); // also allow negative values
+        ((AbstractDocument)differenzField.getDocument()).setDocumentFilter(df);
+        differenzLabel.setLabelFor(differenzField);
+        kassenstandAendernPanel.add(differenzField);
+        kassenstandAendernPanel.add(new JLabel(bc.currencySymbol));
+        */
+
+        // ---
+
+        c1.gridy = 1;
+        c1.gridx = 0;
+        c1.anchor = GridBagConstraints.EAST;
+        JLabel kommentarLabel = new JLabel("Erläuternder Kommentar:");
+        kassenstandAendernPanel.add(kommentarLabel, c1);
+
+        c1.gridy = 1;
+        c1.gridx = 1;
+        c1.anchor = GridBagConstraints.WEST;
+        kommentarField = new JTextField("", 25);
+        kommentarField.getDocument().addDocumentListener(this);
+        StringDocumentFilter sdf = new StringDocumentFilter(70);
+        ((AbstractDocument)kommentarField.getDocument()).setDocumentFilter(sdf);
+        kommentarLabel.setLabelFor(kommentarField);
+        kassenstandAendernPanel.add(kommentarField, c1);
+
+        c1.gridy = 1;
+        c1.gridx = 2;
+        c1.anchor = GridBagConstraints.WEST;
+        returnButton = new JButton("Abschicken");
+        returnButton.addActionListener(this);
+        returnButton.setEnabled(false);
+        kassenstandAendernPanel.add(returnButton, c1);
+
+        c1.gridy = 1;
+        c1.gridx = 3;
+        c1.anchor = GridBagConstraints.CENTER;
+        tagesabschlussButton = new JButton("Tagesabschluss (150 €)");
+        tagesabschlussButton.addActionListener(this);
+        kassenstandAendernPanel.add(tagesabschlussButton, c1);
+
+	aendernPanel.add(kassenstandAendernPanel);
+	headerPanel.add(aendernPanel);
+        allPanel.add(headerPanel, BorderLayout.NORTH);
 
 	fillDataArray(filterStr);
 	showTable();
@@ -302,9 +339,11 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	setTableProperties(myTable);
 //	myTable.setAutoResizeMode(5);
 
-	historyPanel = new JPanel();
-	historyPanel.setLayout(new BoxLayout(historyPanel, BoxLayout.Y_AXIS));
+	historyPanel = new JPanel(new BorderLayout());
 	historyPanel.setBorder(BorderFactory.createTitledBorder("Verlauf der Kassenstände"));
+
+        JPanel historyHeaderPanel = new JPanel();
+	historyHeaderPanel.setLayout(new BoxLayout(historyHeaderPanel, BoxLayout.Y_AXIS));
 
 	    JPanel datePanel = new JPanel();
 	    datePanel.setLayout(new FlowLayout());
@@ -327,7 +366,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    resetButton = new JButton("Zurücksetzen");
 	    resetButton.addActionListener(this);
 	    datePanel.add(resetButton);
-            historyPanel.add(datePanel);
+            historyHeaderPanel.add(datePanel);
 
             JPanel checkBoxPanel = new JPanel();
             rechnungsCheckBox = new JCheckBox("Rechnungen anzeigen");
@@ -335,7 +374,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             rechnungsCheckBox.addItemListener(this);
             //rechnungsCheckBox.addActionListener(this);
             checkBoxPanel.add(rechnungsCheckBox);
-            historyPanel.add(checkBoxPanel);
+            historyHeaderPanel.add(checkBoxPanel);
 
 	    JPanel pageChangePanel = new JPanel();
 	    pageChangePanel.setLayout(new FlowLayout(FlowLayout.LEADING));
@@ -356,12 +395,14 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Kassenstand "+
 		currentPageMin + " bis "+ currentPageMax +" von "+ kassenstandZahlInt);
 	    pageChangePanel.add(header);
-	    historyPanel.add(pageChangePanel);
+	    historyHeaderPanel.add(pageChangePanel);
+
+	    historyPanel.add(historyHeaderPanel, BorderLayout.NORTH);
 
 	    JScrollPane scrollPane = new JScrollPane(myTable);
-	    historyPanel.add(scrollPane);
+	    historyPanel.add(scrollPane, BorderLayout.CENTER);
 
-	allPanel.add(historyPanel);
+	allPanel.add(historyPanel, BorderLayout.CENTER);
     }
 
     private void updateAll(String filterStr){
@@ -531,6 +572,12 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	if (e.getSource() == returnButton){
             abschicken();
             //tabbedPane.recreateTabbedPane();
+	    return;
+	}
+	if (e.getSource() == tagesabschlussButton){
+            neuerKassenstandField.setText("150.00");
+            kommentarField.setText("Tagesabschluss");
+            returnButton.doClick();
 	    return;
 	}
 	else if (e.getSource() == changeDateButton){
