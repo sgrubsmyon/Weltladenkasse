@@ -48,7 +48,7 @@ public class AbrechnungenMonat extends Abrechnungen {
     void addOtherStuff() {
         JPanel otherPanel = new JPanel();
         otherPanel.add(new JLabel("(Zahlen in rot werden als neue Monatsabrechnung gespeichert.)"));
-        tablePanel.add(otherPanel);
+        headerPanel.add(otherPanel);
     }
 
     String returnMaxAbrechnungDate() {

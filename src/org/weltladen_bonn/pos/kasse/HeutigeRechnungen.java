@@ -41,6 +41,9 @@ public class HeutigeRechnungen extends Rechnungen {
 	showTable();
     }
 
+    void addOtherStuff() {
+    }
+
     void addButtonsToTable(){
 	// create the buttons for each row:
 	detailButtons = new Vector<JButton>();
@@ -124,7 +127,7 @@ public class HeutigeRechnungen extends Rechnungen {
      **/
     public void actionPerformed(ActionEvent e) {
         super.actionPerformed(e);
-	if (e.getSource() == removeDetailButton){
+	if (e.getSource() == backButton){
 	    updateTable();
 	    return;
 	}

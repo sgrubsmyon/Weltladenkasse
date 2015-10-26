@@ -50,15 +50,15 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     protected String titleStr;
 
     // The bottom panel which holds button.
-    protected JPanel bottomPanel;
-    protected JPanel tablePanel;
+    protected JPanel allPanel;
+    protected JPanel headerPanel;
     // The table holding the invoices. This is "anonymously subclassed" and two method are overridden
     protected AnyJComponentJTable myTable;
 
     protected JButton prevButton;
     protected JButton nextButton;
 
-    protected JButton removeDetailButton = new JButton("-");
+    protected JButton backButton = new JButton("Zurück");
     protected Vector<JButton> detailButtons;
     protected Vector<JButton> stornoButtons;
 
@@ -79,11 +79,6 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	super(conn, mw);
         filterStr = fs;
         titleStr = ts;
-
-	bottomPanel = new JPanel();
-	bottomPanel.setLayout(new FlowLayout());
-
-	this.add(bottomPanel, BorderLayout.SOUTH);
 
 	fillDataArray();
     }
@@ -152,12 +147,17 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 //	myTable.setFillsViewportHeight(true);
     }
 
+    abstract void addOtherStuff();
+
     abstract void addButtonsToTable();
 
     void showTable(){
-	tablePanel = new JPanel();
-	tablePanel.setLayout(new BoxLayout(tablePanel, BoxLayout.Y_AXIS));
-	tablePanel.setBorder(BorderFactory.createTitledBorder(titleStr));
+	allPanel = new JPanel(new BorderLayout());
+	allPanel.setBorder(BorderFactory.createTitledBorder(titleStr));
+        headerPanel = new JPanel();
+	headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.PAGE_AXIS));
+
+        addOtherStuff();
 
 	JPanel pageChangePanel = new JPanel();
 	pageChangePanel.setLayout(new FlowLayout(FlowLayout.LEADING));
@@ -178,74 +178,26 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Rechnungen "+
 	    currentPageMin + " bis "+ currentPageMax +" von "+ rechnungsZahlInt);
 	pageChangePanel.add(header);
-	tablePanel.add(pageChangePanel);
+	headerPanel.add(pageChangePanel);
+
+        allPanel.add(headerPanel, BorderLayout.NORTH);
 
 	addButtonsToTable();
-//	myTable.setBounds(71,53,150,100);
-//	myTable.setToolTipText("Tabelle kann nur gelesen werden.");
 	setOverviewTableProperties(myTable);
-//	myTable.setAutoResizeMode(5);
-
 	JScrollPane scrollPane = new JScrollPane(myTable);
-//	scrollPane.setBounds(30,30,200,150);
-	tablePanel.add(scrollPane);
+	allPanel.add(scrollPane, BorderLayout.CENTER);
 
-	this.add(tablePanel, BorderLayout.CENTER);
+	this.add(allPanel, BorderLayout.CENTER);
     }
 
     protected void updateTable(){
-	this.remove(tablePanel);
+	this.remove(allPanel);
 	this.revalidate();
 	fillDataArray();
 	showTable();
     }
 
-    protected void showDetailTable(int detailRow, String detailTitleStr) {
-        // clear everything:
-	this.remove(tablePanel);
-	this.revalidate();
-	tablePanel = new JPanel();
-	tablePanel.setLayout(new BoxLayout(tablePanel, BoxLayout.Y_AXIS));
-        kassierArtikel.clear();
-        mwsts.clear();
-
-	// First row: Show total of invoice
-	Vector<Object> coolRow = this.data.get(detailRow);
-	coolRow.set(0, "");
-	coolRow.set(coolRow.size()-1, "");
-	Vector<Vector<Object>> overviewData = new Vector<Vector<Object>>(1);
-	overviewData.add(coolRow);
-        zahlungsModus = coolRow.get(3).toString().toLowerCase();
-        try {
-            kundeGibt = new BigDecimal( bc.priceFormatterIntern(coolRow.get(4).toString()) );
-        } catch (NumberFormatException ex) {
-            kundeGibt = null;
-        }
-	datum = this.dates.get(detailRow);
-	rechnungsNr = Integer.parseInt(coolRow.get(1).toString());
-
-        AnyJComponentJTable overviewTable = new AnyJComponentJTable(overviewData, overviewLabels){
-			private static final long serialVersionUID = 1L;
-
-			public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-                Component c = super.prepareRenderer(renderer, row, column);
-                // add custom rendering here
-                c.setForeground(Color.black); // keep it black
-                return c;
-            }
-        };
-	removeDetailButton.addActionListener(this);
-	overviewTable.setValueAt( removeDetailButton, 0, 0 );
-	overviewTable.setValueAt( myTable.getValueAt(detailRow,overviewLabels.size()-1), 0, overviewLabels.size()-1 );
-	setOverviewTableProperties(overviewTable);
-
-	tablePanel.setBorder(BorderFactory.createTitledBorder(detailTitleStr));
-	tablePanel.add(overviewTable.getTableHeader());
-	tablePanel.add(overviewTable);
-	JTextField header = new JTextField("Details dieser Rechnung:", 25);
-	header.setEditable(false);
-	tablePanel.add(header);
-
+    private Vector< Vector<Object> > getDetailData(int detailRow) {
 	// Now select details of the invoice
 	Vector< Vector<Object> > detailData = new Vector< Vector<Object> >();
 	try {
@@ -342,25 +294,79 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 		detailData.add(row);
 	    }
 	    rs.close();
-        pstmt.close();
+            pstmt.close();
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
 	}
+        return detailData;
+    }
 
+
+    protected void showDetailTable(int detailRow, String detailTitleStr) {
+        // clear everything:
+	this.remove(allPanel);
+	this.revalidate();
+        kassierArtikel.clear();
+        mwsts.clear();
+
+	allPanel = new JPanel(new BorderLayout());
+	allPanel.setBorder(BorderFactory.createTitledBorder(detailTitleStr));
+        headerPanel = new JPanel();
+	headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.PAGE_AXIS));
+
+	// First row: Show total of invoice
+	Vector<Object> coolRow = this.data.get(detailRow);
+	coolRow.set(0, "");
+	//coolRow.set(coolRow.size()-1, "");
+	Vector<Vector<Object>> overviewData = new Vector<Vector<Object>>(1);
+	overviewData.add(coolRow);
+        zahlungsModus = coolRow.get(3).toString().toLowerCase();
+        try {
+            kundeGibt = new BigDecimal( bc.priceFormatterIntern(coolRow.get(4).toString()) );
+        } catch (NumberFormatException ex) {
+            kundeGibt = null;
+        }
+	datum = this.dates.get(detailRow);
+	rechnungsNr = Integer.parseInt(coolRow.get(1).toString());
+
+        AnyJComponentJTable overviewTable = new AnyJComponentJTable(overviewData, overviewLabels){
+			private static final long serialVersionUID = 1L;
+
+			public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                Component c = super.prepareRenderer(renderer, row, column);
+                // add custom rendering here
+                c.setForeground(Color.black); // keep it black
+                return c;
+            }
+        };
+	backButton.addActionListener(this);
+	overviewTable.setValueAt( backButton, 0, 0 );
+	overviewTable.setValueAt( myTable.getValueAt(detailRow,overviewLabels.size()-1), 0, overviewLabels.size()-1 );
+	setOverviewTableProperties(overviewTable);
+
+	headerPanel.add(overviewTable.getTableHeader());
+	headerPanel.add(overviewTable);
+	JTextField header = new JTextField("Details dieser Rechnung:", 25);
+	header.setEditable(false);
+	headerPanel.add(header);
+
+        allPanel.add(headerPanel, BorderLayout.NORTH);
+
+        Vector< Vector<Object> > detailData = getDetailData(detailRow);
         Vector<String> colors = new Vector<String>();
         for (KassierArtikel a : kassierArtikel) {
             colors.add(a.getColor());
         }
 	ArticleSelectTable detailTable = new ArticleSelectTable(detailData, columnLabels, colors);
 	setTableProperties(detailTable);
-
 	JScrollPane detailScrollPane = new JScrollPane(detailTable);
-	tablePanel.add(detailScrollPane);
+
+	allPanel.add(detailScrollPane, BorderLayout.CENTER);
 
 	//JTextField footer = new JTextField(artikelZahl+" Artikel", 25);
 	//footer.setEditable(false);
-	//tablePanel.add(footer);
+	//allPanel.add(footer);
 
         JPanel footerPanel = new JPanel();
         footerPanel.setLayout(new BorderLayout());
@@ -377,9 +383,10 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 quittungsButton.addActionListener(this);
                 rightPanel.add(quittungsButton);
             footerPanel.add(rightPanel, BorderLayout.EAST);
-	tablePanel.add(footerPanel);
 
-	this.add(tablePanel, BorderLayout.CENTER);
+	allPanel.add(footerPanel, BorderLayout.SOUTH);
+
+	this.add(allPanel, BorderLayout.CENTER);
     }
 
     protected void setOverviewTableProperties(AnyJComponentJTable table){

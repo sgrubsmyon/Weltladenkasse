@@ -125,14 +125,7 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
         calButtEnd.addChangeListener(this);
     }
 
-    void showTable() {
-        tablePanel = new JPanel();
-        tablePanel.setLayout(new BoxLayout(tablePanel, BoxLayout.Y_AXIS));
-        tablePanel.setBorder(BorderFactory.createTitledBorder(titleStr));
-
-        addButtonsToTable();
-        setOverviewTableProperties(myTable);
-
+    void addOtherStuff() {
         JPanel datePanel = new JPanel();
         datePanel.setLayout(new FlowLayout());
         // datePanel.setMaximumSize(new Dimension(1024,30));
@@ -157,33 +150,7 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
         resetButton = new JButton("Reset");
         resetButton.addActionListener(this);
         datePanel.add(resetButton);
-        tablePanel.add(datePanel);
-
-        JPanel pageChangePanel = new JPanel();
-        pageChangePanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-        // pageChangePanel.setMaximumSize(new Dimension(1024,30));
-        prevButton = new JButton("<<");
-        if (this.currentPage <= 1)
-            prevButton.setEnabled(false);
-        nextButton = new JButton(">>");
-        if (this.currentPage >= totalPage)
-            nextButton.setEnabled(false);
-        pageChangePanel.add(prevButton);
-        pageChangePanel.add(nextButton);
-        prevButton.addActionListener(this);
-        nextButton.addActionListener(this);
-        int currentPageMin = (currentPage - 1) * rechnungenProSeite + 1;
-        int currentPageMax = rechnungenProSeite * currentPage;
-        currentPageMax = (currentPageMax <= rechnungsZahlInt) ? currentPageMax : rechnungsZahlInt;
-        JLabel header = new JLabel("Seite " + currentPage + " von " + totalPage + ", Rechnungen " + currentPageMin
-                + " bis " + currentPageMax + " von " + rechnungsZahlInt);
-        pageChangePanel.add(header);
-        tablePanel.add(pageChangePanel);
-
-        JScrollPane scrollPane = new JScrollPane(myTable);
-        tablePanel.add(scrollPane);
-
-        this.add(tablePanel, BorderLayout.CENTER);
+        headerPanel.add(datePanel);
     }
 
     void addButtonsToTable() {
@@ -299,7 +266,7 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
             updateTable();
             return;
         }
-        if (e.getSource() == removeDetailButton) {
+        if (e.getSource() == backButton) {
             updateTable();
             return;
         }

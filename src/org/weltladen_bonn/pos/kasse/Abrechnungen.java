@@ -61,8 +61,9 @@ public abstract class Abrechnungen extends WindowContent {
     protected String abrechnungsTableName;
 
     // The bottom panel which holds button.
-    protected JPanel bottomPanel;
-    protected JPanel tablePanel;
+    protected JPanel allPanel;
+    protected JPanel headerPanel;
+    //protected JPanel footerPanel;
     // The table holding the invoices. This is "anonymously subclassed" and two method are overridden
     protected AbrechnungsTable myTable;
 
@@ -100,10 +101,9 @@ public abstract class Abrechnungen extends WindowContent {
         timeName = tn;
         abrechnungsTableName = atn;
 
-	bottomPanel = new JPanel();
-	bottomPanel.setLayout(new FlowLayout());
-
-	this.add(bottomPanel, BorderLayout.SOUTH);
+	//footerPanel = new JPanel();
+	//footerPanel.setLayout(new FlowLayout());
+	//this.add(footerPanel, BorderLayout.SOUTH);
 
 	fillDataArray();
 
@@ -432,10 +432,11 @@ public abstract class Abrechnungen extends WindowContent {
     abstract void addOtherStuff();
 
     void showTable(){
-        tablePanel = new JPanel();
-        tablePanel.setLayout(new BoxLayout(tablePanel, BoxLayout.Y_AXIS));
-        tablePanel.setBorder(BorderFactory.createTitledBorder(titleStr));
+        allPanel = new JPanel(new BorderLayout());
+        allPanel.setBorder(BorderFactory.createTitledBorder(titleStr));
 
+        headerPanel = new JPanel();
+        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.PAGE_AXIS));
         JPanel pageChangePanel = new JPanel();
         pageChangePanel.setLayout(new FlowLayout(FlowLayout.LEADING));
         //	pageChangePanel.setMaximumSize(new Dimension(1024,30));
@@ -455,23 +456,21 @@ public abstract class Abrechnungen extends WindowContent {
         JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Abrechnungen "+
                 currentPageMin + " bis "+ currentPageMax +" von "+ abrechnungsZahl);
         pageChangePanel.add(header);
-        tablePanel.add(pageChangePanel);
+        headerPanel.add(pageChangePanel);
 
         addOtherStuff();
 
-        //	myTable.setBounds(71,53,150,100);
+        allPanel.add(headerPanel, BorderLayout.NORTH);
+
         setTableProperties(myTable);
-        //	myTable.setAutoResizeMode(5);
-
         JScrollPane scrollPane = new JScrollPane(myTable);
-        //	scrollPane.setBounds(30,30,200,150);
-        tablePanel.add(scrollPane);
+        allPanel.add(scrollPane, BorderLayout.CENTER);
 
-        this.add(tablePanel, BorderLayout.CENTER);
+        this.add(allPanel, BorderLayout.CENTER);
     }
 
     protected void updateTable(){
-        this.remove(tablePanel);
+        this.remove(allPanel);
         this.revalidate();
         fillDataArray();
         showTable();

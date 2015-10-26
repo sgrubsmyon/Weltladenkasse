@@ -48,7 +48,7 @@ public class AbrechnungenJahr extends Abrechnungen {
     void addOtherStuff() {
         JPanel otherPanel = new JPanel();
         otherPanel.add(new JLabel("(Zahlen in rot werden als neue Jahresabrechnung gespeichert.)"));
-        tablePanel.add(otherPanel);
+        headerPanel.add(otherPanel);
     }
 
     String returnMaxAbechnungDate() {
