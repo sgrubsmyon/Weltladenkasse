@@ -622,7 +622,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         if (e.getSource() == exportButton){
             String typ = (String)selBestellNrUndTyp.get(1);
             Vector<Object> bestellung = orderData.get(bestellNummernUndTyp.indexOf(selBestellNrUndTyp));
-            Integer kw = Integer.parseInt(bestellung.get(3).toString());
+            Integer kwi = Integer.parseInt(bestellung.get(3).toString());
+            String kw = String.format("%02d", kwi);
             odsChooser.setSelectedFile(new File("Bestellung_WL_Bonn_"+typ+"_KW"+kw+".ods"));
             int returnVal = odsChooser.showSaveDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION){

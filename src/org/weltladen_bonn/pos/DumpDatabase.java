@@ -227,7 +227,8 @@ public class DumpDatabase extends WindowContent {
                 return;
             }
             String[] yw = queryMostRecentOrderYearAndWeek();
-            String year = yw[0], week = yw[1];
+            String year = yw[0];
+            String week = String.format("%02d", Integer.parseInt(yw[1]));
             initializeSaveChooser("DB_Dump_"+year+"_KW"+week+".sql");
             String filename = askForDumpFilename();
             if (filename != null){
