@@ -1424,6 +1424,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             int rechnungsNr = insertIntoVerkauf(true, null);
             //if (zahlungsModus == "ec") {
             printQuittung(rechnungsNr);
+            printQuittung(rechnungsNr);
             //}
         }
         clearAll();

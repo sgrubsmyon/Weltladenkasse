@@ -48,7 +48,7 @@ import org.weltladen_bonn.pos.FileExistsAwareFileChooser;
 
 public abstract class Abrechnungen extends WindowContent {
     // Attribute:
-    protected int abrechnungenProSeite = 6;
+    protected int abrechnungenProSeite = 7;
     protected int currentPage = 1;
     protected int totalPage;
 

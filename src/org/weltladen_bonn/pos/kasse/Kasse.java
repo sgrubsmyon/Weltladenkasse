@@ -39,6 +39,16 @@ public class Kasse {
                         } else {
                             // do nothing
                         }
+                    } else if ( myWindow.myTabbedPane.kassenstandNeedsToChange ){
+                        int answer = JOptionPane.showConfirmDialog(myWindow,
+                            "Es muss noch der Kassenstand gezählt und geändert werden (unter 'Kassenstand').\n"+
+                            "Wirklich schließen?", "Warnung",
+                            JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                        if (answer == JOptionPane.YES_OPTION){
+                            myWindow.dispose();
+                        } else {
+                            // do nothing
+                        }
                     } else {
                         myWindow.dispose();
                     }
