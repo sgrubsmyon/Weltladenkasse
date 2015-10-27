@@ -477,6 +477,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
                     int result = pstmt.executeUpdate();
                     if (result != 0){
                         // update everything
+                        tabbedPane.kassenstandNeedsToChange = false;
                         mainWindow.updateBottomPanel();
                         neuerKassenstandField.setText("");
                         differenzField.setText("");
@@ -533,6 +534,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
                     int result = pstmt.executeUpdate();
                     if (result != 0){
                         // update everything
+                        tabbedPane.kassenstandNeedsToChange = false;
                         mainWindow.updateBottomPanel();
                         neuerKassenstandField.setText("");
                         differenzField.setText("");
@@ -575,7 +577,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    return;
 	}
 	if (e.getSource() == tagesabschlussButton){
-            neuerKassenstandField.setText("150.00");
+            neuerKassenstandField.setText("150,00");
             kommentarField.setText("Tagesabschluss");
             returnButton.doClick();
 	    return;

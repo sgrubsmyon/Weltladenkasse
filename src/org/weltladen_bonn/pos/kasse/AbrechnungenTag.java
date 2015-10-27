@@ -37,7 +37,8 @@ import org.weltladen_bonn.pos.MainWindowGrundlage;
 
 public class AbrechnungenTag extends Abrechnungen {
     // Attribute:
-    private AbrechnungenTabbedPane tabbedPane;
+    private AbrechnungenTabbedPane abrechTabbedPane;
+    private TabbedPane tabbedPane;
 
     private JButton submitButton;
     private boolean submitButtonEnabled;
@@ -48,9 +49,10 @@ public class AbrechnungenTag extends Abrechnungen {
     /**
      *    The constructor.
      *       */
-    public AbrechnungenTag(Connection conn, MainWindowGrundlage mw, AbrechnungenTabbedPane tp){
+    public AbrechnungenTag(Connection conn, MainWindowGrundlage mw, AbrechnungenTabbedPane atp, TabbedPane tp){
         super(conn, mw, "", "Tagesabrechnung", "yyyy-MM-dd HH:mm:ss", "dd.MM. (E)",
                 "dd.MM.yyyy HH:mm:ss (E)", "zeitpunkt", "abrechnung_tag");
+        this.abrechTabbedPane = atp;
         this.tabbedPane = tp;
 	showTable();
     }
@@ -319,9 +321,10 @@ public class AbrechnungenTag extends Abrechnungen {
 	    return;
 	}
 	if (e.getSource() == submitButton){
+            tabbedPane.kassenstandNeedsToChange = true;
             insertTagesAbrechnung();
             updateTable();
-            tabbedPane.recreateTabbedPane();
+            abrechTabbedPane.recreateTabbedPane();
 	    return;
 	}
     }

@@ -42,7 +42,7 @@ public class AbrechnungenTabbedPane extends TabbedPaneGrundlage {
     /**
      *    The constructor.
      *       */
-    public AbrechnungenTabbedPane(Connection conn, MainWindowGrundlage mw, TabbedPaneGrundlage ptp) {
+    public AbrechnungenTabbedPane(Connection conn, MainWindowGrundlage mw, TabbedPane ptp) {
 	super(conn, mw, ptp);
     }
 
@@ -50,7 +50,7 @@ public class AbrechnungenTabbedPane extends TabbedPaneGrundlage {
     protected void createTabbedPane() {
         tabbedPane = new JTabbedPane();
 
-        myTag = new AbrechnungenTag(this.conn, this.mainWindow, this);
+        myTag = new AbrechnungenTag(this.conn, this.mainWindow, this, (TabbedPane)parentTabbedPane);
         myMonat = new AbrechnungenMonat(this.conn, this.mainWindow);
         myJahr = new AbrechnungenJahr(this.conn, this.mainWindow);
         tabbedPane.addTab("Tag", null, myTag, "Tagesabschluss");

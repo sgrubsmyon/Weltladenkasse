@@ -10,31 +10,20 @@ import java.sql.Statement;
 import java.sql.ResultSet;
 
 // GUI stuff:
-//import java.awt.BorderLayout;
-//import java.awt.FlowLayout;
-//import java.awt.Dimension;
 import java.awt.*;
-//import java.awt.event.ActionEvent;
-//import java.awt.event.ActionListener;
 import java.awt.event.*;
 
-//import javax.swing.JFrame;
-//import javax.swing.JPanel;
-//import javax.swing.JScrollPane;
-//import javax.swing.JTable;
-//import javax.swing.JTextArea;
-//import javax.swing.JButton;
-//import javax.swing.JCheckBox;
 import javax.swing.*;
 import javax.swing.tree.*;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.*;
+import javax.swing.event.*;
 
 import org.weltladen_bonn.pos.*;
 
 // Klasse, die Bestellfenster und Artikelliste speichert und anzeigt
-public class TabbedPane extends TabbedPaneGrundlage {
+public class TabbedPane extends TabbedPaneGrundlage implements ChangeListener {
     private Kassieren myKassieren;
     private RechnungenTabbedPane myRech;
     private AbrechnungenTabbedPane myAbrech;
@@ -44,6 +33,7 @@ public class TabbedPane extends TabbedPaneGrundlage {
     public Boolean esWirdKassiert = false; /** This needs to live in TabbedPane (which does not get recreated)
                                              and cannot be local to Kassieren, even though it is only used
                                              inside Kassieren. */
+    public Boolean kassenstandNeedsToChange = false;
 
     // Methoden:
     public TabbedPane(Connection conn, MainWindow mw) {
@@ -66,6 +56,7 @@ public class TabbedPane extends TabbedPaneGrundlage {
         tabbedPane.addTab("Kassenstand", null, myKassenstand, "Kassenstand ansehen/ändern");
         tabbedPane.addTab("Preisschilder", null, myPreisschild, "Preisschilder drucken");
         tabbedPane.addTab("Optionen", null, myOptPane, "Artikelliste/Rabattaktionen/Import/Export");
+        tabbedPane.addChangeListener(this);
 
         this.add(tabbedPane, BorderLayout.CENTER);
 
@@ -78,6 +69,19 @@ public class TabbedPane extends TabbedPaneGrundlage {
 
     public boolean isThereIncompleteAbrechnungTag() {
         return myAbrech.isThereIncompleteAbrechnungTag();
+    }
+
+    /**
+     *    * Each non abstract class that implements the ChangeListener
+     *      must have this method.
+     *
+     *    @param e the change event.
+     **/
+    public void stateChanged(ChangeEvent e){
+        if (kassenstandNeedsToChange && tabbedPane.getSelectedIndex() != 3) {
+            JOptionPane.showMessageDialog(this, "Es muss noch der Kassenstand gezählt und auf 150 € geändert werden\n(unter 'Kassenstand')!",
+                    "Fehler", JOptionPane.WARNING_MESSAGE);
+        }
     }
 
     /**
