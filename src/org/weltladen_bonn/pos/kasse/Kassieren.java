@@ -32,6 +32,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private final BigDecimal ecSchwelle = new BigDecimal("20.00");
     private int artikelRabattArtikelID = 1;
     private int rechnungRabattArtikelID = 2;
+    private int gutscheinArtikelID = 3;
 
     private MainWindow mw;
     private Kundendisplay display;
@@ -112,6 +113,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         showButtons();
         emptyTable();
         showAll();
+        clearAll();
         asPanel.emptyBarcodeBox();
     }
 
@@ -636,20 +638,32 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     void updateRabattButtons() {
         boolean enabled = false;
         if (kassierArtikel.size() > 0) {
-            enabled = true;
+            enabled = false;
             for (int i = kassierArtikel.size() - 1; i >= 0; i--) {
-                if (kassierArtikel.get(i).getType().equals("rabatt")) {
-                    enabled = false; // Artikel hat schon Rabatt, keinen Rabatt
-                                     // mehr erlauben
+                String type = kassierArtikel.get(i).getType();
+                if (type.equals("rabatt")) {
+                    // Artikel hat schon Rabatt, keinen Rabatt
+                    // mehr erlauben
                     break;
                 }
-                if (kassierArtikel.get(i).getType().equals("leergut")) {
-                    enabled = false; // Es handelt sich um Leergut, kein Rabatt
-                                     // erlauben
+                if (type.equals("leergut")) {
+                    // Es handelt sich um Leergut, kein Rabatt
+                    // erlauben
                     break;
                 }
-                if (kassierArtikel.get(i).getType().equals("artikel")) {
-                    // Artikel hatte wohl noch keinen Rabatt
+                if (type.equals("ruecknahme")) {
+                    // Es handelt sich um eine Rückgabe, kein Rabatt
+                    // erlauben
+                    break;
+                }
+                if (type.equals("gutschein")) {
+                    // Es handelt sich um einen Gutschein, kein Rabatt
+                    // erlauben
+                    break;
+                }
+                if (type.equals("artikel")) {
+                    // Artikel hatte wohl noch keinen Rabatt, Rabatt erlauben
+                    enabled = true;
                     break;
                 }
             }
@@ -750,7 +764,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         kassierArtikel.clear();
         removeButtons.clear();
         mwsts.clear();
-        zahlungsModus = "unbekannt";
+        zahlungsModus = "bar";
     }
 
     private void updateAll() {
@@ -1252,7 +1266,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
-    private void hinzufuegen(Integer stueck, String color) {
+    private void hinzufuegen(Integer stueck, String color, String type) {
         Artikel a = getArticle(selectedArticleID);
         String artikelNummer = a.getNummer();
         selectedStueck = stueck;
@@ -1273,7 +1287,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         ka.setRabattID(null);
         ka.setName(kurzname);
         ka.setColor(color);
-        ka.setType("artikel");
+        ka.setType(type);
         ka.setMwst(new BigDecimal(artikelMwSt));
         ka.setStueckzahl(stueck);
         ka.setEinzelpreis(new BigDecimal(artikelPreis));
@@ -1360,12 +1374,16 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
-        hinzufuegen(stueck, "default");
+        String type = "artikel";
+        if (selectedArticleID == gutscheinArtikelID) {
+            type = "gutschein";
+        }
+        hinzufuegen(stueck, "default", type);
     }
 
     private void ruecknahmeHinzufuegen() {
         Integer stueck = -(Integer) anzahlSpinner.getValue();
-        hinzufuegen(stueck, "green");
+        hinzufuegen(stueck, "green", "ruecknahme");
     }
 
     private void zwischensumme() {
@@ -1378,6 +1396,12 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
         if (display != null && display.deviceWorks()) {
             display.printZWS(bigPriceField.getText());
+        }
+
+        if (zahlungsModus == "bar") {
+            bar();
+        } else if (zahlungsModus == "ec") {
+            ec();
         }
     }
 
@@ -1404,16 +1428,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     }
 
     private void gutschein() {
-        selectedArticleID = 3; // internal Gutschein artikel_id
+        selectedArticleID = gutscheinArtikelID; // internal Gutschein artikel_id
         preisField.setText(gutscheinField.getText());
         anzahlSpinner.setValue(1);
         ruecknahmeHinzufuegen();
         zwischensumme();
-        if (zahlungsModus == "bar") {
-            bar();
-        } else if (zahlungsModus == "ec") {
-            ec();
-        }
     }
 
     private void neuerKunde() {
@@ -1749,7 +1768,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
         if (e.getSource() == zwischensummeButton) {
             zwischensumme();
-            bar();
             return;
         }
         if (e.getSource() == barButton) {
