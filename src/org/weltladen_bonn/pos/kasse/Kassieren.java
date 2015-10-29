@@ -54,6 +54,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private JTextField rueckgeldField;
     private JTextField individuellRabattRelativField;
     private JTextField individuellRabattAbsolutField;
+    private JTextField abweichenderPreisField;
     // Buttons
     private JButton hinzufuegenButton;
     private JButton leergutButton;
@@ -68,6 +69,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private JButton quittungsButton;
     private JButton individuellRabattRelativButton;
     private JButton individuellRabattAbsolutButton;
+    private JButton abweichenderPreisButton;
     private JButton mitarbeiterRabattButton;
 
     private Vector<JButton> rabattButtons;
@@ -75,6 +77,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     // The panels
     private JPanel allPanel;
     private JPanel rabattPanel;
+    private JPanel abweichenderPreisPanel;
     private JPanel articleListPanel;
 
     // The table holding the purchase articles.
@@ -484,14 +487,14 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         zahlungsLabel = new BigLabel(" ");
         zahlungsLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         neuerKundePanel.add(zahlungsLabel);
-        JPanel buttonPanel = new JPanel(new BorderLayout());
+        JPanel fertigButtonPanel = new JPanel(new BorderLayout());
         // center
         JPanel centerPanel = new JPanel();
         neuerKundeButton = new BigButton("Fertig/Nächster Kunde");
         neuerKundeButton.setEnabled(false);
         neuerKundeButton.addActionListener(this);
         centerPanel.add(neuerKundeButton);
-        buttonPanel.add(centerPanel, BorderLayout.CENTER);
+        fertigButtonPanel.add(centerPanel, BorderLayout.CENTER);
         // right
         JPanel rightPanel = new JPanel();
         rightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
@@ -500,8 +503,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         quittungsButton.setEnabled(false);
         quittungsButton.addActionListener(this);
         rightPanel.add(quittungsButton);
-        buttonPanel.add(rightPanel, BorderLayout.EAST);
-        neuerKundePanel.add(buttonPanel);
+        fertigButtonPanel.add(rightPanel, BorderLayout.EAST);
+        neuerKundePanel.add(fertigButtonPanel);
         bezahlPanel.add(neuerKundePanel);
 
         allPanel.add(bezahlPanel, BorderLayout.SOUTH);
@@ -509,28 +512,22 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         this.add(allPanel, BorderLayout.CENTER);
     }
 
-    void showButtons() {
-        rabattPanel = new JPanel();
-        rabattPanel.setLayout(new GridBagLayout());
-        rabattPanel.setBorder(BorderFactory.createTitledBorder("Rabatt"));
-        GridBagConstraints c1 = new GridBagConstraints();
-        c1.anchor = GridBagConstraints.NORTH;
-        c1.fill = GridBagConstraints.HORIZONTAL;
-        c1.ipady = 10;
-        c1.insets = new Insets(3, 0, 3, 0);
-        int i = 0;
+    Integer showRabattButtons(GridBagConstraints c, Integer i) {
         for (JButton rbutton : rabattButtons) {
             rbutton.addActionListener(this);
-            c1.gridy = i;
+            c.gridy = i;
             i++;
-            rabattPanel.add(rbutton, c1);
+            rabattPanel.add(rbutton, c);
         }
         mitarbeiterRabattButton = new BigButton("Mitarbeiter");
         mitarbeiterRabattButton.addActionListener(this);
-        c1.gridy = i;
+        c.gridy = i;
         i++;
-        rabattPanel.add(mitarbeiterRabattButton, c1);
+        rabattPanel.add(mitarbeiterRabattButton, c);
+        return i;
+    }
 
+    Integer showRabattIndividuellPanel(GridBagConstraints c, Integer i) {
         JPanel individuellRabattPanel = new JPanel(new GridBagLayout());
         GridBagConstraints c2 = new GridBagConstraints();
         c2.fill = GridBagConstraints.HORIZONTAL;
@@ -538,7 +535,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         individuellRabattPanel.setBorder(BorderFactory.createTitledBorder("individuell"));
 
         individuellRabattRelativField = new JTextField("");
-        individuellRabattRelativField.setColumns(3);
+        individuellRabattRelativField.setColumns(5);
         removeDefaultKeyBindings(individuellRabattRelativField);
         individuellRabattRelativField.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) {
@@ -570,7 +567,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         individuellRabattRelativButton.addActionListener(this);
 
         individuellRabattAbsolutField = new JTextField("");
-        individuellRabattAbsolutField.setColumns(3);
+        individuellRabattAbsolutField.setColumns(5);
         removeDefaultKeyBindings(individuellRabattAbsolutField);
         individuellRabattAbsolutField.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) {
@@ -625,14 +622,94 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         c2.gridy = 1;
         c2.gridx = 2;
         individuellRabattPanel.add(individuellRabattAbsolutButton, c2);
-        c1.gridy = i;
+        c.gridy = i;
         i++;
-        rabattPanel.add(individuellRabattPanel, c1);
-        c1.weighty = 1.;
-        c1.gridy = i;
+        rabattPanel.add(individuellRabattPanel, c);
+        c.weighty = 1.;
+        c.gridy = i;
         i++;
-        rabattPanel.add(Box.createVerticalGlue(), c1);
-        this.add(rabattPanel, BorderLayout.WEST);
+
+        return i;
+    }
+
+    void showAbweichenderPreisPanel() {
+        abweichenderPreisPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints c2 = new GridBagConstraints();
+        c2.fill = GridBagConstraints.HORIZONTAL;
+        c2.insets = new Insets(3, 3, 3, 3);
+        abweichenderPreisPanel.setBorder(BorderFactory.createTitledBorder("Abweichender Preis"));
+
+        abweichenderPreisField = new JTextField("");
+        abweichenderPreisField.setColumns(5);
+        removeDefaultKeyBindings(abweichenderPreisField);
+        abweichenderPreisField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) {
+                if (abweichenderPreisField.getText().length() > 0) {
+                    abweichenderPreisButton.setEnabled(true);
+                } else {
+                    abweichenderPreisButton.setEnabled(false);
+                }
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                this.insertUpdate(e);
+            }
+
+            public void changedUpdate(DocumentEvent e) {
+                // Plain text components do not fire these events
+            }
+        });
+        ((AbstractDocument) abweichenderPreisField.getDocument()).setDocumentFilter(bc.geldFilter);
+        abweichenderPreisField.addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    abweichenderPreisButton.doClick();
+                }
+            }
+        });
+        abweichenderPreisField.setHorizontalAlignment(JTextField.RIGHT);
+        abweichenderPreisButton = new BigButton("OK");
+        abweichenderPreisButton.addActionListener(this);
+
+        c2.anchor = GridBagConstraints.EAST;
+        c2.gridy = 0;
+        c2.gridx = 0;
+        abweichenderPreisPanel.add(abweichenderPreisField, c2);
+        c2.anchor = GridBagConstraints.WEST;
+        c2.gridy = 0;
+        c2.gridx = 1;
+        abweichenderPreisPanel.add(new BigLabel(bc.currencySymbol), c2);
+        c2.anchor = GridBagConstraints.EAST;
+        c2.gridy = 0;
+        c2.gridx = 2;
+        abweichenderPreisPanel.add(abweichenderPreisButton, c2);
+    }
+
+
+    void showButtons() {
+        JPanel buttonPanel = new JPanel(new BorderLayout());
+        JPanel northPanel = new JPanel();
+        northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.PAGE_AXIS));
+
+        rabattPanel = new JPanel();
+        rabattPanel.setLayout(new GridBagLayout());
+        rabattPanel.setBorder(BorderFactory.createTitledBorder("Rabatt"));
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.NORTH;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.ipady = 10;
+        c.insets = new Insets(3, 0, 3, 0);
+
+        Integer i = 0;
+        i = showRabattButtons(c, i);
+        i = showRabattIndividuellPanel(c, i);
+        showAbweichenderPreisPanel();
+
+        northPanel.add(rabattPanel);
+        northPanel.add(abweichenderPreisPanel);
+        buttonPanel.add(northPanel, BorderLayout.NORTH);
+        this.add(buttonPanel, BorderLayout.WEST);
     }
 
     void updateRabattButtons() {
@@ -672,10 +749,15 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             rbutton.setEnabled(enabled);
         }
         mitarbeiterRabattButton.setEnabled(false);
+        individuellRabattRelativField.setText("");
         individuellRabattRelativField.setEditable(enabled);
         individuellRabattRelativButton.setEnabled(false);
+        individuellRabattAbsolutField.setText("");
         individuellRabattAbsolutField.setEditable(enabled);
         individuellRabattAbsolutButton.setEnabled(false);
+        abweichenderPreisField.setText("");
+        abweichenderPreisField.setEditable(enabled);
+        abweichenderPreisButton.setEnabled(false);
     }
 
     void updateRabattButtonsZwischensumme() {
@@ -713,10 +795,15 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (allowMitarbeiterRabatt) {
             mitarbeiterRabattButton.setEnabled(enabled);
         }
+        individuellRabattRelativField.setText("");
         individuellRabattRelativField.setEditable(enabled);
         individuellRabattRelativButton.setEnabled(false);
+        individuellRabattAbsolutField.setText("");
         individuellRabattAbsolutField.setEditable(false);
         individuellRabattAbsolutButton.setEnabled(false);
+        abweichenderPreisField.setText("");
+        abweichenderPreisField.setEditable(false);
+        abweichenderPreisButton.setEnabled(false);
     }
 
     void showTable() {
@@ -814,6 +901,18 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     String getKundeGibt() {
         return bc.priceFormatterIntern(kundeGibtField.getText());
+    }
+
+    BigDecimal getLastArticlePrice() {
+        BigDecimal preis = new BigDecimal("0.00");
+        for (int i = kassierArtikel.size() - 1; i >= 0; i--) {
+            String type = kassierArtikel.get(i).getType();
+            if (type.equals("artikel")) {
+                preis = kassierArtikel.get(i).getEinzelPreis();
+                break;
+            }
+        }
+        return preis;
     }
 
     //////////////////////////////////
@@ -1731,6 +1830,12 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         asPanel.checkIfFormIsComplete();
     }
 
+    void unsetFields() {
+        individuellRabattRelativField.setText("");
+        individuellRabattAbsolutField.setText("");
+        abweichenderPreisField.setText("");
+    }
+
     /**
      * * Each non abstract class that implements the ActionListener must have
      * this method.
@@ -1848,7 +1953,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             } else {
                 artikelRabattierenRelativ(rabattAnteil);
             }
-            individuellRabattRelativField.setText("");
+            unsetFields();
             return;
         }
         if (e.getSource() == individuellRabattAbsolutButton) {
@@ -1858,7 +1963,19 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             } else {
                 artikelRabattierenAbsolut(rabatt);
             }
-            individuellRabattAbsolutField.setText("");
+            unsetFields();
+            return;
+        }
+        if (e.getSource() == abweichenderPreisButton) {
+            BigDecimal origPreis = getLastArticlePrice();
+            BigDecimal neuerPreis = new BigDecimal(bc.priceFormatterIntern(abweichenderPreisField.getText()));
+            BigDecimal rabatt = origPreis.subtract(neuerPreis);
+            if (barButton.isEnabled()) {
+                // do nothing
+            } else {
+                artikelRabattierenAbsolut(rabatt);
+            }
+            unsetFields();
             return;
         }
         int removeRow = -1;
