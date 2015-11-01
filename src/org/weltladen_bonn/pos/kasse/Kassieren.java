@@ -2,6 +2,7 @@ package org.weltladen_bonn.pos.kasse;
 
 // Basic Java stuff:
 import java.util.*; // for Vector
+import java.util.Date;
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
@@ -903,16 +904,16 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         return bc.priceFormatterIntern(kundeGibtField.getText());
     }
 
-    BigDecimal getLastArticlePrice() {
-        BigDecimal preis = new BigDecimal("0.00");
+    int getLastArticleIndex() {
+        int index = -1;
         for (int i = kassierArtikel.size() - 1; i >= 0; i--) {
             String type = kassierArtikel.get(i).getType();
             if (type.equals("artikel")) {
-                preis = kassierArtikel.get(i).getEinzelPreis();
+                index = i;
                 break;
             }
         }
-        return preis;
+        return index;
     }
 
     //////////////////////////////////
@@ -1232,9 +1233,32 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         return maxRechNr;
     }
 
+    String queryLatestVerkauf() {
+        String date = "";
+        try {
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT MAX(verkaufsdatum) "+
+                    "FROM verkauf WHERE storniert = FALSE");
+            rs.next(); date = rs.getString(1); rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return date;
+    }
+
     private int insertIntoVerkauf(boolean ec, BigDecimal kundeGibt) {
         int rechnungsNr = -1;
         try {
+            DateTime latestVerkauf = new DateTime(queryLatestVerkauf());
+            DateTime now = new DateTime(now());
+            if (now.lt(latestVerkauf)) {
+                JOptionPane.showMessageDialog(this, "Fehler: Rechnung kann nicht gespeichert werden, da das aktuelle Datum vor dem der letzten Rechnung liegt.\n"+
+                        "Bitte das Datum im Computer korrigieren.", "Fehler",
+                        JOptionPane.ERROR_MESSAGE);
+                return rechnungsNr;
+            }
             PreparedStatement pstmt = this.conn
                     .prepareStatement("INSERT INTO verkauf SET verkaufsdatum = NOW(), ec_zahlung = ?, kunde_gibt = ?");
             pstmtSetBoolean(pstmt, 1, ec);
@@ -1244,6 +1268,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             if (result == 0) {
                 JOptionPane.showMessageDialog(this, "Fehler: Rechnung konnte nicht abgespeichert werden.", "Fehler",
                         JOptionPane.ERROR_MESSAGE);
+                return rechnungsNr;
             }
             rechnungsNr = maxRechnungsNr();
             for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : this.vatMap.entrySet()) {
@@ -1417,6 +1442,21 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         updateDisplay(kurzname, stueck, artikelPreis);
     }
 
+    private void artikelHinzufuegen() {
+        Integer stueck = (Integer) anzahlSpinner.getValue();
+        if (asPanel.artikelBox.getItemCount() != 1 || asPanel.nummerBox.getItemCount() != 1) {
+            System.out.println("Error: article not selected unambiguously.");
+            JOptionPane.showMessageDialog(this, "Fehler: Artikel nicht eindeutig ausgewählt.", "Fehler",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        String type = "artikel";
+        if (selectedArticleID == gutscheinArtikelID) {
+            type = "gutschein";
+        }
+        hinzufuegen(stueck, "default", type);
+    }
+
     private void leergutHinzufuegen() {
         int pfandArtikelID = queryPfandArtikelID(selectedArticleID);
         // gab es Pfand? Wenn ja, fuege Zeile in Tabelle:
@@ -1463,21 +1503,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             updateAll();
             updateDisplay(pfandName, stueck, pfandString);
         }
-    }
-
-    private void artikelHinzufuegen() {
-        Integer stueck = (Integer) anzahlSpinner.getValue();
-        if (asPanel.artikelBox.getItemCount() != 1 || asPanel.nummerBox.getItemCount() != 1) {
-            System.out.println("Error: article not selected unambiguously.");
-            JOptionPane.showMessageDialog(this, "Fehler: Artikel nicht eindeutig ausgewählt.", "Fehler",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        String type = "artikel";
-        if (selectedArticleID == gutscheinArtikelID) {
-            type = "gutschein";
-        }
-        hinzufuegen(stueck, "default", type);
     }
 
     private void ruecknahmeHinzufuegen() {
@@ -1534,12 +1559,19 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         zwischensumme();
     }
 
-    private void neuerKunde() {
+    private int neuerKunde() {
+        int rechnungsNr = -1;
         if (kundeGibtField.isEditable()) { // if Barzahlung
-            int rechnungsNr = insertIntoVerkauf(false, new BigDecimal(getKundeGibt()));
+            rechnungsNr = insertIntoVerkauf(false, new BigDecimal(getKundeGibt()));
+            if (rechnungsNr < 0){
+                return rechnungsNr;
+            }
             insertIntoKassenstand(rechnungsNr);
-        } else {
-            int rechnungsNr = insertIntoVerkauf(true, null);
+        } else { // EC-Zahlung
+            rechnungsNr = insertIntoVerkauf(true, null);
+            if (rechnungsNr < 0){
+                return rechnungsNr;
+            }
             //if (zahlungsModus == "ec") {
             printQuittung(rechnungsNr);
             printQuittung(rechnungsNr);
@@ -1553,6 +1585,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             mw.setDisplayWelcomeTimer();
             mw.setDisplayBlankTimer();
         }
+        return rechnungsNr;
     }
 
     private void stornieren() {
@@ -1922,8 +1955,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     return;
                 }
             }
-            neuerKunde();
-            tabbedPane.recreateTabbedPane();
+            int rechnungsNr = neuerKunde();
+            if (rechnungsNr > 0) {
+                tabbedPane.recreateTabbedPane();
+            }
             return;
         }
         if (e.getSource() == mitarbeiterRabattButton) {
@@ -1967,14 +2002,20 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             return;
         }
         if (e.getSource() == abweichenderPreisButton) {
-            BigDecimal origPreis = getLastArticlePrice();
-            BigDecimal neuerPreis = new BigDecimal(bc.priceFormatterIntern(abweichenderPreisField.getText()));
-            BigDecimal rabatt = origPreis.subtract(neuerPreis);
-            if (barButton.isEnabled()) {
-                // do nothing
-            } else {
-                artikelRabattierenAbsolut(rabatt);
-            }
+            int i = getLastArticleIndex();
+            BigDecimal neuerEinzelPreis = new BigDecimal(bc.priceFormatterIntern(abweichenderPreisField.getText()));
+            BigDecimal neuerGesPreis = neuerEinzelPreis.multiply(
+                    new BigDecimal(kassierArtikel.get(i).getStueckzahl())
+                    );
+            String neuerEinzelPreisString = bc.priceFormatter(neuerEinzelPreis);
+            String neuerGesPreisString = bc.priceFormatter(neuerGesPreis);
+            kassierArtikel.get(i).setEinzelpreis(neuerEinzelPreis);
+            kassierArtikel.get(i).setGesPreis(neuerGesPreis);
+            data.get(i).set(4, neuerEinzelPreisString);
+            data.get(i).set(5, neuerGesPreisString);
+            updateAll();
+            updateDisplay(kassierArtikel.get(i).getName(),
+                    kassierArtikel.get(i).getStueckzahl(), neuerEinzelPreisString);
             unsetFields();
             return;
         }

@@ -133,9 +133,11 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	oneDayBeforeEarliestDate = earlyCalendar.getTime();
 	earlyCalendar.set(Calendar.DAY_OF_MONTH, earlyDay);
 	earliestDate = earlyCalendar.getTime();
+
+        Date now = new Date(); // current date
         if ( earlyYear == 0 ){
-            oneDayBeforeEarliestDate = new Date();
-            earliestDate = new Date();
+            oneDayBeforeEarliestDate = now;
+            earliestDate = now;
         }
 	Calendar lateCalendar = Calendar.getInstance();
 	lateCalendar.set(Calendar.YEAR, lateYear);
@@ -143,7 +145,14 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	lateCalendar.set(Calendar.DAY_OF_MONTH, lateDay);
 	latestDate = lateCalendar.getTime();
         if ( lateYear == 0 ){
-            latestDate = new Date();
+            latestDate = now;
+        }
+        // final check:
+        if (latestDate.before(earliestDate)) {
+            Date tmp = earliestDate;
+            earliestDate = latestDate;
+            latestDate = tmp;
+            oneDayBeforeEarliestDate = earliestDate;
         }
     }
 
