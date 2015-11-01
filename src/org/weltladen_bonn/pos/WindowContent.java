@@ -1408,6 +1408,22 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
+    protected String now() {
+        String date = "";
+        try {
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT NOW()");
+            rs.next(); date = rs.getString(1); rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return date;
+    }
+
+
+
     /**
      * Calendar methods
      */

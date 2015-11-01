@@ -103,20 +103,6 @@ public class AbrechnungenTag extends Abrechnungen {
         return date;
     }
 
-    String now() {
-        String date = "";
-        try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT NOW()");
-            rs.next(); date = rs.getString(1); rs.close();
-            stmt.close();
-        } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-        return date;
-    }
-
     void queryIncompleteAbrechnung() { // create new abrechnung (for display) from time of last abrechnung until now
         String date = now();
 

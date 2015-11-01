@@ -95,16 +95,25 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
         oneDayBeforeEarliestDate = calendar.getTime();
         calendar.set(Calendar.DAY_OF_MONTH, day);
         earliestDate = calendar.getTime();
+
+        Date now = new Date(); // current date
         if (year == 0) {
-            oneDayBeforeEarliestDate = new Date();
-            earliestDate = new Date();
+            oneDayBeforeEarliestDate = now;
+            earliestDate = now;
         }
-        latestDate = new Date(); // current date
+        latestDate = now;
+        // final check:
+        if (latestDate.before(earliestDate)) {
+            Date tmp = earliestDate;
+            earliestDate = latestDate;
+            latestDate = tmp;
+            oneDayBeforeEarliestDate = earliestDate;
+        }
     }
 
     private void initiateSpinners() {
         System.out.println(
-                "AlteRechnungen spinner values: " + oneDayBeforeEarliestDate + " " + earliestDate + " " + latestDate);
+                "AlteRechnungen spinner values: " + oneDayBeforeEarliestDate + " <= " + earliestDate + " <= " + latestDate);
         startDateModel = new SpinnerDateModel(earliestDate, // Startwert
                 oneDayBeforeEarliestDate, // kleinster Wert
                 latestDate, // groesster Wert
