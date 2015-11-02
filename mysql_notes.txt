@@ -115,3 +115,69 @@ uriuri@dollie:~$ mysql-kasse-admin
 mysql> DESCRIBE produktgruppe;
 ALTER TABLE produktgruppe ADD COLUMN n_artikel_rekursiv INTEGER(10) UNSIGNED DEFAULT NULL;
 DESCRIBE produktgruppe;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+------------------
+
+2015-11-02: Fix the Pfandkiste problem:
+
+MariaDB [kasse]> SET FOREIGN_KEY_CHECKS=0;
+MariaDB [kasse]> UPDATE artikel SET produktgruppen_id = produktgruppen_id + 1 WHERE produktgruppen_id >= 8 AND produktgruppen_id <= 11;
+MariaDB [kasse]> UPDATE produktgruppe SET produktgruppen_id = produktgruppen_id + 1 WHERE produktgruppen_id >= 8 AND produktgruppen_id <= 11 ORDER BY produktgruppen_id DESC;
+MariaDB [kasse]> SELECT p.produktgruppen_id, a.produktgruppen_id, produktgruppen_name, artikel_name FROM produktgruppe AS p INNER JOIN artikel AS a USING (produktgruppen_id) WHERE p.produktgruppen_id >= 8 AND p.produktgruppen_id <= 12;
++-------------------+-------------------+---------------------+------------------------------------+
+| produktgruppen_id | produktgruppen_id | produktgruppen_name | artikel_name                       |
++-------------------+-------------------+---------------------+------------------------------------+
+|                11 |                11 | Sonstiges 7% MwSt   | Variabler Preis 7% MwSt, Sonstige  |
+|                12 |                12 | Sonstiges 19% MwSt  | Variabler Preis 19% MwSt, Sonstige |
+|                12 |                12 | Sonstiges 19% MwSt  | Bambusschale natur/rot, 21x25x12   |
+|                12 |                12 | Sonstiges 19% MwSt  | Bambusschale natur/rot, 21x25x12   |
++-------------------+-------------------+---------------------+------------------------------------+
+4 rows in set (0.00 sec)
+
+MariaDB [kasse]> INSERT INTO `produktgruppe` (`produktgruppen_id`, `toplevel_id`, `sub_id`, `subsub_id`, `produktgruppen_name`, `mwst_id`, `pfand_id`, `std_einheit`, `n_artikel`, `n_artikel_rekursiv`, `aktiv`) VALUES (8,NULL,4,NULL,'Pfand optional',3,NULL,NULL,NULL,NULL,1);
+MariaDB [kasse]> SELECT * FROM produktgruppe;
++-------------------+-------------+--------+-----------+--------------------------------------+---------+----------+-------+-------------+-----------+--------------------+
+| produktgruppen_id | toplevel_id | sub_id | subsub_id | produktgruppen_name                  | mwst_id | pfand_id | aktiv | std_einheit | n_artikel | n_artikel_rekursiv |
++-------------------+-------------+--------+-----------+--------------------------------------+---------+----------+-------+-------------+-----------+--------------------+
+|                 1 |        NULL |   NULL |      NULL | Intern                               |    NULL |     NULL |     1 | NULL        |         0 |              20926 |
+|                 2 |        NULL |      1 |      NULL | Rabatt                               |    NULL |     NULL |     1 | NULL        |         2 |               1067 |
+|                 3 |        NULL |      1 |         1 | Rabatt 0% MwSt                       |       1 |     NULL |     1 | NULL        |         0 |                  0 |
+|                 4 |        NULL |      1 |         2 | Rabatt 7% MwSt                       |       2 |     NULL |     1 | NULL        |         0 |                  0 |
+|                 5 |        NULL |      1 |         3 | Rabatt 19% MwSt                      |       3 |     NULL |     1 | NULL        |         0 |                  0 |
+|                 6 |        NULL |      2 |      NULL | Gutschein                            |       3 |     NULL |     1 | NULL        |         1 |               3429 |
+|                 7 |        NULL |      3 |      NULL | Pfand                                |    NULL |     NULL |     1 | NULL        |         6 |                976 |
+|                 8 |        NULL |      4 |      NULL | Pfand optional                       |    NULL |     NULL |     1 | NULL        |      NULL |               NULL |
+|                 9 |           1 |   NULL |      NULL | Sonstiges                            |    NULL |     NULL |     1 | NULL        |         0 |                  3 |
+|                10 |           1 |      1 |      NULL | Sonstiges 0% MwSt                    |       1 |     NULL |     1 | NULL        |         0 |                  0 |
+|                11 |           1 |      2 |      NULL | Sonstiges 7% MwSt                    |       2 |     NULL |     1 | NULL        |         1 |                  1 |
+|                12 |           1 |      3 |      NULL | Sonstiges 19% MwSt                   |       3 |     NULL |     1 | NULL        |         2 |                  2 |
+
+MariaDB [kasse]> SELECT * FROM rabattaktion;
+Empty set (0.26 sec)
+
+MariaDB [kasse]> SELECT * FROM artikel WHERE artikel_id = 7;
+MariaDB [kasse]> SELECT * FROM artikel WHERE artikel_id = 8;
+MariaDB [kasse]> SELECT * FROM artikel WHERE artikel_id = 9;
+MariaDB [kasse]> UPDATE artikel SET produktgruppen_id = 8 WHERE artikel_id = 7;
+MariaDB [kasse]> UPDATE artikel SET produktgruppen_id = 8 WHERE artikel_id = 8;
+MariaDB [kasse]> UPDATE artikel SET produktgruppen_id = 8 WHERE artikel_id = 9;
+MariaDB [kasse]> UPDATE artikel SET artikel_nr = 'PFANDKISTE' WHERE artikel_id = 7;
+MariaDB [kasse]> UPDATE artikel SET artikel_name = 'Pfand Kiste, Pfandkiste' WHERE artikel_id = 7;
+MariaDB [kasse]> UPDATE artikel SET artikel_nr = 'COLAKISTE' WHERE artikel_id = 8;
+MariaDB [kasse]> UPDATE artikel SET artikel_name = 'Pfand Cola-Kiste, Colakiste' WHERE artikel_id = 8;
+MariaDB [kasse]> SET FOREIGN_KEY_CHECKS=1;
+

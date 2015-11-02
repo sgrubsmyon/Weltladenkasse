@@ -68,7 +68,7 @@ public class ArtikelNeuEingeben extends DialogWindow
     }
 
     private Integer retrieveGruppenID() {
-        Integer result = 11; // default: Sonstiges, 19% MwSt
+        Integer result = 12; // default: Sonstiges, 19% MwSt
         String subStr = this.sub_id == null ? "sub_id IS NULL" : "sub_id = ?";
         String subsubStr = this.subsub_id == null ? "subsub_id IS NULL" : "subsub_id = ?";
         try {
@@ -91,7 +91,7 @@ public class ArtikelNeuEingeben extends DialogWindow
             try {
                 result = rs.getInt(1);
             } catch (SQLException ex) {
-                result = 11; // default: Sonstiges, 19% MwSt
+                result = 12; // default: Sonstiges, 19% MwSt
             }
             rs.close();
             pstmt.close();

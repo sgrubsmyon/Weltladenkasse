@@ -37,7 +37,7 @@ public class Artikel {
 
     public Artikel(BaseClass bc_) {
         bc = bc_;
-        produktgruppen_id = 8;
+        produktgruppen_id = 9; // default: Sonstiges
         lieferant_id = 1;
         artikel_nr = "";
         artikel_name = "";
