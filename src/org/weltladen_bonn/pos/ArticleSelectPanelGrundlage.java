@@ -173,7 +173,8 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
             updateSelectedArticleID();
             setPriceField();
             boolean hasBarcode = doesArticleHaveBarcode(selectedArticleID);
-            if (hasBarcode) {
+            boolean hasVarPrice = doesArticleHaveVarPrice(selectedArticleID);
+            if (hasBarcode || hasVarPrice) {
                 // Forget the remembered barcode. Another article was selected
                 // that already has a barcode.
                 //System.out.println();
