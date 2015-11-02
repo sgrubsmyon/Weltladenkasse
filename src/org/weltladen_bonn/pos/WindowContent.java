@@ -434,6 +434,26 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return hasBarcode;
     }
 
+    protected boolean doesArticleHaveVarPrice(Integer artikel_id) {
+        boolean hasVarPrice = false;
+        try {
+            // barcode shall not be NULL and not contain only whitespace
+            PreparedStatement pstmt = this.conn
+                    .prepareStatement("SELECT variabler_preis "+
+                            "FROM artikel WHERE artikel_id = ?");
+            pstmtSetInteger(pstmt, 1, artikel_id);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            hasVarPrice = rs.getBoolean(1);
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.err.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return hasVarPrice;
+    }
+
     protected int setArticleInactive(Artikel a) {
         // returns 0 if there was an error, otherwise number of rows affected
         // (>0)

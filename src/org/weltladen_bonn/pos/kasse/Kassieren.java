@@ -1888,11 +1888,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             return;
         }
         if (e.getSource() == sevenPercentButton) {
-            setSelectedArticle(11); // Variabler Preis 7%
+            setSelectedArticle(10); // Variabler Preis 7%
             return;
         }
         if (e.getSource() == nineteenPercentButton) {
-            setSelectedArticle(12); // Variabler Preis 19%
+            setSelectedArticle(11); // Variabler Preis 19%
             return;
         }
         if (e.getSource() == hinzufuegenButton) {
