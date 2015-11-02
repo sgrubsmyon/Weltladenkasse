@@ -1240,6 +1240,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             ResultSet rs = stmt.executeQuery("SELECT MAX(verkaufsdatum) "+
                     "FROM verkauf WHERE storniert = FALSE");
             rs.next(); date = rs.getString(1); rs.close();
+            if (date == null){
+                date = "";
+            }
             stmt.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
@@ -1251,13 +1254,16 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private int insertIntoVerkauf(boolean ec, BigDecimal kundeGibt) {
         int rechnungsNr = -1;
         try {
-            DateTime latestVerkauf = new DateTime(queryLatestVerkauf());
-            DateTime now = new DateTime(now());
-            if (now.lt(latestVerkauf)) {
-                JOptionPane.showMessageDialog(this, "Fehler: Rechnung kann nicht gespeichert werden, da das aktuelle Datum vor dem der letzten Rechnung liegt.\n"+
-                        "Bitte das Datum im Computer korrigieren.", "Fehler",
-                        JOptionPane.ERROR_MESSAGE);
-                return rechnungsNr;
+            String latestVerkaufStr = queryLatestVerkauf();
+            if (!latestVerkaufStr.equals("")) {
+                DateTime latestVerkauf = new DateTime(latestVerkaufStr);
+                DateTime now = new DateTime(now());
+                if (now.lt(latestVerkauf)) {
+                    JOptionPane.showMessageDialog(this, "Fehler: Rechnung kann nicht gespeichert werden, da das aktuelle Datum vor dem der letzten Rechnung liegt.\n"+
+                            "Bitte das Datum im Computer korrigieren.", "Fehler",
+                            JOptionPane.ERROR_MESSAGE);
+                    return rechnungsNr;
+                }
             }
             PreparedStatement pstmt = this.conn
                     .prepareStatement("INSERT INTO verkauf SET verkaufsdatum = NOW(), ec_zahlung = ?, kunde_gibt = ?");
