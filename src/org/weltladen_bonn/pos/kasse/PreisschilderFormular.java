@@ -40,6 +40,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
     protected JTextField empfVkPreisField;
     protected JTextField kurznameField;
     protected JTextField mengeField;
+    protected JTextField einheitField;
     protected JTextField herkunftField;
     protected JCheckBox sortimentBox;
 
@@ -175,6 +176,15 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         mengeField.setHorizontalAlignment(JTextField.RIGHT);
         removeDefaultKeyBindings(mengeField);
 
+        einheitField = new JTextField("");
+        einheitField.addKeyListener(enterAdapter);
+        einheitField.getDocument().addDocumentListener(this);
+        ((AbstractDocument) einheitField.getDocument()).setDocumentFilter(bc.einheitFilter);
+        einheitField.setEditable(false);
+        einheitField.setColumns(10);
+        einheitField.setHorizontalAlignment(JTextField.RIGHT);
+        removeDefaultKeyBindings(einheitField);
+
         herkunftField = new JTextField("");
         herkunftField.addKeyListener(enterAdapter);
         herkunftField.getDocument().addDocumentListener(this);
@@ -273,15 +283,15 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         c.anchor = GridBagConstraints.EAST;
         c.gridy = 2;
         c.gridx = 4;
-        propertiesPanel.add(new JLabel("Sortiment: "), c);
+        propertiesPanel.add(new JLabel("Einheit: "), c);
         c.anchor = GridBagConstraints.EAST;
         c.gridy = 2;
         c.gridx = 5;
-        propertiesPanel.add(sortimentBox, c);
+        propertiesPanel.add(einheitField, c);
         c.anchor = GridBagConstraints.WEST;
         c.gridy = 2;
         c.gridx = 6;
-        propertiesPanel.add(new JLabel(""), c);
+        propertiesPanel.add(sortimentBox, c);
 
         JPanel hinzufuegenPanel = new JPanel(new BorderLayout());
         JPanel hinzufuegenButtonPanel = new JPanel();
@@ -455,6 +465,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         String kurzname = origArticle.getKurzname();
         kurzname = kurzname == null ? "" : kurzname;
         String menge = bc.unifyDecimalIntern(origArticle.getMenge());
+        String einheit = origArticle.getEinheit();
         String herkunft = origArticle.getHerkunft();
         herkunft = herkunft == null ? "" : herkunft;
         Boolean sortiment = origArticle.getSortiment();
@@ -463,16 +474,19 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         String user_empfVkPreis = bc.priceFormatterIntern(empfVkPreisField.getText());
         String user_kurzname = kurznameField.getText();
         String user_menge = bc.unifyDecimalIntern(mengeField.getText());
+        String user_einheit = einheitField.getText();
         String user_herkunft = herkunftField.getText();
         Boolean user_sortiment = sortimentBox.isSelected();
         if (!vkPreis.equals(user_vkPreis) || !empfVkPreis.equals(user_empfVkPreis) || !kurzname.equals(user_kurzname)
-                || !menge.equals(user_menge) || !herkunft.equals(user_herkunft) || !sortiment.equals(user_sortiment)) {
+                || !menge.equals(user_menge) || !einheit.equals(user_einheit) || !herkunft.equals(user_herkunft)
+                || !sortiment.equals(user_sortiment)) {
             // user has edited the article, update the article
             Artikel newArticle = getArticle(selectedArticleID);
             newArticle.setVKP(user_vkPreis);
             newArticle.setEmpfVKP(user_empfVkPreis);
             newArticle.setKurzname(user_kurzname);
             newArticle.setMenge(new BigDecimal(user_menge));
+            newArticle.setEinheit(user_einheit);
             newArticle.setHerkunft(user_herkunft);
             newArticle.setSortiment(user_sortiment);
             updateArticle(origArticle, newArticle);
