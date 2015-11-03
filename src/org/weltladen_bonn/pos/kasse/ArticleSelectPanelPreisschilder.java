@@ -30,12 +30,14 @@ public class ArticleSelectPanelPreisschilder extends ArticleSelectPanelGrundlage
         String empfVkPreis = a.getEmpfVKP();
         String kurzname = a.getKurzname();
         BigDecimal menge = a.getMenge();
+        String einheit = a.getEinheit();
         String herkunft = a.getHerkunft();
         Boolean sortiment = a.getSortiment();
         preisschilder.vkPreisField.setText(bc.priceFormatter(vkPreis));
         preisschilder.empfVkPreisField.setText(bc.priceFormatter(empfVkPreis));
         preisschilder.kurznameField.setText(kurzname);
         preisschilder.mengeField.setText(bc.unifyDecimal(menge));
+        preisschilder.einheitField.setText(einheit);
         preisschilder.herkunftField.setText(herkunft);
         preisschilder.sortimentBox.setSelected(sortiment);
         
@@ -43,6 +45,7 @@ public class ArticleSelectPanelPreisschilder extends ArticleSelectPanelGrundlage
         preisschilder.empfVkPreisField.setEditable(true);
         preisschilder.kurznameField.setEditable(true);
         preisschilder.mengeField.setEditable(true);
+        preisschilder.einheitField.setEditable(true);
         preisschilder.herkunftField.setEditable(true);
         preisschilder.sortimentBox.setEnabled(true);
         
@@ -57,6 +60,7 @@ public class ArticleSelectPanelPreisschilder extends ArticleSelectPanelGrundlage
         preisschilder.empfVkPreisField.setText("");
         preisschilder.kurznameField.setText("");
         preisschilder.mengeField.setText("");
+        preisschilder.einheitField.setText("");
         preisschilder.herkunftField.setText("");
         preisschilder.sortimentBox.setSelected(false);
         
@@ -64,6 +68,7 @@ public class ArticleSelectPanelPreisschilder extends ArticleSelectPanelGrundlage
         preisschilder.empfVkPreisField.setEditable(false);
         preisschilder.kurznameField.setEditable(false);
         preisschilder.mengeField.setEditable(false);
+        preisschilder.einheitField.setEditable(false);
         preisschilder.herkunftField.setEditable(false);
         preisschilder.sortimentBox.setEnabled(false);
     }
