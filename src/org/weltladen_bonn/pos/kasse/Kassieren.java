@@ -64,6 +64,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private JButton barButton;
     private JButton ecButton;
     private JButton stornoButton;
+    private JButton passendButton;
     private JButton gutscheinButton;
     private JLabel zahlungsLabel;
     private JButton neuerKundeButton;
@@ -310,18 +311,23 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         spinnerPanel.add(new BigLabel(bc.currencySymbol));
 
         hinzufuegenButton = new BigButton("Hinzufügen");
+        hinzufuegenButton.setBackground(Color.BLUE.darker());
+        hinzufuegenButton.setForeground(Color.WHITE);
         hinzufuegenButton.setMnemonic(KeyEvent.VK_H);
         hinzufuegenButton.addActionListener(this);
         hinzufuegenButton.setEnabled(false);
         spinnerPanel.add(hinzufuegenButton);
 
         leergutButton = new BigButton("Leergut");
+        leergutButton.setBackground(Color.GREEN.darker().darker());
+        leergutButton.setForeground(Color.WHITE);
         leergutButton.setMnemonic(KeyEvent.VK_L);
         leergutButton.addActionListener(this);
         leergutButton.setEnabled(false);
         spinnerPanel.add(leergutButton);
 
         ruecknahmeButton = new BigButton("Rückgabe");
+        ruecknahmeButton.setBackground(Color.ORANGE);
         ruecknahmeButton.setMnemonic(KeyEvent.VK_R);
         ruecknahmeButton.addActionListener(this);
         ruecknahmeButton.setEnabled(false);
@@ -401,6 +407,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         ((AbstractDocument) kundeGibtField.getDocument()).setDocumentFilter(bc.geldFilter);
         kundeGibtPanel.add(kundeGibtField);
         kundeGibtPanel.add(new BigLabel(bc.currencySymbol));
+        passendButton = new BigButton("Pas'd");
+        passendButton.setEnabled(false);
+        passendButton.addActionListener(this);
+        kundeGibtPanel.add(passendButton);
 
         JPanel gutscheinPanel = new JPanel();
         gutscheinPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
@@ -492,6 +502,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         // center
         JPanel centerPanel = new JPanel();
         neuerKundeButton = new BigButton("Fertig/Nächster Kunde");
+        neuerKundeButton.setBackground(Color.BLACK);
+        neuerKundeButton.setForeground(Color.WHITE);
         neuerKundeButton.setEnabled(false);
         neuerKundeButton.addActionListener(this);
         centerPanel.add(neuerKundeButton);
@@ -500,6 +512,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         JPanel rightPanel = new JPanel();
         rightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
         quittungsButton = new BigButton("Quittung");
+        quittungsButton.setBackground(Color.DARK_GRAY);
+        quittungsButton.setForeground(Color.WHITE);
         quittungsButton.setMnemonic(KeyEvent.VK_Q);
         quittungsButton.setEnabled(false);
         quittungsButton.addActionListener(this);
@@ -830,6 +844,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
         JPanel totalPricePanel = createTotalPricePanel();
         zwischensummeButton = new BigButton("ZWS");
+        zwischensummeButton.setBackground(Color.RED.darker());
+        zwischensummeButton.setForeground(Color.WHITE);
         zwischensummeButton.setMnemonic(KeyEvent.VK_Z);
         zwischensummeButton.addActionListener(this);
         if (data.size() == 0)
@@ -884,10 +900,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             BigDecimal kundeGibt = new BigDecimal(getKundeGibt());
             BigDecimal rueckgeld = kundeGibt.subtract(totalPrice);
             if (rueckgeld.signum() < 0) {
-                rueckgeldField.setForeground(Color.red);
+                rueckgeldField.setForeground(Color.RED);
                 // neuerKundeButton.setEnabled(false);
             } else {
-                rueckgeldField.setForeground(Color.green.darker().darker());
+                rueckgeldField.setForeground(Color.GREEN.darker().darker());
                 // neuerKundeButton.setEnabled(true);
             }
             rueckgeldField.setText(bc.priceFormatter(rueckgeld) + ' ' + bc.currencySymbol);
@@ -1539,6 +1555,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         zahlungsModus = "bar";
         zahlungsLabel.setText("Bar-Zahlung. Bitte jetzt abrechnen.");
         kundeGibtField.setEditable(true);
+        passendButton.setEnabled(true);
         gutscheinField.setEditable(true);
         // neuerKundeButton.setEnabled(false);
         neuerKundeButton.setEnabled(true);
@@ -1551,9 +1568,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         zahlungsLabel.setText("EC-Zahlung. Bitte jetzt EC-Gerät bedienen.");
         kundeGibtField.setText("");
         kundeGibtField.setEditable(false);
+        passendButton.setEnabled(false);
         gutscheinField.setEditable(true);
         neuerKundeButton.setEnabled(true);
-        quittungsButton.setEnabled(true);
+        quittungsButton.setEnabled(false);
         neuerKundeButton.requestFocus();
     }
 
@@ -1929,6 +1947,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 }
             }
             ec();
+            return;
+        }
+        if (e.getSource() == passendButton) {
+            kundeGibtField.setText( bc.priceFormatter(getTotalPrice()) );
             return;
         }
         if (e.getSource() == gutscheinButton) {
