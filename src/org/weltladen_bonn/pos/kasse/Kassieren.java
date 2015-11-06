@@ -125,12 +125,25 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private void setupKeyboardShortcuts() {
         // keyboard shortcuts:
         KeyStroke zwischensummeShortcut = KeyStroke.getKeyStroke("ctrl Z");
+        KeyStroke zwischensummeShortcutNumPad = KeyStroke.getKeyStroke(KeyEvent.VK_NUMPAD4, 0, true);
+        KeyStroke hinzufuegenShortcut = KeyStroke.getKeyStroke("ctrl H");
+        KeyStroke leergutShortcut = KeyStroke.getKeyStroke("ctrl L");
+        KeyStroke ruecknahmeShortcut = KeyStroke.getKeyStroke("ctrl R");
+        //
         // KeyStroke barShortcut = KeyStroke.getKeyStroke("ctrl B");
         // KeyStroke ecShortcut = KeyStroke.getKeyStroke("ctrl E");
         // KeyStroke stornierenShortcut = KeyStroke.getKeyStroke("ctrl S");
 
-        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(zwischensummeShortcut, "zws");
+        //this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(zwischensummeShortcut, "zws");
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(zwischensummeShortcutNumPad, "zws");
         this.getActionMap().put("zws", new ZWSAction());
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(zwischensummeShortcut, "hinzufuegen");
+        this.getActionMap().put("hinzufuegen", new HinzufuegenAction());
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(leergutShortcut, "leergut");
+        this.getActionMap().put("leergut", new LeergutAction());
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(ruecknahmeShortcut, "ruecknahme");
+        this.getActionMap().put("ruecknahme", new RuecknahmeAction());
+
         // this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barShortcut,
         // "bar");
         // this.getActionMap().put("bar", new BarAction());
@@ -145,6 +158,24 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private class ZWSAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
             zwischensummeButton.doClick();
+        }
+    }
+
+    private class HinzufuegenAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            hinzufuegenButton.doClick();
+        }
+    }
+
+    private class LeergutAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            leergutButton.doClick();
+        }
+    }
+
+    private class RuecknahmeAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            ruecknahmeButton.doClick();
         }
     }
 
