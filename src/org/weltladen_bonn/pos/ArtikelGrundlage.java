@@ -25,6 +25,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
         field.getInputMap().put(KeyStroke.getKeyStroke("ctrl A"), "none");
         // remove Ctrl-C key binding:
 //        field.getInputMap().put(KeyStroke.getKeyStroke("ctrl C"), "none");
+        // remove Ctrl-H key binding:
+        field.getInputMap().put(KeyStroke.getKeyStroke("ctrl H"), "none");
     }
 
     protected void removeDefaultKeyBindings(JComponent field, int condition) {
@@ -32,6 +34,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
         field.getInputMap(condition).put(KeyStroke.getKeyStroke("ctrl A"), "none");
         // remove Ctrl-C key binding:
 //        field.getInputMap(condition).put(KeyStroke.getKeyStroke("ctrl C"), "none");
+        // remove Ctrl-H key binding:
+        field.getInputMap(condition).put(KeyStroke.getKeyStroke("ctrl H"), "none");
     }
 
     //////////////////////////////////
