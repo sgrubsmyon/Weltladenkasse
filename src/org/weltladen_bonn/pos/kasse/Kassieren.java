@@ -59,7 +59,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     // Buttons
     private JButton hinzufuegenButton;
     private JButton leergutButton;
-    private JButton ruecknahmeButton;
+    private JButton rueckgabeButton;
     private JButton zwischensummeButton;
     private JButton barButton;
     private JButton ecButton;
@@ -124,25 +124,32 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     private void setupKeyboardShortcuts() {
         // keyboard shortcuts:
-        KeyStroke zwischensummeShortcut = KeyStroke.getKeyStroke("ctrl Z");
-        KeyStroke zwischensummeShortcutNumPad = KeyStroke.getKeyStroke(KeyEvent.VK_NUMPAD4, 0, true);
+        KeyStroke kunsthandwerkShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_SUBTRACT, 0);
         KeyStroke hinzufuegenShortcut = KeyStroke.getKeyStroke("ctrl H");
         KeyStroke leergutShortcut = KeyStroke.getKeyStroke("ctrl L");
-        KeyStroke ruecknahmeShortcut = KeyStroke.getKeyStroke("ctrl R");
-        //
+        KeyStroke leergutShortcutNumPad = KeyStroke.getKeyStroke(KeyEvent.VK_DIVIDE, 0);
+        KeyStroke rueckgabeShortcut = KeyStroke.getKeyStroke("ctrl R");
+        KeyStroke rueckgabeShortcutNumPad = KeyStroke.getKeyStroke(KeyEvent.VK_MULTIPLY, 0);
+        KeyStroke zwischensummeShortcut = KeyStroke.getKeyStroke("ctrl Z");
+        KeyStroke zwischensummeShortcutNumPad = KeyStroke.getKeyStroke(KeyEvent.VK_ADD, 0);
         // KeyStroke barShortcut = KeyStroke.getKeyStroke("ctrl B");
         // KeyStroke ecShortcut = KeyStroke.getKeyStroke("ctrl E");
         // KeyStroke stornierenShortcut = KeyStroke.getKeyStroke("ctrl S");
 
-        //this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(zwischensummeShortcut, "zws");
-        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(zwischensummeShortcutNumPad, "zws");
-        this.getActionMap().put("zws", new ZWSAction());
-        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(zwischensummeShortcut, "hinzufuegen");
-        this.getActionMap().put("hinzufuegen", new HinzufuegenAction());
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(kunsthandwerkShortcut, "khw");
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(hinzufuegenShortcut, "hinzufuegen");
         this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(leergutShortcut, "leergut");
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(leergutShortcutNumPad, "leergut");
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(rueckgabeShortcut, "rueckgabe");
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(rueckgabeShortcutNumPad, "rueckgabe");
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(zwischensummeShortcut, "zws");
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(zwischensummeShortcutNumPad, "zws_num");
+        this.getActionMap().put("khw", new KHWAction());
+        this.getActionMap().put("hinzufuegen", new HinzufuegenAction());
         this.getActionMap().put("leergut", new LeergutAction());
-        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(ruecknahmeShortcut, "ruecknahme");
-        this.getActionMap().put("ruecknahme", new RuecknahmeAction());
+        this.getActionMap().put("rueckgabe", new RueckgabeAction());
+        this.getActionMap().put("zws", new ZWSAction());
+        this.getActionMap().put("zws_num", new ZWSNumPadAction());
 
         // this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barShortcut,
         // "bar");
@@ -155,8 +162,33 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         // this.getActionMap().put("stornieren", new StornoAction());
     }
 
+    private class KHWAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            setSelectedArticle(18); // Sonstiges Kunsthandwerk
+        }
+    }
+
     private class ZWSAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
+            zwischensummeButton.doClick();
+        }
+    }
+
+    void robotPressBackSpace() {
+        Robot robot = null;
+        try {
+            robot = new Robot();
+        } catch (AWTException e) {
+            e.printStackTrace();
+        }
+        // Simulate a key press
+        robot.keyPress(KeyEvent.VK_BACK_SPACE);
+        robot.keyRelease(KeyEvent.VK_BACK_SPACE);
+    }
+
+    private class ZWSNumPadAction extends AbstractAction {
+        public void actionPerformed(ActionEvent e) {
+            //robotPressBackSpace();
             zwischensummeButton.doClick();
         }
     }
@@ -173,9 +205,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
-    private class RuecknahmeAction extends AbstractAction {
+    private class RueckgabeAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
-            ruecknahmeButton.doClick();
+            rueckgabeButton.doClick();
         }
     }
 
@@ -357,12 +389,12 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         leergutButton.setEnabled(false);
         spinnerPanel.add(leergutButton);
 
-        ruecknahmeButton = new BigButton("Rückgabe");
-        ruecknahmeButton.setBackground(Color.ORANGE);
-        ruecknahmeButton.setMnemonic(KeyEvent.VK_R);
-        ruecknahmeButton.addActionListener(this);
-        ruecknahmeButton.setEnabled(false);
-        spinnerPanel.add(ruecknahmeButton);
+        rueckgabeButton = new BigButton("Rückgabe");
+        rueckgabeButton.setBackground(Color.ORANGE);
+        rueckgabeButton.setMnemonic(KeyEvent.VK_R);
+        rueckgabeButton.addActionListener(this);
+        rueckgabeButton.setEnabled(false);
+        spinnerPanel.add(rueckgabeButton);
         artikelFormularPanel.add(spinnerPanel);
 
         allPanel.add(artikelFormularPanel, BorderLayout.NORTH);
@@ -438,7 +470,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         ((AbstractDocument) kundeGibtField.getDocument()).setDocumentFilter(bc.geldFilter);
         kundeGibtPanel.add(kundeGibtField);
         kundeGibtPanel.add(new BigLabel(bc.currencySymbol));
-        passendButton = new BigButton("Pas'd");
+        passendButton = new BigButton("Passt");
         passendButton.setEnabled(false);
         passendButton.addActionListener(this);
         kundeGibtPanel.add(passendButton);
@@ -774,7 +806,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     // erlauben
                     break;
                 }
-                if (type.equals("ruecknahme")) {
+                if (type.equals("rueckgabe")) {
                     // Es handelt sich um eine Rückgabe, kein Rabatt
                     // erlauben
                     break;
@@ -906,7 +938,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         this.remove(allPanel);
         this.revalidate();
         showAll();
-        asPanel.emptyBarcodeBox();
+        asPanel.emptyArtikelBox();
 
         // scroll the table scroll pane to bottom:
         scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum());
@@ -1399,11 +1431,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (preisField.getText().length() > 0) {
             hinzufuegenButton.setEnabled(true);
             leergutButton.setEnabled(artikelHasPfand());
-            ruecknahmeButton.setEnabled(true);
+            rueckgabeButton.setEnabled(true);
         } else {
             hinzufuegenButton.setEnabled(false);
             leergutButton.setEnabled(false);
-            ruecknahmeButton.setEnabled(false);
+            rueckgabeButton.setEnabled(false);
         }
     }
 
@@ -1558,9 +1590,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
-    private void ruecknahmeHinzufuegen() {
+    private void rueckgabeHinzufuegen() {
         Integer stueck = -(Integer) anzahlSpinner.getValue();
-        hinzufuegen(stueck, "green", "ruecknahme");
+        hinzufuegen(stueck, "green", "rueckgabe");
     }
 
     private void zwischensumme() {
@@ -1610,7 +1642,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         selectedArticleID = gutscheinArtikelID; // internal Gutschein artikel_id
         preisField.setText(gutscheinField.getText());
         anzahlSpinner.setValue(1);
-        ruecknahmeHinzufuegen();
+        rueckgabeHinzufuegen();
         zwischensumme();
     }
 
@@ -1933,7 +1965,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
      **/
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == sonstigesButton) {
+            asPanel.artikelField.setText("");
             asPanel.artikelField.setText(", Sonstige");
+            asPanel.artikelField.requestFocus();
             return;
         }
         if (e.getSource() == sevenPercentButton) {
@@ -1954,9 +1988,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             leergutHinzufuegen();
             return;
         }
-        if (e.getSource() == ruecknahmeButton) {
+        if (e.getSource() == rueckgabeButton) {
             removeRabattAufRechnung();
-            ruecknahmeHinzufuegen();
+            rueckgabeHinzufuegen();
             return;
         }
         if (e.getSource() == zwischensummeButton) {
@@ -2066,8 +2100,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             BigDecimal neuerGesPreis = neuerEinzelPreis.multiply(
                     new BigDecimal(kassierArtikel.get(i).getStueckzahl())
                     );
-            String neuerEinzelPreisString = bc.priceFormatter(neuerEinzelPreis);
-            String neuerGesPreisString = bc.priceFormatter(neuerGesPreis);
+            String neuerEinzelPreisString = bc.priceFormatter(neuerEinzelPreis)+' '+bc.currencySymbol;
+            String neuerGesPreisString = bc.priceFormatter(neuerGesPreis)+' '+bc.currencySymbol;
             kassierArtikel.get(i).setEinzelpreis(neuerEinzelPreis);
             kassierArtikel.get(i).setGesPreis(neuerGesPreis);
             data.get(i).set(4, neuerEinzelPreisString);

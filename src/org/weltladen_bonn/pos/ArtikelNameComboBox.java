@@ -29,6 +29,7 @@ import javax.swing.DefaultListCellRenderer;
 
 public class ArtikelNameComboBox extends IncrementalSearchComboBox {
     private Connection conn; // connection to MySQL database
+    protected Font mediumFont = new Font("Tahoma", Font.BOLD, 16);
 
     public ArtikelNameComboBox(Connection conn, String fstr) {
         super(fstr);
@@ -121,7 +122,7 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             this.setForeground(foreground);
 
             if (index >= 0 && index < items.size()){
-                column[0].setText( parseName(items.get(index)[0]) );
+                column[0].setText(parseName(items.get(index)[0]));
                 column[1].setText("   "+items.get(index)[1]);
                 if ( ! Boolean.parseBoolean(items.get(index)[2]) ){
                     foreground = Color.GRAY;
@@ -132,6 +133,8 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
                 column[0].setText("qqqqqqqqqqqqqqqq");
                 column[1].setText("qqqq");
             }
+            column[0].setFont(mediumFont); // might be too big
+            column[1].setFont(mediumFont);
             return this;
         }
     }

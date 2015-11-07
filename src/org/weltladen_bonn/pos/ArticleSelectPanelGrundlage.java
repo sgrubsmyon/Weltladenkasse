@@ -98,6 +98,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         artikelBox.addPopupMouseListener(new MouseListenerArtikelBox());
         // set preferred width etc.:
         artikelBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 50, false));
+        artikelBox.setMaximumRowCount(32);
         artikelField = (JTextField) artikelBox.getEditor().getEditorComponent();
         artikelField.setColumns(25);
         removeDefaultKeyBindings(artikelField);
@@ -281,6 +282,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         }
         // Simulate a key press
         robot.keyPress(KeyEvent.VK_DOWN);
+        robot.keyRelease(KeyEvent.VK_DOWN);
     }
 
     private void setArtikelNameAndNummerForBarcode(Vector<String[]> artikelNamen, Vector<String[]> artikelNummern) {
