@@ -64,6 +64,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         };
         artikelNeu = new ArtikelNeu(conn, mw, utf);
         artikelFormular = new ArtikelFormular(conn, mw);
+        this.setPreferredSize(new Dimension(980, 600));
         showAll();
     }
 

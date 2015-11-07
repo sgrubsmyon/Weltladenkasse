@@ -74,7 +74,7 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
     }
 
     protected String parseName(String name) {
-        int widthCut = 65;
+        int widthCut = 70;
         int endIndex = name.length() > widthCut ? widthCut : name.length();
         return name.substring(0, endIndex);
     }
@@ -94,7 +94,7 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
             }
             widest = Math.max(widest, lineWidth);
         }
-        return widest-50;
+        return widest+50;
     }
 
     public void doLayout() {

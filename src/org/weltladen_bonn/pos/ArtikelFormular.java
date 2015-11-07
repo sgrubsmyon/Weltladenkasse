@@ -106,7 +106,7 @@ public class ArtikelFormular extends WindowContent
             }
             rs.close();
             rs = stmt.executeQuery(
-                    "SELECT lieferant_name, lieferant_id FROM lieferant ORDER BY lieferant_id"
+                    "SELECT lieferant_name, lieferant_id FROM lieferant ORDER BY lieferant_name"
                     );
             while (rs.next()) {
                 String name = rs.getString(1);
@@ -131,13 +131,16 @@ public class ArtikelFormular extends WindowContent
             produktgruppenBox = new JComboBox<String>(produktgruppenNamen);
             produktgruppenBox.setRenderer(new ProduktgruppenIndentedRenderer(produktgruppenIDsList));
             produktgruppenBox.setPrototypeDisplayValue("   Kakao und Trinkschokolade");
+            produktgruppenBox.setMaximumRowCount(20);
             produktgruppenBox.addActionListener(this);
             produktgruppenPanel.add(produktgruppenBox);
 
             JPanel lieferantPanel = new JPanel();
             lieferantPanel.setBorder(BorderFactory.createTitledBorder("Lieferant"));
             lieferantBox = new JComboBox<String>(lieferantNamen);
+            lieferantBox.setSelectedItem("unbekannt");
             lieferantBox.setPrototypeDisplayValue("Fairtrade Center Breisgau");
+            lieferantBox.setMaximumRowCount(20);
             lieferantPanel.add(lieferantBox);
 
             JPanel nummerPanel = new JPanel();
@@ -185,6 +188,7 @@ public class ArtikelFormular extends WindowContent
             JPanel beliebtPanel = new JPanel();
             beliebtPanel.setBorder(BorderFactory.createTitledBorder("Beliebtheit"));
             beliebtBox = new JComboBox<String>(bc.beliebtNamen);
+            beliebtBox.setMaximumRowCount(bc.beliebtNamen.size());
             beliebtPanel.add(beliebtBox);
 
         JPanel describePanel = new JPanel();
