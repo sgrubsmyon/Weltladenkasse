@@ -53,12 +53,13 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         JPanel barcodePanel = new JPanel();
         barcodePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
         barcodeBox = new BarcodeComboBox(this.conn, filterStr);
-        barcodeBox.setFont(mediumFont);
+        barcodeBox.setFont(bc.mediumFont);
         barcodeBox.addActionListener(this);
         barcodeBox.addPopupMouseListener(new MouseListenerBarcodeBox());
         barcodeField = (JTextField) barcodeBox.getEditor().getEditorComponent();
         barcodeField.setColumns(9);
         removeDefaultKeyBindings(barcodeField);
+        barcodeField.addKeyListener(removeNumPadAdapter);
         barcodeField.getDocument().addDocumentListener(this);
         BigLabel barcodeLabel = new BigLabel("Barcode: ");
         barcodeLabel.setLabelFor(barcodeBox);
@@ -70,7 +71,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         barcodePanel.add(emptyBarcodeButton);
 
         nummerBox = new ArtikelNummerComboBox(this.conn, filterStr);
-        nummerBox.setFont(mediumFont);
+        nummerBox.setFont(bc.mediumFont);
         nummerBox.addActionListener(this);
         nummerBox.addPopupMouseListener(new MouseListenerNummerBox());
         // set preferred width etc.:
@@ -78,6 +79,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         nummerField = (JTextField) nummerBox.getEditor().getEditorComponent();
         nummerField.setColumns(7);
         removeDefaultKeyBindings(nummerField);
+        nummerField.addKeyListener(removeNumPadAdapter);
         nummerField.getDocument().addDocumentListener(this);
         BigLabel nummerLabel = new BigLabel("Artikelnr.: ");
         nummerLabel.setLabelFor(nummerBox);
@@ -92,8 +94,8 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         this.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
 
         JPanel artikelNamePanel = new JPanel();
-        artikelBox = new ArtikelNameComboBox(this.conn, filterStr);
-        artikelBox.setFont(mediumFont);
+        artikelBox = new ArtikelNameComboBox(this.conn, filterStr, bc);
+        artikelBox.setFont(bc.mediumFont);
         artikelBox.addActionListener(this);
         artikelBox.addPopupMouseListener(new MouseListenerArtikelBox());
         // set preferred width etc.:
@@ -102,6 +104,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         artikelField = (JTextField) artikelBox.getEditor().getEditorComponent();
         artikelField.setColumns(25);
         removeDefaultKeyBindings(artikelField);
+        artikelField.addKeyListener(removeNumPadAdapter);
         artikelField.getDocument().addDocumentListener(this);
         BigLabel artikelLabel = new BigLabel("Artikelname: ");
         artikelLabel.setLabelFor(artikelBox);
@@ -233,7 +236,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         Vector<Vector<String[]>> result = new Vector<Vector<String[]>>();
         try {
             PreparedStatement pstmt = this.conn
-                    .prepareStatement("SELECT DISTINCT a.artikel_name, l.lieferant_name, a.sortiment, "
+                    .prepareStatement("SELECT DISTINCT a.artikel_name, l.lieferant_name, a.vk_preis, a.sortiment, "
                             + "a.artikel_nr FROM artikel AS a " + "LEFT JOIN lieferant AS l USING (lieferant_id) "
                             + "WHERE a.barcode = ? " + "AND a.aktiv = TRUE");
             pstmt.setString(1, barcode);
@@ -241,10 +244,17 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
             // Now do something with the ResultSet, should be only one result
             // ...
             while (rs.next()) {
-                String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
+                String artName = rs.getString(1);
+                String liefName = rs.getString(2) != null ? rs.getString(2) : "";
+                String vkPreis = rs.getString(3) != null ? rs.getString(3) : "";
                 Boolean sortiment = rs.getBoolean(3);
-                artikelNamen.add(new String[] { rs.getString(1), lieferant, sortiment.toString() });
-                artikelNummern.add(new String[] { rs.getString(4) });
+                if (!vkPreis.equals("")){
+                    vkPreis = bc.priceFormatter(vkPreis)+" "+bc.currencySymbol;
+                }
+                String artNummer = rs.getString(4);
+
+                artikelNamen.add(new String[]{artName, liefName, vkPreis, sortiment.toString()});
+                artikelNummern.add(new String[]{artNummer});
             }
             rs.close();
             pstmt.close();
@@ -316,17 +326,23 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         // get artikelName for artikelNummer
         try {
             PreparedStatement pstmt = this.conn
-                    .prepareStatement("SELECT DISTINCT a.artikel_name, l.lieferant_name, a.sortiment FROM artikel AS a "
-                            + "LEFT JOIN lieferant AS l USING (lieferant_id) " + "WHERE a.artikel_nr = ? "
-                            + "AND a.aktiv = TRUE");
+                    .prepareStatement("SELECT DISTINCT a.artikel_name, l.lieferant_name, a.vk_preis, a.sortiment "+
+                            "FROM artikel AS a LEFT JOIN lieferant AS l USING (lieferant_id) "+
+                            "WHERE a.artikel_nr = ? AND a.aktiv = TRUE");
             pstmt.setString(1, artikelNummer);
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result
             // ...
             while (rs.next()) {
-                String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
+                String artName = rs.getString(1);
+                String liefName = rs.getString(2) != null ? rs.getString(2) : "";
+                String vkPreis = rs.getString(3) != null ? rs.getString(3) : "";
                 Boolean sortiment = rs.getBoolean(3);
-                artikelNamen.add(new String[] { rs.getString(1), lieferant, sortiment.toString() });
+                if (!vkPreis.equals("")){
+                    vkPreis = bc.priceFormatter(vkPreis)+" "+bc.currencySymbol;
+                }
+
+                artikelNamen.add(new String[]{artName, liefName, vkPreis, sortiment.toString()});
             }
             rs.close();
             pstmt.close();

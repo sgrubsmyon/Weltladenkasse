@@ -1,40 +1,27 @@
 package org.weltladen_bonn.pos;
 
 // basic Java stuff:
-import java.util.Vector;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
 
 import java.lang.ArrayIndexOutOfBoundsException;
 
 // MySQL Connector/J stuff:
-import java.sql.SQLException;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 
 // GUI stuff:
-import java.awt.Component;
-import java.awt.GridLayout;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
+import java.awt.*;
 
-import javax.swing.JPanel;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.ListCellRenderer;
-import javax.swing.DefaultListCellRenderer;
+import javax.swing.*;
 
 public class ArtikelNameComboBox extends IncrementalSearchComboBox {
     private Connection conn; // connection to MySQL database
-    protected Font mediumFont = new Font("Tahoma", Font.BOLD, 16);
+    private BaseClass bc;
 
-    public ArtikelNameComboBox(Connection conn, String fstr) {
+    public ArtikelNameComboBox(Connection conn, String fstr, BaseClass bc) {
         super(fstr);
         this.setRenderer(new MultiColRenderer());
         this.conn = conn;
+        this.bc = bc;
     }
 
     public String[] parseArtikelName() {
@@ -66,7 +53,8 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
                 whereClause += "AND artikel_name LIKE ? ";
             }
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.sortiment FROM artikel AS a " +
+                    "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.vk_preis, a.sortiment "+
+                    "FROM artikel AS a " +
                     "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
                     "WHERE " + whereClause +
@@ -81,8 +69,13 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             while (rs.next()) {
                 String artName = rs.getString(1);
                 String liefName = rs.getString(2) != null ? rs.getString(2) : "";
-                Boolean sortiment = rs.getBoolean(3);
-                searchResults.add(new String[]{artName, liefName, sortiment.toString()});
+                String vkPreis = rs.getString(3) != null ? rs.getString(3) : "";
+                Boolean sortiment = rs.getBoolean(4);
+                if (!vkPreis.equals("")){
+                    vkPreis = bc.priceFormatter(vkPreis)+" "+bc.currencySymbol;
+                }
+
+                searchResults.add(new String[]{artName, liefName, vkPreis, sortiment.toString()});
             }
             rs.close();
             pstmt.close();
@@ -99,15 +92,28 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
 
     // based on: http://www.coderanch.com/t/340213/GUI/java/Multiple-Columns-JCombobox
     class MultiColRenderer extends JPanel implements ListCellRenderer<Object> {
-        JLabel[] column = new JLabel[2];
+        JLabel[] columns = new JLabel[3];
+        GridBagConstraints c1 = new GridBagConstraints();
+
         public MultiColRenderer() {
-            setLayout(new GridLayout(0,2));
-            for (int i=0; i<column.length; i++){
-                column[i] = new JLabel();
-                //column[i].setOpaque(false);
-                add(column[i]);
+            setLayout(new GridBagLayout());
+            //c1.fill = GridBagConstraints.HORIZONTAL;
+            c1.ipadx = 5;
+            c1.insets = new Insets(0, 100, 0, 100);
+            for (int i=0; i<columns.length; i++){
+                if (i == 2){
+                    c1.anchor = GridBagConstraints.LINE_END;
+                } else {
+                    c1.anchor = GridBagConstraints.LINE_START;
+                }
+                c1.gridx = i;
+                columns[i] = new JLabel();
+                //columns[i].setOpaque(false);
+                add(columns[i], c1);
+                //add(columns[i]);
             }
         }
+
         public Component getListCellRendererComponent(JList<?> list, Object value,
                 int index, boolean isSelected, boolean cellHasFocus) {
             Color foreground, background;
@@ -122,19 +128,28 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             this.setForeground(foreground);
 
             if (index >= 0 && index < items.size()){
-                column[0].setText(parseName(items.get(index)[0]));
-                column[1].setText("   "+items.get(index)[1]);
-                if ( ! Boolean.parseBoolean(items.get(index)[2]) ){
+                columns[0].setText(parseName(items.get(index)[0]));
+                columns[1].setText(items.get(index)[1]);
+                columns[2].setText(items.get(index)[2]);
+                if ( ! Boolean.parseBoolean(items.get(index)[3]) ){
                     foreground = Color.GRAY;
                 }
-                column[0].setForeground(foreground);
-                column[1].setForeground(foreground);
+                columns[0].setForeground(foreground);
+                columns[1].setForeground(foreground);
+                columns[2].setForeground(foreground);
             } else {
-                column[0].setText("qqqqqqqqqqqqqqqq");
-                column[1].setText("qqqq");
+                columns[0].setText("qqqqqqqqqqqqqqqq");
+                columns[1].setText("qqqq");
+                columns[2].setText("qqqq");
             }
-            column[0].setFont(mediumFont); // might be too big
-            column[1].setFont(mediumFont);
+            columns[0].setFont(bc.mediumFont); // might be too big
+            columns[1].setFont(bc.mediumFont);
+            columns[2].setFont(bc.mediumFont);
+
+            // full name as tooltip
+	    if (index >= 0 && value != null) {
+		list.setToolTipText(items.get(index)[0]);
+	    }
             return this;
         }
     }

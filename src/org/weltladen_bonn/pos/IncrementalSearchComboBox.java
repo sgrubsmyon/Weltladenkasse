@@ -87,14 +87,16 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
             int lineWidth = 0;
             String[] itm = items.get(i);
             //for (String s : items.get(i)){
-            int end = Math.min(2, itm.length); // only consider first 2 items for width
+            int end = Math.min(3, itm.length); // only consider first 3 items for width
             for (int j=0; j<end; j++) {
                 String s = itm[j];
+                System.out.println(s);
                 lineWidth += metrics.stringWidth( parseName(s) );
             }
             widest = Math.max(widest, lineWidth);
         }
-        return widest+50;
+        System.out.println("widest: "+widest);
+        return widest;
     }
 
     public void doLayout() {
@@ -245,7 +247,7 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
                         String[] item = items.get(getSelectedIndex());
                         setBox(item);
                         System.out.println("This is KeyListener in SearchBox.");
-                        fireActionEvent(); // this is actually not needed, because ENTER key alrady fired an action event before ("comboBoxEdited")
+                        fireActionEvent(); // this is actually not needed, because ENTER key already fired an action event before ("comboBoxEdited")
                     }
                 }
             }

@@ -45,9 +45,6 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected IntegerDocumentFilter vpeFilter;
     protected IntegerDocumentFilter beliebtFilter;
 
-    protected Font mediumFont = new Font("Tahoma", Font.BOLD, 16);
-    protected Font bigFont = new Font("Tahoma", Font.BOLD, 32);
-
     protected class BigButton extends JButton {
         public BigButton() {
             super();
@@ -60,7 +57,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
 
         private void initialize() {
-            this.setFont(mediumFont);
+            this.setFont(bc.mediumFont);
         }
     }
 
@@ -81,7 +78,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
 
         private void initialize() {
-            this.setFont(mediumFont);
+            this.setFont(bc.mediumFont);
         }
     }
 

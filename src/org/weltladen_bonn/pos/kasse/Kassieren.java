@@ -174,21 +174,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
-    void robotPressBackSpace() {
-        Robot robot = null;
-        try {
-            robot = new Robot();
-        } catch (AWTException e) {
-            e.printStackTrace();
-        }
-        // Simulate a key press
-        robot.keyPress(KeyEvent.VK_BACK_SPACE);
-        robot.keyRelease(KeyEvent.VK_BACK_SPACE);
-    }
-
     private class ZWSNumPadAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
-            //robotPressBackSpace();
             zwischensummeButton.doClick();
         }
     }
@@ -262,7 +249,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         private void initialize() {
             this.setColumns(6);
             this.setHorizontalAlignment(JTextField.RIGHT);
-            this.setFont(bigFont);
+            this.setFont(bc.bigFont);
         }
     }
 
@@ -321,7 +308,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 bc.smallintMax, // max (null == no max)
                 1); // step
         anzahlSpinner = new JSpinner(anzahlModel);
-        anzahlSpinner.setFont(mediumFont);
+        anzahlSpinner.setFont(bc.mediumFont);
         JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(anzahlSpinner, "###");
         anzahlSpinner.setEditor(anzahlEditor);
         anzahlField = anzahlEditor.getTextField();
@@ -348,13 +335,14 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         });
         anzahlField.setColumns(4);
         removeDefaultKeyBindings(anzahlField);
+        anzahlField.addKeyListener(removeNumPadAdapter);
         anzahlLabel.setLabelFor(anzahlSpinner);
         spinnerPanel.add(anzahlSpinner);
 
         BigLabel preisLabel = new BigLabel("Preis: ");
         spinnerPanel.add(preisLabel);
         preisField = new JTextField("");
-        preisField.setFont(mediumFont);
+        preisField.setFont(bc.mediumFont);
         preisField.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -369,6 +357,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         preisField.setEditable(false);
         preisField.setColumns(6);
         removeDefaultKeyBindings(preisField);
+        preisField.addKeyListener(removeNumPadAdapter);
         preisField.setHorizontalAlignment(JTextField.RIGHT);
         spinnerPanel.add(preisField);
         spinnerPanel.add(new BigLabel(bc.currencySymbol));
@@ -445,6 +434,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         kundeGibtField = new BigPriceField("");
         kundeGibtField.setColumns(5);
         removeDefaultKeyBindings(kundeGibtField);
+        kundeGibtField.addKeyListener(removeNumPadAdapter);
         kundeGibtField.setEditable(false);
         kundeGibtField.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) {
@@ -480,6 +470,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         gutscheinField = new BigPriceField("");
         gutscheinField.setColumns(5);
         removeDefaultKeyBindings(gutscheinField);
+        gutscheinField.addKeyListener(removeNumPadAdapter);
         gutscheinField.setEditable(false);
         gutscheinField.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
@@ -504,6 +495,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         bigPriceField = new BigPriceField("");
         bigPriceField.setEditable(false);
         removeDefaultKeyBindings(bigPriceField);
+        bigPriceField.addKeyListener(removeNumPadAdapter);
         zuZahlenPanel.add(bigPriceField);
 
         JPanel rueckgeldPanel = new JPanel();
@@ -511,6 +503,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         rueckgeldField = new BigPriceField("");
         rueckgeldField.setEditable(false);
         removeDefaultKeyBindings(rueckgeldField);
+        rueckgeldField.addKeyListener(removeNumPadAdapter);
         rueckgeldPanel.add(rueckgeldField);
 
         c3.gridy = 0;
@@ -615,6 +608,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         individuellRabattRelativField = new JTextField("");
         individuellRabattRelativField.setColumns(5);
         removeDefaultKeyBindings(individuellRabattRelativField);
+        individuellRabattRelativField.addKeyListener(removeNumPadAdapter);
         individuellRabattRelativField.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) {
                 if (individuellRabattRelativField.getText().length() > 0) {
@@ -647,6 +641,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         individuellRabattAbsolutField = new JTextField("");
         individuellRabattAbsolutField.setColumns(5);
         removeDefaultKeyBindings(individuellRabattAbsolutField);
+        individuellRabattAbsolutField.addKeyListener(removeNumPadAdapter);
         individuellRabattAbsolutField.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) {
                 if (individuellRabattAbsolutField.getText().length() > 0) {
@@ -720,6 +715,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         abweichenderPreisField = new JTextField("");
         abweichenderPreisField.setColumns(5);
         removeDefaultKeyBindings(abweichenderPreisField);
+        abweichenderPreisField.addKeyListener(removeNumPadAdapter);
         abweichenderPreisField.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) {
                 if (abweichenderPreisField.getText().length() > 0) {
@@ -891,7 +887,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
         myTable = new ArticleSelectTable(data, columnLabels, colors);
         removeDefaultKeyBindings(myTable, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-        myTable.setFont(mediumFont);
+        myTable.addKeyListener(removeNumPadAdapter);
+        myTable.setFont(bc.mediumFont);
         myTable.setRowHeight(20);
         // myTable.setBounds(71,53,150,100);
         setTableProperties(myTable);
@@ -1942,8 +1939,13 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private void setSelectedArticle(int id) {
         Artikel a = getArticle(id);
         String[] nummer = new String[]{a.getNummer()};
+        String vkPreis = a.getVKP() != null ? a.getVKP() : "";
+        if (!vkPreis.equals("")){
+            vkPreis = bc.priceFormatter(vkPreis)+" "+bc.currencySymbol;
+        }
         String[] name = new String[]{a.getName(),
             getLieferantName(id),
+            bc.priceFormatter(a.getVKP())+" "+bc.currencySymbol,
             a.getSortiment().toString()};
         asPanel.nummerBox.setBox(nummer);
         asPanel.artikelBox.setBox(name);
