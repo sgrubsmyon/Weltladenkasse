@@ -8,11 +8,13 @@ import java.math.*; // for BigDecimal and RoundingMode
 import java.sql.*; // Connection, Statement, ResultSet ...
 
 // GUI stuff:
-import java.awt.Event;
-import java.awt.event.KeyEvent;
+import java.awt.*;
+import java.awt.event.*; // KeyEvent, KeyAdapter
 import javax.swing.*; // JComponent, KeyStroke
 
 public abstract class ArtikelGrundlage extends WindowContent {
+    protected final RemoveNumPadAdapter removeNumPadAdapter = new RemoveNumPadAdapter();
+
     /**
      *    The constructor.
      *       */
@@ -32,6 +34,25 @@ public abstract class ArtikelGrundlage extends WindowContent {
 //        field.getInputMap(condition).put(KeyStroke.getKeyStroke("ctrl C"), "none");
         field.getInputMap(condition).put(KeyStroke.getKeyStroke("ctrl H"), "none");
         field.getInputMap(condition).put(KeyStroke.getKeyStroke(KeyEvent.VK_SUBTRACT, 0), "none");
+    }
+
+    private class RemoveNumPadAdapter extends KeyAdapter {
+        int pressedKeyCode = -1;
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+            pressedKeyCode = e.getKeyCode();
+        }
+
+        @Override
+        public void keyTyped(KeyEvent e) {
+            if (pressedKeyCode == KeyEvent.VK_ADD ||
+                    pressedKeyCode == KeyEvent.VK_SUBTRACT ||
+                    pressedKeyCode == KeyEvent.VK_MULTIPLY ||
+                    pressedKeyCode == KeyEvent.VK_DIVIDE) {
+                e.consume(); // ignore event
+            }
+        }
     }
 
     //////////////////////////////////

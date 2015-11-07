@@ -39,6 +39,9 @@ public class BaseClass {
     //protected NumberFormat amountFormat;
     protected NumberFormat vatFormat;
 
+    public Font mediumFont = new Font("Tahoma", Font.BOLD, 16);
+    public Font bigFont = new Font("Tahoma", Font.BOLD, 32);
+
     public PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
     public PositiveNumberDocumentFilter relFilter = new PositiveNumberDocumentFilter(3, 6);
     public PositiveNumberDocumentFilter mengeFilter = new PositiveNumberDocumentFilter(5, 8);
