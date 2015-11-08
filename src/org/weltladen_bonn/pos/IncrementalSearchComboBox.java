@@ -4,29 +4,16 @@ package org.weltladen_bonn.pos;
 import java.util.Vector;
 
 // GUI stuff:
-import java.awt.Component;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Dimension;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.*;
+import java.awt.event.*;
 
-import javax.swing.JComboBox;
-import javax.swing.JTextField;
-import javax.swing.JScrollPane;
-import javax.swing.event.DocumentListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.text.JTextComponent;
-import javax.swing.text.PlainDocument;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
+import javax.swing.event.*;
+import javax.swing.text.*;
 
 // for combobox popup menu listener
 import java.lang.reflect.Field;
+import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 
@@ -38,10 +25,7 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
     public Vector<String[]> items;
 
 // credit to: http://stackoverflow.com/questions/11278209/how-can-i-make-comboboxs-list-wider
-/********************* Start Insert */
-    protected boolean layingOut = false;
-    protected int widestLength = 0;
-/********************* Stop Insert */
+    protected Vector<Integer> columnWidths = new Vector<Integer>(3); // support max. 3 columns
 
     public IncrementalSearchComboBox(String fstr) {
         super();
@@ -49,28 +33,16 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
         //this.setRenderer(new MonoColRenderer());
         //this.setEditor(new MyComboBoxEditor());
         this.setEditable(true);
+        this.addPopupMouseListener(new MyMouseListener());
         textFeld = (JTextComponent)this.getEditor().getEditorComponent();
         textFeld.addKeyListener(new MyKeyListener());
-        addPopupMouseListener(new MyMouseListener());
         textFeld.setDocument(new ChangeableDocument());
         textFeld.getDocument().addDocumentListener(this);
         items = new Vector<String[]>();
     }
 
-// credit to: http://stackoverflow.com/questions/11278209/how-can-i-make-comboboxs-list-wider
-// (see also http://stackoverflow.com/questions/956003/how-can-i-change-the-width-of-a-jcombobox-dropdown-list)
-// (see also http://tips4java.wordpress.com/2010/11/28/combo-box-popup/)
-/********************* Start Insert */
-    // Setting the JComboBox wide
-    public void setWide() {
-        widestLength = getWidestItemWidth();
-    }
-
-    public Dimension getSize() {
-        Dimension dim = super.getSize();
-        if (!layingOut)
-            dim.width = Math.max(widestLength, dim.width);
-        return dim;
+    public void setFilterStr(String filterStr) {
+        this.filterStr = filterStr;
     }
 
     protected String parseName(String name) {
@@ -79,39 +51,34 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
         return name.substring(0, endIndex);
     }
 
-    public int getWidestItemWidth() {
-        Font font = this.getFont();
-        FontMetrics metrics = this.getFontMetrics(font);
-        int widest = 0;
-        for (int i=0; i<items.size(); i++) {
-            int lineWidth = 0;
-            String[] itm = items.get(i);
-            //for (String s : items.get(i)){
-            int end = Math.min(3, itm.length); // only consider first 3 items for width
-            for (int j=0; j<end; j++) {
-                String s = itm[j];
-                System.out.println(s);
-                lineWidth += metrics.stringWidth( parseName(s) );
-            }
-            widest = Math.max(widest, lineWidth);
+    private void resetColumnWidths() {
+        columnWidths = new Vector<Integer>(3); // support max. 3 columns
+        for (int j=0; j<3; j++) {
+            columnWidths.add(0);
         }
-        System.out.println("widest: "+widest);
-        return widest;
     }
 
-    public void doLayout() {
-        try {
-            layingOut = true;
-            super.doLayout();
-        } finally {
-            layingOut = false;
+    private void getColumnWidths() {
+        if (items.size() > 0) {
+            Font font = this.getFont();
+            FontMetrics metrics = this.getFontMetrics(font);
+            for (int i=0; i<items.size(); i++) {
+                String[] itm = items.get(i);
+                //for (String s : items.get(i)){
+                int end = Math.min(3, items.get(0).length); // only consider first 3 items for width
+                for (int j=0; j<end; j++) {
+                    String s = itm[j];
+                    int colWidth = metrics.stringWidth( parseName(s) );
+                    columnWidths.set(j, Math.max(columnWidths.get(j), colWidth));
+                }
+            }
         }
     }
-/********************* Stop Insert */
 
     public void emptyBox() {
         this.changeMode = true;
             items.clear();
+            resetColumnWidths();
             this.removeAllItems();
         this.changeMode = false;
         textFeld.setText("");
@@ -120,15 +87,16 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
     public void setBox(String[] item) {
         this.changeMode = true;
             items.clear();
+            resetColumnWidths();
             this.removeAllItems();
             items.add(item);
+            getColumnWidths();
             this.addItem(item[0]);
-            //this.setSelectedItem(item);
         this.changeMode = false;
         this.setBoxMode = true;
             textFeld.setText(item[0]);
         this.setBoxMode = false;
-        this.setWide();
+        this.setPopupVisible(false);
     }
 
 //    @Override
@@ -146,6 +114,7 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
     public void setItems(Vector<String[]> istr) {
         this.changeMode = true;
             items.clear();
+            resetColumnWidths();
             this.removeAllItems();
         this.changeMode = false;
         if (istr.size() == 1){
@@ -154,55 +123,54 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
             //fireActionEvent(); // needed?
         } else {
             this.changeMode = true;
-                //System.out.println("\n*******\nsetting items\n*****");
                 for (String[] item : istr){
                     items.add(item);
                     this.addItem(item[0]);
                 }
+                getColumnWidths();
             this.changeMode = false;
         }
         if ( this.getItemCount() > 1 ){
             this.requestFocus();
             SwingUtilities.invokeLater(new Runnable(){
                 public void run() {
-                    setWide();
-                    showPopup();
+                    //getColumnWidths();
+                    setPopupVisible(true);
                 }
             });
         }
-        else { this.hidePopup(); }
-        this.setWide();
+        else {
+            this.setPopupVisible(false);
+        }
     }
 
     public abstract Vector<String[]> doQuery();
 
     // do the incremental search:
     protected void incrementalSearch() {
-        this.hidePopup(); // hide popup during editing, so that it will be resized
+        this.setPopupVisible(false); // hide popup during editing, so that it will be resized
 
         // clear all items
         this.changeMode = true; // prevent "Attempt to mutate in notification" exception
             items.clear();
+            resetColumnWidths();
             this.removeAllItems();
         this.changeMode = false;
 
         if (textFeld.getText().length() >= 3){
             Vector<String[]> searchResults = doQuery();
-            //System.out.println("### !!! Doing MqSQL query. Result: "+searchResults);
             this.changeMode = true; // prevent "Attempt to mutate in notification" exception
-                for (String[] item : searchResults){
-                    items.add(item);
-                    this.addItem(item[0]);
-                }
+            for (String[] item : searchResults){
+                items.add(item);
+                this.addItem(item[0]);
+            }
+            getColumnWidths();
             this.changeMode = false;
         }
 
-        if (this.getItemCount() > 0){
-            this.setWide();
-            this.showPopup();
+        if (this.getItemCount() > 0) {
+            this.setPopupVisible(true);
         }
-        //// Create a generic NullPointerException:
-        //Integer foo = null; Integer bar = null; foo = foo + bar;
     }
 
     /**

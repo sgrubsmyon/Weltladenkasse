@@ -36,9 +36,9 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
     private ArticleSelectUser articleSelectUser;
 
     // Buttons
-    private JButton emptyBarcodeButton;
-    private JButton emptyArtikelButton;
-    private JButton emptyNummerButton;
+    public JButton emptyBarcodeButton;
+    public JButton emptyArtikelButton;
+    public JButton emptyNummerButton;
 
     protected int selectedArticleID;
     // show all 'normal' items (toplevel_id IS NOT NULL), and in addition
@@ -51,13 +51,15 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         this.articleSelectUser = asu;
 
         JPanel barcodePanel = new JPanel();
-        barcodePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        //barcodePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
         barcodeBox = new BarcodeComboBox(this.conn, filterStr);
         barcodeBox.setFont(bc.mediumFont);
+        FontMetrics fm = barcodeBox.getFontMetrics(bc.mediumFont);
+        int height = (int)(1.5*(double)fm.getHeight());
+        barcodeBox.setPreferredSize(new Dimension(180, height));
         barcodeBox.addActionListener(this);
         barcodeBox.addPopupMouseListener(new MouseListenerBarcodeBox());
         barcodeField = (JTextField) barcodeBox.getEditor().getEditorComponent();
-        barcodeField.setColumns(9);
         removeDefaultKeyBindings(barcodeField);
         barcodeField.addKeyListener(removeNumPadAdapter);
         barcodeField.getDocument().addDocumentListener(this);
@@ -72,12 +74,12 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
 
         nummerBox = new ArtikelNummerComboBox(this.conn, filterStr);
         nummerBox.setFont(bc.mediumFont);
+        nummerBox.setPreferredSize(new Dimension(160, height));
         nummerBox.addActionListener(this);
         nummerBox.addPopupMouseListener(new MouseListenerNummerBox());
         // set preferred width etc.:
-        nummerBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 30, false));
+        nummerBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, -1, false));
         nummerField = (JTextField) nummerBox.getEditor().getEditorComponent();
-        nummerField.setColumns(7);
         removeDefaultKeyBindings(nummerField);
         nummerField.addKeyListener(removeNumPadAdapter);
         nummerField.getDocument().addDocumentListener(this);
@@ -95,14 +97,15 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
 
         JPanel artikelNamePanel = new JPanel();
         artikelBox = new ArtikelNameComboBox(this.conn, filterStr, bc);
-        artikelBox.setFont(bc.mediumFont);
         artikelBox.addActionListener(this);
         artikelBox.addPopupMouseListener(new MouseListenerArtikelBox());
         // set preferred width etc.:
-        artikelBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 50, false));
-        artikelBox.setMaximumRowCount(32);
+        artikelBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, -1, false));
+        artikelBox.setFont(bc.mediumFont);
+        artikelBox.setPreferredSize(new Dimension(460, height));
+        artikelBox.setMaximumRowCount(30);
         artikelField = (JTextField) artikelBox.getEditor().getEditorComponent();
-        artikelField.setColumns(25);
+        artikelBox.setMaximumSize( artikelBox.getPreferredSize() );
         removeDefaultKeyBindings(artikelField);
         artikelField.addKeyListener(removeNumPadAdapter);
         artikelField.getDocument().addDocumentListener(this);
@@ -161,6 +164,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         String artikelName = an[0];
         String lieferant = an[1];
         String artikelNummer = (String) nummerBox.getSelectedItem();
+        System.out.println(lieferant+"   "+artikelNummer);
         selectedArticleID = getArticleID(lieferant, artikelNummer); // get the
                                                                     // internal
                                                                     // artikelID
@@ -247,11 +251,11 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
                 String artName = rs.getString(1);
                 String liefName = rs.getString(2) != null ? rs.getString(2) : "";
                 String vkPreis = rs.getString(3) != null ? rs.getString(3) : "";
-                Boolean sortiment = rs.getBoolean(3);
+                Boolean sortiment = rs.getBoolean(4);
                 if (!vkPreis.equals("")){
                     vkPreis = bc.priceFormatter(vkPreis)+" "+bc.currencySymbol;
                 }
-                String artNummer = rs.getString(4);
+                String artNummer = rs.getString(5);
 
                 artikelNamen.add(new String[]{artName, liefName, vkPreis, sortiment.toString()});
                 artikelNummern.add(new String[]{artNummer});

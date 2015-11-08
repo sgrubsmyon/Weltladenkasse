@@ -47,7 +47,7 @@ public class OptionTabbedPane extends TabbedPaneGrundlage {
         tabbedPane = new JTabbedPane();
 
         myArtikellisteC = new ArtikellisteContainer(this.conn, this.mainWindow);
-        Rabattaktionen myRabattaktionen = new Rabattaktionen(this.conn, this.mainWindow);
+        Rabattaktionen myRabattaktionen = new Rabattaktionen(this.conn, this.mainWindow, this);
         Lieferantliste myLieferant = new Lieferantliste(this.conn, this.mainWindow);
         Produktgruppenliste myProduktgruppe = new Produktgruppenliste(this.conn, this.mainWindow);
         DumpDatabase myDump = new DumpDatabase(this.conn, this.mainWindow, this);

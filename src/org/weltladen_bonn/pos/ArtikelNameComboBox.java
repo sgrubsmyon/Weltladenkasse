@@ -96,21 +96,15 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
         GridBagConstraints c1 = new GridBagConstraints();
 
         public MultiColRenderer() {
-            setLayout(new GridBagLayout());
-            //c1.fill = GridBagConstraints.HORIZONTAL;
-            c1.ipadx = 5;
-            c1.insets = new Insets(0, 100, 0, 100);
+            setLayout(new FlowLayout(FlowLayout.LEFT, 10, 0));
             for (int i=0; i<columns.length; i++){
-                if (i == 2){
-                    c1.anchor = GridBagConstraints.LINE_END;
-                } else {
-                    c1.anchor = GridBagConstraints.LINE_START;
-                }
-                c1.gridx = i;
                 columns[i] = new JLabel();
-                //columns[i].setOpaque(false);
-                add(columns[i], c1);
-                //add(columns[i]);
+                if (i == 2){
+                    columns[i].setHorizontalAlignment(JLabel.RIGHT);
+                } else {
+                    columns[i].setHorizontalAlignment(JLabel.LEFT);
+                }
+                add(columns[i]);
             }
         }
 
@@ -127,10 +121,20 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             this.setBackground(background);
             this.setForeground(foreground);
 
+            columns[0].setFont(bc.mediumFont); // might be too big
+            columns[1].setFont(bc.mediumFont);
+            columns[2].setFont(bc.mediumFont);
+
             if (index >= 0 && index < items.size()){
                 columns[0].setText(parseName(items.get(index)[0]));
                 columns[1].setText(items.get(index)[1]);
                 columns[2].setText(items.get(index)[2]);
+
+                int height = 20;
+                columns[0].setPreferredSize(new Dimension(columnWidths.get(0), height));
+                columns[1].setPreferredSize(new Dimension(columnWidths.get(1), height));
+                columns[2].setPreferredSize(new Dimension(columnWidths.get(2), height));
+
                 if ( ! Boolean.parseBoolean(items.get(index)[3]) ){
                     foreground = Color.GRAY;
                 }
@@ -138,13 +142,10 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
                 columns[1].setForeground(foreground);
                 columns[2].setForeground(foreground);
             } else {
-                columns[0].setText("qqqqqqqqqqqqqqqq");
-                columns[1].setText("qqqq");
-                columns[2].setText("qqqq");
+                columns[0].setText("xxxxxxxxxxxxxxxx");
+                columns[1].setText("xxxx");
+                columns[2].setText("xxxx");
             }
-            columns[0].setFont(bc.mediumFont); // might be too big
-            columns[1].setFont(bc.mediumFont);
-            columns[2].setFont(bc.mediumFont);
 
             // full name as tooltip
 	    if (index >= 0 && value != null) {
