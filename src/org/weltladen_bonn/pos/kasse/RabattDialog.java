@@ -2,16 +2,13 @@ package org.weltladen_bonn.pos.kasse;
 
 // Basic Java stuff:
 import java.util.*; // for Vector
+import java.util.Date;
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
 // MySQL Connector/J stuff:
-import java.sql.SQLException;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -30,8 +27,6 @@ import java.awt.event.*;
 //import javax.swing.JButton;
 //import javax.swing.JCheckBox;
 import javax.swing.*;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
 import javax.swing.text.*; // for AbstractDocument, JTextComponent
 import javax.swing.event.*;
 //import java.beans.PropertyChangeEvent;
@@ -40,20 +35,14 @@ import javax.swing.event.*;
 // JCalendarButton
 import org.weltladen_bonn.pos.jcalendarbutton.JCalendarButton;
 
-import org.weltladen_bonn.pos.MainWindowGrundlage;
-import org.weltladen_bonn.pos.DialogWindow;
-import org.weltladen_bonn.pos.BarcodeComboBox;
-import org.weltladen_bonn.pos.ArtikelNameComboBox;
-import org.weltladen_bonn.pos.ArtikelNummerComboBox;
-import org.weltladen_bonn.pos.ProduktgruppenIndentedRenderer;
-import org.weltladen_bonn.pos.StringDocumentFilter;
-import org.weltladen_bonn.pos.BoundsPopupMenuListener;
+import org.weltladen_bonn.pos.*;
 
-public class RabattDialog extends DialogWindow implements ChangeListener, DocumentListener, ItemListener {
+public class RabattDialog extends DialogWindow implements ChangeListener, DocumentListener, ItemListener, ArticleSelectUser {
     // Attribute:
     protected final BigDecimal percent = new BigDecimal("0.01");
     protected JPanel allPanel;
     protected Rabattaktionen rabattaktionen;
+    protected OptionTabbedPane tabbedPane;
     protected SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
     protected final String[] produktDropDownOptions = {"Einzelner Artikel", "Ganze Produktgruppe"};
@@ -68,12 +57,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
     protected JTextField nameField;
     protected JComboBox<String> produktDropDown;
     protected JPanel produktCards;
-    protected BarcodeComboBox barcodeBox;
-    protected ArtikelNameComboBox artikelBox;
-    protected ArtikelNummerComboBox nummerBox;
-    protected JButton emptyBarcodeButton;
-    protected JButton emptyArtikelButton;
-    protected JButton emptyNummerButton;
+    protected ArticleSelectPanelRabattDialog artikelCard;
     protected JComboBox<String> produktgruppenBox;
     protected JComboBox<String> rabattDropDown;
     protected JPanel rabattCards;
@@ -128,17 +112,19 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
     /**
      *    The constructor.
      *       */
-    public RabattDialog(Connection conn, MainWindowGrundlage mw, Rabattaktionen r, JDialog dia) {
+    public RabattDialog(Connection conn, MainWindowGrundlage mw, Rabattaktionen r, JDialog dia, OptionTabbedPane tabbedPane) {
 	super(conn, mw, dia);
         this.rabattaktionen = r;
+        this.tabbedPane = tabbedPane;
 
         fillComboBoxes();
         showAll();
     }
-    public RabattDialog(Connection conn, MainWindowGrundlage mw, Rabattaktionen r, JDialog dia,
+    public RabattDialog(Connection conn, MainWindowGrundlage mw, Rabattaktionen r, JDialog dia, OptionTabbedPane tabbedPane,
             String bt, boolean editMode, int rabattID, boolean nandb) {
 	super(conn, mw, dia);
         this.rabattaktionen = r;
+        this.tabbedPane = tabbedPane;
         this.borderTitle = bt;
         this.editMode = editMode;
         this.presetRabattID = rabattID;
@@ -237,8 +223,8 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         }
         if ( (!this.artikelName.equals("")) && (!this.artikelNummer.equals("")) ){ // Einzelprodukt
             produktModus = produktDropDownOptions[0];
-            artikelBox.setBox(new String[]{this.artikelName, this.lieferant});
-            nummerBox.setBox(new String[]{this.artikelNummer});
+            artikelCard.artikelBox.setBox(new String[]{this.artikelName, this.lieferant});
+            artikelCard.nummerBox.setBox(new String[]{this.artikelNummer});
         } else if (!this.produktgruppenID.equals("")){ // Produktgruppe
             produktModus = produktDropDownOptions[1];
             int presetIndex = produktgruppenIDs.indexOf(this.produktgruppenID);
@@ -293,10 +279,10 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             cleanSetEnabled(bisSpinner, true);
             cleanSetEnabled(calButtBis, true);
         }
-        artikelBox.setEnabled(false);
-        emptyArtikelButton.setEnabled(false);
-        nummerBox.setEnabled(false);
-        emptyNummerButton.setEnabled(false);
+        artikelCard.artikelBox.setEnabled(false);
+        artikelCard.emptyArtikelButton.setEnabled(false);
+        artikelCard.nummerBox.setEnabled(false);
+        artikelCard.emptyNummerButton.setEnabled(false);
         produktgruppenBox.setEnabled(false);
         produktDropDown.setEnabled(false);
         absolutField.setEnabled(false);
@@ -374,47 +360,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             produktDropDown.addItemListener(this);
             artikelPanel.add(produktDropDown);
             produktModus = produktDropDownOptions[0];
-                JPanel artikelCard = new JPanel();
-                artikelCard.setLayout(new BoxLayout(artikelCard, BoxLayout.Y_AXIS));
-
-                JPanel barcodePanel = new JPanel();
-                barcodePanel.setBorder(BorderFactory.createTitledBorder("Barcode"));
-                    String filterStr = " AND variabler_preis = FALSE AND toplevel_id IS NOT NULL ";
-                    barcodeBox = new BarcodeComboBox(this.conn, filterStr);
-                    barcodeBox.addActionListener(this);
-                    barcodePanel.add(barcodeBox);
-                    emptyBarcodeButton = new JButton("x");
-                    emptyBarcodeButton.addActionListener(this);
-                    barcodePanel.add(emptyBarcodeButton);
-                artikelCard.add(barcodePanel);
-
-                JPanel nameNummerPanel = new JPanel();
-                    JPanel artNamePanel = new JPanel();
-                    artNamePanel.setBorder(BorderFactory.createTitledBorder("Artikelname"));
-                    artikelBox = new ArtikelNameComboBox(this.conn, filterStr);
-                    artikelBox.addActionListener(this);
-                    // set preferred width etc.:
-                    artikelBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 50, false));
-                    artikelBox.setPrototypeDisplayValue("qqqqqqqqqqqqqqqqqqqq");
-                    artNamePanel.add(artikelBox);
-                    emptyArtikelButton = new JButton("x");
-                    emptyArtikelButton.addActionListener(this);
-                    artNamePanel.add(emptyArtikelButton);
-                    nameNummerPanel.add(artNamePanel);
-
-                    JPanel artNummerPanel = new JPanel();
-                    artNummerPanel.setBorder(BorderFactory.createTitledBorder("Artikelnummer"));
-                    nummerBox = new ArtikelNummerComboBox(this.conn, filterStr);
-                    nummerBox.addActionListener(this);
-                    // set preferred width etc.:
-                    nummerBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, 30, false));
-                    nummerBox.setPrototypeDisplayValue("qqqqqqq");
-                    artNummerPanel.add(nummerBox);
-                    emptyNummerButton = new JButton("x");
-                    emptyNummerButton.addActionListener(this);
-                    artNummerPanel.add(emptyNummerButton);
-                    nameNummerPanel.add(artNummerPanel);
-                artikelCard.add(nameNummerPanel);
+                artikelCard = new ArticleSelectPanelRabattDialog(conn, mainWindow, this, tabbedPane);
 
                 JPanel produktgruppenCard = new JPanel();
                     JPanel produktgruppenPanel = new JPanel();// produktgruppenPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
@@ -828,162 +774,9 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         otherFieldPointer.setEditable( thisFieldPointer.getText().length() <= 0 );
     }
 
-    private void setArtikelNameAndNummerForBarcode() {
-        String barcode = (String)barcodeBox.getSelectedItem();
-        Vector<String[]> artikelNamen = new Vector<String[]>();
-        Vector<String[]> artikelNummern = new Vector<String[]>();
-        try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.artikel_nr FROM artikel AS a " +
-                    "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.barcode = ? " +
-                    "AND a.aktiv = TRUE"
-                    );
-            pstmt.setString(1, barcode);
-            ResultSet rs = pstmt.executeQuery();
-            // Now do something with the ResultSet, should be only one result ...
-            while ( rs.next() ){
-                String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
-                artikelNamen.add( new String[]{rs.getString(1), lieferant} );
-                artikelNummern.add( new String[]{rs.getString(3)} );
-            }
-            rs.close();
-            pstmt.close();
-        } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-        if (artikelBox.getItemCount() != 1){
-            //artikelBox.removeActionListener(this);
-            ////if (artikelNamen.size() == 1){
-            ////    // update internal cache string before changing name in text field (otherwise document listener causes problems)
-            ////    artikelNameText = artikelNamen.get(0)[0];
-            ////}
-            artikelBox.setItems(artikelNamen);
-            //artikelBox.addActionListener(this);
-        }
-        if (nummerBox.getItemCount() != 1){
-            //nummerBox.removeActionListener(this);
-            ////if (artikelNummern.size() == 1){
-            ////    // update internal cache string before changing name in text field (otherwise document listener causes problems)
-            ////    artikelNummerText = artikelNummern.get(0)[0];
-            ////}
-            nummerBox.setItems(artikelNummern);
-            //nummerBox.addActionListener(this);
-        }
-        if ( artikelBox.getItemCount() > 1 ){ artikelBox.requestFocus(); artikelBox.showPopup(); }
-        else { artikelBox.hidePopup(); }
-        //if ( nummerBox.getItemCount() > 1 ){ nummerBox.showPopup(); }
-        //else { nummerBox.hidePopup(); }
-    }
 
-    private void setArtikelNummerForName() {
-        // get artikelName
-        String[] an = artikelBox.parseArtikelName();
-        String artikelName = an[0];
-        String artikelNummer = an[1];
-        String lieferantQuery = artikelNummer.equals("") ? "IS NULL" : "= ?";
-        Vector<String[]> artikelNummern = new Vector<String[]>();
-        // get artikelNummer for artikelName
-        try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT DISTINCT a.artikel_nr FROM artikel AS a " +
-                    "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.artikel_name = ? AND l.lieferant_name "+lieferantQuery+" " +
-                    "AND a.aktiv = TRUE"
-                    );
-            pstmt.setString(1, artikelName);
-            if (!artikelNummer.equals("")){
-                pstmt.setString(2, artikelNummer);
-            }
-            ResultSet rs = pstmt.executeQuery();
-            // Now do something with the ResultSet, should be only one result ...
-            while ( rs.next() ){
-                artikelNummern.add( new String[]{rs.getString(1)} );
-            }
-            rs.close();
-            pstmt.close();
-        } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-        if (nummerBox.getItemCount() != 1){
-            //nummerBox.removeActionListener(this);
-            ////if (artikelNummern.size() == 1){
-            ////    // update internal cache string before changing name in text field (otherwise document listener causes problems)
-            ////    artikelNummerText = artikelNummern.get(0)[0];
-            ////}
-            nummerBox.setItems(artikelNummern);
-            //nummerBox.addActionListener(this);
-        }
-        if ( nummerBox.getItemCount() > 1 ){ nummerBox.requestFocus(); nummerBox.showPopup(); }
-        else { nummerBox.hidePopup(); }
-    }
-
-    private void setArtikelNameForNummer() {
-        // get artikelNummer
-        String artikelNummer = (String)nummerBox.getSelectedItem();
-        Vector<String[]> artikelNamen = new Vector<String[]>();
-        // get artikelName for artikelNummer
-        try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT DISTINCT a.artikel_name, l.lieferant_name FROM artikel AS a " +
-                    "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.artikel_nr = ? " +
-                    "AND a.aktiv = TRUE"
-                    );
-            pstmt.setString(1, artikelNummer);
-            ResultSet rs = pstmt.executeQuery();
-            // Now do something with the ResultSet, should be only one result ...
-            while ( rs.next() ){
-                String lieferant = rs.getString(2) != null ? rs.getString(2) : "";
-                artikelNamen.add( new String[]{rs.getString(1), lieferant} );
-            }
-            rs.close();
-            pstmt.close();
-        } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-        if (artikelBox.getItemCount() != 1){
-            //artikelBox.removeActionListener(this);
-            ////if (artikelNamen.size() == 1){
-            ////    // update internal cache string before changing name in text field (otherwise document listener causes problems)
-            ////    artikelNameText = artikelNamen.get(0)[0];
-            ////}
-            artikelBox.setItems(artikelNamen);
-            //artikelBox.addActionListener(this);
-        }
-        if ( artikelBox.getItemCount() > 1 ){ artikelBox.requestFocus(); artikelBox.showPopup(); }
-        else { artikelBox.hidePopup(); }
-    }
-
-
-    private void resetFormFromBarcodeBox() {
-        artikelBox.emptyBox();
-        nummerBox.emptyBox();
-    }
-    private void resetFormFromArtikelBox() {
-        barcodeBox.emptyBox();
-        nummerBox.emptyBox();
-    }
-    private void resetFormFromNummerBox() {
-        barcodeBox.emptyBox();
-        artikelBox.emptyBox();
-    }
 
     private void checkBarcodeBox(ActionEvent e) {
-        if ( e.getActionCommand().equals("comboBoxEdited") || // if enter was pressed
-                ( e.getActionCommand().equals("comboBoxChanged") && e.getModifiers() == 16 ) // if mouse button was clicked
-           ){
-            if ( barcodeBox.getItemCount() == 1 ){ // if selection is correct and unique
-                setArtikelNameAndNummerForBarcode();
-            } else {
-                resetFormFromBarcodeBox();
-            }
-        } else if ( e.getActionCommand().equals("comboBoxChanged") ){ // all other changes (either removal or up/down key etc.)
-            resetFormFromBarcodeBox();
-        }
         if (!this.editMode){
             checkIfFormIsComplete();
         } else {
@@ -991,17 +784,6 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         }
     }
     protected void checkArtikelBox(ActionEvent e) {
-        if ( e.getActionCommand().equals("comboBoxEdited") || // if enter was pressed
-                ( e.getActionCommand().equals("comboBoxChanged") && e.getModifiers() == 16 ) // if mouse button was clicked
-           ){
-            if ( artikelBox.getItemCount() == 1 ){ // if selection is correct and unique
-                setArtikelNummerForName();
-            } else {
-                resetFormFromArtikelBox();
-            }
-        } else if ( e.getActionCommand().equals("comboBoxChanged") ){ // all other changes (either removal or up/down key etc.)
-            resetFormFromArtikelBox();
-        }
         if (!this.editMode){
             checkIfFormIsComplete();
         } else {
@@ -1009,17 +791,6 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         }
     }
     protected void checkNummerBox(ActionEvent e) {
-        if ( e.getActionCommand().equals("comboBoxEdited") || // if enter was pressed
-                ( e.getActionCommand().equals("comboBoxChanged") && e.getModifiers() == 16 ) // if mouse button was clicked
-           ){
-            if ( nummerBox.getItemCount() == 1 ){ // if selection is correct and unique
-                setArtikelNameForNummer();
-            } else {
-                resetFormFromNummerBox();
-            }
-        } else if ( e.getActionCommand().equals("comboBoxChanged") ){ // all other changes (either removal or up/down key etc.)
-            resetFormFromNummerBox();
-        }
         if (!this.editMode){
             checkIfFormIsComplete();
         } else {
@@ -1032,8 +803,8 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
     boolean checkProductSelection() {
         boolean conditionsFulfilled = true;
         if ( produktModus == produktDropDownOptions[0] ){ // Einzelprodukt
-            int nummerNumber = nummerBox.getItemCount();
-            int artikelNumber = artikelBox.getItemCount();
+            int nummerNumber = artikelCard.nummerBox.getItemCount();
+            int artikelNumber = artikelCard.artikelBox.getItemCount();
             if ( ! (artikelNumber == 1 && nummerNumber == 1) ){
                 conditionsFulfilled = false;
             }
@@ -1084,8 +855,8 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         else
             return this.sdf.format(bisDateModel.getDate());
     }
-    String[] artNameValue() { return artikelBox.parseArtikelName(); }
-    String artNummerValue() { return (String)nummerBox.getSelectedItem(); }
+    String[] artNameValue() { return artikelCard.artikelBox.parseArtikelName(); }
+    String artNummerValue() { return (String)artikelCard.nummerBox.getSelectedItem(); }
     Integer produktgruppenValue() { return produktgruppenIDs.get(produktgruppenBox.getSelectedIndex()); }
     BigDecimal absolutValue() {
         if (absolutField.getText().equals("")) return null;
@@ -1241,36 +1012,21 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
      *    @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == barcodeBox){
+        if (e.getSource() == artikelCard.barcodeBox){
             checkBarcodeBox(e);
             return;
         }
-        if (e.getSource() == artikelBox){
+        if (e.getSource() == artikelCard.artikelBox){
             checkArtikelBox(e);
             return;
         }
-        if (e.getSource() == nummerBox){
+        if (e.getSource() == artikelCard.nummerBox){
             checkNummerBox(e);
             return;
         }
         if (e.getSource() == closeButton){
             WindowAdapter adapter = (WindowAdapter)this.window.getWindowListeners()[0];
             adapter.windowClosing(new WindowEvent((Window)this.window, WindowEvent.WINDOW_CLOSING));
-            return;
-        }
-        if (e.getSource() == emptyBarcodeButton){
-            barcodeBox.emptyBox();
-            barcodeBox.requestFocus();
-            return;
-        }
-        if (e.getSource() == emptyArtikelButton){
-            artikelBox.emptyBox();
-            artikelBox.requestFocus();
-            return;
-        }
-        if (e.getSource() == emptyNummerButton){
-            nummerBox.emptyBox();
-            nummerBox.requestFocus();
             return;
         }
         if (e.getSource() == insertButton){
@@ -1287,7 +1043,11 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
     protected int submit() { return 0; }
 
     // will data be lost on close? No.
-    protected boolean willDataBeLost(){
+    protected boolean willDataBeLost() {
         return false;
+    }
+
+    @Override
+    public void updateSelectedArticleID(int selectedArticleID) {
     }
 }

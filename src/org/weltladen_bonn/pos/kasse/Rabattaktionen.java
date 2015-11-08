@@ -50,6 +50,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
     private int currentPage = 1;
     private int totalPage;
     private String filterStr = "WHERE r.bis != r.von OR r.bis IS NULL ";
+    private OptionTabbedPane tabbedPane;
 
     // for date change
     private JSpinner startSpinner;
@@ -94,8 +95,9 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
     /**
      *    The constructor.
      *       */
-    public Rabattaktionen(Connection conn, MainWindowGrundlage mw) {
+    public Rabattaktionen(Connection conn, MainWindowGrundlage mw, OptionTabbedPane tabbedPane) {
 	super(conn, mw);
+        this.tabbedPane = tabbedPane;
 
 	initiateSpinners();
 	showAll();
@@ -537,7 +539,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 
     void showNewRabattDialog() {
         newRabattDialog = new JDialog(this.mainWindow, "Neue Rabattaktion hinzufügen", true);
-        newRabatt = new RabattDialog(this.conn, this.mainWindow, this, newRabattDialog);
+        newRabatt = new RabattDialog(this.conn, this.mainWindow, this, newRabattDialog, tabbedPane);
         newRabattDialog.getContentPane().add(newRabatt, BorderLayout.CENTER);
         newRabattDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         WindowAdapterNewRabatt wanr = new WindowAdapterNewRabatt(newRabatt, newRabattDialog);
@@ -548,7 +550,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 
     void showEditRabattDialog(Integer rabattID, boolean onlyNameAndBis) {
         editRabattDialog = new JDialog(this.mainWindow, "Rabattaktion bearbeiten", true);
-        editRabatt = new RabattDialog(this.conn, this.mainWindow, this, editRabattDialog,
+        editRabatt = new RabattDialog(this.conn, this.mainWindow, this, editRabattDialog, tabbedPane,
                 "Rabattaktion bearbeiten", true, rabattID, onlyNameAndBis);
         editRabattDialog.getContentPane().add(editRabatt, BorderLayout.CENTER);
         editRabattDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
