@@ -1276,7 +1276,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         try {
             PreparedStatement pstmt = this.conn.prepareStatement("SELECT p.pfand_id IS NOT NULL FROM artikel AS a "
                     + "INNER JOIN produktgruppe AS p USING (produktgruppen_id) " + "WHERE a.artikel_id = ?");
-            System.out.println("artikel_id = " + artikelID);
             pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
             rs.next();

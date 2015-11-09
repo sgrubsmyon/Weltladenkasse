@@ -13,16 +13,17 @@ import javax.swing.text.*;
 
 // for combobox popup menu listener
 import java.lang.reflect.Field;
-import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 
 public abstract class IncrementalSearchComboBox extends JComboBox<String> implements DocumentListener {
     protected JTextComponent textFeld;
     protected String filterStr;
+    protected int searchThresh = 3;
     public boolean changeMode = false;
     public boolean setBoxMode = false;
     public Vector<String[]> items;
+    protected MyKeyListener keyListener;
 
 // credit to: http://stackoverflow.com/questions/11278209/how-can-i-make-comboboxs-list-wider
     protected Vector<Integer> columnWidths = new Vector<Integer>(3); // support max. 3 columns
@@ -35,7 +36,8 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
         this.setEditable(true);
         this.addPopupMouseListener(new MyMouseListener());
         textFeld = (JTextComponent)this.getEditor().getEditorComponent();
-        textFeld.addKeyListener(new MyKeyListener());
+        keyListener = new MyKeyListener();
+        textFeld.addKeyListener(keyListener);
         textFeld.setDocument(new ChangeableDocument());
         textFeld.getDocument().addDocumentListener(this);
         items = new Vector<String[]>();
@@ -43,6 +45,10 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
 
     public void setFilterStr(String filterStr) {
         this.filterStr = filterStr;
+    }
+
+    public void setSearchThreshold(int searchThresh) {
+        this.searchThresh = searchThresh;
     }
 
     protected String parseName(String name) {
@@ -75,20 +81,22 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
         }
     }
 
-    public void emptyBox() {
-        this.changeMode = true;
+    public void clearItemCache() {
+        this.changeMode = true; // prevent "Attempt to mutate in notification" exception
             items.clear();
             resetColumnWidths();
             this.removeAllItems();
         this.changeMode = false;
+    }
+
+    public void emptyBox() {
+        clearItemCache();
         textFeld.setText("");
     }
 
     public void setBox(String[] item) {
+        clearItemCache();
         this.changeMode = true;
-            items.clear();
-            resetColumnWidths();
-            this.removeAllItems();
             items.add(item);
             getColumnWidths();
             this.addItem(item[0]);
@@ -112,14 +120,9 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
 //        }
 
     public void setItems(Vector<String[]> istr) {
-        this.changeMode = true;
-            items.clear();
-            resetColumnWidths();
-            this.removeAllItems();
-        this.changeMode = false;
+        clearItemCache();
         if (istr.size() == 1){
             this.setBox(istr.get(0));
-            //System.out.println("This is setItems in SearchBox.");
             //fireActionEvent(); // needed?
         } else {
             this.changeMode = true;
@@ -151,13 +154,9 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
         this.setPopupVisible(false); // hide popup during editing, so that it will be resized
 
         // clear all items
-        this.changeMode = true; // prevent "Attempt to mutate in notification" exception
-            items.clear();
-            resetColumnWidths();
-            this.removeAllItems();
-        this.changeMode = false;
+        clearItemCache();
 
-        if (textFeld.getText().length() >= 3){
+        if (textFeld.getText().length() >= searchThresh){
             Vector<String[]> searchResults = doQuery();
             this.changeMode = true; // prevent "Attempt to mutate in notification" exception
             for (String[] item : searchResults){
@@ -180,14 +179,12 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
      *    @param e the document event.
      **/
     public void insertUpdate(DocumentEvent e) {
-        //System.out.println("in insertUpdate. setBoxMode = "+setBoxMode);
         if (setBoxMode){
             return;
         }
         incrementalSearch();
     }
     public void removeUpdate(DocumentEvent e) {
-        //System.out.println("in removeUpdate. setBoxMode = "+setBoxMode);
         insertUpdate(e);
     }
     public void changedUpdate(DocumentEvent e) {
@@ -214,14 +211,12 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
                     if (getSelectedIndex() >= 0 && getSelectedIndex() < items.size()){
                         String[] item = items.get(getSelectedIndex());
                         setBox(item);
-                        System.out.println("This is KeyListener in SearchBox.");
                         fireActionEvent(); // this is actually not needed, because ENTER key already fired an action event before ("comboBoxEdited")
                     }
                 }
             }
         @Override
             public void keyReleased(KeyEvent e) {
-                //System.out.println("key released.");
                 changeMode = false;
             }
     }
@@ -231,12 +226,9 @@ public abstract class IncrementalSearchComboBox extends JComboBox<String> implem
     public class MyMouseListener extends MouseAdapter {
         @Override
             public void mouseReleased(MouseEvent e) {
-                System.out.println("mouse released.");
                 if (getSelectedIndex() >= 0 && getSelectedIndex() < items.size()){
                     String[] item = items.get(getSelectedIndex());
-                    System.out.println(item[0]);
                     setBox(item);
-                    System.out.println("This is MouseListener in SearchBox.");
                     fireActionEvent(); // this is needed
                 }
             }

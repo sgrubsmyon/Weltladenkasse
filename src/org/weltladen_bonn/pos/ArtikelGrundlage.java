@@ -86,6 +86,28 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return artikelID;
     }
 
+    public int getArticleID(Integer lieferant_id, String artikelNummer) {
+        // get artikelID for lieferant and artikelNummer
+        int artikelID = -1;
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT a.artikel_id FROM artikel AS a " +
+                    "WHERE a.lieferant_id = ? "+
+                    "AND a.artikel_nr = ? " +
+                    "AND a.aktiv = TRUE"
+                    );
+            pstmtSetInteger(pstmt, 1, lieferant_id);
+            pstmt.setString(2, artikelNummer);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); artikelID = rs.getInt(1); rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return artikelID;
+    }
+
     protected String[] getArticleName(int artikelID) {
         String artikelName = new String();
         String lieferant = new String();
