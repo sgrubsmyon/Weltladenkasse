@@ -162,10 +162,9 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         // update selected Artikel
         String[] an = artikelBox.parseArtikelName();
         String artikelName = an[0];
-        String lieferant = an[1];
+        String liefID = an[1];
         String artikelNummer = (String) nummerBox.getSelectedItem();
-        System.out.println(lieferant+"   "+artikelNummer);
-        selectedArticleID = getArticleID(lieferant, artikelNummer); // get the
+        selectedArticleID = getArticleID(Integer.parseInt(liefID), artikelNummer); // get the
                                                                     // internal
                                                                     // artikelID
                                                                     // from the
@@ -187,7 +186,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
                 // that already has a barcode.
                 //System.out.println();
                 //System.out.println("Another article was selected "+
-                //        "that already has a barcode ("++". barcodeMemory is forgotten.");
+                //        "that already has a barcode. barcodeMemory is forgotten.");
                 barcodeMemory = "";
             } else {
                 rememberBarcode();
@@ -240,7 +239,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         Vector<Vector<String[]>> result = new Vector<Vector<String[]>>();
         try {
             PreparedStatement pstmt = this.conn
-                    .prepareStatement("SELECT DISTINCT a.artikel_name, l.lieferant_name, a.vk_preis, a.sortiment, "
+                    .prepareStatement("SELECT DISTINCT a.artikel_name, l.lieferant_kurzname, a.vk_preis, a.sortiment, a.lieferant_id, "
                             + "a.artikel_nr FROM artikel AS a " + "LEFT JOIN lieferant AS l USING (lieferant_id) "
                             + "WHERE a.barcode = ? " + "AND a.aktiv = TRUE");
             pstmt.setString(1, barcode);
@@ -249,15 +248,16 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
             // ...
             while (rs.next()) {
                 String artName = rs.getString(1);
-                String liefName = rs.getString(2) != null ? rs.getString(2) : "";
+                String liefKurzName = rs.getString(2) != null ? rs.getString(2) : "";
                 String vkPreis = rs.getString(3) != null ? rs.getString(3) : "";
                 Boolean sortiment = rs.getBoolean(4);
+                String liefID = rs.getString(5);
+                String artNummer = rs.getString(6);
                 if (!vkPreis.equals("")){
                     vkPreis = bc.priceFormatter(vkPreis)+" "+bc.currencySymbol;
                 }
-                String artNummer = rs.getString(5);
 
-                artikelNamen.add(new String[]{artName, liefName, vkPreis, sortiment.toString()});
+                artikelNamen.add(new String[]{artName, liefKurzName, vkPreis, sortiment.toString(), liefID});
                 artikelNummern.add(new String[]{artNummer});
             }
             rs.close();
@@ -297,6 +297,8 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         // Simulate a key press
         robot.keyPress(KeyEvent.VK_DOWN);
         robot.keyRelease(KeyEvent.VK_DOWN);
+        robot.keyPress(KeyEvent.VK_UP);
+        robot.keyRelease(KeyEvent.VK_UP);
     }
 
     private void setArtikelNameAndNummerForBarcode(Vector<String[]> artikelNamen, Vector<String[]> artikelNummern) {
@@ -330,7 +332,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         // get artikelName for artikelNummer
         try {
             PreparedStatement pstmt = this.conn
-                    .prepareStatement("SELECT DISTINCT a.artikel_name, l.lieferant_name, a.vk_preis, a.sortiment "+
+                    .prepareStatement("SELECT DISTINCT a.artikel_name, l.lieferant_kurzname, a.vk_preis, a.sortiment, a.lieferant_id "+
                             "FROM artikel AS a LEFT JOIN lieferant AS l USING (lieferant_id) "+
                             "WHERE a.artikel_nr = ? AND a.aktiv = TRUE");
             pstmt.setString(1, artikelNummer);
@@ -339,14 +341,15 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
             // ...
             while (rs.next()) {
                 String artName = rs.getString(1);
-                String liefName = rs.getString(2) != null ? rs.getString(2) : "";
+                String liefKurzName = rs.getString(2) != null ? rs.getString(2) : "";
                 String vkPreis = rs.getString(3) != null ? rs.getString(3) : "";
-                Boolean sortiment = rs.getBoolean(3);
+                Boolean sortiment = rs.getBoolean(4);
+                String liefID = rs.getString(5);
                 if (!vkPreis.equals("")){
                     vkPreis = bc.priceFormatter(vkPreis)+" "+bc.currencySymbol;
                 }
 
-                artikelNamen.add(new String[]{artName, liefName, vkPreis, sortiment.toString()});
+                artikelNamen.add(new String[]{artName, liefKurzName, vkPreis, sortiment.toString(), liefID});
             }
             rs.close();
             pstmt.close();
@@ -373,18 +376,14 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         // get artikelName
         String[] an = artikelBox.parseArtikelName();
         String artikelName = an[0];
-        String lieferant = an[1];
-        String lieferantQuery = lieferant.equals("") ? "IS NULL" : "= ?";
+        String liefID = an[1];
         Vector<String[]> artikelNummern = new Vector<String[]>();
         // get artikelNummer for artikelName
         try {
             PreparedStatement pstmt = this.conn.prepareStatement("SELECT DISTINCT a.artikel_nr FROM artikel AS a "
-                    + "LEFT JOIN lieferant AS l USING (lieferant_id) "
-                    + "WHERE a.artikel_name = ? AND l.lieferant_name " + lieferantQuery + " " + "AND a.aktiv = TRUE");
+                    + "WHERE a.artikel_name = ? AND a.lieferant_id = ? AND a.aktiv = TRUE");
             pstmt.setString(1, artikelName);
-            if (!lieferant.equals("")) {
-                pstmt.setString(2, lieferant);
-            }
+            pstmt.setString(2, liefID);
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet, should be only one result
             // ...

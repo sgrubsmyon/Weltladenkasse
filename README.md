@@ -15,7 +15,7 @@ cd Pfad/zu/meinem/Verzeichnis
 Software auf Ubuntu ausführen:
 ------------------------------
 ```
-java -jar Weltladenkasse_v1.0.0.jar
+java -jar Weltladenkasse_v1.0.1.jar
 ```
 
 Eine Version des Java Runtime Environment (JRE) muss installiert sein,
@@ -101,8 +101,8 @@ ant
 
 Compile and run locally:
 ```
-ant && java -jar Weltladenkasse_v1.0.0.jar
-ant && java -jar Weltladenbesteller_v1.0.0.jar
+ant && java -jar Weltladenkasse_v1.0.1.jar
+ant && java -jar Weltladenbesteller_v1.0.1.jar
 ```
 
 Compile and make release (**CAUTION:** default release dir is `../releases`, adjust to your needs):

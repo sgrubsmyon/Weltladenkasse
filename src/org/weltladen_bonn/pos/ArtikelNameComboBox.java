@@ -27,7 +27,7 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
     public String[] parseArtikelName() {
         try {
             String[] item = this.items.get(this.getSelectedIndex());
-            return new String[]{item[0], item[1]};
+            return new String[]{item[0], item[4]};
         } catch (ArrayIndexOutOfBoundsException ex){
             System.out.println("For some reason, selected index in ArtikelNameComboBox is "+
                     this.getSelectedIndex()+", which is out of bounds for array `items`.");
@@ -53,13 +53,13 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
                 whereClause += "AND artikel_name LIKE ? ";
             }
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT DISTINCT a.artikel_name, l.lieferant_name, a.vk_preis, a.sortiment "+
+                    "SELECT DISTINCT a.artikel_name, l.lieferant_kurzname, a.vk_preis, a.sortiment, a.lieferant_id "+
                     "FROM artikel AS a " +
                     "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
                     "WHERE " + whereClause +
                     "AND a.aktiv = TRUE " + filterStr +
-                    "ORDER BY a.artikel_name, l.lieferant_name"
+                    "ORDER BY a.artikel_name, l.lieferant_kurzname"
                     );
             for (int i=0; i<words.length; i++){
                 pstmt.setString(i+1, "%"+words[i]+"%");
@@ -68,14 +68,15 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             // Now do something with the ResultSet ...
             while (rs.next()) {
                 String artName = rs.getString(1);
-                String liefName = rs.getString(2) != null ? rs.getString(2) : "";
+                String liefKurzName = rs.getString(2) != null ? rs.getString(2) : "";
                 String vkPreis = rs.getString(3) != null ? rs.getString(3) : "";
                 Boolean sortiment = rs.getBoolean(4);
+                String liefID = rs.getString(5);
                 if (!vkPreis.equals("")){
                     vkPreis = bc.priceFormatter(vkPreis)+" "+bc.currencySymbol;
                 }
 
-                searchResults.add(new String[]{artName, liefName, vkPreis, sortiment.toString()});
+                searchResults.add(new String[]{artName, liefKurzName, vkPreis, sortiment.toString(), liefID});
             }
             rs.close();
             pstmt.close();
