@@ -103,7 +103,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         artikelBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, -1, false));
         artikelBox.setFont(bc.mediumFont);
         artikelBox.setPreferredSize(new Dimension(460, height));
-        artikelBox.setMaximumRowCount(30);
+        artikelBox.setMaximumRowCount(29);
         artikelField = (JTextField) artikelBox.getEditor().getEditorComponent();
         artikelBox.setMaximumSize( artikelBox.getPreferredSize() );
         removeDefaultKeyBindings(artikelField);

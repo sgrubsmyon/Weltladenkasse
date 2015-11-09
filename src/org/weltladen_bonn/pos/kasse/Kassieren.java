@@ -1943,9 +1943,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             vkPreis = bc.priceFormatter(vkPreis)+" "+bc.currencySymbol;
         }
         String[] name = new String[]{a.getName(),
-            getLieferantName(id),
-            bc.priceFormatter(a.getVKP())+" "+bc.currencySymbol,
-            a.getSortiment().toString()};
+            getShortLieferantName(id),
+            vkPreis,
+            a.getSortiment().toString(),
+            a.getLiefID().toString()};
         asPanel.nummerBox.setBox(nummer);
         asPanel.artikelBox.setBox(name);
         asPanel.checkIfFormIsComplete();
