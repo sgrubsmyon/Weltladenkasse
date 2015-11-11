@@ -57,6 +57,7 @@ public class Bestellen extends BestellungsGrundlage implements
     private JButton emptyArtikelButton;
     private JButton emptyNummerButton;
     private JButton hinzufuegenButton;
+    protected JButton changeButton;
     private Vector<JButton> removeButtons;
     private JButton abschliessenButton;
     private JButton verwerfenButton;
@@ -296,6 +297,12 @@ public class Bestellen extends BestellungsGrundlage implements
 	    hinzufuegenButton.addActionListener(this);
 	    hinzufuegenButton.setEnabled(false);
 	    chooseArticlePanel.add(hinzufuegenButton);
+
+	    changeButton = new JButton("Verändern");
+            changeButton.setMnemonic(KeyEvent.VK_V);
+	    changeButton.addActionListener(this);
+	    changeButton.setEnabled(false);
+	    chooseArticlePanel.add(changeButton);
         allPanel.add(chooseArticlePanel);
 
 	showTable();
@@ -894,6 +901,32 @@ public class Bestellen extends BestellungsGrundlage implements
         return okTyp;
     }
 
+    private void showEditDialog() {
+        Artikel article = getArticle(selectedArticleID);
+        Vector<Artikel> selectedArticles = new Vector<Artikel>();
+        selectedArticles.add(article);
+
+        asPanel.showEditDialog(selectedArticles);
+
+        boolean variablerPreis = getVariablePriceBool(selectedArticleID);
+        if ( ! variablerPreis ){
+            String artikelPreis = getRecSalePrice(selectedArticleID);
+            if (artikelPreis == null || artikelPreis.equals("")){
+                artikelPreis = getSalePrice(selectedArticleID);
+            }
+            if (artikelPreis == null)
+                artikelPreis = "";
+            preisField.getDocument().removeDocumentListener(this);
+            preisField.setText( bc.decimalMark(artikelPreis) );
+            preisField.getDocument().addDocumentListener(this);
+        } else {
+            preisField.getDocument().removeDocumentListener(this);
+            preisField.setText("");
+            preisField.getDocument().addDocumentListener(this);
+            preisField.setEditable(true);
+        }
+    }
+
     /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.
@@ -904,6 +937,10 @@ public class Bestellen extends BestellungsGrundlage implements
         if (e.getSource() == hinzufuegenButton){
             Integer stueck = (Integer)anzahlSpinner.getValue();
             fuegeArtikelHinzu(stueck);
+	    return;
+	}
+        if (e.getSource() == changeButton){
+            showEditDialog();
 	    return;
 	}
         if (e.getSource() == changeTypButton){

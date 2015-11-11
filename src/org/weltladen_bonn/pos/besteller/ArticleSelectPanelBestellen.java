@@ -27,6 +27,7 @@ public class ArticleSelectPanelBestellen extends ArticleSelectPanelGrundlage {
     protected void resetOther() {
         bestellen.preisField.setText("");
         bestellen.preisField.setEditable(false);
+        bestellen.changeButton.setEnabled(false);
     }
 
     private void setAnzahlSpinner() {
@@ -62,19 +63,23 @@ public class ArticleSelectPanelBestellen extends ArticleSelectPanelGrundlage {
 
                 showEditDialog(selectedArticles);
 
-                artikelPreis = getRecSalePrice(selectedArticleID);
-                if (artikelPreis == null || artikelPreis.equals("")){
-                    artikelPreis = getSalePrice(selectedArticleID);
-                }
-                if (artikelPreis == null)
+                boolean varPreis2 = getVariablePriceBool(selectedArticleID);
+                if ( !varPreis2 ){
+                    artikelPreis = getRecSalePrice(selectedArticleID);
+                    if (artikelPreis == null || artikelPreis.equals("")){
+                        artikelPreis = getSalePrice(selectedArticleID);
+                    }
+                    if (artikelPreis == null)
+                        artikelPreis = "";
+                } else {
                     artikelPreis = "";
-                System.out.println("artikelPreis: "+artikelPreis);
+                    bestellen.preisField.setEditable(true);
+                }
             }
             bestellen.preisField.getDocument().removeDocumentListener(this);
             bestellen.preisField.setText( bc.decimalMark(artikelPreis) );
             bestellen.preisField.getDocument().addDocumentListener(this);
-        }
-        else {
+        } else {
             bestellen.preisField.setEditable(true);
         }
         int setgroesse = getSetSize(selectedArticleID);
@@ -83,13 +88,14 @@ public class ArticleSelectPanelBestellen extends ArticleSelectPanelGrundlage {
         } else {
             bestellen.setLabel.setText("");
         }
+        bestellen.changeButton.setEnabled(true);
     }
 
     @Override
     protected void resetPriceField() {
     }
 
-    private void showEditDialog(Vector<Artikel> selectedArticles) {
+    protected void showEditDialog(Vector<Artikel> selectedArticles) {
         JDialog editDialog = new JDialog(mainWindow, "Artikel bearbeiten", true);
         ArtikelBearbeiten bearb = new ArtikelBearbeiten(conn,
                 mainWindow, tabbedPane.getArtikelliste(), editDialog,
