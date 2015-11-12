@@ -24,7 +24,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
     protected Integer toplevel_id = 1;
     protected Integer sub_id = 3;
     protected Integer subsub_id = null;
-    protected String produktgruppenname = "Sonstiges 19% MwSt";
+    protected String produktgruppenname = "Sonstiges 19% MwSt (0)";
+    private String searchStr = null;
 
     protected JPanel allPanel;
     protected JPanel artikelListPanel;
@@ -79,12 +80,21 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
     protected Artikelliste(Connection conn, ArtikellisteContainer ac, Integer
             tid, Integer sid, Integer ssid, String gn) {
         super(conn, ac.getMainWindowPointer());
-
         this.container = ac;
         this.toplevel_id = tid;
         this.sub_id = sid;
         this.subsub_id = ssid;
         this.produktgruppenname = gn;
+
+        fillDataArray();
+        showAll();
+    }
+
+    protected Artikelliste(Connection conn, ArtikellisteContainer ac, String searchStr) {
+        super(conn, ac.getMainWindowPointer());
+        this.container = ac;
+        this.searchStr = searchStr;
+        this.produktgruppenname = "Suchergebnis (0)";
 
         fillDataArray();
         showAll();
@@ -99,8 +109,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         super(conn, mwp);
     }
 
-    private String queryString(String filter) {
-        String queryStr = 
+    private PreparedStatement prepareStatement(String filter) {
+        String queryStr =
             "SELECT artikel_id, produktgruppen_id, produktgruppen_name, "+
             "lieferant_id, lieferant_name, "+
             "artikel_nr, artikel_name, "+
@@ -120,10 +130,18 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             aktivFilterStr +
             sortimentFilterStr +
             "ORDER BY " + orderByStr;
-        return queryStr;
+        PreparedStatement pstmt = null;
+        //System.out.println("Artikelliste SQL query string:\n"+queryStr);
+        try {
+            pstmt = this.conn.prepareStatement(queryStr);
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return pstmt;
     }
 
-    private String queryStringProduktgruppe() {
+    private PreparedStatement prepareStatementProduktgruppe() {
         String filter = "";
         if (toplevel_id == null){ // if user clicked on "Alle Artikel"
             if (showInternals)
@@ -137,12 +155,40 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             filter += " AND p.sub_id = " + sub_id + " ";
         if (subsub_id != null)
             filter += " AND p.subsub_id = " + subsub_id + " ";
-        return queryString(filter);
+        return prepareStatement(filter);
     }
 
-    private void queryDatabase(String queryStr) {
+    private PreparedStatement prepareStatementSearchString() {
+        String[] words = searchStr.split("\\s+");
+        String baseClause = "(produktgruppen_name LIKE ? OR lieferant_name LIKE ? OR "+
+            "artikel_nr LIKE ? OR artikel_name LIKE ? OR kurzname LIKE ? OR "+
+            "einheit LIKE ? OR barcode LIKE ? OR herkunft LIKE ?) ";
+        int nQuestionMark = 8;
+        String filter = "";
+        if (words.length > 0){
+            filter += baseClause;
+        }
+        for (int i=1; i<words.length; i++){
+            filter += "AND "+baseClause;
+        }
+        PreparedStatement pstmt = null;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(queryStr);
+            pstmt = prepareStatement(filter);
+            for (int i=0; i<words.length; i++) {
+                for (int j=i*nQuestionMark+1; j<=(i+1)*nQuestionMark; j++) {
+                    pstmt.setString(j, "%"+words[i]+"%");
+                    //System.out.println("Setting string "+j+" on pstmt to: %"+words[i]+"%");
+                }
+            }
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return pstmt;
+    }
+
+    private void queryDatabase(PreparedStatement pstmt) {
+        try {
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 Integer artikel_id = rs.getInt(1);
@@ -352,7 +398,13 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         documentFilterMap.put("Herkunft", bc.herkunftFilter);
         documentFilterMap.put("Bestand", bc.intFilter);
 
-        queryDatabase(queryStringProduktgruppe());
+        PreparedStatement pstmt;
+        if (this.searchStr == null) {
+            pstmt = prepareStatementProduktgruppe();
+        } else {
+            pstmt = prepareStatementSearchString();
+        }
+        queryDatabase(pstmt);
         refreshOriginalData();
         displayData = new Vector< Vector<Object> >(data);
         initiateDisplayIndices();

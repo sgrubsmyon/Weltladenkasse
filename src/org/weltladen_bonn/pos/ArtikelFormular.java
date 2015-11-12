@@ -378,8 +378,10 @@ public class ArtikelFormular extends WindowContent
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == produktgruppenBox){
             int prodGrIndex = produktgruppenBox.getSelectedIndex();
-            String einheit = produktgruppenEinheiten.get(prodGrIndex);
-            System.out.println(einheit);
+            String einheit = "";
+            if (prodGrIndex >= 0 && prodGrIndex < produktgruppenEinheiten.size()) {
+                einheit = produktgruppenEinheiten.get(prodGrIndex);
+            }
             einheitField.setText(einheit);
         }
     }

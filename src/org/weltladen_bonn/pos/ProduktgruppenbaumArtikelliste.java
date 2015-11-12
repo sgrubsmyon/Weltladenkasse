@@ -79,7 +79,7 @@ public class ProduktgruppenbaumArtikelliste extends ProduktgruppenbaumGrundlage 
             Integer subid = gruppe.sub_id;
             Integer subsubid = gruppe.subsub_id;
             String gruppenname = gruppe.name;
-            container.switchToArtikelliste(topid, subid, subsubid, gruppenname);
+            container.switchToArtikellisteProduktgruppe(topid, subid, subsubid, gruppenname);
         }
     }
 }
