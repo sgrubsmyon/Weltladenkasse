@@ -103,6 +103,9 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
     protected Artikelliste(Connection conn, ArtikellisteContainer ac) {
         super(conn, ac.getMainWindowPointer());
         this.container = ac;
+
+        fillDataArray();
+        showAll();
     }
 
     protected Artikelliste(Connection conn, MainWindowGrundlage mwp) {

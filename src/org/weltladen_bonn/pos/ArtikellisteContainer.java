@@ -48,6 +48,7 @@ public class ArtikellisteContainer extends WindowContent {
     private JButton revertButton;
     private JButton editButton;
     private JButton newButton;
+    private JButton addSimilarButton;
     private JButton importButton;
     private JButton exportButton;
 
@@ -116,6 +117,7 @@ public class ArtikellisteContainer extends WindowContent {
         // be reminded of search string
         searchField.setText(lastSearchStr);
         artListShown = false;
+        enableButtons();
     }
 
     private void showTopPanel() {
@@ -186,6 +188,11 @@ public class ArtikellisteContainer extends WindowContent {
             newButton.addActionListener(this);
             bottomRightPanel.add(newButton);
 
+            addSimilarButton = new JButton("Ähnliche Artikel eingeben");
+            addSimilarButton.setMnemonic(KeyEvent.VK_A);
+            addSimilarButton.addActionListener(this);
+            bottomRightPanel.add(addSimilarButton);
+
             importButton = new JButton("Artikel importieren");
             importButton.setMnemonic(KeyEvent.VK_D);
             importButton.addActionListener(this);
@@ -206,6 +213,7 @@ public class ArtikellisteContainer extends WindowContent {
             revertButton.setEnabled(artList.editedArticles.size() > 0);
             editButton.setEnabled(artList.myTable.getSelectedRowCount() > 0);
             newButton.setEnabled(artList.editedArticles.size() == 0);
+            addSimilarButton.setEnabled(artList.myTable.getSelectedRowCount() == 1);
             importButton.setEnabled(artList.editedArticles.size() == 0);
             exportButton.setEnabled(artList.editedArticles.size() == 0);
         } else {
@@ -213,6 +221,7 @@ public class ArtikellisteContainer extends WindowContent {
             revertButton.setEnabled(false);
             editButton.setEnabled(false);
             newButton.setEnabled(true);
+            addSimilarButton.setEnabled(false);
             importButton.setEnabled(true);
             exportButton.setEnabled(true);
         }
@@ -255,6 +264,10 @@ public class ArtikellisteContainer extends WindowContent {
             return;
         }
         if (e.getSource() == newButton){
+            artList.showNewItemDialog();
+            return;
+        }
+        if (e.getSource() == addSimilarButton){
             artList.showNewItemDialog();
             return;
         }
