@@ -21,10 +21,10 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
        TableModelListener, ListSelectionListener, DocumentListener {
     // Attribute:
     private ArtikellisteContainer container;
-    protected Integer toplevel_id;
-    protected Integer sub_id;
-    protected Integer subsub_id;
-    protected String produktgruppenname;
+    protected Integer toplevel_id = 1;
+    protected Integer sub_id = 3;
+    protected Integer subsub_id = null;
+    protected String produktgruppenname = "Sonstiges 19% MwSt";
 
     protected JPanel allPanel;
     protected JPanel artikelListPanel;
@@ -38,12 +38,6 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
     protected boolean showInternals = false;
     protected JTextField filterField;
     private JButton emptyFilterButton;
-    private JButton saveButton;
-    private JButton revertButton;
-    private JButton editButton;
-    private JButton newButton;
-    private JButton importButton;
-    private JButton exportButton;
 
     private String filterStr = "";
     private String aktivFilterStr = " AND artikel.aktiv = TRUE ";
@@ -74,7 +68,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
     protected HashMap<String, DocumentFilter> documentFilterMap;
 
     // Vectors storing table edits
-    private Vector<Artikel> editedArticles;
+    protected Vector<Artikel> editedArticles;
     private Vector<Artikel> changedArticles;
 
     // Dialog to read items from file
@@ -96,8 +90,157 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         showAll();
     }
 
+    protected Artikelliste(Connection conn, ArtikellisteContainer ac) {
+        super(conn, ac.getMainWindowPointer());
+        this.container = ac;
+    }
+
     protected Artikelliste(Connection conn, MainWindowGrundlage mwp) {
         super(conn, mwp);
+    }
+
+    private String queryString(String filter) {
+        String queryStr = 
+            "SELECT artikel_id, produktgruppen_id, produktgruppen_name, "+
+            "lieferant_id, lieferant_name, "+
+            "artikel_nr, artikel_name, "+
+            "kurzname, "+
+            "menge, einheit, barcode, "+
+            "herkunft, vpe, "+
+            "setgroesse, "+
+            "vk_preis, empf_vk_preis, ek_rabatt, ek_preis, variabler_preis, mwst_satz, "+
+            "sortiment, lieferbar, "+
+            "beliebtheit, bestand, "+
+            "DATE_FORMAT(von, '"+bc.dateFormatSQL+"'), DATE_FORMAT(bis, '"+bc.dateFormatSQL+"'), "+
+            "artikel.aktiv "+
+            "FROM artikel LEFT JOIN lieferant USING (lieferant_id) "+
+            "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
+            "LEFT JOIN mwst USING (mwst_id) "+
+            "WHERE " + filter +
+            aktivFilterStr +
+            sortimentFilterStr +
+            "ORDER BY " + orderByStr;
+        return queryStr;
+    }
+
+    private String queryStringProduktgruppe() {
+        String filter = "";
+        if (toplevel_id == null){ // if user clicked on "Alle Artikel"
+            if (showInternals)
+                filter = "TRUE "; // to show all items, also internal ones (where toplevel_id == null)
+            else
+                filter = "p.toplevel_id > 0 ";
+        } else {
+            filter = "p.toplevel_id = " + toplevel_id + " ";
+        }
+        if (sub_id != null)
+            filter += " AND p.sub_id = " + sub_id + " ";
+        if (subsub_id != null)
+            filter += " AND p.subsub_id = " + subsub_id + " ";
+        return queryString(filter);
+    }
+
+    private void queryDatabase(String queryStr) {
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(queryStr);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Integer artikel_id = rs.getInt(1);
+                Integer produktgruppen_id = rs.getInt(2);
+                String gruppenname = rs.getString(3);
+                Integer lieferant_id = rs.getInt(4);
+                String lieferant = rs.getString(5);
+                String nummer = rs.getString(6);
+                String name = rs.getString(7);
+                String kurzname = rs.getString(8);
+                BigDecimal menge = rs.getBigDecimal(9);
+                String einheit = rs.getString(10);
+                String barcode = rs.getString(11);
+                String herkunft = rs.getString(12);
+                Integer vpe = rs.getString(13) == null ? null : rs.getInt(13);
+                Integer setgroesse = rs.getString(14) == null ? null : rs.getInt(14);
+                String vkp = rs.getString(15);
+                String empf_vkp = rs.getString(16);
+                String ek_rabatt = bc.vatFormatter( rs.getString(17) );
+                String ekp = rs.getString(18);
+                Boolean var = rs.getBoolean(19);
+                String mwst = rs.getString(20);
+                Boolean sortiment = rs.getBoolean(21);
+                Boolean lieferbar = rs.getBoolean(22);
+                Integer beliebtWert = rs.getInt(23);
+                Integer bestand = rs.getString(24) == null ? null : rs.getInt(24);
+                String von = rs.getString(25);
+                String bis = rs.getString(26);
+                Boolean aktiv = rs.getBoolean(27);
+
+                if (lieferant_id == null) lieferant_id = 1; // corresponds to "unknown"
+                if (lieferant == null) lieferant = "";
+                if (kurzname == null) kurzname = "";
+                String mengeStr = "";
+                if (menge != null){ mengeStr = bc.unifyDecimal(menge); }
+                if (einheit == null){ einheit = ""; }
+                if (barcode == null){ barcode = ""; }
+                if (herkunft == null) herkunft = "";
+                String vpeStr = "";
+                if (vpe != null){ vpeStr = vpe.toString(); }
+                String setgrStr = "";
+                if (setgroesse != null){ setgrStr = setgroesse.toString(); }
+                String vkpOutput = "";
+                if (vkp != null){ vkpOutput = bc.priceFormatter(vkp); }
+                String empfVKPOutput = "";
+                if (empf_vkp != null){ empfVKPOutput = bc.priceFormatter(empf_vkp); }
+                String ekRabattOutput = "";
+                if (ek_rabatt != null){ ekRabattOutput = bc.vatPercentRemover(ek_rabatt); }
+                String ekpOutput = "";
+                if (ekp != null){ ekpOutput = bc.priceFormatter(ekp); }
+                String mwstOutput = "";
+                if (mwst != null){ mwstOutput = bc.vatFormatter(mwst); }
+                if (var == true){ vkpOutput = "variabel"; empfVKPOutput = "variabel";
+                    ekRabattOutput = "variabel"; ekpOutput = "variabel"; }
+                Integer beliebtIndex = 0;
+                if (beliebtWert != null){
+                    try {
+                        beliebtIndex = bc.beliebtWerte.indexOf(beliebtWert);
+                    } catch (ArrayIndexOutOfBoundsException ex){
+                        System.out.println("Unknown beliebtWert: "+beliebtWert);
+                    }
+                }
+                String bestandStr = "";
+                if (bestand != null){ bestandStr = bestand.toString(); }
+                if (von == null) von = "";
+                if (bis == null) bis = "";
+
+                Vector<Object> row = new Vector<Object>();
+                    row.add(gruppenname);
+                    row.add(lieferant); row.add(nummer);
+                    row.add(name); row.add(kurzname);
+                    row.add(mengeStr); row.add(einheit);
+                    row.add(vkpOutput);
+                    row.add(sortiment);
+                    row.add(lieferbar);
+                    row.add(beliebtIndex); row.add(barcode);
+                    row.add(vpeStr); row.add(setgrStr);
+                    row.add(empfVKPOutput); row.add(ekRabattOutput);
+                    row.add(ekpOutput); row.add(mwstOutput);
+                    row.add(herkunft); row.add(bestandStr);
+                    row.add(von); row.add(bis);
+                    row.add(aktiv);
+                data.add(row);
+
+                Artikel article = new Artikel(bc, produktgruppen_id, lieferant_id,
+                        nummer, name, kurzname, menge, einheit, barcode,
+                        herkunft, vpe, setgroesse, vkp, empf_vkp, ek_rabatt,
+                        ekp, var, sortiment, lieferbar, beliebtWert, bestand,
+                        aktiv);
+                articles.add(article);
+                artikelIDs.add(artikel_id);
+            }
+            rs.close();
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
     }
 
     protected void fillDataArray() {
@@ -209,139 +352,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         documentFilterMap.put("Herkunft", bc.herkunftFilter);
         documentFilterMap.put("Bestand", bc.intFilter);
 
-        String filter = "";
-        if (toplevel_id == null){ // if user clicked on "Alle Artikel"
-            if (showInternals)
-                filter = "TRUE "; // to show all items, also internal ones (where toplevel_id == null)
-            else
-                filter = "p.toplevel_id > 0 ";
-        } else {
-            filter = "p.toplevel_id = " + toplevel_id + " ";
-        }
-        if (sub_id != null)
-            filter += " AND p.sub_id = " + sub_id + " ";
-        if (subsub_id != null)
-            filter += " AND p.subsub_id = " + subsub_id + " ";
-        try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT artikel_id, produktgruppen_id, produktgruppen_name, "+
-                    "lieferant_id, lieferant_name, "+
-                    "artikel_nr, artikel_name, "+
-                    "kurzname, "+
-                    "menge, einheit, barcode, "+
-                    "herkunft, vpe, "+
-                    "setgroesse, "+
-                    "vk_preis, empf_vk_preis, ek_rabatt, ek_preis, variabler_preis, mwst_satz, "+
-                    "sortiment, lieferbar, "+
-                    "beliebtheit, bestand, "+
-                    "DATE_FORMAT(von, '"+bc.dateFormatSQL+"'), DATE_FORMAT(bis, '"+bc.dateFormatSQL+"'), "+
-                    "artikel.aktiv "+
-                    "FROM artikel LEFT JOIN lieferant USING (lieferant_id) "+
-                    "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
-                    "LEFT JOIN mwst USING (mwst_id) "+
-                    "WHERE " + filter +
-                    aktivFilterStr +
-                    sortimentFilterStr +
-                    "ORDER BY " + orderByStr
-                    );
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                Integer artikel_id = rs.getInt(1);
-                Integer produktgruppen_id = rs.getInt(2);
-                String gruppenname = rs.getString(3);
-                Integer lieferant_id = rs.getInt(4);
-                String lieferant = rs.getString(5);
-                String nummer = rs.getString(6);
-                String name = rs.getString(7);
-                String kurzname = rs.getString(8);
-                BigDecimal menge = rs.getBigDecimal(9);
-                String einheit = rs.getString(10);
-                String barcode = rs.getString(11);
-                String herkunft = rs.getString(12);
-                Integer vpe = rs.getString(13) == null ? null : rs.getInt(13);
-                Integer setgroesse = rs.getString(14) == null ? null : rs.getInt(14);
-                String vkp = rs.getString(15);
-                String empf_vkp = rs.getString(16);
-                String ek_rabatt = bc.vatFormatter( rs.getString(17) );
-                String ekp = rs.getString(18);
-                Boolean var = rs.getBoolean(19);
-                String mwst = rs.getString(20);
-                Boolean sortiment = rs.getBoolean(21);
-                Boolean lieferbar = rs.getBoolean(22);
-                Integer beliebtWert = rs.getInt(23);
-                Integer bestand = rs.getString(24) == null ? null : rs.getInt(24);
-                String von = rs.getString(25);
-                String bis = rs.getString(26);
-                Boolean aktiv = rs.getBoolean(27);
-
-                if (lieferant_id == null) lieferant_id = 1; // corresponds to "unknown"
-                if (lieferant == null) lieferant = "";
-                if (kurzname == null) kurzname = "";
-                String mengeStr = "";
-                if (menge != null){ mengeStr = bc.unifyDecimal(menge); }
-                if (einheit == null){ einheit = ""; }
-                if (barcode == null){ barcode = ""; }
-                if (herkunft == null) herkunft = "";
-                String vpeStr = "";
-                if (vpe != null){ vpeStr = vpe.toString(); }
-                String setgrStr = "";
-                if (setgroesse != null){ setgrStr = setgroesse.toString(); }
-                String vkpOutput = "";
-                if (vkp != null){ vkpOutput = bc.priceFormatter(vkp); }
-                String empfVKPOutput = "";
-                if (empf_vkp != null){ empfVKPOutput = bc.priceFormatter(empf_vkp); }
-                String ekRabattOutput = "";
-                if (ek_rabatt != null){ ekRabattOutput = bc.vatPercentRemover(ek_rabatt); }
-                String ekpOutput = "";
-                if (ekp != null){ ekpOutput = bc.priceFormatter(ekp); }
-                String mwstOutput = "";
-                if (mwst != null){ mwstOutput = bc.vatFormatter(mwst); }
-                if (var == true){ vkpOutput = "variabel"; empfVKPOutput = "variabel";
-                    ekRabattOutput = "variabel"; ekpOutput = "variabel"; }
-                Integer beliebtIndex = 0;
-                if (beliebtWert != null){
-                    try {
-                        beliebtIndex = bc.beliebtWerte.indexOf(beliebtWert);
-                    } catch (ArrayIndexOutOfBoundsException ex){
-                        System.out.println("Unknown beliebtWert: "+beliebtWert);
-                    }
-                }
-                String bestandStr = "";
-                if (bestand != null){ bestandStr = bestand.toString(); }
-                if (von == null) von = "";
-                if (bis == null) bis = "";
-
-                Vector<Object> row = new Vector<Object>();
-                    row.add(gruppenname);
-                    row.add(lieferant); row.add(nummer);
-                    row.add(name); row.add(kurzname);
-                    row.add(mengeStr); row.add(einheit);
-                    row.add(vkpOutput);
-                    row.add(sortiment);
-                    row.add(lieferbar);
-                    row.add(beliebtIndex); row.add(barcode);
-                    row.add(vpeStr); row.add(setgrStr);
-                    row.add(empfVKPOutput); row.add(ekRabattOutput);
-                    row.add(ekpOutput); row.add(mwstOutput);
-                    row.add(herkunft); row.add(bestandStr);
-                    row.add(von); row.add(bis);
-                    row.add(aktiv);
-                data.add(row);
-
-                Artikel article = new Artikel(bc, produktgruppen_id, lieferant_id,
-                        nummer, name, kurzname, menge, einheit, barcode,
-                        herkunft, vpe, setgroesse, vkp, empf_vkp, ek_rabatt,
-                        ekp, var, sortiment, lieferbar, beliebtWert, bestand,
-                        aktiv);
-                articles.add(article);
-                artikelIDs.add(artikel_id);
-            }
-            rs.close();
-            pstmt.close();
-        } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        }
+        queryDatabase(queryStringProduktgruppe());
         refreshOriginalData();
         displayData = new Vector< Vector<Object> >(data);
         initiateDisplayIndices();
@@ -358,7 +369,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         }
     }
 
-    private void putChangesIntoDB() {
+    protected void putChangesIntoDB() {
         for (int index=0; index < editedArticles.size(); index++){
             Artikel origArticle = editedArticles.get(index);
             Artikel newArticle = changedArticles.get(index);
@@ -373,9 +384,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
 
         showTopPanel();
         showTable();
-        showBottomPanel();
 
-        enableButtons();
+        container.enableButtons();
 
         this.add(allPanel, BorderLayout.CENTER);
     }
@@ -425,56 +435,6 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
           topRightPanel.add(emptyFilterButton);
         topPanel.add(topRightPanel, BorderLayout.EAST);
         allPanel.add(topPanel, BorderLayout.NORTH);
-    }
-
-
-    protected void showBottomPanel() {
-        JPanel bottomPanel = new JPanel();
-	bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
-          JPanel bottomLeftPanel = new JPanel();
-          bottomLeftPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-            saveButton = new JButton("Änderungen speichern");
-            saveButton.addActionListener(this);
-            bottomLeftPanel.add(saveButton);
-
-            revertButton = new JButton("Änderungen verwerfen");
-            revertButton.addActionListener(this);
-            bottomLeftPanel.add(revertButton);
-
-            editButton = new JButton("Markierte Artikel bearbeiten");
-            editButton.setMnemonic(KeyEvent.VK_B);
-            editButton.addActionListener(this);
-            bottomLeftPanel.add(editButton);
-        bottomPanel.add(bottomLeftPanel);
-
-          JPanel bottomRightPanel = new JPanel();
-          bottomRightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
-            newButton = new JButton("Neue Artikel eingeben");
-            newButton.setMnemonic(KeyEvent.VK_N);
-            newButton.addActionListener(this);
-            bottomRightPanel.add(newButton);
-
-            importButton = new JButton("Artikel importieren");
-            importButton.setMnemonic(KeyEvent.VK_D);
-            importButton.addActionListener(this);
-            bottomRightPanel.add(importButton);
-
-            exportButton = new JButton("Artikel exportieren");
-            exportButton.setMnemonic(KeyEvent.VK_B);
-            exportButton.addActionListener(this);
-            bottomRightPanel.add(exportButton);
-        bottomPanel.add(bottomRightPanel);
-        allPanel.add(bottomPanel, BorderLayout.SOUTH);
-    }
-
-
-    protected void enableButtons() {
-        saveButton.setEnabled(editedArticles.size() > 0);
-        revertButton.setEnabled(editedArticles.size() > 0);
-        editButton.setEnabled(myTable.getSelectedRowCount() > 0);
-        newButton.setEnabled(editedArticles.size() == 0);
-        importButton.setEnabled(editedArticles.size() == 0);
-        exportButton.setEnabled(editedArticles.size() == 0);
     }
 
 
@@ -701,7 +661,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         String borderLabel = this.produktgruppenname.
             replaceAll(" \\([0-9]*\\)$", " ("+displayData.size()+")");
         artikelListPanel.setBorder(BorderFactory.createTitledBorder(borderLabel));
-        enableButtons();
+        container.enableButtons();
     }
 
     protected void setTableProperties(AnyJComponentJTable myTable) {
@@ -724,6 +684,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         // new, much better, keeping view:
         fillDataArray();
         updateTable();
+        container.updateTree();
     }
 
     /** Needed for ItemListener. */
@@ -757,7 +718,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
     /** Needed for ListSelectionListener.
      * Invoked when the row selection changes. */
     public void valueChanged(ListSelectionEvent e) {
-        enableButtons();
+        container.enableButtons();
     }
 
 
@@ -948,7 +909,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 changedArticles.remove(changeIndex);
             }
         }
-        enableButtons();
+        container.enableButtons();
     }
 
     void showEditDialog() {
@@ -1055,31 +1016,6 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             } else {
                 container.switchToProduktgruppenliste();
             }
-            return;
-        }
-        if (e.getSource() == saveButton){
-            putChangesIntoDB();
-            updateAll();
-            return;
-        }
-        if (e.getSource() == revertButton){
-            updateAll();
-            return;
-        }
-        if (e.getSource() == editButton){
-            showEditDialog();
-            return;
-        }
-        if (e.getSource() == newButton){
-            showNewItemDialog();
-            return;
-        }
-        if (e.getSource() == importButton){
-            showReadFromFileDialog();
-            return;
-        }
-        if (e.getSource() == exportButton){
-            showExportDialog();
             return;
         }
         if (e.getSource() == inaktivCheckBox){

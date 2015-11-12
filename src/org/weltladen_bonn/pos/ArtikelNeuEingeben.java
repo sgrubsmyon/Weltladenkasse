@@ -144,7 +144,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         artikelFormular.einheitField.getDocument().addDocumentListener(this);
         artikelFormular.einheitField.addKeyListener(enterAdapter);
         artikelFormular.barcodeField.getDocument().addDocumentListener(this);
-        artikelFormular.barcodeField.addKeyListener(enterAdapter);
+        //artikelFormular.barcodeField.addKeyListener(enterAdapter); // scanner would always submit
         artikelFormular.herkunftField.getDocument().addDocumentListener(this);
         artikelFormular.herkunftField.addKeyListener(enterAdapter);
         artikelFormular.vpeSpinner.addChangeListener(this);

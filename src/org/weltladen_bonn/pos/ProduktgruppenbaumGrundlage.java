@@ -150,10 +150,14 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
         }
     }
 
-    protected void updateTree(String filterStr, String titleStr) {
+    protected void updateTree(String titleStr) {
 	this.remove(groupListPanel);
 	this.revalidate();
 	showTree(titleStr);
+    }
+
+    protected void updateTree() {
+        updateTree(this.titleStr);
     }
 
     //////////////////////////
