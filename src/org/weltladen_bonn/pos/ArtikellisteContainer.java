@@ -27,17 +27,17 @@ import java.awt.event.*;
 //import javax.swing.JCheckBox;
 import javax.swing.*;
 import javax.swing.tree.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
+import javax.swing.event.*;
 import javax.swing.table.*;
 
 // Klasse, die Produktgruppenliste und Artikelliste speichert und anzeigt
 public class ArtikellisteContainer extends WindowContent {
     // Attribute:
-    protected ProduktgruppenbaumArtikelliste prodList;
-    protected TreeSet<Integer> sortedExpandedRows; // saves (and thus enables to restore) the expansion state of JTree
+    private ProduktgruppenbaumArtikelliste prodList;
+    private TreeSet<Integer> sortedExpandedRows; // saves (and thus enables to restore) the expansion state of JTree
+    private String lastSearchStr; // saves (and thus enables to restore) the search string
     private Artikelliste artList;
-    boolean artListShown = false;
+    private boolean artListShown = false;
 
     private JPanel prodListPanel;
     private JTextField searchField;
@@ -75,7 +75,8 @@ public class ArtikellisteContainer extends WindowContent {
         return artList;
     }
 
-    public void switchToArtikelliste(Integer topid, Integer subid, Integer subsubid, String gruppenname) {
+    public void switchToArtikelliste(Artikelliste artList) {
+        // remember the expansion state
         JTree tree = prodList.getTree();
         Enumeration treeCache = tree.getExpandedDescendants(new TreePath(tree.getModel().getRoot()));
         sortedExpandedRows = new TreeSet<Integer>();
@@ -85,9 +86,21 @@ public class ArtikellisteContainer extends WindowContent {
         }
         this.remove(prodListPanel);
         this.revalidate();
-        artList = new Artikelliste(this.conn, this, topid, subid, subsubid, gruppenname);
-        this.add(artList, BorderLayout.CENTER);
+        this.artList = artList;
+        this.add(this.artList, BorderLayout.CENTER);
         artListShown = true;
+    }
+
+    public void switchToArtikellisteProduktgruppe(Integer topid, Integer subid, Integer subsubid, String gruppenname) {
+        Artikelliste artList = new Artikelliste(this.conn, this, topid, subid, subsubid, gruppenname);
+        switchToArtikelliste(artList);
+    }
+
+    public void switchToArtikellisteSearchString(String searchStr) {
+        Artikelliste artList = new Artikelliste(this.conn, this, searchStr);
+        switchToArtikelliste(artList);
+        // remember the search string
+        lastSearchStr = searchStr;
     }
 
     public void switchToProduktgruppenliste() {
@@ -95,25 +108,53 @@ public class ArtikellisteContainer extends WindowContent {
         this.revalidate();
         artList = new Artikelliste(this.conn, this);
         showProdListPanel();
+        // be reminded of expansion state
         JTree tree = prodList.getTree();
         for (Integer i : sortedExpandedRows){
             tree.expandRow(i);
         }
+        // be reminded of search string
+        searchField.setText(lastSearchStr);
         artListShown = false;
     }
 
     private void showTopPanel() {
         JPanel topPanel = new JPanel();
-          JLabel searchLabel = new JLabel("Suche:");
+          JLabel searchLabel = new JLabel("Artikel suchen:");
           topPanel.add(searchLabel);
           searchField = new JTextField("");
           searchField.setColumns(20);
+          searchField.getDocument().addDocumentListener(new DocumentListener() {
+              public void insertUpdate(DocumentEvent e) {
+                  if (searchField.getText().length() >= 3) {
+                      searchButton.setEnabled(true);
+                  } else {
+                      searchButton.setEnabled(false);
+                  }
+              }
+
+              public void removeUpdate(DocumentEvent e) {
+                  this.insertUpdate(e);
+              }
+
+              public void changedUpdate(DocumentEvent e) {
+                  // Plain text components do not fire these events
+              }
+          });
+          searchField.addKeyListener(new KeyAdapter() {
+              public void keyPressed(KeyEvent e) {
+                  if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                      searchButton.doClick();
+                  }
+              }
+          });
           topPanel.add(searchField);
           searchLabel.setLabelFor(searchField);
           emptySearchButton = new JButton("x");
           emptySearchButton.addActionListener(this);
           topPanel.add(emptySearchButton);
           searchButton = new JButton("Los!");
+          searchButton.setEnabled(false);
           searchButton.addActionListener(this);
           topPanel.add(searchButton);
         prodListPanel.add(topPanel, BorderLayout.NORTH);
@@ -195,6 +236,11 @@ public class ArtikellisteContainer extends WindowContent {
             searchField.requestFocus();
 	    return;
 	}
+        if (e.getSource() == searchButton){
+            String searchStr = searchField.getText();
+            switchToArtikellisteSearchString(searchStr);
+	    return;
+	}
         if (e.getSource() == saveButton){
             artList.putChangesIntoDB();
             artList.updateAll();
@@ -218,8 +264,8 @@ public class ArtikellisteContainer extends WindowContent {
         }
         if (e.getSource() == exportButton){
             if (!artListShown) {
-                // in order to import *all* articles:
-                artList = new Artikelliste(this.conn, this, null, null, null, "Alle Artikel");
+                // in order to export *all* articles:
+                artList = new Artikelliste(this.conn, this, null, null, null, "Alle Artikel (0)");
             }
             artList.showExportDialog();
             if (!artListShown) {

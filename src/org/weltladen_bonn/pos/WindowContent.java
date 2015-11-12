@@ -222,7 +222,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             }
             // row must contain (somewhere) each whitespace separated filter
             // word
-            for (String fstr : filterStr.split(" ")) {
+            for (String fstr : filterStr.split("\\s+")) {
                 if (fstr.equals(""))
                     continue;
                 if (!row.contains(fstr.toLowerCase())) {
