@@ -1,3 +1,8 @@
+Batch-convert Abrechnungen to PDF:
+soffice --convert-to pdf *
+
+
+
 MySQL duplicates löschen:
 http://stackoverflow.com/questions/4685173/delete-all-duplicate-rows-except-for-one-in-mysql
 

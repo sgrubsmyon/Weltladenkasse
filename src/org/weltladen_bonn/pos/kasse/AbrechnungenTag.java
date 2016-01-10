@@ -50,8 +50,8 @@ public class AbrechnungenTag extends Abrechnungen {
      *    The constructor.
      *       */
     public AbrechnungenTag(Connection conn, MainWindowGrundlage mw, AbrechnungenTabbedPane atp, TabbedPane tp){
-        super(conn, mw, "", "Tagesabrechnung", "yyyy-MM-dd HH:mm:ss", "dd.MM. (E)",
-                "dd.MM.yyyy HH:mm:ss (E)", "zeitpunkt", "abrechnung_tag");
+        super(conn, mw, "", "Tagesabrechnung", "yyyy-MM-dd HH:mm:ss", "dd.MM. HH:mm (E)",
+                "zeitpunkt", "abrechnung_tag");
         this.abrechTabbedPane = atp;
         this.tabbedPane = tp;
 	showTable();

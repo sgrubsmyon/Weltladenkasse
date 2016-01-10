@@ -56,7 +56,6 @@ public abstract class Abrechnungen extends WindowContent {
     protected String titleStr;
     protected String dateInFormat;
     protected String dateOutFormat;
-    protected String dateOutFormat_Export;
     protected String timeName;
     protected String abrechnungsTableName;
 
@@ -90,14 +89,13 @@ public abstract class Abrechnungen extends WindowContent {
      *    The constructor.
      *       */
     public Abrechnungen(Connection conn, MainWindowGrundlage mw, String fs, String ts, String dif, String dof,
-            String dofe, String tn, String atn)
+            String tn, String atn)
     {
 	super(conn, mw);
         filterStr = fs;
         titleStr = ts;
         dateInFormat = dif;
         dateOutFormat = dof;
-        dateOutFormat_Export = dofe;
         timeName = tn;
         abrechnungsTableName = atn;
 
@@ -345,6 +343,18 @@ public abstract class Abrechnungen extends WindowContent {
         return formattedDate;
     }
 
+    Date createDate(String date) {
+        SimpleDateFormat sdfIn = new SimpleDateFormat(this.dateInFormat);
+        Date d = null;
+        try {
+            d = sdfIn.parse(date);
+        } catch (ParseException ex) {
+            System.out.println("ParseException: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return d;
+    }
+
     String dateForFilename(String date) {
         return date.replaceAll(" ", "_").replaceAll(":", "");
     }
@@ -515,8 +525,9 @@ public abstract class Abrechnungen extends WindowContent {
     void writeSpreadSheet(File file, int exportIndex) {
         // Get data
         String date = abrechnungsDates.get(exportIndex);
+        Date ddate = createDate(date);
+        System.out.println("ddate: "+ddate);
         Integer id = abrechnungsIDs.get(exportIndex);
-        String formattedDate = formatDate(date, this.dateOutFormat_Export);
         Vector<BigDecimal> totals = abrechnungsTotals.get(exportIndex);
         HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(exportIndex); // map with values for each mwst
 
@@ -540,7 +551,7 @@ public abstract class Abrechnungen extends WindowContent {
         }
 
         // Change date
-        sheet.getCellAt("B7").setValue(formattedDate);
+        sheet.getCellAt("B7").setValue(ddate);
         // Laufende Nummer:
         sheet.getCellAt("B8").setValue(id);
 
