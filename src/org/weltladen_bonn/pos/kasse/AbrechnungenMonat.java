@@ -3,6 +3,8 @@ package org.weltladen_bonn.pos.kasse;
 // Basic Java stuff:
 import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -41,7 +43,7 @@ public class AbrechnungenMonat extends Abrechnungen {
      *       */
     public AbrechnungenMonat(Connection conn, MainWindowGrundlage mw){
 	super(conn, mw, "", "Monatsabrechnung", "yyyy-MM-dd", "MMM yyyy",
-                "MMMM yyyy", "monat", "abrechnung_monat");
+                "monat", "abrechnung_monat");
 	showTable();
     }
 
@@ -256,6 +258,19 @@ public class AbrechnungenMonat extends Abrechnungen {
         System.out.println("max date is: "+maxDate);
         System.out.println("new months are: "+months);
         insertNewMonths(months);
+    }
+
+    Date createDate(String date) {
+        SimpleDateFormat sdfIn = new SimpleDateFormat(this.dateInFormat);
+        Calendar cal = Calendar.getInstance();
+        try {
+            cal.setTime(sdfIn.parse(date));
+            cal.set(Calendar.DAY_OF_MONTH, 15);
+        } catch (ParseException ex) {
+            System.out.println("ParseException: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return cal.getTime();
     }
 
     /**
