@@ -155,6 +155,9 @@ public class Bestellen extends BestellungsGrundlage implements
             if (selKW > 0){
                 week = selKW;
             }
+            if (week > 53) {
+                week = 53;
+            }
             SpinnerNumberModel kwModel = new SpinnerNumberModel(week, // initial value
                                                                 1, // min
                                                                 53, // max (null == no max)
