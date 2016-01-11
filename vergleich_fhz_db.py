@@ -1,6 +1,40 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+'''
+1.) In "Weltladenkasse -> Artikelliste" auf "Lebensmittel" klicken
+2.) Auf "Artikel exportieren" klicken, speichern als "XYZ_Lebensmittel.ods", auf
+    "Zurück"
+3.) In Weltladenkasse -> Artikelliste auf "Getränke" klicken
+4.) Auf "Artikel exportieren" klicken, speichern als "XYZ_Getränke.ods"
+5.) Beide ods-Dateien öffnen, in Getränke alles markieren, kopieren, unter
+    Lebensmittel einfügen
+6.) Alle Artikel mit "SONSTIGES" in Artikelnummer löschen, Ergebnis speichern als "XYZ_LM.ods"
+7.) "File -> Save As" und als csv-Datei exportieren.
+    WICHTIG: Als Separator/Delimiter ';' auswählen!
+8.) Neue FHZ-Preisliste öffnen
+    * Spalten so benennen und arrangieren wie in der XYZ-Datei (gleiche Reihenfolge)
+    * Wir benötigen Spalten C bis L, ohne I
+    * Andere Spalten (z.B. Sortiment, Bestand, Barcode, etc.) leer lassen
+    * Ergänzungsprodukte am Ende löschen
+    * mit Formeln bearbeiten:
+        =CONCATENATE(L5, " | ", M5, " ", N5, " ", O5)       für "Bezeichnung" (Kurzname ist der egtl. Name)
+        =IF(F5="x", "Ja", "Nein")                           für "Sofort lieferbar"
+        =IF(H5="g", "kg", IF(H5="ml","l",""))               für "Einheit"
+        =E5/1000                                            für "Menge"
+    * Copy VPE column into vim, then
+        :%s/[^0-9]//g
+      Save as blabla, cat in terminal and copy and paste in LibreOffice
+9.) "File -> Save As" und als csv-Datei exportieren.
+    WICHTIG: Als Separator/Delimiter ';' auswählen!
+10.) Dieses Skript aufrufen mit --fhz FHZ_XYZ.csv --wlb XYZ_LM.csv
+11.) Ergebnisse werden gespeichert in Dateien:
+    * 'preisänderung.csv' (alle Artikel, aktualisiert)
+    * 'preisänderung_geänderte_preise.csv' (alle Artikel, deren Preis sich verändert hat)
+    * 'preisänderung_geänderte_preise_sortiment.csv' (alle Sortimentsartikel, deren Preis sich verändert hat)
+    * 'preisänderung_neue_artikel.csv' (alle neuen Artikel)
+'''
+
 import sys
 import numpy as np
 import pandas as pd
@@ -102,6 +136,8 @@ print("---------------")
 # Remove all newlines ('\n') from all fields
 fhz.replace(to_replace='\n', value=', ', inplace=True, regex=True)
 wlb.replace(to_replace='\n', value=', ', inplace=True, regex=True)
+fhz.replace(to_replace=';', value=',', inplace=True, regex=True)
+wlb.replace(to_replace=';', value=',', inplace=True, regex=True)
 
 # homogenize data
 # print Lieferanten:
@@ -172,13 +208,29 @@ for i in range(len(fhz)):
                 if wlb_row['Sortiment'] == 'Ja':
                     print("---------------")
 
-        # adopt the article name
-        wlb_neu.loc[name, 'Bezeichnung | Einheit'] = fhz_row['Bezeichnung | Einheit']
+        #### adopt the article name
+        ###wlb_neu.loc[name, 'Bezeichnung | Einheit'] = fhz_row['Bezeichnung | Einheit']
 
-        # TODO adopt more, e.g. VPE!
+        # adopt VPE
         if fhz_row['VPE'] != wlb_row['VPE']:
-            print("VPEs for %s differ: %s (FHZ) and %s (WLB)" % (name,
-                    fhz_row['VPE'], wlb_row['VPE']))
+            wlb_neu.loc[name, 'VPE'] = fhz_row['VPE']
+            print("Ändere VPE für %s von %s (WLB) zu %s (FHZ)" % (name,
+                    wlb_row['VPE'], fhz_row['VPE']))
+            print("---------------")
+
+        # adopt Menge
+        if fhz_row['Menge (kg/l/Stk.)'] != wlb_row['Menge (kg/l/Stk.)']:
+            wlb_neu.loc[name, 'Menge (kg/l/Stk.)'] = fhz_row['Menge (kg/l/Stk.)']
+            print("Ändere Menge für %s von %s (WLB) zu %s (FHZ)" % (name,
+                    wlb_row['Menge (kg/l/Stk.)'], fhz_row['Menge (kg/l/Stk.)']))
+            print("---------------")
+
+        # adopt Einheit
+        if fhz_row['Einheit'] != wlb_row['Einheit']:
+            wlb_neu.loc[name, 'Einheit'] = fhz_row['Einheit']
+            print("Ändere Einheit für %s von %s (WLB) zu %s (FHZ)" % (name,
+                    wlb_row['Einheit'], fhz_row['Einheit']))
+            print("---------------")
     except KeyError:
         pass
 print(count, "Artikel haben geänderten Preis.")
@@ -208,16 +260,17 @@ print("Folgende Artikel kommen mehrfach in 'geaenderte_preise' vor:")
 for i in gp_dup_indices:
     print(geaenderte_preise.loc[i])
 
-writeOutAsCSV(geaenderte_preise, 'test_geänderte_preise.csv', only_index=True)
+writeOutAsCSV(geaenderte_preise, 'preisänderung_geänderte_preise.csv', only_index=True)
 mask = geaenderte_preise['Sortiment'] == 'Ja'
 gp_sortiment = geaenderte_preise[mask]
-writeOutAsCSV(gp_sortiment, 'test_geänderte_preise_sortiment.csv',
+writeOutAsCSV(gp_sortiment, 'preisänderung_geänderte_preise_sortiment.csv',
         only_index=True)
 
 count = 0
 print('\n')
 for i in range(len(fhz)):
     fhz_row = fhz.iloc[i]
+    name = fhz_row.name
     fhz_preis = Decimal(fhz_row['Empf. VK-Preis'])
     try:
         wlb_row = wlb_neu.loc[name]
@@ -231,7 +284,7 @@ for i in range(len(fhz)):
                 '(%s) (%s)' % (fhz_row['Bezeichnung | Einheit'],
                     wlb_row['Bezeichnung | Einheit']))
 print(count, "Differenzen gefunden.")
-writeOutAsCSV(wlb_neu, 'test.csv')
+writeOutAsCSV(wlb_neu, 'preisänderung.csv')
 
 # Add new, so far unknown articles from FHZ
 # Get empty df:
@@ -255,7 +308,7 @@ for i in range(len(fhz)):
         print('"%s" nicht in WLB. (%s)' % (fhz_row['Bezeichnung | Einheit'], name))
 print(count, "Artikel nicht in WLB.")
 wlb_neue_artikel = removeEmptyRow(wlb_neue_artikel)
-writeOutAsCSV(wlb_neue_artikel, 'test_neue_artikel.csv')
+writeOutAsCSV(wlb_neue_artikel, 'preisänderung_neue_artikel.csv')
 
 # Show list of articles missing in FHZ (so not orderable!)
 count = 0
