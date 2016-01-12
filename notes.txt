@@ -2,6 +2,9 @@ Batch-convert Abrechnungen to PDF:
 soffice --convert-to pdf *
 
 
+DB von Hand auf PI einlesen:
+mysql --local-infile -ukassenadmin -p -e "source DB_Dump_2016-01-11_nach_Preisänderung.sql" kasse
+
 
 MySQL duplicates löschen:
 http://stackoverflow.com/questions/4685173/delete-all-duplicate-rows-except-for-one-in-mysql
