@@ -214,7 +214,7 @@ for i in range(len(fhz)):
                 if wlb_row['Sortiment'] == 'Ja':
                     print("Ändere Preis von:", str(wlb_preis), " zu:", str(fhz_preis))
                 wlb_neu.loc[name, 'VK-Preis'] = str(fhz_preis)
-                geaenderte_preise = geaenderte_preise.append(wlb_row)
+                geaenderte_preise = geaenderte_preise.append(wlb_neu.loc[name])
                 if wlb_row['Sortiment'] == 'Ja':
                     print("---------------")
 
