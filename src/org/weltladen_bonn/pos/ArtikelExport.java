@@ -75,7 +75,7 @@ public class ArtikelExport extends WindowContent {
         columnLabels.add("Artikelnummer");
         columnLabels.add("Bezeichnung | Einheit");
         columnLabels.add("Kurzname");
-        columnLabels.add("Menge (kg/l/Stk.)");
+        columnLabels.add("Menge (kg/l/St.)");
         columnLabels.add("Einheit");
         columnLabels.add("Sortiment");
         columnLabels.add("Sofort lieferbar");

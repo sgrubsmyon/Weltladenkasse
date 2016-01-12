@@ -25,6 +25,12 @@
     * Copy VPE column into vim, then
         :%s/[^0-9]//g
       Save as blabla, cat in terminal and copy and paste in LibreOffice
+    * Spalte "Menge": Markieren, "Format Cells", 5 decimal places
+    * Correct all missing values of Einheit and corresponding Menge (it's 0)
+    OR:
+    * After running script, search for "zu 0 " in output, correct the Menge
+        values in the FHZ file and Einheit to "St." (e.g. Vanilleschoten
+        'ma110100', 'sl115108', 'rfb116032')
 9.) "File -> Save As" und als csv-Datei exportieren.
     WICHTIG: Als Separator/Delimiter ';' auswählen!
 10.) Dieses Skript aufrufen mit --fhz FHZ_XYZ.csv --wlb XYZ_LM.csv
@@ -32,7 +38,11 @@
     * 'preisänderung.csv' (alle Artikel, aktualisiert)
     * 'preisänderung_geänderte_preise.csv' (alle Artikel, deren Preis sich verändert hat)
     * 'preisänderung_geänderte_preise_sortiment.csv' (alle Sortimentsartikel, deren Preis sich verändert hat)
+    * 'preisänderung_geänderte_preise_sortiment_alle_felder.csv' (wie oben, für Import in LibreOffice zum besseren Erkennen der Artikel von Hand)
     * 'preisänderung_neue_artikel.csv' (alle neuen Artikel)
+12.) 'preisänderung.csv' mit LibreOffice öffnen, Semicolon als Separator, als
+    ods-Datei speichern (Save a copy, "_NEU.ods").
+13.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken.
 '''
 
 import sys
@@ -188,7 +198,7 @@ for i in range(len(fhz)):
                 fhz_preis = round(fhz_preis / setgroesse, 2)
                 print("Alte (WLB) setgroesse:", setgroesse,
                         "   (Bitte prüfen, ob korrekt!)")
-                print("Ändere FHZ-Preis zu FHZ-Preis / %s = %s" % (setgroesse,
+                print("FHZ-Preis wird zu FHZ-Preis / %s = %s" % (setgroesse,
                     fhz_preis))
                 print("")
             if ( abs(fhz_preis - wlb_preis) > 0.021 ):
@@ -219,10 +229,10 @@ for i in range(len(fhz)):
             print("---------------")
 
         # adopt Menge
-        if fhz_row['Menge (kg/l/Stk.)'] != wlb_row['Menge (kg/l/Stk.)']:
-            wlb_neu.loc[name, 'Menge (kg/l/Stk.)'] = fhz_row['Menge (kg/l/Stk.)']
+        if fhz_row['Menge (kg/l/St.)'] != wlb_row['Menge (kg/l/St.)']:
+            wlb_neu.loc[name, 'Menge (kg/l/St.)'] = fhz_row['Menge (kg/l/St.)']
             print("Ändere Menge für %s von %s (WLB) zu %s (FHZ)" % (name,
-                    wlb_row['Menge (kg/l/Stk.)'], fhz_row['Menge (kg/l/Stk.)']))
+                    wlb_row['Menge (kg/l/St.)'], fhz_row['Menge (kg/l/St.)']))
             print("---------------")
 
         # adopt Einheit
@@ -264,7 +274,9 @@ writeOutAsCSV(geaenderte_preise, 'preisänderung_geänderte_preise.csv', only_in
 mask = geaenderte_preise['Sortiment'] == 'Ja'
 gp_sortiment = geaenderte_preise[mask]
 writeOutAsCSV(gp_sortiment, 'preisänderung_geänderte_preise_sortiment.csv',
-        only_index=True)
+    only_index=True)
+writeOutAsCSV(gp_sortiment,
+    'preisänderung_geänderte_preise_sortiment_alle_felder.csv')
 
 count = 0
 print('\n')
