@@ -448,8 +448,14 @@ public class Bestellen extends BestellungsGrundlage implements
             String lieferant = data.get(i).get(1).toString();
             String nummer = data.get(i).get(2).toString();
             String name = data.get(i).get(3).toString();
-            String vkp = data.get(i).get(4).toString(); vkp = vkp == null ? "" : vkp;
-            String vpe = data.get(i).get(5).toString(); vpe = vpe == null ? "" : vpe;
+            String vkp = "";
+            try {
+                vkp = data.get(i).get(4).toString();
+            } catch (NullPointerException ex) { }
+            String vpe = "";
+            try {
+                vpe = data.get(i).get(5).toString();
+            } catch (NullPointerException ex) { }
             String stueck = data.get(i).get(6).toString();
             String color = colors.get(i);
             String artikelID = artikelIDs.get(i).toString();
