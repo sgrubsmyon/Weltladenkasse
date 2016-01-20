@@ -372,7 +372,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     }
 
     Vector< Vector<Object> > retrieveOrderDetailData_forExport(Vector<Object> bestellNrUndTyp) {
-        Vector< Vector<Object> > orderExportData = new Vector< Vector<Object> >();
+        Vector< Vector<Object> > exportData = new Vector< Vector<Object> >();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT bd.position, l.lieferant_name, a.artikel_nr, a.artikel_name, "+
@@ -412,7 +412,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     //row.add(pos); // omit position
                     row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
                     row.add(vpe); row.add(vkp); row.add(ekp); row.add(mwst); row.add(stueck);
-                orderExportData.add(row);
+                exportData.add(row);
             }
 	    rs.close();
 	    pstmt.close();
@@ -420,7 +420,77 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
-        return orderExportData;
+        return exportData;
+    }
+
+    Vector< Vector<Object> > retrieveInventurDetailData_forExport(Vector<Object> bestellNrUndTyp) {
+        Vector< Vector<Object> > exportData = new Vector< Vector<Object> >();
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "SELECT l.lieferant_kurzname, a.artikel_nr, a.artikel_name, "+
+                    "a.vk_preis, a.empf_vk_preis, a.ek_rabatt, a.ek_preis, m.mwst_satz, bd.stueckzahl "+
+                    "FROM bestellung_details AS bd "+
+                    "LEFT JOIN artikel AS a USING (artikel_id) "+
+                    "LEFT JOIN lieferant AS l USING (lieferant_id) "+
+                    "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
+                    "LEFT JOIN mwst AS m USING (mwst_id) "+
+                    "WHERE bd.bestell_nr = ? AND bd.typ = ? "+
+                    "ORDER BY p.toplevel_id, p.sub_id, p.subsub_id, a.artikel_name"
+                    );
+            pstmt.setInt(1, (Integer)bestellNrUndTyp.get(0));
+            pstmt.setString(2, (String)bestellNrUndTyp.get(1));
+            ResultSet rs = pstmt.executeQuery();
+            // Now do something with the ResultSet, should be only one result ...
+            while ( rs.next() ){
+                String lieferant = rs.getString(1);
+                String artikelNummer = rs.getString(2);
+                String artikelName = rs.getString(3);
+                BigDecimal vkpreis = rs.getBigDecimal(4);
+                BigDecimal empf_vkpreis = rs.getBigDecimal(5);
+                BigDecimal ekrabatt = rs.getBigDecimal(6);
+                BigDecimal ekpreis = rs.getBigDecimal(7);
+                BigDecimal mwst = rs.getBigDecimal(8);
+                Integer stueck = rs.getInt(9);
+                BigDecimal stueckDecimal = new BigDecimal(stueck);
+
+                BigDecimal single_mwst_betrag = null;
+                BigDecimal single_netto = null;
+                BigDecimal total_brutto = null;
+                BigDecimal total_mwst_betrag = null;
+                BigDecimal total_netto = null;
+                if (ekpreis != null) {
+                    single_mwst_betrag = new BigDecimal( bc.priceFormatterIntern(calculateVAT(ekpreis, mwst)) );
+                    single_netto = ekpreis.subtract(single_mwst_betrag);
+                    total_brutto = ekpreis.multiply(stueckDecimal);
+                    //total_mwst_betrag = new BigDecimal( bc.priceFormatterIntern(calculateVAT(total_brutto, mwst)) );
+                    //total_netto = total_brutto.subtract(total_mwst_betrag);
+                    total_mwst_betrag = single_mwst_betrag.multiply(stueckDecimal);
+                    total_netto = single_netto.multiply(stueckDecimal);
+                }
+                BigDecimal total_vkp = null;
+                if (vkpreis != null) {
+                    total_vkp = vkpreis.multiply(stueckDecimal);
+                }
+
+                if (ekrabatt != null) {
+                    ekrabatt = ekrabatt.multiply(bc.hundred);
+                }
+
+                Vector<Object> row = new Vector<Object>();
+                    row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
+                    row.add(vkpreis); row.add(empf_vkpreis); row.add(ekrabatt);
+                    row.add(ekpreis); row.add(mwst.multiply(bc.hundred)); row.add(single_netto);
+                    row.add(single_mwst_betrag); row.add(stueck); row.add(total_netto);
+                    row.add(total_mwst_betrag); row.add(total_brutto); row.add(total_vkp);
+                exportData.add(row);
+            }
+	    rs.close();
+	    pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return exportData;
     }
 
     private void deleteOrderFromDB(Vector<Object> bestellNrUndTyp) {
@@ -493,6 +563,15 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         // Get general order data
         Vector<Object> bestellung = orderData.get(bestellNummernUndTyp.indexOf(selBestellNrUndTyp));
         String typ = bestellung.get(1).toString();
+        if ( !typ.equals("IVT") ) {
+            writeBestellung(bestellung, file);
+        } else {
+            writeInventur(bestellung, file);
+        }
+    }
+
+    void writeBestellung(Vector<Object> bestellung, File file) {
+        String typ = bestellung.get(1).toString();
         //int jahr = Integer.parseInt(bestellung.get(2));
         Integer kw = Integer.parseInt(bestellung.get(3).toString());
         String oldDate = bestellung.get(4).toString();
@@ -551,6 +630,57 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             ex.printStackTrace();
         }
     }
+
+    void writeInventur(Vector<Object> inventur, File file) {
+        String typ = inventur.get(1).toString();
+        //int jahr = Integer.parseInt(inventur.get(2));
+        String jahr = inventur.get(2).toString();
+        String headline = "Inventur 31.12."+jahr;
+
+        // Load the template file
+        final Sheet sheet;
+        try {
+            String filename = "vorlagen"+bc.fileSep+"Inventur.ods";
+            File infile = new File(filename);
+            if (!infile.exists()){
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Zum Bestell-Typ '"+typ+"' gibt es keine Bestellvorlage "+
+                        "'"+filename+"'.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            sheet = SpreadSheet.createFromFile(infile).getSheet(0);
+        } catch (IOException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+            return;
+        }
+
+        // Change headline
+        sheet.getCellAt("A1").setValue(headline);
+
+        // Insert inventory items
+        Vector< Vector<Object> > data = retrieveInventurDetailData_forExport(selBestellNrUndTyp);
+        System.out.println("Export data: "+data);
+        for (int row=0; row<data.size(); row++){
+            for (int col=0; col<data.get(row).size(); col++){
+                System.out.println("Setting value at "+(2+row)+","+col+": "+data.get(row).get(col));
+                sheet.setValueAt(data.get(row).get(col), col, 2+row);
+            }
+        }
+
+        try {
+            // Save to file and open it.
+            OOUtils.open(sheet.getSpreadSheet().saveAs(file));
+        } catch (FileNotFoundException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
 
     /**
      *    * Each non abstract class that implements the DocumentListener
@@ -622,9 +752,14 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         if (e.getSource() == exportButton){
             String typ = (String)selBestellNrUndTyp.get(1);
             Vector<Object> bestellung = orderData.get(bestellNummernUndTyp.indexOf(selBestellNrUndTyp));
-            Integer kwi = Integer.parseInt(bestellung.get(3).toString());
-            String kw = String.format("%02d", kwi);
-            odsChooser.setSelectedFile(new File("Bestellung_WL_Bonn_"+typ+"_KW"+kw+".ods"));
+            if ( !typ.equals("IVT") ){
+                Integer kwi = Integer.parseInt(bestellung.get(3).toString());
+                String kw = String.format("%02d", kwi);
+                odsChooser.setSelectedFile(new File("Bestellung_WL_Bonn_"+typ+"_KW"+kw+".ods"));
+            } else {
+                String jahr = bestellung.get(2).toString();
+                odsChooser.setSelectedFile(new File("Inventur_WL_Bonn_"+jahr+".ods"));
+            }
             int returnVal = odsChooser.showSaveDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION){
                 File file = odsChooser.getSelectedFile();

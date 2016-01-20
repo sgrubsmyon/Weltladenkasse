@@ -25,6 +25,8 @@
     * Copy VPE column into vim, then
         :%s/[^0-9]//g
       Save as blabla, cat in terminal and copy and paste in LibreOffice
+    * Alle Zeilen, die leer sind oder Überschrift (Produktgruppe) enthalten, löschen:
+        Zeilen markieren, Ctrl-Minus 
     * Spalte "Menge": Markieren, "Format Cells", 5 decimal places
     * Correct all missing values of Einheit and corresponding Menge (it's 0)
     OR:
