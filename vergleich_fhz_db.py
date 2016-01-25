@@ -26,7 +26,7 @@
         :%s/[^0-9]//g
       Save as blabla, cat in terminal and copy and paste in LibreOffice
     * Alle Zeilen, die leer sind oder Überschrift (Produktgruppe) enthalten, löschen:
-        Zeilen markieren, Ctrl-Minus 
+        Zeilen markieren, Ctrl-Minus
     * Spalte "Menge": Markieren, "Format Cells", 5 decimal places
     * Correct all missing values of Einheit and corresponding Menge (it's 0)
     OR:
@@ -37,14 +37,26 @@
     WICHTIG: Als Separator/Delimiter ';' auswählen!
 10.) Dieses Skript aufrufen mit --fhz FHZ_XYZ.csv --wlb XYZ_LM.csv
 11.) Ergebnisse werden gespeichert in Dateien:
-    * 'preisänderung.csv' (alle Artikel, aktualisiert)
-    * 'preisänderung_geänderte_preise.csv' (alle Artikel, deren Preis sich verändert hat)
-    * 'preisänderung_geänderte_preise_sortiment.csv' (alle Sortimentsartikel, deren Preis sich verändert hat)
-    * 'preisänderung_geänderte_preise_sortiment_alle_felder.csv' (wie oben, für Import in LibreOffice zum besseren Erkennen der Artikel von Hand)
-    * 'preisänderung_neue_artikel.csv' (alle neuen Artikel)
-12.) 'preisänderung.csv' mit LibreOffice öffnen, Semicolon als Separator, als
-    ods-Datei speichern (Save a copy, "_NEU.ods").
-13.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken.
+    * "preisänderung.csv" (alle Artikel, aktualisiert)
+    * "preisänderung_geänderte_preise.csv" (alle Artikel, deren Preis sich verändert hat)
+    * "preisänderung_geänderte_preise_sortiment.csv" (alle Sortimentsartikel, deren Preis sich verändert hat)
+    * "preisänderung_geänderte_preise_sortiment_alle_felder.csv" (wie oben, für Import in LibreOffice zum besseren Erkennen der Artikel von Hand)
+    * "preisänderung_neue_artikel.csv" (alle neuen Artikel)
+12.) "preisänderung.csv" mit LibreOffice öffnen, Semicolon als Separator.  Hier
+    gibt es ein Problem, nämlich dass Artikelnummern, die mit "0" beginnen ihre
+    führenden Nullen verlieren. Daher: Die Spalte "Artikelnr." anklicken und Typ
+    auf "Text" setzen (https://www.youtube.com/watch?v=TrVbvKzLhgs). Als ods-Datei
+    speichern (Save a copy, "_NEU.ods").
+13.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
+    die Datei "_NEU.ods" auswählen.
+14.) Die Datei "preisänderung_neue_artikel.csv" mit LibreOffice öffnen,
+    Semicolon als Separator. Auch hier wieder: Die Spalte "Artikelnr." anklicken und Typ
+    auf "Text" setzen.
+15.) Für jeden neuen Artikel aus "preisänderung_neue_artikel" eine existierende
+    Produktgruppe wählen und in die entspr. Spalte eintragen. Speichern als
+    "preisänderung_neue_artikel.ods".
+13.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
+    die Datei "preisänderung_neue_artikel.ods" auswählen.
 '''
 
 import sys
