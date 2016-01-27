@@ -94,6 +94,14 @@ Unjar the hidapi-1.1.jar (with `jar -xvf hidapi-1.1.jar`) and copy the content
 of the `native/*` folders (files ending with `.so`, `.dll` or `.jnilib`) into
 folder `resources/natives`.
 
+To run the script `rabatte_setzen.py` (which sets discount rates), you need to
+download
+* mysql-connector-python-2.1.3.tar.gz (platform independent): https://dev.mysql.com/downloads/connector/python/
+untar and run:
+```
+python ./setup.py install
+```
+
 ## Compile:
 ```
 ant

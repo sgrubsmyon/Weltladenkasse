@@ -70,10 +70,14 @@ from optparse import OptionParser
 usage = "Usage: %prog   [OPTIONS]"
 parser = OptionParser(usage)
 
-parser.add_option("--fhz", type="string", default='Artikelliste_Bestellvorlage_Lebensmittelpreisliste_1.2-2015.csv',
-        dest="FHZ", help="The path to FHZ .csv file.")
-parser.add_option("--wlb", type="string", default='Artikelliste_DB_Dump_2015_KW40_LM.csv',
-        dest="WLB", help="The path to WLB .csv file.")
+parser.add_option("--fhz", type="string",
+        default='Artikelliste_Bestellvorlage_Lebensmittelpreisliste_1.2-2015.csv',
+        dest="FHZ",
+        help="The path to FHZ .csv file.")
+parser.add_option("--wlb", type="string",
+        default='Artikelliste_DB_Dump_2015_KW40_LM.csv',
+        dest="WLB",
+        help="The path to WLB .csv file.")
 
 # get parsed args
 (options, args) = parser.parse_args()
