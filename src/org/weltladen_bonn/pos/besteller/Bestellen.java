@@ -62,6 +62,8 @@ public class Bestellen extends BestellungsGrundlage implements
     private JButton abschliessenButton;
     private JButton verwerfenButton;
 
+    private JLabel beliebtLabel;
+
     // The panels
     private JPanel allPanel;
     private JPanel articleListPanel;
@@ -120,8 +122,12 @@ public class Bestellen extends BestellungsGrundlage implements
     }
 
     void showAll(){
-	allPanel = new JPanel();
-	allPanel.setLayout(new BoxLayout(allPanel, BoxLayout.Y_AXIS));
+        allPanel = new JPanel(new BorderLayout());
+
+        JPanel northPanel = new JPanel();
+
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.PAGE_AXIS));
 
         JPanel datePanel = new JPanel();
 	datePanel.setLayout(new FlowLayout());
@@ -197,10 +203,10 @@ public class Bestellen extends BestellungsGrundlage implements
             }
             bestNrField.setEditable(false);
             datePanel.add(bestNrField);
-        allPanel.add(datePanel);
+        formPanel.add(datePanel);
 
         asPanel = new ArticleSelectPanelBestellen(conn, mainWindow, this, tabbedPane);
-        allPanel.add(asPanel);
+        formPanel.add(asPanel);
 
 	JPanel chooseArticlePanel = new JPanel();
 	chooseArticlePanel.setLayout(new FlowLayout());
@@ -306,7 +312,17 @@ public class Bestellen extends BestellungsGrundlage implements
 	    changeButton.addActionListener(this);
 	    changeButton.setEnabled(false);
 	    chooseArticlePanel.add(changeButton);
-        allPanel.add(chooseArticlePanel);
+        formPanel.add(chooseArticlePanel);
+
+        JPanel beliebtPanel = new JPanel();
+        beliebtLabel = new JLabel(); //bc.beliebtKuerzel.get(0) );
+        beliebtLabel.setFont(bc.bigFont);
+        //beliebtLabel.setForeground( bc.beliebtFarben.get(index) );
+        beliebtLabel.setForeground( Color.LIGHT_GRAY );
+
+        northPanel.add(formPanel);
+        northPanel.add(beliebtPanel);
+        allPanel.add(northPanel, BorderLayout.NORTH);
 
 	showTable();
 
@@ -335,7 +351,7 @@ public class Bestellen extends BestellungsGrundlage implements
         initiateTable();
 
 	articleListPanel = new JPanel();
-	articleListPanel.setLayout(new BoxLayout(articleListPanel, BoxLayout.Y_AXIS));
+	articleListPanel.setLayout(new BoxLayout(articleListPanel, BoxLayout.PAGE_AXIS));
 	articleListPanel.setBorder(BorderFactory.createTitledBorder("Gewählte Artikel"));
 
             //articleScrollPane = new ScrollPane();
@@ -343,7 +359,7 @@ public class Bestellen extends BestellungsGrundlage implements
             articleScrollPane = new JScrollPane(orderTable);
             articleListPanel.add(articleScrollPane);
 
-	allPanel.add(articleListPanel);
+	allPanel.add(articleListPanel, BorderLayout.CENTER);
 
         abschliessenPanel = new JPanel();
         abschliessenPanel.setLayout(new FlowLayout());
@@ -372,7 +388,7 @@ public class Bestellen extends BestellungsGrundlage implements
 	    emptyFilterButton = new JButton("x");
 	    emptyFilterButton.addActionListener(this);
 	    abschliessenPanel.add(emptyFilterButton);
-        allPanel.add(abschliessenPanel);
+        allPanel.add(abschliessenPanel, BorderLayout.SOUTH);
     }
 
     void emptyTable(){

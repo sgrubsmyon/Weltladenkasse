@@ -267,7 +267,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                     row.add(vkpOutput);
                     row.add(sortiment);
                     row.add(lieferbar);
-                    row.add(beliebtIndex); row.add(barcode);
+                    row.add(beliebtWert); row.add(barcode);
                     row.add(vpeStr); row.add(setgrStr);
                     row.add(empfVKPOutput); row.add(ekRabattOutput);
                     row.add(ekpOutput); row.add(mwstOutput);
@@ -542,10 +542,19 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         // Subclass the AnyJComponentJTable to set editable cells, font properties and tool tip text.
         @Override
         public boolean isCellEditable(int row, int col) {
+            int realRowIndex = convertRowIndexToModel(row);
+            int articleIndex = realRowIndex;
+            try {
+                articleIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
+            } catch (ArrayIndexOutOfBoundsException ex){
+                System.out.println("No display data at row "+realRowIndex);
+                System.out.println("No editable information.");
+                return false;
+            }
             String header = this.getColumnName(col);
-            if ( articles.get(row).getAktiv() ){
+            if ( articles.get(articleIndex).getAktiv() ){
                 if ( moneyColumns.contains(header) || header.equals("EK-Rabatt") ) {
-                    if ( ! displayData.get(row).get(col).equals("variabel") )
+                    if ( ! displayData.get(realRowIndex).get(col).equals("variabel") )
                         return true;
                 }
                 else if ( editableColumns.contains(header) ){
@@ -559,23 +568,23 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
             // custom rendering
             Component c = super.prepareRenderer(renderer, row, column);
-            Object value = this.getValueAt(row, column);
-            int realRowIndex = row;
-            realRowIndex = convertRowIndexToModel(realRowIndex);
+            Object value = this.getValueAt(row, column); // here, no conversion must be done (don't really get why, because tool tip and articleIndex need it)
+            int realRowIndex = convertRowIndexToModel(row);
+            int articleIndex = realRowIndex;
             try {
-                realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
+                articleIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
             } catch (ArrayIndexOutOfBoundsException ex){
                 System.out.println("No display data at row "+realRowIndex);
                 System.out.println("No special rendering possible.");
                 return c;
             }
             // for rows with inactive items, set color:
-            if ( ! articles.get(realRowIndex).getAktiv() ){
+            if ( ! articles.get(articleIndex).getAktiv() ){
                 c.setFont( c.getFont().deriveFont(Font.ITALIC) );
                 c.setForeground(Color.BLUE);
             }
             // for articles not in sortiment, set color:
-            else if ( ! articles.get(realRowIndex).getSortiment() ){
+            else if ( ! articles.get(articleIndex).getSortiment() ){
                 c.setFont( c.getFont().deriveFont(Font.PLAIN) );
                 c.setForeground(Color.GRAY);
             }
@@ -585,7 +594,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             }
             // override the above if this is the "Beliebtheit" column:
             if ( this.getColumnName(column).equals("Beliebtheit") ){
-                Integer index = Integer.parseInt(value.toString());
+                Integer index = bc.beliebtWerte.indexOf( Integer.parseInt(value.toString()) );
                 c.setFont( c.getFont().deriveFont(Font.PLAIN) );
                 c.setForeground( bc.beliebtFarben.get(index) );
             }
@@ -596,7 +605,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 String valueStr = "";
                 if ( cname.equals("Beliebtheit") ){
                     // BeliebtRenderer:
-                    Integer index = Integer.parseInt(value.toString());
+                    Integer index = bc.beliebtWerte.indexOf( Integer.parseInt(value.toString()) );
                     label.setText( bc.beliebtKuerzel.get(index) );
                 }
                 if ( moneyColumns.contains(cname) ){
@@ -660,17 +669,18 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         @Override
         public String getToolTipText(MouseEvent e) {
             String defaultTip = super.getToolTipText(e);
+            System.out.println("Default tooltip "+defaultTip);
             Point p = e.getPoint();
             int colIndex = columnAtPoint(p);
             // override the default tool tip if this is the "Beliebtheit" column:
             if ( this.getColumnName(colIndex).equals("Beliebtheit") ){
                 int rowIndex = rowAtPoint(p);
-                //int realRowIndex = rowIndex;
-                //realRowIndex = convertRowIndexToModel(realRowIndex);
-                //realRowIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
-                Integer index = Integer.parseInt(this.getValueAt(rowIndex, colIndex).toString());
+                int realRowIndex = convertRowIndexToModel(rowIndex);
+                System.out.println("This is tooltip for row "+rowIndex+", "+realRowIndex);
+                Integer value = Integer.parseInt(this.getValueAt(realRowIndex, colIndex).toString());
+                Integer index = bc.beliebtWerte.indexOf(value);
                 String name = bc.beliebtNamen.get(index);
-                return name+" ("+index+")";
+                return name+" ("+value+")";
             }
             return defaultTip;
         }
@@ -705,9 +715,12 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
     }
 
     protected void updateTable() {
-        applyFilter(filterStr, displayData, displayIndices);
+        // does not work correctly when table is sorted and filter is used:
+        /*
         artikelListPanel.remove(scrollPane);
 	artikelListPanel.revalidate();
+
+        applyFilter(filterStr, displayData, displayIndices);
 
         scrollPane = new JScrollPane(myTable);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -716,6 +729,13 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         String borderLabel = this.produktgruppenname.
             replaceAll(" \\([0-9]*\\)$", " ("+displayData.size()+")");
         artikelListPanel.setBorder(BorderFactory.createTitledBorder(borderLabel));
+        */
+        allPanel.remove(artikelListPanel);
+        allPanel.revalidate();
+
+        applyFilter(filterStr, displayData, displayIndices);
+
+        showTable();
         container.enableButtons();
     }
 
@@ -913,7 +933,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         Integer beliebt;
         try {
             beliebt = Integer.parseInt( model.getValueAt(row, model.findColumn("Beliebtheit")).toString() );
-        } catch (NumberFormatException ex){ beliebt = 2; }
+        } catch (NumberFormatException ex){ beliebt = 0; }
         a.setBeliebt(beliebt);
         Integer bestand;
         try {
@@ -932,6 +952,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
     public void tableChanged(TableModelEvent e) {
         // get info about edited cell
         int row = e.getFirstRow();
+        System.out.println("first edited row: "+row);
+        //int realRowIndex = model.convertRowIndexToModel(row);
         int dataRow = displayIndices.get(row); // convert from displayData index to data index
         int column = e.getColumn();
         AbstractTableModel model = (AbstractTableModel)e.getSource();
