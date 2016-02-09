@@ -54,10 +54,11 @@ public class BaseClass {
     public IntegerDocumentFilter vpeFilter;
     public IntegerDocumentFilter beliebtFilter;
 
-    protected Vector<Integer> beliebtWerte;
-    protected Vector<String> beliebtNamen;
-    protected Vector<String> beliebtKuerzel;
-    protected Vector<Color> beliebtFarben;
+    public Vector<Integer> beliebtWerte;
+    public Vector<String> beliebtNamen;
+    public Vector<String> beliebtBeschreibungen;
+    public Vector<String> beliebtKuerzel;
+    public Vector<Color> beliebtFarben;
     protected Integer minBeliebt, maxBeliebt;
 
     public BaseClass() {
@@ -76,22 +77,32 @@ public class BaseClass {
     protected void fillBeliebtWerte() {
         beliebtWerte = new Vector<Integer>();
         beliebtNamen = new Vector<String>();
+        beliebtBeschreibungen = new Vector<String>();
         beliebtKuerzel = new Vector<String>();
         beliebtFarben = new Vector<Color>();
+        beliebtWerte.add(-1);
+        beliebtNamen.add("ausgelistet");
+        beliebtBeschreibungen.add("Nicht bestellen! (oder nicht bestellbar)");
+        beliebtKuerzel.add("x");
+        beliebtFarben.add(Color.RED.darker());
         beliebtWerte.add(0);
         beliebtNamen.add("keine Angabe");
+        beliebtBeschreibungen.add("?");
         beliebtKuerzel.add("●");
         beliebtFarben.add(Color.GRAY);
         beliebtWerte.add(1);
         beliebtNamen.add("niedrig");
+        beliebtBeschreibungen.add("Erst bestellen, wenn nur noch 1 Pkg. im Regal ist");
         beliebtKuerzel.add("●");
         beliebtFarben.add(Color.RED);
         beliebtWerte.add(2);
         beliebtNamen.add("mittel");
+        beliebtBeschreibungen.add("Bestellen, wenn noch 3-4 Pkg. im Regal sind (Lager leer)");
         beliebtKuerzel.add("●");
         beliebtFarben.add(Color.YELLOW);
         beliebtWerte.add(3);
         beliebtNamen.add("hoch");
+        beliebtBeschreibungen.add("Sollte immer vorrätig sein");
         beliebtKuerzel.add("●");
         beliebtFarben.add(Color.GREEN);
         minBeliebt = Collections.min(beliebtWerte);
