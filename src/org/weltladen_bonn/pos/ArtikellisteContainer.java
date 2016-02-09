@@ -211,7 +211,8 @@ public class ArtikellisteContainer extends WindowContent {
         if (artListShown) {
             saveButton.setEnabled(artList.editedArticles.size() > 0);
             revertButton.setEnabled(artList.editedArticles.size() > 0);
-            editButton.setEnabled(artList.myTable.getSelectedRowCount() > 0);
+            editButton.setEnabled(artList.myTable.getSelectedRowCount() > 0 &&
+                    artList.numberOfSelectedInactiveArticles() == 0);
             newButton.setEnabled(artList.editedArticles.size() == 0);
             addSimilarButton.setEnabled(artList.myTable.getSelectedRowCount() == 1);
             importButton.setEnabled(artList.editedArticles.size() == 0);
@@ -268,7 +269,7 @@ public class ArtikellisteContainer extends WindowContent {
             return;
         }
         if (e.getSource() == addSimilarButton){
-            artList.showNewItemDialog();
+            artList.showNewSimilarItemDialog();
             return;
         }
         if (e.getSource() == importButton){

@@ -548,9 +548,14 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 articleIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
             } catch (ArrayIndexOutOfBoundsException ex){
                 System.out.println("No display data at row "+realRowIndex);
-                System.out.println("No editable information.");
+                System.out.println("No information about editability in isCellEditable().");
                 return false;
             }
+            /*
+            System.out.println("is cell editable? row "+row+", realRowIndex "+realRowIndex+", articleIndex "+articleIndex);
+            System.out.println("is cell editable? displayData at realRowIndex: "+displayData.get(realRowIndex));
+            System.out.println("is cell editable? articles at articleIndex: "+articles.get(articleIndex).getName()+", "+articles.get(articleIndex).getKurzname());
+            */
             String header = this.getColumnName(col);
             if ( articles.get(articleIndex).getAktiv() ){
                 if ( moneyColumns.contains(header) || header.equals("EK-Rabatt") ) {
@@ -569,6 +574,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             // custom rendering
             Component c = super.prepareRenderer(renderer, row, column);
             Object value = this.getValueAt(row, column); // here, no conversion must be done (don't really get why, because tool tip and articleIndex need it)
+            //System.out.println("prepare renderer row: "+row+" value: "+value);
             int realRowIndex = convertRowIndexToModel(row);
             int articleIndex = realRowIndex;
             try {
@@ -578,6 +584,11 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 System.out.println("No special rendering possible.");
                 return c;
             }
+            /*
+            System.out.println("prepare renderer: row "+row+", realRowIndex "+realRowIndex+", articleIndex "+articleIndex);
+            System.out.println("prepare renderer: displayData at realRowIndex: "+displayData.get(realRowIndex));
+            System.out.println("prepare renderer: articles at articleIndex: "+articles.get(articleIndex).getName()+", "+articles.get(articleIndex).getKurzname());
+            */
             // for rows with inactive items, set color:
             if ( ! articles.get(articleIndex).getAktiv() ){
                 c.setFont( c.getFont().deriveFont(Font.ITALIC) );
@@ -669,15 +680,21 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         @Override
         public String getToolTipText(MouseEvent e) {
             String defaultTip = super.getToolTipText(e);
-            System.out.println("Default tooltip "+defaultTip);
             Point p = e.getPoint();
             int colIndex = columnAtPoint(p);
             // override the default tool tip if this is the "Beliebtheit" column:
             if ( this.getColumnName(colIndex).equals("Beliebtheit") ){
                 int rowIndex = rowAtPoint(p);
+                // conversion of row index to model would lead to wrong results
+                // when sorting is used (seems like the conversion is done
+                // internally already)
+                /*
                 int realRowIndex = convertRowIndexToModel(rowIndex);
-                System.out.println("This is tooltip for row "+rowIndex+", "+realRowIndex);
-                Integer value = Integer.parseInt(this.getValueAt(realRowIndex, colIndex).toString());
+                System.out.println("prepare renderer: rowIndex "+rowIndex+", realRowIndex "+realRowIndex);
+                System.out.println("prepare renderer: displayData at rowIndex: "+displayData.get(rowIndex));
+                System.out.println("prepare renderer: displayData at realRowIndex: "+displayData.get(realRowIndex));
+                */
+                Integer value = Integer.parseInt(this.getValueAt(rowIndex, colIndex).toString());
                 Integer index = bc.beliebtWerte.indexOf(value);
                 String name = bc.beliebtNamen.get(index);
                 return name+" ("+value+")";
@@ -802,6 +819,16 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         /**
          * post-edit edited cell (parse bad mistakes)
          */
+        // the row index and column index given to this function are already converted to model
+        /*
+        System.out.println("parse cell: row "+row+", col "+column);
+        System.out.println("parse cell: dataRow "+dataRow);
+        System.out.println("parse cell: model at row and col: "+model.getValueAt(row, column));
+        System.out.println("parse cell: data at dataRow "+data.get(dataRow));
+        System.out.println("parse cell: origArticle: "+origArticle.getName()+", "+
+                origArticle.getKurzname()+", "+origArticle.getVKP()+", "+origArticle.getEKP());
+        */
+
         String value = model.getValueAt(row, column).toString().replaceAll("\\s","");
         if ( value.equals("") ){
             // replace whitespace only entries with nothing
@@ -953,6 +980,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         // get info about edited cell
         int row = e.getFirstRow();
         System.out.println("first edited row: "+row);
+        // index is already converted to model, i.e. displayData index
         //int realRowIndex = model.convertRowIndexToModel(row);
         int dataRow = displayIndices.get(row); // convert from displayData index to data index
         int column = e.getColumn();
@@ -989,14 +1017,39 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         container.enableButtons();
     }
 
+
+    protected int numberOfSelectedInactiveArticles() {
+        int count = 0;
+        int[] selection = myTable.getSelectedRows();
+        for (int i = 0; i < selection.length; i++) {
+            // index must be converted first to model (displayData), then to
+            // data/articles
+            selection[i] = myTable.convertRowIndexToModel(selection[i]);
+            selection[i] = displayIndices.get(selection[i]); // convert from displayData index to data/articles index
+            if ( !articles.get(selection[i]).getAktiv() ) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+
     void showEditDialog() {
         // get data from the selected rows
         Vector<Artikel> selectedArticles = new Vector<Artikel>();
         int[] selection = myTable.getSelectedRows();
         for (int i = 0; i < selection.length; i++) {
+            // index must be converted first to model (displayData), then to
+            // data/articles
+            //System.out.println("show edit dialog: selection[i] index "+selection[i]);
             selection[i] = myTable.convertRowIndexToModel(selection[i]);
-            selection[i] = displayIndices.get(selection[i]); // convert from displayData index to data index
+            //System.out.println("show edit dialog: selection[i] index converted to model "+selection[i]);
+            selection[i] = displayIndices.get(selection[i]); // convert from displayData index to data/articles index
+            //System.out.println("show edit dialog: selection[i] index converted to data/articles index "+selection[i]);
             selectedArticles.add( articles.get(selection[i]) );
+            //System.out.println("show edit dialog: data at selection[i]: "+data.get(selection[i]));
+            //System.out.println("show edit dialog: articles at selection[i]: "+articles.get(selection[i]).getName()+", "+
+            //        articles.get(selection[i]).getKurzname()+", "+articles.get(selection[i]).getVKP()+", "+articles.get(selection[i]).getEKP());
         }
         JDialog editDialog = new JDialog(this.mainWindow, "Artikel bearbeiten", true);
         ArtikelBearbeiten bearb = new ArtikelBearbeiten(this.conn, this.mainWindow, this, editDialog,
@@ -1013,6 +1066,25 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
     void showNewItemDialog() {
         JDialog newItemDialog = new JDialog(this.mainWindow, "Neue Artikel hinzufügen", true);
         ArtikelNeuEingeben newItems = new ArtikelNeuEingeben(this.conn, this.mainWindow, this, newItemDialog, toplevel_id, sub_id, subsub_id);
+        newItemDialog.getContentPane().add(newItems, BorderLayout.CENTER);
+        newItemDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        WindowAdapterDialog wad = new WindowAdapterDialog(newItems, newItemDialog, "Achtung: Neue Artikel gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
+        newItemDialog.addWindowListener(wad);
+        newItemDialog.pack();
+        newItemDialog.setVisible(true);
+    }
+
+    void showNewSimilarItemDialog() {
+        // get data from the selected row
+        int index = myTable.getSelectedRows()[0];
+        // index must be converted first to model (displayData), then to
+        // data/articles
+        index = myTable.convertRowIndexToModel(index);
+        index = displayIndices.get(index); // convert from displayData index to data/articles index
+        Artikel selectedArticle = articles.get(index);
+        JDialog newItemDialog = new JDialog(this.mainWindow, "Ähnliche Artikel hinzufügen", true);
+        ArtikelNeuEingeben newItems = new ArtikelNeuEingeben(this.conn, this.mainWindow, this, newItemDialog, selectedArticle.getProdGrID());
+        newItems.setOriginalValues(selectedArticle);
         newItemDialog.getContentPane().add(newItems, BorderLayout.CENTER);
         newItemDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         WindowAdapterDialog wad = new WindowAdapterDialog(newItems, newItemDialog, "Achtung: Neue Artikel gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");

@@ -37,9 +37,10 @@ public class ArtikelNeuEingeben extends DialogWindow
     protected Artikelliste artikelListe;
     protected ArtikelNeu artikelNeu;
     protected ArtikelFormular artikelFormular;
-    private Integer toplevel_id;
-    private Integer sub_id;
-    private Integer subsub_id;
+    private Integer toplevel_id = null;
+    private Integer sub_id = null;
+    private Integer subsub_id = null;
+    private Integer produktgruppen_id = null;
 
     protected JButton hinzufuegenButton;
     protected JButton submitButton;
@@ -55,6 +56,24 @@ public class ArtikelNeuEingeben extends DialogWindow
         toplevel_id = tid;
         sub_id = sid;
         subsub_id = ssid;
+        UpdateTableFunctor utf = new UpdateTableFunctor() {
+            public void updateTable() {
+                allPanel.remove(footerPanel);
+                artikelNeu.updateTable(allPanel);
+                showFooter();
+            }
+        };
+        artikelNeu = new ArtikelNeu(conn, mw, utf);
+        artikelFormular = new ArtikelFormular(conn, mw);
+        this.setPreferredSize(new Dimension(980, 600));
+        showAll();
+    }
+
+    public ArtikelNeuEingeben(Connection conn, MainWindowGrundlage mw,
+            Artikelliste pw, JDialog dia, Integer prodgrID) {
+	super(conn, mw, dia);
+        artikelListe = pw;
+        produktgruppen_id = prodgrID;
         UpdateTableFunctor utf = new UpdateTableFunctor() {
             public void updateTable() {
                 allPanel.remove(footerPanel);
@@ -115,8 +134,10 @@ public class ArtikelNeuEingeben extends DialogWindow
         buttonPanel.add(hinzufuegenButton);
         headerPanel.add(buttonPanel);
 
-        Integer gruppenID = retrieveGruppenID();
-        int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(gruppenID);
+        if (this.produktgruppen_id == null) {
+            this.produktgruppen_id = retrieveGruppenID();
+        }
+        int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(this.produktgruppen_id);
         artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
 
         artikelFormular.beliebtBox.setSelectedIndex(bc.beliebtNamen.indexOf("keine Angabe"));
@@ -343,6 +364,89 @@ public class ArtikelNeuEingeben extends DialogWindow
         }
         footerPanel.add(closeButton);
         allPanel.add(footerPanel);
+    }
+
+    protected void setOriginalValues(Artikel origArticle) {
+        int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(origArticle.getProdGrID());
+        artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
+
+        int liefIndex = artikelFormular.lieferantIDs.indexOf(origArticle.getLiefID());
+        artikelFormular.lieferantBox.setSelectedIndex(liefIndex);
+
+        artikelFormular.nummerField.setText(origArticle.getNummer());
+
+        artikelFormular.nameField.setText(origArticle.getName());
+
+        if ( origArticle.getKurzname() != null ){
+            artikelFormular.kurznameField.setText(origArticle.getKurzname());
+        } else {
+            artikelFormular.kurznameField.setText("");
+        }
+        if ( origArticle.getMenge() != null ){
+            artikelFormular.mengeField.setText( bc.decimalMark(origArticle.getMenge().toString()) );
+        } else {
+            artikelFormular.mengeField.setText("");
+        }
+        if ( origArticle.getEinheit() != null ){
+            artikelFormular.einheitField.setText(origArticle.getEinheit());
+        } else {
+            artikelFormular.einheitField.setText("");
+        }
+        if ( origArticle.getBarcode() != null ){
+            artikelFormular.barcodeField.setText(origArticle.getBarcode());
+        } else {
+            artikelFormular.barcodeField.setText("");
+        }
+        if ( origArticle.getHerkunft() != null ){
+            artikelFormular.herkunftField.setText(origArticle.getHerkunft());
+        } else {
+            artikelFormular.herkunftField.setText("");
+        }
+        if ( origArticle.getVPE() != null ){
+            artikelFormular.vpeSpinner.setValue(origArticle.getVPE());
+        } else {
+            artikelFormular.vpeSpinner.setValue(0);
+        }
+
+        artikelFormular.setSpinner.setValue(origArticle.getSetgroesse());
+
+        artikelFormular.preisVariabelBox.setSelected(origArticle.getVarPreis());
+        if (!origArticle.getVarPreis()){ // if non-variable price
+            if ( origArticle.getVKP() != null ){
+                artikelFormular.vkpreisField.setText( bc.priceFormatter(origArticle.getVKP()) );
+            } else {
+                artikelFormular.vkpreisField.setText("");
+            }
+            if ( origArticle.getEmpfVKP() != null ){
+                artikelFormular.empfvkpreisField.setText( bc.priceFormatter(origArticle.getEmpfVKP()) );
+            } else {
+                artikelFormular.empfvkpreisField.setText("");
+            }
+            if ( origArticle.getEKRabatt() != null ){
+                artikelFormular.ekrabattField.setText( bc.vatPercentRemover(origArticle.getEKRabatt()) );
+            } else {
+                artikelFormular.ekrabattField.setText("");
+            }
+            if ( origArticle.getEKP() != null ){
+                artikelFormular.ekpreisField.setText( bc.priceFormatter(origArticle.getEKP()) );
+            } else {
+                artikelFormular.ekpreisField.setText("");
+            }
+        } else { // variable prices
+            artikelFormular.vkpreisField.setEnabled(false);
+            artikelFormular.empfvkpreisField.setEnabled(false);
+            artikelFormular.ekrabattField.setEnabled(false);
+            artikelFormular.ekpreisField.setEnabled(false);
+        }
+
+        artikelFormular.sortimentBox.setSelected(origArticle.getSortiment());
+
+        artikelFormular.lieferbarBox.setSelected(origArticle.getLieferbar());
+
+        artikelFormular.beliebtBox.setSelectedIndex(
+                bc.beliebtWerte.indexOf(origArticle.getBeliebt()));
+
+        artikelFormular.updateEKPreisField();
     }
 
     public void emptyTable() {
