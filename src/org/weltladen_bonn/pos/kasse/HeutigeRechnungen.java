@@ -127,6 +127,18 @@ public class HeutigeRechnungen extends Rechnungen {
      **/
     public void actionPerformed(ActionEvent e) {
         super.actionPerformed(e);
+        if (e.getSource() == prevButton) {
+            if (this.currentPage > 1)
+                this.currentPage--;
+            updateTable();
+            return;
+        }
+        if (e.getSource() == nextButton) {
+            if (this.currentPage < totalPage)
+                this.currentPage++;
+            updateTable();
+            return;
+        }
 	if (e.getSource() == backButton){
 	    updateTable();
 	    return;
