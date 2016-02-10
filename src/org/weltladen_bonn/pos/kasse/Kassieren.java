@@ -2025,13 +2025,13 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             return;
         }
         if (e.getSource() == stornoButton) {
-        	int answer = JOptionPane.showConfirmDialog(this,
-        			"Wirklich stornieren?", "Storno",
-        			JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-        	if (answer == JOptionPane.YES_OPTION) {
-        		stornieren();
-        	}
-        	return;
+            int answer = JOptionPane.showConfirmDialog(this,
+                    "Wirklich stornieren?", "Storno",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (answer == JOptionPane.YES_OPTION) {
+                stornieren();
+            }
+            return;
         }
         if (e.getSource() == quittungsButton) {
             if (zahlungsModus == "bar") {

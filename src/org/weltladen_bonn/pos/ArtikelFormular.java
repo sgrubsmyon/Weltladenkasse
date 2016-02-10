@@ -187,7 +187,12 @@ public class ArtikelFormular extends WindowContent
 
             JPanel beliebtPanel = new JPanel();
             beliebtPanel.setBorder(BorderFactory.createTitledBorder("Beliebtheit"));
-            beliebtBox = new JComboBox<String>(bc.beliebtNamen);
+            Vector<String> beliebtNamenValues = new Vector<String>();
+            for (int i=0; i<bc.beliebtNamen.size(); i++) {
+                beliebtNamenValues.add(bc.beliebtNamen.get(i)+" ("+bc.beliebtWerte.get(i)+")");
+            }
+            //beliebtBox = new JComboBox<String>(bc.beliebtNamen);
+            beliebtBox = new JComboBox<String>(beliebtNamenValues);
             beliebtBox.setMaximumRowCount(bc.beliebtNamen.size());
             beliebtPanel.add(beliebtBox);
 

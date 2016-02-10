@@ -89,8 +89,9 @@ public class TabbedPane extends TabbedPaneGrundlage {
             String vkp = data.get(i).get(4).toString();
             String vpe = data.get(i).get(5) == null ? null : data.get(i).get(5).toString();
             Integer stueck = Integer.parseInt( data.get(i).get(6).toString() );
+            Integer beliebt = Integer.parseInt( data.get(i).get(7).toString() );
             myBestellen.hinzufuegen(artikelIDs.get(i), lieferant, artikelNr,
-                    artikelName, vkp, vpe, stueck, colors.get(i));
+                    artikelName, vkp, vpe, stueck, beliebt, colors.get(i));
         }
         myBestellen.updateAll();
         myBestellen.doCSVBackup();
