@@ -42,9 +42,30 @@ public class ArticleSelectPanelBestellen extends ArticleSelectPanelGrundlage {
         bestellen.updateAnzahlColor(vpeInt);
     }
 
+    private void setKuller(Artikel a) {
+        int index = bc.beliebtWerte.indexOf(a.getBeliebt());
+        bestellen.beliebtKuller.setText( bc.beliebtKuerzel.get(index) );
+        bestellen.beliebtKuller.setForeground( bc.beliebtFarben.get(index) );
+        String description = bc.beliebtBeschreibungen.get(index);
+        Font font = bestellen.beliebtText.getFont();
+        // vertical centering für Arme:
+        FontMetrics metrics = bestellen.beliebtText.getFontMetrics(font);
+        int textwidth = metrics.stringWidth(description);
+        long boxwidth = Math.round( bestellen.beliebtText.getPreferredSize().getWidth() );
+        if (textwidth <= boxwidth) {
+            description = "\n"+description+"\n";
+        } else if (textwidth <= 2.*boxwidth) {
+            description = "\n"+description;
+        }
+        bestellen.beliebtText.setText(description);
+    }
+
     @Override
     protected void setPriceField() {
+        Artikel article = getArticle(selectedArticleID);
+
         setAnzahlSpinner();
+        setKuller(article);
 
         boolean variablerPreis = getVariablePriceBool(selectedArticleID);
         if ( ! variablerPreis ){
@@ -57,7 +78,6 @@ public class ArticleSelectPanelBestellen extends ArticleSelectPanelGrundlage {
                         "Für diesen Artikel muss erst der Preis festgelegt werden!",
                         "Info", JOptionPane.INFORMATION_MESSAGE);
 
-                Artikel article = getArticle(selectedArticleID);
                 Vector<Artikel> selectedArticles = new Vector<Artikel>();
                 selectedArticles.add(article);
 

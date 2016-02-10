@@ -46,6 +46,7 @@ public abstract class BestellungsGrundlage extends ArtikelGrundlage {
         columnLabels.add("Pos.");
 	columnLabels.add("Lieferant"); columnLabels.add("Artikel-Nr."); columnLabels.add("Artikel-Name"); 
         columnLabels.add("Einzelpreis"); columnLabels.add("VPE"); columnLabels.add("Stückzahl");
+        columnLabels.add("Beliebtheit");
     }
 
     protected void setTableProperties(JTable table) {
@@ -71,5 +72,8 @@ public abstract class BestellungsGrundlage extends ArtikelGrundlage {
 	TableColumn stueckzahl = table.getColumn("Stückzahl");
 	stueckzahl.setCellRenderer(rechtsAusrichter);
 	stueckzahl.setPreferredWidth(200);
+	TableColumn beliebt = table.getColumn("Beliebtheit");
+	beliebt.setCellRenderer(zentralAusrichter);
+	beliebt.setPreferredWidth(200);
     }
 }

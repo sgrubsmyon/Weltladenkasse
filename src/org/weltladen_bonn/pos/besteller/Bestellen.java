@@ -62,7 +62,8 @@ public class Bestellen extends BestellungsGrundlage implements
     private JButton abschliessenButton;
     private JButton verwerfenButton;
 
-    private JLabel beliebtLabel;
+    protected JLabel beliebtKuller;
+    protected JTextArea beliebtText;
 
     // The panels
     private JPanel allPanel;
@@ -315,10 +316,14 @@ public class Bestellen extends BestellungsGrundlage implements
         formPanel.add(chooseArticlePanel);
 
         JPanel beliebtPanel = new JPanel();
-        beliebtLabel = new JLabel(); //bc.beliebtKuerzel.get(0) );
-        beliebtLabel.setFont(bc.bigFont);
-        //beliebtLabel.setForeground( bc.beliebtFarben.get(index) );
-        beliebtLabel.setForeground( Color.LIGHT_GRAY );
+        beliebtKuller = new JLabel( bc.beliebtKuerzel.get(bc.beliebtNamen.indexOf("keine Angabe")) );
+        beliebtKuller.setFont(bc.bigFont);
+        beliebtKuller.setForeground( Color.LIGHT_GRAY );
+        beliebtText = new JTextArea(3, 20);
+        beliebtText = makeLabelStyle(beliebtText);
+        beliebtText.setEditable(false);
+        beliebtPanel.add(beliebtKuller);
+        beliebtPanel.add(beliebtText);
 
         northPanel.add(formPanel);
         northPanel.add(beliebtPanel);
@@ -330,7 +335,7 @@ public class Bestellen extends BestellungsGrundlage implements
     }
 
     void initiateTable() {
-        orderTable = new BestellungsTable(displayData, columnLabels, colors);
+        orderTable = new BestellungsTable(bc, displayData, columnLabels, colors);
         removeDefaultKeyBindings(orderTable, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         orderTable.getModel().addTableModelListener(this);
 	setTableProperties(orderTable);
@@ -459,7 +464,7 @@ public class Bestellen extends BestellungsGrundlage implements
         fileStr += selJahr + bc.delimiter;
         fileStr += selKW + bc.lineSep;
         // format of csv file:
-        fileStr += "#Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;color;artikelID"+bc.lineSep;
+        fileStr += "#Lieferant;Art.-Nr.;Artikelname;VK-Preis;VPE;Stueck;Beliebtheit;color;artikelID"+bc.lineSep;
         for (int i=data.size()-1; i>=0; i--){
             String lieferant = data.get(i).get(1).toString();
             String nummer = data.get(i).get(2).toString();
@@ -473,6 +478,7 @@ public class Bestellen extends BestellungsGrundlage implements
                 vpe = data.get(i).get(5).toString();
             } catch (NullPointerException ex) { }
             String stueck = data.get(i).get(6).toString();
+            String beliebt = data.get(i).get(7).toString();
             String color = colors.get(i);
             String artikelID = artikelIDs.get(i).toString();
 
@@ -482,6 +488,7 @@ public class Bestellen extends BestellungsGrundlage implements
             fileStr += vkp + bc.delimiter;
             fileStr += vpe + bc.delimiter;
             fileStr += stueck + bc.delimiter;
+            fileStr += beliebt + bc.delimiter;
             fileStr += color + bc.delimiter;
             fileStr += artikelID + bc.lineSep;
         }
@@ -540,7 +547,7 @@ public class Bestellen extends BestellungsGrundlage implements
                 line = line.replaceAll("#.*",""); // remove commented lines
                 // get the fields
                 String[] fields = line.split(bc.delimiter);
-                if (fields.length < 7 ){
+                if (fields.length < 8 ){
                     continue;
                 }
 
@@ -550,11 +557,12 @@ public class Bestellen extends BestellungsGrundlage implements
                 String vkp = fields[3];
                 String vpe = fields[4];
                 Integer stueck = Integer.parseInt(fields[5]);
-                String color = fields[6];
-                Integer artikelID = Integer.parseInt(fields[7]);
+                Integer beliebt = Integer.parseInt(fields[6]);
+                String color = fields[7];
+                Integer artikelID = Integer.parseInt(fields[8]);
 
                 hinzufuegen(artikelID, lieferant, nummer, name,
-                        vkp, vpe, stueck, color);
+                        vkp, vpe, stueck, beliebt, color);
             }
             updateAll();
         } catch (FileNotFoundException ex) {
@@ -666,9 +674,9 @@ public class Bestellen extends BestellungsGrundlage implements
         }
     }
 
-    protected void hinzufuegen(Integer artikelID,
-            String lieferant, String artikelNummer, String artikelName,
-            String vkp, String vpe, Integer stueck, String color) {
+    protected void hinzufuegen(Integer artikelID, String lieferant,
+            String artikelNummer, String artikelName, String vkp, String vpe,
+            Integer stueck, Integer beliebt, String color) {
         artikelIDs.add(0, artikelID);
         colors.add(0, color);
         Integer lastPos = 0;
@@ -683,6 +691,7 @@ public class Bestellen extends BestellungsGrundlage implements
             row.add(positions.firstElement());
             row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
             row.add(vkp); row.add(vpe); row.add(stueck);
+            row.add(beliebt);
             row.add(removeButtons.firstElement());
         data.add(0, row);
 
@@ -708,11 +717,12 @@ public class Bestellen extends BestellungsGrundlage implements
         artikelPreis = bc.decimalMark(artikelPreis)+' '+bc.currencySymbol;
         String artikelMwSt = getVAT(selectedArticleID);
         artikelMwSt = bc.vatFormatter(artikelMwSt);
+        Integer beliebt = a.getBeliebt();
         Boolean sortiment = a.getSortiment();
         String color = sortiment ? "default" : "gray";
 
         hinzufuegen(selectedArticleID, lieferant, artikelNummer, artikelName,
-                artikelPreis, vpe, stueck, color);
+                artikelPreis, vpe, stueck, beliebt, color);
         updateAll();
         asPanel.emptyBarcodeBox();
 
@@ -986,8 +996,13 @@ public class Bestellen extends BestellungsGrundlage implements
 	    return;
 	}
 	if (e.getSource() == verwerfenButton){
-            verwerfen();
-	    return;
+            int answer = JOptionPane.showConfirmDialog(this,
+                    "Wirklich verwerfen?", "Bestellung löschen",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (answer == JOptionPane.YES_OPTION) {
+                verwerfen();
+            }
+            return;
 	}
 	int removeIndex = -1;
 	for (int i=0; i<removeButtons.size(); i++){

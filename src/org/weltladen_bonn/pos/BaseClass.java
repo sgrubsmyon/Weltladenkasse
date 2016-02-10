@@ -82,7 +82,7 @@ public class BaseClass {
         beliebtFarben = new Vector<Color>();
         beliebtWerte.add(-1);
         beliebtNamen.add("ausgelistet");
-        beliebtBeschreibungen.add("Nicht bestellen! (oder nicht bestellbar)");
+        beliebtBeschreibungen.add("Nicht bestellen! (ausgelistet oder nicht bestellbar)");
         beliebtKuerzel.add("x");
         beliebtFarben.add(Color.RED.darker());
         beliebtWerte.add(0);

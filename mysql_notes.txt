@@ -181,3 +181,24 @@ MariaDB [kasse]> UPDATE artikel SET artikel_nr = 'COLAKISTE' WHERE artikel_id = 
 MariaDB [kasse]> UPDATE artikel SET artikel_name = 'Pfand Cola-Kiste, Colakiste' WHERE artikel_id = 8;
 MariaDB [kasse]> SET FOREIGN_KEY_CHECKS=1;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------
+
+2016-02-10: Change beliebtheit field to SIGNED TINYINT
+
+ALTER TABLE artikel MODIFY beliebtheit TINYINT(1) NOT NULL DEFAULT 0;
+

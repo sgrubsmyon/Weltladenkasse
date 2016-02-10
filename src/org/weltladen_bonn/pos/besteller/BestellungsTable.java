@@ -10,21 +10,27 @@ import javax.swing.*;
 import javax.swing.table.*;
 
 import org.weltladen_bonn.pos.ArticleSelectTable;
+import org.weltladen_bonn.pos.BaseClass;
 
 public class BestellungsTable extends ArticleSelectTable {
+    private BaseClass bc;
+
     /**
      *    The constructor.
      *       */
-    public BestellungsTable(Vector< Vector<Object> > data, Vector<String> columns,
+    public BestellungsTable(BaseClass bc, Vector< Vector<Object> > data, Vector<String> columns,
             Vector<String> colors) {
         super(data, columns, colors);
+        this.bc = bc;
     }
 
     @Override
     public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
         Component c = super.prepareRenderer(renderer, row, column);
+        Object value = this.getValueAt(row, column); // here, no conversion must be done (don't really get why, because tool tip and articleIndex need it)
         // add custom rendering here
-        if ( getColumnName(column).equals("Stückzahl") ){
+        String cname = getColumnName(column);
+        if ( cname.equals("Stückzahl") ){
             Component cc;
             if (renderer instanceof JSpinner){
                 cc = ( (JSpinner.NumberEditor) ((JSpinner)renderer).getEditor() ).getTextField();
@@ -43,6 +49,15 @@ public class BestellungsTable extends ArticleSelectTable {
                 }
             } catch (Exception ex) {
                 cc.setForeground(Color.black); // if sth. goes wrong: default color
+            }
+        }
+        if ( cname.equals("Beliebtheit") ){
+            Integer index = bc.beliebtWerte.indexOf( Integer.parseInt(value.toString()) );
+            c.setFont( c.getFont().deriveFont(Font.PLAIN) );
+            c.setForeground( bc.beliebtFarben.get(index) );
+            if (c instanceof JLabel){
+                JLabel label = (JLabel)c;
+                label.setText( bc.beliebtKuerzel.get(index) );
             }
         }
         //c.setBackground(Color.LIGHT_GRAY);

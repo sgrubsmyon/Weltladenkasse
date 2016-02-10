@@ -960,7 +960,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         Integer beliebt;
         try {
             beliebt = Integer.parseInt( model.getValueAt(row, model.findColumn("Beliebtheit")).toString() );
-        } catch (NumberFormatException ex){ beliebt = 0; }
+        } catch (NumberFormatException ex){ beliebt = bc.beliebtNamen.indexOf("keine Angabe"); }
         a.setBeliebt(beliebt);
         Integer bestand;
         try {

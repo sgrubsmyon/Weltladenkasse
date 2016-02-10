@@ -210,7 +210,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
                 // Table with order details:
                 retrieveOrderDetailData(bestellNrUndTyp);
-                orderDetailTable = new BestellungsTable(orderDetailDisplayData,
+                orderDetailTable = new BestellungsTable(bc, orderDetailDisplayData,
                         columnLabels, orderDetailColors);
                 setTableProperties(orderDetailTable);
 
@@ -264,7 +264,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         orderDetailTablePanel.remove(orderDetailScrollPane);
 	orderDetailTablePanel.revalidate();
 
-        orderDetailTable = new BestellungsTable(orderDetailDisplayData,
+        orderDetailTable = new BestellungsTable(bc, orderDetailDisplayData,
                 columnLabels, orderDetailColors);
         setTableProperties(orderDetailTable);
 
@@ -319,7 +319,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT bd.position, l.lieferant_name, a.artikel_nr, a.artikel_name, "+
-                    "a.empf_vk_preis, a.vk_preis, a.vpe, bd.stueckzahl, a.sortiment, bd.artikel_id "+
+                    "a.empf_vk_preis, a.vk_preis, a.vpe, bd.stueckzahl, a.beliebtheit, a.sortiment, bd.artikel_id "+
                     "FROM bestellung_details AS bd "+
                     "LEFT JOIN artikel AS a USING (artikel_id) "+
                     "LEFT JOIN lieferant AS l USING (lieferant_id) "+
@@ -341,9 +341,10 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 //Integer vpeInt = rs.getInt(7);
                 //vpeInt = vpeInt > 0 ? vpeInt : 0;
                 Integer stueck = rs.getInt(8);
-                Boolean sortimentBool = rs.getBoolean(9);
+                Integer beliebt = rs.getInt(9);
+                Boolean sortimentBool = rs.getBoolean(10);
                 String color = sortimentBool ? "default" : "gray";
-                Integer artikelID = rs.getInt(10);
+                Integer artikelID = rs.getInt(11);
 
                 String vkp;
                 if (empf_vkpreis == null || empf_vkpreis.equals("")){
@@ -355,7 +356,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 Vector<Object> row = new Vector<Object>();
                     row.add(pos);
                     row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
-                    row.add(bc.priceFormatter(vkp)+" "+bc.currencySymbol); row.add(vpe); row.add(stueck);
+                    row.add(bc.priceFormatter(vkp)+" "+bc.currencySymbol); row.add(vpe);
+                    row.add(stueck); row.add(beliebt);
                     row.add(""); // row.add(removeButtons.lastElement())
                 orderDetailData.add(row);
                 orderDetailArtikelIDs.add(artikelID);
