@@ -127,43 +127,14 @@ public class HeutigeRechnungen extends Rechnungen {
      **/
     public void actionPerformed(ActionEvent e) {
         super.actionPerformed(e);
-        if (e.getSource() == prevButton) {
-            if (this.currentPage > 1)
-                this.currentPage--;
-            updateTable();
-            return;
-        }
-        if (e.getSource() == nextButton) {
-            if (this.currentPage < totalPage)
-                this.currentPage++;
-            updateTable();
-            return;
-        }
-	if (e.getSource() == backButton){
-	    updateTable();
-	    return;
-	}
-	final int numberOfRows = detailButtons.size();
-	int detailRow=-1;
+	final int numberOfRows = stornoButtons.size();
 	int stornoRow=-1;
-	for (int i=0; i<numberOfRows; i++){
-	    if (e.getSource() == detailButtons.get(i) ){
-		detailRow = i;
-		break;
-	    }
-	}
-	if (detailRow == -1){
-	    for (int i=0; i<numberOfRows; i++){
-		if (e.getSource() == stornoButtons.get(i) ){
-		    stornoRow = i;
-		    break;
-		}
-	    }
-	}
-	if (detailRow > -1){
-	    showDetailTable(detailRow, this.titleStr);
-	    return;
-	}
+        for (int i=0; i<numberOfRows; i++){
+            if (e.getSource() == stornoButtons.get(i) ){
+                stornoRow = i;
+                break;
+            }
+        }
 	if (stornoRow > -1){
             int answer = JOptionPane.showConfirmDialog(this,
                     "Rechnung " + (String) data.get(stornoRow).get(1) + " wirklich stornieren?", "Storno",
