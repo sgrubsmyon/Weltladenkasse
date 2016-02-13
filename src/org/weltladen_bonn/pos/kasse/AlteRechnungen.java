@@ -263,33 +263,5 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
             updateTable();
             return;
         }
-        if (e.getSource() == prevButton) {
-            if (this.currentPage > 1)
-                this.currentPage--;
-            updateTable();
-            return;
-        }
-        if (e.getSource() == nextButton) {
-            if (this.currentPage < totalPage)
-                this.currentPage++;
-            updateTable();
-            return;
-        }
-        if (e.getSource() == backButton) {
-            updateTable();
-            return;
-        }
-        final int numberOfRows = detailButtons.size();
-        int detailRow = -1;
-        for (int i = 0; i < numberOfRows; i++) {
-            if (e.getSource() == detailButtons.get(i)) {
-                detailRow = i;
-                break;
-            }
-        }
-        if (detailRow != -1) {
-            showDetailTable(detailRow, this.titleStr);
-            return;
-        }
     }
 }

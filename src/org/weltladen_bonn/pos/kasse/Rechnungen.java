@@ -57,17 +57,16 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 
     protected JButton prevButton;
     protected JButton nextButton;
-
     protected JButton backButton = new JButton("Zurück");
     protected Vector<JButton> detailButtons;
     protected Vector<JButton> stornoButtons;
+    protected JButton quittungsButton;
 
     protected Vector<Vector<Object>> data;
     protected Vector<String> dates;
     protected Vector<String> overviewLabels;
     protected String rechnungsZahl;
     protected int rechnungsZahlInt;
-    protected JButton quittungsButton;
 
     // Methoden:
 
@@ -414,6 +413,34 @@ public abstract class Rechnungen extends RechnungsGrundlage {
      *    @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == prevButton) {
+            if (this.currentPage > 1)
+                this.currentPage--;
+            updateTable();
+            return;
+        }
+        if (e.getSource() == nextButton) {
+            if (this.currentPage < totalPage)
+                this.currentPage++;
+            updateTable();
+            return;
+        }
+        if (e.getSource() == backButton) {
+            updateTable();
+            return;
+        }
+        final int numberOfRows = detailButtons.size();
+	int detailRow = -1;
+	for (int i=0; i<numberOfRows; i++){
+	    if (e.getSource() == detailButtons.get(i) ){
+		detailRow = i;
+		break;
+	    }
+	}
+	if (detailRow > -1){
+	    showDetailTable(detailRow, this.titleStr);
+	    return;
+	}
 	if (e.getSource() == quittungsButton){
             LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
                 getMwstsAndTheirValues();

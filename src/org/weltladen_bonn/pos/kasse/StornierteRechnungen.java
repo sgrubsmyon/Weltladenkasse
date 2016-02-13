@@ -55,21 +55,5 @@ public class StornierteRechnungen extends Rechnungen {
      **/
     public void actionPerformed(ActionEvent e) {
         super.actionPerformed(e);
-	if (e.getSource() == backButton){
-	    updateTable();
-	    return;
-	}
-	final int numberOfRows = detailButtons.size();
-	int detailRow=-1;
-	for (int i=0; i<numberOfRows; i++){
-	    if (e.getSource() == detailButtons.get(i) ){
-		detailRow = i;
-		break;
-	    }
-	}
-	if (detailRow != -1){
-	    showDetailTable(detailRow, this.titleStr);
-	    return;
-	}
     }
 }
