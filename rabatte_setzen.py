@@ -26,46 +26,40 @@ if (pwd is None):
 
 # https://dev.mysql.com/downloads/connector/python/
 import mysql.connector
+import numpy as np
 
-def getDataFromDB(conn, SELECT, FROM, WHERE=None):
-    """
-    A generic wrapper function to fetch data from a MySQL DB.  Data is returned
-    as a numpy matrix `res': first dimension is column, second dimension is
-    row. So e.g. if you fetch certain values from the columns a and b, then
-    res[0] returns the array with the values from a, res[1] has values from b.
-
-    args:
-        `conn': A connection to the DB created with mysql.connector.connect().
-                Example:
-                >>> conn = mysql.connector.connect(host="example.com",
-                              user="usr", passwd="pwd", db="eno")
-
-        `SELECT': String containing the list of columns you want
-                (comma-separated)
-
-        `FROM': String containing list of tables where
-                the columns come from. Can contain multiple tables joined together.
-                Examples: "mytable" or "mytable AS m LEFT JOIN othertable AS o"
-
-        `WHERE': String containing the WHERE clause for filtering and/or other stuff,
-                Examples: "" (fetch all rows), "WHERE a < 10." or "LIMIT 0,30" or "ORDER BY id".
-                If None is given (default), then "LIMIT 0,30" is used.
-
-    returns:
-        `res': A numpy array with two dimensions: first column index, second row index.
-    """
+def select(conn, query):
     res = np.array([])
-    with conn:
-        cursor = conn.cursor()
-        if (WHERE is None):
-            WHERE = 'LIMIT 0,30'
-        query = "SELECT %s FROM %s %s" % (SELECT, FROM, WHERE)
-        cursor.execute(query)
-        things = cursor.fetchall()
-        res = np.array(things)
-        res = res.transpose()
-        cursor.close()
+    #with conn:
+    cursor = conn.cursor()
+    #print(query)
+    cursor.execute(query)
+    things = cursor.fetchall()
+    res = np.array(things)
+    res = res.transpose()
+    cursor.close()
     return res
 
-conn = mysql.connector.connect(host=options.HOST, user="kassenadmin",
+def update(conn, query):
+    #with conn:
+    cursor = conn.cursor()
+    #print(query)
+    cursor.execute(query)
+    cursor.close()
+
+conn = mysql.connector.connect(host=options.HOST, user="mitarbeiter",
         password=pwd, db="kasse")
+
+rabatt = 0.15
+print("EK-Rabatt für folgende Artikel wird gesetzt auf: %s%%" % (100*rabatt))
+query = ("SELECT artikel_nr, artikel_name FROM artikel AS a "
+    "INNER JOIN lieferant AS l USING (lieferant_id) "
+    "INNER JOIN produktgruppe AS p USING (produktgruppen_id) "
+    "WHERE lieferant_name = 'GEPA' AND produktgruppen_name = 'Kaffee'")#"AND a.aktiv = TRUE"
+print(select(conn, query))
+query = ("UPDATE artikel "
+    "INNER JOIN lieferant AS l USING (lieferant_id) "
+    "INNER JOIN produktgruppe AS p USING (produktgruppen_id) "
+    "SET ek_rabatt = %s "
+    "WHERE lieferant_name = 'GEPA' AND produktgruppen_name = 'Kaffee'" % rabatt)#"AND a.aktiv = TRUE"
+update(conn, query)
