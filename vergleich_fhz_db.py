@@ -12,27 +12,31 @@
 6.) Alle Artikel mit "SONSTIGES" in Artikelnummer löschen, Ergebnis speichern als "XYZ_LM.ods"
 7.) "File -> Save As" und als csv-Datei exportieren.
     WICHTIG: Als Separator/Delimiter ';' auswählen!
-8.) Neue FHZ-Preisliste öffnen
+8.) Neue FHZ-Preisliste öffnen, 'File -> Save As' als "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX.ods"
+    * Wir benötigen Spalten C bis L, diese Spalten markieren, kopieren und in
+        leeres Dokument einfügen mit Ctrl-v (Formatierung wird gelöscht)
+    * Alle Zeilen, die leer sind oder Überschrift (Produktgruppe) enthalten, löschen:
+        Mit Ctrl-Down springen, Zellen aus Zeilen markieren, Ctrl-Minus, Delete entire row(s)
     * Spalten so benennen und arrangieren wie in der XYZ-Datei (gleiche Reihenfolge)
-    * Wir benötigen Spalten C bis L, ohne I
     * Andere Spalten (z.B. Sortiment, Bestand, Barcode, etc.) leer lassen
-    * Ergänzungsprodukte am Ende löschen
+    * Preis (Spalte "je Einheit") geht in "Empf. VK-Preis"
+    * Spalte "Variabel" auf "Nein" setzen
     * mit Formeln bearbeiten:
-        =CONCATENATE(L5, " | ", M5, " ", N5, " ", O5)       für "Bezeichnung" (Kurzname ist der egtl. Name)
-        =IF(F5="x", "Ja", "Nein")                           für "Sofort lieferbar"
-        =IF(H5="g", "kg", IF(H5="ml","l",""))               für "Einheit"
+        =CONCATENATE(E2, " | ", F2, " ", G2, " ", H2)       für "Bezeichnung" (Kurzname ist der egtl. Name)
         =E5/1000                                            für "Menge"
+        =IF(H5="g", "kg", IF(H5="ml","l",""))               für "Einheit"
+        * nach fehlender Einheit suchen (mit Ctrl-Down zu Lücken springen), in fast
+            allen Fällen (außer Pfand) "St." eintragen und Menge anpassen (z.B.
+            4 für Muskatnüsse)
+        OR:
+        * After running script, search for "zu 0 " in output, correct the Menge
+            values in the FHZ file and Einheit to "St." (e.g. Vanilleschoten
+            'ma110100', 'sl115108', 'rfb116032')
+        =IF(F5="x", "Ja", "Nein")                           für "Sofort lieferbar"
     * Copy VPE column into vim, then
         :%s/[^0-9]//g
       Save as blabla, cat in terminal and copy and paste in LibreOffice
-    * Alle Zeilen, die leer sind oder Überschrift (Produktgruppe) enthalten, löschen:
-        Zeilen markieren, Ctrl-Minus
     * Spalte "Menge": Markieren, "Format Cells", 5 decimal places
-    * Correct all missing values of Einheit and corresponding Menge (it's 0)
-    OR:
-    * After running script, search for "zu 0 " in output, correct the Menge
-        values in the FHZ file and Einheit to "St." (e.g. Vanilleschoten
-        'ma110100', 'sl115108', 'rfb116032')
 9.) "File -> Save As" und als csv-Datei exportieren.
     WICHTIG: Als Separator/Delimiter ';' auswählen!
 10.) Dieses Skript aufrufen mit --fhz FHZ_XYZ.csv --wlb XYZ_LM.csv
