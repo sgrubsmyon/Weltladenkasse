@@ -22,44 +22,48 @@ parser.add_option("-p", "--pwd", type="string",
 (options, args) = parser.parse_args()
 pwd = options.PWD
 if (pwd is None):
-    pwd = getpass("Please enter admin(!) password of MySQL DB. ")
+    pwd = getpass("Please enter mitarbeiter password of MySQL DB. ")
 
 # https://dev.mysql.com/downloads/connector/python/
 import mysql.connector
 import numpy as np
 
-def select(conn, query):
+def select(conn, lieferant='GEPA', prod_gr='Kaffee', rabatt=0.15):
     res = np.array([])
     #with conn:
     cursor = conn.cursor()
+    query = ("SELECT artikel_nr, artikel_name FROM artikel AS a "
+        "INNER JOIN lieferant AS l USING (lieferant_id) "
+        "INNER JOIN produktgruppe AS p USING (produktgruppen_id) "
+        "WHERE lieferant_name = %s AND produktgruppen_name = %s")#"AND a.aktiv = TRUE"
+    print("EK-Rabatt für folgende Artikel wird gesetzt auf: %s%%" % (100*rabatt))
     #print(query)
-    cursor.execute(query)
-    things = cursor.fetchall()
-    res = np.array(things)
-    res = res.transpose()
+    cursor.execute(query, (lieferant, prod_gr))
+    res = np.array(cursor.fetchall()).transpose()
     cursor.close()
+    print(res)
     return res
 
-def update(conn, query):
+def update(conn, lieferant='GEPA', prod_gr='Kaffee', rabatt=0.15):
     #with conn:
     cursor = conn.cursor()
+    query = ("UPDATE artikel "
+        "INNER JOIN lieferant AS l USING (lieferant_id) "
+        "INNER JOIN produktgruppe AS p USING (produktgruppen_id) "
+        "SET ek_rabatt = %s "
+        "WHERE lieferant_name = %s AND produktgruppen_name = %s")#"AND a.aktiv = TRUE"
     #print(query)
-    cursor.execute(query)
+    cursor.execute(query, (rabatt, lieferant, prod_gr))
+    conn.commit()
     cursor.close()
 
 conn = mysql.connector.connect(host=options.HOST, user="mitarbeiter",
         password=pwd, db="kasse")
 
+lieferant = 'GEPA'
+prod_gr = 'Kaffee'
 rabatt = 0.15
-print("EK-Rabatt für folgende Artikel wird gesetzt auf: %s%%" % (100*rabatt))
-query = ("SELECT artikel_nr, artikel_name FROM artikel AS a "
-    "INNER JOIN lieferant AS l USING (lieferant_id) "
-    "INNER JOIN produktgruppe AS p USING (produktgruppen_id) "
-    "WHERE lieferant_name = 'GEPA' AND produktgruppen_name = 'Kaffee'")#"AND a.aktiv = TRUE"
-print(select(conn, query))
-query = ("UPDATE artikel "
-    "INNER JOIN lieferant AS l USING (lieferant_id) "
-    "INNER JOIN produktgruppe AS p USING (produktgruppen_id) "
-    "SET ek_rabatt = %s "
-    "WHERE lieferant_name = 'GEPA' AND produktgruppen_name = 'Kaffee'" % rabatt)#"AND a.aktiv = TRUE"
-update(conn, query)
+select(conn, lieferant=lieferant, prod_gr=prod_gr, rabatt=rabatt)
+update(conn, lieferant=lieferant, prod_gr=prod_gr, rabatt=rabatt)
+
+conn.close()
