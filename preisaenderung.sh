@@ -251,7 +251,7 @@ for i in range(len(fhz)):
             print("---------------")
 
         # adopt Menge
-        if fhz_row['Menge (kg/l/St.)'] != wlb_row['Menge (kg/l/St.)']:
+        if float(fhz_row['Menge (kg/l/St.)']) != float(wlb_row['Menge (kg/l/St.)']):
             wlb_neu.loc[name, 'Menge (kg/l/St.)'] = fhz_row['Menge (kg/l/St.)']
             print("Ändere Menge für %s von %s (WLB) zu %s (FHZ)" % (name,
                     wlb_row['Menge (kg/l/St.)'], fhz_row['Menge (kg/l/St.)']))

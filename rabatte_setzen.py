@@ -125,12 +125,13 @@ def rabatt_setzen_by_name(conn, lieferant='GEPA', name='%credit%',
 conn = mysql.connector.connect(host=options.HOST, user="mitarbeiter",
         password=pwd, db="kasse")
 
+
 ### Kaffee gepa1
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Kaffee', rabatt=0.15)
+rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Entkoffeiniert', rabatt=0.15)
 ### Kaffee gepa2
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Espresso', rabatt=0.21)
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Kaffeepads', rabatt=0.21)
-rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Entkoffeiniert', rabatt=0.21)
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Getreidekaffee', rabatt=0.21)
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Guarana', rabatt=0.21)
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Instantkaffee', rabatt=0.21)
@@ -141,23 +142,24 @@ rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Brotaufstriche', rab
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Nüsse', rabatt=0.33)
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Trockenfrüchte', rabatt=0.33)
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Tee', rabatt=0.33)
+### nichts drin aber trotzdem zu LM1 (wenn, dann wäre es vermutlich da)
+#rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Sonstige Lebensmittel', rabatt=0.33)
+#rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Essig und Öl', rabatt=0.33)
+#rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Feinkost', rabatt=0.33)
 ### LM gepa2
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Zucker', rabatt=0.29)
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Kakao und Trinkschokolade', rabatt=0.29)
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Getränke', rabatt=0.29)
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Süßwaren und Snacks', rabatt=0.29)
-### LM gepa Reis, Körner
+rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Saisonartikel', rabatt=0.29)
+### LM gepa Reis, Körner, Nudeln
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Getreide und Hülsenfrüchte', rabatt=0.17)
+rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Nudeln', rabatt=0.17)
 ### KHW gepa
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Kunsthandwerk', rabatt=0.40)
 ### KHW gepa Dr. Bronner
 rabatt_setzen_by_name(conn, lieferant='GEPA', name='%Dr. Bronner%', prod_gr='Kosmetik', rabatt=0.25)
-### gepa unzugeordnet
-rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Sonstige Lebensmittel', rabatt=0.29)
-rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Nudeln', rabatt=0.29)
-rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Essig und Öl', rabatt=0.29)
-rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Feinkost', rabatt=0.29)
-rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Saisonartikel', rabatt=0.29)
+
 
 ### Kaffee ep
 rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Kaffeeprodukte', rabatt=0.17)
@@ -179,21 +181,23 @@ rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Trockenfrüchte', raba
 rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Tee', rabatt=0.35)
 rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Getreide und Hülsenfrüchte', rabatt=0.35)
 rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Nudeln', rabatt=0.35)
+rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Essig und Öl', rabatt=0.35)
+rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Feinkost', rabatt=0.35)
+rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Sonstige Lebensmittel', rabatt=0.35)
+rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Saisonartikel', rabatt=0.35)
 ### LM ep2
 rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Zucker', rabatt=0.31)
 rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Kakao und Trinkschokolade', rabatt=0.31)
 rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Getränke', rabatt=0.31)
 rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Süßwaren und Snacks', rabatt=0.31)
-### ep unzugeordnet
-rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Sonstige Lebensmittel', rabatt=0.31)
-rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Essig und Öl', rabatt=0.31)
-rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Feinkost', rabatt=0.31)
-rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Saisonartikel', rabatt=0.31)
 ### KHW ep
 rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Kunsthandwerk', rabatt=0.42)
 
+
 ### Kaffee dwp
 rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Kaffeeprodukte', rabatt=0.17)
+rabatt_setzen_by_name(conn, lieferant='dwp', name='%kaffee%',
+        prod_gr='Saisonartikel', rabatt=0.17)
 ### LM dwp1
 rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Gewürze und Kräuter', rabatt=0.33)
 rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Soßen und Würzpasten', rabatt=0.33)
@@ -203,30 +207,36 @@ rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Trockenfrüchte', rab
 rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Tee', rabatt=0.33)
 rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Getreide und Hülsenfrüchte', rabatt=0.33)
 rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Nudeln', rabatt=0.33)
+rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Sonstige Lebensmittel', rabatt=0.33)
+rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Essig und Öl', rabatt=0.33)
+rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Feinkost', rabatt=0.33)
+rabatt_setzen_by_name(conn, lieferant='dwp', name='%tee%',
+        prod_gr='Saisonartikel', rabatt=0.33)
 ### LM dwp2
 rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Zucker', rabatt=0.29)
 rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Kakao und Trinkschokolade', rabatt=0.29)
 rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Getränke', rabatt=0.29)
 rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Süßwaren und Snacks', rabatt=0.29)
-### dwp unzugeordnet
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Sonstige Lebensmittel', rabatt=0.29)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Essig und Öl', rabatt=0.29)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Feinkost', rabatt=0.29)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Saisonartikel', rabatt=0.29)
+rabatt_setzen_by_lieferant(conn, lieferant='Zotter', prod_gr='Süßwaren und Snacks', rabatt=0.29)
+rabatt_setzen_by_lieferant(conn, lieferant='Zotter', prod_gr='Saisonartikel', rabatt=0.29)
 ### KHW dwp
 rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Kunsthandwerk', rabatt=0.40)
+
 
 ### Libera Terra
 rabatt_setzen_by_lieferant(conn, lieferant='Libera Terra', prod_gr='Lebensmittel', rabatt=0.33)
 rabatt_setzen_by_lieferant(conn, lieferant='Libera Terra', prod_gr='Getränke', rabatt=0.33)
 
+
 ### ctm
 rabatt_setzen_by_lieferant(conn, lieferant='CTM', prod_gr='Lebensmittel', rabatt=0.23)
 rabatt_setzen_by_lieferant(conn, lieferant='CTM', prod_gr='Getränke', rabatt=0.23)
 
+
 ### eth
 rabatt_setzen_by_lieferant(conn, lieferant='Ethiquable', prod_gr='Lebensmittel', rabatt=0.23)
 rabatt_setzen_by_lieferant(conn, lieferant='Ethiquable', prod_gr='Getränke', rabatt=0.23)
+
 
 ### LM fairkauf
 rabatt_setzen_by_lieferant(conn, lieferant='Fairkauf', prod_gr='Lebensmittel', rabatt=0.23)
@@ -234,30 +244,56 @@ rabatt_setzen_by_lieferant(conn, lieferant='Fairkauf', prod_gr='Getränke', raba
 ### KHW fairkauf
 rabatt_setzen_by_lieferant(conn, lieferant='Fairkauf', prod_gr='Kunsthandwerk', rabatt=0.35)
 
+
 ### KHW Globo
 rabatt_setzen_by_lieferant(conn, lieferant='Globo', prod_gr='Kunsthandwerk', rabatt=0.32)
 
+
 ### KHW ftc
 rabatt_setzen_by_lieferant(conn, lieferant='Fairtrade Center Breisgau', prod_gr='Kunsthandwerk', rabatt=0.40)
+
 
 ### LM Hans Pfeffer
 rabatt_setzen_by_lieferant(conn, lieferant='Bannmühle', prod_gr='Getränke', rabatt=0.23)
 rabatt_setzen_by_lieferant(conn, lieferant='Bannmühle/dwp', prod_gr='Getränke', rabatt=0.23)
 
-### Café Libertad
-rabatt_setzen_by_lieferant(conn, lieferant='Café Libertad', prod_gr='Kaffeeprodukte', rabatt=0.17)
 
 ### Café Libertad
 rabatt_setzen_by_lieferant(conn, lieferant='Café Libertad', prod_gr='Kaffeeprodukte', rabatt=0.17)
+
+
+### cafe chavalo
+rabatt_setzen_by_lieferant(conn, lieferant='Café Chavalo', prod_gr='Kaffeeprodukte', rabatt=0.10)
+
+
+### Zubehör faire/sonst. --> unklar, ob es da was gibt, wäre 35 %
+
+# Zubehör fehlt noch: Wein-Geschenkkarton (für 2 oder 3 Flaschen) und Holz-Präsentbox "Centopassi" --> beim FHZ nachgefragt
+
+
+### Zubehör gepa
+rabatt_setzen_by_name(conn, lieferant='GEPA/and.', name='%tee%',
+        prod_gr='Ergänzungsprodukte', rabatt=0.32)
+rabatt_setzen_by_name(conn, lieferant='GEPA/and.', name='%kaffee%',
+        prod_gr='Ergänzungsprodukte', rabatt=0.32)
+rabatt_setzen_by_name(conn, lieferant='unbekannt', name='%tee%',
+        prod_gr='Ergänzungsprodukte', rabatt=0.32)
+rabatt_setzen_by_name(conn, lieferant='unbekannt', name='%kaffee%',
+        prod_gr='Ergänzungsprodukte', rabatt=0.32)
+
+
+### Tragetasche sollte zu Ergänzungsprodukte, oder?
+rabatt_setzen_by_name(conn, lieferant='EP', name='%Papiertragetasche%',
+        prod_gr='Sonstiges Kunsthandwerk', rabatt=0.00)
+rabatt_setzen_by_name(conn, lieferant='EP', name='%Papiertragetasche%',
+        prod_gr='Ergänzungsprodukte', rabatt=0.00)
+### Dieser Artikel ist noch nicht in der Datenbank, sollte aber rein für einfacheres Bestellen
+rabatt_setzen_by_name(conn, lieferant='GEPA', name='%Gutschein%',
+        prod_gr='Ergänzungsprodukte', rabatt=0.00)
+
+
+### Bücher
+rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Bücher', rabatt=0.15)
+
 
 conn.close()
-
-'''
-Klären:
-* GEPA: Was ist Kaffee1, was Kaffee2?
-* Bücher und Tonträger: Buch evtl. EP, Tonträger nur Putumayo, also nicht für uns
-* Zubehör: faire/sonst. und gepa Teefilter oder Kaffeefilter = Zubehör, Tüten und Gutscheine keinRabatt
-* JFS
-* cafe chavalo (nur 1 Produkt)
-* Abgrenzung LM1/LM2
-'''
