@@ -7,8 +7,8 @@
     "Zurück"
 3.) In Weltladenkasse -> Artikelliste auf "Getränke" klicken
 4.) Auf "Artikel exportieren" klicken, speichern als "XYZ_Getränke.ods"
-5.) Beide ods-Dateien öffnen, in Getränke alles markieren, kopieren, unter
-    Lebensmittel einfügen
+5.) Beide ods-Dateien öffnen, in Getränke alles außer erste Zeile markieren,
+    kopieren, unter Lebensmittel einfügen
 6.) Alle Artikel mit "SONSTIGES" in Artikelnummer löschen, Ergebnis speichern als "XYZ_LM.ods"
 7.) "File -> Save As" und als csv-Datei exportieren.
     WICHTIG: Als Separator/Delimiter ';' auswählen!
@@ -246,6 +246,7 @@ def main():
 
     # homogenize Lieferanten:
     print('\n\n\n')
+    print('Lieferanten-Vergleich:')
     print("WLB:", sorted(set(map(lambda i: i[0], wlb.index))))
     print("FHZ:", set(map(lambda i: i[0], fhz.index)))
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Bannmühle', i[1])
@@ -267,8 +268,8 @@ def main():
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('EP', convert_art_number_ep(i[1]))
         if i[0] == 'EP' else i, fhz.index.tolist())), names=fhz.index.names)
     # dwp:
-    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('EP', convert_art_number_dwp(i[1]))
-        if i[0] == 'EP' else i, fhz.index.tolist())), names=fhz.index.names)
+    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('dwp', convert_art_number_dwp(i[1]))
+        if i[0] == 'dwp' else i, fhz.index.tolist())), names=fhz.index.names)
 
 
     #################################################
@@ -335,22 +336,22 @@ def main():
             # adopt VPE
             if fhz_row['VPE'] != wlb_row['VPE']:
                 wlb_neu.loc[name, 'VPE'] = fhz_row['VPE']
-                print("Ändere VPE für %s von %s (WLB) zu %s (FHZ)" % (name,
-                        wlb_row['VPE'], fhz_row['VPE']))
+                print("Ändere VPE für %s (%s) von %s (WLB) zu %s (FHZ)" % (name,
+                    wlb_row['Bezeichnung | Einheit'], wlb_row['VPE'], fhz_row['VPE']))
                 sth_printed = True
 
             # adopt Menge
             if float(fhz_row['Menge (kg/l/St.)']) != float(wlb_row['Menge (kg/l/St.)']):
                 wlb_neu.loc[name, 'Menge (kg/l/St.)'] = fhz_row['Menge (kg/l/St.)']
-                print("Ändere Menge für %s von %s (WLB) zu %s (FHZ)" % (name,
-                        wlb_row['Menge (kg/l/St.)'], fhz_row['Menge (kg/l/St.)']))
+                print("Ändere Menge für %s (%s) von %s (WLB) zu %s (FHZ)" % (name,
+                        wlb_row['Bezeichnung | Einheit'], wlb_row['Menge (kg/l/St.)'], fhz_row['Menge (kg/l/St.)']))
                 sth_printed = True
 
             # adopt Einheit
             if fhz_row['Einheit'] != wlb_row['Einheit']:
                 wlb_neu.loc[name, 'Einheit'] = fhz_row['Einheit']
-                print("Ändere Einheit für %s von %s (WLB) zu %s (FHZ)" % (name,
-                        wlb_row['Einheit'], fhz_row['Einheit']))
+                print("Ändere Einheit für %s (%s) von %s (WLB) zu %s (FHZ)" % (name,
+                        wlb_row['Bezeichnung | Einheit'], wlb_row['Einheit'], fhz_row['Einheit']))
                 sth_printed = True
         except KeyError:
             pass
