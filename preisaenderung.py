@@ -11,7 +11,7 @@
     kopieren, unter Lebensmittel einfügen
 6.) Alle Artikel mit "SONSTIGES" in Artikelnummer löschen, Ergebnis speichern als "XYZ_LM.ods"
 7.) "File -> Save As" und als csv-Datei exportieren.
-    WICHTIG: Als Separator/Delimiter ';' auswählen!
+    WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
 8.) Neue FHZ-Preisliste öffnen, 'File -> Save As' als "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX.ods"
     * Wir benötigen Spalten C bis L, diese Spalten markieren, kopieren und in
         leeres Dokument einfügen mit Ctrl-v (Formatierung wird gelöscht)
@@ -42,7 +42,7 @@
       Save as blabla, cat in terminal and copy and paste in LibreOffice
     * Spalte "Menge": Markieren, "Format Cells", 5 decimal places
 9.) "File -> Save As" und als csv-Datei exportieren.
-    WICHTIG: Als Separator/Delimiter ';' auswählen!
+    WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
 10.) Dieses Skript aufrufen mit --fhz FHZ_XYZ.csv --wlb XYZ_LM.csv
 11.) Ergebnisse werden gespeichert in Dateien:
     * "preisänderung.csv" (alle Artikel, aktualisiert)
@@ -50,21 +50,30 @@
     * "preisänderung_geänderte_preise_sortiment.csv" (alle Sortimentsartikel, deren Preis sich verändert hat)
     * "preisänderung_geänderte_preise_sortiment_alle_felder.csv" (wie oben, für Import in LibreOffice zum besseren Erkennen der Artikel von Hand)
     * "preisänderung_neue_artikel.csv" (alle neuen Artikel)
-12.) "preisänderung.csv" mit LibreOffice öffnen, Semicolon als Separator.  Hier
-    gibt es ein Problem, nämlich dass Artikelnummern, die mit "0" beginnen ihre
-    führenden Nullen verlieren. Daher: Die Spalte "Artikelnr." anklicken und Typ
-    auf "Text" setzen (https://www.youtube.com/watch?v=TrVbvKzLhgs). Als ods-Datei
-    speichern (Save a copy, "_NEU.ods").
-13.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
+12.) "preisänderung.csv" mit LibreOffice öffnen:
+    * Separated by: Semicolon
+    * Text Delimiter: '"'!
+    * Problem 1:
+        nämlich dass Artikelnummern, die mit "0" beginnen ihre führenden Nullen
+        verlieren.
+        Daher: Die Spalte "Artikelnr." anklicken und Typ auf "Text" setzen
+            (https://www.youtube.com/watch?v=TrVbvKzLhgs).
+    * Problem 2:
+        nämlich dass dreistellige Mengenangaben wie "0.126 kg" zu "126 kg"
+        werden.
+        Daher: Die Spalte "Menge (kg/l/St.)" anklicken und Typ auf "Text"
+            setzen.
+13.) Als ods-Datei speichern (Save a copy, "_NEU.ods").
+14.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
     die Datei "_NEU.ods" auswählen.
-14.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
+15.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
     "preisänderung_geänderte_preise_sortiment.csv" auswählen.
-15.) Die Datei "preisänderung_neue_artikel.csv" mit LibreOffice öffnen,
+16.) Die Datei "preisänderung_neue_artikel.csv" mit LibreOffice öffnen,
     Semicolon als Separator. Auch hier wieder: Die Spalte "Artikelnr." anklicken und Typ
     auf "Text" setzen.
-16.) Für jeden neuen Artikel eine existierende Produktgruppe wählen und in die
+17.) Für jeden neuen Artikel eine existierende Produktgruppe wählen und in die
     entspr. Spalte eintragen. Speichern als "preisänderung_neue_artikel.ods".
-17.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
+18.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
     die Datei "preisänderung_neue_artikel.ods" auswählen.
 '''
 
