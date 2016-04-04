@@ -75,7 +75,7 @@ public class ArtikelNeu extends WindowContent
         colorMatrix = new Vector< Vector<Color> >();
     }
 
-    public void showTable(JPanel allPanel) {
+    public void showTable(JPanel panel) {
         myTable = new AnyJComponentJTable(data, columnLabels){ // subclass the JTable to set font properties
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component c = super.prepareRenderer(renderer, row, column);
@@ -88,13 +88,14 @@ public class ArtikelNeu extends WindowContent
         };
         setTableProperties(myTable);
 
-	tablePanel = new JPanel();
-	tablePanel.setLayout(new BoxLayout(tablePanel, BoxLayout.Y_AXIS));
+	tablePanel = new JPanel(new BorderLayout());
 	tablePanel.setBorder(BorderFactory.createTitledBorder("Neue Artikel"));
-            JScrollPane scrollPane = new JScrollPane(myTable);
-            tablePanel.add(scrollPane);
+        JScrollPane scrollPane = new JScrollPane(myTable);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        myTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
 
-	allPanel.add(tablePanel);
+        panel.add(tablePanel);
     }
 
     private void setTableProperties(JTable table) {
@@ -179,10 +180,10 @@ public class ArtikelNeu extends WindowContent
         return 0;
     }
 
-    public void updateTable(JPanel allPanel) {
-        allPanel.remove(tablePanel);
-        allPanel.revalidate();
-        showTable(allPanel);
+    public void updateTable(JPanel panel) {
+        panel.remove(tablePanel);
+        panel.revalidate();
+        showTable(panel);
     }
 
     // will data be lost on close?

@@ -39,6 +39,8 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
     protected ArtikelNeu artikelNeu;
     protected UpdateTableFunctor utf;
 
+    private HashMap<Vector<Object>, Vector<String>> allArticles;
+
     private JButton fileButton;
     private JProgressBar progressBar;
     private Task readInTask;
@@ -61,8 +63,9 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
     private final String logStringEnd = "</body>\n</html>";
     private JEditorPane log;
     private final Dimension minLogDimension = new Dimension(400,100);
-    private final Dimension prefLogDimension = new Dimension(600,200);
+    private final Dimension prefLogDimension = new Dimension(800,200);
 
+    private JPanel tablePanel;
     private JSplitPane splitPane;
 
     protected JButton submitButton;
@@ -77,8 +80,8 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
 
         utf = new UpdateTableFunctor() {
             public void updateTable() {
-                artikelNeu.updateTable(allPanel);
-                splitPane.setBottomComponent(artikelNeu.tablePanel);
+                artikelNeu.updateTable(tablePanel);
+                //splitPane.setBottomComponent(tablePanel);
             }
         };
         artikelNeu = new ArtikelNeu(conn, mw, utf);
@@ -122,18 +125,19 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         //logScrollPane.setPreferredSize(prefLogDimension);
         headerPanel.add(logScrollPane);
 
-        allPanel.add(headerPanel);
+        allPanel.add(headerPanel, BorderLayout.NORTH);
     }
 
     protected void showMiddle() {
-        artikelNeu.showTable(allPanel);
+        tablePanel = new JPanel();
+        artikelNeu.showTable(tablePanel);
 
-        //splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-        //        headerPanel,
-        //        artikelNeu.tablePanel);
-        //splitPane.setOneTouchExpandable(true);
-        //splitPane.setResizeWeight(0.3);
-        //allPanel.add(splitPane);
+        splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+                headerPanel,
+                tablePanel);
+        splitPane.setOneTouchExpandable(true);
+        splitPane.setResizeWeight(0.3);
+        allPanel.add(splitPane, BorderLayout.CENTER);
     }
 
     protected void showFooter() {
@@ -165,7 +169,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             closeButton.setEnabled(false);
         }
         footerPanel.add(closeButton);
-        allPanel.add(footerPanel);
+        allPanel.add(footerPanel, BorderLayout.SOUTH);
     }
 
     // will data be lost on close?
@@ -207,44 +211,51 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         return gruppenid;
     }
 
-    private Vector<String> queryAllFields(Integer lieferant_id, String artikelnummer) {
-        Vector<String> results = new Vector<String>();
+    private void loadAllArticles() {
+        allArticles = new HashMap<Vector<Object>, Vector<String>>();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT produktgruppen_id, artikel_name, kurzname, menge, einheit, "+
-                    "sortiment, lieferbar, beliebtheit, "+
-                    "barcode, vpe, setgroesse, vk_preis, empf_vk_preis, ek_rabatt, ek_preis, variabler_preis, "+
-                    "herkunft, bestand " +
+                    "SELECT lieferant_id, artikel_nr, produktgruppen_id, "+
+                    "artikel_name, kurzname, menge, einheit, sortiment, "+
+                    "lieferbar, beliebtheit, barcode, vpe, setgroesse, "+
+                    "vk_preis, empf_vk_preis, ek_rabatt, ek_preis, "+
+                    "variabler_preis, herkunft, bestand "+
                     "FROM artikel "+
-                    "WHERE lieferant_id = ? AND artikel_nr = ? AND aktiv = TRUE"
+                    "WHERE aktiv = TRUE"
                     );
-            pstmt.setInt(1, lieferant_id);
-            pstmt.setString(2, artikelnummer);
             ResultSet rs = pstmt.executeQuery();
-            rs.next();
-            results.add(rs.getString(1)); // produktgruppen_id
-            results.add(rs.getString(2)); // artikel_name
-            results.add(rs.getString(3) == null ? "" : rs.getString(3)); // kurzname
-            results.add(rs.getString(4) == null ? "" : rs.getString(4)); // menge
-            results.add(rs.getString(5) == null ? "" : rs.getString(5)); // einheit
-            results.add(rs.getString(6));                               // sortiment
-            results.add(rs.getString(7) == null ? "" : rs.getString(7)); // lieferbar
-            results.add(rs.getString(8) == null ? "" : rs.getString(8)); // beliebtheit
-            results.add(rs.getString(9) == null ? "" : rs.getString(9)); // barcode
-            results.add(rs.getString(10) == null ? "" : rs.getString(10)); // vpe
-            results.add(rs.getString(11) == null ? "" : rs.getString(11)); // setgroesse
-            results.add(rs.getString(12) == null ? "" : rs.getString(12)); // vk_preis
-            results.add(rs.getString(13) == null ? "" : rs.getString(13)); // empf_vk_preis
-            results.add(rs.getString(14) == null ? "" : bc.vatFormatter(rs.getString(14))); // ek_rabatt
-            results.add(rs.getString(15) == null ? "" : rs.getString(15)); // ek_preis
-            results.add(rs.getString(16));                               // variabler_preis
-            results.add(rs.getString(17) == null ? "" : rs.getString(17)); // herkunft
-            results.add(rs.getString(18) == null ? "" : rs.getString(18)); // bestand
-            // edit menge:
-            try {
-                results.set(3, new BigDecimal(results.get(3)).stripTrailingZeros().toPlainString());
-            } catch (NumberFormatException ex) {
-                results.set(3, "");
+            while (rs.next()) {
+                Vector<Object> key = new Vector<Object>();
+                key.add(rs.getInt(1)); // lieferant_id
+                key.add(rs.getString(2)); // artikel_nr
+
+                Vector<String> value = new Vector<String>();
+                value.add(rs.getString(3)); // produktgruppen_id
+                value.add(rs.getString(4)); // artikel_name
+                value.add(rs.getString(5) == null ? "" : rs.getString(5)); // kurzname
+                value.add(rs.getString(6) == null ? "" : rs.getString(6)); // menge
+                value.add(rs.getString(7) == null ? "" : rs.getString(7)); // einheit
+                value.add(rs.getString(8));                               // sortiment
+                value.add(rs.getString(9) == null ? "" : rs.getString(9)); // lieferbar
+                value.add(rs.getString(10) == null ? "" : rs.getString(10)); // beliebtheit
+                value.add(rs.getString(11) == null ? "" : rs.getString(11)); // barcode
+                value.add(rs.getString(12) == null ? "" : rs.getString(12)); // vpe
+                value.add(rs.getString(13) == null ? "" : rs.getString(13)); // setgroesse
+                value.add(rs.getString(14) == null ? "" : rs.getString(14)); // vk_preis
+                value.add(rs.getString(15) == null ? "" : rs.getString(15)); // empf_vk_preis
+                value.add(rs.getString(16) == null ? "" : bc.vatFormatter(rs.getString(16))); // ek_rabatt
+                value.add(rs.getString(17) == null ? "" : rs.getString(17)); // ek_preis
+                value.add(rs.getString(18));                               // variabler_preis
+                value.add(rs.getString(19) == null ? "" : rs.getString(19)); // herkunft
+                value.add(rs.getString(20) == null ? "" : rs.getString(20)); // bestand
+                // edit menge:
+                try {
+                    value.set(5, new BigDecimal(value.get(5)).stripTrailingZeros().toPlainString());
+                } catch (NumberFormatException ex) {
+                    value.set(5, "");
+                }
+
+                allArticles.put(key, value);
             }
             rs.close();
             pstmt.close();
@@ -252,7 +263,14 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
-        return results;
+    }
+
+    private Vector<String> lookupAllFields(Integer lieferant_id, String artikelnummer) {
+        Vector<Object> key = new Vector<Object>();
+        key.add(lieferant_id);
+        key.add(artikelnummer);
+        Vector<String> value = allArticles.get(key);
+        return value;
     }
 
     boolean boolStringInvalid(String boolStr) {
@@ -520,7 +538,8 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         int itemAlreadyKnown = checkIfArticleAlreadyKnown(lieferant_id, nummer);
         if (itemAlreadyKnown == 1){ // item already in db
             // compare every field:
-            Vector<String> allFields = queryAllFields(lieferant_id, nummer);
+            //Vector<String> allFields = queryAllFields(lieferant_id, nummer);
+            Vector<String> allFields = lookupAllFields(lieferant_id, nummer);
 
             colors.add( gruppenid.equals(allFields.get(0)) ? Color.black : Color.red ); // produktgruppe
             colors.add(Color.black); // lieferant
@@ -619,6 +638,8 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
          */
         @Override
         public Void doInBackground() {
+            // load all active articles in DB into memory
+            loadAllArticles();
             int emptyLineCount = 0;
             int size = sheet.getRowCount();
             //Initialize progress property.

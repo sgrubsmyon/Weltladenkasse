@@ -40,8 +40,7 @@ public abstract class DialogWindow extends WindowContent {
     protected abstract void showFooter();
 
     protected void showAll() {
-	allPanel = new JPanel();
-	allPanel.setLayout(new BoxLayout(allPanel, BoxLayout.Y_AXIS));
+        allPanel = new JPanel(new BorderLayout());
 
         showHeader();
         showMiddle();
