@@ -88,14 +88,12 @@ public class ArtikelNeu extends WindowContent
         };
         setTableProperties(myTable);
 
-	tablePanel = new JPanel(new BorderLayout());
-	tablePanel.setBorder(BorderFactory.createTitledBorder("Neue Artikel"));
         JScrollPane scrollPane = new JScrollPane(myTable);
+	scrollPane.setBorder(BorderFactory.createTitledBorder("Neue Artikel"));
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         myTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        tablePanel.add(scrollPane, BorderLayout.CENTER);
 
-        panel.add(tablePanel);
+        panel.add(scrollPane);
     }
 
     private void setTableProperties(JTable table) {

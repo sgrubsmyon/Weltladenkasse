@@ -38,10 +38,6 @@ public class LieferantNeuEingeben extends DialogWindow
     protected JButton deleteButton;
     protected Lieferantliste lieferantListe;
 
-    protected JPanel allPanel;
-    protected JPanel headerPanel;
-    protected JPanel footerPanel;
-
     private JTextField lieferantNameField;
     private JTextField lieferantKurznameField;
 
@@ -50,16 +46,6 @@ public class LieferantNeuEingeben extends DialogWindow
 	super(conn, mw, dia);
         this.lieferantListe = pw;
         showAll();
-    }
-
-    protected void showAll() {
-	allPanel = new JPanel();
-	allPanel.setLayout(new BoxLayout(allPanel, BoxLayout.Y_AXIS));
-
-        showHeader();
-        showFooter();
-
-	this.add(allPanel, BorderLayout.CENTER);
     }
 
     protected void showHeader() {
@@ -75,7 +61,7 @@ public class LieferantNeuEingeben extends DialogWindow
         JPanel kurznamePanel = new JPanel();
         kurznamePanel.setBorder(BorderFactory.createTitledBorder("Kurzname (bis 10 Zeichen)"));
         lieferantKurznameField = new JTextField("");
-        lieferantKurznameField.setColumns(15);
+        lieferantKurznameField.setColumns(20);
         ((AbstractDocument)lieferantKurznameField.getDocument()).setDocumentFilter(bc.einheitFilter);
         kurznamePanel.add(lieferantKurznameField);
         headerPanel.add(kurznamePanel);
@@ -94,7 +80,7 @@ public class LieferantNeuEingeben extends DialogWindow
         lieferantNameField.addKeyListener(enterAdapter);
         lieferantKurznameField.getDocument().addDocumentListener(this);
         lieferantKurznameField.addKeyListener(enterAdapter);
-        allPanel.add(headerPanel);
+        allPanel.add(headerPanel, BorderLayout.NORTH);
     }
 
     protected void showMiddle() { }
@@ -116,7 +102,7 @@ public class LieferantNeuEingeben extends DialogWindow
         closeButton.addActionListener(this);
         closeButton.setEnabled(true);
         footerPanel.add(closeButton);
-        allPanel.add(footerPanel);
+        allPanel.add(footerPanel, BorderLayout.SOUTH);
     }
 
     public boolean checkIfFormIsComplete() {

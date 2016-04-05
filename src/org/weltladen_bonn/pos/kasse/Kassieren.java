@@ -119,7 +119,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         emptyTable();
         showAll();
         clearAll();
-        asPanel.emptyBarcodeBox();
+        asPanel.emptyArtikelBox();
     }
 
     private void setupKeyboardShortcuts() {

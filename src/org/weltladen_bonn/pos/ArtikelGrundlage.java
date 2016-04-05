@@ -108,7 +108,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return artikelID;
     }
 
-    protected String[] getArticleName(int artikelID) {
+    public String[] getArticleName(int artikelID) {
         String artikelName = new String();
         String lieferant = new String();
         Boolean sortiment = false;
@@ -134,7 +134,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return new String[]{artikelName, lieferant, sortiment.toString()};
     }
 
-    protected String[] getArticleNumber(int artikelID) {
+    public String[] getArticleNumber(int artikelID) {
         String artikelNumber = new String();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
@@ -152,7 +152,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return new String[]{artikelNumber};
     }
 
-    protected String getShortName(int artikelID) {
+    public String getShortName(int artikelID) {
         String kurzname = new String();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
@@ -179,7 +179,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return kurzname;
     }
 
-    protected String getShortName(Artikel a) {
+    public String getShortName(Artikel a) {
         String kurzname = a.getKurzname();
         if ( kurzname == null || kurzname.equals("") ){
             kurzname = a.getName();
@@ -190,7 +190,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return kurzname;
     }
 
-    protected String getLieferantName(int artikelID) {
+    public String getLieferantName(int artikelID) {
         String lieferant = new String();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
@@ -210,7 +210,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return lieferant;
     }
 
-    protected String getShortLieferantName(int artikelID) {
+    public String getShortLieferantName(int artikelID) {
         String liefkurz = new String();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
@@ -239,7 +239,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return liefkurz;
     }
 
-    protected String getBarcode(int artikelID) {
+    public String getBarcode(int artikelID) {
         String barcode = new String();
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
@@ -257,7 +257,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return barcode;
     }
 
-    protected boolean getVariablePriceBool(int artikelID) {
+    public boolean getVariablePriceBool(int artikelID) {
         // is price variable for artikelID?
         boolean variabel = false;
         try {
@@ -275,7 +275,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return variabel;
     }
 
-    protected String getSalePrice(int artikelID) {
+    public String getSalePrice(int artikelID) {
         /** returns vk_preis from DB, this is price per article */
         String price = "";
         try {
@@ -293,7 +293,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return price;
     }
 
-    protected String getRecSalePrice(int artikelID) {
+    public String getRecSalePrice(int artikelID) {
         /** returns empf_vk_preis from DB, this is price per set */
         String price = "";
         try {
@@ -311,7 +311,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return price;
     }
 
-    protected String getVAT(int artikelID) {
+    public String getVAT(int artikelID) {
         // get VAT rate for artikelID
         String vat = "";
         try {
@@ -385,7 +385,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return new String[]{menge, preis, kg_preis};
     }
 
-    protected String getVPE(int artikelID) {
+    public String getVPE(int artikelID) {
         String vpe = "";
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
@@ -405,7 +405,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return vpe;
     }
 
-    protected int getSetSize(int artikelID) {
+    public int getSetSize(int artikelID) {
         // is price variable for artikelID?
         int setgroesse = 1;
         try {
@@ -423,7 +423,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return setgroesse;
     }
 
-    protected Boolean getSortimentBool(int artikelID) {
+    public Boolean getSortimentBool(int artikelID) {
         Boolean sortimentBool = false;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(

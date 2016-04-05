@@ -256,7 +256,7 @@ public class ProduktgruppeFormular extends WindowContent
         propertiesPanel.add(pfandPanel);
         headerPanel.add(propertiesPanel);
 
-        allPanel.add(headerPanel);
+        allPanel.add(headerPanel, BorderLayout.NORTH);
     }
 
     public boolean checkIfFormIsComplete() {

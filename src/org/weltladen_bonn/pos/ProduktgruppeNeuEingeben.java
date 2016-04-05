@@ -82,7 +82,7 @@ public class ProduktgruppeNeuEingeben extends DialogWindow
         closeButton.addActionListener(this);
         closeButton.setEnabled(true);
         footerPanel.add(closeButton);
-        allPanel.add(footerPanel);
+        allPanel.add(footerPanel, BorderLayout.SOUTH);
     }
 
     public void fillComboBoxes() {

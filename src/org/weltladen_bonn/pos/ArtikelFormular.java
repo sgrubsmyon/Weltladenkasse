@@ -320,7 +320,7 @@ public class ArtikelFormular extends WindowContent
         preisPanel.add(preisVariabelPanel);
         headerPanel.add(preisPanel);
 
-        allPanel.add(headerPanel);
+        allPanel.add(headerPanel, BorderLayout.NORTH);
     }
 
     public boolean checkIfFormIsComplete() {

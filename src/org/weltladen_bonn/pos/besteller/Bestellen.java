@@ -35,7 +35,7 @@ public class Bestellen extends BestellungsGrundlage implements
     private int selectedArticleID;
     private int selectedNumberOfVPEs = 1;
 
-    private ArticleSelectPanelBestellen asPanel;
+    protected ArticleSelectPanelBestellen asPanel;
     protected JSpinner anzahlSpinner;
     private JSpinner vpeSpinner;
     protected JFormattedTextField anzahlField;
@@ -98,7 +98,7 @@ public class Bestellen extends BestellungsGrundlage implements
         emptyTable();
 	showAll();
         doCSVBackupReadin();
-        asPanel.emptyBarcodeBox();
+        asPanel.emptyArtikelBox();
     }
 
     void preventSpinnerOverflow(JSpinner spinner) {
@@ -608,7 +608,7 @@ public class Bestellen extends BestellungsGrundlage implements
         }
         selTyp = newTyp;
         doCSVBackupReadin();
-        asPanel.emptyBarcodeBox();
+        //asPanel.emptyArtikelBox();
     }
 
 
@@ -724,7 +724,7 @@ public class Bestellen extends BestellungsGrundlage implements
         hinzufuegen(selectedArticleID, lieferant, artikelNummer, artikelName,
                 artikelPreis, vpe, stueck, beliebt, color);
         updateAll();
-        asPanel.emptyBarcodeBox();
+        asPanel.emptyArtikelBox();
 
         // save a CSV backup to hard disk
         doCSVBackup();
@@ -802,7 +802,7 @@ public class Bestellen extends BestellungsGrundlage implements
     private void verwerfen() {
         clearAll();
         updateAll();
-        asPanel.emptyBarcodeBox();
+        asPanel.emptyArtikelBox();
         // save a CSV backup to hard disk
         doCSVBackup();
     }
@@ -1032,7 +1032,7 @@ public class Bestellen extends BestellungsGrundlage implements
             }
 
             //updateAll();
-            //asPanel.emptyBarcodeBox();
+            //asPanel.emptyArtikelBox();
             updateTable();
 
             // save a CSV backup to hard disk

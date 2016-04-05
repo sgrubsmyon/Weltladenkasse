@@ -40,7 +40,6 @@ import org.weltladen_bonn.pos.*;
 public class RabattDialog extends DialogWindow implements ChangeListener, DocumentListener, ItemListener, ArticleSelectUser {
     // Attribute:
     protected final BigDecimal percent = new BigDecimal("0.01");
-    protected JPanel allPanel;
     protected Rabattaktionen rabattaktionen;
     protected OptionTabbedPane tabbedPane;
     protected SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -96,7 +95,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
     protected String bis;
     protected boolean unlimited;
     protected String artikelName;
-    protected String lieferant;
+    protected String liefID;
     protected String artikelNummer;
     protected Integer produktgruppenID;
     protected BigDecimal rabattAbsolut;
@@ -180,11 +179,10 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
     void queryPresetValues() {
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT r.aktionsname, r.von, r.bis, a.artikel_name, l.lieferant_name, a.artikel_nr, "+
+                    "SELECT r.aktionsname, r.von, r.bis, a.artikel_name, a.lieferant_id, a.artikel_nr, "+
                     "r.produktgruppen_id, r.rabatt_absolut, r.rabatt_relativ, "+
                     "r.mengenrabatt_schwelle, r.mengenrabatt_anzahl_kostenlos, r.mengenrabatt_relativ "+
                     "FROM rabattaktion AS r LEFT JOIN artikel AS a USING (artikel_id) "+
-                    "LEFT JOIN lieferant AS l USING (lieferant_id) "+
                     "WHERE r.rabatt_id = ?"
                     );
             pstmtSetInteger(pstmt, 1, this.presetRabattID);
@@ -196,7 +194,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                 if (this.bis.length() == 0) this.unlimited = true;
                 else this.unlimited = false;
                 this.artikelName = rs.getString(4) == null ? "" : rs.getString(4);
-                this.lieferant = rs.getString(5) == null ? "" : rs.getString(5);
+                this.liefID = rs.getString(5) == null ? "" : rs.getString(5);
                 this.artikelNummer = rs.getString(6) == null ? "" : rs.getString(6);
                 this.produktgruppenID = rs.getInt(7);
                 this.rabattAbsolut = rs.getBigDecimal(8);
@@ -223,7 +221,12 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         }
         if ( (!this.artikelName.equals("")) && (!this.artikelNummer.equals("")) ){ // Einzelprodukt
             produktModus = produktDropDownOptions[0];
-            artikelCard.artikelBox.setBox(new String[]{this.artikelName, this.lieferant});
+            String[] name = new String[]{this.artikelName,
+                this.rabattaktionen.getShortLieferantName(Integer.parseInt(this.liefID)),
+                this.rabattaktionen.getSalePrice(Integer.parseInt(this.liefID)),
+                this.rabattaktionen.getSortimentBool(Integer.parseInt(this.liefID)).toString(),
+                this.liefID};
+            artikelCard.artikelBox.setBox(name);
             artikelCard.nummerBox.setBox(new String[]{this.artikelNummer});
         } else if (!this.produktgruppenID.equals("")){ // Produktgruppe
             produktModus = produktDropDownOptions[1];
@@ -293,20 +296,13 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         rabattDropDown.setEnabled(false);
     }
 
-    protected void showHeader() { }
     protected void showMiddle() { }
-    protected void showFooter() { }
 
-    protected void showAll(){
-	allPanel = new JPanel();
-	allPanel.setLayout(new BoxLayout(allPanel, BoxLayout.Y_AXIS));
-
-	//allPanel.add(Box.createRigidArea(new Dimension(0,10))); // add empty space
-
-	JPanel rabattaktionPanel = new JPanel();
-	rabattaktionPanel.setLayout(new BoxLayout(rabattaktionPanel, BoxLayout.Y_AXIS));
-	rabattaktionPanel.setBorder(BorderFactory.createTitledBorder(borderTitle));
-	//
+    protected void showHeader(){
+        headerPanel = new JPanel();
+	headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
+	headerPanel.setBorder(BorderFactory.createTitledBorder(borderTitle));
+        //
         JPanel generalPanel = new JPanel();
             JPanel namePanel = new JPanel();
                 namePanel.setBorder(BorderFactory.createTitledBorder("Aktionsname"));
@@ -352,7 +348,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                 unlimitedCheckBox.setSelected(false);
                 bisPanel.add(unlimitedCheckBox);
             generalPanel.add(bisPanel);
-        rabattaktionPanel.add(generalPanel);
+        headerPanel.add(generalPanel);
         //
 	JPanel artikelPanel = new JPanel();
 	    artikelPanel.add(new JLabel("Wähle:"));
@@ -376,7 +372,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             produktCards.add(artikelCard, produktDropDownOptions[0]);
             produktCards.add(produktgruppenCard, produktDropDownOptions[1]);
             artikelPanel.add(produktCards);
-	rabattaktionPanel.add(artikelPanel);
+	headerPanel.add(artikelPanel);
         //
 	JPanel wertPanel = new JPanel();
 	    wertPanel.add(new JLabel("Wähle:"));
@@ -462,13 +458,22 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             rabattCards.add(einzelCard, rabattDropDownOptions[0]);
             rabattCards.add(mengenCard, rabattDropDownOptions[1]);
             wertPanel.add(rabattCards);
-	rabattaktionPanel.add(wertPanel);
-	    //
+	headerPanel.add(wertPanel);
+
+	allPanel.add(headerPanel, BorderLayout.NORTH);
+
+        if (this.editMode) setPresetValues();
+        if (this.enableOnlyNameAndBis) enableOnlyNameAndBis();
+    }
+
+    protected void showFooter() {
+        footerPanel = new JPanel();
+	footerPanel.setLayout(new BoxLayout(footerPanel, BoxLayout.Y_AXIS));
         if (this.editMode){
             JPanel statusPanel = new JPanel();
             editStatus = new JLabel("Keine Änderungen");
             statusPanel.add(editStatus);
-            rabattaktionPanel.add(statusPanel);
+            footerPanel.add(statusPanel);
         }
 	JPanel buttonPanel = new JPanel();
             if (!this.editMode){
@@ -486,14 +491,9 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             closeButton.setMnemonic(KeyEvent.VK_S);
 	    closeButton.addActionListener(this);
 	    buttonPanel.add(closeButton);
-	rabattaktionPanel.add(buttonPanel);
-	//
-	allPanel.add(rabattaktionPanel);
+	footerPanel.add(buttonPanel);
 
-        if (this.editMode) setPresetValues();
-        if (this.enableOnlyNameAndBis) enableOnlyNameAndBis();
-
-	this.add(allPanel, BorderLayout.CENTER);
+        allPanel.add(footerPanel, BorderLayout.SOUTH);
     }
 
     protected void updateAll(){
@@ -505,7 +505,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
 
     protected Object[] retrieveValuesFromForm() {
         String aktname = null, von = null, bis = null,
-               artName = null, lieferant = null, artNummer = null;
+               artName = null, liefID = null, artNummer = null;
         Integer artikelID = null, prodGrID = null;
         BigDecimal absolutValue = null, relativValue = null;
         Integer schwelle = null, mengeKostenlos = null;
@@ -540,9 +540,10 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
 
         if (produktModus == produktDropDownOptions[0]){ // Einzelprodukt
             artName = artNameValue()[0];
-            lieferant = artNameValue()[1];
+            liefID = artNameValue()[1];
             artNummer = artNummerValue();
-            artikelID = this.rabattaktionen.getArticleID(lieferant, artNummer); // get the internal artikelID from the DB
+            System.out.println("getting id for name, liefID, nummer "+artName+" "+liefID+" "+artNummer);
+            artikelID = this.rabattaktionen.getArticleID(Integer.parseInt(liefID), artNummer); // get the internal artikelID from the DB
         }
 
         if (produktModus == produktDropDownOptions[1]){ // Produktgruppe
@@ -550,7 +551,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         }
 
         return new Object[]{aktname, von, bis,
-            artName, lieferant, artNummer,
+            artName, liefID, artNummer,
             artikelID, prodGrID,
             absolutValue, relativValue,
             schwelle, mengeKostenlos, mengeRel};
@@ -562,7 +563,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         String von = (String)values[1];
         String bis = (String)values[2];
         String artName = (String)values[3];
-        String lieferant = (String)values[4];
+        String liefID = (String)values[4];
         String artNummer = (String)values[5];
         Integer artikelID = (Integer)values[6];
         Integer prodGrID = (Integer)values[7];
@@ -583,7 +584,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                 "prodGrID: " + prodGrID + "\n" +
                 "artikelID: " + artikelID + "\n" +
                 "artName: " + artName + "\n" +
-                "lieferant: " + lieferant + "\n" +
+                "liefID: " + liefID + "\n" +
                 "artNummer: " + artNummer);
         int answer = JOptionPane.showConfirmDialog(this,
                 "Rabattaktion \""+aktname+"\" in Datenbank eingeben?",
@@ -640,7 +641,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         String von = (String)values[1];
         String bis = (String)values[2];
         String artName = (String)values[3];
-        String lieferant = (String)values[4];
+        String liefID = (String)values[4];
         String artNummer = (String)values[5];
         Integer artikelID = (Integer)values[6];
         Integer prodGrID = (Integer)values[7];
@@ -938,9 +939,13 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
 
     void checkIfChangesCanBeSaved() {
         // are conditions fulfilled?
-        if (!areThereChanges()) editStatus.setText("Keine Änderungen");
-        else if (areThereChanges() && !isFormComplete()) editStatus.setText("Änderungen, aber unvollständig");
-        else if (areThereChanges() && isFormComplete()) editStatus.setText("Änderungen vorgenommen");
+        if (!areThereChanges()){ 
+            editStatus.setText("Keine Änderungen");
+        } else if (areThereChanges() && !isFormComplete()){ 
+            editStatus.setText("Änderungen, aber unvollständig");
+        } else if (areThereChanges() && isFormComplete()){
+            editStatus.setText("Änderungen vorgenommen");
+        }
         editButton.setEnabled(areThereChanges() && isFormComplete());
     }
 

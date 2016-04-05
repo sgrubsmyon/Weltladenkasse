@@ -53,6 +53,8 @@ public class TabbedPane extends TabbedPaneGrundlage {
         tabbedPane.addTab("DB Import/Export", null, myDump, "Datenbank exportieren/importieren");
 
         this.add(tabbedPane, BorderLayout.CENTER);
+
+        myBestellen.asPanel.emptyArtikelBox();
     }
 
     public Artikelliste getArtikelliste() {
