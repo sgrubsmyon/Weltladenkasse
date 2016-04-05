@@ -174,6 +174,26 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         return artikelNeu.checkIfArticleAlreadyKnown(lieferant_id, nummer);
     }
 
+    public int checkIfArticleAlreadyKnown(Integer lieferant_id, String lieferant, String artikelnummer) {
+        int exists = 0;
+        Vector<Object> key = new Vector<Object>();
+        key.add(lieferant_id);
+        key.add(artikelnummer);
+        if ( allArticles.containsKey(key) ){
+            exists = 1;
+        }
+        // always look into table, too
+        for (int i=0; i<artikelNeu.data.size(); i++){
+            String tableLieferant = artikelNeu.data.get(i).get(1).toString();
+            String tableNummer = artikelNeu.data.get(i).get(2).toString();
+            if (tableLieferant.equals(lieferant) && tableNummer.equals(artikelnummer)){
+                exists = 2; // item already in table
+                break;
+            }
+        }
+        return exists;
+    }
+
     public int submit() {
         return artikelNeu.submit();
     }
@@ -528,10 +548,9 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         herkunft = newArticle.getHerkunft();
 
         Vector<Color> colors = new Vector<Color>();
-        int itemAlreadyKnown = checkIfArticleAlreadyKnown(lieferant_id, nummer);
+        int itemAlreadyKnown = checkIfArticleAlreadyKnown(lieferant_id, lieferant, nummer);
         if (itemAlreadyKnown == 1){ // item already in db
             // compare every field:
-            //Vector<String> allFields = queryAllFields(lieferant_id, nummer);
             Vector<String> allFields = lookupAllFields(lieferant_id, nummer);
 
             colors.add( gruppenid.equals(allFields.get(0)) ? Color.black : Color.red ); // produktgruppe
@@ -571,7 +590,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         for (int i=0; i<colors.size(); i++){
             if (colors.get(i) == Color.red){
                 itemChanged = true;
-                System.out.println("Row "+lineCount+", Change in column "+i);
+                System.out.println("Row "+lineCount+" ("+name+"), Change in column "+i);
                 //break;
             }
         }
