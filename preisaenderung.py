@@ -296,6 +296,7 @@ def main():
         fhz_preis = Decimal(fhz_row['Empf. VK-Preis'])
         name = fhz_row.name
         sth_printed = False
+        price_changed = False
         try:
             wlb_row = wlb_neu.loc[name]
             # adopt the rec. sale price and the "Lieferbarkeit" directly and completely
@@ -338,6 +339,7 @@ def main():
                         sth_printed = True
                     wlb_neu.loc[name, 'VK-Preis'] = str(fhz_preis)
                     geaenderte_preise = geaenderte_preise.append(wlb_neu.loc[name])
+                    price_changed = True
 
             #### adopt the article name
             ###wlb_neu.loc[name, 'Bezeichnung | Einheit'] = fhz_row['Bezeichnung | Einheit']
@@ -355,6 +357,9 @@ def main():
                 print("Ändere Menge für %s (%s) von %s (WLB) zu %s (FHZ)" % (name,
                         wlb_row['Bezeichnung | Einheit'], wlb_row['Menge (kg/l/St.)'], fhz_row['Menge (kg/l/St.)']))
                 sth_printed = True
+                if not price_changed:
+                    geaenderte_preise = geaenderte_preise.append(wlb_neu.loc[name])
+                    price_changed = True
 
             # adopt Einheit
             if fhz_row['Einheit'] != wlb_row['Einheit']:
