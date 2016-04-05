@@ -60,7 +60,7 @@ public class TabbedPane extends TabbedPaneGrundlage implements ChangeListener {
 
         this.add(tabbedPane, BorderLayout.CENTER);
 
-        myKassieren.asPanel.artikelBox.requestFocus();
+        myKassieren.asPanel.emptyArtikelBox();
     }
 
     public Artikelliste getArtikelliste() {

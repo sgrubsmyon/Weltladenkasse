@@ -142,7 +142,7 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
         wasTunText.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
         headerPanel.add(wasTunText);
 
-        allPanel.add(headerPanel);
+        allPanel.add(headerPanel, BorderLayout.NORTH);
     }
 
     protected void showMiddle() {
@@ -182,7 +182,7 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
         //System.out.println("timeSpinner getValue: "+timeSpinner.getValue());
         //System.out.println("timeSpinner getStart: "+timeModel.getStart());
         //System.out.println("timeSpinner getEnd: "+timeModel.getEnd());
-        allPanel.add(middlePanel);
+        allPanel.add(middlePanel, BorderLayout.CENTER);
     }
 
     protected void showFooter() {
@@ -198,7 +198,7 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
         cancelButton.setMnemonic(KeyEvent.VK_A);
         cancelButton.addActionListener(this);
         footerPanel.add(cancelButton);
-        allPanel.add(footerPanel);
+        allPanel.add(footerPanel, BorderLayout.SOUTH);
     }
 
     void setStartTime(Date minTime) {

@@ -363,7 +363,7 @@ public class ArtikelNeuEingeben extends DialogWindow
             closeButton.setEnabled(false);
         }
         footerPanel.add(closeButton);
-        allPanel.add(footerPanel);
+        allPanel.add(footerPanel, BorderLayout.SOUTH);
     }
 
     protected void setOriginalValues(Artikel origArticle) {

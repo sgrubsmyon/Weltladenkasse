@@ -90,27 +90,25 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
     }
 
     protected void showHeader() {
-        headerPanel = new JPanel();
-	headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
-        //headerPanel.setMinimumSize(minLogDimension);
-        //headerPanel.setPreferredSize(prefLogDimension);
-
         odsChooser = new JFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "ODS Spreadsheet-Dokumente", "ods");
         odsChooser.setFileFilter(filter);
 
-        JPanel fileButtonPanel = new JPanel();
+        headerPanel = new JPanel();
         fileButton = new JButton("Datei auswählen");
         fileButton.setMnemonic(KeyEvent.VK_D);
 	fileButton.addActionListener(this);
 	//fileButton.setEnabled(artikelNeu.data.size()==0);
-        fileButtonPanel.add(fileButton);
+        headerPanel.add(fileButton);
         progressBar = new JProgressBar();
         progressBar.setStringPainted(true);
-        fileButtonPanel.add(progressBar);
-        headerPanel.add(fileButtonPanel);
+        headerPanel.add(progressBar);
 
+        allPanel.add(headerPanel, BorderLayout.NORTH);
+    }
+
+    protected void showMiddle() {
         log = new JEditorPane();
         //log.setMargin(new Insets(5,5,5,5));
         log.setEditable(false);
@@ -123,17 +121,12 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         //logScrollPane.setBorder( BorderFactory.createEmptyBorder(5,5,5,5) );
         //logScrollPane.setMinimumSize(minLogDimension);
         //logScrollPane.setPreferredSize(prefLogDimension);
-        headerPanel.add(logScrollPane);
 
-        allPanel.add(headerPanel, BorderLayout.NORTH);
-    }
-
-    protected void showMiddle() {
-        tablePanel = new JPanel();
+        tablePanel = new JPanel(new BorderLayout());
         artikelNeu.showTable(tablePanel);
 
         splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                headerPanel,
+                logScrollPane,
                 tablePanel);
         splitPane.setOneTouchExpandable(true);
         splitPane.setResizeWeight(0.3);
@@ -250,9 +243,9 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
                 value.add(rs.getString(20) == null ? "" : rs.getString(20)); // bestand
                 // edit menge:
                 try {
-                    value.set(5, new BigDecimal(value.get(5)).stripTrailingZeros().toPlainString());
+                    value.set(3, new BigDecimal(value.get(3)).stripTrailingZeros().toPlainString());
                 } catch (NumberFormatException ex) {
-                    value.set(5, "");
+                    value.set(3, "");
                 }
 
                 allArticles.put(key, value);
