@@ -94,6 +94,53 @@ Unjar the hidapi-1.1.jar (with `jar -xvf hidapi-1.1.jar`) and copy the content
 of the `native/*` folders (files ending with `.so`, `.dll` or `.jnilib`) into
 folder `resources/natives`.
 
+## Optionally: Install receipt printer
+
+### EPSON TM-U220 dot matrix printer
+
+* Create udev rule for receipt printer.
+(Don't edit `/lib/udev/rules.d/50-udev-default.rules`, will be overwritten on update.)
+Create new file `/etc/udev/rules.d/99-own.rules`, add:
+```
+# for EPSON TM-U220 receipt printer:
+KERNEL=="ttyUSB0", GROUP="lp", MODE="0660"
+```
+
+* Install Linux drivers for EPSON TM-U220 printer.
+
+
+## Optionally: Install customer display
+
+* Create udev rule for customer display, according to https://github.com/signal11/hidapi/blob/master/udev/99-hid.rules:
+In file `/etc/udev/rules.d/99-own.rules` add:
+```
+# for Wincor/Nixdorf BA63 USB customer display:
+# HIDAPI/libusb
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0aa7", ATTRS{idProduct}=="0200", MODE="0666"
+```
+Might need to change the hexnumbers of vendor id and product id according to
+your make and model. Get the numbers (in decimal) by running Weltladenkasse on
+terminal with display plugged in.
+
+
+## Optionally: Configure barcode scanner
+
+* Configure scanner prefix as "ctrl-c/alt-c" (to gain barcode box focus for every
+scan) according to "Honeywell MetroSelect Single-Line Scanner Configuration
+Guide":
+    1. Scan barcode "Enter/Exit Configuration Mode" on page 1-1 (p. 7)
+    2. Scan barcode "Configurable Prefix Character #1" on page 8-1 (p. 43)
+    3. Scan barcodes "1", "7", "5" on page 16-1 (81) for left ctrl key /
+	"1", "7", "4" on page 16-1 (81) for left alt key
+    4. Scan barcode "Configurable Prefix Character #2" on page 8-1
+    5. Scan barcodes "0", "9", "9" on page 16-2 (82) for "c"
+    6. Scan barcode "Enter/Exit Configuration Mode" on page 1-1
+
+Set beeper options with codes on page 7-4 (p. 36).
+
+
+## Optionally: Python scripts
+
 To run the script `rabatte_setzen.py` (which sets discount rates), you need to
 download
 * mysql-connector-python-2.1.3.tar.gz (platform independent): https://dev.mysql.com/downloads/connector/python/
@@ -101,6 +148,12 @@ untar and run:
 ```
 python ./setup.py install
 ```
+
+
+## Optionally: Good profilers:
+* JProfiler (proprietary): https://www.ej-technologies.com/download/jprofiler/files
+* Profiler4j: http://profiler4j.sourceforge.net/
+
 
 ## Compile:
 ```
@@ -123,8 +176,3 @@ Compile without jar creation (much faster) and run locally:
 ant develop && ./run_kasse.sh
 ant develop && ./run_besteller.sh
 ```
-
-## Good profilers:
-* JProfiler (proprietary): https://www.ej-technologies.com/download/jprofiler/files
-* Profiler4j: http://profiler4j.sourceforge.net/
-
