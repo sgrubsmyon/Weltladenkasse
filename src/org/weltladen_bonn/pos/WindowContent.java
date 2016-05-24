@@ -20,8 +20,11 @@ import javax.swing.table.*;
 // DateTime from date4j (http://www.date4j.net/javadoc/index.html)
 import hirondelle.date4j.DateTime;
 
-// JCalendarButton
+// old calendar button:
 import org.weltladen_bonn.pos.jcalendarbutton.JCalendarButton;
+// new calendar button:
+import com.toedter.calendar.JDateChooser;
+import com.toedter.calendar.JSpinnerDateEditor;
 
 public abstract class WindowContent extends JPanel implements ActionListener {
 
@@ -1470,5 +1473,28 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                 ((SpinnerDateModel) m).setValue(newDate);
             }
         }
+    }
+
+    protected Vector<Object> setupDateChooser(String label, Date initDate, Date minDate, Date maxDate) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(minDate);
+        cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH)-1);
+        Date oneDayBeforeMinDate = cal.getTime();
+
+        JLabel dateLabel = new JLabel(label);
+        JSpinnerDateEditor sdEdit = new JSpinnerDateEditor();
+        JSpinner dateSpinner = (JSpinner)sdEdit.getUiComponent();
+        JDateChooser dateChooser = new JDateChooser((Date)initDate.clone(), null, sdEdit);
+        //dateChooser.setMinSelectableDate((Date)minDate.clone());
+        dateChooser.setMinSelectableDate((Date)oneDayBeforeMinDate.clone());
+        dateChooser.setMaxSelectableDate((Date)maxDate.clone());
+        dateChooser.setLocale(bc.myLocale);
+        dateSpinner.setEditor(new JSpinner.DateEditor(dateSpinner, "dd.MM.yyyy"));
+        dateLabel.setLabelFor(dateChooser);
+        Vector<Object> retVec = new Vector<Object>();
+        retVec.add(dateLabel);
+        retVec.add(dateChooser);
+        retVec.add(dateSpinner);
+        return retVec;
     }
 }

@@ -38,11 +38,10 @@ import org.weltladen_bonn.pos.*;
 
 public abstract class Rechnungen extends RechnungsGrundlage {
     /**
-	 * Base class for displaying orders
-	 */
-	private static final long serialVersionUID = 1L;
-	// Attribute:
-    protected int rechnungenProSeite = 25;
+     * Base class for displaying orders
+     */
+    private static final long serialVersionUID = 1L;
+    // Attribute:
     protected int currentPage = 1;
     protected int totalPage;
 
@@ -96,6 +95,19 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    Statement stmt = this.conn.createStatement();
 	    // Run MySQL command
 	    ResultSet rs = stmt.executeQuery(
+		    "SELECT COUNT(*) FROM verkauf " +
+		    filterStr
+		    );
+	    // Now do something with the ResultSet ...
+	    rs.next();
+	    rechnungsZahl = rs.getString(1);
+	    rechnungsZahlInt = Integer.parseInt(rechnungsZahl);
+	    totalPage = rechnungsZahlInt/bc.rowsPerPage + 1;
+            if (currentPage > totalPage) {
+                currentPage = totalPage;
+            }
+	    rs.close();
+	    rs = stmt.executeQuery(
 		    "SELECT vd.rechnungs_nr, SUM(vd.ges_preis) AS rechnungs_betrag, "+
                     "verkauf.ec_zahlung, verkauf.kunde_gibt, " +
 		    "DATE_FORMAT(verkauf.verkaufsdatum, '"+bc.dateFormatSQL+"'), " +
@@ -105,7 +117,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 		    filterStr +
 		    "GROUP BY vd.rechnungs_nr " +
 		    "ORDER BY vd.rechnungs_nr DESC " +
-		    "LIMIT " + (currentPage-1)*rechnungenProSeite + "," + rechnungenProSeite
+		    "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
 		    );
 	    // Now do something with the ResultSet ...
 	    while (rs.next()) {
@@ -125,16 +137,6 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 
                 dates.add(rs.getString(6));
 	    }
-	    rs.close();
-	    rs = stmt.executeQuery(
-		    "SELECT COUNT(*) FROM verkauf " +
-		    filterStr
-		    );
-	    // Now do something with the ResultSet ...
-	    rs.next();
-	    rechnungsZahl = rs.getString(1);
-	    rechnungsZahlInt = Integer.parseInt(rechnungsZahl);
-	    totalPage = rechnungsZahlInt/rechnungenProSeite + 1;
 	    rs.close();
 	    stmt.close();
 	} catch (SQLException ex) {
@@ -171,8 +173,8 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	pageChangePanel.add(nextButton);
 	prevButton.addActionListener(this);
 	nextButton.addActionListener(this);
-	int currentPageMin = (currentPage-1)*rechnungenProSeite + 1;
-	int currentPageMax = rechnungenProSeite*currentPage;
+	int currentPageMin = (currentPage-1)*bc.rowsPerPage + 1;
+	int currentPageMax = bc.rowsPerPage*currentPage;
 	currentPageMax = (currentPageMax <= rechnungsZahlInt) ? currentPageMax : rechnungsZahlInt;
 	JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Rechnungen "+
 	    currentPageMin + " bis "+ currentPageMax +" von "+ rechnungsZahlInt);

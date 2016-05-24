@@ -46,7 +46,6 @@ import org.weltladen_bonn.pos.StringDocumentFilter;
 
 public class Kassenstand extends WindowContent implements ChangeListener, DocumentListener, ItemListener {
     // Attributes:
-    private int kassenstaendeProSeite = 25;
     private int currentPage = 1;
     private int totalPage;
     private String filterStr = "";
@@ -195,7 +194,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
                     "WHERE " + ausblendeString +
 		    filterStr +
 		    "ORDER BY buchungsdatum DESC " +
-		    "LIMIT " + (currentPage-1)*kassenstaendeProSeite + "," + kassenstaendeProSeite
+		    "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
 		    );
 	    // Now do something with the ResultSet ...
 	    while (rs.next()) {
@@ -216,7 +215,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    rs.next();
 	    kassenstandZahl = rs.getString(1);
 	    kassenstandZahlInt = Integer.parseInt(kassenstandZahl);
-	    totalPage = kassenstandZahlInt/kassenstaendeProSeite + 1;
+	    totalPage = kassenstandZahlInt/bc.rowsPerPage + 1;
 	    rs.close();
 	    stmt.close();
 	} catch (SQLException ex) {
@@ -398,8 +397,8 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	    pageChangePanel.add(nextButton);
 	    prevButton.addActionListener(this);
 	    nextButton.addActionListener(this);
-	    int currentPageMin = (currentPage-1)*kassenstaendeProSeite + 1;
-	    int currentPageMax = kassenstaendeProSeite*currentPage;
+	    int currentPageMin = (currentPage-1)*bc.rowsPerPage + 1;
+	    int currentPageMax = bc.rowsPerPage*currentPage;
 	    currentPageMax = (currentPageMax <= kassenstandZahlInt) ? currentPageMax : kassenstandZahlInt;
 	    JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Kassenstand "+
 		currentPageMin + " bis "+ currentPageMax +" von "+ kassenstandZahlInt);

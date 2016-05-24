@@ -30,8 +30,6 @@ import javax.swing.text.*; // for DocumentFilter
 
 // DateTime from date4j (http://www.date4j.net/javadoc/index.html)
 import hirondelle.date4j.DateTime;
-// JCalendarButton
-import org.weltladen_bonn.pos.jcalendarbutton.JCalendarButton;
 //import java.util.Calendar;
 import java.util.Date;
 // JCalendar
