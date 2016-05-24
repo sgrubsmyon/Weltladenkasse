@@ -46,7 +46,6 @@ import org.weltladen_bonn.pos.AnyJComponentJTable;
 
 public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, TableModelListener {
     // Attribute:
-    private int rabattaktionenProSeite = 25;
     private int currentPage = 1;
     private int totalPage;
     private String filterStr = "WHERE r.bis != r.von OR r.bis IS NULL ";
@@ -206,7 +205,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
                     "LEFT JOIN artikel USING (artikel_id) "+
 		    this.filterStr +
 		    "ORDER BY r.von DESC " +
-		    "LIMIT " + (currentPage-1)*rabattaktionenProSeite + "," + rabattaktionenProSeite
+		    "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
 		    );
 	    // Now do something with the ResultSet ...
 	    while (rs.next()) {
@@ -269,7 +268,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    rs.next();
 	    kassenstandZahl = rs.getString(1);
 	    kassenstandZahlInt = Integer.parseInt(kassenstandZahl);
-	    totalPage = kassenstandZahlInt/rabattaktionenProSeite + 1;
+	    totalPage = kassenstandZahlInt/bc.rowsPerPage + 1;
 	    rs.close();
 	    stmt.close();
 	} catch (SQLException ex) {
@@ -358,8 +357,8 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    pageChangePanel.add(nextButton);
 	    prevButton.addActionListener(this);
 	    nextButton.addActionListener(this);
-	    int currentPageMin = (currentPage-1)*rabattaktionenProSeite + 1;
-	    int currentPageMax = rabattaktionenProSeite*currentPage;
+	    int currentPageMin = (currentPage-1)*bc.rowsPerPage + 1;
+	    int currentPageMax = bc.rowsPerPage*currentPage;
 	    currentPageMax = (currentPageMax <= kassenstandZahlInt) ? currentPageMax : kassenstandZahlInt;
 	    JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Rabattaktionen "+
 		currentPageMin + " bis "+ currentPageMax +" von "+ kassenstandZahlInt);

@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.FileInputStream;
 import java.text.*; // for NumberFormat
 import java.awt.*; // for Color
+import javax.swing.JOptionPane;
 import javax.swing.text.*; // for DocumentFilter
 
 public class BaseClass {
@@ -25,6 +26,7 @@ public class BaseClass {
     public String dateFormatJava;
     public String dateFormatDate4j;
     public String delimiter; // for CSV export/import
+    public Integer rowsPerPage;
     public final String fileSep = System.getProperty("file.separator");
     public final String lineSep = System.getProperty("line.separator");
     public final int smallintMax = 32767;
@@ -136,8 +138,12 @@ public class BaseClass {
             this.dateFormatJava = props.getProperty("dateFormatJava");
             this.dateFormatDate4j = props.getProperty("dateFormatDate4j");
             this.delimiter = props.getProperty("delimiter"); // for CSV export/import
+            this.rowsPerPage = Integer.parseInt(props.getProperty("rowsPerPage"));
         } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
+            JOptionPane.showMessageDialog(null, "Fehler in der Konfigurationsdatei config.properties.\n"+
+                    "Es werden die Standardwerte benutzt.", "Fehler",
+                    JOptionPane.ERROR_MESSAGE);
             this.currencySymbol = "€";
             this.mysqlHost = "localhost";
             this.mysqlPath = "";
@@ -152,6 +158,7 @@ public class BaseClass {
             this.dateFormatJava = "dd.MM.yyyy, HH:mm 'Uhr'";
             this.dateFormatDate4j = "DD.MM.YYYY, hh:mm |Uhr|";
             this.delimiter = ";"; // for CSV export/import
+            this.rowsPerPage = 32;
         }
         this.mysqlHost = removeQuotes(this.mysqlHost);
         this.printerName = removeQuotes(this.printerName);

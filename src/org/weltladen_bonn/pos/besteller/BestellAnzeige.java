@@ -1,7 +1,7 @@
 package org.weltladen_bonn.pos.besteller;
 
 // Basic Java stuff:
-import java.util.*; // for Vector
+import java.util.*; // for Vector, Date
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 import java.math.RoundingMode;
 import java.io.File;
@@ -46,17 +46,27 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+// JCalendar
+import com.toedter.calendar.JDateChooser;
+import com.toedter.calendar.JSpinnerDateEditor;
+
 import org.weltladen_bonn.pos.*;
 
 public class BestellAnzeige extends BestellungsGrundlage implements DocumentListener {
     // Attribute:
-    private int bestellungenProSeite = 25;
     private int currentPage = 1;
     private int totalPage;
     private String bestellungsZahl;
     private int bestellungsZahlInt;
 
     private TabbedPane tabbedPane;
+
+    private JDateChooser dateChooserStart;
+    private JDateChooser dateChooserEnd;
+    private Date earliestDate;
+    private Date latestDate;
+    private JButton changeDateButton;
+    private JButton resetButton;
 
     private FileExistsAwareFileChooser odsChooser;
     private JButton prevButton;
@@ -77,14 +87,16 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     private Vector<Integer> orderDetailDisplayIndices;
 
     private JSplitPane splitPane;
-    private JPanel orderPanel;
-    private JPanel orderDetailPanel;
+    private JPanel leftPanel;
+    private JPanel rightPanel;
+    private JPanel orderTablePanel;
     private JPanel orderDetailTablePanel;
     private JScrollPane orderDetailScrollPane;
     protected AnyJComponentJTable orderTable;
     private BestellungsTable orderDetailTable;
 
-    private String filterStr = ""; // show only specific items of the order
+    private String filterStrOrders = ""; // show only orders from within a date range
+    private String filterStrOrderDetail = ""; // show only specific items of the order
 
     // Methoden:
 
@@ -97,6 +109,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         tabbedPane = tp;
         selBestellNrUndTyp = new Vector<Object>();
         selBestellNrUndTyp.add(-1); selBestellNrUndTyp.add("");
+
+        queryEarliestBestellung();
         showAll();
 
         odsChooser = new FileExistsAwareFileChooser();
@@ -105,12 +119,54 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         odsChooser.setFileFilter(filter);
     }
 
+    private void queryEarliestBestellung() {
+        int day = 0;
+        int month = 0;
+        int year = 0;
+        try {
+            // Create statement for MySQL database
+            Statement stmt = this.conn.createStatement();
+            // Run MySQL command
+            ResultSet rs = stmt
+                    .executeQuery("SELECT DAY(MIN(bestellung.bestell_datum)), MONTH(MIN(bestellung.bestell_datum)), "
+                            + "YEAR(MIN(bestellung.bestell_datum)) FROM bestellung");
+            // Now do something with the ResultSet ...
+            rs.next();
+            day = rs.getInt(1);
+            month = rs.getInt(2);
+            year = rs.getInt(3);
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR, year);
+        calendar.set(Calendar.MONTH, month - 1);
+        calendar.set(Calendar.DAY_OF_MONTH, day);
+        earliestDate = calendar.getTime();
+
+        Date now = new Date(); // current date
+        if (year == 0) {
+            earliestDate = now;
+        }
+        latestDate = now;
+        // final check:
+        if (latestDate.before(earliestDate)) {
+            Date tmp = earliestDate;
+            earliestDate = latestDate;
+            latestDate = tmp;
+        }
+    }
+
+
     void showAll() {
-        orderPanel = new JPanel();
-        orderDetailPanel = new JPanel();
+        leftPanel = new JPanel();
+        rightPanel = new JPanel();
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                orderPanel,
-                orderDetailPanel);
+                leftPanel,
+                rightPanel);
         splitPane.setOneTouchExpandable(true);
         //splitPane.setResizeWeight(0.3);
         splitPane.setDividerLocation(0.3);
@@ -119,19 +175,85 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     }
 
     void showTables() {
+        showLeftPanel();
+        showRightPanel(selBestellNrUndTyp);
+    }
+
+    void showLeftPanel() {
+        leftPanel.setLayout(new BorderLayout());
+        showDateChangePanel();
         showOrderTable();
-        showOrderDetailTable(selBestellNrUndTyp);
+    }
+
+    void showDateChangePanel() {
+        JPanel datePanel = new JPanel(new GridBagLayout());
+        GridBagConstraints c1 = new GridBagConstraints();
+        c1.anchor = GridBagConstraints.CENTER;
+        c1.fill = GridBagConstraints.HORIZONTAL;
+        c1.ipadx = 5;
+        c1.insets = new Insets(0, 5, 0, 5);
+
+        Vector<Object> vecStart = setupDateChooser("Startdatum:", earliestDate, earliestDate, latestDate);
+        JLabel dateLabelStart = (JLabel)vecStart.get(0);
+        dateChooserStart = (JDateChooser)vecStart.get(1);
+        //dateSpinnerStart = (JSpinner)vecEnd.get(2);
+	//dateSpinnerStart.addChangeListener(this);
+
+        Vector<Object> vecEnd = setupDateChooser("Enddatum:", latestDate, earliestDate, latestDate);
+        JLabel dateLabelEnd = (JLabel)vecEnd.get(0);
+        dateChooserEnd = (JDateChooser)vecEnd.get(1);
+        //dateSpinnerEnd = (JSpinner)vecEnd.get(2);
+	//dateSpinnerEnd.addChangeListener(this);
+
+        changeDateButton = new JButton(
+                //new ImageIcon(WindowContent.class.getResource("/resources/icons/refreshButtonSmall.gif")));
+                "Anwenden");
+        changeDateButton.addActionListener(this);
+        resetButton = new JButton("Reset");
+        resetButton.addActionListener(this);
+
+        c1.gridy = 0; c1.gridx = 0; datePanel.add(dateLabelStart, c1);
+        c1.gridy = 0; c1.gridx = 1; datePanel.add(dateChooserStart, c1);
+        c1.gridy = 0; c1.gridx = 2; datePanel.add(resetButton, c1);
+        c1.gridy = 1; c1.gridx = 0; datePanel.add(dateLabelEnd, c1);
+        c1.gridy = 1; c1.gridx = 1; datePanel.add(dateChooserEnd, c1);
+        c1.gridy = 1; c1.gridx = 2; datePanel.add(changeDateButton, c1);
+
+	leftPanel.add(datePanel, BorderLayout.NORTH);
     }
 
     void showOrderTable() {
-        orderPanel.setLayout(new BorderLayout());
+        // Panel for the prev/next buttons and order table
+        orderTablePanel = new JPanel(new BorderLayout());
+
+        retrieveOrderData();
+
+	JPanel pageChangePanel = new JPanel();
+	pageChangePanel.setLayout(new FlowLayout(FlowLayout.LEADING));
+	prevButton = new JButton("<<");
+	if (this.currentPage <= 1)
+	    prevButton.setEnabled(false);
+	nextButton = new JButton(">>");
+	if (this.currentPage >= totalPage)
+	    nextButton.setEnabled(false);
+	pageChangePanel.add(prevButton);
+	pageChangePanel.add(nextButton);
+	prevButton.addActionListener(this);
+	nextButton.addActionListener(this);
+	int currentPageMin = (currentPage-1)*bc.rowsPerPage + 1;
+	int currentPageMax = bc.rowsPerPage*currentPage;
+	currentPageMax = (currentPageMax <= bestellungsZahlInt) ? currentPageMax : bestellungsZahlInt;
+	JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Bestellungen "+
+	    currentPageMin + " bis "+ currentPageMax +" von "+ bestellungsZahlInt);
+	pageChangePanel.add(header);
+	orderTablePanel.add(pageChangePanel, BorderLayout.NORTH);
+
         orderLabels = new Vector<String>();
         orderLabels.add("Nr.");
         orderLabels.add("Typ");
         orderLabels.add("Jahr");
         orderLabels.add("KW");
         orderLabels.add("Datum");
-        retrieveOrderData();
         orderTable = new AnyJComponentJTable(orderData, orderLabels){
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component c = super.prepareRenderer(renderer, row, column);
@@ -163,7 +285,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 	datum.setPreferredWidth(200);
 
         JScrollPane scrollPane = new JScrollPane(orderTable);
-        orderPanel.add(scrollPane, BorderLayout.CENTER);
+        orderTablePanel.add(scrollPane, BorderLayout.CENTER);
+        leftPanel.add(orderTablePanel, BorderLayout.CENTER);
     }
 
     private class RowListener implements ListSelectionListener {
@@ -180,13 +303,13 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 selBestellNrUndTyp = new Vector<Object>();
                 selBestellNrUndTyp.add(-1); selBestellNrUndTyp.add("");
             }
-            updateDetailPanel();
+            updateRightPanel();
         }
     }
 
-    public void showOrderDetailTable(Vector<Object> bestellNrUndTyp) {
+    public void showRightPanel(Vector<Object> bestellNrUndTyp) {
         if ( (Integer)bestellNrUndTyp.get(0) > 0 ){
-            orderDetailPanel.setLayout(new BorderLayout());
+            rightPanel.setLayout(new BorderLayout());
 
             // Panel for header and both tables
             orderDetailTablePanel = new JPanel();
@@ -217,7 +340,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 orderDetailScrollPane = new JScrollPane(orderDetailTable);
                 orderDetailTablePanel.add(orderDetailScrollPane);
 
-            orderDetailPanel.add(orderDetailTablePanel, BorderLayout.CENTER);
+            rightPanel.add(orderDetailTablePanel, BorderLayout.CENTER);
 
             // Panel for buttons
             JPanel buttonPanel = new JPanel(new FlowLayout());
@@ -240,7 +363,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 	    emptyFilterButton.addActionListener(this);
 	    buttonPanel.add(emptyFilterButton);
 
-            orderDetailPanel.add(buttonPanel, BorderLayout.SOUTH);
+            rightPanel.add(buttonPanel, BorderLayout.SOUTH);
         }
     }
 
@@ -252,15 +375,23 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 	showAll();
     }
 
-    private void updateDetailPanel(){
-        orderDetailPanel = new JPanel();
-        splitPane.setRightComponent(orderDetailPanel);
+    private void updateOrderTable(){
+        leftPanel.remove(orderTablePanel);
+        selBestellNrUndTyp = new Vector<Object>();
+        selBestellNrUndTyp.add(-1); selBestellNrUndTyp.add("");
+        showOrderTable();
+        updateRightPanel();
+    }
+
+    private void updateRightPanel(){
+        rightPanel = new JPanel();
+        splitPane.setRightComponent(rightPanel);
 	//this.revalidate();
-	showOrderDetailTable(selBestellNrUndTyp);
+	showRightPanel(selBestellNrUndTyp);
     }
 
     private void updateDetailTable() {
-        applyFilter(filterStr, orderDetailDisplayData, orderDetailDisplayIndices);
+        applyFilter(filterStrOrderDetail, orderDetailDisplayData, orderDetailDisplayIndices);
         orderDetailTablePanel.remove(orderDetailScrollPane);
 	orderDetailTablePanel.revalidate();
 
@@ -277,11 +408,25 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         bestellNummernUndTyp = new Vector< Vector<Object> >();
         try {
             Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
+	    ResultSet rs = stmt.executeQuery(
+		    "SELECT COUNT(*) FROM bestellung "+
+		    filterStrOrders
+		    );
+	    // Now do something with the ResultSet ...
+	    rs.next();
+	    bestellungsZahl = rs.getString(1);
+	    bestellungsZahlInt = Integer.parseInt(bestellungsZahl);
+	    totalPage = bestellungsZahlInt/bc.rowsPerPage + 1;
+            if (currentPage > totalPage) {
+                currentPage = totalPage;
+            }
+	    rs.close();
+            rs = stmt.executeQuery(
                     "SELECT bestell_nr, typ, jahr, kw, DATE_FORMAT(bestell_datum, "+
-                    "'"+bc.dateFormatSQL+"') FROM bestellung ORDER BY "+
-                    "bestell_nr DESC LIMIT " +
-                    (currentPage-1)*bestellungenProSeite + "," + bestellungenProSeite
+                    "'"+bc.dateFormatSQL+"') FROM bestellung "+
+		    filterStrOrders +
+                    "ORDER BY bestell_nr DESC "+
+                    "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
                     );
             while ( rs.next() ){
                 Vector<Object> bestNrUndTyp = new Vector<Object>();
@@ -295,15 +440,6 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 row.add(rs.getString(5));
                 orderData.add(row);
             }
-	    rs.close();
-	    rs = stmt.executeQuery(
-		    "SELECT COUNT(bestell_nr) FROM bestellung"
-		    );
-	    // Now do something with the ResultSet ...
-	    rs.next();
-	    bestellungsZahl = rs.getString(1);
-	    bestellungsZahlInt = Integer.parseInt(bestellungsZahl);
-	    totalPage = bestellungsZahlInt/bestellungenProSeite + 1;
 	    rs.close();
 	    stmt.close();
         } catch (SQLException ex) {
@@ -692,9 +828,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
      **/
     public void insertUpdate(DocumentEvent e) {
         if (e.getDocument() == filterField.getDocument()){
-            String oldFilterStr = new String(filterStr);
-            filterStr = filterField.getText();
-            if ( !filterStr.contains(oldFilterStr) ){
+            String oldFilterStr = new String(filterStrOrderDetail);
+            filterStrOrderDetail = filterField.getText();
+            if ( !filterStrOrderDetail.contains(oldFilterStr) ){
                 // user has deleted from, not added to the filter string, reset the displayData
                 orderDetailDisplayData = new Vector< Vector<Object> >(orderDetailData);
                 initiateDisplayIndices();
@@ -723,11 +859,40 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
      *    @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == prevButton) {
+            if (this.currentPage > 1)
+                this.currentPage--;
+            updateOrderTable();
+            return;
+        }
+        if (e.getSource() == nextButton) {
+            if (this.currentPage < totalPage)
+                this.currentPage++;
+            updateOrderTable();
+            return;
+        }
+        if (e.getSource() == changeDateButton) {
+            Date startDate = dateChooserStart.getDate();
+            Date endDate = dateChooserEnd.getDate();
+            java.sql.Date startDateSQL = new java.sql.Date(startDate.getTime());
+            java.sql.Date endDateSQL = new java.sql.Date(endDate.getTime());
+            String startDateStr = startDateSQL.toString();
+            String endDateStr = endDateSQL.toString();
+            this.filterStrOrders = "WHERE DATE(bestellung.bestell_datum) >= DATE('" + startDateStr + "') "
+                    + "AND DATE(bestellung.bestell_datum) <= DATE('" + endDateStr + "') ";
+            updateOrderTable();
+            return;
+        }
+        if (e.getSource() == resetButton) {
+            this.filterStrOrders = "";
+            updateAll();
+            return;
+        }
         if (e.getSource() == editButton){
             if ( (Integer)selBestellNrUndTyp.get(0) > 0){
                 if (!tabbedPane.bestellenTableIsEmpty()){
                     int answer = JOptionPane.showConfirmDialog(this,
-                            "Achtung: Bestellen-Tab enthält bereits eine Bestellung.\nDaten gehen verloren. Fortfahren?",
+                            "Achtung: Bestellen-Tab enthält bereits eine Bestellung,\nderen Daten verloren gehen. Fortfahren?",
                             "Warnung",
                             JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                     if (answer == JOptionPane.YES_OPTION){

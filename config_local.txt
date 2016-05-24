@@ -13,3 +13,4 @@ dateFormatJava = dd.MM.yyyy, HH:mm 'Uhr'
 dateFormatDate4j = DD.MM.YYYY, hh:mm |Uhr|
 delimiter = ;
 currencySymbol = €
+rowsPerPage = 100
