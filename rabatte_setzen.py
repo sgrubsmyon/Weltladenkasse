@@ -33,6 +33,7 @@ if (pwd is None):
 import mysql.connector
 import numpy as np
 
+
 def construct_prod_gr_id_filter(conn, prod_gr='Kaffee'):
     #with conn:
     cursor = conn.cursor()
@@ -110,14 +111,14 @@ def update_by_name(conn, lieferant='GEPA', name='%credit%', prod_gr='Kaffee',
 
 def rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Kaffee', rabatt=0.15):
     select_by_lieferant(conn, lieferant=lieferant, prod_gr=prod_gr, rabatt=rabatt)
-    #update_by_lieferant(conn, lieferant=lieferant, prod_gr=prod_gr, rabatt=rabatt)
+    update_by_lieferant(conn, lieferant=lieferant, prod_gr=prod_gr, rabatt=rabatt)
 
 def rabatt_setzen_by_name(conn, lieferant='GEPA', name='%credit%',
         prod_gr='Kaffee', rabatt=0.15):
     select_by_name(conn, lieferant=lieferant, name=name, prod_gr=prod_gr,
             rabatt=rabatt)
-    #update_by_name(conn, lieferant=lieferant, name=name, prod_gr=prod_gr,
-    #        rabatt=rabatt)
+    update_by_name(conn, lieferant=lieferant, name=name, prod_gr=prod_gr,
+            rabatt=rabatt)
 
 
 
@@ -297,3 +298,6 @@ rabatt_setzen_by_lieferant(conn, lieferant='EP', prod_gr='Bücher', rabatt=0.15)
 
 
 conn.close()
+
+# List all articles still missing a rabatt:
+# > SELECT lieferant_name, artikel_nr, artikel_name, produktgruppen_name FROM artikel JOIN lieferant USING (lieferant_id) JOIN produktgruppe USING (produktgruppen_id) WHERE ek_rabatt IS NULL;

@@ -1483,13 +1483,18 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
         JLabel dateLabel = new JLabel(label);
         JSpinnerDateEditor sdEdit = new JSpinnerDateEditor();
-        JSpinner dateSpinner = (JSpinner)sdEdit.getUiComponent();
         JDateChooser dateChooser = new JDateChooser((Date)initDate.clone(), null, sdEdit);
         //dateChooser.setMinSelectableDate((Date)minDate.clone());
         dateChooser.setMinSelectableDate((Date)oneDayBeforeMinDate.clone());
         dateChooser.setMaxSelectableDate((Date)maxDate.clone());
         dateChooser.setLocale(bc.myLocale);
+        JSpinner dateSpinner = (JSpinner)sdEdit.getUiComponent();
         dateSpinner.setEditor(new JSpinner.DateEditor(dateSpinner, "dd.MM.yyyy"));
+        // bringt nichts:
+        //dateSpinner.setModel(new SpinnerDateModel(initDate, // Startwert
+        //        oneDayBeforeMinDate, // kleinster Wert
+        //        maxDate, // groesster Wert
+        //        Calendar.YEAR));
         dateLabel.setLabelFor(dateChooser);
         Vector<Object> retVec = new Vector<Object>();
         retVec.add(dateLabel);
