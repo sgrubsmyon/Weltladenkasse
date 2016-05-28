@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# TODO:
+# * Bei uns jetzt "El Puente", im FHZ "EP" (auf "El Puente" ändern)
+# * Alles, was bei FHZ "unbekannt" ist, soll "FHZ" als Lieferant bekommen
+
 '''
 1.) In "Weltladenkasse -> Artikelliste" auf "Lebensmittel" klicken
 2.) Auf "Artikel exportieren" klicken, speichern als "XYZ_Lebensmittel.ods", auf
@@ -69,8 +73,9 @@
 15.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
     "preisänderung_geänderte_preise_sortiment.csv" auswählen.
 16.) Die Datei "preisänderung_neue_artikel.csv" mit LibreOffice öffnen,
-    Semicolon als Separator. Auch hier wieder: Die Spalte "Artikelnr." anklicken und Typ
-    auf "Text" setzen.
+    Semicolon als Separator, Text Delimiter: '"'. Auch hier wieder: Die Spalte
+    "Artikelnr." anklicken und Typ auf "Text" setzen, Spalte "Menge (kg/l/St.)"
+    anklicken und Typ auf "Text" setzen.
 17.) Für jeden neuen Artikel eine existierende Produktgruppe wählen und in die
     entspr. Spalte eintragen. Speichern als "preisänderung_neue_artikel.ods".
 18.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
