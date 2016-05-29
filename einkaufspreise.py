@@ -17,6 +17,12 @@ bei getcontext().rounding.
 Nachteil: Skript ist dann komplizierter und langsamer, da man für jeden Artikel
 ein einzelnes Query braucht, das den EKP, den Python aus dem Rabatt berechnet
 hat, setzt.
+
+* TODO einfügen
+  * Kalender BfdW
+  * Kalender DNH
+  * Kohle
+  * WL-Kochbuch
 '''
 
 # install parser
@@ -59,7 +65,7 @@ def count_missing_empf_vkp(conn):
 
 def set_vkp_as_empf_vkp(conn):
     cursor = conn.cursor()
-    query = ("UPDATE artikel SET empf_vk_preis = vk_preis "
+    query = ("UPDATE artikel SET empf_vk_preis = vk_preis*setgroesse "
             "WHERE empf_vk_preis IS NULL AND vk_preis IS NOT NULL")
     cursor.execute(query)
     conn.commit()

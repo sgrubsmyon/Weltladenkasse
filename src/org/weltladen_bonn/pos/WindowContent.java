@@ -285,24 +285,22 @@ public abstract class WindowContent extends JPanel implements ActionListener {
      */
 
     protected BigDecimal calculateVAT(BigDecimal totalPrice, BigDecimal mwst) {
-        // return totalPrice.multiply( one.subtract( one.divide(one.add(mwst),
-        // 10, RoundingMode.HALF_UP) ) ); // VAT = bruttoPreis * ( 1. -
-        // 1./(1.+mwst) );
-        return totalPrice.divide(bc.one.add(mwst), 10, RoundingMode.HALF_UP).multiply(mwst); // VAT
-                                                                                             // =
-                                                                                             // bruttoPreis
-                                                                                             // /
-                                                                                             // (1.+mwst)
-                                                                                             // *
-                                                                                             // mwst;
+        /* 
+         * VAT = bruttoPreis / (1.+mwst) * mwst; 
+         * Alternative:
+         *  // VAT = bruttoPreis * ( 1. - 1./(1.+mwst) );
+         *  return totalPrice.multiply(
+         *      one.subtract( one.divide(one.add(mwst), 10, RoundingMode.HALF_UP) )
+         *      );
+         */
+        return totalPrice.divide(bc.one.add(mwst), 10, RoundingMode.HALF_UP).multiply(mwst);
     }
 
     protected BigDecimal calculateEKP(BigDecimal empfVKPreis, BigDecimal ekRabatt) {
-        return (bc.one.subtract(ekRabatt)).multiply(empfVKPreis); // Einkaufspreis
-                                                                  // = (1 -
-                                                                  // rabatt) *
-                                                                  // Empf.
-                                                                  // VK-Preis
+        /* 
+         * Einkaufspreis = (1 - rabatt) * Empf. VK-Preis
+         */
+        return (bc.one.subtract(ekRabatt)).multiply(empfVKPreis); 
     }
 
     protected BigDecimal calculateEKP(String empfVKPreis, BigDecimal ekRabatt) {
