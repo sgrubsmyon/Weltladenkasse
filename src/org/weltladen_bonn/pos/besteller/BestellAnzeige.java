@@ -566,7 +566,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT l.lieferant_kurzname, a.artikel_nr, a.artikel_name, "+
-                    "a.vk_preis, a.empf_vk_preis, a.ek_rabatt, a.ek_preis, m.mwst_satz, bd.stueckzahl "+
+                    "a.vk_preis, a.empf_vk_preis, a.ek_rabatt, a.ek_preis, "+
+                    "a.setgroesse, m.mwst_satz, bd.stueckzahl "+
                     "FROM bestellung_details AS bd "+
                     "LEFT JOIN artikel AS a USING (artikel_id) "+
                     "LEFT JOIN lieferant AS l USING (lieferant_id) "+
@@ -586,17 +587,21 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 BigDecimal vkpreis = rs.getBigDecimal(4);
                 BigDecimal empf_vkpreis = rs.getBigDecimal(5);
                 BigDecimal ekrabatt = rs.getBigDecimal(6);
-                BigDecimal ekpreis = rs.getBigDecimal(7);
-                BigDecimal mwst = rs.getBigDecimal(8);
-                Integer stueck = rs.getInt(9);
+                BigDecimal ekpreis_set = rs.getBigDecimal(7);
+                Integer setgroesse = rs.getInt(8);
+                BigDecimal setgroesseDecimal = new BigDecimal(setgroesse);
+                BigDecimal mwst = rs.getBigDecimal(9);
+                Integer stueck = rs.getInt(10);
                 BigDecimal stueckDecimal = new BigDecimal(stueck);
 
+                BigDecimal ekpreis = null;
                 BigDecimal single_mwst_betrag = null;
                 BigDecimal single_netto = null;
                 BigDecimal total_brutto = null;
                 BigDecimal total_mwst_betrag = null;
                 BigDecimal total_netto = null;
-                if (ekpreis != null) {
+                if (ekpreis_set != null) {
+                    ekpreis = ekpreis_set.divide(setgroesseDecimal, 2, RoundingMode.HALF_UP);
                     single_mwst_betrag = new BigDecimal( bc.priceFormatterIntern(calculateVAT(ekpreis, mwst)) );
                     single_netto = ekpreis.subtract(single_mwst_betrag);
                     total_brutto = ekpreis.multiply(stueckDecimal);
@@ -616,8 +621,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
                 Vector<Object> row = new Vector<Object>();
                     row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
-                    row.add(vkpreis); row.add(empf_vkpreis); row.add(ekrabatt);
-                    row.add(ekpreis); row.add(mwst.multiply(bc.hundred)); row.add(single_netto);
+                    row.add(vkpreis); row.add(empf_vkpreis); row.add(setgroesse); row.add(ekrabatt);
+                    row.add(ekpreis_set); row.add(ekpreis); row.add(mwst.multiply(bc.hundred)); row.add(single_netto);
                     row.add(single_mwst_betrag); row.add(stueck); row.add(total_netto);
                     row.add(total_mwst_betrag); row.add(total_brutto); row.add(total_vkp);
                 exportData.add(row);
@@ -799,11 +804,11 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
         // Insert inventory items
         Vector< Vector<Object> > data = retrieveInventurDetailData_forExport(selBestellNrUndTyp);
-        System.out.println("Export data: "+data);
+        //System.out.println("Export data: "+data);
         for (int row=0; row<data.size(); row++){
             for (int col=0; col<data.get(row).size(); col++){
-                System.out.println("Setting value at "+(2+row)+","+col+": "+data.get(row).get(col));
-                sheet.setValueAt(data.get(row).get(col), col, 2+row);
+                System.out.println("Setting value at "+(3+row)+","+col+": "+data.get(row).get(col));
+                sheet.setValueAt(data.get(row).get(col), col, 3+row);
             }
         }
 
