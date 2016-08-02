@@ -7,32 +7,34 @@
 
 '''
 1.) In "Weltladenkasse -> Artikelliste" auf "Lebensmittel" klicken
-2.) Auf "Artikel exportieren" klicken, speichern als "XYZ_Lebensmittel.ods", auf
+2.) Auf "Artikel exportieren" klicken, speichern als "Artikelliste_Lebensmittel.ods", auf
     "Zurück"
 3.) In Weltladenkasse -> Artikelliste auf "Getränke" klicken
-4.) Auf "Artikel exportieren" klicken, speichern als "XYZ_Getränke.ods"
+4.) Auf "Artikel exportieren" klicken, speichern als "Artikelliste_Getränke.ods"
 5.) Beide ods-Dateien öffnen, in Getränke alles außer erste Zeile markieren,
     kopieren, unter Lebensmittel einfügen
-6.) Alle Artikel mit "SONSTIGES" in Artikelnummer löschen, Ergebnis speichern als "XYZ_LM.ods"
-7.) "File -> Save As" und als csv-Datei exportieren.
+6.) Alle Artikel mit "SONSTIGES" in Artikelnummer löschen, Ergebnis speichern
+    als "Artikelliste_LM.ods"
+7.) "File -> Save a Copy" und als csv-Datei exportieren.
     WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
-8.) Neue FHZ-Preisliste öffnen, 'File -> Save As' als "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX.ods"
+8.) Neue FHZ-Preisliste öffnen
     * Wir benötigen Spalten C bis L, diese Spalten markieren, kopieren und in
-        leeres Dokument einfügen mit Ctrl-v (Formatierung wird gelöscht)
+        leeres Dokument (Ctrl-N) einfügen mit Ctrl-Shift-V (Formatierung wird gelöscht)
+    * 'File -> Save As' als "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX.ods"
     * Alle Zeilen, die leer sind oder Überschrift (Produktgruppe) enthalten, löschen:
         Mit Ctrl-Down springen, Zellen aus Zeilen markieren, Ctrl-Minus, Delete entire row(s)
     * Alle Pfandartikel (leere Flaschen und Kästen) löschen (von PFAND1 bis
         PFANDKISTE2), denn wir haben ein anderes Pfandsystem (bei uns entspricht
         PFAND2 der 0,33 l Flasche für 8 ct, dafür haben wir nicht die
         GEPA-Pfandflasche 9999385 und GEPA-Pfandkiste 9999386)
-    * Spalten so benennen und arrangieren wie in der XYZ-Datei (gleiche Reihenfolge)
+    * Spalten so benennen und arrangieren wie in der Artikelliste-Datei (gleiche Reihenfolge)
     * Andere Spalten (z.B. Sortiment, Bestand, Barcode, etc.) leer lassen
     * Preis (Spalte "je Einheit") geht in "Empf. VK-Preis"
     * Spalte "Variabel" auf "Nein" setzen
     * mit Formeln bearbeiten:
-        =CONCATENATE(E2, " | ", F2, " ", G2, " ", H2)       für "Bezeichnung" (Kurzname ist der egtl. Name)
-        =E5/1000                                            für "Menge"
-        =IF(H5="g", "kg", IF(H5="ml","l",""))               für "Einheit"
+        =CONCATENATE(F3, " | ", G3, " ", H3, " ", I3)       für "Bezeichnung" (Kurzname ist der egtl. Name)
+        =G3/1000                                            für "Menge"
+        =IF(I3="g", "kg", IF(I3="ml","l",""))               für "Einheit"
         * nach fehlender Einheit suchen (mit Ctrl-Down zu Lücken springen), in fast
             allen Fällen (außer Pfand) "St." eintragen und Menge anpassen (z.B.
             4 für Muskatnüsse)
@@ -45,9 +47,9 @@
         :%s/[^0-9]//g
       Save as blabla, cat in terminal and copy and paste in LibreOffice
     * Spalte "Menge": Markieren, "Format Cells", 5 decimal places
-9.) "File -> Save As" und als csv-Datei exportieren.
+9.) "File -> Save a Copy" und als csv-Datei exportieren.
     WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
-10.) Dieses Skript aufrufen mit --fhz FHZ_XYZ.csv --wlb XYZ_LM.csv
+10.) Dieses Skript aufrufen mit --fhz FHZ_FILE.csv --wlb Artikelliste_LM.csv
 11.) Ergebnisse werden gespeichert in Dateien:
     * "preisänderung.csv" (alle Artikel, aktualisiert)
     * "preisänderung_geänderte_preise.csv" (alle Artikel, deren Preis sich verändert hat)
@@ -263,6 +265,8 @@ def main():
     print('Lieferanten-Vergleich:')
     print("WLB:", sorted(set(map(lambda i: i[0], wlb.index))))
     print("FHZ:", set(map(lambda i: i[0], fhz.index)))
+    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('El Puente', i[1])
+        if i[0] == 'EP' else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Bannmühle', i[1])
         if i[0] == 'Bannmühle/dwp' else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Fairtrade Center Breisgau', i[1])
