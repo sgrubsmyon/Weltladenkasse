@@ -9,3 +9,4 @@ upload_software.sh
 *.so
 *.jnilib
 /bin/
+__pycache__/
