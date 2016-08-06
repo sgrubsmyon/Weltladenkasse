@@ -2,8 +2,11 @@
 # -*- coding: utf-8 -*-
 
 # TODO:
-# * Bei uns jetzt "El Puente", im FHZ "EP" (auf "El Puente" ändern)
-# * Alles, was bei FHZ "unbekannt" ist, soll "FHZ" als Lieferant bekommen
+# * GEPA      891097110      Agenda 21 Biokaffee\nBohne: neuer Name ("Bio Café, Bohne")
+#   und Verpackung, Art.-Nr. gleich!
+# * El Puente ta11304 sollte sein ta113004 (EL PUENTEs Bio-Kaffee # Großverbraucher) gemahlen | 1000 g Beutel)
+# * El Puente at113003 sollte sein at113004 („Oromia“, Sidamo Großverbraucher, gemahlen)
+
 
 '''
 1.) In "Weltladenkasse -> Artikelliste" auf "Lebensmittel" klicken
@@ -69,9 +72,9 @@
         werden.
         Daher: Die Spalte "Menge (kg/l/St.)" anklicken und Typ auf "Text"
             setzen.
-13.) Als ods-Datei speichern (Save a copy, "_NEU.ods").
+13.) Als ods-Datei speichern (Save a copy, "Artikelliste_LM_NEU.ods").
 14.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
-    die Datei "_NEU.ods" auswählen.
+    die Datei "Artikelliste_LM_NEU.ods" auswählen.
 15.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
     "preisänderung_geänderte_preise_sortiment.csv" auswählen.
 16.) Die Datei "preisänderung_neue_artikel.csv" mit LibreOffice öffnen,
@@ -279,12 +282,14 @@ def main():
         if i[0] == 'Libera\nTerra' else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('unbekannt', i[1])
         if type(i[0]) == float and np.isnan(i[0]) else i, fhz.index.tolist())), names=fhz.index.names)
+    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('FHZ Rheinland', i[1])
+        if i[0] == 'unbekannt' else i, fhz.index.tolist())), names=fhz.index.names)
     print("FHZ neu:", sorted(set(map(lambda i: i[0], fhz.index))))
 
     # add '-' sign to article numbers in FHZ:
-    # EP:
-    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('EP', convert_art_number_ep(i[1]))
-        if i[0] == 'EP' else i, fhz.index.tolist())), names=fhz.index.names)
+    # El Puente:
+    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('El Puente', convert_art_number_ep(i[1]))
+        if i[0] == 'El Puente' else i, fhz.index.tolist())), names=fhz.index.names)
     # dwp:
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('dwp', convert_art_number_dwp(i[1]))
         if i[0] == 'dwp' else i, fhz.index.tolist())), names=fhz.index.names)
@@ -361,10 +366,11 @@ def main():
                 sth_printed = True
 
             # adopt Menge
-            if float(fhz_row['Menge (kg/l/St.)']) != float(wlb_row['Menge (kg/l/St.)']):
-                wlb_neu.loc[name, 'Menge (kg/l/St.)'] = fhz_row['Menge (kg/l/St.)']
+            fhz_menge = float(fhz_row['Menge (kg/l/St.)']) / setgroesse
+            if fhz_menge != float(wlb_row['Menge (kg/l/St.)']):
+                wlb_neu.loc[name, 'Menge (kg/l/St.)'] = '%.5f' % fhz_menge
                 print("Ändere Menge für %s (%s) von %s (WLB) zu %s (FHZ)" % (name,
-                        wlb_row['Bezeichnung | Einheit'], wlb_row['Menge (kg/l/St.)'], fhz_row['Menge (kg/l/St.)']))
+                        wlb_row['Bezeichnung | Einheit'], wlb_row['Menge (kg/l/St.)'], fhz_menge))
                 sth_printed = True
                 if not price_changed:
                     geaenderte_preise = geaenderte_preise.append(wlb_neu.loc[name])
