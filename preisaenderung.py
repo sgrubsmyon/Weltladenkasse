@@ -368,17 +368,18 @@ def main():
 
             # adopt VPE
             if fhz_row['VPE'] != wlb_row['VPE']:
-                wlb_neu.loc[name, 'VPE'] = fhz_row['VPE']
                 print("Ändere VPE für %s (%s) von %s (WLB) zu %s (FHZ)" % (name,
                     wlb_row['Bezeichnung | Einheit'], wlb_row['VPE'], fhz_row['VPE']))
+                wlb_neu.loc[name, 'VPE'] = fhz_row['VPE']
                 sth_printed = True
 
             # adopt Menge
             fhz_menge = float(fhz_row['Menge (kg/l/St.)']) / setgroesse
             if fhz_menge != float(wlb_row['Menge (kg/l/St.)']):
-                wlb_neu.loc[name, 'Menge (kg/l/St.)'] = '%.5f' % fhz_menge
                 print("Ändere Menge für %s (%s) von %s (WLB) zu %s (FHZ)" % (name,
-                        wlb_row['Bezeichnung | Einheit'], wlb_row['Menge (kg/l/St.)'], fhz_menge))
+                        wlb_row['Bezeichnung | Einheit'], float(wlb_row['Menge (kg/l/St.)']),
+                        fhz_menge))
+                wlb_neu.loc[name, 'Menge (kg/l/St.)'] = '%.5f' % fhz_menge
                 sth_printed = True
                 if not price_changed:
                     geaenderte_preise = geaenderte_preise.append(wlb_neu.loc[name])
@@ -386,9 +387,9 @@ def main():
 
             # adopt Einheit
             if fhz_row['Einheit'] != wlb_row['Einheit']:
-                wlb_neu.loc[name, 'Einheit'] = fhz_row['Einheit']
                 print("Ändere Einheit für %s (%s) von %s (WLB) zu %s (FHZ)" % (name,
                         wlb_row['Bezeichnung | Einheit'], wlb_row['Einheit'], fhz_row['Einheit']))
+                wlb_neu.loc[name, 'Einheit'] = fhz_row['Einheit']
                 sth_printed = True
         except KeyError:
             pass
