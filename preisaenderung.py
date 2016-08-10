@@ -53,6 +53,14 @@
 9.) "File -> Save a Copy" und als csv-Datei exportieren.
     WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
 10.) Dieses Skript aufrufen mit --fhz FHZ_FILE.csv --wlb Artikelliste_LM.csv
+11.) Evtl. Probleme beheben, z.B.:
+    * Dopplungen von Artikelnummern korrigieren (werden als erstes aufgelistet),
+        diese erzeugen später weitere Fehlermeldungen (Fehler evtl. ans FHZ
+        melden)
+    * Änderungen prüfen und ggf. eingreifen
+    * Angebliche neue Artikel prüfen, ob nur ein Tippfehler in der Artikelnummer
+        ist (Fehler evtl. ans FHZ melden)
+12.) Punkt 10 und 11 so lange ausführen, bis alles OK ist
 11.) Ergebnisse werden gespeichert in Dateien:
     * "preisänderung.csv" (alle Artikel, aktualisiert)
     * "preisänderung_geänderte_preise.csv" (alle Artikel, deren Preis sich verändert hat)
