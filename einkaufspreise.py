@@ -37,7 +37,7 @@ parser.add_option("--host", type="string",
 parser.add_option("-p", "--pwd", type="string",
         default=None,
         dest="PWD",
-        help="The admin(!) password of the MySQL DB. If not set, password is "
+        help="The mitarbeiter password of the MySQL DB. If not set, password is "
         "prompted for.")
 
 # get parsed args

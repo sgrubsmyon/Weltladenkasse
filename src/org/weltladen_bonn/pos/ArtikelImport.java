@@ -511,10 +511,10 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
                 // if calculated ekpreis according to empf_vkpreis and ekrabatt does not match ekpreis:
                 //    use the calculated ekpreis, but give a warning
                 logString += "<div style=\""+redStyle+"\">EK-Preis von "+
-                    bc.priceFormatter(origEKPreis)+" "+bc.currencySymbol+
+                    bc.priceFormatter(origEKPreis)+" "+bc.currencySymbol+" "+
                     "aus Zeile "+lineCount+" wird durch berechneten "+
                     "EK-Preis von "+bc.priceFormatter(ekpreis)+" "+
-                    bc.currencySymbol+" ersetzt!.</div>\n";
+                    bc.currencySymbol+" ersetzt!</div>\n";
                 log.setText(logString+logStringEnd);
             }
         }
