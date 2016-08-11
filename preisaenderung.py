@@ -4,9 +4,6 @@
 # TODO:
 # * GEPA      891097110      Agenda 21 Biokaffee\nBohne: neuer Name ("Bio Café, Bohne")
 #   und Verpackung, Art.-Nr. gleich!
-# * El Puente ta11304 sollte sein ta113004 (EL PUENTEs Bio-Kaffee # Großverbraucher) gemahlen | 1000 g Beutel)
-# * El Puente at113003 sollte sein at113004 („Oromia“, Sidamo Großverbraucher, gemahlen)
-
 
 '''
 1.) In "Weltladenkasse -> Artikelliste" auf "Lebensmittel" klicken
@@ -61,13 +58,13 @@
     * Angebliche neue Artikel prüfen, ob nur ein Tippfehler in der Artikelnummer
         ist (Fehler evtl. ans FHZ melden)
 12.) Punkt 10 und 11 so lange ausführen, bis alles OK ist
-11.) Ergebnisse werden gespeichert in Dateien:
+13.) Ergebnisse werden gespeichert in Dateien:
     * "preisänderung.csv" (alle Artikel, aktualisiert)
     * "preisänderung_geänderte_preise.csv" (alle Artikel, deren Preis sich verändert hat)
-    * "preisänderung_geänderte_preise_sortiment.csv" (alle Sortimentsartikel, deren Preis sich verändert hat)
+    * "preisänderung_geänderte_preise_sortiment.csv" (alle Sortimentsartikel, deren Preis sich verändert hat, für Import im Preisschilder-Menü)
     * "preisänderung_geänderte_preise_sortiment_alle_felder.csv" (wie oben, für Import in LibreOffice zum besseren Erkennen der Artikel von Hand)
     * "preisänderung_neue_artikel.csv" (alle neuen Artikel)
-12.) "preisänderung.csv" mit LibreOffice öffnen:
+14.) "preisänderung.csv" mit LibreOffice öffnen:
     * Separated by: Semicolon
     * Text Delimiter: '"'!
     * Problem 1:
@@ -80,18 +77,18 @@
         werden.
         Daher: Die Spalte "Menge (kg/l/St.)" anklicken und Typ auf "Text"
             setzen.
-13.) Als ods-Datei speichern (Save a copy, "Artikelliste_LM_NEU.ods").
-14.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
+15.) Als ods-Datei speichern (Save a copy, "Artikelliste_LM_NEU.ods").
+16.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
     die Datei "Artikelliste_LM_NEU.ods" auswählen.
-15.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
+17.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
     "preisänderung_geänderte_preise_sortiment.csv" auswählen.
-16.) Die Datei "preisänderung_neue_artikel.csv" mit LibreOffice öffnen,
+18.) Die Datei "preisänderung_neue_artikel.csv" mit LibreOffice öffnen,
     Semicolon als Separator, Text Delimiter: '"'. Auch hier wieder: Die Spalte
     "Artikelnr." anklicken und Typ auf "Text" setzen, Spalte "Menge (kg/l/St.)"
     anklicken und Typ auf "Text" setzen.
-17.) Für jeden neuen Artikel eine existierende Produktgruppe wählen und in die
+19.) Für jeden neuen Artikel eine existierende Produktgruppe wählen und in die
     entspr. Spalte eintragen. Speichern als "preisänderung_neue_artikel.ods".
-18.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
+20.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
     die Datei "preisänderung_neue_artikel.ods" auswählen.
 '''
 
