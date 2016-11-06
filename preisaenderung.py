@@ -18,11 +18,13 @@
 7.) "File -> Save a Copy" und als csv-Datei exportieren.
     WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
 8.) Neue FHZ-Preisliste öffnen
-    * Wir benötigen Spalten C bis L, diese Spalten markieren, kopieren und in
-        leeres Dokument (Ctrl-N) einfügen mit Ctrl-Shift-V (Formatierung wird gelöscht)
+    * Wir benötigen Spalten D bis M (von "Lieferant" bis "je Einheit"), diese
+        Spalten markieren, kopieren und in leeres Dokument (Ctrl-N) einfügen mit
+        Ctrl-Shift-V (Formatierung wird gelöscht)
     * 'File -> Save As' als "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX.ods"
     * Alle Zeilen, die leer sind oder Überschrift (Produktgruppe) enthalten, löschen:
-        Mit Ctrl-Down springen, Zellen aus Zeilen markieren, Ctrl-Minus, Delete entire row(s)
+        In Spalte "Lieferant" mit Ctrl-Down springen, Zellen aus Zeilen
+        markieren, Ctrl-Minus, Delete entire row(s)
     * Alle Pfandartikel (leere Flaschen und Kästen) löschen (von PFAND1 bis
         PFANDKISTE2), denn wir haben ein anderes Pfandsystem (bei uns entspricht
         PFAND2 der 0,33 l Flasche für 8 ct, dafür haben wir nicht die
@@ -32,24 +34,25 @@
     * Preis (Spalte "je Einheit") geht in "Empf. VK-Preis"
     * Spalte "Variabel" auf "Nein" setzen
     * mit Formeln bearbeiten:
-        =CONCATENATE(F3, " | ", G3, " ", H3, " ", I3)       für "Bezeichnung" (Kurzname ist der egtl. Name)
+        =CONCATENATE(F3, " | ", G3, " ", H3, " ", I3)       für "Bezeichnung | Einheit"
+                                                            (Kurzname ist der FHZ-Name)
         =G3/1000                                            für "Menge"
         =IF(I3="g", "kg", IF(I3="ml","l",""))               für "Einheit"
         * nach fehlender Einheit suchen (mit Ctrl-Down zu Lücken springen), in fast
-            allen Fällen (außer Pfand) "St." eintragen und Menge anpassen (z.B.
+            allen Fällen (außer z.B. Kokoblock) "St." eintragen und Menge anpassen (z.B.
             4 für Muskatnüsse)
         OR:
         * After running script, search for "zu 0 " in output, correct the Menge
             values in the FHZ file and Einheit to "St." (e.g. Vanilleschoten
             'ma110100', 'sl115108', 'rfb116032')
-        =IF(F5="x", "Ja", "Nein")                           für "Sofort lieferbar"
+        =IF(D3="x", "Ja", "Nein")                           für "Sofort lieferbar"
     * Copy VPE column into vim, then
         :%s/[^0-9]//g
       Save as blabla, cat in terminal and copy and paste in LibreOffice
     * Spalte "Menge": Markieren, "Format Cells", 5 decimal places
 9.) "File -> Save a Copy" und als csv-Datei exportieren.
     WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
-10.) Dieses Skript aufrufen mit --fhz FHZ_FILE.csv --wlb Artikelliste_LM.csv
+10.) Dieses Skript aufrufen mit --fhz FHZ_FILE.csv --wlb Artikelliste_LM.csv (-n)
 11.) Evtl. Probleme beheben, z.B.:
     * Dopplungen von Artikelnummern korrigieren (werden als erstes aufgelistet),
         diese erzeugen später weitere Fehlermeldungen (Fehler evtl. ans FHZ
@@ -219,6 +222,10 @@ def main():
             default='Artikelliste_DB_Dump_2015_KW40_LM.csv',
             dest="WLB",
             help="The path to WLB .csv file.")
+    parser.add_option("-n", action="store_true",
+            default=False,
+            dest="ADOPT_NAMES",
+            help="Artikelnamen ('Bezeichnung | Einheit') vom FHZ übernehmen?")
 
     # get parsed args
     (options, args) = parser.parse_args()
@@ -360,8 +367,9 @@ def main():
                     geaenderte_preise = geaenderte_preise.append(wlb_neu.loc[name])
                     price_changed = True
 
-            #### adopt the article name
-            ###wlb_neu.loc[name, 'Bezeichnung | Einheit'] = fhz_row['Bezeichnung | Einheit']
+            if options.ADOPT_NAMES:
+                #### adopt the article name
+                wlb_neu.loc[name, 'Bezeichnung | Einheit'] = fhz_row['Bezeichnung | Einheit']
 
             # adopt VPE
             if fhz_row['VPE'] != wlb_row['VPE']:
