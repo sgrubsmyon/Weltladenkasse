@@ -52,7 +52,8 @@
     * Spalte "Menge": Markieren, "Format Cells", 5 decimal places
 9.) "File -> Save a Copy" und als csv-Datei exportieren.
     WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
-10.) Dieses Skript aufrufen mit --fhz FHZ_FILE.csv --wlb Artikelliste_LM.csv (-n)
+10.) Dieses Skript aufrufen mit:
+    --fhz FHZ_FILE.csv --wlb Artikelliste_LM.csv (-n) > log.txt
 11.) Evtl. Probleme beheben, z.B.:
     * Dopplungen von Artikelnummern korrigieren (werden als erstes aufgelistet),
         diese erzeugen später weitere Fehlermeldungen (Fehler evtl. ans FHZ
