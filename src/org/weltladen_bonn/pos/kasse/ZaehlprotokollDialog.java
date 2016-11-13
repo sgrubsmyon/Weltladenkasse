@@ -14,14 +14,17 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.AbstractDocument;
+import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.Vector;
 
 // MySQL Connector/J stuff:
 // GUI stuff:
@@ -45,6 +48,15 @@ public class ZaehlprotokollDialog extends DialogWindow
     // Attribute:
     private AbrechnungenTag abrechnungen;
 
+    private Vector<JSpinner> muenz_spinners;
+    private Vector<JSpinner> schein_spinners;
+    private Vector<JFormattedTextField> muenz_fields;
+    private Vector<JFormattedTextField> schein_fields;
+    private Vector<BigDecimal> muenz_werte;
+    private Vector<BigDecimal> schein_werte;
+
+    private JFormattedTextField summeField;
+
     private JButton okButton;
     private JButton cancelButton;
 
@@ -67,12 +79,13 @@ public class ZaehlprotokollDialog extends DialogWindow
         int top = 10, left = 10, bottom = 10, right = 10;
         headerPanel.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
 
-        JTextArea erklaerText = new JTextArea(7, 30);
+        JTextArea erklaerText = new JTextArea(3, 30);
         erklaerText.append("Der Kassenbestand in allen Münz- und Scheinsorten " +
                 "ist vollständig zu protokollieren!\n\n" +
                 "Bitte zähle, wie viele Münzen und Scheine von jeder Sorte " +
                 "in der Kasse sind, und trage es hier ein:" );
         erklaerText = makeLabelStyle(erklaerText);
+        erklaerText.setFont(bc.mediumFont);
         erklaerText.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
         headerPanel.add(erklaerText);
 
@@ -86,6 +99,10 @@ public class ZaehlprotokollDialog extends DialogWindow
         JPanel middlePanel = new JPanel();
         middlePanel.setLayout(new BoxLayout(middlePanel, BoxLayout.Y_AXIS));
 
+
+
+
+
         JPanel muenzPanel = new JPanel(new GridBagLayout());
         muenzPanel.setBorder(BorderFactory.createTitledBorder("Münzen" ));
         GridBagConstraints c = new GridBagConstraints();
@@ -94,41 +111,63 @@ public class ZaehlprotokollDialog extends DialogWindow
         c.ipady = 10;
         c.insets = new Insets(3, 10, 3, 10);
 
-        JLabel muenze_1cent_label = new JLabel("1 Cent:" );
-        JLabel muenze_2cent_label = new JLabel("2 Cent:" );
-        JLabel muenze_5cent_label = new JLabel("5 Cent:" );
-        JLabel muenze_10cent_label = new JLabel("10 Cent:" );
-        JLabel muenze_20cent_label = new JLabel("20 Cent:" );
-        JLabel muenze_50cent_label = new JLabel("50 Cent:" );
-        JLabel muenze_1euro_label = new JLabel("1 Euro:" );
-        JLabel muenze_2euro_label = new JLabel("2 Euro:" );
+        Vector<String> muenz_namen = new Vector<>();
+        muenz_namen.add("1 Cent");
+        muenz_namen.add("2 Cent");
+        muenz_namen.add("5 Cent");
+        muenz_namen.add("10 Cent");
+        muenz_namen.add("20 Cent");
+        muenz_namen.add("50 Cent");
+        muenz_namen.add("1 Euro");
+        muenz_namen.add("2 Euro");
 
-        Icon muenze_1cent_icon = new ImageIcon(getClass().getResource("/resources/icons/coins/1cent_klein.gif" ), "1 Cent");
-        Icon muenze_2cent_icon = new ImageIcon(getClass().getResource("/resources/icons/coins/2cent_klein.gif" ), "2 Cent");
-        Icon muenze_5cent_icon = new ImageIcon(getClass().getResource("/resources/icons/coins/5cent_klein.gif" ), "5 Cent");
-        Icon muenze_10cent_icon = new ImageIcon(getClass().getResource("/resources/icons/coins/10cent_klein.gif" ), "10 Cent");
-        Icon muenze_20cent_icon = new ImageIcon(getClass().getResource("/resources/icons/coins/20cent_klein.gif" ), "20 Cent");
-        Icon muenze_50cent_icon = new ImageIcon(getClass().getResource("/resources/icons/coins/50cent_klein.gif" ), "50 Cent");
-        Icon muenze_1euro_icon = new ImageIcon(getClass().getResource("/resources/icons/coins/1euro_klein.gif" ), "1 Euro");
-        Icon muenze_2euro_icon = new ImageIcon(getClass().getResource("/resources/icons/coins/2euro_klein.gif" ), "2 Euro");
+        muenz_werte = new Vector<>();
+        muenz_werte.add(new BigDecimal("0.01"));
+        muenz_werte.add(new BigDecimal("0.02"));
+        muenz_werte.add(new BigDecimal("0.05"));
+        muenz_werte.add(new BigDecimal("0.10"));
+        muenz_werte.add(new BigDecimal("0.20"));
+        muenz_werte.add(new BigDecimal("0.50"));
+        muenz_werte.add(new BigDecimal("1.00"));
+        muenz_werte.add(new BigDecimal("2.00"));
 
-        JSpinner muenze_1cent_spinner = new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1));
-        JSpinner muenze_2cent_spinner = new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1));
-        JSpinner muenze_5cent_spinner = new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1));
-        JSpinner muenze_10cent_spinner = new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1));
-        JSpinner muenze_20cent_spinner = new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1));
-        JSpinner muenze_50cent_spinner = new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1));
-        JSpinner muenze_1euro_spinner = new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1));
-        JSpinner muenze_2euro_spinner = new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1));
+        Vector<JLabel> muenz_labels = new Vector<>();
+        for (String name : muenz_namen) {
+            muenz_labels.add(new JLabel(name));
+        }
 
-        JFormattedTextField muenze_1cent_field = new JFormattedTextField();
-        JFormattedTextField muenze_2cent_field = new JFormattedTextField();
-        JFormattedTextField muenze_5cent_field = new JFormattedTextField();
-        JFormattedTextField muenze_10cent_field = new JFormattedTextField();
-        JFormattedTextField muenze_20cent_field = new JFormattedTextField();
-        JFormattedTextField muenze_50cent_field = new JFormattedTextField();
-        JFormattedTextField muenze_1euro_field = new JFormattedTextField();
-        JFormattedTextField muenze_2euro_field = new JFormattedTextField();
+        Vector<ImageIcon> muenz_icons = new Vector<>();
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/1cent_klein.gif" ), "1 Cent"));
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/2cent_klein.gif" ), "2 Cent"));
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/5cent_klein.gif" ), "5 Cent"));
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/10cent_klein.gif" ), "10 Cent"));
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/20cent_klein.gif" ), "20 Cent"));
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/50cent_klein.gif" ), "50 Cent"));
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/1euro_klein.gif" ), "1 Euro"));
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/2euro_klein.gif" ), "2 Euro"));
+
+        muenz_spinners = new Vector<>();
+        for (String name : muenz_namen) {
+            muenz_spinners.add(new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1)));
+            muenz_spinners.lastElement().addChangeListener(this);
+            muenz_spinners.lastElement().setFont(bc.mediumFont);
+            JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(muenz_spinners.lastElement(), "###");
+            muenz_spinners.lastElement().setEditor(anzahlEditor);
+            JFormattedTextField anzahlField = anzahlEditor.getTextField();
+//            preventSpinnerOverflow(anzahlField);
+            ((NumberFormatter) anzahlField.getFormatter()).setAllowsInvalid(false); // accept
+                                                                                    // only allowed values (i.e. numbers)
+        }
+
+
+        muenz_fields = new Vector<>();
+        for (String name : muenz_namen) {
+            muenz_fields.add(new JFormattedTextField("0,00"));
+            ((AbstractDocument) muenz_fields.lastElement().getDocument()).setDocumentFilter(bc.geldFilter);
+            muenz_fields.lastElement().setEnabled(false);
+            muenz_fields.lastElement().setFont(bc.mediumFont);
+            muenz_fields.lastElement().setHorizontalAlignment(JTextField.RIGHT);
+        }
 //        kundeGibtField.getDocument().addDocumentListener(new DocumentListener() {
 //            public void insertUpdate(DocumentEvent e) {
 //                updateRueckgeld();
@@ -142,14 +181,6 @@ public class ZaehlprotokollDialog extends DialogWindow
 //                // Plain text components do not fire these events
 //            }
 //        });
-        ((AbstractDocument) muenze_1cent_field.getDocument()).setDocumentFilter(bc.geldFilter);
-        ((AbstractDocument) muenze_2cent_field.getDocument()).setDocumentFilter(bc.geldFilter);
-        ((AbstractDocument) muenze_5cent_field.getDocument()).setDocumentFilter(bc.geldFilter);
-        ((AbstractDocument) muenze_10cent_field.getDocument()).setDocumentFilter(bc.geldFilter);
-        ((AbstractDocument) muenze_20cent_field.getDocument()).setDocumentFilter(bc.geldFilter);
-        ((AbstractDocument) muenze_50cent_field.getDocument()).setDocumentFilter(bc.geldFilter);
-        ((AbstractDocument) muenze_1euro_field.getDocument()).setDocumentFilter(bc.geldFilter);
-        ((AbstractDocument) muenze_2euro_field.getDocument()).setDocumentFilter(bc.geldFilter);
 
         c.gridy = 2;
         c.gridx = 0;
@@ -158,163 +189,54 @@ public class ZaehlprotokollDialog extends DialogWindow
         c.gridx = 0;
         muenzPanel.add(new JLabel("Betrag:"), c);
 
-        c.gridy = 0;
-        c.gridx = 1;
-        c.anchor = GridBagConstraints.CENTER;
-        muenzPanel.add(muenze_1cent_label, c);
-        c.gridy = 0;
-        c.gridx = 3;
-        c.anchor = GridBagConstraints.CENTER;
-        muenzPanel.add(muenze_2cent_label, c);
-        c.gridy = 0;
-        c.gridx = 5;
-        c.anchor = GridBagConstraints.CENTER;
-        muenzPanel.add(muenze_5cent_label, c);
-        c.gridy = 0;
-        c.gridx = 7;
-        c.anchor = GridBagConstraints.CENTER;
-        muenzPanel.add(muenze_10cent_label, c);
-        c.gridy = 0;
-        c.gridx = 9;
-        c.anchor = GridBagConstraints.CENTER;
-        muenzPanel.add(muenze_20cent_label, c);
-        c.gridy = 0;
-        c.gridx = 11;
-        c.anchor = GridBagConstraints.CENTER;
-        muenzPanel.add(muenze_50cent_label, c);
-        c.gridy = 0;
-        c.gridx = 13;
-        c.anchor = GridBagConstraints.CENTER;
-        muenzPanel.add(muenze_1euro_label, c);
-        c.gridy = 0;
-        c.gridx = 15;
-        c.anchor = GridBagConstraints.CENTER;
-        muenzPanel.add(muenze_2euro_label, c);
+        int index = 1;
+        for (JLabel label : muenz_labels) {
+            c.gridy = 0;
+            c.gridx = index;
+            c.anchor = GridBagConstraints.CENTER;
+            muenzPanel.add(label, c);
+            index += 2;
+        }
 
-        c.gridy = 1;
-        c.gridx = 1;
-        muenzPanel.add(new JLabel(muenze_1cent_icon), c);
-        c.gridy = 1;
-        c.gridx = 3;
-        muenzPanel.add(new JLabel(muenze_2cent_icon), c);
-        c.gridy = 1;
-        c.gridx = 5;
-        muenzPanel.add(new JLabel(muenze_5cent_icon), c);
-        c.gridy = 1;
-        c.gridx = 7;
-        muenzPanel.add(new JLabel(muenze_10cent_icon), c);
-        c.gridy = 1;
-        c.gridx = 9;
-        muenzPanel.add(new JLabel(muenze_20cent_icon), c);
-        c.gridy = 1;
-        c.gridx = 11;
-        muenzPanel.add(new JLabel(muenze_50cent_icon), c);
-        c.gridy = 1;
-        c.gridx = 13;
-        muenzPanel.add(new JLabel(muenze_1euro_icon), c);
-        c.gridy = 1;
-        c.gridx = 15;
-        muenzPanel.add(new JLabel(muenze_2euro_icon), c);
+        index = 1;
+        for (ImageIcon icon : muenz_icons) {
+            c.gridy = 1;
+            c.gridx = index;
+            muenzPanel.add(new JLabel(icon), c);
+            index += 2;
+        }
 
-        c.gridy = 2;
-        c.gridx = 1;
-        muenzPanel.add(muenze_1cent_spinner, c);
-        c.gridy = 2;
-        c.gridx = 3;
-        muenzPanel.add(muenze_2cent_spinner, c);
-        c.gridy = 2;
-        c.gridx = 5;
-        muenzPanel.add(muenze_5cent_spinner, c);
-        c.gridy = 2;
-        c.gridx = 7;
-        muenzPanel.add(muenze_10cent_spinner, c);
-        c.gridy = 2;
-        c.gridx = 9;
-        muenzPanel.add(muenze_20cent_spinner, c);
-        c.gridy = 2;
-        c.gridx = 11;
-        muenzPanel.add(muenze_50cent_spinner, c);
-        c.gridy = 2;
-        c.gridx = 13;
-        muenzPanel.add(muenze_1euro_spinner, c);
-        c.gridy = 2;
-        c.gridx = 15;
-        muenzPanel.add(muenze_2euro_spinner, c);
+        index = 1;
+        for (JSpinner spinner : muenz_spinners) {
+            c.gridy = 2;
+            c.gridx = index;
+            muenzPanel.add(spinner, c);
+            index += 2;
+        }
 
-        c.gridy = 3;
-        c.gridx = 1;
-        muenzPanel.add(new JLabel("oder"), c);
-        c.gridy = 3;
-        c.gridx = 3;
-        muenzPanel.add(new JLabel("oder"), c);
-        c.gridy = 3;
-        c.gridx = 5;
-        muenzPanel.add(new JLabel("oder"), c);
-        c.gridy = 3;
-        c.gridx = 7;
-        muenzPanel.add(new JLabel("oder"), c);
-        c.gridy = 3;
-        c.gridx = 9;
-        muenzPanel.add(new JLabel("oder"), c);
-        c.gridy = 3;
-        c.gridx = 11;
-        muenzPanel.add(new JLabel("oder"), c);
-        c.gridy = 3;
-        c.gridx = 13;
-        muenzPanel.add(new JLabel("oder"), c);
-        c.gridy = 3;
-        c.gridx = 15;
-        muenzPanel.add(new JLabel("oder"), c);
+//        index = 1;
+//        for (String name : muenz_namen) {
+//            c.gridy = 3;
+//            c.gridx = index;
+//            muenzPanel.add(new JLabel("oder"), c);
+//            index += 2;
+//        }
 
-        c.gridy = 4;
-        c.gridx = 1;
-        muenzPanel.add(muenze_1cent_field, c);
-        c.gridy = 4;
-        c.gridx = 3;
-        muenzPanel.add(muenze_2cent_field, c);
-        c.gridy = 4;
-        c.gridx = 5;
-        muenzPanel.add(muenze_5cent_field, c);
-        c.gridy = 4;
-        c.gridx = 7;
-        muenzPanel.add(muenze_10cent_field, c);
-        c.gridy = 4;
-        c.gridx = 9;
-        muenzPanel.add(muenze_20cent_field, c);
-        c.gridy = 4;
-        c.gridx = 11;
-        muenzPanel.add(muenze_50cent_field, c);
-        c.gridy = 4;
-        c.gridx = 13;
-        muenzPanel.add(muenze_1euro_field, c);
-        c.gridy = 4;
-        c.gridx = 15;
-        muenzPanel.add(muenze_2euro_field, c);
+        index = 1;
+        for (JFormattedTextField field : muenz_fields) {
+            c.gridy = 4;
+            c.gridx = index;
+            muenzPanel.add(field, c);
+            index += 2;
+        }
 
-        c.gridy = 4;
-        c.gridx = 2;
-        muenzPanel.add(new JLabel(bc.currencySymbol), c);
-        c.gridy = 4;
-        c.gridx = 4;
-        muenzPanel.add(new JLabel(bc.currencySymbol), c);
-        c.gridy = 4;
-        c.gridx = 6;
-        muenzPanel.add(new JLabel(bc.currencySymbol), c);
-        c.gridy = 4;
-        c.gridx = 8;
-        muenzPanel.add(new JLabel(bc.currencySymbol), c);
-        c.gridy = 4;
-        c.gridx = 10;
-        muenzPanel.add(new JLabel(bc.currencySymbol), c);
-        c.gridy = 4;
-        c.gridx = 12;
-        muenzPanel.add(new JLabel(bc.currencySymbol), c);
-        c.gridy = 4;
-        c.gridx = 14;
-        muenzPanel.add(new JLabel(bc.currencySymbol), c);
-        c.gridy = 4;
-        c.gridx = 16;
-        muenzPanel.add(new JLabel(bc.currencySymbol), c);
+        index = 2;
+        for (String name : muenz_namen) {
+            c.gridy = 4;
+            c.gridx = index;
+            muenzPanel.add(new JLabel(bc.currencySymbol), c);
+            index += 2;
+        }
 
 
 
@@ -328,163 +250,148 @@ public class ZaehlprotokollDialog extends DialogWindow
         c2.ipady = 10;
         c2.insets = new Insets(3, 10, 3, 10);
 
-        JLabel schein_5euro_label = new JLabel("5 Euro:" );
-        JLabel schein_10euro_label = new JLabel("10 Euro:" );
-        JLabel schein_20euro_label = new JLabel("20 Euro:" );
-        JLabel schein_50euro_label = new JLabel("50 Euro:" );
-        JLabel schein_100euro_label = new JLabel("100 Euro:" );
-        JLabel schein_200euro_label = new JLabel("200 Euro:" );
+        Vector<String> schein_namen = new Vector<>();
+        schein_namen.add("5 Euro");
+        schein_namen.add("10 Euro");
+        schein_namen.add("20 Euro");
+        schein_namen.add("50 Euro");
+        schein_namen.add("100 Euro");
+        schein_namen.add("200 Euro");
 
-        Icon schein_5euro_icon = new ImageIcon(getClass().getResource("/resources/icons/banknotes/5euro_neu_vorne_klein.jpg" ), "5 Euro");
-        Icon schein_10euro_icon = new ImageIcon(getClass().getResource("/resources/icons/banknotes/10euro_neu_vorne_klein.jpg" ), "10 Euro");
-        Icon schein_20euro_icon = new ImageIcon(getClass().getResource("/resources/icons/banknotes/20euro_neu_vorne_klein.jpg" ), "20 Euro");
-        Icon schein_50euro_icon = new ImageIcon(getClass().getResource("/resources/icons/banknotes/50euro_neu_vorne_klein.jpg" ), "50 Euro");
-        Icon schein_100euro_icon = new ImageIcon(getClass().getResource("/resources/icons/banknotes/100euro_klein.gif" ), "100 Euro");
-        Icon schein_200euro_icon = new ImageIcon(getClass().getResource("/resources/icons/banknotes/200euro_klein.gif" ), "200 Euro");
+        schein_werte = new Vector<>();
+        schein_werte.add(new BigDecimal("5"));
+        schein_werte.add(new BigDecimal("10"));
+        schein_werte.add(new BigDecimal("20"));
+        schein_werte.add(new BigDecimal("50"));
+        schein_werte.add(new BigDecimal("100"));
+        schein_werte.add(new BigDecimal("200"));
 
-        JSpinner schein_5euro_spinner = new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1));
-        JSpinner schein_10euro_spinner = new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1));
-        JSpinner schein_20euro_spinner = new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1));
-        JSpinner schein_50euro_spinner = new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1));
-        JSpinner schein_100euro_spinner = new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1));
-        JSpinner schein_200euro_spinner = new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1));
+        Vector<JLabel> schein_labels = new Vector<>();
+        for (String name : schein_namen) {
+            schein_labels.add(new JLabel(name));
+        }
 
-        JFormattedTextField schein_5euro_field = new JFormattedTextField();
-        JFormattedTextField schein_10euro_field = new JFormattedTextField();
-        JFormattedTextField schein_20euro_field = new JFormattedTextField();
-        JFormattedTextField schein_50euro_field = new JFormattedTextField();
-        JFormattedTextField schein_100euro_field = new JFormattedTextField();
-        JFormattedTextField schein_200euro_field = new JFormattedTextField();
-        ((AbstractDocument) schein_5euro_field.getDocument()).setDocumentFilter(bc.geldFilter);
-        ((AbstractDocument) schein_10euro_field.getDocument()).setDocumentFilter(bc.geldFilter);
-        ((AbstractDocument) schein_20euro_field.getDocument()).setDocumentFilter(bc.geldFilter);
-        ((AbstractDocument) schein_50euro_field.getDocument()).setDocumentFilter(bc.geldFilter);
-        ((AbstractDocument) schein_100euro_field.getDocument()).setDocumentFilter(bc.geldFilter);
-        ((AbstractDocument) schein_200euro_field.getDocument()).setDocumentFilter(bc.geldFilter);
+        Vector<ImageIcon> schein_icons = new Vector<>();
+        schein_icons.add(new ImageIcon(getClass().getResource("/resources/icons/banknotes/5euro_neu_vorne_klein.jpg" ), "5 Euro"));
+        schein_icons.add(new ImageIcon(getClass().getResource("/resources/icons/banknotes/10euro_neu_vorne_klein.jpg" ), "10 Euro"));
+        schein_icons.add(new ImageIcon(getClass().getResource("/resources/icons/banknotes/20euro_neu_vorne_klein.jpg" ), "20 Euro"));
+        schein_icons.add(new ImageIcon(getClass().getResource("/resources/icons/banknotes/50euro_neu_vorne_klein.jpg" ), "50 Euro"));
+        schein_icons.add(new ImageIcon(getClass().getResource("/resources/icons/banknotes/100euro_klein.gif" ), "100 Euro"));
+        schein_icons.add(new ImageIcon(getClass().getResource("/resources/icons/banknotes/200euro_klein.gif" ), "200 Euro"));
 
-        c2.gridy = 2;
-        c2.gridx = 0;
-        scheinPanel.add(new JLabel("Anzahl:"), c2);
-        c2.gridy = 4;
-        c2.gridx = 0;
-        scheinPanel.add(new JLabel("Betrag:"), c2);
+        schein_spinners = new Vector<>();
+        for (String name : schein_namen) {
+            schein_spinners.add(new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1)));
+            schein_spinners.lastElement().addChangeListener(this);
+            schein_spinners.lastElement().setFont(bc.mediumFont);
+            JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(schein_spinners.lastElement(), "###");
+            schein_spinners.lastElement().setEditor(anzahlEditor);
+            JFormattedTextField anzahlField = anzahlEditor.getTextField();
+//            preventSpinnerOverflow(anzahlField);
+            ((NumberFormatter) anzahlField.getFormatter()).setAllowsInvalid(false); // accept
+                                                                                    // only allowed values (i.e. numbers)
+        }
 
-        c2.gridy = 0;
-        c2.gridx = 1;
-        scheinPanel.add(schein_5euro_label, c2);
-        c2.gridy = 0;
-        c2.gridx = 3;
-        scheinPanel.add(schein_10euro_label, c2);
-        c2.gridy = 0;
-        c2.gridx = 5;
-        scheinPanel.add(schein_20euro_label, c2);
-        c2.gridy = 0;
-        c2.gridx = 7;
-        scheinPanel.add(schein_50euro_label, c2);
-        c2.gridy = 0;
-        c2.gridx = 9;
-        scheinPanel.add(schein_100euro_label, c2);
-        c2.gridy = 0;
-        c2.gridx = 11;
-        scheinPanel.add(schein_200euro_label, c2);
+        schein_fields = new Vector<>();
+        for (String name : schein_namen) {
+            schein_fields.add(new JFormattedTextField(bc.priceFormatter("0")));
+            ((AbstractDocument) schein_fields.lastElement().getDocument()).setDocumentFilter(bc.geldFilter);
+            schein_fields.lastElement().setEnabled(false);
+            schein_fields.lastElement().setFont(bc.mediumFont);
+            schein_fields.lastElement().setHorizontalAlignment(JTextField.RIGHT);
+        }
 
-        c2.gridy = 1;
-        c2.gridx = 1;
-        scheinPanel.add(new JLabel(schein_5euro_icon), c2);
-        c2.gridy = 1;
-        c2.gridx = 3;
-        scheinPanel.add(new JLabel(schein_10euro_icon), c2);
-        c2.gridy = 1;
-        c2.gridx = 5;
-        scheinPanel.add(new JLabel(schein_20euro_icon), c2);
-        c2.gridy = 1;
-        c2.gridx = 7;
-        scheinPanel.add(new JLabel(schein_50euro_icon), c2);
-        c2.gridy = 1;
-        c2.gridx = 9;
-        scheinPanel.add(new JLabel(schein_100euro_icon), c2);
-        c2.gridy = 1;
-        c2.gridx = 11;
-        scheinPanel.add(new JLabel(schein_200euro_icon), c2);
+        c.gridy = 2;
+        c.gridx = 0;
+        scheinPanel.add(new JLabel("Anzahl:"), c);
+        c.gridy = 4;
+        c.gridx = 0;
+        scheinPanel.add(new JLabel("Betrag:"), c);
 
-        c2.gridy = 2;
-        c2.gridx = 1;
-        scheinPanel.add(schein_5euro_spinner, c2);
-        c2.gridy = 2;
-        c2.gridx = 3;
-        scheinPanel.add(schein_10euro_spinner, c2);
-        c2.gridy = 2;
-        c2.gridx = 5;
-        scheinPanel.add(schein_20euro_spinner, c2);
-        c2.gridy = 2;
-        c2.gridx = 7;
-        scheinPanel.add(schein_50euro_spinner, c2);
-        c2.gridy = 2;
-        c2.gridx = 9;
-        scheinPanel.add(schein_100euro_spinner, c2);
-        c2.gridy = 2;
-        c2.gridx = 11;
-        scheinPanel.add(schein_200euro_spinner, c2);
+        index = 1;
+        for (JLabel label : schein_labels) {
+            c.gridy = 0;
+            c.gridx = index;
+            c.anchor = GridBagConstraints.CENTER;
+            scheinPanel.add(label, c);
+            index += 2;
+        }
 
-        c2.gridy = 3;
-        c2.gridx = 1;
-        scheinPanel.add(new JLabel("oder"), c2);
-        c2.gridy = 3;
-        c2.gridx = 3;
-        scheinPanel.add(new JLabel("oder"), c2);
-        c2.gridy = 3;
-        c2.gridx = 5;
-        scheinPanel.add(new JLabel("oder"), c2);
-        c2.gridy = 3;
-        c2.gridx = 7;
-        scheinPanel.add(new JLabel("oder"), c2);
-        c2.gridy = 3;
-        c2.gridx = 9;
-        scheinPanel.add(new JLabel("oder"), c2);
-        c2.gridy = 3;
-        c2.gridx = 11;
-        scheinPanel.add(new JLabel("oder"), c2);
+        index = 1;
+        for (ImageIcon icon : schein_icons) {
+            c.gridy = 1;
+            c.gridx = index;
+            scheinPanel.add(new JLabel(icon), c);
+            index += 2;
+        }
 
-        c2.gridy = 4;
-        c2.gridx = 1;
-        scheinPanel.add(schein_5euro_field, c2);
-        c2.gridy = 4;
-        c2.gridx = 3;
-        scheinPanel.add(schein_10euro_field, c2);
-        c2.gridy = 4;
-        c2.gridx = 5;
-        scheinPanel.add(schein_20euro_field, c2);
-        c2.gridy = 4;
-        c2.gridx = 7;
-        scheinPanel.add(schein_50euro_field, c2);
-        c2.gridy = 4;
-        c2.gridx = 9;
-        scheinPanel.add(schein_100euro_field, c2);
-        c2.gridy = 4;
-        c2.gridx = 11;
-        scheinPanel.add(schein_200euro_field, c2);
+        index = 1;
+        for (JSpinner spinner : schein_spinners) {
+            c.gridy = 2;
+            c.gridx = index;
+            scheinPanel.add(spinner, c);
+            index += 2;
+        }
 
-        c2.gridy = 4;
-        c2.gridx = 2;
-        scheinPanel.add(new JLabel(bc.currencySymbol), c2);
-        c2.gridy = 4;
-        c2.gridx = 4;
-        scheinPanel.add(new JLabel(bc.currencySymbol), c2);
-        c2.gridy = 4;
-        c2.gridx = 6;
-        scheinPanel.add(new JLabel(bc.currencySymbol), c2);
-        c2.gridy = 4;
-        c2.gridx = 8;
-        scheinPanel.add(new JLabel(bc.currencySymbol), c2);
-        c2.gridy = 4;
-        c2.gridx = 10;
-        scheinPanel.add(new JLabel(bc.currencySymbol), c2);
-        c2.gridy = 4;
-        c2.gridx = 12;
-        scheinPanel.add(new JLabel(bc.currencySymbol), c2);
+//        index = 1;
+//        for (String name : schein_namen) {
+//            c.gridy = 3;
+//            c.gridx = index;
+//            scheinPanel.add(new JLabel("oder"), c);
+//            index += 2;
+//        }
+
+        index = 1;
+        for (JFormattedTextField field : schein_fields) {
+            c.gridy = 4;
+            c.gridx = index;
+            scheinPanel.add(field, c);
+            index += 2;
+        }
+
+        index = 2;
+        for (String name : schein_namen) {
+            c.gridy = 4;
+            c.gridx = index;
+            scheinPanel.add(new JLabel(bc.currencySymbol), c);
+            index += 2;
+        }
+
+
+
+        JPanel summePanel = new JPanel(new BorderLayout());
+        summePanel.setBorder(BorderFactory.createTitledBorder("Summe" ));
+
+        summeField = new JFormattedTextField(bc.priceFormatter("0"));
+        summeField.setColumns(7);
+        summeField.setFont(bc.mediumFont);
+        summeField.setHorizontalAlignment(JTextField.RIGHT);
+        ((AbstractDocument) summeField.getDocument()).setDocumentFilter(bc.geldFilter);
+        summeField.setEnabled(false);
+        JPanel summeFieldPanel = new JPanel();
+        summeFieldPanel.add(new JLabel("Gezählter Betrag:"));
+        summeFieldPanel.add(summeField);
+        summeFieldPanel.add(new JLabel(bc.currencySymbol));
+        summePanel.add(summeFieldPanel, BorderLayout.WEST);
+
+        JFormattedTextField kassenstandField;
+        kassenstandField = new JFormattedTextField(bc.priceFormatter(mainWindow.retrieveKassenstand()));
+        kassenstandField.setColumns(7);
+        kassenstandField.setFont(bc.mediumFont);
+        kassenstandField.setHorizontalAlignment(JTextField.RIGHT);
+        ((AbstractDocument) kassenstandField.getDocument()).setDocumentFilter(bc.geldFilter);
+        kassenstandField.setEnabled(false);
+        JPanel kassenstandFieldPanel = new JPanel();
+        kassenstandFieldPanel.add(new JLabel("Soll-Kassenstand:"));
+        kassenstandFieldPanel.add(kassenstandField);
+        kassenstandFieldPanel.add(new JLabel(bc.currencySymbol));
+        summePanel.add(kassenstandFieldPanel, BorderLayout.EAST);
+
+
 
         middlePanel.add(muenzPanel);
         middlePanel.add(scheinPanel);
+        middlePanel.add(summePanel);
 
         allPanel.add(middlePanel, BorderLayout.CENTER);
     }
@@ -505,13 +412,48 @@ public class ZaehlprotokollDialog extends DialogWindow
         allPanel.add(footerPanel, BorderLayout.SOUTH);
     }
 
+    private void refreshSum() {
+        BigDecimal sum = new BigDecimal("0");
+        for (JFormattedTextField field : muenz_fields) {
+            sum = sum.add(new BigDecimal(bc.priceFormatterIntern(field.getText())));
+            System.out.println(sum);
+        }
+        for (JFormattedTextField field : schein_fields) {
+            sum = sum.add(new BigDecimal(bc.priceFormatterIntern(field.getText())));
+            System.out.println(sum);
+        }
+        summeField.setText(bc.priceFormatter(sum));
+    }
+
     /**
      * Needed for ChangeListener.
      */
     public void stateChanged(ChangeEvent e) {
-//	if (e.getSource() == dateSpinner){
-//
-//	}
+        int index = 0;
+        for (JSpinner spinner : muenz_spinners) {
+            if (e.getSource() == spinner) {
+                BigDecimal anzahl = new BigDecimal((Integer) spinner.getValue());
+                BigDecimal wert = muenz_werte.elementAt(index);
+                muenz_fields.elementAt(index).setText(bc.priceFormatter(anzahl.multiply(wert)));
+                System.out.println("Eins");
+                refreshSum();
+                System.out.println("Drei");
+                return;
+            }
+            index++;
+        }
+
+        index = 0;
+        for (JSpinner spinner : schein_spinners) {
+            if (e.getSource() == spinner) {
+                BigDecimal anzahl = new BigDecimal((Integer) spinner.getValue());
+                BigDecimal wert = schein_werte.elementAt(index);
+                schein_fields.elementAt(index).setText(bc.priceFormatter(anzahl.multiply(wert)));
+                refreshSum();
+                return;
+            }
+            index++;
+        }
     }
 
     protected int submit() {
