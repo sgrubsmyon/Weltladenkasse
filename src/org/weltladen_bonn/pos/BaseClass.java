@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.io.FileInputStream;
 import java.text.*; // for NumberFormat
 import java.awt.*; // for Color
-import javax.swing.JOptionPane;
+import javax.swing.*;
 import javax.swing.text.*; // for DocumentFilter
 
 public class BaseClass {
@@ -41,8 +41,8 @@ public class BaseClass {
     //protected NumberFormat amountFormat;
     protected NumberFormat vatFormat;
 
-    public Font mediumFont = new Font("Tahoma", Font.BOLD, 16);
-    public Font bigFont = new Font("Tahoma", Font.BOLD, 32);
+    public static Font mediumFont = new Font("Tahoma", Font.BOLD, 16);
+    public static Font bigFont = new Font("Tahoma", Font.BOLD, 32);
 
     public PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
     public PositiveNumberDocumentFilter relFilter = new PositiveNumberDocumentFilter(3, 6);
@@ -66,9 +66,9 @@ public class BaseClass {
     public BaseClass() {
         loadConfigFile();
 
-	//amountFormat = new DecimalFormat("0.00");
-	//amountFormat = NumberFormat.getCurrencyInstance(myLocale);
-	vatFormat = new DecimalFormat("0.####");
+        //amountFormat = new DecimalFormat("0.00");
+        //amountFormat = NumberFormat.getCurrencyInstance(myLocale);
+        vatFormat = new DecimalFormat("0.####");
 
         intFilter = new IntegerDocumentFilter(-smallintMax, smallintMax);
         vpeFilter = new IntegerDocumentFilter(1, smallintMax);
@@ -165,6 +165,48 @@ public class BaseClass {
         this.displayManufacturer = removeQuotes(this.displayManufacturer);
         this.displayModel = removeQuotes(this.displayModel);
     }
+
+
+    /**
+     * Nested classes that add style
+     */
+    public static class BigLabel extends JLabel {
+        /**
+         * JLabel with bigger than normal font
+         */
+        private static final long serialVersionUID = 1L;
+
+        public BigLabel() {
+            super();
+            initialize();
+        }
+
+        public BigLabel(String str) {
+            super(str);
+            initialize();
+        }
+
+        private void initialize() {
+            this.setFont(mediumFont);
+        }
+    }
+
+    public static class BigButton extends JButton {
+        public BigButton() {
+            super();
+            initialize();
+        }
+
+        public BigButton(String str) {
+            super(str);
+            initialize();
+        }
+
+        private void initialize() {
+            this.setFont(mediumFont);
+        }
+    }
+
 
     /**
      * General helper functions
@@ -295,4 +337,5 @@ public class BaseClass {
             return "";
         }
     }
+
 }

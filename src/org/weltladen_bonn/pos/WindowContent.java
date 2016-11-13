@@ -48,42 +48,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected IntegerDocumentFilter vpeFilter;
     protected IntegerDocumentFilter beliebtFilter;
 
-    protected class BigButton extends JButton {
-        public BigButton() {
-            super();
-            initialize();
-        }
 
-        public BigButton(String str) {
-            super(str);
-            initialize();
-        }
-
-        private void initialize() {
-            this.setFont(bc.mediumFont);
-        }
-    }
-
-    protected class BigLabel extends JLabel {
-        /**
-         * JLabel with bigger than normal font
-         */
-        private static final long serialVersionUID = 1L;
-
-        public BigLabel() {
-            super();
-            initialize();
-        }
-
-        public BigLabel(String str) {
-            super(str);
-            initialize();
-        }
-
-        private void initialize() {
-            this.setFont(bc.mediumFont);
-        }
-    }
 
     // Methoden:
     // Setter:

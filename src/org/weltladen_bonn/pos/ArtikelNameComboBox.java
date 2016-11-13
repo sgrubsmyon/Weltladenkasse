@@ -122,9 +122,9 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             this.setBackground(background);
             this.setForeground(foreground);
 
-            columns[0].setFont(bc.mediumFont); // might be too big
-            columns[1].setFont(bc.mediumFont);
-            columns[2].setFont(bc.mediumFont);
+            columns[0].setFont(BaseClass.mediumFont); // might be too big
+            columns[1].setFont(BaseClass.mediumFont);
+            columns[2].setFont(BaseClass.mediumFont);
 
             if (index >= 0 && index < items.size()){
                 columns[0].setText(parseName(items.get(index)[0]));

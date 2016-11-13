@@ -1,20 +1,21 @@
 package org.weltladen_bonn.pos;
 
 // Basic Java stuff:
-import java.util.*; // for Vector
-import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
+import org.weltladen_bonn.pos.BaseClass.BigLabel;
+
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Vector;
 
 // MySQL Connector/J stuff:
-import java.sql.*; // Connection, Statement, ResultSet
-
 // GUI stuff:
-import java.awt.*; // BorderLayout, FlowLayout, Dimension
-import java.awt.event.*; // ActionEvent, ActionListener
-
-import javax.swing.*; // JFrame, JPanel, JTable, JButton, ...
-import javax.swing.table.*;
-import javax.swing.text.*; // for DocumentFilter
-import javax.swing.event.*;
 
 public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage implements ActionListener, DocumentListener {
     /**
@@ -53,8 +54,8 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         JPanel barcodePanel = new JPanel();
         //barcodePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
         barcodeBox = new BarcodeComboBox(this.conn, filterStr);
-        barcodeBox.setFont(bc.mediumFont);
-        FontMetrics fm = barcodeBox.getFontMetrics(bc.mediumFont);
+        barcodeBox.setFont(BaseClass.mediumFont);
+        FontMetrics fm = barcodeBox.getFontMetrics(BaseClass.mediumFont);
         int height = (int)(1.5*(double)fm.getHeight());
         barcodeBox.setPreferredSize(new Dimension(180, height));
         barcodeBox.addActionListener(this);
@@ -73,7 +74,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         barcodePanel.add(emptyBarcodeButton);
 
         nummerBox = new ArtikelNummerComboBox(this.conn, filterStr);
-        nummerBox.setFont(bc.mediumFont);
+        nummerBox.setFont(BaseClass.mediumFont);
         nummerBox.setPreferredSize(new Dimension(160, height));
         nummerBox.addActionListener(this);
         nummerBox.addPopupMouseListener(new MouseListenerNummerBox());
@@ -101,7 +102,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         artikelBox.addPopupMouseListener(new MouseListenerArtikelBox());
         // set preferred width etc.:
         artikelBox.addPopupMenuListener(new BoundsPopupMenuListener(false, true, -1, false));
-        artikelBox.setFont(bc.mediumFont);
+        artikelBox.setFont(BaseClass.mediumFont);
         artikelBox.setPreferredSize(new Dimension(460, height));
         artikelBox.setMaximumRowCount(29);
         artikelField = (JTextField) artikelBox.getEditor().getEditorComponent();
