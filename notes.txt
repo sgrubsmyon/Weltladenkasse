@@ -1,3 +1,21 @@
+Befehle für GdPDU-Umstellung: (als kassenadmin)
+$ mysql -u kassenadmin -p kasse
+> ALTER TABLE abrechnung_tag MODIFY id INTEGER(10) UNSIGNED NOT NULL;
+> ALTER TABLE abrechnung_monat MODIFY id INTEGER(10) UNSIGNED NOT NULL;
+> ALTER TABLE abrechnung_jahr MODIFY id INTEGER(10) UNSIGNED NOT NULL;
+> CREATE TABLE zaehlprotokoll (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    abrechnung_tag_id INTEGER(10) UNSIGNED NOT NULL,
+    anzahl SMALLINT(5) UNSIGNED NOT NULL,
+    einheit DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+
+
 Batch-convert Abrechnungen to PDF:
 soffice --convert-to pdf *
 

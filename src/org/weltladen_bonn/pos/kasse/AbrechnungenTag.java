@@ -283,6 +283,15 @@ public class AbrechnungenTag extends Abrechnungen {
         }
     }
 
+    void showZaehlprotokollDialog() {
+        JDialog dialog = new JDialog(this.mainWindow, "Erfassung des Kassenbestandes", true);
+        ZaehlprotokollDialog zaehlprotokoll = new ZaehlprotokollDialog(this.conn, this.mainWindow, this, dialog);
+        dialog.getContentPane().add(zaehlprotokoll, BorderLayout.CENTER);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.pack();
+        dialog.setVisible(true);
+    }
+
     void queryAbrechnungenSpecial() {
     }
 
@@ -307,11 +316,13 @@ public class AbrechnungenTag extends Abrechnungen {
 	    return;
 	}
 	if (e.getSource() == submitButton){
-            tabbedPane.kassenstandNeedsToChange = true;
-            insertTagesAbrechnung();
-            updateTable();
-            abrechTabbedPane.recreateTabbedPane();
-	    return;
+        showZaehlprotokollDialog();
+        tabbedPane.kassenstandNeedsToChange = true;
+        insertTagesAbrechnung();
+        // TODO check if following line is needed
+        //updateTable();
+        abrechTabbedPane.recreateTabbedPane();
+        return;
 	}
     }
 }
