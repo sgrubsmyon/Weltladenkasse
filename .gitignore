@@ -10,3 +10,6 @@ upload_software.sh
 *.jnilib
 /bin/
 __pycache__/
+.idea/
+out/
+git.iml
