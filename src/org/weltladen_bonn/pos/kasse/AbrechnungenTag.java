@@ -44,6 +44,7 @@ public class AbrechnungenTag extends Abrechnungen {
     private boolean submitButtonEnabled;
 
     private String selectedZeitpunkt = null;
+    private Boolean zaehlprotokollSucess = null;
 
     // Methoden:
     /**
@@ -59,6 +60,10 @@ public class AbrechnungenTag extends Abrechnungen {
 
     void setSelectedZeitpunkt(String zp) {
         this.selectedZeitpunkt = zp;
+    }
+
+    void setZaehlprotokollSuccess(Boolean success) {
+        this.zaehlprotokollSucess = success;
     }
 
     void addOtherStuff() {
@@ -317,11 +322,11 @@ public class AbrechnungenTag extends Abrechnungen {
 	}
 	if (e.getSource() == submitButton){
         showZaehlprotokollDialog();
-        tabbedPane.kassenstandNeedsToChange = true;
-        insertTagesAbrechnung();
-        // TODO check if following line is needed
-        //updateTable();
-        abrechTabbedPane.recreateTabbedPane();
+        if (this.zaehlprotokollSucess) {
+            tabbedPane.kassenstandNeedsToChange = true;
+            insertTagesAbrechnung();
+            abrechTabbedPane.recreateTabbedPane();
+        }
         return;
 	}
     }

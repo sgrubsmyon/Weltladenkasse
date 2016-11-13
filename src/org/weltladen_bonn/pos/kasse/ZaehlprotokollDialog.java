@@ -2,46 +2,22 @@ package org.weltladen_bonn.pos.kasse;
 
 // Basic Java stuff:
 
-import com.toedter.calendar.JDateChooser;
-import com.toedter.calendar.JSpinnerDateEditor;
-import hirondelle.date4j.DateTime;
+import org.weltladen_bonn.pos.BaseClass;
+import org.weltladen_bonn.pos.BaseClass.BigLabel;
 import org.weltladen_bonn.pos.DialogWindow;
 import org.weltladen_bonn.pos.MainWindowGrundlage;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
 import java.util.Vector;
-
-// MySQL Connector/J stuff:
-// GUI stuff:
-//import java.awt.BorderLayout;
-//import java.awt.FlowLayout;
-//import java.awt.Dimension;
-//import java.awt.event.ActionEvent;
-//import java.awt.event.ActionListener;
-//import javax.swing.JFrame;
-//import javax.swing.JPanel;
-//import javax.swing.JScrollPane;
-//import javax.swing.JTable;
-//import javax.swing.JButton;
-//import javax.swing.JCheckBox;
-// DateTime from date4j (http://www.date4j.net/javadoc/index.html)
-//import java.util.Calendar;
-// JCalendar
 
 public class ZaehlprotokollDialog extends DialogWindow
         implements ChangeListener {
@@ -56,6 +32,8 @@ public class ZaehlprotokollDialog extends DialogWindow
     private Vector<BigDecimal> schein_werte;
 
     private JFormattedTextField summeField;
+    private JFormattedTextField kassenstandField;
+    private JFormattedTextField differenzField;
 
     private JButton okButton;
     private JButton cancelButton;
@@ -85,7 +63,7 @@ public class ZaehlprotokollDialog extends DialogWindow
                 "Bitte zähle, wie viele Münzen und Scheine von jeder Sorte " +
                 "in der Kasse sind, und trage es hier ein:" );
         erklaerText = makeLabelStyle(erklaerText);
-        erklaerText.setFont(bc.mediumFont);
+        erklaerText.setFont(BaseClass.mediumFont);
         erklaerText.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
         headerPanel.add(erklaerText);
 
@@ -131,9 +109,9 @@ public class ZaehlprotokollDialog extends DialogWindow
         muenz_werte.add(new BigDecimal("1.00"));
         muenz_werte.add(new BigDecimal("2.00"));
 
-        Vector<JLabel> muenz_labels = new Vector<>();
+        Vector<BigLabel> muenz_labels = new Vector<>();
         for (String name : muenz_namen) {
-            muenz_labels.add(new JLabel(name));
+            muenz_labels.add(new BigLabel(name));
         }
 
         Vector<ImageIcon> muenz_icons = new Vector<>();
@@ -150,7 +128,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         for (String name : muenz_namen) {
             muenz_spinners.add(new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1)));
             muenz_spinners.lastElement().addChangeListener(this);
-            muenz_spinners.lastElement().setFont(bc.mediumFont);
+            muenz_spinners.lastElement().setFont(BaseClass.mediumFont);
             JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(muenz_spinners.lastElement(), "###");
             muenz_spinners.lastElement().setEditor(anzahlEditor);
             JFormattedTextField anzahlField = anzahlEditor.getTextField();
@@ -164,9 +142,9 @@ public class ZaehlprotokollDialog extends DialogWindow
         for (String name : muenz_namen) {
             muenz_fields.add(new JFormattedTextField("0,00"));
             ((AbstractDocument) muenz_fields.lastElement().getDocument()).setDocumentFilter(bc.geldFilter);
-            muenz_fields.lastElement().setEnabled(false);
-            muenz_fields.lastElement().setFont(bc.mediumFont);
-            muenz_fields.lastElement().setHorizontalAlignment(JTextField.RIGHT);
+            muenz_fields.lastElement().setEditable(false);
+            muenz_fields.lastElement().setFont(BaseClass.mediumFont);
+            muenz_fields.lastElement().setHorizontalAlignment(JFormattedTextField.RIGHT);
         }
 //        kundeGibtField.getDocument().addDocumentListener(new DocumentListener() {
 //            public void insertUpdate(DocumentEvent e) {
@@ -184,13 +162,13 @@ public class ZaehlprotokollDialog extends DialogWindow
 
         c.gridy = 2;
         c.gridx = 0;
-        muenzPanel.add(new JLabel("Anzahl:"), c);
+        muenzPanel.add(new BigLabel("Anzahl:"), c);
         c.gridy = 4;
         c.gridx = 0;
-        muenzPanel.add(new JLabel("Betrag:"), c);
+        muenzPanel.add(new BigLabel("Betrag:"), c);
 
         int index = 1;
-        for (JLabel label : muenz_labels) {
+        for (BigLabel label : muenz_labels) {
             c.gridy = 0;
             c.gridx = index;
             c.anchor = GridBagConstraints.CENTER;
@@ -218,7 +196,7 @@ public class ZaehlprotokollDialog extends DialogWindow
 //        for (String name : muenz_namen) {
 //            c.gridy = 3;
 //            c.gridx = index;
-//            muenzPanel.add(new JLabel("oder"), c);
+//            muenzPanel.add(new BigLabel("oder"), c);
 //            index += 2;
 //        }
 
@@ -234,7 +212,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         for (String name : muenz_namen) {
             c.gridy = 4;
             c.gridx = index;
-            muenzPanel.add(new JLabel(bc.currencySymbol), c);
+            muenzPanel.add(new BigLabel(bc.currencySymbol), c);
             index += 2;
         }
 
@@ -266,9 +244,9 @@ public class ZaehlprotokollDialog extends DialogWindow
         schein_werte.add(new BigDecimal("100"));
         schein_werte.add(new BigDecimal("200"));
 
-        Vector<JLabel> schein_labels = new Vector<>();
+        Vector<BigLabel> schein_labels = new Vector<>();
         for (String name : schein_namen) {
-            schein_labels.add(new JLabel(name));
+            schein_labels.add(new BigLabel(name));
         }
 
         Vector<ImageIcon> schein_icons = new Vector<>();
@@ -283,7 +261,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         for (String name : schein_namen) {
             schein_spinners.add(new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1)));
             schein_spinners.lastElement().addChangeListener(this);
-            schein_spinners.lastElement().setFont(bc.mediumFont);
+            schein_spinners.lastElement().setFont(BaseClass.mediumFont);
             JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(schein_spinners.lastElement(), "###");
             schein_spinners.lastElement().setEditor(anzahlEditor);
             JFormattedTextField anzahlField = anzahlEditor.getTextField();
@@ -296,20 +274,20 @@ public class ZaehlprotokollDialog extends DialogWindow
         for (String name : schein_namen) {
             schein_fields.add(new JFormattedTextField(bc.priceFormatter("0")));
             ((AbstractDocument) schein_fields.lastElement().getDocument()).setDocumentFilter(bc.geldFilter);
-            schein_fields.lastElement().setEnabled(false);
-            schein_fields.lastElement().setFont(bc.mediumFont);
-            schein_fields.lastElement().setHorizontalAlignment(JTextField.RIGHT);
+            schein_fields.lastElement().setEditable(false);
+            schein_fields.lastElement().setFont(BaseClass.mediumFont);
+            schein_fields.lastElement().setHorizontalAlignment(JFormattedTextField.RIGHT);
         }
 
         c.gridy = 2;
         c.gridx = 0;
-        scheinPanel.add(new JLabel("Anzahl:"), c);
+        scheinPanel.add(new BigLabel("Anzahl:"), c);
         c.gridy = 4;
         c.gridx = 0;
-        scheinPanel.add(new JLabel("Betrag:"), c);
+        scheinPanel.add(new BigLabel("Betrag:"), c);
 
         index = 1;
-        for (JLabel label : schein_labels) {
+        for (BigLabel label : schein_labels) {
             c.gridy = 0;
             c.gridx = index;
             c.anchor = GridBagConstraints.CENTER;
@@ -337,7 +315,7 @@ public class ZaehlprotokollDialog extends DialogWindow
 //        for (String name : schein_namen) {
 //            c.gridy = 3;
 //            c.gridx = index;
-//            scheinPanel.add(new JLabel("oder"), c);
+//            scheinPanel.add(new BigLabel("oder"), c);
 //            index += 2;
 //        }
 
@@ -353,40 +331,78 @@ public class ZaehlprotokollDialog extends DialogWindow
         for (String name : schein_namen) {
             c.gridy = 4;
             c.gridx = index;
-            scheinPanel.add(new JLabel(bc.currencySymbol), c);
+            scheinPanel.add(new BigLabel(bc.currencySymbol), c);
             index += 2;
         }
 
 
 
-        JPanel summePanel = new JPanel(new BorderLayout());
+        JPanel summePanel = new JPanel(new GridBagLayout());
         summePanel.setBorder(BorderFactory.createTitledBorder("Summe" ));
+        GridBagConstraints c3 = new GridBagConstraints();
+        c3.anchor = GridBagConstraints.CENTER;
+        c3.fill = GridBagConstraints.HORIZONTAL;
+        c3.ipady = 10;
+        c3.insets = new Insets(3, 10, 3, 10);
 
         summeField = new JFormattedTextField(bc.priceFormatter("0"));
         summeField.setColumns(7);
-        summeField.setFont(bc.mediumFont);
-        summeField.setHorizontalAlignment(JTextField.RIGHT);
-        ((AbstractDocument) summeField.getDocument()).setDocumentFilter(bc.geldFilter);
-        summeField.setEnabled(false);
-        JPanel summeFieldPanel = new JPanel();
-        summeFieldPanel.add(new JLabel("Gezählter Betrag:"));
-        summeFieldPanel.add(summeField);
-        summeFieldPanel.add(new JLabel(bc.currencySymbol));
-        summePanel.add(summeFieldPanel, BorderLayout.WEST);
+        summeField.setFont(BaseClass.mediumFont);
+        summeField.setHorizontalAlignment(JFormattedTextField.RIGHT);
+        summeField.setEditable(false);
 
-        JFormattedTextField kassenstandField;
+        c3.gridy = 0;
+        c3.gridx = 0;
+        summePanel.add(new BigLabel("Gezählter Betrag:"), c3);
+        c3.gridy = 0;
+        c3.gridx = 1;
+        summePanel.add(summeField, c3);
+        c3.gridy = 0;
+        c3.gridx = 2;
+        summePanel.add(new BigLabel(bc.currencySymbol), c3);
+
         kassenstandField = new JFormattedTextField(bc.priceFormatter(mainWindow.retrieveKassenstand()));
         kassenstandField.setColumns(7);
-        kassenstandField.setFont(bc.mediumFont);
-        kassenstandField.setHorizontalAlignment(JTextField.RIGHT);
-        ((AbstractDocument) kassenstandField.getDocument()).setDocumentFilter(bc.geldFilter);
-        kassenstandField.setEnabled(false);
-        JPanel kassenstandFieldPanel = new JPanel();
-        kassenstandFieldPanel.add(new JLabel("Soll-Kassenstand:"));
-        kassenstandFieldPanel.add(kassenstandField);
-        kassenstandFieldPanel.add(new JLabel(bc.currencySymbol));
-        summePanel.add(kassenstandFieldPanel, BorderLayout.EAST);
+        kassenstandField.setFont(BaseClass.mediumFont);
+        kassenstandField.setForeground(Color.BLUE);
+        kassenstandField.setHorizontalAlignment(JFormattedTextField.RIGHT);
+        kassenstandField.setEditable(false);
 
+        c3.gridy = 0;
+        c3.gridx = 3;
+        summePanel.add(Box.createRigidArea(new Dimension(10, 0)), c3); // add empty space
+
+        c3.gridy = 0;
+        c3.gridx = 4;
+        summePanel.add(new BigLabel("Soll-Kassenstand:"), c3);
+        c3.gridy = 0;
+        c3.gridx = 5;
+        summePanel.add(kassenstandField, c3);
+        c3.gridy = 0;
+        c3.gridx = 6;
+        summePanel.add(new BigLabel(bc.currencySymbol), c3);
+
+        BigDecimal differenz = new BigDecimal(bc.priceFormatterIntern(summeField.getText())).subtract(mainWindow.retrieveKassenstand());
+        differenzField = new JFormattedTextField(bc.priceFormatter(differenz));
+        differenzField.setColumns(7);
+        differenzField.setFont(BaseClass.mediumFont);
+        if (differenz.signum() == 0) {
+            differenzField.setForeground(Color.GREEN.darker().darker());
+        } else {
+            differenzField.setForeground(Color.RED);
+        }
+        differenzField.setHorizontalAlignment(JFormattedTextField.RIGHT);
+        differenzField.setEditable(false);
+
+        c3.gridy = 1;
+        c3.gridx = 0;
+        summePanel.add(new BigLabel("Differenz:"), c3);
+        c3.gridy = 1;
+        c3.gridx = 1;
+        summePanel.add(differenzField, c3);
+        c3.gridy = 1;
+        c3.gridx = 2;
+        summePanel.add(new BigLabel(bc.currencySymbol), c3);
 
 
         middlePanel.add(muenzPanel);
@@ -416,13 +432,19 @@ public class ZaehlprotokollDialog extends DialogWindow
         BigDecimal sum = new BigDecimal("0");
         for (JFormattedTextField field : muenz_fields) {
             sum = sum.add(new BigDecimal(bc.priceFormatterIntern(field.getText())));
-            System.out.println(sum);
         }
         for (JFormattedTextField field : schein_fields) {
             sum = sum.add(new BigDecimal(bc.priceFormatterIntern(field.getText())));
-            System.out.println(sum);
         }
         summeField.setText(bc.priceFormatter(sum));
+
+        BigDecimal differenz = sum.subtract(new BigDecimal(bc.priceFormatterIntern(kassenstandField.getText())));
+        differenzField.setText(bc.priceFormatter(differenz));
+        if (differenz.signum() == 0) {
+            differenzField.setForeground(Color.GREEN.darker().darker());
+        } else {
+            differenzField.setForeground(Color.RED);
+        }
     }
 
     /**
@@ -435,9 +457,7 @@ public class ZaehlprotokollDialog extends DialogWindow
                 BigDecimal anzahl = new BigDecimal((Integer) spinner.getValue());
                 BigDecimal wert = muenz_werte.elementAt(index);
                 muenz_fields.elementAt(index).setText(bc.priceFormatter(anzahl.multiply(wert)));
-                System.out.println("Eins");
                 refreshSum();
-                System.out.println("Drei");
                 return;
             }
             index++;
@@ -472,12 +492,14 @@ public class ZaehlprotokollDialog extends DialogWindow
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == okButton) {
             submit();
+            // communicate that zehlprotokoll was successful:
+            this.abrechnungen.setZaehlprotokollSuccess(true);
             this.window.dispose();
             return;
         }
         if (e.getSource() == cancelButton) {
-            // communicate that insert abrechnung was canceled:
-//            this.abrechnungen.setSelectedZeitpunkt( null );
+            // communicate that zaehlprotokoll was canceled:
+            this.abrechnungen.setZaehlprotokollSuccess(false);
             this.window.dispose();
             return;
         }
