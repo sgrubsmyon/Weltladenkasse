@@ -314,11 +314,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         anzahlField = anzahlEditor.getTextField();
         preventSpinnerOverflow(anzahlField);
         ((NumberFormatter) anzahlField.getFormatter()).setAllowsInvalid(false); // accept
-                                                                                // only
-                                                                                // allowed
-                                                                                // values
-                                                                                // (i.e.
-                                                                                // numbers)
+                                                                                // only allowed values (i.e. numbers)
         anzahlField.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
