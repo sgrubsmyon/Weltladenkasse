@@ -139,7 +139,9 @@ CREATE TABLE abrechnung_tag (
     mwst_netto DECIMAL(13,2) NOT NULL,
     mwst_betrag DECIMAL(13,2) NOT NULL,
     bar_brutto DECIMAL(13,2) NOT NULL,
-    PRIMARY KEY (id, mwst_satz)
+    kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    PRIMARY KEY (id, mwst_satz),
+    FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE zaehlprotokoll (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,

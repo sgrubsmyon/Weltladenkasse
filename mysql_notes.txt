@@ -202,3 +202,32 @@ MariaDB [kasse]> SET FOREIGN_KEY_CHECKS=1;
 
 ALTER TABLE artikel MODIFY beliebtheit TINYINT(1) NOT NULL DEFAULT 0;
 
+
+
+
+
+------------------------------
+
+2016-11-XX
+
+
+Befehle für GdPDU-Umstellung: (als kassenadmin)
+$ mysql -u kassenadmin -p kasse
+> ALTER TABLE abrechnung_tag MODIFY id INTEGER(10) UNSIGNED NOT NULL;
+> ALTER TABLE abrechnung_monat MODIFY id INTEGER(10) UNSIGNED NOT NULL;
+> ALTER TABLE abrechnung_jahr MODIFY id INTEGER(10) UNSIGNED NOT NULL;
+> CREATE TABLE zaehlprotokoll (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    abrechnung_tag_id INTEGER(10) UNSIGNED NOT NULL,
+    anzahl SMALLINT(5) UNSIGNED NOT NULL,
+    einheit DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+> ALTER TABLE abrechnung_tag ADD COLUMN kassenstand_id INTEGER(10) UNSIGNED;
+> ALTER TABLE abrechnung_tag ADD CONSTRAINT abrechnung_tag_ibfk_1 FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id);
+
+
+
+
+
