@@ -44,7 +44,7 @@ public class AbrechnungenTag extends Abrechnungen {
     private boolean submitButtonEnabled;
 
     private String selectedZeitpunkt = null;
-    private Boolean zaehlprotokollSucess = null;
+    private Vector<Vector> zaehlprotokoll = null;
 
     // Methoden:
     /**
@@ -62,8 +62,8 @@ public class AbrechnungenTag extends Abrechnungen {
         this.selectedZeitpunkt = zp;
     }
 
-    void setZaehlprotokollSuccess(Boolean success) {
-        this.zaehlprotokollSucess = success;
+    void setZaehlprotokoll(Vector<Vector> zp) {
+        this.zaehlprotokoll = zp;
     }
 
     void addOtherStuff() {
@@ -224,10 +224,11 @@ public class AbrechnungenTag extends Abrechnungen {
         }
     }
 
-    void insertTagesAbrechnung() {
+    private Integer insertTagesAbrechnung() {
         /** create new abrechnung (and save in DB) from time of last abrechnung until now */
+        Integer id = null;
         try {
-            Integer id = id();
+            id = id();
             String firstDate = queryEarliestVerkauf();
             String lastDate = queryLatestVerkauf();
             String nowDate = now();
@@ -235,7 +236,7 @@ public class AbrechnungenTag extends Abrechnungen {
             System.out.println("Selected Zeitpunkt: "+zeitpunkt);
             if (zeitpunkt == null){
                 System.out.println("insertTagesAbrechnung was cancelled!");
-                return; // don't do anything, user cancelled (or did not select date properly)
+                return id; // don't do anything, user cancelled (or did not select date properly)
             }
             // get netto values grouped by mwst:
             HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
@@ -286,6 +287,7 @@ public class AbrechnungenTag extends Abrechnungen {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+        return id;
     }
 
     void showZaehlprotokollDialog() {
@@ -308,26 +310,25 @@ public class AbrechnungenTag extends Abrechnungen {
      **/
     public void actionPerformed(ActionEvent e){
         super.actionPerformed(e);
-	if (e.getSource() == prevButton){
-	    if (this.currentPage > 1)
-		this.currentPage--;
-	    updateTable();
-	    return;
-	}
-	if (e.getSource() == nextButton){
-	    if (this.currentPage < totalPage)
-		this.currentPage++;
-	    updateTable();
-	    return;
-	}
-	if (e.getSource() == submitButton){
-        showZaehlprotokollDialog();
-        if (this.zaehlprotokollSucess) {
-            tabbedPane.kassenstandNeedsToChange = true;
-            insertTagesAbrechnung();
-            abrechTabbedPane.recreateTabbedPane();
+        if (e.getSource() == prevButton){
+            if (this.currentPage > 1)
+                this.currentPage--;
+            updateTable();
+            return;
         }
-        return;
-	}
+        if (e.getSource() == nextButton){
+            if (this.currentPage < totalPage)
+                this.currentPage++;
+            updateTable();
+            return;
+        }
+        if (e.getSource() == submitButton){
+            showZaehlprotokollDialog();
+            if (this.zaehlprotokoll != null) {
+                tabbedPane.kassenstandNeedsToChange = true;
+                Integer id = insertTagesAbrechnung();
+                abrechTabbedPane.recreateTabbedPane();
+            }
+        }
     }
 }

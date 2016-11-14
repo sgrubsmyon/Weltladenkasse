@@ -428,6 +428,11 @@ public class ZaehlprotokollDialog extends DialogWindow
         allPanel.add(footerPanel, BorderLayout.SOUTH);
     }
 
+    @Override
+    protected int submit() {
+        return 0;
+    }
+
     private void refreshSum() {
         BigDecimal sum = new BigDecimal("0");
         for (JFormattedTextField field : muenz_fields) {
@@ -476,11 +481,18 @@ public class ZaehlprotokollDialog extends DialogWindow
         }
     }
 
-    protected int submit() {
-//        java.sql.Timestamp selectedTimestamp = new java.sql.Timestamp( dateChooser.getDate().getTime() +
-//                timeModel.getDate().getTime() );
-//        this.abrechnungen.setSelectedZeitpunkt( selectedTimestamp.toString() );
-        return 0;
+    private Vector<Vector> grabZaehlprotokoll() {
+        Vector<Vector> zaehlprotokoll = new Vector<>();
+        int index = 0;
+        for (BigDecimal wert : muenz_werte) {
+            BigDecimal anzahl = new BigDecimal((Integer) muenz_spinners.get(index).getValue());
+            Vector<BigDecimal> vec = new Vector<>();
+            vec.add(wert);
+            vec.add(anzahl);
+            zaehlprotokoll.add(vec);
+            index++;
+        }
+        return zaehlprotokoll;
     }
 
     /**
@@ -491,15 +503,15 @@ public class ZaehlprotokollDialog extends DialogWindow
      **/
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == okButton) {
-            submit();
+            Vector<Vector> zaehlprotokoll = grabZaehlprotokoll();
             // communicate that zehlprotokoll was successful:
-            this.abrechnungen.setZaehlprotokollSuccess(true);
+            this.abrechnungen.setZaehlprotokoll(zaehlprotokoll);
             this.window.dispose();
             return;
         }
         if (e.getSource() == cancelButton) {
             // communicate that zaehlprotokoll was canceled:
-            this.abrechnungen.setZaehlprotokollSuccess(false);
+            this.abrechnungen.setZaehlprotokoll(null);
             this.window.dispose();
             return;
         }
