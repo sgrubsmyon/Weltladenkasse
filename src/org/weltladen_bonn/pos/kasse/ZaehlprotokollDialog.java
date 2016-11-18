@@ -17,6 +17,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.util.HashMap;
 import java.util.Vector;
 
 public class ZaehlprotokollDialog extends DialogWindow
@@ -481,15 +482,18 @@ public class ZaehlprotokollDialog extends DialogWindow
         }
     }
 
-    private Vector<Vector> grabZaehlprotokoll() {
-        Vector<Vector> zaehlprotokoll = new Vector<>();
+    private HashMap<BigDecimal, Integer> grabZaehlprotokoll() {
+        HashMap<BigDecimal, Integer> zaehlprotokoll = new HashMap<>();
         int index = 0;
         for (BigDecimal wert : muenz_werte) {
-            BigDecimal anzahl = new BigDecimal((Integer) muenz_spinners.get(index).getValue());
-            Vector<BigDecimal> vec = new Vector<>();
-            vec.add(wert);
-            vec.add(anzahl);
-            zaehlprotokoll.add(vec);
+            Integer anzahl = (Integer) muenz_spinners.get(index).getValue();
+            zaehlprotokoll.put(wert, anzahl);
+            index++;
+        }
+        index = 0;
+        for (BigDecimal wert : schein_werte) {
+            Integer anzahl = (Integer) schein_spinners.get(index).getValue();
+            zaehlprotokoll.put(wert, anzahl);
             index++;
         }
         return zaehlprotokoll;
@@ -503,7 +507,7 @@ public class ZaehlprotokollDialog extends DialogWindow
      **/
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == okButton) {
-            Vector<Vector> zaehlprotokoll = grabZaehlprotokoll();
+            HashMap<BigDecimal, Integer> zaehlprotokoll = grabZaehlprotokoll();
             // communicate that zehlprotokoll was successful:
             this.abrechnungen.setZaehlprotokoll(zaehlprotokoll);
             this.window.dispose();
