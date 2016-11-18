@@ -72,7 +72,6 @@ public abstract class MainWindowGrundlage extends JFrame {
     }
 
 
-
     public BigDecimal retrieveKassenstand(){
         BigDecimal ks = new BigDecimal("0.00");
 	try {
@@ -92,6 +91,27 @@ public abstract class MainWindowGrundlage extends JFrame {
 	}
         return ks;
     }
+
+
+    public Integer retrieveKassenstandId(){
+        Integer id = null;
+        try {
+            // Create statement for MySQL database
+            Statement stmt = this.conn.createStatement();
+            // Run MySQL command
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT MAX(kassenstand_id) FROM kassenstand"
+            );
+            if ( rs.next() ){ id = rs.getInt(1); }
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return id;
+    }
+
 
     // Setters & Getters:
     public void setContentPanel(JPanel panel){

@@ -510,7 +510,7 @@ public abstract class Abrechnungen extends WindowContent {
     }
 
     protected void setTableProperties(AnyJComponentJTable table) {
-	// Spalteneigenschaften:
+        // Spalteneigenschaften:
         for (int i=0; i<table.getColumnCount(); i++){
             TableColumn column = table.getColumnModel().getColumn(i);
             if (i==0){

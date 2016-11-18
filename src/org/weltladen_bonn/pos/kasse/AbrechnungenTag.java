@@ -44,7 +44,7 @@ public class AbrechnungenTag extends Abrechnungen {
     private boolean submitButtonEnabled;
 
     private String selectedZeitpunkt = null;
-    private Vector<Vector> zaehlprotokoll = null;
+    private HashMap<BigDecimal, Integer> zaehlprotokoll = null;
 
     // Methoden:
     /**
@@ -62,7 +62,7 @@ public class AbrechnungenTag extends Abrechnungen {
         this.selectedZeitpunkt = zp;
     }
 
-    void setZaehlprotokoll(Vector<Vector> zp) {
+    void setZaehlprotokoll(HashMap<BigDecimal, Integer> zp) {
         this.zaehlprotokoll = zp;
     }
 
@@ -236,8 +236,10 @@ public class AbrechnungenTag extends Abrechnungen {
             System.out.println("Selected Zeitpunkt: "+zeitpunkt);
             if (zeitpunkt == null){
                 System.out.println("insertTagesAbrechnung was cancelled!");
-                return id; // don't do anything, user cancelled (or did not select date properly)
+                return null; // don't do anything, user cancelled (or did not select date properly)
             }
+            // get ID of current kassenstand (highest ID due to auto-increment)
+            Integer kassenstand_id = mainWindow.retrieveKassenstandId();
             // get netto values grouped by mwst:
             HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
             // get totals (bar brutto) grouped by mwst:
@@ -258,26 +260,29 @@ public class AbrechnungenTag extends Abrechnungen {
                 //        "   "+bar_brutto);
                 PreparedStatement pstmt = this.conn.prepareStatement(
                         "INSERT INTO abrechnung_tag SET id = ?, "+
-                        "zeitpunkt = ?, "+
-                        "zeitpunkt_real = ?, "+
-                        "mwst_satz = ?, "+
-                        "mwst_netto = ?, "+
-                        "mwst_betrag = ?, "+
-                        "bar_brutto = ?"
-                        );
-                pstmt.setInt(1, id);
+                                "zeitpunkt = ?, "+
+                                "zeitpunkt_real = ?, "+
+                                "mwst_satz = ?, "+
+                                "mwst_netto = ?, "+
+                                "mwst_betrag = ?, "+
+                                "bar_brutto = ?, "+
+                                "kassenstand_id = ?"
+                );
+                pstmtSetInteger(pstmt, 1, id);
                 pstmt.setString(2, zeitpunkt);
                 pstmt.setString(3, nowDate);
                 pstmt.setBigDecimal(4, mwst_satz);
                 pstmt.setBigDecimal(5, mwst_netto);
                 pstmt.setBigDecimal(6, mwst_betrag);
                 pstmt.setBigDecimal(7, bar_brutto);
+                pstmtSetInteger(pstmt, 8, kassenstand_id);
                 int result = pstmt.executeUpdate();
                 pstmt.close();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Tagesabrechnung konnte nicht gespeichert werden.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
+                    id = null;
                 }
             }
             // NEED TO REDO Monats/Jahresabrechnung if needed (check if zeitpunkt lies in old month/year)!!!
@@ -286,8 +291,42 @@ public class AbrechnungenTag extends Abrechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Fehler: Tagesabrechnung konnte nicht gespeichert werden.",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
+            id = null;
         }
         return id;
+    }
+
+    private void insertZaehlprotokoll(Integer abrechnung_tag_id) {
+        try {
+            for ( Map.Entry<BigDecimal, Integer> entry : zaehlprotokoll.entrySet() ){
+                BigDecimal wert = entry.getKey();
+                Integer anzahl = entry.getValue();
+                PreparedStatement pstmt = this.conn.prepareStatement(
+                        "INSERT INTO zaehlprotokoll SET abrechnung_tag_id = ?, "+
+                                "anzahl = ?, "+
+                                "einheit = ?"
+                );
+                pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+                pstmtSetInteger(pstmt, 2, anzahl);
+                pstmt.setBigDecimal(3, wert);
+                int result = pstmt.executeUpdate();
+                pstmt.close();
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Zählprotokoll konnte nicht gespeichert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Fehler: Zählprotokoll konnte nicht gespeichert werden.",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     void showZaehlprotokollDialog() {
@@ -327,6 +366,9 @@ public class AbrechnungenTag extends Abrechnungen {
             if (this.zaehlprotokoll != null) {
                 tabbedPane.kassenstandNeedsToChange = true;
                 Integer id = insertTagesAbrechnung();
+                if (id != null) {
+                    insertZaehlprotokoll(id);
+                }
                 abrechTabbedPane.recreateTabbedPane();
             }
         }
