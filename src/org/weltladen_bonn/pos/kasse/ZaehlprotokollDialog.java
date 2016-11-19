@@ -507,10 +507,18 @@ public class ZaehlprotokollDialog extends DialogWindow
      **/
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == okButton) {
-            HashMap<BigDecimal, Integer> zaehlprotokoll = grabZaehlprotokoll();
-            // communicate that zehlprotokoll was successful:
-            this.abrechnungen.setZaehlprotokoll(zaehlprotokoll);
-            this.window.dispose();
+            int answer = JOptionPane.showConfirmDialog(this,
+                    "Bitte genau prüfen, ob die Eingaben stimmen!\n\n"+
+                            "Die Eingaben können nachträglich nicht geändert werden.\n\n"+
+                            "Stimmt alles?",
+                    "Alles korrekt?",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (answer == JOptionPane.YES_OPTION) {
+                HashMap<BigDecimal, Integer> zaehlprotokoll = grabZaehlprotokoll();
+                // communicate that zehlprotokoll was successful:
+                this.abrechnungen.setZaehlprotokoll(zaehlprotokoll);
+                this.window.dispose();
+            }
             return;
         }
         if (e.getSource() == cancelButton) {
