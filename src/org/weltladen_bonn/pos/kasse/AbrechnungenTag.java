@@ -44,8 +44,12 @@ public class AbrechnungenTag extends Abrechnungen {
     private boolean submitButtonEnabled;
 
     private String selectedZeitpunkt = null;
-    private HashMap<BigDecimal, Integer> zaehlprotokoll = null;
+    private LinkedHashMap<BigDecimal, Integer> zaehlprotokoll = null;
     private String zaehlprotokollKommentar = null;
+
+    protected Vector< Vector<String> > zaehlprotokollZeitpunkte;
+    protected Vector< Vector<String> > zaehlprotokollKommentare;
+    protected Vector< Vector< LinkedHashMap<BigDecimal, Integer> > > zaehlprotokolle;
 
     // Methoden:
     /**
@@ -63,7 +67,7 @@ public class AbrechnungenTag extends Abrechnungen {
         this.selectedZeitpunkt = zp;
     }
 
-    void setZaehlprotokoll(HashMap<BigDecimal, Integer> zp) {
+    void setZaehlprotokoll(LinkedHashMap<BigDecimal, Integer> zp) {
         this.zaehlprotokoll = zp;
     }
 
@@ -71,6 +75,99 @@ public class AbrechnungenTag extends Abrechnungen {
         this.zaehlprotokollKommentar = kommentar;
     }
 
+    @Override
+    void queryAbrechnungen() {
+        // the normal queries
+        super.queryAbrechnungen();
+
+        // the queries concerning zaehlprotokolle
+        try {
+            zaehlprotokollZeitpunkte = new Vector<>();
+            zaehlprotokollKommentare = new Vector<>();
+            zaehlprotokolle = new Vector<>();
+            // first, get the zaehlprotokolle
+            for (Integer id : abrechnungsIDs){
+                PreparedStatement pstmt = this.conn.prepareStatement(
+                        "SELECT id, zeitpunkt, kommentar, aktiv " +
+                                "FROM zaehlprotokoll " +
+                                "WHERE abrechnung_tag_id = ?"
+                );
+                pstmtSetInteger(pstmt, 1, id);
+                ResultSet rs = pstmt.executeQuery();
+                Vector<String> zeitpunkte = new Vector<>();
+                Vector<String> kommentare = new Vector<>();
+                Vector< LinkedHashMap<BigDecimal, Integer> > zps = new Vector<>();
+                while (rs.next()) {
+                    zeitpunkte.add(rs.getString(2));
+                    kommentare.add(rs.getString(3));
+                    PreparedStatement pstmt2 = this.conn.prepareStatement(
+                            "SELECT einheit, anzahl "+
+                                    "FROM zaehlprotokoll_details "+
+                                    "WHERE zaehlprotokoll_id = ? "+
+                                    "ORDER BY einheit"
+                    );
+                    pstmtSetInteger(pstmt2, 1, rs.getInt(1));
+                    ResultSet rs2 = pstmt2.executeQuery();
+                    LinkedHashMap<BigDecimal, Integer> zp = new LinkedHashMap<>();
+                    while (rs2.next()) {
+                        zp.put(rs2.getBigDecimal(1), rs2.getInt(2));
+                    }
+                    zps.add(zp);
+                }
+                rs.close();
+                zaehlprotokollZeitpunkte.add(zeitpunkte);
+                zaehlprotokollKommentare.add(kommentare);
+                zaehlprotokolle.add(zps);
+            }
+            System.out.println(zaehlprotokollZeitpunkte);
+            System.out.println(zaehlprotokollKommentare);
+            System.out.println(zaehlprotokolle);
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    private Integer maxZaehlprotokollNumber() {
+        Integer maxNumber = 0;
+        for (Vector<String> zeitpunkte : zaehlprotokollZeitpunkte) {
+            Integer newSize = zeitpunkte.size();
+            if (newSize > maxNumber) {
+                maxNumber = newSize;
+            }
+        }
+        return maxNumber;
+    }
+
+    private TreeSet<BigDecimal> zaehlprotokollEinheiten() {
+        TreeSet<BigDecimal> einheiten = new TreeSet<>();
+        for (Vector< LinkedHashMap<BigDecimal, Integer> > zps : zaehlprotokolle) {
+            for (LinkedHashMap<BigDecimal, Integer> zp : zps){
+                einheiten.addAll(zp.keySet());
+            }
+        }
+        return einheiten;
+    }
+
+    @Override
+    void fillHeaderColumn() {
+        super.fillHeaderColumn();
+
+        Integer zpNumber = maxZaehlprotokollNumber();
+        TreeSet<BigDecimal> zpEinheiten = zaehlprotokollEinheiten();
+        System.out.println(zpNumber);
+        System.out.println(zpEinheiten);
+        for (int i = 0; i < zpNumber; i++) {
+            data.add(new Vector<>()); data.lastElement().add(""); // empty row as separator before zaehlprotokoll
+            data.add(new Vector<>()); data.lastElement().add("Zeitpunkt");
+            for (BigDecimal einheit : zpEinheiten) {
+                data.add(new Vector<>()); data.lastElement().add(bc.priceFormatter(einheit)+" "+bc.currencySymbol);
+            }
+            data.add(new Vector<>()); data.lastElement().add("Kommentar");
+        }
+    }
+
+    @Override
     void addOtherStuff() {
         JPanel otherPanel = new JPanel();
         submitButton = new JButton("Tagesabrechnung machen");
@@ -113,6 +210,7 @@ public class AbrechnungenTag extends Abrechnungen {
         return date;
     }
 
+    @Override
     void queryIncompleteAbrechnung() { // create new abrechnung (for display) from time of last abrechnung until now
         String date = now();
 

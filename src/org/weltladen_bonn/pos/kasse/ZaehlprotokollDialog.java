@@ -21,7 +21,7 @@ import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Vector;
 
 public class ZaehlprotokollDialog extends DialogWindow
@@ -540,8 +540,8 @@ public class ZaehlprotokollDialog extends DialogWindow
         }
     }
 
-    private HashMap<BigDecimal, Integer> grabZaehlprotokoll() {
-        HashMap<BigDecimal, Integer> zaehlprotokoll = new HashMap<>();
+    private LinkedHashMap<BigDecimal, Integer> grabZaehlprotokoll() {
+        LinkedHashMap<BigDecimal, Integer> zaehlprotokoll = new LinkedHashMap<>();
         int index = 0;
         for (BigDecimal wert : muenz_werte) {
             Integer anzahl = (Integer) muenz_spinners.get(index).getValue();
@@ -572,7 +572,7 @@ public class ZaehlprotokollDialog extends DialogWindow
                     "Alles korrekt?",
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (answer == JOptionPane.YES_OPTION) {
-                HashMap<BigDecimal, Integer> zaehlprotokoll = grabZaehlprotokoll();
+                LinkedHashMap<BigDecimal, Integer> zaehlprotokoll = grabZaehlprotokoll();
                 // communicate that zehlprotokoll was successful:
                 this.abrechnungen.setZaehlprotokoll(zaehlprotokoll);
                 this.abrechnungen.setZaehlprotokollKommentar(kommentarArea.getText());
