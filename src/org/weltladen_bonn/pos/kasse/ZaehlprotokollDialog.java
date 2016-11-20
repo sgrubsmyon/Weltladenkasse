@@ -10,10 +10,14 @@ import org.weltladen_bonn.pos.MainWindowGrundlage;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -21,7 +25,7 @@ import java.util.HashMap;
 import java.util.Vector;
 
 public class ZaehlprotokollDialog extends DialogWindow
-        implements ChangeListener {
+        implements ChangeListener, DocumentListener {
     // Attribute:
     private AbrechnungenTag abrechnungen;
 
@@ -35,6 +39,10 @@ public class ZaehlprotokollDialog extends DialogWindow
     private JFormattedTextField summeField;
     private JFormattedTextField kassenstandField;
     private JFormattedTextField differenzField;
+
+    private JTextArea kommentarErklaerText;
+    private JTextArea kommentarArea;
+    Boolean kommentarAreaIsVirgin = true;
 
     private JButton okButton;
     private JButton cancelButton;
@@ -55,17 +63,17 @@ public class ZaehlprotokollDialog extends DialogWindow
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
 
         // borders:
-        int top = 10, left = 10, bottom = 10, right = 10;
+        int top = 5, left = 5, bottom = 5, right = 5;
         headerPanel.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
 
-        JTextArea erklaerText = new JTextArea(3, 30);
+        JTextArea erklaerText = new JTextArea(2, 30);
         erklaerText.append("Der Kassenbestand in allen Münz- und Scheinsorten " +
-                "ist vollständig zu protokollieren!\n\n" +
-                "Bitte zähle, wie viele Münzen und Scheine von jeder Sorte " +
-                "in der Kasse sind, und trage es hier ein:" );
+                "ist vollständig zu protokollieren!\n" +
+                "Bitte zählen, wie viele Münzen und Scheine von jeder Sorte " +
+                "in der Kasse sind, und hier eintragen:" );
         erklaerText = makeLabelStyle(erklaerText);
         erklaerText.setFont(BaseClass.mediumFont);
-        erklaerText.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
+//        erklaerText.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
         headerPanel.add(erklaerText);
 
         allPanel.add(headerPanel, BorderLayout.NORTH);
@@ -85,10 +93,10 @@ public class ZaehlprotokollDialog extends DialogWindow
         JPanel muenzPanel = new JPanel(new GridBagLayout());
         muenzPanel.setBorder(BorderFactory.createTitledBorder("Münzen" ));
         GridBagConstraints c = new GridBagConstraints();
-        c.anchor = GridBagConstraints.CENTER;
         c.fill = GridBagConstraints.HORIZONTAL;
-        c.ipady = 10;
-        c.insets = new Insets(3, 10, 3, 10);
+        c.anchor = GridBagConstraints.CENTER;
+        c.ipady = 5;
+        c.insets = new Insets(3, 0, 3, 3);
 
         Vector<String> muenz_namen = new Vector<>();
         muenz_namen.add("1 Cent");
@@ -133,6 +141,7 @@ public class ZaehlprotokollDialog extends DialogWindow
             JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(muenz_spinners.lastElement(), "###");
             muenz_spinners.lastElement().setEditor(anzahlEditor);
             JFormattedTextField anzahlField = anzahlEditor.getTextField();
+            anzahlField.setColumns(3);
 //            preventSpinnerOverflow(anzahlField);
             ((NumberFormatter) anzahlField.getFormatter()).setAllowsInvalid(false); // accept
                                                                                     // only allowed values (i.e. numbers)
@@ -224,10 +233,10 @@ public class ZaehlprotokollDialog extends DialogWindow
         JPanel scheinPanel = new JPanel(new GridBagLayout());
         scheinPanel.setBorder(BorderFactory.createTitledBorder("Scheine" ));
         GridBagConstraints c2 = new GridBagConstraints();
-        c2.anchor = GridBagConstraints.CENTER;
         c2.fill = GridBagConstraints.HORIZONTAL;
-        c2.ipady = 10;
-        c2.insets = new Insets(3, 10, 3, 10);
+        c2.anchor = GridBagConstraints.CENTER;
+        c2.ipady = 5;
+        c2.insets = new Insets(3, 0, 3, 3);
 
         Vector<String> schein_namen = new Vector<>();
         schein_namen.add("5 Euro");
@@ -280,59 +289,59 @@ public class ZaehlprotokollDialog extends DialogWindow
             schein_fields.lastElement().setHorizontalAlignment(JFormattedTextField.RIGHT);
         }
 
-        c.gridy = 2;
-        c.gridx = 0;
-        scheinPanel.add(new BigLabel("Anzahl:"), c);
-        c.gridy = 4;
-        c.gridx = 0;
-        scheinPanel.add(new BigLabel("Betrag:"), c);
+        c2.gridy = 2;
+        c2.gridx = 0;
+        scheinPanel.add(new BigLabel("Anzahl:"), c2);
+        c2.gridy = 4;
+        c2.gridx = 0;
+        scheinPanel.add(new BigLabel("Betrag:"), c2);
 
         index = 1;
         for (BigLabel label : schein_labels) {
-            c.gridy = 0;
-            c.gridx = index;
-            c.anchor = GridBagConstraints.CENTER;
-            scheinPanel.add(label, c);
+            c2.gridy = 0;
+            c2.gridx = index;
+            c2.anchor = GridBagConstraints.CENTER;
+            scheinPanel.add(label, c2);
             index += 2;
         }
 
         index = 1;
         for (ImageIcon icon : schein_icons) {
-            c.gridy = 1;
-            c.gridx = index;
-            scheinPanel.add(new JLabel(icon), c);
+            c2.gridy = 1;
+            c2.gridx = index;
+            scheinPanel.add(new JLabel(icon), c2);
             index += 2;
         }
 
         index = 1;
         for (JSpinner spinner : schein_spinners) {
-            c.gridy = 2;
-            c.gridx = index;
-            scheinPanel.add(spinner, c);
+            c2.gridy = 2;
+            c2.gridx = index;
+            scheinPanel.add(spinner, c2);
             index += 2;
         }
 
 //        index = 1;
 //        for (String name : schein_namen) {
-//            c.gridy = 3;
-//            c.gridx = index;
-//            scheinPanel.add(new BigLabel("oder"), c);
+//            c2.gridy = 3;
+//            c2.gridx = index;
+//            scheinPanel.add(new BigLabel("oder"), c2);
 //            index += 2;
 //        }
 
         index = 1;
         for (JFormattedTextField field : schein_fields) {
-            c.gridy = 4;
-            c.gridx = index;
-            scheinPanel.add(field, c);
+            c2.gridy = 4;
+            c2.gridx = index;
+            scheinPanel.add(field, c2);
             index += 2;
         }
 
         index = 2;
         for (String name : schein_namen) {
-            c.gridy = 4;
-            c.gridx = index;
-            scheinPanel.add(new BigLabel(bc.currencySymbol), c);
+            c2.gridy = 4;
+            c2.gridx = index;
+            scheinPanel.add(new BigLabel(bc.currencySymbol), c2);
             index += 2;
         }
 
@@ -343,8 +352,8 @@ public class ZaehlprotokollDialog extends DialogWindow
         GridBagConstraints c3 = new GridBagConstraints();
         c3.anchor = GridBagConstraints.CENTER;
         c3.fill = GridBagConstraints.HORIZONTAL;
-        c3.ipady = 10;
-        c3.insets = new Insets(3, 10, 3, 10);
+        c3.ipady = 5;
+        c3.insets = new Insets(3, 0, 3, 3);
 
         summeField = new JFormattedTextField(bc.priceFormatter("0"));
         summeField.setColumns(7);
@@ -406,9 +415,57 @@ public class ZaehlprotokollDialog extends DialogWindow
         summePanel.add(new BigLabel(bc.currencySymbol), c3);
 
 
+
+        JPanel kommentarPanel = new JPanel(new GridBagLayout());
+        kommentarPanel.setBorder(BorderFactory.createTitledBorder("Kommentar" ));
+        GridBagConstraints c4 = new GridBagConstraints();
+        c4.anchor = GridBagConstraints.CENTER;
+        c4.fill = GridBagConstraints.HORIZONTAL;
+        c4.ipady = 5;
+//        c4.insets = new Insets(3, 10, 3, 10);
+        c4.insets = new Insets(3, 0, 3, 3);
+
+
+        kommentarErklaerText = new JTextArea(5, 30);
+        kommentarErklaerText.append("Bitte rechts eingeben:\n"+
+                "Was ist der Grund für die Differenz?\n"+
+                "(Wenn die Differenz 0,00 "+bc.currencySymbol+" ist, dann einfach \"Kasse stimmt\" o.ä. eintragen.)");
+        kommentarErklaerText = makeLabelStyle(kommentarErklaerText);
+        kommentarErklaerText.setFont(BaseClass.mediumFont);
+        int top = 5, left = 5, bottom = 5, right = 5;
+        kommentarErklaerText.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
+
+        kommentarArea = new JTextArea(5, 25);
+        kommentarArea.setText("Kommentar eingeben...");
+        kommentarArea.addFocusListener(new FocusListener() {
+            public void focusGained(FocusEvent e) {
+                if (kommentarAreaIsVirgin) {
+                    kommentarArea.setText("");
+                    kommentarAreaIsVirgin = false;
+                }
+            }
+
+            public void focusLost(FocusEvent e) {
+                // do nothing
+            }
+        });
+        kommentarArea.setFont(BaseClass.mediumFont);
+        kommentarArea.getDocument().addDocumentListener(this);
+        JScrollPane kommentarScrollPane = new JScrollPane(kommentarArea);
+
+        c4.gridy = 0;
+        c4.gridx = 0;
+        kommentarPanel.add(kommentarErklaerText, c4);
+        c4.gridy = 0;
+        c4.gridx = 1;
+        kommentarPanel.add(kommentarScrollPane, c4);
+
+
+
         middlePanel.add(muenzPanel);
         middlePanel.add(scheinPanel);
         middlePanel.add(summePanel);
+        middlePanel.add(kommentarPanel);
 
         allPanel.add(middlePanel, BorderLayout.CENTER);
     }
@@ -421,6 +478,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         okButton = new JButton("OK" );
         okButton.setMnemonic(KeyEvent.VK_O);
         okButton.addActionListener(this);
+        okButton.setEnabled(false);
         footerPanel.add(okButton);
         cancelButton = new JButton("Abbrechen" );
         cancelButton.setMnemonic(KeyEvent.VK_A);
@@ -517,6 +575,7 @@ public class ZaehlprotokollDialog extends DialogWindow
                 HashMap<BigDecimal, Integer> zaehlprotokoll = grabZaehlprotokoll();
                 // communicate that zehlprotokoll was successful:
                 this.abrechnungen.setZaehlprotokoll(zaehlprotokoll);
+                this.abrechnungen.setZaehlprotokollKommentar(kommentarArea.getText());
                 this.window.dispose();
             }
             return;
@@ -524,6 +583,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         if (e.getSource() == cancelButton) {
             // communicate that zaehlprotokoll was canceled:
             this.abrechnungen.setZaehlprotokoll(null);
+            this.abrechnungen.setZaehlprotokollKommentar(null);
             this.window.dispose();
             return;
         }
@@ -534,4 +594,31 @@ public class ZaehlprotokollDialog extends DialogWindow
     protected boolean willDataBeLost() {
         return false;
     }
+
+    /**
+     * * Each non abstract class that implements the DocumentListener must have
+     * these methods.
+     *
+     * @param e
+     *            the document event.
+     **/
+    @Override
+    public void insertUpdate(DocumentEvent documentEvent) {
+        if (kommentarArea.getDocument().getLength() >= 5) {
+            okButton.setEnabled(true);
+        } else {
+            okButton.setEnabled(false);
+        }
+    }
+
+    @Override
+    public void removeUpdate(DocumentEvent documentEvent) {
+        insertUpdate(documentEvent);
+    }
+
+    @Override
+    public void changedUpdate(DocumentEvent documentEvent) {
+        // Plain text components do not fire these events
+    }
+
 }
