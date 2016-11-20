@@ -89,9 +89,9 @@ public abstract class Abrechnungen extends WindowContent {
      *    The constructor.
      *       */
     public Abrechnungen(Connection conn, MainWindowGrundlage mw, String fs, String ts, String dif, String dof,
-            String tn, String atn)
+                        String tn, String atn)
     {
-	super(conn, mw);
+        super(conn, mw);
         filterStr = fs;
         titleStr = ts;
         dateInFormat = dif;
@@ -99,11 +99,11 @@ public abstract class Abrechnungen extends WindowContent {
         timeName = tn;
         abrechnungsTableName = atn;
 
-	//footerPanel = new JPanel();
-	//footerPanel.setLayout(new FlowLayout());
-	//this.add(footerPanel, BorderLayout.SOUTH);
+        //footerPanel = new JPanel();
+        //footerPanel.setLayout(new FlowLayout());
+        //this.add(footerPanel, BorderLayout.SOUTH);
 
-	fillDataArray();
+        fillDataArray();
 
         odsChooser = new FileExistsAwareFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
@@ -362,15 +362,15 @@ public abstract class Abrechnungen extends WindowContent {
     void fillHeaderColumn() {
         // fill header column
         columnLabels.add("");
-        data.add(new Vector<Object>()); data.lastElement().add("Gesamt Brutto");
-        data.add(new Vector<Object>()); data.lastElement().add("Gesamt Bar Brutto");
-        data.add(new Vector<Object>()); data.lastElement().add("Gesamt EC Brutto");
+        data.add(new Vector<>()); data.lastElement().add("Gesamt Brutto");
+        data.add(new Vector<>()); data.lastElement().add("Gesamt Bar Brutto");
+        data.add(new Vector<>()); data.lastElement().add("Gesamt EC Brutto");
         for (BigDecimal mwst : mwstSet){
-            data.add(new Vector<Object>()); data.lastElement().add(bc.vatFormatter(mwst)+" MwSt. Brutto");
-            data.add(new Vector<Object>()); data.lastElement().add(bc.vatFormatter(mwst)+" MwSt. Netto");
-            data.add(new Vector<Object>()); data.lastElement().add(bc.vatFormatter(mwst)+" MwSt. Betrag");
+            data.add(new Vector<>()); data.lastElement().add(bc.vatFormatter(mwst)+" MwSt. Brutto");
+            data.add(new Vector<>()); data.lastElement().add(bc.vatFormatter(mwst)+" MwSt. Netto");
+            data.add(new Vector<>()); data.lastElement().add(bc.vatFormatter(mwst)+" MwSt. Betrag");
         }
-        data.add(new Vector<Object>()); data.lastElement().add(""); // row for exportButtons
+        data.add(new Vector<>()); data.lastElement().add(""); // row for exportButtons
     }
 
     int fillDataArrayColumn(String date, Vector<BigDecimal> totals, HashMap<BigDecimal, Vector<BigDecimal>> vats) {
