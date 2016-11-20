@@ -216,6 +216,8 @@ $ mysql -u kassenadmin -p kasse
 > ALTER TABLE abrechnung_tag MODIFY id INTEGER(10) UNSIGNED NOT NULL;
 > ALTER TABLE abrechnung_monat MODIFY id INTEGER(10) UNSIGNED NOT NULL;
 > ALTER TABLE abrechnung_jahr MODIFY id INTEGER(10) UNSIGNED NOT NULL;
+
+# old: (no edit functionality)
 > CREATE TABLE zaehlprotokoll (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     abrechnung_tag_id INTEGER(10) UNSIGNED NOT NULL,
@@ -224,7 +226,27 @@ $ mysql -u kassenadmin -p kasse
     PRIMARY KEY (id),
     FOREIGN KEY (abrechnung_tag_id) REFERENCES abrechnung_tag(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-> ALTER TABLE abrechnung_tag ADD COLUMN kassenstand_id INTEGER(10) UNSIGNED;
+
+# new: (with edit functionality)
+> CREATE TABLE zaehlprotokoll (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    abrechnung_tag_id INTEGER(10) UNSIGNED NOT NULL,
+    zeitpunkt DATETIME NOT NULL,
+    kommentar TEXT NOT NULL,
+    aktiv BOOLEAN NOT NULL DEFAULT TRUE,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+> CREATE TABLE zaehlprotokoll_details (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    zaehlprotokoll_id INTEGER(10) UNSIGNED NOT NULL,
+    anzahl SMALLINT(5) UNSIGNED NOT NULL,
+    einheit DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (zaehlprotokoll_id) REFERENCES zaehlprotokoll(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+> ALTER TABLE abrechnung_tag ADD COLUMN kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL;
 > ALTER TABLE abrechnung_tag ADD CONSTRAINT abrechnung_tag_ibfk_1 FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id);
 
 $ mysql -u root -p
