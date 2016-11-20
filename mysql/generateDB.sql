@@ -146,10 +146,19 @@ CREATE TABLE abrechnung_tag (
 CREATE TABLE zaehlprotokoll (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     abrechnung_tag_id INTEGER(10) UNSIGNED NOT NULL,
+    zeitpunkt DATETIME NOT NULL,
+    kommentar TEXT NOT NULL,
+    aktiv BOOLEAN NOT NULL DEFAULT TRUE,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE zaehlprotokoll_details (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    zaehlprotokoll_id INTEGER(10) UNSIGNED NOT NULL,
     anzahl SMALLINT(5) UNSIGNED NOT NULL,
     einheit DECIMAL(13,2) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (abrechnung_tag_id) REFERENCES abrechnung_tag(id)
+    FOREIGN KEY (zaehlprotokoll_id) REFERENCES zaehlprotokoll(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_monat (
     id INTEGER(10) UNSIGNED NOT NULL,
