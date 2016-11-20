@@ -45,6 +45,7 @@ public class AbrechnungenTag extends Abrechnungen {
 
     private String selectedZeitpunkt = null;
     private HashMap<BigDecimal, Integer> zaehlprotokoll = null;
+    private String zaehlprotokollKommentar = null;
 
     // Methoden:
     /**
@@ -64,6 +65,10 @@ public class AbrechnungenTag extends Abrechnungen {
 
     void setZaehlprotokoll(HashMap<BigDecimal, Integer> zp) {
         this.zaehlprotokoll = zp;
+    }
+
+    void setZaehlprotokollKommentar(String kommentar) {
+        this.zaehlprotokollKommentar = kommentar;
     }
 
     void addOtherStuff() {
@@ -299,26 +304,60 @@ public class AbrechnungenTag extends Abrechnungen {
         return id;
     }
 
+    private Integer maxZaehlprotokollID() {
+        Integer maxZaehlID = null;
+        try {
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT MAX(id) FROM zaehlprotokoll");
+            rs.next();
+            maxZaehlID = rs.getInt(1);
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return maxZaehlID;
+    }
+
     private void insertZaehlprotokoll(Integer abrechnung_tag_id) {
         try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "INSERT INTO zaehlprotokoll SET abrechnung_tag_id = ?, "+
+                            "zeitpunkt = ?, "+
+                            "kommentar = ?"
+            );
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            pstmt.setString(2, now());
+            pstmt.setString(3, zaehlprotokollKommentar);
+            int result = pstmt.executeUpdate();
+            pstmt.close();
+            if (result == 0){
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Zählprotokoll konnte nicht gespeichert werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+            }
             for ( Map.Entry<BigDecimal, Integer> entry : zaehlprotokoll.entrySet() ){
                 BigDecimal wert = entry.getKey();
                 Integer anzahl = entry.getValue();
-                PreparedStatement pstmt = this.conn.prepareStatement(
-                        "INSERT INTO zaehlprotokoll SET abrechnung_tag_id = ?, "+
+                pstmt = this.conn.prepareStatement(
+                        "INSERT INTO zaehlprotokoll_details SET zaehlprotokoll_id = ?, "+
                                 "anzahl = ?, "+
                                 "einheit = ?"
                 );
-                pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+                pstmtSetInteger(pstmt, 1, maxZaehlprotokollID());
                 pstmtSetInteger(pstmt, 2, anzahl);
                 pstmt.setBigDecimal(3, wert);
-                int result = pstmt.executeUpdate();
+                result = pstmt.executeUpdate();
                 pstmt.close();
-                if (result == 0){
-                    JOptionPane.showMessageDialog(this,
-                            "Fehler: Zählprotokoll konnte nicht gespeichert werden.",
-                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                if (result == 0) {
+                    break;
                 }
+            }
+            if (result == 0) {
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Zählprotokoll-Details konnten nicht gespeichert werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
@@ -364,6 +403,7 @@ public class AbrechnungenTag extends Abrechnungen {
         if (e.getSource() == submitButton){
             showZaehlprotokollDialog();
             if (this.zaehlprotokoll != null) {
+                System.out.println(this.zaehlprotokollKommentar);
                 tabbedPane.kassenstandNeedsToChange = true;
                 Integer id = insertTagesAbrechnung();
                 if (id != null) {
