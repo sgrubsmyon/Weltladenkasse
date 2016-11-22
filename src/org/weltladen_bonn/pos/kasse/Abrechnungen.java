@@ -69,8 +69,6 @@ public abstract class Abrechnungen extends WindowContent {
     protected JButton prevButton;
     protected JButton nextButton;
     protected Vector<JButton> exportButtons;
-    private FileExistsAwareFileChooser odsChooser;
-
     protected Vector<String> abrechnungsDates;
     protected Vector<Integer> abrechnungsIDs;
     protected Vector< Vector<BigDecimal> > abrechnungsTotals;
@@ -82,6 +80,7 @@ public abstract class Abrechnungen extends WindowContent {
     protected Vector< Vector<Object> > data;
     protected Vector<String> columnLabels;
     protected int abrechnungsZahl;
+    private FileExistsAwareFileChooser odsChooser;
 
     // Methoden:
 
@@ -373,7 +372,7 @@ public abstract class Abrechnungen extends WindowContent {
         data.add(new Vector<>()); data.lastElement().add(""); // row for exportButtons
     }
 
-    int fillDataArrayColumn(String date, Vector<BigDecimal> totals, HashMap<BigDecimal, Vector<BigDecimal>> vats) {
+    int fillDataArrayColumnWithData(String date, Vector<BigDecimal> totals, HashMap<BigDecimal, Vector<BigDecimal>> vats) {
         String formattedDate = formatDate(date, this.dateOutFormat);
         columnLabels.add(formattedDate);
         // add Gesamt Brutto
@@ -395,7 +394,16 @@ public abstract class Abrechnungen extends WindowContent {
                 rowIndex++;
             }
         }
-        return rowIndex;
+        return rowIndex+1;
+    }
+
+    int fillDataArrayColumn(int colIndex) {
+        String date = abrechnungsDates.get(colIndex);
+        Vector<BigDecimal> totals = abrechnungsTotals.get(colIndex);
+        HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(colIndex); // map with values for each mwst
+        int rowIndex = fillDataArrayColumnWithData(date, totals, vats);
+        addExportButton(rowIndex);
+        return rowIndex+1;
     }
 
     void addExportButton(int rowIndex) {
@@ -416,23 +424,13 @@ public abstract class Abrechnungen extends WindowContent {
 
         if (currentPage == 1){
             // fill red (incomplete, so unsaved) data column
-            //System.out.println("incomplete: "+incompleteAbrechnungsDate);
-            //System.out.println("incomplete: "+incompleteAbrechnungsTotals);
-            //System.out.println("incomplete: "+incompleteAbrechnungsVATs);
-            int rowIndex = fillDataArrayColumn(incompleteAbrechnungsDate, incompleteAbrechnungsTotals, incompleteAbrechnungsVATs);
+            int rowIndex = fillDataArrayColumnWithData(incompleteAbrechnungsDate, incompleteAbrechnungsTotals, incompleteAbrechnungsVATs);
             data.get(rowIndex).add(""); // instead of exportButton
         }
 
         // fill data columns with black (already saved in DB) abrechnungen
         for (int colIndex=0; colIndex<abrechnungsDates.size(); colIndex++){
-            String date = abrechnungsDates.get(colIndex);
-            Vector<BigDecimal> totals = abrechnungsTotals.get(colIndex);
-            HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(colIndex); // map with values for each mwst
-            //System.out.println(date);
-            //System.out.println(totals);
-            //System.out.println(vats);
-            int rowIndex = fillDataArrayColumn(date, totals, vats);
-            addExportButton(rowIndex);
+            fillDataArrayColumn(colIndex);
         }
         myTable = new AbrechnungsTable(data, columnLabels);
         //	myTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
@@ -484,29 +482,6 @@ public abstract class Abrechnungen extends WindowContent {
         this.revalidate();
         fillDataArray();
         showTable();
-    }
-
-    protected class AbrechnungsTable extends AnyJComponentJTable {
-        public AbrechnungsTable(Vector< Vector<Object> > data, Vector<String> columns) {
-            super(data, columns);
-        }
-        @Override
-        public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-            Component c = super.prepareRenderer(renderer, row, column);
-            int realColIndex = convertColumnIndexToModel(column); // user might have changed column order
-            // add custom rendering here
-            if (realColIndex == 0){
-                c.setFont( c.getFont().deriveFont(Font.BOLD) );
-            }
-            if (currentPage == 1 && realColIndex == 1){
-                c.setForeground(Color.red);
-            }
-            else {
-                c.setForeground(Color.black);
-            }
-            //c.setBackground(Color.LIGHT_GRAY);
-            return c;
-        }
     }
 
     protected void setTableProperties(AnyJComponentJTable table) {
@@ -625,5 +600,28 @@ public abstract class Abrechnungen extends WindowContent {
             export(exportIndex);
             return;
 	}
+    }
+
+    protected class AbrechnungsTable extends AnyJComponentJTable {
+        public AbrechnungsTable(Vector< Vector<Object> > data, Vector<String> columns) {
+            super(data, columns);
+        }
+        @Override
+        public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+            Component c = super.prepareRenderer(renderer, row, column);
+            int realColIndex = convertColumnIndexToModel(column); // user might have changed column order
+            // add custom rendering here
+            if (realColIndex == 0){
+                c.setFont( c.getFont().deriveFont(Font.BOLD) );
+            }
+            if (currentPage == 1 && realColIndex == 1){
+                c.setForeground(Color.red);
+            }
+            else {
+                c.setForeground(Color.black);
+            }
+            //c.setBackground(Color.LIGHT_GRAY);
+            return c;
+        }
     }
 }
