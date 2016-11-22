@@ -47,9 +47,12 @@ public class AbrechnungenTag extends Abrechnungen {
     private LinkedHashMap<BigDecimal, Integer> zaehlprotokoll = null;
     private String zaehlprotokollKommentar = null;
 
-    protected Vector< Vector<String> > zaehlprotokollZeitpunkte;
-    protected Vector< Vector<String> > zaehlprotokollKommentare;
-    protected Vector< Vector< LinkedHashMap<BigDecimal, Integer> > > zaehlprotokolle;
+    private Vector< Vector<String> > zaehlprotokollZeitpunkte;
+    private Vector< Vector<String> > zaehlprotokollKommentare;
+    private Vector< Vector< LinkedHashMap<BigDecimal, Integer> > > zaehlprotokolle;
+
+    private Integer zpNumber;
+    private TreeSet<BigDecimal> zpEinheiten;
 
     // Methoden:
     /**
@@ -153,13 +156,30 @@ public class AbrechnungenTag extends Abrechnungen {
     void fillHeaderColumn() {
         super.fillHeaderColumn();
 
-        Integer zpNumber = maxZaehlprotokollNumber();
-        TreeSet<BigDecimal> zpEinheiten = zaehlprotokollEinheiten();
+        zpNumber = maxZaehlprotokollNumber();
+        zpEinheiten = zaehlprotokollEinheiten();
         System.out.println(zpNumber);
         System.out.println(zpEinheiten);
         for (int i = 0; i < zpNumber; i++) {
             data.add(new Vector<>()); data.lastElement().add(""); // empty row as separator before zaehlprotokoll
             data.add(new Vector<>()); data.lastElement().add("Zeitpunkt");
+            for (BigDecimal einheit : zpEinheiten) {
+                data.add(new Vector<>()); data.lastElement().add(bc.priceFormatter(einheit)+" "+bc.currencySymbol);
+            }
+            data.add(new Vector<>()); data.lastElement().add("Kommentar");
+        }
+    }
+
+    @Override
+    int fillDataArrayColumn(int colIndex) {
+        int rowIndex = super.fillDataArrayColumn(colIndex);
+
+        for (int i = 0; i < zpNumber; i++) {
+            data.get(rowIndex).add(""); // empty row as separator before zaehlprotokoll
+            rowIndex++;
+            data.get(rowIndex).add(zaehlprotokollZeitpunkte.get(i));
+//            data.get(rowIndex).add( bc.priceFormatter(bd)+" "+bc.currencySymbol );
+            // CONTINUE HERE!!!
             for (BigDecimal einheit : zpEinheiten) {
                 data.add(new Vector<>()); data.lastElement().add(bc.priceFormatter(einheit)+" "+bc.currencySymbol);
             }
