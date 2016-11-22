@@ -49,10 +49,15 @@ public class AbrechnungenTag extends Abrechnungen {
 
     private Vector< Vector<String> > zaehlprotokollZeitpunkte;
     private Vector< Vector<String> > zaehlprotokollKommentare;
+    private Vector< Vector<BigDecimal> > zaehlprotokollSummen;
+    private Vector<BigDecimal> zaehlprotokollSollKassenstaende;
+    private Vector< Vector<BigDecimal> > zaehlprotokollDifferenzen;
     private Vector< Vector< LinkedHashMap<BigDecimal, Integer> > > zaehlprotokolle;
 
     private Integer zpNumber;
     private TreeSet<BigDecimal> zpEinheiten;
+
+    protected Vector<JButton> editButtons;
 
     // Methoden:
     /**
@@ -63,7 +68,7 @@ public class AbrechnungenTag extends Abrechnungen {
                 "zeitpunkt", "abrechnung_tag");
         this.abrechTabbedPane = atp;
         this.tabbedPane = tp;
-	showTable();
+        showTable();
     }
 
     void setSelectedZeitpunkt(String zp) {
@@ -87,30 +92,48 @@ public class AbrechnungenTag extends Abrechnungen {
         try {
             zaehlprotokollZeitpunkte = new Vector<>();
             zaehlprotokollKommentare = new Vector<>();
+            zaehlprotokollSummen = new Vector<>();
+            zaehlprotokollSollKassenstaende = new Vector<>();
+            zaehlprotokollDifferenzen = new Vector<>();
             zaehlprotokolle = new Vector<>();
-            // first, get the zaehlprotokolle
             for (Integer id : abrechnungsIDs){
                 PreparedStatement pstmt = this.conn.prepareStatement(
                         "SELECT id, zeitpunkt, kommentar, aktiv " +
                                 "FROM zaehlprotokoll " +
-                                "WHERE abrechnung_tag_id = ?"
+                                "WHERE abrechnung_tag_id = ? "+
+                                "ORDER BY id DESC"
                 );
                 pstmtSetInteger(pstmt, 1, id);
                 ResultSet rs = pstmt.executeQuery();
                 Vector<String> zeitpunkte = new Vector<>();
                 Vector<String> kommentare = new Vector<>();
+                Vector<BigDecimal> summen = new Vector<>();
                 Vector< LinkedHashMap<BigDecimal, Integer> > zps = new Vector<>();
                 while (rs.next()) {
                     zeitpunkte.add(rs.getString(2));
                     kommentare.add(rs.getString(3));
+                    //
                     PreparedStatement pstmt2 = this.conn.prepareStatement(
+                            "SELECT SUM(anzahl*einheit) "+
+                                    "FROM zaehlprotokoll_details "+
+                                    "WHERE zaehlprotokoll_id = ?"
+                    );
+                    pstmtSetInteger(pstmt2, 1, rs.getInt(1));
+                    ResultSet rs2 = pstmt2.executeQuery();
+                    BigDecimal summe = new BigDecimal("0");
+                    if (rs2.next()) {
+                        summe = rs2.getBigDecimal(1);
+                    }
+                    summen.add(summe);
+                    //
+                    pstmt2 = this.conn.prepareStatement(
                             "SELECT einheit, anzahl "+
                                     "FROM zaehlprotokoll_details "+
                                     "WHERE zaehlprotokoll_id = ? "+
                                     "ORDER BY einheit"
                     );
                     pstmtSetInteger(pstmt2, 1, rs.getInt(1));
-                    ResultSet rs2 = pstmt2.executeQuery();
+                    rs2 = pstmt2.executeQuery();
                     LinkedHashMap<BigDecimal, Integer> zp = new LinkedHashMap<>();
                     while (rs2.next()) {
                         zp.put(rs2.getBigDecimal(1), rs2.getInt(2));
@@ -118,12 +141,37 @@ public class AbrechnungenTag extends Abrechnungen {
                     zps.add(zp);
                 }
                 rs.close();
+                //
+                pstmt = this.conn.prepareStatement(
+                        "SELECT neuer_kassenstand " +
+                                "FROM kassenstand INNER JOIN abrechnung_tag USING (kassenstand_id) " +
+                                "WHERE abrechnung_tag.id = ? "+
+                                "LIMIT 1"
+                );
+                pstmtSetInteger(pstmt, 1, id);
+                rs = pstmt.executeQuery();
+                BigDecimal sollKassenstand = new BigDecimal("0");
+                if (rs.next()) {
+                    sollKassenstand = rs.getBigDecimal(1);
+                }
+                //
+                Vector<BigDecimal> differenzen = new Vector<>();
+                for (BigDecimal summe : summen) {
+                    differenzen.add(summe.subtract(sollKassenstand));
+                }
+                //
                 zaehlprotokollZeitpunkte.add(zeitpunkte);
                 zaehlprotokollKommentare.add(kommentare);
+                zaehlprotokollSummen.add(summen);
+                zaehlprotokollSollKassenstaende.add(sollKassenstand);
+                zaehlprotokollDifferenzen.add(differenzen);
                 zaehlprotokolle.add(zps);
             }
             System.out.println(zaehlprotokollZeitpunkte);
             System.out.println(zaehlprotokollKommentare);
+            System.out.println(zaehlprotokollSummen);
+            System.out.println(zaehlprotokollSollKassenstaende);
+            System.out.println(zaehlprotokollDifferenzen);
             System.out.println(zaehlprotokolle);
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
@@ -164,10 +212,57 @@ public class AbrechnungenTag extends Abrechnungen {
             data.add(new Vector<>()); data.lastElement().add(""); // empty row as separator before zaehlprotokoll
             data.add(new Vector<>()); data.lastElement().add("Zeitpunkt");
             for (BigDecimal einheit : zpEinheiten) {
-                data.add(new Vector<>()); data.lastElement().add(bc.priceFormatter(einheit)+" "+bc.currencySymbol);
+                data.add(new Vector<>()); data.lastElement().add(bc.priceFormatter(einheit)+" "+bc.currencySymbol+"   Anzahl = ");
             }
+            data.add(new Vector<>()); data.lastElement().add("Summe gezählter Kassenstand");
+            data.add(new Vector<>()); data.lastElement().add("Soll-Kassenstand");
+            data.add(new Vector<>()); data.lastElement().add("Differenz");
             data.add(new Vector<>()); data.lastElement().add("Kommentar");
+            if (zpNumber == 1) {
+                data.add(new Vector<>()); data.lastElement().add(""); // empty row instead of edit zaehlprotokoll button
+            }
         }
+
+        // need to initialize edit buttons some time before fillDataArrayColumn()
+        editButtons = new Vector<>();
+    }
+
+    @Override
+    int fillIncompleteDataColumn() {
+        int rowIndex = super.fillIncompleteDataColumn();
+
+        for (int i = 0; i < zpNumber; i++) {
+            data.get(rowIndex).add(""); // empty row as separator before zaehlprotokoll
+            rowIndex++;
+            data.get(rowIndex).add(""); // Zeitpunkt
+            rowIndex++;
+            for (BigDecimal einheit : zpEinheiten) {
+                data.get(rowIndex).add("");
+                rowIndex++;
+            }
+            data.get(rowIndex).add(""); // Summe gezählter Kassenstand
+            rowIndex++;
+            data.get(rowIndex).add(""); // Soll-Kassenstand
+            rowIndex++;
+            data.get(rowIndex).add(""); // Differenz
+            rowIndex++;
+            data.get(rowIndex).add(""); // Kommentar
+            rowIndex++;
+            if (zpNumber == 1) {
+                data.get(rowIndex).add(""); // empty row instead of edit zaehlprotokoll button
+                rowIndex++;
+            }
+        }
+        return rowIndex;
+    }
+
+    int addEditButton(int rowIndex) {
+        // add zaehlprotokoll edit buttons in last row of latest zaehlprotokoll:
+        editButtons.add(new JButton("Bearbeiten"));
+        editButtons.lastElement().addActionListener(this);
+        data.get(rowIndex).add(editButtons.lastElement());
+        rowIndex++;
+        return rowIndex;
     }
 
     @Override
@@ -177,14 +272,50 @@ public class AbrechnungenTag extends Abrechnungen {
         for (int i = 0; i < zpNumber; i++) {
             data.get(rowIndex).add(""); // empty row as separator before zaehlprotokoll
             rowIndex++;
-            data.get(rowIndex).add(zaehlprotokollZeitpunkte.get(i));
-//            data.get(rowIndex).add( bc.priceFormatter(bd)+" "+bc.currencySymbol );
-            // CONTINUE HERE!!!
-            for (BigDecimal einheit : zpEinheiten) {
-                data.add(new Vector<>()); data.lastElement().add(bc.priceFormatter(einheit)+" "+bc.currencySymbol);
+            try {
+                data.get(rowIndex).add(zaehlprotokollZeitpunkte.get(colIndex).get(i));
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                data.get(rowIndex).add("");
             }
-            data.add(new Vector<>()); data.lastElement().add("Kommentar");
+            rowIndex++;
+            for (BigDecimal einheit : zpEinheiten) {
+                try {
+                    Integer anzahl = zaehlprotokolle.get(colIndex).get(i).get(einheit);
+                    data.get(rowIndex).add(anzahl);
+                } catch (ArrayIndexOutOfBoundsException ex) {
+                    data.get(rowIndex).add("");
+                }
+                rowIndex++;
+            }
+            try {
+                data.get(rowIndex).add(zaehlprotokollSummen.get(colIndex).get(i));
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                data.get(rowIndex).add("");
+            }
+            rowIndex++;
+            try {
+                data.get(rowIndex).add(zaehlprotokollSollKassenstaende.get(colIndex));
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                data.get(rowIndex).add("");
+            }
+            rowIndex++;
+            try {
+                data.get(rowIndex).add(zaehlprotokollDifferenzen.get(colIndex).get(i));
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                data.get(rowIndex).add("");
+            }
+            rowIndex++;
+            try {
+                data.get(rowIndex).add(zaehlprotokollKommentare.get(colIndex).get(i));
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                data.get(rowIndex).add("");
+            }
+            rowIndex++;
+            if (zpNumber == 1) {
+                rowIndex = addEditButton(rowIndex);
+            }
         }
+        return rowIndex;
     }
 
     @Override
