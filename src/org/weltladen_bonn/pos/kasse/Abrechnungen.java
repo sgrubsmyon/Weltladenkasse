@@ -394,7 +394,14 @@ public abstract class Abrechnungen extends WindowContent {
                 rowIndex++;
             }
         }
-        return rowIndex+1;
+        return rowIndex;
+    }
+
+    int fillIncompleteDataColumn() {
+        int rowIndex = fillDataArrayColumnWithData(incompleteAbrechnungsDate, incompleteAbrechnungsTotals, incompleteAbrechnungsVATs);
+        data.get(rowIndex).add(""); // instead of exportButton
+        rowIndex++;
+        return rowIndex;
     }
 
     int fillDataArrayColumn(int colIndex) {
@@ -402,30 +409,31 @@ public abstract class Abrechnungen extends WindowContent {
         Vector<BigDecimal> totals = abrechnungsTotals.get(colIndex);
         HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(colIndex); // map with values for each mwst
         int rowIndex = fillDataArrayColumnWithData(date, totals, vats);
-        addExportButton(rowIndex);
-        return rowIndex+1;
+        rowIndex = addExportButton(rowIndex);
+        return rowIndex;
     }
 
-    void addExportButton(int rowIndex) {
+    int addExportButton(int rowIndex) {
         // add export buttons in last row:
         exportButtons.add(new JButton("Exportieren"));
         exportButtons.lastElement().addActionListener(this);
         data.get(rowIndex).add(exportButtons.lastElement());
+        rowIndex++;
+        return rowIndex;
     }
 
     void fillDataArray(){
         queryAbrechnungen();
 
-        columnLabels = new Vector<String>();
-        data = new Vector< Vector<Object> >();
-        exportButtons = new Vector<JButton>();
+        columnLabels = new Vector<>();
+        data = new Vector<>();
+        exportButtons = new Vector<>();
 
         fillHeaderColumn();
 
         if (currentPage == 1){
             // fill red (incomplete, so unsaved) data column
-            int rowIndex = fillDataArrayColumnWithData(incompleteAbrechnungsDate, incompleteAbrechnungsTotals, incompleteAbrechnungsVATs);
-            data.get(rowIndex).add(""); // instead of exportButton
+            fillIncompleteDataColumn();
         }
 
         // fill data columns with black (already saved in DB) abrechnungen
@@ -588,18 +596,18 @@ public abstract class Abrechnungen extends WindowContent {
      *    @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
-	int exportIndex = -1;
-	for (int i=0; i<exportButtons.size(); i++){
-	    if (e.getSource() == exportButtons.get(i) ){
-		exportIndex = i;
+        int exportIndex = -1;
+        for (int i=0; i<exportButtons.size(); i++){
+            if (e.getSource() == exportButtons.get(i) ){
+                exportIndex = i;
                 System.out.println("exportIndex: "+exportIndex);
-		break;
-	    }
-	}
+                break;
+            }
+        }
         if (exportIndex > -1){
             export(exportIndex);
             return;
-	}
+        }
     }
 
     protected class AbrechnungsTable extends AnyJComponentJTable {
