@@ -150,14 +150,18 @@ public class AbrechnungenTag extends Abrechnungen {
                 );
                 pstmtSetInteger(pstmt, 1, id);
                 rs = pstmt.executeQuery();
-                BigDecimal sollKassenstand = new BigDecimal("0");
+                BigDecimal sollKassenstand = null;
                 if (rs.next()) {
                     sollKassenstand = rs.getBigDecimal(1);
                 }
                 //
                 Vector<BigDecimal> differenzen = new Vector<>();
                 for (BigDecimal summe : summen) {
-                    differenzen.add(summe.subtract(sollKassenstand));
+                    BigDecimal diff = null;
+                    if (sollKassenstand != null) {
+                        diff = summe.subtract(sollKassenstand);
+                    }
+                    differenzen.add(diff);
                 }
                 //
                 zaehlprotokollZeitpunkte.add(zeitpunkte);
@@ -210,16 +214,32 @@ public class AbrechnungenTag extends Abrechnungen {
         System.out.println(zpEinheiten);
         for (int i = 0; i < zpNumber; i++) {
             data.add(new Vector<>()); data.lastElement().add(""); // empty row as separator before zaehlprotokoll
+            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+            fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             data.add(new Vector<>()); data.lastElement().add("Zeitpunkt");
+            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+            fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             for (BigDecimal einheit : zpEinheiten) {
                 data.add(new Vector<>()); data.lastElement().add(bc.priceFormatter(einheit)+" "+bc.currencySymbol+"   Anzahl = ");
+                colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+                fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             }
             data.add(new Vector<>()); data.lastElement().add("Summe gezählter Kassenstand");
+            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+            fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             data.add(new Vector<>()); data.lastElement().add("Soll-Kassenstand");
+            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+            fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             data.add(new Vector<>()); data.lastElement().add("Differenz");
+            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+            fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             data.add(new Vector<>()); data.lastElement().add("Kommentar");
+            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+            fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             if (zpNumber == 1) {
                 data.add(new Vector<>()); data.lastElement().add(""); // empty row instead of edit zaehlprotokoll button
+                colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+                fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             }
         }
 
@@ -233,23 +253,39 @@ public class AbrechnungenTag extends Abrechnungen {
 
         for (int i = 0; i < zpNumber; i++) {
             data.get(rowIndex).add(""); // empty row as separator before zaehlprotokoll
+            colors.get(rowIndex).add(Color.BLACK);
+            fontStyles.get(rowIndex).add("normal");
             rowIndex++;
             data.get(rowIndex).add(""); // Zeitpunkt
+            colors.get(rowIndex).add(Color.BLACK);
+            fontStyles.get(rowIndex).add("normal");
             rowIndex++;
             for (BigDecimal einheit : zpEinheiten) {
                 data.get(rowIndex).add("");
+                colors.get(rowIndex).add(Color.BLACK);
+                fontStyles.get(rowIndex).add("normal");
                 rowIndex++;
             }
             data.get(rowIndex).add(""); // Summe gezählter Kassenstand
+            colors.get(rowIndex).add(Color.BLACK);
+            fontStyles.get(rowIndex).add("normal");
             rowIndex++;
             data.get(rowIndex).add(""); // Soll-Kassenstand
+            colors.get(rowIndex).add(Color.BLACK);
+            fontStyles.get(rowIndex).add("normal");
             rowIndex++;
             data.get(rowIndex).add(""); // Differenz
+            colors.get(rowIndex).add(Color.BLACK);
+            fontStyles.get(rowIndex).add("normal");
             rowIndex++;
             data.get(rowIndex).add(""); // Kommentar
+            colors.get(rowIndex).add(Color.BLACK);
+            fontStyles.get(rowIndex).add("normal");
             rowIndex++;
             if (zpNumber == 1) {
                 data.get(rowIndex).add(""); // empty row instead of edit zaehlprotokoll button
+                colors.get(rowIndex).add(Color.BLACK);
+                fontStyles.get(rowIndex).add("normal");
                 rowIndex++;
             }
         }
@@ -261,6 +297,8 @@ public class AbrechnungenTag extends Abrechnungen {
         editButtons.add(new JButton("Bearbeiten"));
         editButtons.lastElement().addActionListener(this);
         data.get(rowIndex).add(editButtons.lastElement());
+        colors.get(rowIndex).add(Color.BLACK);
+        fontStyles.get(rowIndex).add("normal");
         rowIndex++;
         return rowIndex;
     }
@@ -271,12 +309,16 @@ public class AbrechnungenTag extends Abrechnungen {
 
         for (int i = 0; i < zpNumber; i++) {
             data.get(rowIndex).add(""); // empty row as separator before zaehlprotokoll
+            colors.get(rowIndex).add(Color.BLACK);
+            fontStyles.get(rowIndex).add("normal");
             rowIndex++;
             try {
                 data.get(rowIndex).add(zaehlprotokollZeitpunkte.get(colIndex).get(i));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 data.get(rowIndex).add("");
             }
+            colors.get(rowIndex).add(Color.BLACK);
+            fontStyles.get(rowIndex).add("bold");
             rowIndex++;
             for (BigDecimal einheit : zpEinheiten) {
                 try {
@@ -285,34 +327,59 @@ public class AbrechnungenTag extends Abrechnungen {
                 } catch (ArrayIndexOutOfBoundsException ex) {
                     data.get(rowIndex).add("");
                 }
+                colors.get(rowIndex).add(Color.BLACK);
+                fontStyles.get(rowIndex).add("normal");
                 rowIndex++;
             }
             try {
-                data.get(rowIndex).add(zaehlprotokollSummen.get(colIndex).get(i));
+                data.get(rowIndex).add(bc.priceFormatter(zaehlprotokollSummen.get(colIndex).get(i))+" "+bc.currencySymbol);
             } catch (ArrayIndexOutOfBoundsException ex) {
                 data.get(rowIndex).add("");
             }
+            colors.get(rowIndex).add(Color.BLACK);
+            fontStyles.get(rowIndex).add("bold");
             rowIndex++;
             try {
-                data.get(rowIndex).add(zaehlprotokollSollKassenstaende.get(colIndex));
+                data.get(rowIndex).add(bc.priceFormatter(zaehlprotokollSollKassenstaende.get(colIndex))+" "+bc.currencySymbol);
             } catch (ArrayIndexOutOfBoundsException ex) {
                 data.get(rowIndex).add("");
             }
+            colors.get(rowIndex).add(Color.BLUE);
+            fontStyles.get(rowIndex).add("bold");
             rowIndex++;
             try {
-                data.get(rowIndex).add(zaehlprotokollDifferenzen.get(colIndex).get(i));
+                data.get(rowIndex).add(bc.priceFormatter(zaehlprotokollDifferenzen.get(colIndex).get(i))+" "+bc.currencySymbol);
+                if (zaehlprotokollDifferenzen.get(colIndex).get(i).signum() == 0) {
+                    colors.get(rowIndex).add(Color.GREEN.darker().darker());
+                } else {
+                    colors.get(rowIndex).add(Color.RED);
+                }
             } catch (ArrayIndexOutOfBoundsException ex) {
                 data.get(rowIndex).add("");
+                colors.get(rowIndex).add(Color.BLACK);
             }
+            fontStyles.get(rowIndex).add("bold");
             rowIndex++;
             try {
                 data.get(rowIndex).add(zaehlprotokollKommentare.get(colIndex).get(i));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 data.get(rowIndex).add("");
             }
+            colors.get(rowIndex).add(Color.BLACK);
+            fontStyles.get(rowIndex).add("bold");
             rowIndex++;
             if (zpNumber == 1) {
-                rowIndex = addEditButton(rowIndex);
+                try {
+                    zaehlprotokollZeitpunkte.get(colIndex).get(i);
+                    // only if the above access works, there are data => add button
+                    rowIndex = addEditButton(rowIndex);
+                } catch (ArrayIndexOutOfBoundsException ex) {
+                    data.get(rowIndex).add(""); // empty row instead of edit zaehlprotokoll button
+                    colors.get(rowIndex).add(Color.BLACK);
+                    fontStyles.get(rowIndex).add("normal");
+                    rowIndex++;
+                }
+
             }
         }
         return rowIndex;
