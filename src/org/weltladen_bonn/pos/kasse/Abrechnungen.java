@@ -78,6 +78,8 @@ public abstract class Abrechnungen extends WindowContent {
     protected HashMap<BigDecimal, Vector<BigDecimal>> incompleteAbrechnungsVATs;
     protected TreeSet<BigDecimal> mwstSet;
     protected Vector< Vector<Object> > data;
+    protected Vector< Vector<Color> > colors;
+    protected Vector< Vector<String> > fontStyles;
     protected Vector<String> columnLabels;
     protected int abrechnungsZahl;
     private FileExistsAwareFileChooser odsChooser;
@@ -362,25 +364,45 @@ public abstract class Abrechnungen extends WindowContent {
         // fill header column
         columnLabels.add("");
         data.add(new Vector<>()); data.lastElement().add("Gesamt Brutto");
+        colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+        fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
         data.add(new Vector<>()); data.lastElement().add("Gesamt Bar Brutto");
+        colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+        fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
         data.add(new Vector<>()); data.lastElement().add("Gesamt EC Brutto");
+        colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+        fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
         for (BigDecimal mwst : mwstSet){
             data.add(new Vector<>()); data.lastElement().add(bc.vatFormatter(mwst)+" MwSt. Brutto");
+            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+            fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             data.add(new Vector<>()); data.lastElement().add(bc.vatFormatter(mwst)+" MwSt. Netto");
+            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+            fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             data.add(new Vector<>()); data.lastElement().add(bc.vatFormatter(mwst)+" MwSt. Betrag");
+            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+            fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
         }
         data.add(new Vector<>()); data.lastElement().add(""); // row for exportButtons
+        colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+        fontStyles.add(new Vector<>()); fontStyles.lastElement().add("normal");
     }
 
-    int fillDataArrayColumnWithData(String date, Vector<BigDecimal> totals, HashMap<BigDecimal, Vector<BigDecimal>> vats) {
+    int fillDataArrayColumnWithData(String date, Vector<BigDecimal> totals, HashMap<BigDecimal, Vector<BigDecimal>> vats, Color color) {
         String formattedDate = formatDate(date, this.dateOutFormat);
         columnLabels.add(formattedDate);
         // add Gesamt Brutto
         data.get(0).add( bc.priceFormatter( totals.get(0) )+" "+bc.currencySymbol );
+        colors.get(0).add(color);
+        fontStyles.get(0).add("normal");
         // add Gesamt Bar Brutto
         data.get(1).add( bc.priceFormatter( totals.get(1) )+" "+bc.currencySymbol );
+        colors.get(1).add(color);
+        fontStyles.get(1).add("normal");
         // add Gesamt EC Brutto
         data.get(2).add( bc.priceFormatter( totals.get(2) )+" "+bc.currencySymbol );
+        colors.get(2).add(color);
+        fontStyles.get(2).add("normal");
         // add VATs
         int rowIndex = 3;
         for (BigDecimal mwst : mwstSet){
@@ -391,6 +413,8 @@ public abstract class Abrechnungen extends WindowContent {
                 } else {
                     data.get(rowIndex).add( bc.priceFormatter("0")+" "+bc.currencySymbol );
                 }
+                colors.get(rowIndex).add(color);
+                fontStyles.get(rowIndex).add("normal");
                 rowIndex++;
             }
         }
@@ -398,8 +422,10 @@ public abstract class Abrechnungen extends WindowContent {
     }
 
     int fillIncompleteDataColumn() {
-        int rowIndex = fillDataArrayColumnWithData(incompleteAbrechnungsDate, incompleteAbrechnungsTotals, incompleteAbrechnungsVATs);
+        int rowIndex = fillDataArrayColumnWithData(incompleteAbrechnungsDate, incompleteAbrechnungsTotals, incompleteAbrechnungsVATs, Color.RED);
         data.get(rowIndex).add(""); // instead of exportButton
+        colors.get(rowIndex).add(Color.BLACK);
+        fontStyles.get(rowIndex).add("normal");
         rowIndex++;
         return rowIndex;
     }
@@ -408,7 +434,7 @@ public abstract class Abrechnungen extends WindowContent {
         String date = abrechnungsDates.get(colIndex);
         Vector<BigDecimal> totals = abrechnungsTotals.get(colIndex);
         HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(colIndex); // map with values for each mwst
-        int rowIndex = fillDataArrayColumnWithData(date, totals, vats);
+        int rowIndex = fillDataArrayColumnWithData(date, totals, vats, Color.BLACK);
         rowIndex = addExportButton(rowIndex);
         return rowIndex;
     }
@@ -418,6 +444,8 @@ public abstract class Abrechnungen extends WindowContent {
         exportButtons.add(new JButton("Exportieren"));
         exportButtons.lastElement().addActionListener(this);
         data.get(rowIndex).add(exportButtons.lastElement());
+        colors.get(rowIndex).add(Color.BLACK);
+        fontStyles.get(rowIndex).add("normal");
         rowIndex++;
         return rowIndex;
     }
@@ -427,6 +455,8 @@ public abstract class Abrechnungen extends WindowContent {
 
         columnLabels = new Vector<>();
         data = new Vector<>();
+        colors = new Vector<>();
+        fontStyles = new Vector<>();
         exportButtons = new Vector<>();
 
         fillHeaderColumn();
@@ -618,17 +648,12 @@ public abstract class Abrechnungen extends WindowContent {
         public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
             Component c = super.prepareRenderer(renderer, row, column);
             int realColIndex = convertColumnIndexToModel(column); // user might have changed column order
+            int realRowIndex = convertRowIndexToModel(row); // user might have changed row order
             // add custom rendering here
-            if (realColIndex == 0){
-                c.setFont( c.getFont().deriveFont(Font.BOLD) );
+            if (fontStyles.get(realRowIndex).get(realColIndex).equals("bold")) {
+                c.setFont(c.getFont().deriveFont(Font.BOLD));
             }
-            if (currentPage == 1 && realColIndex == 1){
-                c.setForeground(Color.red);
-            }
-            else {
-                c.setForeground(Color.black);
-            }
-            //c.setBackground(Color.LIGHT_GRAY);
+            c.setForeground(colors.get(realRowIndex).get(realColIndex));
             return c;
         }
     }
