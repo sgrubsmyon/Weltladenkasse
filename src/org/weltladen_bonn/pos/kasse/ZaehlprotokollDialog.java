@@ -33,8 +33,6 @@ public class ZaehlprotokollDialog extends DialogWindow
     private Vector<JSpinner> schein_spinners;
     private Vector<JFormattedTextField> muenz_fields;
     private Vector<JFormattedTextField> schein_fields;
-    private Vector<BigDecimal> muenz_werte;
-    private Vector<BigDecimal> schein_werte;
 
     private JFormattedTextField summeField;
     private JFormattedTextField kassenstandField;
@@ -86,10 +84,6 @@ public class ZaehlprotokollDialog extends DialogWindow
         JPanel middlePanel = new JPanel();
         middlePanel.setLayout(new BoxLayout(middlePanel, BoxLayout.Y_AXIS));
 
-
-
-
-
         JPanel muenzPanel = new JPanel(new GridBagLayout());
         muenzPanel.setBorder(BorderFactory.createTitledBorder("Münzen" ));
         GridBagConstraints c = new GridBagConstraints();
@@ -98,28 +92,8 @@ public class ZaehlprotokollDialog extends DialogWindow
         c.ipady = 5;
         c.insets = new Insets(3, 0, 3, 3);
 
-        Vector<String> muenz_namen = new Vector<>();
-        muenz_namen.add("1 Cent");
-        muenz_namen.add("2 Cent");
-        muenz_namen.add("5 Cent");
-        muenz_namen.add("10 Cent");
-        muenz_namen.add("20 Cent");
-        muenz_namen.add("50 Cent");
-        muenz_namen.add("1 Euro");
-        muenz_namen.add("2 Euro");
-
-        muenz_werte = new Vector<>();
-        muenz_werte.add(new BigDecimal("0.01"));
-        muenz_werte.add(new BigDecimal("0.02"));
-        muenz_werte.add(new BigDecimal("0.05"));
-        muenz_werte.add(new BigDecimal("0.10"));
-        muenz_werte.add(new BigDecimal("0.20"));
-        muenz_werte.add(new BigDecimal("0.50"));
-        muenz_werte.add(new BigDecimal("1.00"));
-        muenz_werte.add(new BigDecimal("2.00"));
-
         Vector<BigLabel> muenz_labels = new Vector<>();
-        for (String name : muenz_namen) {
+        for (String name : bc.muenz_namen) {
             muenz_labels.add(new BigLabel(name));
         }
 
@@ -134,7 +108,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/2euro_klein.gif" ), "2 Euro"));
 
         muenz_spinners = new Vector<>();
-        for (String name : muenz_namen) {
+        for (String name : bc.muenz_namen) {
             muenz_spinners.add(new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1)));
             muenz_spinners.lastElement().addChangeListener(this);
             muenz_spinners.lastElement().setFont(BaseClass.mediumFont);
@@ -149,7 +123,7 @@ public class ZaehlprotokollDialog extends DialogWindow
 
 
         muenz_fields = new Vector<>();
-        for (String name : muenz_namen) {
+        for (String name : bc.muenz_namen) {
             muenz_fields.add(new JFormattedTextField("0,00"));
             ((AbstractDocument) muenz_fields.lastElement().getDocument()).setDocumentFilter(bc.geldFilter);
             muenz_fields.lastElement().setEditable(false);
@@ -203,7 +177,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         }
 
 //        index = 1;
-//        for (String name : muenz_namen) {
+//        for (String name : bc.muenz_namen) {
 //            c.gridy = 3;
 //            c.gridx = index;
 //            muenzPanel.add(new BigLabel("oder"), c);
@@ -219,7 +193,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         }
 
         index = 2;
-        for (String name : muenz_namen) {
+        for (String name : bc.muenz_namen) {
             c.gridy = 4;
             c.gridx = index;
             muenzPanel.add(new BigLabel(bc.currencySymbol), c);
@@ -238,24 +212,8 @@ public class ZaehlprotokollDialog extends DialogWindow
         c2.ipady = 5;
         c2.insets = new Insets(3, 0, 3, 3);
 
-        Vector<String> schein_namen = new Vector<>();
-        schein_namen.add("5 Euro");
-        schein_namen.add("10 Euro");
-        schein_namen.add("20 Euro");
-        schein_namen.add("50 Euro");
-        schein_namen.add("100 Euro");
-        schein_namen.add("200 Euro");
-
-        schein_werte = new Vector<>();
-        schein_werte.add(new BigDecimal("5.00"));
-        schein_werte.add(new BigDecimal("10.00"));
-        schein_werte.add(new BigDecimal("20.00"));
-        schein_werte.add(new BigDecimal("50.00"));
-        schein_werte.add(new BigDecimal("100.00"));
-        schein_werte.add(new BigDecimal("200.00"));
-
         Vector<BigLabel> schein_labels = new Vector<>();
-        for (String name : schein_namen) {
+        for (String name : bc.schein_namen) {
             schein_labels.add(new BigLabel(name));
         }
 
@@ -268,7 +226,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         schein_icons.add(new ImageIcon(getClass().getResource("/resources/icons/banknotes/200euro_klein.gif" ), "200 Euro"));
 
         schein_spinners = new Vector<>();
-        for (String name : schein_namen) {
+        for (String name : bc.schein_namen) {
             schein_spinners.add(new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1)));
             schein_spinners.lastElement().addChangeListener(this);
             schein_spinners.lastElement().setFont(BaseClass.mediumFont);
@@ -281,7 +239,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         }
 
         schein_fields = new Vector<>();
-        for (String name : schein_namen) {
+        for (String name : bc.schein_namen) {
             schein_fields.add(new JFormattedTextField(bc.priceFormatter("0")));
             ((AbstractDocument) schein_fields.lastElement().getDocument()).setDocumentFilter(bc.geldFilter);
             schein_fields.lastElement().setEditable(false);
@@ -322,7 +280,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         }
 
 //        index = 1;
-//        for (String name : schein_namen) {
+//        for (String name : bc.schein_namen) {
 //            c2.gridy = 3;
 //            c2.gridx = index;
 //            scheinPanel.add(new BigLabel("oder"), c2);
@@ -338,7 +296,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         }
 
         index = 2;
-        for (String name : schein_namen) {
+        for (String name : bc.schein_namen) {
             c2.gridy = 4;
             c2.gridx = index;
             scheinPanel.add(new BigLabel(bc.currencySymbol), c2);
@@ -521,7 +479,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         for (JSpinner spinner : muenz_spinners) {
             if (e.getSource() == spinner) {
                 BigDecimal anzahl = new BigDecimal((Integer) spinner.getValue());
-                BigDecimal wert = muenz_werte.elementAt(index);
+                BigDecimal wert = bc.muenz_werte.elementAt(index);
                 muenz_fields.elementAt(index).setText(bc.priceFormatter(anzahl.multiply(wert)));
                 refreshSum();
                 return;
@@ -533,7 +491,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         for (JSpinner spinner : schein_spinners) {
             if (e.getSource() == spinner) {
                 BigDecimal anzahl = new BigDecimal((Integer) spinner.getValue());
-                BigDecimal wert = schein_werte.elementAt(index);
+                BigDecimal wert = bc.schein_werte.elementAt(index);
                 schein_fields.elementAt(index).setText(bc.priceFormatter(anzahl.multiply(wert)));
                 refreshSum();
                 return;
@@ -545,13 +503,13 @@ public class ZaehlprotokollDialog extends DialogWindow
     private LinkedHashMap<BigDecimal, Integer> getZaehlprotokoll() {
         LinkedHashMap<BigDecimal, Integer> zaehlprotokoll = new LinkedHashMap<>();
         int index = 0;
-        for (BigDecimal wert : muenz_werte) {
+        for (BigDecimal wert : bc.muenz_werte) {
             Integer anzahl = (Integer) muenz_spinners.get(index).getValue();
             zaehlprotokoll.put(wert, anzahl);
             index++;
         }
         index = 0;
-        for (BigDecimal wert : schein_werte) {
+        for (BigDecimal wert : bc.schein_werte) {
             Integer anzahl = (Integer) schein_spinners.get(index).getValue();
             zaehlprotokoll.put(wert, anzahl);
             index++;
@@ -561,13 +519,13 @@ public class ZaehlprotokollDialog extends DialogWindow
 
     void setZaehlprotokoll(LinkedHashMap<BigDecimal, Integer> zaehlprotokoll) {
         int index = 0;
-        for (BigDecimal wert : muenz_werte) {
+        for (BigDecimal wert : bc.muenz_werte) {
             Integer anzahl = zaehlprotokoll.get(wert);
             muenz_spinners.get(index).setValue(anzahl);
             index++;
         }
         index = 0;
-        for (BigDecimal wert : schein_werte) {
+        for (BigDecimal wert : bc.schein_werte) {
             Integer anzahl = zaehlprotokoll.get(wert);
             schein_spinners.get(index).setValue(anzahl);
             index++;

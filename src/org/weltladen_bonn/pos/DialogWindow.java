@@ -31,7 +31,7 @@ public abstract class DialogWindow extends WindowContent {
 
     // Methoden:
     public DialogWindow(Connection conn, MainWindowGrundlage mw, JDialog dia) {
-	super(conn, mw);
+        super(conn, mw);
         this.window = dia;
     }
 
@@ -46,7 +46,7 @@ public abstract class DialogWindow extends WindowContent {
         showMiddle();
         showFooter();
 
-	this.add(allPanel, BorderLayout.CENTER);
+        this.add(allPanel, BorderLayout.CENTER);
     }
 
     protected void updateAll(){

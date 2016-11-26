@@ -19,6 +19,8 @@ import javax.swing.*;
 // DateTime from date4j (http://www.date4j.net/javadoc/index.html)
 import hirondelle.date4j.DateTime;
 
+import org.weltladen_bonn.pos.BaseClass;
+import org.weltladen_bonn.pos.DialogWindow;
 import org.weltladen_bonn.pos.MainWindowGrundlage;
 
 public class AbrechnungenTag extends Abrechnungen {
@@ -715,7 +717,7 @@ public class AbrechnungenTag extends Abrechnungen {
     }
 
     void showZaehlprotokollDialog() {
-        JDialog dialog = new JDialog(this.mainWindow, "Erfassung des Kassenbestandes", true);
+        JDialog dialog = new JDialog(this.mainWindow, "Erfassung des Kassenbestands", true);
         ZaehlprotokollDialog zd = new ZaehlprotokollDialog(this.conn, this.mainWindow, this, dialog);
         dialog.getContentPane().add(zd, BorderLayout.CENTER);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -724,7 +726,7 @@ public class AbrechnungenTag extends Abrechnungen {
     }
 
     void showZaehlprotokollEditDialog(int editIndex) {
-        JDialog dialog = new JDialog(this.mainWindow, "Bearbeitung des Kassenbestandes", true);
+        JDialog dialog = new JDialog(this.mainWindow, "Bearbeitung des Kassenbestands", true);
         ZaehlprotokollDialog zd = new ZaehlprotokollDialog(this.conn, this.mainWindow, this, dialog);
         zd.setZaehlprotokoll(zaehlprotokolle.get(editIndex).get(0));
         zd.setKassenstand(zaehlprotokollSollKassenstaende.get(editIndex));
@@ -732,6 +734,15 @@ public class AbrechnungenTag extends Abrechnungen {
                 "Was ist der Grund für diese Änderung?\n"+
                 "Und ggf.: Was ist der Grund für die verbleibende Differenz?");
         dialog.getContentPane().add(zd, BorderLayout.CENTER);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.pack();
+        dialog.setVisible(true);
+    }
+
+    void showKassenstandZuruecksetzenDialog() {
+        JDialog dialog = new JDialog(this.mainWindow, "Kassenstand zurücksetzen", true);
+        KassenstandZuruecksetzenDialog kzd = new KassenstandZuruecksetzenDialog(this.conn, this.mainWindow, dialog, this.zaehlprotokoll);
+        dialog.getContentPane().add(kzd, BorderLayout.CENTER);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.pack();
         dialog.setVisible(true);
@@ -763,10 +774,11 @@ public class AbrechnungenTag extends Abrechnungen {
         if (e.getSource() == submitButton){
             showZaehlprotokollDialog();
             if (this.zaehlprotokoll != null) {
-                tabbedPane.kassenstandNeedsToChange = true;
+//                tabbedPane.kassenstandNeedsToChange = true;
                 Integer id = insertTagesAbrechnung();
                 if (id != null) {
                     insertZaehlprotokoll(id);
+                    showKassenstandZuruecksetzenDialog();
                 }
                 abrechTabbedPane.recreateTabbedPane();
             }
