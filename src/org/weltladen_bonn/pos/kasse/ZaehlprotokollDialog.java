@@ -247,12 +247,12 @@ public class ZaehlprotokollDialog extends DialogWindow
         schein_namen.add("200 Euro");
 
         schein_werte = new Vector<>();
-        schein_werte.add(new BigDecimal("5"));
-        schein_werte.add(new BigDecimal("10"));
-        schein_werte.add(new BigDecimal("20"));
-        schein_werte.add(new BigDecimal("50"));
-        schein_werte.add(new BigDecimal("100"));
-        schein_werte.add(new BigDecimal("200"));
+        schein_werte.add(new BigDecimal("5.00"));
+        schein_werte.add(new BigDecimal("10.00"));
+        schein_werte.add(new BigDecimal("20.00"));
+        schein_werte.add(new BigDecimal("50.00"));
+        schein_werte.add(new BigDecimal("100.00"));
+        schein_werte.add(new BigDecimal("200.00"));
 
         Vector<BigLabel> schein_labels = new Vector<>();
         for (String name : schein_namen) {
@@ -540,7 +540,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         }
     }
 
-    private LinkedHashMap<BigDecimal, Integer> grabZaehlprotokoll() {
+    private LinkedHashMap<BigDecimal, Integer> getZaehlprotokoll() {
         LinkedHashMap<BigDecimal, Integer> zaehlprotokoll = new LinkedHashMap<>();
         int index = 0;
         for (BigDecimal wert : muenz_werte) {
@@ -555,6 +555,32 @@ public class ZaehlprotokollDialog extends DialogWindow
             index++;
         }
         return zaehlprotokoll;
+    }
+
+    void setZaehlprotokoll(LinkedHashMap<BigDecimal, Integer> zaehlprotokoll) {
+        int index = 0;
+        for (BigDecimal wert : muenz_werte) {
+            Integer anzahl = zaehlprotokoll.get(wert);
+            System.out.println("muenz_wert: "+wert+" anzahl: "+anzahl);
+            muenz_spinners.get(index).setValue(anzahl);
+            index++;
+        }
+        index = 0;
+        for (BigDecimal wert : schein_werte) {
+            Integer anzahl = zaehlprotokoll.get(wert);
+            System.out.println("schein_wert: "+wert+" anzahl: "+anzahl);
+            schein_spinners.get(index).setValue(anzahl);
+            index++;
+        }
+    }
+
+    void setKassenstand(BigDecimal kassenstand) {
+        kassenstandField.setText(bc.priceFormatter(kassenstand));
+        refreshSum();
+    }
+
+    void setKommentarErklaerText(String text) {
+        kommentarErklaerText.setText(text);
     }
 
     /**
@@ -572,7 +598,7 @@ public class ZaehlprotokollDialog extends DialogWindow
                     "Alles korrekt?",
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (answer == JOptionPane.YES_OPTION) {
-                LinkedHashMap<BigDecimal, Integer> zaehlprotokoll = grabZaehlprotokoll();
+                LinkedHashMap<BigDecimal, Integer> zaehlprotokoll = getZaehlprotokoll();
                 // communicate that zehlprotokoll was successful:
                 this.abrechnungen.setZaehlprotokoll(zaehlprotokoll);
                 this.abrechnungen.setZaehlprotokollKommentar(kommentarArea.getText());

@@ -167,7 +167,9 @@ public class AbrechnungenTag extends Abrechnungen {
                 zaehlprotokollZeitpunkte.add(zeitpunkte);
                 zaehlprotokollKommentare.add(kommentare);
                 zaehlprotokollSummen.add(summen);
-                zaehlprotokollSollKassenstaende.add(sollKassenstand);
+                if (sollKassenstand != null) {
+                    zaehlprotokollSollKassenstaende.add(sollKassenstand);
+                }
                 zaehlprotokollDifferenzen.add(differenzen);
                 zaehlprotokolle.add(zps);
             }
@@ -236,8 +238,8 @@ public class AbrechnungenTag extends Abrechnungen {
             data.add(new Vector<>()); data.lastElement().add("Kommentar");
             colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
             fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
-            if (zpNumber == 1) {
-                data.add(new Vector<>()); data.lastElement().add(""); // empty row instead of edit zaehlprotokoll button
+            if (i == 0) { // only after first zaehlprotokoll
+                data.add(new Vector<>()); data.lastElement().add(""); // empty cell instead of edit zaehlprotokoll button
                 colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
                 fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             }
@@ -282,7 +284,7 @@ public class AbrechnungenTag extends Abrechnungen {
             colors.get(rowIndex).add(Color.BLACK);
             fontStyles.get(rowIndex).add("normal");
             rowIndex++;
-            if (zpNumber == 1) {
+            if (i == 0) { // only after first zaehlprotokoll
                 data.get(rowIndex).add(""); // empty row instead of edit zaehlprotokoll button
                 colors.get(rowIndex).add(Color.BLACK);
                 fontStyles.get(rowIndex).add("normal");
@@ -368,13 +370,13 @@ public class AbrechnungenTag extends Abrechnungen {
             colors.get(rowIndex).add(Color.BLACK);
             fontStyles.get(rowIndex).add("bold");
             rowIndex++;
-            if (zpNumber == 1) {
+            if (i == 0) { // only after first zaehlprotokoll
                 try {
                     zaehlprotokollZeitpunkte.get(colIndex).get(i);
                     // only if the above access works, there are data => add button
                     rowIndex = addEditButton(rowIndex);
                 } catch (ArrayIndexOutOfBoundsException ex) {
-                    data.get(rowIndex).add(""); // empty row instead of edit zaehlprotokoll button
+                    data.get(rowIndex).add(""); // empty cell instead of edit zaehlprotokoll button
                     colors.get(rowIndex).add(Color.BLACK);
                     fontStyles.get(rowIndex).add("normal");
                     rowIndex++;
@@ -693,6 +695,20 @@ public class AbrechnungenTag extends Abrechnungen {
         dialog.setVisible(true);
     }
 
+    void showZaehlprotokollEditDialog(int editIndex) {
+        JDialog dialog = new JDialog(this.mainWindow, "Bearbeitung des Kassenbestandes", true);
+        ZaehlprotokollDialog zd = new ZaehlprotokollDialog(this.conn, this.mainWindow, this, dialog);
+        zd.setZaehlprotokoll(zaehlprotokolle.get(editIndex).get(0));
+        zd.setKassenstand(zaehlprotokollSollKassenstaende.get(editIndex));
+        zd.setKommentarErklaerText("Bitte rechts eingeben:\n"+
+                "Was ist der Grund für diese Änderung?\n"+
+                "Und ggf.: Was ist der Grund für die verbleibende Differenz?");
+        dialog.getContentPane().add(zd, BorderLayout.CENTER);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.pack();
+        dialog.setVisible(true);
+    }
+
     void queryAbrechnungenSpecial() {
     }
 
@@ -727,6 +743,18 @@ public class AbrechnungenTag extends Abrechnungen {
                 }
                 abrechTabbedPane.recreateTabbedPane();
             }
+            return;
+        }
+        int editIndex = -1;
+        for (int i=0; i<editButtons.size(); i++){
+            if (e.getSource() == editButtons.get(i) ){
+                editIndex = i;
+                System.out.println("editIndex: "+editIndex);
+                break;
+            }
+        }
+        if (editIndex > -1){
+            showZaehlprotokollEditDialog(editIndex);
         }
     }
 }
