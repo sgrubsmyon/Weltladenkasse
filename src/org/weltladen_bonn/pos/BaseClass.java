@@ -63,6 +63,11 @@ public class BaseClass {
     public Vector<Color> beliebtFarben;
     protected Integer minBeliebt, maxBeliebt;
 
+    public Vector<String> muenz_namen = new Vector<>();
+    public Vector<BigDecimal> muenz_werte = new Vector<>();
+    public Vector<String> schein_namen = new Vector<>();
+    public Vector<BigDecimal> schein_werte = new Vector<>();
+
     public BaseClass() {
         loadConfigFile();
 
@@ -74,9 +79,11 @@ public class BaseClass {
         vpeFilter = new IntegerDocumentFilter(1, smallintMax);
 
         fillBeliebtWerte();
+        fillMuenzWerte();
+        fillScheinWerte();
     }
 
-    protected void fillBeliebtWerte() {
+    private void fillBeliebtWerte() {
         beliebtWerte = new Vector<Integer>();
         beliebtNamen = new Vector<String>();
         beliebtBeschreibungen = new Vector<String>();
@@ -110,6 +117,43 @@ public class BaseClass {
         minBeliebt = Collections.min(beliebtWerte);
         maxBeliebt = Collections.max(beliebtWerte);
         beliebtFilter = new IntegerDocumentFilter(minBeliebt, maxBeliebt);
+    }
+
+    private void fillMuenzWerte() {
+        muenz_namen.add("1 Cent");
+        muenz_namen.add("2 Cent");
+        muenz_namen.add("5 Cent");
+        muenz_namen.add("10 Cent");
+        muenz_namen.add("20 Cent");
+        muenz_namen.add("50 Cent");
+        muenz_namen.add("1 Euro");
+        muenz_namen.add("2 Euro");
+
+        muenz_werte.add(new BigDecimal("0.01"));
+        muenz_werte.add(new BigDecimal("0.02"));
+        muenz_werte.add(new BigDecimal("0.05"));
+        muenz_werte.add(new BigDecimal("0.10"));
+        muenz_werte.add(new BigDecimal("0.20"));
+        muenz_werte.add(new BigDecimal("0.50"));
+        muenz_werte.add(new BigDecimal("1.00"));
+        muenz_werte.add(new BigDecimal("2.00"));
+    }
+
+    private void fillScheinWerte() {
+        schein_namen.add("5 Euro");
+        schein_namen.add("10 Euro");
+        schein_namen.add("20 Euro");
+        schein_namen.add("50 Euro");
+        schein_namen.add("100 Euro");
+        schein_namen.add("200 Euro");
+
+        schein_werte = new Vector<>();
+        schein_werte.add(new BigDecimal("5.00"));
+        schein_werte.add(new BigDecimal("10.00"));
+        schein_werte.add(new BigDecimal("20.00"));
+        schein_werte.add(new BigDecimal("50.00"));
+        schein_werte.add(new BigDecimal("100.00"));
+        schein_werte.add(new BigDecimal("200.00"));
     }
 
     private String removeQuotes(String s) {
@@ -165,7 +209,6 @@ public class BaseClass {
         this.displayManufacturer = removeQuotes(this.displayManufacturer);
         this.displayModel = removeQuotes(this.displayModel);
     }
-
 
     /**
      * Nested classes that add style
