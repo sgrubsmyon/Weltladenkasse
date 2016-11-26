@@ -12,23 +12,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 // GUI stuff:
-//import java.awt.BorderLayout;
-//import java.awt.FlowLayout;
-//import java.awt.Dimension;
 import java.awt.*;
-//import java.awt.event.ActionEvent;
-//import java.awt.event.ActionListener;
 import java.awt.event.*;
-
-//import javax.swing.JFrame;
-//import javax.swing.JPanel;
-//import javax.swing.JScrollPane;
-//import javax.swing.JTable;
-//import javax.swing.JTextArea;
-//import javax.swing.JButton;
-//import javax.swing.JCheckBox;
 import javax.swing.*;
-import javax.swing.table.*;
 
 // DateTime from date4j (http://www.date4j.net/javadoc/index.html)
 import hirondelle.date4j.DateTime;
@@ -57,7 +43,7 @@ public class AbrechnungenTag extends Abrechnungen {
     private Integer zpNumber;
     private TreeSet<BigDecimal> zpEinheiten;
 
-    protected Vector<JButton> editButtons;
+    private Vector<JButton> editButtons;
 
     // Methoden:
     /**
@@ -215,32 +201,38 @@ public class AbrechnungenTag extends Abrechnungen {
         System.out.println(zpNumber);
         System.out.println(zpEinheiten);
         for (int i = 0; i < zpNumber; i++) {
-            data.add(new Vector<>()); data.lastElement().add(""); // empty row as separator before zaehlprotokoll
-            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
-            fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
+            Color def_col = Color.BLACK;
+            if (i == 0) {
+                data.add(new Vector<>()); data.lastElement().add("Aktives Zählprotokoll");
+            } else {
+                data.add(new Vector<>()); data.lastElement().add("Inaktives Zählprotokoll");
+                def_col = Color.GRAY;
+            }
+            colors.add(new Vector<>()); colors.lastElement().add(def_col);
+            fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold-italic");
             data.add(new Vector<>()); data.lastElement().add("Zeitpunkt");
-            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+            colors.add(new Vector<>()); colors.lastElement().add(def_col);
             fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             for (BigDecimal einheit : zpEinheiten) {
                 data.add(new Vector<>()); data.lastElement().add(bc.priceFormatter(einheit)+" "+bc.currencySymbol+"   Anzahl = ");
-                colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+                colors.add(new Vector<>()); colors.lastElement().add(def_col);
                 fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             }
             data.add(new Vector<>()); data.lastElement().add("Summe gezählter Kassenstand");
-            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+            colors.add(new Vector<>()); colors.lastElement().add(def_col);
             fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             data.add(new Vector<>()); data.lastElement().add("Soll-Kassenstand");
-            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+            colors.add(new Vector<>()); colors.lastElement().add(def_col);
             fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             data.add(new Vector<>()); data.lastElement().add("Differenz");
-            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+            colors.add(new Vector<>()); colors.lastElement().add(def_col);
             fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             data.add(new Vector<>()); data.lastElement().add("Kommentar");
-            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+            colors.add(new Vector<>()); colors.lastElement().add(def_col);
             fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             if (i == 0) { // only after first zaehlprotokoll
                 data.add(new Vector<>()); data.lastElement().add(""); // empty cell instead of edit zaehlprotokoll button
-                colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+                colors.add(new Vector<>()); colors.lastElement().add(def_col);
                 fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             }
         }
@@ -294,7 +286,7 @@ public class AbrechnungenTag extends Abrechnungen {
         return rowIndex;
     }
 
-    int addEditButton(int rowIndex) {
+    private int addEditButton(int rowIndex) {
         // add zaehlprotokoll edit buttons in last row of latest zaehlprotokoll:
         editButtons.add(new JButton("Bearbeiten"));
         editButtons.lastElement().addActionListener(this);
@@ -310,8 +302,19 @@ public class AbrechnungenTag extends Abrechnungen {
         int rowIndex = super.fillDataArrayColumn(colIndex);
 
         for (int i = 0; i < zpNumber; i++) {
+            Color def_col = Color.BLACK;
+            Color soll_col = Color.BLUE;
+            Color good_col = Color.GREEN.darker().darker();
+            Color bad_col = Color.RED;
+            if (i > 0) {
+                def_col = Color.GRAY;
+                soll_col = Color.GRAY;
+                good_col = Color.GRAY;
+                bad_col = Color.GRAY;
+            }
+
             data.get(rowIndex).add(""); // empty row as separator before zaehlprotokoll
-            colors.get(rowIndex).add(Color.BLACK);
+            colors.get(rowIndex).add(def_col);
             fontStyles.get(rowIndex).add("normal");
             rowIndex++;
             try {
@@ -319,7 +322,7 @@ public class AbrechnungenTag extends Abrechnungen {
             } catch (ArrayIndexOutOfBoundsException ex) {
                 data.get(rowIndex).add("");
             }
-            colors.get(rowIndex).add(Color.BLACK);
+            colors.get(rowIndex).add(def_col);
             fontStyles.get(rowIndex).add("bold");
             rowIndex++;
             for (BigDecimal einheit : zpEinheiten) {
@@ -329,7 +332,7 @@ public class AbrechnungenTag extends Abrechnungen {
                 } catch (ArrayIndexOutOfBoundsException ex) {
                     data.get(rowIndex).add("");
                 }
-                colors.get(rowIndex).add(Color.BLACK);
+                colors.get(rowIndex).add(def_col);
                 fontStyles.get(rowIndex).add("normal");
                 rowIndex++;
             }
@@ -338,27 +341,29 @@ public class AbrechnungenTag extends Abrechnungen {
             } catch (ArrayIndexOutOfBoundsException ex) {
                 data.get(rowIndex).add("");
             }
-            colors.get(rowIndex).add(Color.BLACK);
+            colors.get(rowIndex).add(def_col);
             fontStyles.get(rowIndex).add("bold");
             rowIndex++;
             try {
+                zaehlprotokollZeitpunkte.get(colIndex).get(i);
+                // only if the above access works, there are data => add kassenstand
                 data.get(rowIndex).add(bc.priceFormatter(zaehlprotokollSollKassenstaende.get(colIndex))+" "+bc.currencySymbol);
             } catch (ArrayIndexOutOfBoundsException ex) {
                 data.get(rowIndex).add("");
             }
-            colors.get(rowIndex).add(Color.BLUE);
+            colors.get(rowIndex).add(soll_col);
             fontStyles.get(rowIndex).add("bold");
             rowIndex++;
             try {
                 data.get(rowIndex).add(bc.priceFormatter(zaehlprotokollDifferenzen.get(colIndex).get(i))+" "+bc.currencySymbol);
                 if (zaehlprotokollDifferenzen.get(colIndex).get(i).signum() == 0) {
-                    colors.get(rowIndex).add(Color.GREEN.darker().darker());
+                    colors.get(rowIndex).add(good_col);
                 } else {
-                    colors.get(rowIndex).add(Color.RED);
+                    colors.get(rowIndex).add(bad_col);
                 }
             } catch (ArrayIndexOutOfBoundsException ex) {
                 data.get(rowIndex).add("");
-                colors.get(rowIndex).add(Color.BLACK);
+                colors.get(rowIndex).add(def_col);
             }
             fontStyles.get(rowIndex).add("bold");
             rowIndex++;
@@ -367,7 +372,7 @@ public class AbrechnungenTag extends Abrechnungen {
             } catch (ArrayIndexOutOfBoundsException ex) {
                 data.get(rowIndex).add("");
             }
-            colors.get(rowIndex).add(Color.BLACK);
+            colors.get(rowIndex).add(def_col);
             fontStyles.get(rowIndex).add("bold");
             rowIndex++;
             if (i == 0) { // only after first zaehlprotokoll
@@ -377,7 +382,7 @@ public class AbrechnungenTag extends Abrechnungen {
                     rowIndex = addEditButton(rowIndex);
                 } catch (ArrayIndexOutOfBoundsException ex) {
                     data.get(rowIndex).add(""); // empty cell instead of edit zaehlprotokoll button
-                    colors.get(rowIndex).add(Color.BLACK);
+                    colors.get(rowIndex).add(def_col);
                     fontStyles.get(rowIndex).add("normal");
                     rowIndex++;
                 }
@@ -398,7 +403,7 @@ public class AbrechnungenTag extends Abrechnungen {
         headerPanel.add(otherPanel);
     }
 
-    String queryEarliestVerkauf() {
+    private String queryEarliestVerkauf() {
         String date = "";
         try {
             Statement stmt = this.conn.createStatement();
@@ -414,7 +419,7 @@ public class AbrechnungenTag extends Abrechnungen {
         return date;
     }
 
-    String queryLatestVerkauf() {
+    private String queryLatestVerkauf() {
         String date = "";
         try {
             Statement stmt = this.conn.createStatement();
@@ -459,7 +464,7 @@ public class AbrechnungenTag extends Abrechnungen {
         }
     }
 
-    HashMap<BigDecimal, BigDecimal> queryIncompleteAbrechnung_BarBruttoVATs() {
+    private HashMap<BigDecimal, BigDecimal> queryIncompleteAbrechnung_BarBruttoVATs() {
         HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = new HashMap<BigDecimal, BigDecimal>();
         try {
             Statement stmt = this.conn.createStatement();
@@ -485,7 +490,7 @@ public class AbrechnungenTag extends Abrechnungen {
         return abrechnungBarBrutto;
     }
 
-    void showSelectZeitpunktDialog(DateTime firstDate, DateTime lastDate, DateTime nowDate) {
+    private void showSelectZeitpunktDialog(DateTime firstDate, DateTime lastDate, DateTime nowDate) {
         JDialog dialog = new JDialog(this.mainWindow, "Zeitpunkt manuell auswählen", true);
         SelectZeitpunktForAbrechnungDialog selZeitpunkt = 
             new SelectZeitpunktForAbrechnungDialog(this.conn, this.mainWindow,
@@ -496,7 +501,7 @@ public class AbrechnungenTag extends Abrechnungen {
         dialog.setVisible(true);
     }
 
-    String decideOnZeitpunkt(String firstDate, String lastDate, String nowDate) {
+    private String decideOnZeitpunkt(String firstDate, String lastDate, String nowDate) {
         DateTime firstD = new DateTime(firstDate);
         DateTime lastD = new DateTime(lastDate);
         DateTime nowD = new DateTime(nowDate);
@@ -514,8 +519,8 @@ public class AbrechnungenTag extends Abrechnungen {
         }
     }
 
-    void deleteAbrechnungIfNeedBe(String abrechnungsName, String timeName,
-            String zeitpunktParsing, String zeitpunkt) {
+    private void deleteAbrechnungIfNeedBe(String abrechnungsName, String timeName,
+                                          String zeitpunktParsing, String zeitpunkt) {
         /** Delete Monats-/Jahresabrechnung if there was already one for the given zeitpunkt */
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
@@ -686,10 +691,33 @@ public class AbrechnungenTag extends Abrechnungen {
         }
     }
 
+    private void setZaehlprotokollInactive(Integer abrechnung_tag_id) {
+        try {
+            PreparedStatement pstmt = this.conn.prepareStatement(
+                    "UPDATE zaehlprotokoll SET aktiv = FALSE "+
+                            "WHERE abrechnung_tag_id = ? AND aktiv = TRUE"
+            );
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            int result = pstmt.executeUpdate();
+            pstmt.close();
+            if (result == 0){
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Altes Zählprotokoll konnte nicht inaktiv gesetzt werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Fehler: Altes Zählprotokoll konnte nicht inaktiv gesetzt werden.",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     void showZaehlprotokollDialog() {
         JDialog dialog = new JDialog(this.mainWindow, "Erfassung des Kassenbestandes", true);
-        ZaehlprotokollDialog zaehlprotokoll = new ZaehlprotokollDialog(this.conn, this.mainWindow, this, dialog);
-        dialog.getContentPane().add(zaehlprotokoll, BorderLayout.CENTER);
+        ZaehlprotokollDialog zd = new ZaehlprotokollDialog(this.conn, this.mainWindow, this, dialog);
+        dialog.getContentPane().add(zd, BorderLayout.CENTER);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.pack();
         dialog.setVisible(true);
@@ -735,7 +763,6 @@ public class AbrechnungenTag extends Abrechnungen {
         if (e.getSource() == submitButton){
             showZaehlprotokollDialog();
             if (this.zaehlprotokoll != null) {
-                System.out.println(this.zaehlprotokollKommentar);
                 tabbedPane.kassenstandNeedsToChange = true;
                 Integer id = insertTagesAbrechnung();
                 if (id != null) {
@@ -755,6 +782,14 @@ public class AbrechnungenTag extends Abrechnungen {
         }
         if (editIndex > -1){
             showZaehlprotokollEditDialog(editIndex);
+            if (this.zaehlprotokoll != null) {
+                Integer id = abrechnungsIDs.get(editIndex);
+                if (id != null) {
+                    setZaehlprotokollInactive(id);
+                    insertZaehlprotokoll(id);
+                }
+                abrechTabbedPane.recreateTabbedPane();
+            }
         }
     }
 }
