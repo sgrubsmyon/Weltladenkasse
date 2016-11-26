@@ -437,6 +437,8 @@ public class ZaehlprotokollDialog extends DialogWindow
 
         kommentarArea = new JTextArea(5, 25);
         kommentarArea.setText("Kommentar eingeben...");
+        kommentarArea.setLineWrap(true); // nice line wrapping
+        kommentarArea.setWrapStyleWord(true); // nice line wrapping
         kommentarArea.addFocusListener(new FocusListener() {
             public void focusGained(FocusEvent e) {
                 if (kommentarAreaIsVirgin) {
@@ -561,14 +563,12 @@ public class ZaehlprotokollDialog extends DialogWindow
         int index = 0;
         for (BigDecimal wert : muenz_werte) {
             Integer anzahl = zaehlprotokoll.get(wert);
-            System.out.println("muenz_wert: "+wert+" anzahl: "+anzahl);
             muenz_spinners.get(index).setValue(anzahl);
             index++;
         }
         index = 0;
         for (BigDecimal wert : schein_werte) {
             Integer anzahl = zaehlprotokoll.get(wert);
-            System.out.println("schein_wert: "+wert+" anzahl: "+anzahl);
             schein_spinners.get(index).setValue(anzahl);
             index++;
         }
@@ -593,7 +593,6 @@ public class ZaehlprotokollDialog extends DialogWindow
         if (e.getSource() == okButton) {
             int answer = JOptionPane.showConfirmDialog(this,
                     "Bitte genau prüfen, ob die Eingaben stimmen!\n\n"+
-                            "Die Eingaben können nachträglich nicht geändert werden.\n\n"+
                             "Stimmt alles?",
                     "Alles korrekt?",
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -625,7 +624,7 @@ public class ZaehlprotokollDialog extends DialogWindow
      * * Each non abstract class that implements the DocumentListener must have
      * these methods.
      *
-     * @param e
+     * @param documentEvent
      *            the document event.
      **/
     @Override

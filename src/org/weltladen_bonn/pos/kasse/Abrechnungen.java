@@ -652,6 +652,8 @@ public abstract class Abrechnungen extends WindowContent {
             // add custom rendering here
             if (fontStyles.get(realRowIndex).get(realColIndex).equals("bold")) {
                 c.setFont(c.getFont().deriveFont(Font.BOLD));
+            } else if (fontStyles.get(realRowIndex).get(realColIndex).equals("bold-italic")) {
+                c.setFont(c.getFont().deriveFont(Font.BOLD | Font.ITALIC));
             }
             c.setForeground(colors.get(realRowIndex).get(realColIndex));
             return c;
