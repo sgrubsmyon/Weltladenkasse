@@ -13,3 +13,5 @@ dateFormatDate4j = DD.MM.YYYY, hh:mm |Uhr|
 delimiter = ;
 currencySymbol = €
 rowsPerPage = 32
+sollMuenzKassenstand = 50.00
+sollScheinKassenstand = 100.00

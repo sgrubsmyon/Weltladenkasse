@@ -98,8 +98,8 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         headerPanel = new JPanel();
         fileButton = new JButton("Datei auswählen");
         fileButton.setMnemonic(KeyEvent.VK_D);
-	fileButton.addActionListener(this);
-	//fileButton.setEnabled(artikelNeu.data.size()==0);
+        fileButton.addActionListener(this);
+        //fileButton.setEnabled(artikelNeu.data.size()==0);
         headerPanel.add(fileButton);
         progressBar = new JProgressBar();
         progressBar.setStringPainted(true);
