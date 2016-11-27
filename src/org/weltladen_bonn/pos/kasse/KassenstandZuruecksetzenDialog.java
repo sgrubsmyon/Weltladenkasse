@@ -18,8 +18,7 @@ import java.util.Map;
  */
 class KassenstandZuruecksetzenDialog extends DialogWindow
         implements DocumentListener {
-    BigDecimal sollKassenstand = new BigDecimal("150.00");
-    LinkedHashMap<BigDecimal, Integer> zaehlprotokoll;
+    private LinkedHashMap<BigDecimal, Integer> zaehlprotokoll;
 
     public KassenstandZuruecksetzenDialog(Connection conn, MainWindowGrundlage mw, JDialog dia,
                                           LinkedHashMap<BigDecimal, Integer> zaehlprotokoll) {
@@ -42,17 +41,47 @@ class KassenstandZuruecksetzenDialog extends DialogWindow
             BigDecimal anzahl = new BigDecimal(entry.getValue());
             gezaehlterKassenstand = gezaehlterKassenstand.add(wert.multiply(anzahl));
         }
+
+        BigDecimal sollKassenstand = bc.sollMuenzKassenstand.add(bc.sollScheinKassenstand);
         BigDecimal delta = gezaehlterKassenstand.subtract(sollKassenstand);
+
         // CONTINUE HERE, CALCULATE schein AND muenz deltas
+        BigDecimal muenzStand = new BigDecimal("0");
+        for (BigDecimal wert : bc.muenz_werte) {
+            BigDecimal anzahl = new BigDecimal(zaehlprotokoll.get(wert));
+            muenzStand = muenzStand.add(wert.multiply(anzahl));
+        }
+        BigDecimal muenzDelta = muenzStand.subtract(bc.sollMuenzKassenstand);
+
+        BigDecimal scheinStand = new BigDecimal("0");
+        for (BigDecimal wert : bc.schein_werte) {
+            BigDecimal anzahl = new BigDecimal(zaehlprotokoll.get(wert));
+            scheinStand = scheinStand.add(wert.multiply(anzahl));
+        }
+        BigDecimal scheinDelta = scheinStand.subtract(bc.sollScheinKassenstand);
+
+        String gesamtDeltaText = delta.signum() >= 0 ?
+                bc.priceFormatter(delta)+" "+bc.currencySymbol+" aus der Kasse entnommen werden, " :
+                bc.priceFormatter(delta.multiply(bc.minusOne))+" "+bc.currencySymbol+" in die Kasse gegeben werden, ";
+        String muenzDeltaText = muenzDelta.signum() >= 0 ?
+                bc.priceFormatter(muenzDelta)+" "+bc.currencySymbol+" in Münzen aus der Kasse entnommen werden" :
+                bc.priceFormatter(muenzDelta.multiply(bc.minusOne))+" "+bc.currencySymbol+" in Münzen in die Kasse gegeben werden";
+        String scheinDeltaText = scheinDelta.signum() >= 0 ?
+                bc.priceFormatter(scheinDelta)+" "+bc.currencySymbol+" in Scheinen aus der Kasse entnommen werden" :
+                bc.priceFormatter(scheinDelta.multiply(bc.minusOne))+" "+bc.currencySymbol+" in Scheinen in die Kasse gegeben werden";
 
         JTextArea erklaerText = new JTextArea(20, 40);
         erklaerText.append("Der Kassenstand soll, soweit möglich, auf "+
                 bc.priceFormatter(sollKassenstand)+" "+bc.currencySymbol+" "+
-                "gebracht werden.\n\n" +
+                "gebracht werden. Idealerweise "+bc.priceFormatter(bc.sollScheinKassenstand)+" "+bc.currencySymbol+" "+
+                "in Scheinen und "+bc.priceFormatter(bc.sollMuenzKassenstand)+" "+bc.currencySymbol+" in Münzen.\n\n" +
                 "Bei einem gezählten Kassenstand von "+
                 bc.priceFormatter(gezaehlterKassenstand)+" "+bc.currencySymbol+" müssen dafür "+
-                bc.priceFormatter(delta)+" "+bc.currencySymbol+" aus der Kasse entnommen werden.\n\n"+
-                "Vorschlag:\n");
+                gesamtDeltaText +
+                "und zwar müssen:\n\n"+
+                "\t● "+scheinDeltaText+",\n"+
+                "\t● "+muenzDeltaText+".\n\n"+
+                "Falls Wechselgeld gebraucht wird, kann es in der Wechselgeldkasse gefunden werden (siehe Wiki).");
         erklaerText = makeLabelStyle(erklaerText);
         erklaerText.setFont(BaseClass.mediumFont);
         //erklaerText.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));

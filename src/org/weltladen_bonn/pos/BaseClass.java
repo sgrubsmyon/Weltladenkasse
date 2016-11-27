@@ -12,6 +12,8 @@ import javax.swing.text.*; // for DocumentFilter
 
 public class BaseClass {
     public final Locale myLocale = Locale.GERMAN;
+
+    // configurable parameters:
     public String currencySymbol;
     public String mysqlHost; /** hostname of mysql server */
     public String mysqlPath; /** path where mysql and mysqldump lie around */
@@ -27,6 +29,9 @@ public class BaseClass {
     public String dateFormatDate4j;
     public String delimiter; // for CSV export/import
     public Integer rowsPerPage;
+    public BigDecimal sollMuenzKassenstand;
+    public BigDecimal sollScheinKassenstand;
+
     public final String fileSep = System.getProperty("file.separator");
     public final String lineSep = System.getProperty("line.separator");
     public final int smallintMax = 32767;
@@ -183,6 +188,8 @@ public class BaseClass {
             this.dateFormatDate4j = props.getProperty("dateFormatDate4j");
             this.delimiter = props.getProperty("delimiter"); // for CSV export/import
             this.rowsPerPage = Integer.parseInt(props.getProperty("rowsPerPage"));
+            this.sollMuenzKassenstand = new BigDecimal(props.getProperty("sollMuenzKassenstand"));
+            this.sollScheinKassenstand = new BigDecimal(props.getProperty("sollScheinKassenstand"));
         } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
             JOptionPane.showMessageDialog(null, "Fehler in der Konfigurationsdatei config.properties.\n"+
@@ -203,6 +210,8 @@ public class BaseClass {
             this.dateFormatDate4j = "DD.MM.YYYY, hh:mm |Uhr|";
             this.delimiter = ";"; // for CSV export/import
             this.rowsPerPage = 32;
+            this.sollMuenzKassenstand = new BigDecimal("50.00");
+            this.sollScheinKassenstand = new BigDecimal("100.00");
         }
         this.mysqlHost = removeQuotes(this.mysqlHost);
         this.printerName = removeQuotes(this.printerName);
