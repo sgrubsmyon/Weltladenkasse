@@ -76,6 +76,7 @@ class KassenstandZuruecksetzenDialog extends DialogWindow
         String scheinDeltaText = scheinDelta.signum() >= 0 ?
                 "<span class='red'>"+bc.priceFormatter(scheinDelta)+" "+bc.currencySymbol+"</span> in Scheinen aus der Kasse entnommen werden" :
                 "<span class='red'>"+bc.priceFormatter(scheinDelta.multiply(bc.minusOne))+" "+bc.currencySymbol+"</span> in Scheinen in die Kasse gegeben werden";
+        scheinDeltaText += " (am besten so, dass 5 mal 10 € und 10 mal 5 € verbleiben)";
 
         JTextPane erklaerText = new JTextPane();
         erklaerText.setEditable(false);
@@ -96,7 +97,7 @@ class KassenstandZuruecksetzenDialog extends DialogWindow
                 bc.priceFormatter(sollKassenstand)+" "+bc.currencySymbol+"</span> "+
                 "gebracht werden. Idealerweise <span class='blue'>"+
                 bc.priceFormatter(bc.sollScheinKassenstand)+" "+bc.currencySymbol+"</span> "+
-                "in Scheinen und <span class='blue'>"+
+                "in Scheinen (fünf 10 €- und zehn 5 €-Scheine) und <span class='blue'>"+
                 bc.priceFormatter(bc.sollMuenzKassenstand)+" "+bc.currencySymbol+"</span> in Münzen.</p>\n" +
                 "<p>Bei einem gezählten Kassenstand von <span class='green'>"+
                 bc.priceFormatter(gezaehlterKassenstand)+" "+bc.currencySymbol+"</span> (<span class='green'>"+
