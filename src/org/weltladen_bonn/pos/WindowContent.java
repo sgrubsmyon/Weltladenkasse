@@ -1409,16 +1409,17 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
 
-    protected int insertIntoKassenstand(BigDecimal neuerKassenstand, String kommentar) {
+    protected int insertIntoKassenstand(BigDecimal neuerKassenstand, Boolean entnahme, String kommentar) {
         int result = 0;
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
-                    "INSERT INTO kassenstand SET buchungsdatum = " +
-                            "NOW(), neuer_kassenstand = ?, " +
-                            "manuell = TRUE, kommentar = ?"
+                    "INSERT INTO kassenstand SET buchungsdatum = NOW(), " +
+                            "neuer_kassenstand = ?, manuell = TRUE, " +
+                            "entnahme = ?, kommentar = ?"
             );
             pstmt.setBigDecimal(1, neuerKassenstand);
-            pstmt.setString(2, kommentar);
+            pstmt.setBoolean(2, entnahme);
+            pstmt.setString(3, kommentar);
             result = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException ex) {

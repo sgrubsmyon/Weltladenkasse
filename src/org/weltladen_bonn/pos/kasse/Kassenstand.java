@@ -55,6 +55,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 
     // Text Fields
     private JTextField neuerKassenstandField;
+    private JCheckBox entnahmeCheckBox;
     private JTextField differenzField;
     private JTextField kommentarField;
     //Formats to format and parse numbers
@@ -96,52 +97,52 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
      *       */
     public Kassenstand(Connection conn, MainWindowGrundlage mw, TabbedPane tp)
     {
-	super(conn, mw);
+        super(conn, mw);
         tabbedPane = tp;
 
-	fillDataArray(filterStr);
-	queryEarliestKassenstand();
-	initiateSpinners();
-	showAll();
+        fillDataArray(filterStr);
+        queryEarliestKassenstand();
+        initiateSpinners();
+        showAll();
     }
 
     private void queryEarliestKassenstand(){
-	int day = 0;
+        int day = 0;
         int month = 0;
         int year = 0;
-	try {
-	    // Create statement for MySQL database
-	    Statement stmt = this.conn.createStatement();
-	    // Run MySQL command
-	    ResultSet rs = stmt.executeQuery(
-		    "SELECT DAY(MIN(buchungsdatum)), MONTH(MIN(buchungsdatum)), " +
-		    "YEAR(MIN(buchungsdatum)) FROM kassenstand"
-		    );
-	    // Now do something with the ResultSet ...
-	    rs.next();
-	    day = rs.getInt(1);
-	    month = rs.getInt(2);
-	    year = rs.getInt(3);
-	    rs.close();
-	    stmt.close();
-	} catch (SQLException ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    ex.printStackTrace();
-	}
-	Calendar calendar = Calendar.getInstance();
-	calendar.set(Calendar.YEAR, year);
-	calendar.set(Calendar.MONTH, month-1);
-	calendar.set(Calendar.DAY_OF_MONTH, day-1); // for strange reasons, we need day-1
-	oneDayBeforeEarliestDate = calendar.getTime();
-	calendar.set(Calendar.DAY_OF_MONTH, day);
-	earliestDate = calendar.getTime();
+        try {
+            // Create statement for MySQL database
+            Statement stmt = this.conn.createStatement();
+            // Run MySQL command
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT DAY(MIN(buchungsdatum)), MONTH(MIN(buchungsdatum)), " +
+                            "YEAR(MIN(buchungsdatum)) FROM kassenstand"
+            );
+            // Now do something with the ResultSet ...
+            rs.next();
+            day = rs.getInt(1);
+            month = rs.getInt(2);
+            year = rs.getInt(3);
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR, year);
+        calendar.set(Calendar.MONTH, month-1);
+        calendar.set(Calendar.DAY_OF_MONTH, day-1); // for strange reasons, we need day-1
+        oneDayBeforeEarliestDate = calendar.getTime();
+        calendar.set(Calendar.DAY_OF_MONTH, day);
+        earliestDate = calendar.getTime();
 
         Date now = new Date(); // current date
         if ( year == 0 ){
             oneDayBeforeEarliestDate = now;
             earliestDate = now;
         }
-	latestDate = now;
+        latestDate = now;
         // final check:
         if (latestDate.before(earliestDate)) {
             Date tmp = earliestDate;
@@ -153,104 +154,105 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 
     private void initiateSpinners(){
         startDateModel = new SpinnerDateModel(earliestDate, // Startwert
-                                     oneDayBeforeEarliestDate, // kleinster Wert
-                                     latestDate, // groesster Wert
-                                     Calendar.YEAR);//ignored for user input
+                oneDayBeforeEarliestDate, // kleinster Wert
+                latestDate, // groesster Wert
+                Calendar.YEAR);//ignored for user input
         startSpinner = new JSpinner(startDateModel);
         startSpinner.setEditor(new JSpinner.DateEditor(startSpinner, "dd/MM/yyyy"));
-	startSpinner.addChangeListener(this);
-	calButtStart = new JCalendarButton(earliestDate);
-	calButtStart.addChangeListener(this);
+        startSpinner.addChangeListener(this);
+        calButtStart = new JCalendarButton(earliestDate);
+        calButtStart.addChangeListener(this);
         endDateModel = new SpinnerDateModel(latestDate, // Startwert
-                                     oneDayBeforeEarliestDate, // kleinster Wert
-                                     latestDate, // groesster Wert
-                                     Calendar.YEAR);//ignored for user input
+                oneDayBeforeEarliestDate, // kleinster Wert
+                latestDate, // groesster Wert
+                Calendar.YEAR);//ignored for user input
         endSpinner = new JSpinner(endDateModel);
         endSpinner.setEditor(new JSpinner.DateEditor(endSpinner, "dd/MM/yyyy"));
-	endSpinner.addChangeListener(this);
-	calButtEnd = new JCalendarButton(latestDate);
-	calButtEnd.addChangeListener(this);
+        endSpinner.addChangeListener(this);
+        calButtEnd = new JCalendarButton(latestDate);
+        calButtEnd.addChangeListener(this);
     }
 
     void fillDataArray(String filterStr){
-	data = new Vector<Vector<Object>>();
-	columnLabels = new Vector<String>();
-	columnLabels.add("Buchungsdatum"); columnLabels.add("Neuer Kassenstand"); columnLabels.add("Manuell?");
-	columnLabels.add("Rechnungsnr."); columnLabels.add("Erläuternder Kommentar");
-	try {
-	    // Create statement for MySQL database
-	    Statement stmt = this.conn.createStatement();
+        data = new Vector<Vector<Object>>();
+        columnLabels = new Vector<String>();
+        columnLabels.add("Buchungsdatum"); columnLabels.add("Neuer Kassenstand"); columnLabels.add("Manuell?");
+        columnLabels.add("Entnahme?"); columnLabels.add("Rechnungsnr."); columnLabels.add("Erläuternder Kommentar");
+        try {
+            // Create statement for MySQL database
+            Statement stmt = this.conn.createStatement();
             String ausblendeString = new String();
             if (showRechnungen){
                 ausblendeString = "TRUE ";
             } else {
                 ausblendeString = "manuell = TRUE ";
             }
-	    // Run MySQL command
-	    ResultSet rs = stmt.executeQuery(
-		    "SELECT DATE_FORMAT(buchungsdatum,'"+bc.dateFormatSQL+"'), "+
-		    "neuer_kassenstand, manuell, rechnungs_nr, kommentar " +
-		    "FROM kassenstand " +
-                    "WHERE " + ausblendeString +
-		    filterStr +
-		    "ORDER BY buchungsdatum DESC " +
-		    "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
-		    );
-	    // Now do something with the ResultSet ...
-	    while (rs.next()) {
-		Vector<Object> row = new Vector<Object>();
-		row.add(rs.getString(1));
-		row.add(bc.priceFormatter(rs.getString(2))+" "+bc.currencySymbol);
-		row.add(rs.getString(3).contentEquals("0") ? "Nein" : "Ja");
-		row.add(rs.getString(4));
-		row.add(rs.getString(5));
-		data.add(row);
-	    }
-	    rs.close();
-	    rs = stmt.executeQuery(
-		    "SELECT COUNT(*) FROM kassenstand WHERE TRUE " +
-		    filterStr
-		    );
-	    // Now do something with the ResultSet ...
-	    rs.next();
-	    kassenstandZahl = rs.getString(1);
-	    kassenstandZahlInt = Integer.parseInt(kassenstandZahl);
-	    totalPage = kassenstandZahlInt/bc.rowsPerPage + 1;
-	    rs.close();
-	    stmt.close();
-	} catch (SQLException ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    ex.printStackTrace();
-	}
-	myTable = new AnyJComponentJTable(data, columnLabels);
+            // Run MySQL command
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT DATE_FORMAT(buchungsdatum,'"+bc.dateFormatSQL+"'), "+
+                            "neuer_kassenstand, manuell, entnahme, rechnungs_nr, kommentar " +
+                            "FROM kassenstand " +
+                            "WHERE " + ausblendeString +
+                            filterStr +
+                            "ORDER BY buchungsdatum DESC " +
+                            "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
+            );
+            // Now do something with the ResultSet ...
+            while (rs.next()) {
+                Vector<Object> row = new Vector<Object>();
+                row.add(rs.getString(1));
+                row.add(bc.priceFormatter(rs.getString(2))+" "+bc.currencySymbol);
+                row.add(rs.getString(3).contentEquals("0") ? "Nein" : "Ja");
+                row.add(rs.getString(4).contentEquals("0") ? "Nein" : "Ja");
+                row.add(rs.getString(5));
+                row.add(rs.getString(6));
+                data.add(row);
+            }
+            rs.close();
+            rs = stmt.executeQuery(
+                    "SELECT COUNT(*) FROM kassenstand WHERE TRUE " +
+                            filterStr
+            );
+            // Now do something with the ResultSet ...
+            rs.next();
+            kassenstandZahl = rs.getString(1);
+            kassenstandZahlInt = Integer.parseInt(kassenstandZahl);
+            totalPage = kassenstandZahlInt/bc.rowsPerPage + 1;
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        myTable = new AnyJComponentJTable(data, columnLabels);
 //	myTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
 //	myTable.setFillsViewportHeight(true);
     }
 
     void showAll(){
-	allPanel = new JPanel(new BorderLayout());
+        allPanel = new JPanel(new BorderLayout());
 
-	JPanel headerPanel = new JPanel();
-	headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
+        JPanel headerPanel = new JPanel();
+        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
 
-	headerPanel.add(Box.createRigidArea(new Dimension(0,10))); // add empty space
-	JPanel kassenstandPanel = new JPanel();
-	kassenstandPanel.setLayout(new FlowLayout());
-	JLabel kassenstandLabel = new JLabel("Aktueller Kassenstand:");
-	kassenstandPanel.add(kassenstandLabel);
-	JTextField kassenstandField = new JTextField("", 10);
+        headerPanel.add(Box.createRigidArea(new Dimension(0,10))); // add empty space
+        JPanel kassenstandPanel = new JPanel();
+        kassenstandPanel.setLayout(new FlowLayout());
+        JLabel kassenstandLabel = new JLabel("Aktueller Kassenstand:");
+        kassenstandPanel.add(kassenstandLabel);
+        JTextField kassenstandField = new JTextField("", 10);
         kassenstandField.setHorizontalAlignment(JTextField.RIGHT);
-	kassenstandField.setText( bc.priceFormatter(mainWindow.retrieveKassenstand()) );
-	kassenstandField.setEditable(false);
-	kassenstandLabel.setLabelFor(kassenstandField);
-	kassenstandPanel.add(kassenstandField);
+        kassenstandField.setText( bc.priceFormatter(mainWindow.retrieveKassenstand()) );
+        kassenstandField.setEditable(false);
+        kassenstandLabel.setLabelFor(kassenstandField);
+        kassenstandPanel.add(kassenstandField);
         kassenstandPanel.add(new JLabel(bc.currencySymbol));
-	headerPanel.add(kassenstandPanel);
+        headerPanel.add(kassenstandPanel);
 
-	JPanel aendernPanel = new JPanel(new BorderLayout());
-	aendernPanel.setBorder(BorderFactory.createTitledBorder("Kassenstand ändern"));
+        JPanel aendernPanel = new JPanel(new BorderLayout());
+        aendernPanel.setBorder(BorderFactory.createTitledBorder("Kassenstand ändern"));
 
-	JPanel kassenstandAendernPanel = new JPanel(new GridBagLayout());
+        JPanel kassenstandAendernPanel = new JPanel(new GridBagLayout());
         GridBagConstraints c1 = new GridBagConstraints();
         c1.anchor = GridBagConstraints.CENTER;
         c1.fill = GridBagConstraints.HORIZONTAL;
@@ -278,6 +280,12 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
         c1.gridy = 0;
         c1.gridx = 2;
         kassenstandAendernPanel.add(new JLabel(bc.currencySymbol), c1);
+
+        c1.gridy = 0;
+        c1.gridx = 3;
+        entnahmeCheckBox = new JCheckBox("Entnahme");
+        entnahmeCheckBox.addItemListener(this);
+        kassenstandAendernPanel.add(entnahmeCheckBox, c1);
 
         // ---
 
@@ -330,120 +338,122 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
         tagesabschlussButton.addActionListener(this);
         kassenstandAendernPanel.add(tagesabschlussButton, c1);
 
-	aendernPanel.add(kassenstandAendernPanel);
-	headerPanel.add(aendernPanel);
+        aendernPanel.add(kassenstandAendernPanel);
+        headerPanel.add(aendernPanel);
         allPanel.add(headerPanel, BorderLayout.NORTH);
 
-	fillDataArray(filterStr);
-	showTable();
+        fillDataArray(filterStr);
+        showTable();
 
-	this.add(allPanel, BorderLayout.CENTER);
+        this.add(allPanel, BorderLayout.CENTER);
     }
 
     void showTable(){
         myTable.setAutoCreateRowSorter(true);
 //	myTable.setBounds(71,53,150,100);
 //	myTable.setToolTipText("Tabelle kann nur gelesen werden.");
-	setTableProperties(myTable);
+        setTableProperties(myTable);
 //	myTable.setAutoResizeMode(5);
 
-	historyPanel = new JPanel(new BorderLayout());
-	historyPanel.setBorder(BorderFactory.createTitledBorder("Verlauf der Kassenstände"));
+        historyPanel = new JPanel(new BorderLayout());
+        historyPanel.setBorder(BorderFactory.createTitledBorder("Verlauf der Kassenstände"));
 
         JPanel historyHeaderPanel = new JPanel();
-	historyHeaderPanel.setLayout(new BoxLayout(historyHeaderPanel, BoxLayout.Y_AXIS));
+        historyHeaderPanel.setLayout(new BoxLayout(historyHeaderPanel, BoxLayout.Y_AXIS));
 
-	    JPanel datePanel = new JPanel();
-	    datePanel.setLayout(new FlowLayout());
-	    //datePanel.setMaximumSize(new Dimension(1024,30));
-	    JLabel startDateLabel = new JLabel("Startdatum:");
-	    datePanel.add(startDateLabel);
-	    startDateLabel.setLabelFor(startSpinner);
-	    datePanel.add(startSpinner);
-	    datePanel.add(calButtStart);
-	    datePanel.add(Box.createRigidArea(new Dimension(10,0))); // add empty space
-	    JLabel endDateLabel = new JLabel("Enddatum:");
-	    datePanel.add(endDateLabel);
-	    endDateLabel.setLabelFor(endSpinner);
-	    datePanel.add(endSpinner);
-	    datePanel.add(calButtEnd);
-	    datePanel.add(Box.createRigidArea(new Dimension(10,0))); // add empty space
-	    changeDateButton = new JButton(new ImageIcon( WindowContent.class.getResource("/resources/icons/refreshButtonSmall.gif") ));
-	    changeDateButton.addActionListener(this);
-	    datePanel.add(changeDateButton);
-	    resetButton = new JButton("Zurücksetzen");
-	    resetButton.addActionListener(this);
-	    datePanel.add(resetButton);
-            historyHeaderPanel.add(datePanel);
+        JPanel datePanel = new JPanel();
+        datePanel.setLayout(new FlowLayout());
+        //datePanel.setMaximumSize(new Dimension(1024,30));
+        JLabel startDateLabel = new JLabel("Startdatum:");
+        datePanel.add(startDateLabel);
+        startDateLabel.setLabelFor(startSpinner);
+        datePanel.add(startSpinner);
+        datePanel.add(calButtStart);
+        datePanel.add(Box.createRigidArea(new Dimension(10,0))); // add empty space
+        JLabel endDateLabel = new JLabel("Enddatum:");
+        datePanel.add(endDateLabel);
+        endDateLabel.setLabelFor(endSpinner);
+        datePanel.add(endSpinner);
+        datePanel.add(calButtEnd);
+        datePanel.add(Box.createRigidArea(new Dimension(10,0))); // add empty space
+        changeDateButton = new JButton(new ImageIcon( WindowContent.class.getResource("/resources/icons/refreshButtonSmall.gif") ));
+        changeDateButton.addActionListener(this);
+        datePanel.add(changeDateButton);
+        resetButton = new JButton("Zurücksetzen");
+        resetButton.addActionListener(this);
+        datePanel.add(resetButton);
+        historyHeaderPanel.add(datePanel);
 
-            JPanel checkBoxPanel = new JPanel();
-            rechnungsCheckBox = new JCheckBox("Rechnungen anzeigen");
-            rechnungsCheckBox.setSelected(showRechnungen);
-            rechnungsCheckBox.addItemListener(this);
-            //rechnungsCheckBox.addActionListener(this);
-            checkBoxPanel.add(rechnungsCheckBox);
-            historyHeaderPanel.add(checkBoxPanel);
+        JPanel checkBoxPanel = new JPanel();
+        rechnungsCheckBox = new JCheckBox("Rechnungen anzeigen");
+        rechnungsCheckBox.setSelected(showRechnungen);
+        rechnungsCheckBox.addItemListener(this);
+        checkBoxPanel.add(rechnungsCheckBox);
+        historyHeaderPanel.add(checkBoxPanel);
 
-	    JPanel pageChangePanel = new JPanel();
-	    pageChangePanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-	    //	pageChangePanel.setMaximumSize(new Dimension(1024,30));
-	    prevButton = new JButton("<<");
-	    if (this.currentPage <= 1)
-		prevButton.setEnabled(false);
-	    nextButton = new JButton(">>");
-	    if (this.currentPage >= totalPage)
-		nextButton.setEnabled(false);
-	    pageChangePanel.add(prevButton);
-	    pageChangePanel.add(nextButton);
-	    prevButton.addActionListener(this);
-	    nextButton.addActionListener(this);
-	    int currentPageMin = (currentPage-1)*bc.rowsPerPage + 1;
-	    int currentPageMax = bc.rowsPerPage*currentPage;
-	    currentPageMax = (currentPageMax <= kassenstandZahlInt) ? currentPageMax : kassenstandZahlInt;
-	    JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Kassenstand "+
-		currentPageMin + " bis "+ currentPageMax +" von "+ kassenstandZahlInt);
-	    pageChangePanel.add(header);
-	    historyHeaderPanel.add(pageChangePanel);
+        JPanel pageChangePanel = new JPanel();
+        pageChangePanel.setLayout(new FlowLayout(FlowLayout.LEADING));
+        //	pageChangePanel.setMaximumSize(new Dimension(1024,30));
+        prevButton = new JButton("<<");
+        if (this.currentPage <= 1)
+            prevButton.setEnabled(false);
+        nextButton = new JButton(">>");
+        if (this.currentPage >= totalPage)
+            nextButton.setEnabled(false);
+        pageChangePanel.add(prevButton);
+        pageChangePanel.add(nextButton);
+        prevButton.addActionListener(this);
+        nextButton.addActionListener(this);
+        int currentPageMin = (currentPage-1)*bc.rowsPerPage + 1;
+        int currentPageMax = bc.rowsPerPage*currentPage;
+        currentPageMax = (currentPageMax <= kassenstandZahlInt) ? currentPageMax : kassenstandZahlInt;
+        JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Kassenstand "+
+                currentPageMin + " bis "+ currentPageMax +" von "+ kassenstandZahlInt);
+        pageChangePanel.add(header);
+        historyHeaderPanel.add(pageChangePanel);
 
-	    historyPanel.add(historyHeaderPanel, BorderLayout.NORTH);
+        historyPanel.add(historyHeaderPanel, BorderLayout.NORTH);
 
-	    JScrollPane scrollPane = new JScrollPane(myTable);
-	    historyPanel.add(scrollPane, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(myTable);
+        historyPanel.add(scrollPane, BorderLayout.CENTER);
 
-	allPanel.add(historyPanel, BorderLayout.CENTER);
+        allPanel.add(historyPanel, BorderLayout.CENTER);
     }
 
     private void updateAll(String filterStr){
-	this.remove(allPanel);
-	this.revalidate();
-	fillDataArray(filterStr);
-	showAll();
+        this.remove(allPanel);
+        this.revalidate();
+        fillDataArray(filterStr);
+        showAll();
     }
 
     private void updateTable(String filterStr){
-	allPanel.remove(historyPanel);
-	allPanel.revalidate();
-	fillDataArray(filterStr);
-	showTable();
+        allPanel.remove(historyPanel);
+        allPanel.revalidate();
+        fillDataArray(filterStr);
+        showTable();
     }
 
     private void setTableProperties(AnyJComponentJTable table){
-	// Spalteneigenschaften:
+        // Spalteneigenschaften:
 //	table.getColumnModel().getColumn(0).setPreferredWidth(10);
-	TableColumn buchungsDatum = table.getColumn("Buchungsdatum");
-	buchungsDatum.setCellRenderer(rechtsAusrichter);
-	buchungsDatum.setPreferredWidth(50);
-	TableColumn betrag = table.getColumn("Neuer Kassenstand");
-	betrag.setCellRenderer(rechtsAusrichter);
-	TableColumn manuell = table.getColumn("Manuell?");
-	manuell.setCellRenderer(rechtsAusrichter);
-	manuell.setPreferredWidth(5);
-	TableColumn rechnungsNr = table.getColumn("Rechnungsnr.");
-	rechnungsNr.setCellRenderer(rechtsAusrichter);
-	rechnungsNr.setPreferredWidth(8);
-	TableColumn kommentarCol = table.getColumn("Erläuternder Kommentar");
-	kommentarCol.setCellRenderer(rechtsAusrichter);
-	kommentarCol.setPreferredWidth(70);
+        TableColumn buchungsDatum = table.getColumn("Buchungsdatum");
+        buchungsDatum.setCellRenderer(rechtsAusrichter);
+        buchungsDatum.setPreferredWidth(50);
+        TableColumn betrag = table.getColumn("Neuer Kassenstand");
+        betrag.setCellRenderer(rechtsAusrichter);
+        TableColumn manuell = table.getColumn("Manuell?");
+        manuell.setCellRenderer(rechtsAusrichter);
+        manuell.setPreferredWidth(5);
+        TableColumn entnahme = table.getColumn("Entnahme?");
+        entnahme.setCellRenderer(rechtsAusrichter);
+        entnahme.setPreferredWidth(5);
+        TableColumn rechnungsNr = table.getColumn("Rechnungsnr.");
+        rechnungsNr.setCellRenderer(rechtsAusrichter);
+        rechnungsNr.setPreferredWidth(8);
+        TableColumn kommentarCol = table.getColumn("Erläuternder Kommentar");
+        kommentarCol.setCellRenderer(rechtsAusrichter);
+        kommentarCol.setPreferredWidth(70);
     }
 
     private void abschicken() {
@@ -454,6 +464,11 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             neuerKassenstandField.setText("");
             differenzField.setText("");
             kommentarField.setText("");
+        }
+        Boolean entnahme = entnahmeCheckBox.isSelected();
+        String entnahmeString = "";
+        if (entnahme) {
+            entnahmeString = "\n\nIst es wirklich eine Entnahme? (Tagesabschluss ist keine Entnahme!)";
         }
         String kommentar = kommentarField.getText();
         // neuerKassenstand mode:
@@ -469,12 +484,12 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             }
             text = bc.priceFormatter(text)+" "+bc.currencySymbol;
             int answer = JOptionPane.showConfirmDialog(this,
-                    "Kassenstand wirklich auf "+text+" setzen "+
-                            "mit Kommentar \n\""+kommentar+"\"?", "Kassenstand ändern",
+                    "Kassenstand wirklich auf "+text+" setzen mit Kommentar \n"+
+                            "\""+kommentar+"\"?"+entnahmeString, "Kassenstand ändern",
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (answer == JOptionPane.YES_OPTION){
                 BigDecimal newValue = new BigDecimal( bc.priceFormatterIntern(text) );
-                int result = insertIntoKassenstand(newValue, kommentar);
+                int result = insertIntoKassenstand(newValue, entnahme, kommentar);
                 if (result != 0) {
                     // update everything
                     tabbedPane.kassenstandNeedsToChange = false;
@@ -515,12 +530,12 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             else erhoehenReduzieren = "erhöhen";
             int answer = JOptionPane.showConfirmDialog(this,
                     "Kassenstand wirklich um "+text+" "+erhoehenReduzieren+" "+
-                            "mit Kommentar \n\""+kommentar+"\"?", "Kassenstand ändern",
+                            "mit Kommentar \n\""+kommentar+"\"?"+entnahmeString, "Kassenstand ändern",
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (answer == JOptionPane.YES_OPTION){
                 BigDecimal oldValue = mainWindow.retrieveKassenstand();
                 BigDecimal newValue = oldValue.add(differenz);
-                int result = insertIntoKassenstand(newValue, kommentar);
+                int result = insertIntoKassenstand(newValue, entnahme, kommentar);
                 if (result != 0){
                     // update everything
                     tabbedPane.kassenstandNeedsToChange = false;
@@ -615,87 +630,87 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
      *    @param e the change event.
      **/
     public void stateChanged(ChangeEvent e) {
-	if (e.getSource() == startSpinner){
-	    SpinnerModel dateModel = startSpinner.getModel();
-	    if (dateModel instanceof SpinnerDateModel) {
-		calButtStart.setTargetDate(((SpinnerDateModel)dateModel).getDate());
-	    }
-	}
-	else if (e.getSource() == endSpinner){
-	    SpinnerModel dateModel = endSpinner.getModel();
-	    if (dateModel instanceof SpinnerDateModel) {
-		calButtEnd.setTargetDate(((SpinnerDateModel)dateModel).getDate());
-	    }
-	}
-	else if (e.getSource() == calButtStart){
-	    SpinnerModel dateModel = startSpinner.getModel();
-	    Date newDate = calButtStart.getTargetDate();
-	    if ( newDate.before(earliestDate) ){
-		newDate = earliestDate;
-		calButtStart.setTargetDate(newDate);
-	    }
-	    if ( newDate.after(latestDate) ){
-		newDate = latestDate;
-		calButtStart.setTargetDate(newDate);
-	    }
-	    if (dateModel instanceof SpinnerDateModel) {
-		if (newDate != null){
-		    ((SpinnerDateModel)dateModel).setValue(newDate);
-		}
-	    }
-	}
-	else if (e.getSource() == calButtEnd){
-	    SpinnerModel dateModel = endSpinner.getModel();
-	    Date newDate = calButtEnd.getTargetDate();
-	    if ( newDate.before(earliestDate) ){
-		newDate = earliestDate;
-		calButtEnd.setTargetDate(newDate);
-	    }
-	    if ( newDate.after(latestDate) ){
-		newDate = latestDate;
-		calButtEnd.setTargetDate(newDate);
-	    }
-	    if (dateModel instanceof SpinnerDateModel) {
-		if (newDate != null){
-		    ((SpinnerDateModel)dateModel).setValue(newDate);
-		}
-	    }
-	}
+        if (e.getSource() == startSpinner){
+            SpinnerModel dateModel = startSpinner.getModel();
+            if (dateModel instanceof SpinnerDateModel) {
+                calButtStart.setTargetDate(((SpinnerDateModel)dateModel).getDate());
+            }
+        }
+        else if (e.getSource() == endSpinner){
+            SpinnerModel dateModel = endSpinner.getModel();
+            if (dateModel instanceof SpinnerDateModel) {
+                calButtEnd.setTargetDate(((SpinnerDateModel)dateModel).getDate());
+            }
+        }
+        else if (e.getSource() == calButtStart){
+            SpinnerModel dateModel = startSpinner.getModel();
+            Date newDate = calButtStart.getTargetDate();
+            if ( newDate.before(earliestDate) ){
+                newDate = earliestDate;
+                calButtStart.setTargetDate(newDate);
+            }
+            if ( newDate.after(latestDate) ){
+                newDate = latestDate;
+                calButtStart.setTargetDate(newDate);
+            }
+            if (dateModel instanceof SpinnerDateModel) {
+                if (newDate != null){
+                    ((SpinnerDateModel)dateModel).setValue(newDate);
+                }
+            }
+        }
+        else if (e.getSource() == calButtEnd){
+            SpinnerModel dateModel = endSpinner.getModel();
+            Date newDate = calButtEnd.getTargetDate();
+            if ( newDate.before(earliestDate) ){
+                newDate = earliestDate;
+                calButtEnd.setTargetDate(newDate);
+            }
+            if ( newDate.after(latestDate) ){
+                newDate = latestDate;
+                calButtEnd.setTargetDate(newDate);
+            }
+            if (dateModel instanceof SpinnerDateModel) {
+                if (newDate != null){
+                    ((SpinnerDateModel)dateModel).setValue(newDate);
+                }
+            }
+        }
     }
 
 
 
 
-    void setOtherFieldEditable(DocumentEvent e) {
-	JTextField thisFieldPointer = null;
-	JTextField otherFieldPointer = null;
-	if ( e.getDocument() == neuerKassenstandField.getDocument() ){
-	    thisFieldPointer = neuerKassenstandField;
-	    otherFieldPointer = differenzField;
-	}
-	else if ( e.getDocument() == differenzField.getDocument() ){
-	    thisFieldPointer = differenzField;
-	    otherFieldPointer = neuerKassenstandField;
-	}
-	else {
-	    return;
-	}
-	if (thisFieldPointer.getText().length() > 0){
-	    otherFieldPointer.setEditable(false);
-	}
-	else {
-	    otherFieldPointer.setEditable(true);
-	}
+    private void setOtherFieldEditable(DocumentEvent e) {
+        JTextField thisFieldPointer = null;
+        JTextField otherFieldPointer = null;
+        if ( e.getDocument() == neuerKassenstandField.getDocument() ){
+            thisFieldPointer = neuerKassenstandField;
+            otherFieldPointer = differenzField;
+        }
+        else if ( e.getDocument() == differenzField.getDocument() ){
+            thisFieldPointer = differenzField;
+            otherFieldPointer = neuerKassenstandField;
+        }
+        else {
+            return;
+        }
+        if (thisFieldPointer.getText().length() > 0){
+            otherFieldPointer.setEditable(false);
+        }
+        else {
+            otherFieldPointer.setEditable(true);
+        }
     }
 
-    void checkIfFormIsComplete() {
-	if ( (neuerKassenstandField.getText().length() > 0 || differenzField.getText().length() > 0) &&
-		kommentarField.getText().length() > 0 ){
-	    returnButton.setEnabled(true);
-	}
-	else {
-	    returnButton.setEnabled(false);
-	}
+    private void checkIfFormIsComplete() {
+        if ( (neuerKassenstandField.getText().length() > 0 || differenzField.getText().length() > 0) &&
+                kommentarField.getText().length() > 0 ){
+            returnButton.setEnabled(true);
+        }
+        else {
+            returnButton.setEnabled(false);
+        }
     }
     /**
      *    * Each non abstract class that implements the DocumentListener
@@ -704,17 +719,17 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
      *    @param e the document event.
      **/
     public void insertUpdate(DocumentEvent e) {
-	// check if form is valid (if Kassenstand can be changed)
-	setOtherFieldEditable(e);
-	checkIfFormIsComplete();
+        // check if form is valid (if Kassenstand can be changed)
+        setOtherFieldEditable(e);
+        checkIfFormIsComplete();
     }
     public void removeUpdate(DocumentEvent e) {
-	// check if form is valid (if Kassenstand can be changed)
-	setOtherFieldEditable(e);
-	checkIfFormIsComplete();
+        // check if form is valid (if Kassenstand can be changed)
+        setOtherFieldEditable(e);
+        checkIfFormIsComplete();
     }
     public void changedUpdate(DocumentEvent e) {
-	//Plain text components do not fire these events
+        //Plain text components do not fire these events
     }
 
     /** Needed for ItemListener. */
@@ -728,8 +743,15 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             } else if (e.getStateChange() == ItemEvent.DESELECTED) {
                 showRechnungen = false;
             }
+            updateAll(this.filterStr);
         }
-        updateAll(this.filterStr);
+        if (source == entnahmeCheckBox) {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                tagesabschlussButton.setEnabled(false);
+            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                tagesabschlussButton.setEnabled(true);
+            }
+        }
     }
 
 }

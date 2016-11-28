@@ -125,6 +125,7 @@ CREATE TABLE kassenstand (
     buchungsdatum DATETIME NOT NULL,
     neuer_kassenstand DECIMAL(13,2) NOT NULL,
     manuell BOOLEAN NOT NULL DEFAULT FALSE,
+    entnahme BOOLEAN NOT NULL DEFAULT FALSE,
     rechnungs_nr INTEGER(10) UNSIGNED DEFAULT NULL,
     kommentar VARCHAR(70),
     PRIMARY KEY (kassenstand_id),

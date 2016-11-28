@@ -19,6 +19,7 @@ import javax.swing.*;
 // DateTime from date4j (http://www.date4j.net/javadoc/index.html)
 import hirondelle.date4j.DateTime;
 
+import org.jopendocument.dom.spreadsheet.Sheet;
 import org.weltladen_bonn.pos.BaseClass;
 import org.weltladen_bonn.pos.DialogWindow;
 import org.weltladen_bonn.pos.MainWindowGrundlage;
@@ -722,7 +723,7 @@ public class AbrechnungenTag extends Abrechnungen {
         }
     }
 
-    void showZaehlprotokollDialog() {
+    private void showZaehlprotokollDialog() {
         JDialog dialog = new JDialog(this.mainWindow, "Erfassung des Kassenbestands", true);
         ZaehlprotokollDialog zd = new ZaehlprotokollDialog(this.conn, this.mainWindow, this, dialog);
         dialog.getContentPane().add(zd, BorderLayout.CENTER);
@@ -731,7 +732,7 @@ public class AbrechnungenTag extends Abrechnungen {
         dialog.setVisible(true);
     }
 
-    void showZaehlprotokollEditDialog(int editIndex) {
+    private void showZaehlprotokollEditDialog(int editIndex) {
         JDialog dialog = new JDialog(this.mainWindow, "Bearbeitung des Kassenbestands", true);
         ZaehlprotokollDialog zd = new ZaehlprotokollDialog(this.conn, this.mainWindow, this, dialog);
         zd.setZaehlprotokoll(zaehlprotokolle.get(editIndex).get(0));
@@ -745,7 +746,7 @@ public class AbrechnungenTag extends Abrechnungen {
         dialog.setVisible(true);
     }
 
-    void showKassenstandZuruecksetzenDialog() {
+    private void showKassenstandZuruecksetzenDialog() {
         JDialog dialog = new JDialog(this.mainWindow, "Kassenstand zurücksetzen", true);
         KassenstandZuruecksetzenDialog kzd = new KassenstandZuruecksetzenDialog(this.conn, this.mainWindow, dialog, this.zaehlprotokoll, this);
         dialog.getContentPane().add(kzd, BorderLayout.CENTER);
@@ -755,6 +756,12 @@ public class AbrechnungenTag extends Abrechnungen {
     }
 
     void queryAbrechnungenSpecial() {
+    }
+
+    @Override
+    Sheet fillSpreadSheet(int exportIndex) {
+        Sheet sheet = super.fillSpreadSheet(exportIndex);
+        return sheet;
     }
 
     /**

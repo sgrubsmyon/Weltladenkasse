@@ -535,11 +535,11 @@ public abstract class Abrechnungen extends WindowContent {
         }
     }
 
-    void writeSpreadSheet(File file, int exportIndex) {
+    Sheet fillSpreadSheet(int exportIndex) {
         // Get data
         String date = abrechnungsDates.get(exportIndex);
         Date ddate = createDate(date);
-        System.out.println("ddate: "+ddate);
+        System.out.println("ddate: " + ddate);
         Integer id = abrechnungsIDs.get(exportIndex);
         Vector<BigDecimal> totals = abrechnungsTotals.get(exportIndex);
         HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(exportIndex); // map with values for each mwst
@@ -547,20 +547,20 @@ public abstract class Abrechnungen extends WindowContent {
         // Load the template file
         final Sheet sheet;
         try {
-            String filename = "vorlagen"+bc.fileSep+titleStr+".ods";
+            String filename = "vorlagen" + bc.fileSep + titleStr + ".ods";
             File infile = new File(filename);
-            if (!infile.exists()){
+            if (!infile.exists()) {
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: Zur '"+titleStr+"' gibt es keine Vorlage "+
-                        "'"+filename+"'.",
+                        "Fehler: Zur '" + titleStr + "' gibt es keine Vorlage " +
+                                "'" + filename + "'.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
-                return;
+                return null;
             }
             sheet = SpreadSheet.createFromFile(infile).getSheet(0);
         } catch (IOException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
-            return;
+            return null;
         }
 
         // Change date
@@ -570,19 +570,19 @@ public abstract class Abrechnungen extends WindowContent {
 
         // Set Totals:
         int rowIndex = 9;
-        for (BigDecimal total : totals){
+        for (BigDecimal total : totals) {
             sheet.setValueAt(total, 1, rowIndex);
             rowIndex++;
         }
         rowIndex++; // empty row
 
         // Set VATs:
-        for (BigDecimal mwst : mwstSet){
-            sheet.setValueAt(bc.vatFormatter(mwst)+" MwSt. Brutto", 0, rowIndex);
-            sheet.setValueAt(bc.vatFormatter(mwst)+" MwSt. Netto", 0, rowIndex+1);
-            sheet.setValueAt(bc.vatFormatter(mwst)+" MwSt. Betrag", 0, rowIndex+2);
-            for (int i=0; i<3; i++){
-                if (vats.containsKey(mwst)){
+        for (BigDecimal mwst : mwstSet) {
+            sheet.setValueAt(bc.vatFormatter(mwst) + " MwSt. Brutto", 0, rowIndex);
+            sheet.setValueAt(bc.vatFormatter(mwst) + " MwSt. Netto", 0, rowIndex + 1);
+            sheet.setValueAt(bc.vatFormatter(mwst) + " MwSt. Betrag", 0, rowIndex + 2);
+            for (int i = 0; i < 3; i++) {
+                if (vats.containsKey(mwst)) {
                     sheet.setValueAt(vats.get(mwst).get(i), 1, rowIndex);
                 } else {
                     sheet.setValueAt(0., 1, rowIndex);
@@ -592,26 +592,28 @@ public abstract class Abrechnungen extends WindowContent {
             rowIndex++; // empty row
         }
 
+        return sheet;
+    }
+
+    private void writeSpreadSheet(Sheet sheet, File file) {
         try {
             // Save to file and open it.
             OOUtils.open(sheet.getSpreadSheet().saveAs(file));
-        } catch (FileNotFoundException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
         } catch (IOException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
 
-    void export(int exportIndex){
+    private void export(int exportIndex){
         String date = abrechnungsDates.get(exportIndex);
         odsChooser.setSelectedFile(new File(titleStr+"_WL_Bonn_"+dateForFilename(date)+".ods"));
         int returnVal = odsChooser.showSaveDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION){
             File file = odsChooser.getSelectedFile();
 
-            writeSpreadSheet(file, exportIndex);
+            Sheet sheet = fillSpreadSheet(exportIndex);
+            writeSpreadSheet(sheet, file);
 
             System.out.println("Written to " + file.getName());
         } else {

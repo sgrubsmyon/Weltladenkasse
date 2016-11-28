@@ -249,12 +249,12 @@ $ mysql -u kassenadmin -p kasse
 > ALTER TABLE abrechnung_tag ADD COLUMN kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL;
 > ALTER TABLE abrechnung_tag ADD CONSTRAINT abrechnung_tag_ibfk_1 FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id);
 
+# for Entnahme capability of Kassenstand:
+> ALTER TABLE kassenstand ADD COLUMN entnahme BOOLEAN NOT NULL DEFAULT FALSE;
+
 $ mysql -u root -p
 > SOURCE grants.sql;
 
-(first check with "SELECT * FROM mysql.user;")
+# First check with "SELECT * FROM mysql.user;", then:
 $ ./mysql/grantRemoteAccessForAll.sh
-
-
-
 
