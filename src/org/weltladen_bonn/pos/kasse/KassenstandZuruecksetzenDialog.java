@@ -211,7 +211,10 @@ class KassenstandZuruecksetzenDialog extends DialogWindow
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == submitButton){
             int result = insertIntoKassenstand(
-                    new BigDecimal(bc.priceFormatterIntern(newKassenstandField.getText())), "Tagesabschluss");
+                    new BigDecimal(bc.priceFormatterIntern(newKassenstandField.getText())),
+                    false,
+                    "Tagesabschluss"
+            );
             if (result == 0) {
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Kassenstand konnte nicht geändert werden.",
