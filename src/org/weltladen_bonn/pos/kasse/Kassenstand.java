@@ -446,7 +446,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 	kommentarCol.setPreferredWidth(70);
     }
 
-    void abschicken() {
+    private void abschicken() {
         // eigentlich unmoeglich:
         if (neuerKassenstandField.getText().length() > 0 && differenzField.getText().length() > 0){
             JOptionPane.showMessageDialog(this, "Sowohl neuer Kassenstand als auch Additionsbetrag eingegeben!",
@@ -457,7 +457,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
         }
         String kommentar = kommentarField.getText();
         // neuerKassenstand mode:
-        if (neuerKassenstandField.getText().length() > 0){
+        if (neuerKassenstandField.getText().length() > 0) {
             String text = neuerKassenstandField.getText();
             if ( ! text.matches(".*[0-9].*") ){ // if contains no digit: throw error
                 JOptionPane.showMessageDialog(this, "Fehlerhafter Betrag eingegeben!",
@@ -470,43 +470,32 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             text = bc.priceFormatter(text)+" "+bc.currencySymbol;
             int answer = JOptionPane.showConfirmDialog(this,
                     "Kassenstand wirklich auf "+text+" setzen "+
-                    "mit Kommentar \n\""+kommentar+"\"?", "Kassenstand ändern",
+                            "mit Kommentar \n\""+kommentar+"\"?", "Kassenstand ändern",
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (answer == JOptionPane.YES_OPTION){
                 BigDecimal newValue = new BigDecimal( bc.priceFormatterIntern(text) );
-                try {
-                    PreparedStatement pstmt = this.conn.prepareStatement(
-                            "INSERT INTO kassenstand SET buchungsdatum = "+
-                            "NOW(), neuer_kassenstand = ?, " +
-                            "manuell = TRUE, kommentar = ?"
-                            );
-                    pstmt.setBigDecimal(1, newValue);
-                    pstmt.setString(2, kommentar);
-                    int result = pstmt.executeUpdate();
-                    if (result != 0){
-                        // update everything
-                        tabbedPane.kassenstandNeedsToChange = false;
-                        mainWindow.updateBottomPanel();
-                        neuerKassenstandField.setText("");
-                        differenzField.setText("");
-                        kommentarField.setText("");
-                        updateAll(this.filterStr);
-                    }
-                    else {
-                        JOptionPane.showMessageDialog(this,
-                                "Fehler: Kassenstand konnte nicht geändert werden.",
-                                "Fehler", JOptionPane.ERROR_MESSAGE);
-                    }
-                    pstmt.close();
-                } catch (SQLException ex) {
-                    System.out.println("Exception: " + ex.getMessage());
-                    ex.printStackTrace();
+                int result = insertIntoKassenstand(newValue, kommentar);
+                if (result != 0) {
+                    // update everything
+                    tabbedPane.kassenstandNeedsToChange = false;
+                    mainWindow.updateBottomPanel();
+                    neuerKassenstandField.setText("");
+                    differenzField.setText("");
+                    kommentarField.setText("");
+                    updateAll(this.filterStr);
                 }
+                else {
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Kassenstand konnte nicht geändert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+
+            } else {
+                return;
             }
-            else { return; }
         }
         // differenz mode:
-        else if (differenzField.getText().length() > 0){
+        else if (differenzField.getText().length() > 0) {
             String text = differenzField.getText();
             if ( ! text.matches(".*[0-9].*") ){ // if contains no digit: throw error
                 JOptionPane.showMessageDialog(this, "Fehlerhafter Additionsbetrag eingegeben!",
@@ -518,7 +507,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             }
             text = bc.priceFormatter(text)+" "+bc.currencySymbol;
             BigDecimal differenz = new BigDecimal( bc.priceFormatterIntern(text) );
-            String erhoehenReduzieren = new String("");
+            String erhoehenReduzieren;
             if (text.charAt(0) == '-'){
                 erhoehenReduzieren = "reduzieren";
                 text = text.substring(1, text.length()); // strip off the "-"
@@ -526,41 +515,30 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             else erhoehenReduzieren = "erhöhen";
             int answer = JOptionPane.showConfirmDialog(this,
                     "Kassenstand wirklich um "+text+" "+erhoehenReduzieren+" "+
-                    "mit Kommentar \n\""+kommentar+"\"?", "Kassenstand ändern",
+                            "mit Kommentar \n\""+kommentar+"\"?", "Kassenstand ändern",
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (answer == JOptionPane.YES_OPTION){
                 BigDecimal oldValue = mainWindow.retrieveKassenstand();
                 BigDecimal newValue = oldValue.add(differenz);
-                try {
-                    PreparedStatement pstmt = this.conn.prepareStatement(
-                            "INSERT INTO kassenstand SET buchungsdatum = "+
-                            "NOW(), neuer_kassenstand = ?, " +
-                            "manuell = TRUE, kommentar = ?"
-                            );
-                    pstmt.setBigDecimal(1, newValue);
-                    pstmt.setString(2, kommentar);
-                    int result = pstmt.executeUpdate();
-                    if (result != 0){
-                        // update everything
-                        tabbedPane.kassenstandNeedsToChange = false;
-                        mainWindow.updateBottomPanel();
-                        neuerKassenstandField.setText("");
-                        differenzField.setText("");
-                        kommentarField.setText("");
-                        updateAll(this.filterStr);
-                    }
-                    else {
-                        JOptionPane.showMessageDialog(this,
-                                "Fehler: Kassenstand konnte nicht geändert werden.",
-                                "Fehler", JOptionPane.ERROR_MESSAGE);
-                    }
-                    pstmt.close();
-                } catch (SQLException ex) {
-                    System.out.println("Exception: " + ex.getMessage());
-                    ex.printStackTrace();
+                int result = insertIntoKassenstand(newValue, kommentar);
+                if (result != 0){
+                    // update everything
+                    tabbedPane.kassenstandNeedsToChange = false;
+                    mainWindow.updateBottomPanel();
+                    neuerKassenstandField.setText("");
+                    differenzField.setText("");
+                    kommentarField.setText("");
+                    updateAll(this.filterStr);
+                }
+                else {
+                    JOptionPane.showMessageDialog(this,
+                            "Fehler: Kassenstand konnte nicht geändert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
-            else { return; }
+            else {
+                return;
+            }
         }
         // eigentlich unmoeglich:
         else {
@@ -579,55 +557,55 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
      *    @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
-	if (e.getSource() == returnButton){
+        if (e.getSource() == returnButton){
             abschicken();
             //tabbedPane.recreateTabbedPane();
-	    return;
-	}
-	if (e.getSource() == tagesabschlussButton){
+            return;
+        }
+        if (e.getSource() == tagesabschlussButton){
             neuerKassenstandField.setText("150,00");
             kommentarField.setText("Tagesabschluss");
             returnButton.doClick();
-	    return;
-	}
-	else if (e.getSource() == changeDateButton){
-	    SpinnerModel startDateModel = startSpinner.getModel();
-	    SpinnerModel endDateModel = endSpinner.getModel();
-	    Date startDate = null;
-	    if (startDateModel instanceof SpinnerDateModel) {
-		startDate = ((SpinnerDateModel)startDateModel).getDate();
-	    }
-	    Date endDate = null;
-	    if (endDateModel instanceof SpinnerDateModel) {
-		endDate = ((SpinnerDateModel)endDateModel).getDate();
-	    }
-	    java.sql.Date startDateSQL = new java.sql.Date( startDate.getTime() );
-	    java.sql.Date endDateSQL = new java.sql.Date( endDate.getTime() );
-	    String startDateStr = startDateSQL.toString();
-	    String endDateStr = endDateSQL.toString();
-	    this.filterStr = "AND DATE(buchungsdatum) >= DATE('"+startDateStr+"') "+
-		"AND DATE(buchungsdatum) <= DATE('"+endDateStr+"') ";
-	    updateTable(this.filterStr);
-	    return;
-	}
-	else if (e.getSource() == resetButton){
-	    this.filterStr = "";
-	    initiateSpinners();
-	    updateTable(this.filterStr);
-	    return;
-	}
-	else if (e.getSource() == prevButton){
-	    if (this.currentPage > 1)
-		this.currentPage--;
-	    updateTable(this.filterStr);
-	    return;
-	}
-	else if (e.getSource() == nextButton){
-	    if (this.currentPage < totalPage)
-		this.currentPage++;
-	    updateTable(this.filterStr);
-	    return;
-	}
+            return;
+        }
+        else if (e.getSource() == changeDateButton){
+            SpinnerModel startDateModel = startSpinner.getModel();
+            SpinnerModel endDateModel = endSpinner.getModel();
+            Date startDate = null;
+            if (startDateModel instanceof SpinnerDateModel) {
+                startDate = ((SpinnerDateModel)startDateModel).getDate();
+            }
+            Date endDate = null;
+            if (endDateModel instanceof SpinnerDateModel) {
+                endDate = ((SpinnerDateModel)endDateModel).getDate();
+            }
+            java.sql.Date startDateSQL = new java.sql.Date( startDate.getTime() );
+            java.sql.Date endDateSQL = new java.sql.Date( endDate.getTime() );
+            String startDateStr = startDateSQL.toString();
+            String endDateStr = endDateSQL.toString();
+            this.filterStr = "AND DATE(buchungsdatum) >= DATE('"+startDateStr+"') "+
+                    "AND DATE(buchungsdatum) <= DATE('"+endDateStr+"') ";
+            updateTable(this.filterStr);
+            return;
+        }
+        else if (e.getSource() == resetButton){
+            this.filterStr = "";
+            initiateSpinners();
+            updateTable(this.filterStr);
+            return;
+        }
+        else if (e.getSource() == prevButton){
+            if (this.currentPage > 1)
+                this.currentPage--;
+            updateTable(this.filterStr);
+            return;
+        }
+        else if (e.getSource() == nextButton){
+            if (this.currentPage < totalPage)
+                this.currentPage++;
+            updateTable(this.filterStr);
+            return;
+        }
     }
 
     /**

@@ -47,6 +47,8 @@ public class AbrechnungenTag extends Abrechnungen {
 
     private Vector<JButton> editButtons;
 
+    private Boolean kassenstandWasChanged = false;
+
     // Methoden:
     /**
      *    The constructor.
@@ -69,6 +71,10 @@ public class AbrechnungenTag extends Abrechnungen {
 
     void setZaehlprotokollKommentar(String kommentar) {
         this.zaehlprotokollKommentar = kommentar;
+    }
+
+    void setKassenstandWasChanged(Boolean b) {
+        kassenstandWasChanged = b;
     }
 
     @Override
@@ -741,7 +747,7 @@ public class AbrechnungenTag extends Abrechnungen {
 
     void showKassenstandZuruecksetzenDialog() {
         JDialog dialog = new JDialog(this.mainWindow, "Kassenstand zurücksetzen", true);
-        KassenstandZuruecksetzenDialog kzd = new KassenstandZuruecksetzenDialog(this.conn, this.mainWindow, dialog, this.zaehlprotokoll);
+        KassenstandZuruecksetzenDialog kzd = new KassenstandZuruecksetzenDialog(this.conn, this.mainWindow, dialog, this.zaehlprotokoll, this);
         dialog.getContentPane().add(kzd, BorderLayout.CENTER);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.pack();
@@ -774,11 +780,12 @@ public class AbrechnungenTag extends Abrechnungen {
         if (e.getSource() == submitButton){
             showZaehlprotokollDialog();
             if (this.zaehlprotokoll != null) {
-//                tabbedPane.kassenstandNeedsToChange = true;
                 Integer id = insertTagesAbrechnung();
                 if (id != null) {
                     insertZaehlprotokoll(id);
+                    kassenstandWasChanged = false;
                     showKassenstandZuruecksetzenDialog();
+                    tabbedPane.kassenstandNeedsToChange = !kassenstandWasChanged;
                 }
                 abrechTabbedPane.recreateTabbedPane();
             }
