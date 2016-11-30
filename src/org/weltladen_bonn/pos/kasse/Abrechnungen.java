@@ -244,11 +244,11 @@ public abstract class Abrechnungen extends WindowContent {
     void queryAbrechnungen() {
         queryAbrechnungenSpecial();
 
-        abrechnungsDates = new Vector<String>();
-        abrechnungsIDs = new Vector<Integer>();
-        abrechnungsTotals = new Vector< Vector<BigDecimal> >();
-        abrechnungsVATs = new Vector< HashMap<BigDecimal, Vector<BigDecimal>> >();
-        mwstSet = new TreeSet<BigDecimal>();
+        abrechnungsDates = new Vector<>();
+        abrechnungsIDs = new Vector<>();
+        abrechnungsTotals = new Vector<>();
+        abrechnungsVATs = new Vector<>();
+        mwstSet = new TreeSet<>();
 
         if (this.currentPage == 1){
             queryIncompleteAbrechnung();
