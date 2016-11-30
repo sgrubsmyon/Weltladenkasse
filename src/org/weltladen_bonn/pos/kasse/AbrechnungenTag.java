@@ -36,6 +36,9 @@ public class AbrechnungenTag extends Abrechnungen {
     private LinkedHashMap<BigDecimal, Integer> zaehlprotokoll = null;
     private String zaehlprotokollKommentar = null;
 
+    protected Vector<BigDecimal> abrechnungsStornos;
+    protected Vector<BigDecimal> abrechnungsEntnahmen;
+
     private Vector< Vector<String> > zaehlprotokollZeitpunkte;
     private Vector< Vector<String> > zaehlprotokollKommentare;
     private Vector< Vector<BigDecimal> > zaehlprotokollSummen;
@@ -83,14 +86,46 @@ public class AbrechnungenTag extends Abrechnungen {
         // the normal queries
         super.queryAbrechnungen();
 
-        // the queries concerning zaehlprotokolle
+        // the queries concerning Stornierungen and Entnahmen
+        abrechnungsStornos = new Vector<>();
+        abrechnungsEntnahmen = new Vector<>();
         try {
-            zaehlprotokollZeitpunkte = new Vector<>();
-            zaehlprotokollKommentare = new Vector<>();
-            zaehlprotokollSummen = new Vector<>();
-            zaehlprotokollSollKassenstaende = new Vector<>();
-            zaehlprotokollDifferenzen = new Vector<>();
-            zaehlprotokolle = new Vector<>();
+            for (Integer id : abrechnungsIDs) {
+                Statement stmt = this.conn.createStatement();
+                ResultSet rs = stmt.executeQuery(
+                        // SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) WHERE storniert = TRUE AND verkaufsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 17 LIMIT 1), '0001-01-01') AND verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 18 LIMIT 1), '999999-01-01') GROUP BY mwst_satz;
+                        // CONTINUE HERE Hallo
+                        "SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) "+
+                                "FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) "+
+                                "WHERE storniert = TRUE AND "+
+                                "verkaufsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 17 LIMIT 1), '0001-01-01') AND "+
+                                "verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 18 LIMIT 1), '999999-01-01') "+
+                                "GROUP BY mwst_satz"
+                );
+                while (rs.next()) {
+                    String date = rs.getString(1);
+                    Vector<BigDecimal> values = new Vector<BigDecimal>();
+                    values.add(rs.getBigDecimal(2));
+                    values.add(rs.getBigDecimal(3));
+                    values.add(rs.getBigDecimal(4));
+                    // store in vectors
+                    abrechnungsStornos.add();
+                }
+                rs.close();
+            }
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+
+        // the queries concerning zaehlprotokolle
+        zaehlprotokollZeitpunkte = new Vector<>();
+        zaehlprotokollKommentare = new Vector<>();
+        zaehlprotokollSummen = new Vector<>();
+        zaehlprotokollSollKassenstaende = new Vector<>();
+        zaehlprotokollDifferenzen = new Vector<>();
+        zaehlprotokolle = new Vector<>();
+        try {
             for (Integer id : abrechnungsIDs){
                 PreparedStatement pstmt = this.conn.prepareStatement(
                         "SELECT id, zeitpunkt, kommentar, aktiv " +
@@ -168,12 +203,12 @@ public class AbrechnungenTag extends Abrechnungen {
                 zaehlprotokollDifferenzen.add(differenzen);
                 zaehlprotokolle.add(zps);
             }
-            System.out.println(zaehlprotokollZeitpunkte);
-            System.out.println(zaehlprotokollKommentare);
-            System.out.println(zaehlprotokollSummen);
-            System.out.println(zaehlprotokollSollKassenstaende);
-            System.out.println(zaehlprotokollDifferenzen);
-            System.out.println(zaehlprotokolle);
+//            System.out.println(zaehlprotokollZeitpunkte);
+//            System.out.println(zaehlprotokollKommentare);
+//            System.out.println(zaehlprotokollSummen);
+//            System.out.println(zaehlprotokollSollKassenstaende);
+//            System.out.println(zaehlprotokollDifferenzen);
+//            System.out.println(zaehlprotokolle);
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
