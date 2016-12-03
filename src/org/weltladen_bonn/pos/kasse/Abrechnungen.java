@@ -118,7 +118,7 @@ public abstract class Abrechnungen extends WindowContent {
     }
 
     Integer id() {
-        Integer id = new Integer(-1);
+        Integer id = -1;
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT IFNULL("+
@@ -139,7 +139,7 @@ public abstract class Abrechnungen extends WindowContent {
 
     // since all Abrechnungen need to include the incomplete Tagesabrechnung, include code here to share
     protected Vector<BigDecimal> queryIncompleteAbrechnungTag_Totals() {
-        Vector<BigDecimal> values = new Vector<BigDecimal>();
+        Vector<BigDecimal> values = new Vector<>();
         try {
             Statement stmt = this.conn.createStatement();
             // for filling the diplayed table:
@@ -183,7 +183,7 @@ public abstract class Abrechnungen extends WindowContent {
     }
     ///////////
     protected HashMap<BigDecimal, Vector<BigDecimal>> queryIncompleteAbrechnungTag_VATs() {
-        HashMap<BigDecimal, Vector<BigDecimal>> map = new HashMap<BigDecimal, Vector<BigDecimal>>();
+        HashMap<BigDecimal, Vector<BigDecimal>> map = new HashMap<>();
         try {
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery(
@@ -226,7 +226,7 @@ public abstract class Abrechnungen extends WindowContent {
             // NEWER: Rounding was already done when Rechnung was saved, not necessary here
                 BigDecimal mwst_netto = rs.getBigDecimal(2);
                 BigDecimal mwst_betrag = rs.getBigDecimal(3);
-                Vector<BigDecimal> values = new Vector<BigDecimal>();
+                Vector<BigDecimal> values = new Vector<>();
                 values.add( mwst_netto.add(mwst_betrag) ); // = brutto
                 values.add(mwst_netto);
                 values.add(mwst_betrag);
@@ -274,7 +274,7 @@ public abstract class Abrechnungen extends WindowContent {
                     filterStr +
                     "GROUP BY id ORDER BY id DESC "+
                     "LIMIT " + offset + "," + noOfColumns
-                    );
+            );
             while (rs.next()) {
                 String date = rs.getString(1);
                 Vector<BigDecimal> values = new Vector<BigDecimal>();
