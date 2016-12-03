@@ -36,8 +36,12 @@ public class AbrechnungenTag extends Abrechnungen {
     private LinkedHashMap<BigDecimal, Integer> zaehlprotokoll = null;
     private String zaehlprotokollKommentar = null;
 
-    protected Vector<BigDecimal> abrechnungsStornos;
-    protected Vector<BigDecimal> abrechnungsEntnahmen;
+    private Vector< HashMap<BigDecimal, BigDecimal> > abrechnungsStornos;
+    private Vector< HashMap<BigDecimal, BigDecimal> > abrechnungsRetouren;
+    private Vector<BigDecimal> abrechnungsEntnahmen;
+    private HashMap<BigDecimal, BigDecimal> incompleteAbrechnungsStornos;
+    private HashMap<BigDecimal, BigDecimal> incompleteAbrechnungsRetouren;
+    private BigDecimal incompleteAbrechnungsEntnahmen;
 
     private Vector< Vector<String> > zaehlprotokollZeitpunkte;
     private Vector< Vector<String> > zaehlprotokollKommentare;
@@ -81,43 +85,114 @@ public class AbrechnungenTag extends Abrechnungen {
         kassenstandWasChanged = b;
     }
 
-    @Override
-    void queryAbrechnungen() {
-        // the normal queries
-        super.queryAbrechnungen();
 
-        // the queries concerning Stornierungen and Entnahmen
+// ----------------------------------------------------------------------------
+
+
+    private ResultSet doQueryStornos(Integer abrechnung_tag_id) throws SQLException {
+        // Summe über Stornos:
+        PreparedStatement pstmt = this.conn.prepareStatement(
+                // SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) WHERE storniert = TRUE AND verkaufsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 17 LIMIT 1), '0001-01-01') AND verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 18 LIMIT 1), '9999-01-01') GROUP BY mwst_satz;
+                "SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) " +
+                        "FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) " +
+                        "WHERE storniert = TRUE AND " +
+                        "verkaufsdatum >= IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '0001-01-01') AND " +
+                        "verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '9999-01-01') " +
+                        "GROUP BY mwst_satz"
+        );
+        pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
+        pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
+        return pstmt.executeQuery();
+    }
+
+    private ResultSet doQueryRetouren(Integer abrechnung_tag_id) throws SQLException {
+        // Summe über Retouren:
+        PreparedStatement pstmt = this.conn.prepareStatement(
+                // SELECT mwst_satz, SUM(ges_preis) FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) INNER JOIN artikel USING (artikel_id) WHERE storniert = FALSE AND verkaufsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 0 LIMIT 1), '0001-01-01') AND verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 9999999999999 LIMIT 1), '9999-01-01') AND stueckzahl < 0 AND produktgruppen_id >= 9 GROUP BY mwst_satz;
+                "SELECT mwst_satz, SUM(ges_preis) " +
+                        "FROM verkauf_details " +
+                        "INNER JOIN verkauf USING (rechnungs_nr) " +
+                        "INNER JOIN artikel USING (artikel_id) " +
+                        "WHERE storniert = FALSE AND " +
+                        "verkaufsdatum >= IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '0001-01-01') AND " +
+                        "verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '9999-01-01') AND " +
+                        "stueckzahl < 0 AND produktgruppen_id >= 9 " +
+                        "GROUP BY mwst_satz"
+        );
+        pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
+        pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
+        return pstmt.executeQuery();
+    }
+
+    private ResultSet doQueryEntnahmen(Integer abrechnung_tag_id) throws SQLException {
+        // Summe über Entnahmen:
+        PreparedStatement pstmt = this.conn.prepareStatement(
+                // SELECT SUM(entnahme_betrag) FROM (SELECT kassenstand_id AS kid, neuer_kassenstand - (SELECT neuer_kassenstand FROM kassenstand WHERE kassenstand_id = kid-1) AS entnahme_betrag FROM kassenstand WHERE buchungsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 0 LIMIT 1), '0001-01-01') AND buchungsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 9999999999999 LIMIT 1), '9999-01-01') AND entnahme = TRUE) AS entnahme_table;
+                "SELECT SUM(entnahme_betrag) " +
+                        "FROM (" +
+                        "SELECT kassenstand_id AS kid, " +
+                        "neuer_kassenstand - (SELECT neuer_kassenstand FROM kassenstand WHERE kassenstand_id = kid-1) AS entnahme_betrag " +
+                        "FROM kassenstand WHERE " +
+                        "buchungsdatum >= IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '0001-01-01') AND " +
+                        "buchungsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '9999-01-01') AND " +
+                        "entnahme = TRUE" +
+                        ") AS entnahme_table"
+        );
+        pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
+        pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
+        return pstmt.executeQuery();
+    }
+
+    void queryStornosRetourenEntnahmen() {
+        // the queries concerning Stornierungen, Retouren and Entnahmen
         abrechnungsStornos = new Vector<>();
+        abrechnungsRetouren = new Vector<>();
         abrechnungsEntnahmen = new Vector<>();
         try {
             for (Integer id : abrechnungsIDs) {
-                Statement stmt = this.conn.createStatement();
-                ResultSet rs = stmt.executeQuery(
-                        // SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) WHERE storniert = TRUE AND verkaufsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 17 LIMIT 1), '0001-01-01') AND verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 18 LIMIT 1), '999999-01-01') GROUP BY mwst_satz;
-                        // CONTINUE HERE Hallo
-                        "SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) "+
-                                "FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) "+
-                                "WHERE storniert = TRUE AND "+
-                                "verkaufsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 17 LIMIT 1), '0001-01-01') AND "+
-                                "verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 18 LIMIT 1), '999999-01-01') "+
-                                "GROUP BY mwst_satz"
-                );
+                // Summe über Stornos:
+                ResultSet rs = doQueryStornos(id);
+                HashMap<BigDecimal, BigDecimal> map = new HashMap<>();
                 while (rs.next()) {
-                    String date = rs.getString(1);
-                    Vector<BigDecimal> values = new Vector<BigDecimal>();
-                    values.add(rs.getBigDecimal(2));
-                    values.add(rs.getBigDecimal(3));
-                    values.add(rs.getBigDecimal(4));
-                    // store in vectors
-                    abrechnungsStornos.add();
+                    BigDecimal mwst_satz = rs.getBigDecimal(1);
+                    BigDecimal storno_sum = rs.getBigDecimal(2);
+                    map.put(mwst_satz, storno_sum);
+                    mwstSet.add(mwst_satz);
                 }
+                rs.close();
+                abrechnungsStornos.add(map);
+
+                // Summe über Retouren:
+                rs = doQueryRetouren(id);
+                HashMap<BigDecimal, BigDecimal> map2 = new HashMap<>();
+                while (rs.next()) {
+                    BigDecimal mwst_satz = rs.getBigDecimal(1);
+                    BigDecimal retoure_sum = rs.getBigDecimal(2);
+                    map2.put(mwst_satz, retoure_sum);
+                    mwstSet.add(mwst_satz);
+                }
+                rs.close();
+                abrechnungsRetouren.add(map2);
+
+                // Summe über Entnahmen:
+                rs = doQueryEntnahmen(id);
+                BigDecimal entnahme_sum = new BigDecimal("0.00");
+                if (rs.next()) {
+                    BigDecimal sum = rs.getBigDecimal(1);
+                    if (sum != null) {
+                        entnahme_sum = sum;
+                    }
+                }
+                abrechnungsEntnahmen.add(entnahme_sum);
                 rs.close();
             }
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+    }
 
+    void queryZaehlprotokoll() {
         // the queries concerning zaehlprotokolle
         zaehlprotokollZeitpunkte = new Vector<>();
         zaehlprotokollKommentare = new Vector<>();
@@ -126,11 +201,11 @@ public class AbrechnungenTag extends Abrechnungen {
         zaehlprotokollDifferenzen = new Vector<>();
         zaehlprotokolle = new Vector<>();
         try {
-            for (Integer id : abrechnungsIDs){
+            for (Integer id : abrechnungsIDs) {
                 PreparedStatement pstmt = this.conn.prepareStatement(
                         "SELECT id, zeitpunkt, kommentar, aktiv " +
                                 "FROM zaehlprotokoll " +
-                                "WHERE abrechnung_tag_id = ? "+
+                                "WHERE abrechnung_tag_id = ? " +
                                 "ORDER BY id DESC"
                 );
                 pstmtSetInteger(pstmt, 1, id);
@@ -138,14 +213,14 @@ public class AbrechnungenTag extends Abrechnungen {
                 Vector<String> zeitpunkte = new Vector<>();
                 Vector<String> kommentare = new Vector<>();
                 Vector<BigDecimal> summen = new Vector<>();
-                Vector< LinkedHashMap<BigDecimal, Integer> > zps = new Vector<>();
+                Vector<LinkedHashMap<BigDecimal, Integer>> zps = new Vector<>();
                 while (rs.next()) {
                     zeitpunkte.add(rs.getString(2));
                     kommentare.add(rs.getString(3));
                     //
                     PreparedStatement pstmt2 = this.conn.prepareStatement(
-                            "SELECT SUM(anzahl*einheit) "+
-                                    "FROM zaehlprotokoll_details "+
+                            "SELECT SUM(anzahl*einheit) " +
+                                    "FROM zaehlprotokoll_details " +
                                     "WHERE zaehlprotokoll_id = ?"
                     );
                     pstmtSetInteger(pstmt2, 1, rs.getInt(1));
@@ -157,9 +232,9 @@ public class AbrechnungenTag extends Abrechnungen {
                     summen.add(summe);
                     //
                     pstmt2 = this.conn.prepareStatement(
-                            "SELECT einheit, anzahl "+
-                                    "FROM zaehlprotokoll_details "+
-                                    "WHERE zaehlprotokoll_id = ? "+
+                            "SELECT einheit, anzahl " +
+                                    "FROM zaehlprotokoll_details " +
+                                    "WHERE zaehlprotokoll_id = ? " +
                                     "ORDER BY einheit"
                     );
                     pstmtSetInteger(pstmt2, 1, rs.getInt(1));
@@ -175,7 +250,7 @@ public class AbrechnungenTag extends Abrechnungen {
                 pstmt = this.conn.prepareStatement(
                         "SELECT neuer_kassenstand " +
                                 "FROM kassenstand INNER JOIN abrechnung_tag USING (kassenstand_id) " +
-                                "WHERE abrechnung_tag.id = ? "+
+                                "WHERE abrechnung_tag.id = ? " +
                                 "LIMIT 1"
                 );
                 pstmtSetInteger(pstmt, 1, id);
@@ -215,6 +290,117 @@ public class AbrechnungenTag extends Abrechnungen {
         }
     }
 
+    @Override
+    void queryAbrechnungen() {
+        // the normal queries
+        super.queryAbrechnungen();
+        queryStornosRetourenEntnahmen();
+        queryZaehlprotokoll();
+    }
+
+
+    @Override
+    void queryIncompleteAbrechnung() { // create new abrechnung (for display) from time of last abrechnung until now
+        String date = now();
+
+        // for filling the displayed table:
+        // first, get the totals:
+        Vector<BigDecimal> values = queryIncompleteAbrechnungTag_Totals();
+        // store in map under date
+        incompleteAbrechnungsDate = date;
+        incompleteAbrechnungsTotals = values;
+        incompleteAbrechnungsVATs = new HashMap<>();
+
+        // second, get values grouped by mwst
+        HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
+        int rowCount = 0;
+        for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : abrechnungNettoBetrag.entrySet() ){
+            BigDecimal mwst = entry.getKey();
+            Vector<BigDecimal> mwstValues = entry.getValue();
+            incompleteAbrechnungsVATs.put(mwst, mwstValues);
+            mwstSet.add(mwst);
+            rowCount++;
+
+            submitButtonEnabled = true;
+        }
+        if ( rowCount == 0 ){ // empty, there are no verkaeufe!!!
+            submitButtonEnabled = false;
+        }
+
+        // the queries concerning Stornierungen, Retouren and Entnahmen
+        incompleteAbrechnungsStornos = new HashMap<>();
+        incompleteAbrechnungsRetouren = new HashMap<>();
+        try {
+            Integer id = id(); // ID of new, yet to come, abrechnung
+            // Summe über Stornos:
+            ResultSet rs = doQueryStornos(id);
+            while (rs.next()) {
+                BigDecimal mwst_satz = rs.getBigDecimal(1);
+                BigDecimal storno_sum = rs.getBigDecimal(2);
+                incompleteAbrechnungsStornos.put(mwst_satz, storno_sum);
+                mwstSet.add(mwst_satz);
+            }
+            rs.close();
+
+            // Summe über Retouren:
+            rs = doQueryRetouren(id);
+            while (rs.next()) {
+                BigDecimal mwst_satz = rs.getBigDecimal(1);
+                BigDecimal retoure_sum = rs.getBigDecimal(2);
+                incompleteAbrechnungsRetouren.put(mwst_satz, retoure_sum);
+                mwstSet.add(mwst_satz);
+            }
+            rs.close();
+
+            // Summe über Entnahmen:
+            rs = doQueryEntnahmen(id);
+            if (rs.next()) {
+                incompleteAbrechnungsEntnahmen = rs.getBigDecimal(1);
+            } else {
+                incompleteAbrechnungsEntnahmen = new BigDecimal("0.00");
+            }
+            rs.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    private HashMap<BigDecimal, BigDecimal> queryIncompleteAbrechnung_BarBruttoVATs() {
+        HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = new HashMap<>();
+        try {
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT mwst_satz, SUM(ges_preis) AS bar_brutto " +
+                    "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
+                    "WHERE storniert = FALSE AND verkaufsdatum > " +
+                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01') AND ec_zahlung = FALSE " +
+                    "GROUP BY mwst_satz"
+                    );
+            while (rs.next()) {
+                BigDecimal mwst_satz = rs.getBigDecimal(1);
+                BigDecimal bar_brutto = rs.getBigDecimal(2);
+                abrechnungBarBrutto.put(mwst_satz, bar_brutto);
+                mwstSet.add(mwst_satz);
+                //System.out.println(mwst_satz+"  "+bar_brutto);
+            }
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return abrechnungBarBrutto;
+    }
+
+    @Override
+    void queryAbrechnungenSpecial() {
+    }
+
+
+// ----------------------------------------------------------------------------
+
+
     private Integer maxZaehlprotokollNumber() {
         Integer maxNumber = 0;
         for (Vector<String> zeitpunkte : zaehlprotokollZeitpunkte) {
@@ -239,6 +425,48 @@ public class AbrechnungenTag extends Abrechnungen {
     @Override
     void fillHeaderColumn() {
         super.fillHeaderColumn();
+
+        // ------------- Stornos, Retouren, Entnahmen
+
+        // empty row as separator before storno
+        data.add(new Vector<>());
+        data.lastElement().add("");
+        colors.add(new Vector<>());
+        colors.lastElement().add(Color.BLACK);
+        fontStyles.add(new Vector<>());
+        fontStyles.lastElement().add("bold");
+        for (BigDecimal mwst : mwstSet) {
+            data.add(new Vector<>());
+            data.lastElement().add("Storno ("+bc.vatFormatter(mwst)+" MwSt.)");
+            colors.add(new Vector<>());
+            colors.lastElement().add(Color.BLACK);
+            fontStyles.add(new Vector<>());
+            fontStyles.lastElement().add("bold");
+        }
+        for (BigDecimal mwst : mwstSet) {
+            data.add(new Vector<>());
+            data.lastElement().add("Retouren ("+bc.vatFormatter(mwst)+" MwSt.)");
+            colors.add(new Vector<>());
+            colors.lastElement().add(Color.BLACK);
+            fontStyles.add(new Vector<>());
+            fontStyles.lastElement().add("bold");
+        }
+        data.add(new Vector<>());
+        data.lastElement().add("Entnahmen");
+        colors.add(new Vector<>());
+        colors.lastElement().add(Color.BLACK);
+        fontStyles.add(new Vector<>());
+        fontStyles.lastElement().add("bold");
+
+        // ------------- Zaehlprotokoll
+
+        // empty row as separator before zaehlprotokoll
+        data.add(new Vector<>());
+        data.lastElement().add("");
+        colors.add(new Vector<>());
+        colors.lastElement().add(Color.BLACK);
+        fontStyles.add(new Vector<>());
+        fontStyles.lastElement().add("bold");
 
         zpNumber = maxZaehlprotokollNumber();
         zpEinheiten = zaehlprotokollEinheiten();
@@ -289,6 +517,62 @@ public class AbrechnungenTag extends Abrechnungen {
     int fillIncompleteDataColumn() {
         int rowIndex = super.fillIncompleteDataColumn();
 
+        // ------------- Stornos, Retouren, Entnahmen
+
+        data.get(rowIndex).add(""); // empty row as separator before storno
+        colors.get(rowIndex).add(Color.BLACK);
+        fontStyles.get(rowIndex).add("normal");
+        rowIndex++;
+        for (BigDecimal mwst : mwstSet) {
+            Color color = Color.BLACK;
+            if (incompleteAbrechnungsStornos != null && incompleteAbrechnungsStornos.containsKey(mwst)){
+                BigDecimal bd = incompleteAbrechnungsStornos.get(mwst);
+                if (bd.signum() != 0) {
+                    color = Color.BLUE;
+                }
+                data.get(rowIndex).add( bc.priceFormatter(bd)+" "+bc.currencySymbol );
+            } else {
+                data.get(rowIndex).add( bc.priceFormatter("0")+" "+bc.currencySymbol );
+            }
+            colors.get(rowIndex).add(color);
+            fontStyles.get(rowIndex).add("normal");
+            rowIndex++;
+        }
+        for (BigDecimal mwst : mwstSet) {
+            Color color = Color.BLACK;
+            if (incompleteAbrechnungsRetouren != null && incompleteAbrechnungsRetouren.containsKey(mwst)){
+                BigDecimal bd = incompleteAbrechnungsRetouren.get(mwst);
+                if (bd.signum() != 0) {
+                    color = Color.BLUE;
+                }
+                data.get(rowIndex).add( bc.priceFormatter(bd)+" "+bc.currencySymbol );
+            } else {
+                data.get(rowIndex).add( bc.priceFormatter("0")+" "+bc.currencySymbol );
+            }
+            colors.get(rowIndex).add(color);
+            fontStyles.get(rowIndex).add("normal");
+            rowIndex++;
+        }
+        Color color = Color.BLACK;
+        if (incompleteAbrechnungsEntnahmen != null){
+            BigDecimal bd = incompleteAbrechnungsEntnahmen;
+            if (bd.signum() != 0) {
+                color = Color.RED;
+            }
+            data.get(rowIndex).add( bc.priceFormatter(bd)+" "+bc.currencySymbol );
+        } else {
+            data.get(rowIndex).add( bc.priceFormatter("0")+" "+bc.currencySymbol );
+        }
+        colors.get(rowIndex).add(color);
+        fontStyles.get(rowIndex).add("normal");
+        rowIndex++;
+
+        // ------------- Zaehlprotokoll
+
+        data.get(rowIndex).add(""); // empty row as separator before zaehlprotokoll
+        colors.get(rowIndex).add(Color.BLACK);
+        fontStyles.get(rowIndex).add("normal");
+        rowIndex++;
         for (int i = 0; i < zpNumber; i++) {
             data.get(rowIndex).add(""); // empty row as separator before zaehlprotokoll
             colors.get(rowIndex).add(Color.BLACK);
@@ -345,6 +629,63 @@ public class AbrechnungenTag extends Abrechnungen {
     int fillDataArrayColumn(int colIndex) {
         int rowIndex = super.fillDataArrayColumn(colIndex);
 
+        // ------------- Stornos, Retouren, Entnahmen
+
+        data.get(rowIndex).add(""); // empty row as separator before storno
+        colors.get(rowIndex).add(Color.BLACK);
+        fontStyles.get(rowIndex).add("normal");
+        rowIndex++;
+        for (BigDecimal mwst : mwstSet) {
+            Color color = Color.BLACK;
+            if (abrechnungsStornos != null && abrechnungsStornos.get(colIndex).containsKey(mwst)){
+                BigDecimal bd = abrechnungsStornos.get(colIndex).get(mwst);
+                if (bd.signum() != 0) {
+                    color = Color.BLUE;
+                }
+                data.get(rowIndex).add( bc.priceFormatter(bd)+" "+bc.currencySymbol );
+            } else {
+                data.get(rowIndex).add( bc.priceFormatter("0")+" "+bc.currencySymbol );
+            }
+            colors.get(rowIndex).add(color);
+            fontStyles.get(rowIndex).add("normal");
+            rowIndex++;
+        }
+        for (BigDecimal mwst : mwstSet) {
+            Color color = Color.BLACK;
+            if (abrechnungsRetouren != null && abrechnungsRetouren.get(colIndex).containsKey(mwst)){
+                BigDecimal bd = abrechnungsRetouren.get(colIndex).get(mwst);
+                if (bd.signum() != 0) {
+                    color = Color.BLUE;
+                }
+                data.get(rowIndex).add( bc.priceFormatter(bd)+" "+bc.currencySymbol );
+            } else {
+                data.get(rowIndex).add( bc.priceFormatter("0")+" "+bc.currencySymbol );
+            }
+            colors.get(rowIndex).add(color);
+            fontStyles.get(rowIndex).add("normal");
+            rowIndex++;
+        }
+        Color color = Color.BLACK;
+        if (abrechnungsEntnahmen != null){
+            System.out.println(abrechnungsEntnahmen);
+            BigDecimal bd = abrechnungsEntnahmen.get(colIndex);
+            if (bd.signum() != 0) {
+                color = Color.RED;
+            }
+            data.get(rowIndex).add( bc.priceFormatter(bd)+" "+bc.currencySymbol );
+        } else {
+            data.get(rowIndex).add( bc.priceFormatter("0")+" "+bc.currencySymbol );
+        }
+        colors.get(rowIndex).add(color);
+        fontStyles.get(rowIndex).add("normal");
+        rowIndex++;
+
+        // ------------- Zaehlprotokoll
+
+        data.get(rowIndex).add(""); // empty row as separator before zaehlprotokoll
+        colors.get(rowIndex).add(Color.BLACK);
+        fontStyles.get(rowIndex).add("normal");
+        rowIndex++;
         for (int i = 0; i < zpNumber; i++) {
             Color def_col = Color.BLACK;
             Color soll_col = Color.BLUE;
@@ -447,6 +788,10 @@ public class AbrechnungenTag extends Abrechnungen {
         headerPanel.add(otherPanel);
     }
 
+
+// ----------------------------------------------------------------------------
+
+
     private String queryEarliestVerkauf() {
         String date = "";
         try {
@@ -479,60 +824,6 @@ public class AbrechnungenTag extends Abrechnungen {
         return date;
     }
 
-    @Override
-    void queryIncompleteAbrechnung() { // create new abrechnung (for display) from time of last abrechnung until now
-        String date = now();
-
-        // for filling the diplayed table:
-        // first, get the totals:
-        Vector<BigDecimal> values = queryIncompleteAbrechnungTag_Totals();
-        // store in map under date
-        incompleteAbrechnungsDate = date;
-        incompleteAbrechnungsTotals = values;
-        incompleteAbrechnungsVATs = new HashMap<BigDecimal, Vector<BigDecimal>>();
-
-        // second, get values grouped by mwst
-        HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
-        int rowCount = 0;
-        for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : abrechnungNettoBetrag.entrySet() ){
-            BigDecimal mwst = entry.getKey();
-            Vector<BigDecimal> mwstValues = entry.getValue();
-            incompleteAbrechnungsVATs.put(mwst, mwstValues);
-            mwstSet.add(mwst);
-            rowCount++;
-
-            submitButtonEnabled = true;
-        }
-        if ( rowCount == 0 ){ // empty, there are no verkaeufe!!!
-            submitButtonEnabled = false;
-        }
-    }
-
-    private HashMap<BigDecimal, BigDecimal> queryIncompleteAbrechnung_BarBruttoVATs() {
-        HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = new HashMap<BigDecimal, BigDecimal>();
-        try {
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT mwst_satz, SUM(ges_preis) AS bar_brutto " +
-                    "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01') AND ec_zahlung = FALSE " +
-                    "GROUP BY mwst_satz"
-                    );
-            while (rs.next()) {
-                BigDecimal mwst_satz = rs.getBigDecimal(1);
-                BigDecimal bar_brutto = rs.getBigDecimal(2);
-                abrechnungBarBrutto.put(mwst_satz, bar_brutto);
-                //System.out.println(mwst_satz+"  "+bar_brutto);
-            }
-            rs.close();
-            stmt.close();
-        } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-        return abrechnungBarBrutto;
-    }
 
     private void showSelectZeitpunktDialog(DateTime firstDate, DateTime lastDate, DateTime nowDate) {
         JDialog dialog = new JDialog(this.mainWindow, "Zeitpunkt manuell auswählen", true);
@@ -790,9 +1081,6 @@ public class AbrechnungenTag extends Abrechnungen {
         dialog.setVisible(true);
     }
 
-    void queryAbrechnungenSpecial() {
-    }
-
     @Override
     Sheet fillSpreadSheet(int exportIndex) {
         Sheet sheet = super.fillSpreadSheet(exportIndex);
@@ -837,7 +1125,7 @@ public class AbrechnungenTag extends Abrechnungen {
         for (int i=0; i<editButtons.size(); i++){
             if (e.getSource() == editButtons.get(i) ){
                 editIndex = i;
-                System.out.println("editIndex: "+editIndex);
+//                System.out.println("editIndex: "+editIndex);
                 break;
             }
         }
