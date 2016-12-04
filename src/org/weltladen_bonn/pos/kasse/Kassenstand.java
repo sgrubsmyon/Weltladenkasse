@@ -497,7 +497,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
                     neuerKassenstandField.setText("");
                     differenzField.setText("");
                     kommentarField.setText("");
-                    updateAll(this.filterStr);
+                    tabbedPane.recreateTabbedPane();
                 }
                 else {
                     JOptionPane.showMessageDialog(this,
@@ -543,7 +543,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
                     neuerKassenstandField.setText("");
                     differenzField.setText("");
                     kommentarField.setText("");
-                    updateAll(this.filterStr);
+                    tabbedPane.recreateTabbedPane();
                 }
                 else {
                     JOptionPane.showMessageDialog(this,
@@ -574,7 +574,6 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == returnButton){
             abschicken();
-            //tabbedPane.recreateTabbedPane();
             return;
         }
         if (e.getSource() == tagesabschlussButton){
@@ -743,7 +742,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             } else if (e.getStateChange() == ItemEvent.DESELECTED) {
                 showRechnungen = false;
             }
-            updateAll(this.filterStr);
+            updateTable(this.filterStr);
         }
         if (source == entnahmeCheckBox) {
             if (e.getStateChange() == ItemEvent.SELECTED) {

@@ -786,8 +786,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     void updateRabattButtons() {
         boolean enabled = false;
+        boolean abweichEnabled = false;
         if (kassierArtikel.size() > 0) {
             enabled = false;
+            abweichEnabled = false;
             for (int i = kassierArtikel.size() - 1; i >= 0; i--) {
                 String type = kassierArtikel.get(i).getType();
                 if (type.equals("rabatt")) {
@@ -802,7 +804,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 }
                 if (type.equals("rueckgabe")) {
                     // Es handelt sich um eine Rückgabe, kein Rabatt
-                    // erlauben
+                    // erlauben, aber abweichender Preis muss möglich sein,
+                    // damit man auch rabattierte Artikel zur Not darüber
+                    // richtig zurückgeben kann
+                    abweichEnabled = true;
                     break;
                 }
                 if (type.equals("gutschein")) {
@@ -813,6 +818,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 if (type.equals("artikel")) {
                     // Artikel hatte wohl noch keinen Rabatt, Rabatt erlauben
                     enabled = true;
+                    abweichEnabled = true;
                     break;
                 }
             }
@@ -828,7 +834,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         individuellRabattAbsolutField.setEditable(enabled);
         individuellRabattAbsolutButton.setEnabled(false);
         abweichenderPreisField.setText("");
-        abweichenderPreisField.setEditable(enabled);
+        abweichenderPreisField.setEditable(abweichEnabled);
         abweichenderPreisButton.setEnabled(false);
     }
 
@@ -982,7 +988,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         int index = -1;
         for (int i = kassierArtikel.size() - 1; i >= 0; i--) {
             String type = kassierArtikel.get(i).getType();
-            if (type.equals("artikel")) {
+            if (type.equals("artikel") || type.equals("rueckgabe")) {
                 index = i;
                 break;
             }
