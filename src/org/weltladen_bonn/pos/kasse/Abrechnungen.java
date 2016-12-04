@@ -535,7 +535,7 @@ public abstract class Abrechnungen extends WindowContent {
         }
     }
 
-    Sheet fillSpreadSheet(int exportIndex) {
+    Vector<Object> fillSpreadSheet(int exportIndex) {
         // Get data
         String date = abrechnungsDates.get(exportIndex);
         Date ddate = createDate(date);
@@ -569,7 +569,7 @@ public abstract class Abrechnungen extends WindowContent {
         sheet.getCellAt("B8").setValue(id);
 
         // Set Totals:
-        int rowIndex = 9;
+        Integer rowIndex = 9;
         for (BigDecimal total : totals) {
             sheet.setValueAt(total, 1, rowIndex);
             rowIndex++;
@@ -592,7 +592,10 @@ public abstract class Abrechnungen extends WindowContent {
             rowIndex++; // empty row
         }
 
-        return sheet;
+        Vector<Object> v = new Vector<>();
+        v.add(sheet);
+        v.add(rowIndex);
+        return v;
     }
 
     private void writeSpreadSheet(Sheet sheet, File file) {
@@ -612,7 +615,8 @@ public abstract class Abrechnungen extends WindowContent {
         if (returnVal == JFileChooser.APPROVE_OPTION){
             File file = odsChooser.getSelectedFile();
 
-            Sheet sheet = fillSpreadSheet(exportIndex);
+            Vector<Object> v = fillSpreadSheet(exportIndex);
+            Sheet sheet = (Sheet) v.firstElement();
             writeSpreadSheet(sheet, file);
 
             System.out.println("Written to " + file.getName());
