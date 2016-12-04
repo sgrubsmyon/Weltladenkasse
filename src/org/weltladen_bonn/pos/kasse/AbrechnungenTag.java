@@ -112,11 +112,12 @@ public class AbrechnungenTag extends Abrechnungen {
                 "SELECT mwst_satz, SUM(ges_preis) " +
                         "FROM verkauf_details " +
                         "INNER JOIN verkauf USING (rechnungs_nr) " +
-                        "INNER JOIN artikel USING (artikel_id) " +
+                        "LEFT JOIN artikel USING (artikel_id) " + // left join needed because Rabattaktionen do not have an artikel_id
                         "WHERE storniert = FALSE AND " +
                         "verkaufsdatum >= IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '0001-01-01') AND " +
                         "verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '9999-01-01') AND " +
-                        "stueckzahl < 0 AND produktgruppen_id >= 9 " +
+                        "stueckzahl < 0 AND ( produktgruppen_id NOT IN (1, 6, 7, 8) OR produktgruppen_id IS NULL ) " + // exclude internal articles, Gutschein, and Pfand
+                        // produktgruppen_id is null for Rabattaktionen
                         "GROUP BY mwst_satz"
         );
         pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
