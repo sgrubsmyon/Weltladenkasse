@@ -48,9 +48,13 @@ public class AbrechnungenTabbedPane extends TabbedPaneGrundlage {
 
     @Override
     protected void createTabbedPane() {
+      createTabbedPane(null);
+    }
+
+    protected void createTabbedPane(Integer abrechnungTagExportIndex) {
         tabbedPane = new JTabbedPane();
 
-        myTag = new AbrechnungenTag(this.conn, this.mainWindow, this, (TabbedPane)parentTabbedPane);
+        myTag = new AbrechnungenTag(this.conn, this.mainWindow, this, (TabbedPane)parentTabbedPane, abrechnungTagExportIndex);
         myMonat = new AbrechnungenMonat(this.conn, this.mainWindow);
         myJahr = new AbrechnungenJahr(this.conn, this.mainWindow);
         tabbedPane.addTab("Tag", null, myTag, "Tagesabschluss");
@@ -58,6 +62,23 @@ public class AbrechnungenTabbedPane extends TabbedPaneGrundlage {
         tabbedPane.addTab("Jahr", null, myJahr, "Jahresabschluss");
 
         this.add(tabbedPane, BorderLayout.CENTER);
+    }
+
+    public void recreateTabbedPane(Integer abrechnungTagExportIndex) {
+        recreateTabbedPane(true, abrechnungTagExportIndex);
+    }
+
+    public void recreateTabbedPane(boolean switchBack, Integer abrechnungTagExportIndex) {
+        int selIndex = tabbedPane.getSelectedIndex();
+        this.remove(tabbedPane);
+	this.revalidate();
+        createTabbedPane(abrechnungTagExportIndex);
+        if (switchBack){
+            tabbedPane.setSelectedIndex(selIndex);
+        }
+        if (parentTabbedPane != null){
+            parentTabbedPane.recreateTabbedPane(switchBack);
+        }
     }
 
     public boolean isThereIncompleteAbrechnungTag() {
