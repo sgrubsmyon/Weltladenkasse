@@ -61,12 +61,15 @@ public class AbrechnungenTag extends Abrechnungen {
     /**
      *    The constructor.
      *       */
-    public AbrechnungenTag(Connection conn, MainWindowGrundlage mw, AbrechnungenTabbedPane atp, TabbedPane tp){
+    public AbrechnungenTag(Connection conn, MainWindowGrundlage mw, AbrechnungenTabbedPane atp, TabbedPane tp, Integer exportIndex){
         super(conn, mw, "", "Tagesabrechnung", "yyyy-MM-dd HH:mm:ss", "dd.MM. HH:mm (E)",
                 "zeitpunkt", "abrechnung_tag");
         this.abrechTabbedPane = atp;
         this.tabbedPane = tp;
         showTable();
+        if (exportIndex != null) {
+          export(exportIndex);
+        }
     }
 
     void setSelectedZeitpunkt(String zp) {
@@ -1200,8 +1203,17 @@ public class AbrechnungenTag extends Abrechnungen {
                     kassenstandWasChanged = false;
                     showKassenstandZuruecksetzenDialog();
                     tabbedPane.kassenstandNeedsToChange = !kassenstandWasChanged;
+                    JOptionPane.showMessageDialog(this,
+                            "Bitte im folgenden Fenster den Ordner\n"+
+                            "'Dokumente/Kasse/Tagesabrechnungen/Aktuelles Jahr/Aktueller Monat'\n"+
+                            "als Speicherort auswählen.\n\n"+
+                            "Danach öffnet sich die Abrechnung automatisch.\n"+
+                            "Bitte dann die Abrechnung drucken (z.B. mit Strg-P).",
+                            "Hinweis", JOptionPane.INFORMATION_MESSAGE);
+                    abrechTabbedPane.recreateTabbedPane(0);
+                } else {
+                  abrechTabbedPane.recreateTabbedPane();
                 }
-                abrechTabbedPane.recreateTabbedPane();
             }
             return;
         }

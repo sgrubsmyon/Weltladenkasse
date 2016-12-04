@@ -609,7 +609,7 @@ public abstract class Abrechnungen extends WindowContent {
         }
     }
 
-    private void export(int exportIndex){
+    void export(int exportIndex){
         String date = abrechnungsDates.get(exportIndex);
         odsChooser.setSelectedFile(new File(titleStr+"_WL_Bonn_"+dateForFilename(date)+".ods"));
         int returnVal = odsChooser.showSaveDialog(this);

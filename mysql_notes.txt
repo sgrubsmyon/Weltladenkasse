@@ -208,7 +208,7 @@ ALTER TABLE artikel MODIFY beliebtheit TINYINT(1) NOT NULL DEFAULT 0;
 
 ------------------------------
 
-2016-11-XX
+2016-12-04
 
 
 Befehle für GdPDU-Umstellung: (als kassenadmin)
@@ -257,4 +257,7 @@ $ mysql -u root -p
 
 # First check with "SELECT * FROM mysql.user;", then:
 $ ./mysql/grantRemoteAccessForAll.sh
+and enter '192.168.2.' (for LAN)
+then run script again
+and enter '10.8.0.' (for VPN)
 
