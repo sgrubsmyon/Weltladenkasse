@@ -334,6 +334,7 @@ public abstract class Abrechnungen extends WindowContent {
     String formatDate(String date, String dateFormat) {
         SimpleDateFormat sdfIn = new SimpleDateFormat(this.dateInFormat);
         SimpleDateFormat sdfOut = new SimpleDateFormat(dateFormat);
+        //sdfOut.setTimeZone(TimeZone.getTimeZone("CET")); // has no effect on jOpenDocument
         String formattedDate = "";
         try {
             formattedDate = sdfOut.format( sdfIn.parse(date) );
