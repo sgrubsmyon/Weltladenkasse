@@ -487,7 +487,7 @@ public class AbrechnungenTag extends Abrechnungen {
             colors.add(new Vector<>()); colors.lastElement().add(def_col);
             fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             for (BigDecimal einheit : zpEinheiten) {
-                data.add(new Vector<>()); data.lastElement().add(bc.priceFormatter(einheit)+" "+bc.currencySymbol+"   Anzahl = ");
+                data.add(new Vector<>()); data.lastElement().add(bc.priceFormatter(einheit)+" "+bc.currencySymbol+", Anzahl =");
                 colors.add(new Vector<>()); colors.lastElement().add(def_col);
                 fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             }
@@ -1115,10 +1115,55 @@ public class AbrechnungenTag extends Abrechnungen {
         } else {
             sheet.setValueAt(0., 1, rowIndex);
         }
-        rowIndex++;
-        rowIndex++; // empty row
 
-        // CONTINUE HERE WITH ZAEHLPROTOKOLL
+        // Set fixed rowIndex here, so that special formatting is for the correct cells, also if less than two
+        // MwSt.s are in use.
+        // This will work as long as one or two MwSt. values are used.
+        rowIndex = 27;
+
+        // Set Zaehlprotokoll:
+        if (zpNumber > 0) {
+            int i = 0; // only print first (most recent) zaehlprotokoll
+            try {
+                sheet.setValueAt("Zählprotokoll:", 0, rowIndex);
+                Date zpDate = createDate(zaehlprotokollZeitpunkte.get(exportIndex).get(i));
+                System.out.println(zpDate);
+                sheet.setValueAt(zpDate, 1, rowIndex);
+            } catch (ArrayIndexOutOfBoundsException ignored) {}
+            rowIndex++;
+            for (BigDecimal einheit : zpEinheiten) {
+                try {
+                    sheet.setValueAt(bc.priceFormatter(einheit)+" "+bc.currencySymbol+", Anzahl:", 0, rowIndex);
+                    Integer anzahl = zaehlprotokolle.get(exportIndex).get(i).get(einheit);
+                    sheet.setValueAt(anzahl, 1, rowIndex);
+                    sheet.setValueAt("Wert:", 2, rowIndex);
+                    sheet.setValueAt(new BigDecimal(anzahl).multiply(einheit), 3, rowIndex);
+                } catch (ArrayIndexOutOfBoundsException ignored) {}
+                rowIndex++;
+            }
+            try {
+                sheet.setValueAt("Zähl-Kassenstand:", 0, rowIndex);
+                sheet.setValueAt(zaehlprotokollSummen.get(exportIndex).get(i), 1, rowIndex);
+            } catch (ArrayIndexOutOfBoundsException ignored) {}
+            rowIndex++;
+            try {
+                zaehlprotokollZeitpunkte.get(exportIndex).get(i);
+                // only if the above access works, there are data => add kassenstand
+                sheet.setValueAt("Soll-Kassenstand:", 0, rowIndex);
+                sheet.setValueAt(zaehlprotokollSollKassenstaende.get(exportIndex), 1, rowIndex);
+            } catch (ArrayIndexOutOfBoundsException ignored) {}
+            rowIndex++;
+            try {
+                sheet.setValueAt("Differenz", 0, rowIndex);
+                sheet.setValueAt(zaehlprotokollDifferenzen.get(exportIndex).get(i), 1, rowIndex);
+            } catch (ArrayIndexOutOfBoundsException ignored) {}
+            rowIndex++;
+            try {
+                sheet.setValueAt("Kommentar", 0, rowIndex);
+                sheet.setValueAt(zaehlprotokollKommentare.get(exportIndex).get(i), 1, rowIndex);
+            } catch (ArrayIndexOutOfBoundsException ignored) {}
+            rowIndex++;
+        }
 
         v = new Vector<>();
         v.add(sheet);

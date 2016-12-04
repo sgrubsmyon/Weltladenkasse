@@ -578,9 +578,9 @@ public abstract class Abrechnungen extends WindowContent {
 
         // Set VATs:
         for (BigDecimal mwst : mwstSet) {
-            sheet.setValueAt(bc.vatFormatter(mwst) + " MwSt. Brutto", 0, rowIndex);
-            sheet.setValueAt(bc.vatFormatter(mwst) + " MwSt. Netto", 0, rowIndex + 1);
-            sheet.setValueAt(bc.vatFormatter(mwst) + " MwSt. Betrag", 0, rowIndex + 2);
+            sheet.setValueAt(bc.vatFormatter(mwst) + " MwSt. Brutto:", 0, rowIndex);
+            sheet.setValueAt(bc.vatFormatter(mwst) + " MwSt. Netto:", 0, rowIndex + 1);
+            sheet.setValueAt(bc.vatFormatter(mwst) + " MwSt. Betrag:", 0, rowIndex + 2);
             for (int i = 0; i < 3; i++) {
                 if (vats.containsKey(mwst)) {
                     sheet.setValueAt(vats.get(mwst).get(i), 1, rowIndex);
