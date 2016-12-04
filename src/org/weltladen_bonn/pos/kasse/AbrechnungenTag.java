@@ -668,7 +668,6 @@ public class AbrechnungenTag extends Abrechnungen {
         }
         Color color = Color.BLACK;
         if (abrechnungsEntnahmen != null){
-            System.out.println(abrechnungsEntnahmen);
             BigDecimal bd = abrechnungsEntnahmen.get(colIndex);
             if (bd.signum() != 0) {
                 color = Color.RED;
@@ -1083,9 +1082,48 @@ public class AbrechnungenTag extends Abrechnungen {
     }
 
     @Override
-    Sheet fillSpreadSheet(int exportIndex) {
-        Sheet sheet = super.fillSpreadSheet(exportIndex);
-        return sheet;
+    Vector<Object> fillSpreadSheet(int exportIndex) {
+        Vector<Object> v = super.fillSpreadSheet(exportIndex);
+        Sheet sheet = (Sheet) v.firstElement();
+        Integer rowIndex = (Integer) v.lastElement();
+
+        // Set Stornos, Retouren, Entnahmen:
+        for (BigDecimal mwst : mwstSet) {
+            sheet.setValueAt("Storno ("+bc.vatFormatter(mwst) + " MwSt.)", 0, rowIndex);
+            if (abrechnungsStornos != null && abrechnungsStornos.get(exportIndex).containsKey(mwst)){
+                BigDecimal bd = abrechnungsStornos.get(exportIndex).get(mwst);
+                sheet.setValueAt(bd, 1, rowIndex);
+            } else {
+                sheet.setValueAt(0., 1, rowIndex);
+            }
+            rowIndex++;
+        }
+        for (BigDecimal mwst : mwstSet) {
+            sheet.setValueAt("Retouren ("+bc.vatFormatter(mwst) + " MwSt.)", 0, rowIndex);
+            if (abrechnungsRetouren != null && abrechnungsRetouren.get(exportIndex).containsKey(mwst)){
+                BigDecimal bd = abrechnungsRetouren.get(exportIndex).get(mwst);
+                sheet.setValueAt(bd, 1, rowIndex);
+            } else {
+                sheet.setValueAt(0., 1, rowIndex);
+            }
+            rowIndex++;
+        }
+        sheet.setValueAt("Entnahmen", 0, rowIndex);
+        if (abrechnungsEntnahmen != null){
+            BigDecimal bd = abrechnungsEntnahmen.get(exportIndex);
+            sheet.setValueAt(bd, 1, rowIndex);
+        } else {
+            sheet.setValueAt(0., 1, rowIndex);
+        }
+        rowIndex++;
+        rowIndex++; // empty row
+
+        // CONTINUE HERE WITH ZAEHLPROTOKOLL
+
+        v = new Vector<>();
+        v.add(sheet);
+        v.add(rowIndex);
+        return v;
     }
 
     /**
