@@ -115,31 +115,31 @@ public abstract class MainWindowGrundlage extends JFrame {
 
     // Setters & Getters:
     public void setContentPanel(JPanel panel){
-	this.contentPanel = panel;
-	holdAll.add(this.contentPanel, BorderLayout.CENTER);
+        this.contentPanel = panel;
+        holdAll.add(this.contentPanel, BorderLayout.CENTER);
     }
 
     public void changeContentPanel(JPanel panel){
 //	this.contentPanel.removeAll();
-	holdAll.remove(this.contentPanel);
-	holdAll.revalidate();
-	this.contentPanel = panel;
-	holdAll.add(this.contentPanel, BorderLayout.CENTER);
+        holdAll.remove(this.contentPanel);
+        holdAll.revalidate();
+        this.contentPanel = panel;
+        holdAll.add(this.contentPanel, BorderLayout.CENTER);
     }
 
     public void updateBottomPanel(){
-	holdAll.remove(this.bottomPanel);
-	holdAll.revalidate();
-	this.bottomPanel = new JPanel(); // The bottom panel which holds date and kassenstand bar.
-	Date now = new Date();
-	dateTime = now.toString();
-	dateTimeLabel = new JLabel(dateTime);
-	kassenstandLabel = new JLabel( bc.priceFormatter(retrieveKassenstand())+" "+bc.currencySymbol );
-	hostLabel = new JLabel("("+bc.mysqlHost+")");
-	this.bottomPanel.add(dateTimeLabel);
-	this.bottomPanel.add(kassenstandLabel);
-	this.bottomPanel.add(hostLabel);
-	holdAll.add(this.bottomPanel, BorderLayout.SOUTH);
+        holdAll.remove(this.bottomPanel);
+        holdAll.revalidate();
+        this.bottomPanel = new JPanel(); // The bottom panel which holds date and kassenstand bar.
+        Date now = new Date();
+        dateTime = now.toString();
+        dateTimeLabel = new JLabel(dateTime);
+        kassenstandLabel = new JLabel( bc.priceFormatter(retrieveKassenstand())+" "+bc.currencySymbol );
+        hostLabel = new JLabel("("+bc.mysqlHost+")");
+        this.bottomPanel.add(dateTimeLabel);
+        this.bottomPanel.add(kassenstandLabel);
+        this.bottomPanel.add(hostLabel);
+        holdAll.add(this.bottomPanel, BorderLayout.SOUTH);
     }
 
 }

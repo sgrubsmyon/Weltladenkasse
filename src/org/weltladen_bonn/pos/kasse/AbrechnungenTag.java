@@ -1203,6 +1203,7 @@ public class AbrechnungenTag extends Abrechnungen {
                     kassenstandWasChanged = false;
                     showKassenstandZuruecksetzenDialog();
                     tabbedPane.kassenstandNeedsToChange = !kassenstandWasChanged;
+                    mainWindow.updateBottomPanel();
                     JOptionPane.showMessageDialog(this,
                             "Bitte im folgenden Fenster den Ordner\n"+
                             "'Dokumente/Kasse/Tagesabrechnungen/Aktuelles Jahr/Aktueller Monat'\n"+
