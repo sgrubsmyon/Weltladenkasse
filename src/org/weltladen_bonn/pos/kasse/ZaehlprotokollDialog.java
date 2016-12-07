@@ -70,7 +70,7 @@ public class ZaehlprotokollDialog extends DialogWindow
                 "Bitte zählen, wie viele Münzen und Scheine von jeder Sorte " +
                 "in der Kasse sind, und hier eintragen:" );
         erklaerText = makeLabelStyle(erklaerText);
-        erklaerText.setFont(BaseClass.mediumFont);
+//        erklaerText.setFont(BaseClass.mediumFont);
 //        erklaerText.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
         headerPanel.add(erklaerText);
 
@@ -389,7 +389,7 @@ public class ZaehlprotokollDialog extends DialogWindow
                 "Was ist der Grund für die Differenz?\n"+
                 "(Wenn die Differenz 0,00 "+bc.currencySymbol+" ist, dann einfach \"Kasse stimmt\" o.ä. eintragen.)");
         kommentarErklaerText = makeLabelStyle(kommentarErklaerText);
-        kommentarErklaerText.setFont(BaseClass.mediumFont);
+//        kommentarErklaerText.setFont(BaseClass.mediumFont);
         int top = 5, left = 5, bottom = 5, right = 5;
         kommentarErklaerText.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
 
@@ -409,7 +409,7 @@ public class ZaehlprotokollDialog extends DialogWindow
                 // do nothing
             }
         });
-        kommentarArea.setFont(BaseClass.mediumFont);
+//        kommentarArea.setFont(BaseClass.mediumFont);
         kommentarArea.getDocument().addDocumentListener(this);
         JScrollPane kommentarScrollPane = new JScrollPane(kommentarArea);
 
