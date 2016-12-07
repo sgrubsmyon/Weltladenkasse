@@ -432,13 +432,6 @@ public class AbrechnungenTag extends Abrechnungen {
 
         // ------------- Stornos, Retouren, Entnahmen
 
-        // empty row as separator before storno
-        data.add(new Vector<>());
-        data.lastElement().add("");
-        colors.add(new Vector<>());
-        colors.lastElement().add(Color.BLACK);
-        fontStyles.add(new Vector<>());
-        fontStyles.lastElement().add("bold");
         for (BigDecimal mwst : mwstSet) {
             data.add(new Vector<>());
             data.lastElement().add("Storno ("+bc.vatFormatter(mwst)+" MwSt.)");
@@ -463,14 +456,6 @@ public class AbrechnungenTag extends Abrechnungen {
         fontStyles.lastElement().add("bold");
 
         // ------------- Zaehlprotokoll
-
-        // empty row as separator before zaehlprotokoll
-        data.add(new Vector<>());
-        data.lastElement().add("");
-        colors.add(new Vector<>());
-        colors.lastElement().add(Color.BLACK);
-        fontStyles.add(new Vector<>());
-        fontStyles.lastElement().add("bold");
 
         zpNumber = maxZaehlprotokollNumber();
         zpEinheiten = zaehlprotokollEinheiten();
@@ -523,10 +508,6 @@ public class AbrechnungenTag extends Abrechnungen {
 
         // ------------- Stornos, Retouren, Entnahmen
 
-        data.get(rowIndex).add(""); // empty row as separator before storno
-        colors.get(rowIndex).add(Color.BLACK);
-        fontStyles.get(rowIndex).add("normal");
-        rowIndex++;
         for (BigDecimal mwst : mwstSet) {
             Color color = Color.BLACK;
             if (incompleteAbrechnungsStornos != null && incompleteAbrechnungsStornos.containsKey(mwst)){
@@ -573,10 +554,6 @@ public class AbrechnungenTag extends Abrechnungen {
 
         // ------------- Zaehlprotokoll
 
-        data.get(rowIndex).add(""); // empty row as separator before zaehlprotokoll
-        colors.get(rowIndex).add(Color.BLACK);
-        fontStyles.get(rowIndex).add("normal");
-        rowIndex++;
         for (int i = 0; i < zpNumber; i++) {
             data.get(rowIndex).add(""); // empty row as separator before zaehlprotokoll
             colors.get(rowIndex).add(Color.BLACK);
@@ -635,10 +612,6 @@ public class AbrechnungenTag extends Abrechnungen {
 
         // ------------- Stornos, Retouren, Entnahmen
 
-        data.get(rowIndex).add(""); // empty row as separator before storno
-        colors.get(rowIndex).add(Color.BLACK);
-        fontStyles.get(rowIndex).add("normal");
-        rowIndex++;
         for (BigDecimal mwst : mwstSet) {
             Color color = Color.BLACK;
             if (abrechnungsStornos != null && abrechnungsStornos.get(colIndex).containsKey(mwst)){
@@ -685,10 +658,6 @@ public class AbrechnungenTag extends Abrechnungen {
 
         // ------------- Zaehlprotokoll
 
-        data.get(rowIndex).add(""); // empty row as separator before zaehlprotokoll
-        colors.get(rowIndex).add(Color.BLACK);
-        fontStyles.get(rowIndex).add("normal");
-        rowIndex++;
         for (int i = 0; i < zpNumber; i++) {
             Color def_col = Color.BLACK;
             Color soll_col = Color.BLUE;
