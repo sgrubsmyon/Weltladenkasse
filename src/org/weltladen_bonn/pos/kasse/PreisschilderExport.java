@@ -25,19 +25,20 @@ public class PreisschilderExport extends WindowContent {
      * Class for generating OpenDocument Text document with price tags
      */
     private static final long serialVersionUID = 1L;
-    String typ;
-    Vector<String> namen;
-    Vector<String> nummern;
-    Vector<String> mengen;
-    Vector<String> preise;
-    Vector<String> lieferanten;
-    Vector<String> kgPreise;
-    Vector<String> herkuenfte;
+    private String typ;
+    private Vector<String> namen;
+    private Vector<String> nummern;
+    private Vector<String> mengen;
+    private Vector<String> preise;
+    private Vector<String> lieferanten;
+    private Vector<String> kgPreise;
+    private Vector<String> einheiten;
+    private Vector<String> herkuenfte;
     private FileExistsAwareFileChooser odtChooser;
 
     public PreisschilderExport(Connection conn, MainWindowGrundlage mw, String typ, Vector<String> lieferanten,
             Vector<String> namen, Vector<String> nummern, Vector<String> mengen, Vector<String> preise,
-            Vector<String> kgPreise, Vector<String> herkuenfte) {
+            Vector<String> kgPreise, Vector<String> einheiten, Vector<String> herkuenfte) {
         /**
          * typ is either "lm" for Lebensmittel or "khw" for "Kunsthandwerk"
          */
@@ -50,6 +51,7 @@ public class PreisschilderExport extends WindowContent {
         this.preise = preise;
         this.lieferanten = lieferanten;
         this.kgPreise = kgPreise;
+        this.einheiten = einheiten;
         this.herkuenfte = herkuenfte;
 
         odtChooser = new FileExistsAwareFileChooser();
@@ -153,7 +155,7 @@ public class PreisschilderExport extends WindowContent {
                 return;
             pageCounter++;
 
-            for (int i = 0; i < 27; i++) { // always fill full page, 27 fields
+            for (int i = 0; i < 30; i++) { // always fill full page, 30 fields
                 int index = fieldCounter;
                 if (index < namen.size()) {
                     template.setField("name_" + i, parseName(namen.get(index)));
@@ -162,7 +164,8 @@ public class PreisschilderExport extends WindowContent {
                     if (typ.equals("lm")) {
                         template.setField("menge_" + i, mengen.get(index));
                         template.setField("kg_preis_" + i, kgPreise.get(index));
-                        template.setField("text_" + i, "Grundpreis\n(pro kg oder l)");
+                        template.setField("text_upper_" + i, "Grundpreis");
+                        template.setField("text_lower_" + i, "(pro "+einheiten.get(index)+")");
                     } else if (typ.equals("khw")) {
                         template.setField("herkunft_" + i, parseHerkunft(herkuenfte.get(index)));
                         template.setField("nummer_" + i, nummern.get(index));
@@ -172,13 +175,15 @@ public class PreisschilderExport extends WindowContent {
                     template.setField("name_" + i, "");
                     template.setField("preis_" + i, "");
                     template.setField("lieferant_" + i, "");
-                    template.setField("text_" + i, "");
                     if (typ.equals("lm")) {
                         template.setField("menge_" + i, "");
                         template.setField("kg_preis_" + i, "");
+                        template.setField("text_upper_" + i, "");
+                        template.setField("text_lower_" + i, "");
                     } else if (typ.equals("khw")) {
                         template.setField("herkunft_" + i, "");
                         template.setField("nummer_" + i, "");
+                        template.setField("text_" + i, "");
                     }
                 }
                 fieldCounter++;

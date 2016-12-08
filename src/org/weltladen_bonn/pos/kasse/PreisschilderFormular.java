@@ -74,9 +74,10 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
     private Vector<String> mengen;
     private Vector<String> preise;
     private Vector<String> kgPreise;
+    private Vector<String> einheiten;
     private Vector<String> herkuenfte;
     protected Vector<String> colors;
-    protected Vector<String> types;
+    private Vector<String> types;
 
     // Methoden:
 
@@ -105,6 +106,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         columnLabels.add("Preis");
         columnLabels.add("Menge");
         columnLabels.add("Preis pro kg/l/St.");
+        columnLabels.add("Einheit");
         columnLabels.add("Herkunft");
         columnLabels.add("MwSt.");
         columnLabels.add("Entfernen");
@@ -369,6 +371,9 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         TableColumn kg_preis = table.getColumn("Preis pro kg/l/St.");
         kg_preis.setCellRenderer(rechtsAusrichter);
         kg_preis.setPreferredWidth(30);
+        TableColumn einheit = table.getColumn("Einheit");
+        einheit.setCellRenderer(zentralAusrichter);
+        einheit.setPreferredWidth(30);
         TableColumn herkunft = table.getColumn("Herkunft");
         herkunft.setCellRenderer(zentralAusrichter);
         herkunft.setPreferredWidth(50);
@@ -394,21 +399,22 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
     }
 
     void emptyTable() {
-        data = new Vector<Vector<Object>>();
+        data = new Vector<>();
         //artikelIDs = new Vector<Integer>();
-        articleNumbers = new Vector<String>();
-        lieferanten = new Vector<String>();
-        articleNames = new Vector<String>();
-        kurzlieferanten = new Vector<String>();
-        kurznamen = new Vector<String>();
-        mengen = new Vector<String>();
-        preise = new Vector<String>();
-        kgPreise = new Vector<String>();
-        herkuenfte = new Vector<String>();
-        colors = new Vector<String>();
-        types = new Vector<String>();
-        removeButtons = new Vector<JButton>();
-        editButtons = new Vector<JButton>();
+        articleNumbers = new Vector<>();
+        lieferanten = new Vector<>();
+        articleNames = new Vector<>();
+        kurzlieferanten = new Vector<>();
+        kurznamen = new Vector<>();
+        mengen = new Vector<>();
+        preise = new Vector<>();
+        kgPreise = new Vector<>();
+        einheiten = new Vector<>();
+        herkuenfte = new Vector<>();
+        colors = new Vector<>();
+        types = new Vector<>();
+        removeButtons = new Vector<>();
+        editButtons = new Vector<>();
     }
 
     private void clearAll() {
@@ -422,6 +428,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         mengen.clear();
         preise.clear();
         kgPreise.clear();
+        einheiten.clear();
         herkuenfte.clear();
         colors.clear();
         types.clear();
@@ -510,6 +517,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         String menge = menge_preis_kg_preis[0];
         String preis = menge_preis_kg_preis[1];
         String kgPreis = menge_preis_kg_preis[2];
+        String einheit = a.getEinheit();
         String herkunft = a.getHerkunft() == null ? "" : a.getHerkunft();
 
         // for PreisschilderExport:
@@ -522,6 +530,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         mengen.add(menge);
         preise.add(preis);
         kgPreise.add(kgPreis);
+        einheiten.add(einheit);
         herkuenfte.add(herkunft);
 
         colors.add(color);
@@ -538,6 +547,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         row.add(preis);
         row.add(menge);
         row.add(kgPreis);
+        row.add(einheit);
         row.add(herkunft);
         row.add(bc.vatFormatter(artikelMwSt));
         row.add(removeButtons.lastElement());
@@ -640,6 +650,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         mengen.remove(rowIndex);
         preise.remove(rowIndex);
         kgPreise.remove(rowIndex);
+        einheiten.remove(rowIndex);
         herkuenfte.remove(rowIndex);
         colors.remove(rowIndex);
         types.remove(rowIndex);
@@ -658,6 +669,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
             mengen.remove(rowIndex);
             preise.remove(rowIndex);
             kgPreise.remove(rowIndex);
+            einheiten.remove(rowIndex);
             herkuenfte.remove(rowIndex);
             colors.remove(rowIndex);
             types.remove(rowIndex);
@@ -702,7 +714,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         if (e.getSource() == printButton) {
             String type = lmButton.isSelected() ? "lm" : khwButton.isSelected() ? "khw" : "";
             new PreisschilderExport(this.conn, this.mainWindow, type, kurzlieferanten, kurznamen, articleNumbers, mengen,
-                    preise, kgPreise, herkuenfte);
+                    preise, kgPreise, einheiten, herkuenfte);
             return;
         }
         int rowIndex = -1;
