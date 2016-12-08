@@ -14,7 +14,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.sql.*; // Connection, Statement, ResultSet ...
 
 // jOpenDocument stuff:
-import org.jopendocument.dom.template.*; // JavaScriptFileTemplate, TemplateException
+import org.jopendocument.dom.template.*; // JavaScriptTemplate, TemplateException
 import org.jopendocument.dom.OOUtils;
 import org.jdom.JDOMException;
 
@@ -59,8 +59,8 @@ public class PreisschilderExport extends WindowContent {
         createPriceTagFile();
     }
 
-    private JavaScriptFileTemplate loadTemplate() {
-        final JavaScriptFileTemplate template;
+    private JavaScriptTemplate loadTemplate() {
+        final JavaScriptTemplate template;
         try {
             String filename = "vorlagen" + bc.fileSep;
             if (typ.equals("lm")) {
@@ -78,7 +78,7 @@ public class PreisschilderExport extends WindowContent {
                         JOptionPane.ERROR_MESSAGE);
                 return null;
             }
-            template = new JavaScriptFileTemplate(infile);
+            template = new JavaScriptTemplate(infile);
         } catch (IOException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -148,7 +148,7 @@ public class PreisschilderExport extends WindowContent {
         while (fieldCounter < namen.size()) {
             // Load the template.
             // Java 5 users will have to use RhinoFileTemplate instead
-            JavaScriptFileTemplate template = loadTemplate();
+            JavaScriptTemplate template = loadTemplate();
             if (template == null)
                 return;
             pageCounter++;
