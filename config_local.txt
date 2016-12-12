@@ -16,3 +16,6 @@ currencySymbol = €
 rowsPerPage = 32
 sollMuenzKassenstand = 50.00
 sollScheinKassenstand = 100.00
+exportDirAbrechnungTag = 'Dokumente/Kasse/Tagesabrechnungen/'yyyy'/'MM MMMM
+exportDirAbrechnungMonat = 'Dokumente/Kasse/Monatsabrechnungen/'yyyy
+exportDirAbrechnungJahr = 'Dokumente/Kasse/Jahresabrechnungen'

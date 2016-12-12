@@ -24,7 +24,7 @@ import org.weltladen_bonn.pos.BaseClass;
 import org.weltladen_bonn.pos.DialogWindow;
 import org.weltladen_bonn.pos.MainWindowGrundlage;
 
-public class AbrechnungenTag extends Abrechnungen {
+class AbrechnungenTag extends Abrechnungen {
     // Attribute:
     private AbrechnungenTabbedPane abrechTabbedPane;
     private TabbedPane tabbedPane;
@@ -61,9 +61,10 @@ public class AbrechnungenTag extends Abrechnungen {
     /**
      *    The constructor.
      *       */
-    public AbrechnungenTag(Connection conn, MainWindowGrundlage mw, AbrechnungenTabbedPane atp, TabbedPane tp, Integer exportIndex){
+    AbrechnungenTag(Connection conn, MainWindowGrundlage mw, AbrechnungenTabbedPane atp, TabbedPane tp, Integer exportIndex){
         super(conn, mw, "", "Tagesabrechnung", "yyyy-MM-dd HH:mm:ss", "dd.MM. HH:mm (E)",
                 "zeitpunkt", "abrechnung_tag");
+        this.setExportDirFormat(bc.exportDirAbrechnungTag);
         this.abrechTabbedPane = atp;
         this.tabbedPane = tp;
         showTable();
@@ -1174,10 +1175,8 @@ public class AbrechnungenTag extends Abrechnungen {
                     tabbedPane.kassenstandNeedsToChange = !kassenstandWasChanged;
                     mainWindow.updateBottomPanel();
                     JOptionPane.showMessageDialog(this,
-                            "Bitte im folgenden Fenster den Ordner\n"+
-                            "'Dokumente/Kasse/Tagesabrechnungen/Aktuelles Jahr/Aktueller Monat'\n"+
-                            "als Speicherort auswählen.\n\n"+
-                            "Danach öffnet sich die Abrechnung automatisch.\n"+
+                            "Bitte im folgenden Fenster auf 'Speichern' klicken.\n"+
+                            "Danach öffnet sich die Abrechnung automatisch.\n\n"+
                             "Bitte dann die Abrechnung drucken (z.B. mit Strg-P).",
                             "Hinweis", JOptionPane.INFORMATION_MESSAGE);
                     abrechTabbedPane.recreateTabbedPane(0);

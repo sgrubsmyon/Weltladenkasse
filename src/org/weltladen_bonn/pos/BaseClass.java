@@ -31,6 +31,9 @@ public class BaseClass {
     public Integer rowsPerPage;
     public BigDecimal sollMuenzKassenstand;
     public BigDecimal sollScheinKassenstand;
+    public String exportDirAbrechnungTag;
+    public String exportDirAbrechnungMonat;
+    public String exportDirAbrechnungJahr;
 
     public final String fileSep = System.getProperty("file.separator");
     public final String lineSep = System.getProperty("line.separator");
@@ -190,6 +193,9 @@ public class BaseClass {
             this.rowsPerPage = Integer.parseInt(props.getProperty("rowsPerPage"));
             this.sollMuenzKassenstand = new BigDecimal(props.getProperty("sollMuenzKassenstand"));
             this.sollScheinKassenstand = new BigDecimal(props.getProperty("sollScheinKassenstand"));
+            this.exportDirAbrechnungTag = props.getProperty("exportDirAbrechnungTag");
+            this.exportDirAbrechnungMonat = props.getProperty("exportDirAbrechnungMonat");
+            this.exportDirAbrechnungJahr = props.getProperty("exportDirAbrechnungJahr");
         } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
             JOptionPane.showMessageDialog(null, "Fehler in der Konfigurationsdatei config.properties.\n"+
@@ -212,6 +218,9 @@ public class BaseClass {
             this.rowsPerPage = 32;
             this.sollMuenzKassenstand = new BigDecimal("50.00");
             this.sollScheinKassenstand = new BigDecimal("100.00");
+            this.exportDirAbrechnungTag = "'Dokumente/Kasse/Tagesabrechnungen/'yyyy'/'MM MMMM";
+            this.exportDirAbrechnungMonat = "'Dokumente/Kasse/Monatsabrechnungen/'yyyy";
+            this.exportDirAbrechnungJahr = "'Dokumente/Kasse/Jahresabrechnungen'";
         }
         this.mysqlHost = removeQuotes(this.mysqlHost);
         this.printerName = removeQuotes(this.printerName);
