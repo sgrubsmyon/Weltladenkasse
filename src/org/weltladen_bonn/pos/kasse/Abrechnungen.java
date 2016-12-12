@@ -48,16 +48,17 @@ import org.weltladen_bonn.pos.FileExistsAwareFileChooser;
 
 public abstract class Abrechnungen extends WindowContent {
     // Attribute:
-    protected int abrechnungenProSeite = 7;
-    protected int currentPage = 1;
-    protected int totalPage;
+    private int abrechnungenProSeite = 7;
+    int currentPage = 1;
+    int totalPage;
 
     protected String filterStr;
-    protected String titleStr;
-    protected String dateInFormat;
-    protected String dateOutFormat;
-    protected String timeName;
-    protected String abrechnungsTableName;
+    private String titleStr;
+    String dateInFormat;
+    private String dateOutFormat;
+    private String exportDirFormat;
+    private String timeName;
+    private String abrechnungsTableName;
 
     // The bottom panel which holds button.
     protected JPanel allPanel;
@@ -66,22 +67,22 @@ public abstract class Abrechnungen extends WindowContent {
     // The table holding the invoices. This is "anonymously subclassed" and two method are overridden
     protected AbrechnungsTable myTable;
 
-    protected JButton prevButton;
-    protected JButton nextButton;
-    protected Vector<JButton> exportButtons;
-    protected Vector<String> abrechnungsDates;
-    protected Vector<Integer> abrechnungsIDs;
-    protected Vector< Vector<BigDecimal> > abrechnungsTotals;
-    protected Vector< HashMap<BigDecimal, Vector<BigDecimal>> > abrechnungsVATs;
-    protected String incompleteAbrechnungsDate;
-    protected Vector<BigDecimal> incompleteAbrechnungsTotals;
-    protected HashMap<BigDecimal, Vector<BigDecimal>> incompleteAbrechnungsVATs;
-    protected TreeSet<BigDecimal> mwstSet;
+    JButton prevButton;
+    JButton nextButton;
+    private Vector<JButton> exportButtons;
+    private Vector<String> abrechnungsDates;
+    Vector<Integer> abrechnungsIDs;
+    private Vector< Vector<BigDecimal> > abrechnungsTotals;
+    private Vector< HashMap<BigDecimal, Vector<BigDecimal>> > abrechnungsVATs;
+    String incompleteAbrechnungsDate;
+    Vector<BigDecimal> incompleteAbrechnungsTotals;
+    HashMap<BigDecimal, Vector<BigDecimal>> incompleteAbrechnungsVATs;
+    TreeSet<BigDecimal> mwstSet;
     protected Vector< Vector<Object> > data;
     protected Vector< Vector<Color> > colors;
-    protected Vector< Vector<String> > fontStyles;
+    Vector< Vector<String> > fontStyles;
     protected Vector<String> columnLabels;
-    protected int abrechnungsZahl;
+    private int abrechnungsZahl;
     private FileExistsAwareFileChooser odsChooser;
 
     // Methoden:
@@ -112,7 +113,11 @@ public abstract class Abrechnungen extends WindowContent {
         odsChooser.setFileFilter(filter);
     }
 
-    public boolean isThereIncompleteAbrechnung() {
+    public void setExportDirFormat(String exportDirFormat) {
+        this.exportDirFormat = exportDirFormat;
+    }
+
+    boolean isThereIncompleteAbrechnung() {
         BigDecimal totalBrutto = incompleteAbrechnungsTotals.get(0);
         return totalBrutto.signum() != 0;
     }
@@ -334,7 +339,6 @@ public abstract class Abrechnungen extends WindowContent {
     String formatDate(String date, String dateFormat) {
         SimpleDateFormat sdfIn = new SimpleDateFormat(this.dateInFormat);
         SimpleDateFormat sdfOut = new SimpleDateFormat(dateFormat);
-        //sdfOut.setTimeZone(TimeZone.getTimeZone("CET")); // has no effect on jOpenDocument
         String formattedDate = "";
         try {
             formattedDate = sdfOut.format( sdfIn.parse(date) );
@@ -611,6 +615,19 @@ public abstract class Abrechnungen extends WindowContent {
 
     void export(int exportIndex){
         String date = abrechnungsDates.get(exportIndex);
+        File exportDir = new File(System.getProperty("user.home")+bc.fileSep+formatDate(date, this.exportDirFormat));
+        boolean ok = true;
+        if (!exportDir.exists()) {
+            ok = exportDir.mkdirs();
+        }
+        if (ok) {
+            odsChooser.setCurrentDirectory(exportDir);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "Fehler: Ordner für "+titleStr+" unter "+exportDir+" existiert nicht "+
+                            "und konnte nicht angelegt werden.",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
         odsChooser.setSelectedFile(new File(titleStr+"_WL_Bonn_"+dateForFilename(date)+".ods"));
         int returnVal = odsChooser.showSaveDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION){
@@ -643,12 +660,11 @@ public abstract class Abrechnungen extends WindowContent {
         }
         if (exportIndex > -1){
             export(exportIndex);
-            return;
         }
     }
 
-    protected class AbrechnungsTable extends AnyJComponentJTable {
-        public AbrechnungsTable(Vector< Vector<Object> > data, Vector<String> columns) {
+    private class AbrechnungsTable extends AnyJComponentJTable {
+        AbrechnungsTable(Vector<Vector<Object>> data, Vector<String> columns) {
             super(data, columns);
         }
         @Override

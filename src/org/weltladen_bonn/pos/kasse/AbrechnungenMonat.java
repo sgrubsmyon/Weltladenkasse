@@ -42,9 +42,10 @@ public class AbrechnungenMonat extends Abrechnungen {
      *    The constructor.
      *       */
     public AbrechnungenMonat(Connection conn, MainWindowGrundlage mw){
-	super(conn, mw, "", "Monatsabrechnung", "yyyy-MM-dd", "MMM yyyy",
+        super(conn, mw, "", "Monatsabrechnung", "yyyy-MM-dd", "MMM yyyy",
                 "monat", "abrechnung_monat");
-	showTable();
+        this.setExportDirFormat(bc.exportDirAbrechnungMonat);
+        showTable();
     }
 
     void addOtherStuff() {

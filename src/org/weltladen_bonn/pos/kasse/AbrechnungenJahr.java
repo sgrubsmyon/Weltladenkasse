@@ -42,9 +42,10 @@ public class AbrechnungenJahr extends Abrechnungen {
      *    The constructor.
      *       */
     public AbrechnungenJahr(Connection conn, MainWindowGrundlage mw){
-	super(conn, mw, "", "Jahresabrechnung", "yyyy", "yyyy",
+        super(conn, mw, "", "Jahresabrechnung", "yyyy", "yyyy",
                 "jahr", "abrechnung_jahr");
-	showTable();
+        this.setExportDirFormat(bc.exportDirAbrechnungJahr);
+        showTable();
     }
 
     void addOtherStuff() {
