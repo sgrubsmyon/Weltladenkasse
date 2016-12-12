@@ -48,6 +48,7 @@ class AbrechnungenTag extends Abrechnungen {
     private Vector< Vector<BigDecimal> > zaehlprotokollSummen;
     private Vector<BigDecimal> zaehlprotokollSollKassenstaende;
     private Vector< Vector<BigDecimal> > zaehlprotokollDifferenzen;
+    private Vector< Vector<BigDecimal> > zaehlprotokollEinnahmen;
     private Vector< Vector< LinkedHashMap<BigDecimal, Integer> > > zaehlprotokolle;
 
     private Integer zpNumber;
@@ -204,6 +205,7 @@ class AbrechnungenTag extends Abrechnungen {
         zaehlprotokollSummen = new Vector<>();
         zaehlprotokollSollKassenstaende = new Vector<>();
         zaehlprotokollDifferenzen = new Vector<>();
+        zaehlprotokollEinnahmen = new Vector<>();
         zaehlprotokolle = new Vector<>();
         try {
             for (Integer id : abrechnungsIDs) {
@@ -274,6 +276,30 @@ class AbrechnungenTag extends Abrechnungen {
                     differenzen.add(diff);
                 }
                 //
+                pstmt = this.conn.prepareStatement(
+                        "SELECT neuer_kassenstand "+
+                                "FROM kassenstand "+
+                                "WHERE kassenstand_id > "+
+                                "(SELECT DISTINCT kassenstand_id FROM abrechnung_tag WHERE id = ?) "+
+                                "AND manuell = TRUE AND entnahme = FALSE AND kommentar = 'Tagesabschluss' "+
+                                "ORDER BY kassenstand_id LIMIT 1"
+                );
+                pstmtSetInteger(pstmt, 1, id);
+                rs = pstmt.executeQuery();
+                BigDecimal neuerKassenstand = null;
+                if (rs.next()) {
+                    neuerKassenstand = rs.getBigDecimal(1);
+                }
+                //
+                Vector<BigDecimal> einnahmen = new Vector<>();
+                for (BigDecimal summe : summen) {
+                    BigDecimal einnahme = null;
+                    if (neuerKassenstand != null) {
+                        einnahme = summe.subtract(neuerKassenstand);
+                    }
+                    einnahmen.add(einnahme);
+                }
+                //
                 zaehlprotokollZeitpunkte.add(zeitpunkte);
                 zaehlprotokollKommentare.add(kommentare);
                 zaehlprotokollSummen.add(summen);
@@ -281,14 +307,9 @@ class AbrechnungenTag extends Abrechnungen {
                     zaehlprotokollSollKassenstaende.add(sollKassenstand);
                 }
                 zaehlprotokollDifferenzen.add(differenzen);
+                zaehlprotokollEinnahmen.add(einnahmen);
                 zaehlprotokolle.add(zps);
             }
-//            System.out.println(zaehlprotokollZeitpunkte);
-//            System.out.println(zaehlprotokollKommentare);
-//            System.out.println(zaehlprotokollSummen);
-//            System.out.println(zaehlprotokollSollKassenstaende);
-//            System.out.println(zaehlprotokollDifferenzen);
-//            System.out.println(zaehlprotokolle);
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -480,13 +501,16 @@ class AbrechnungenTag extends Abrechnungen {
                 colors.add(new Vector<>()); colors.lastElement().add(def_col);
                 fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             }
-            data.add(new Vector<>()); data.lastElement().add("Summe gezählter Kassenstand");
+            data.add(new Vector<>()); data.lastElement().add("Zähl-Kassenstand");
             colors.add(new Vector<>()); colors.lastElement().add(def_col);
             fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             data.add(new Vector<>()); data.lastElement().add("Soll-Kassenstand");
             colors.add(new Vector<>()); colors.lastElement().add(def_col);
             fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             data.add(new Vector<>()); data.lastElement().add("Differenz");
+            colors.add(new Vector<>()); colors.lastElement().add(def_col);
+            fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
+            data.add(new Vector<>()); data.lastElement().add("Bar-Tageseinnahmen");
             colors.add(new Vector<>()); colors.lastElement().add(def_col);
             fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
             data.add(new Vector<>()); data.lastElement().add("Kommentar");
@@ -579,6 +603,10 @@ class AbrechnungenTag extends Abrechnungen {
             fontStyles.get(rowIndex).add("normal");
             rowIndex++;
             data.get(rowIndex).add(""); // Differenz
+            colors.get(rowIndex).add(Color.BLACK);
+            fontStyles.get(rowIndex).add("normal");
+            rowIndex++;
+            data.get(rowIndex).add(""); // Einnahmen
             colors.get(rowIndex).add(Color.BLACK);
             fontStyles.get(rowIndex).add("normal");
             rowIndex++;
@@ -723,6 +751,14 @@ class AbrechnungenTag extends Abrechnungen {
                 data.get(rowIndex).add("");
                 colors.get(rowIndex).add(def_col);
             }
+            fontStyles.get(rowIndex).add("bold");
+            rowIndex++;
+            try {
+                data.get(rowIndex).add(bc.priceFormatter(zaehlprotokollEinnahmen.get(colIndex).get(i))+" "+bc.currencySymbol);
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                data.get(rowIndex).add("");
+            }
+            colors.get(rowIndex).add(def_col);
             fontStyles.get(rowIndex).add("bold");
             rowIndex++;
             try {
@@ -1129,6 +1165,11 @@ class AbrechnungenTag extends Abrechnungen {
             try {
                 sheet.setValueAt("Differenz", 0, rowIndex);
                 sheet.setValueAt(zaehlprotokollDifferenzen.get(exportIndex).get(i), 1, rowIndex);
+            } catch (ArrayIndexOutOfBoundsException ignored) {}
+            rowIndex++;
+            try {
+                sheet.setValueAt("Bar-Einnahmen", 0, rowIndex);
+                sheet.setValueAt(zaehlprotokollEinnahmen.get(exportIndex).get(i), 1, rowIndex);
             } catch (ArrayIndexOutOfBoundsException ignored) {}
             rowIndex++;
             try {
