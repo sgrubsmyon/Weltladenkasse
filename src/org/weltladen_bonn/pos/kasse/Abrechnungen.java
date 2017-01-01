@@ -268,29 +268,27 @@ public abstract class Abrechnungen extends WindowContent {
             int noOfColumns = currentPage > 1 ? abrechnungenProSeite : abrechnungenProSeite-1; // "-1" on first page only (because red column needs space too)
 
             // second, get the total amounts
-            ResultSet rs = stmt.executeQuery(
-                    "SELECT "+timeName+", SUM(mwst_netto + mwst_betrag), "+
-                                       // ^^^ Gesamt Brutto
-                    "SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto), "+
-                  // ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
-                    "id "+
+            String query = "SELECT id, "+timeName+", SUM(mwst_netto + mwst_betrag), "+
+                    // ^^^ Gesamt Brutto
+                    "SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) "+
+                    // ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
                     "FROM "+abrechnungsTableName+" "+
                     "WHERE TRUE "+
                     filterStr +
-                    "GROUP BY id ORDER BY id DESC "+
-                    "LIMIT " + offset + "," + noOfColumns
-            );
+                    "GROUP BY id, "+timeName+" ORDER BY id DESC "+
+                    "LIMIT " + offset + "," + noOfColumns;
+            ResultSet rs = stmt.executeQuery(query);
             while (rs.next()) {
-                String date = rs.getString(1);
-                Vector<BigDecimal> values = new Vector<BigDecimal>();
-                values.add(rs.getBigDecimal(2));
+                String date = rs.getString(2);
+                Vector<BigDecimal> values = new Vector<>();
                 values.add(rs.getBigDecimal(3));
                 values.add(rs.getBigDecimal(4));
+                values.add(rs.getBigDecimal(5));
                 // store in vectors
+                abrechnungsIDs.add(rs.getInt(1));
                 abrechnungsDates.add(date);
-                abrechnungsIDs.add(rs.getInt(5));
                 abrechnungsTotals.add(values);
-                abrechnungsVATs.add(new HashMap<BigDecimal, Vector<BigDecimal>>());
+                abrechnungsVATs.add(new HashMap<>());
             }
             rs.close();
 
