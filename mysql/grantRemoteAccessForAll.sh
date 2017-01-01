@@ -53,10 +53,10 @@ sed "s/localhost/$host%/" grants.sql > grants_temp.sql
 echo ""
 echo "Will now create the remote MySQL users..."
 mysql --local-infile -h localhost -u root -p$root_pwd --execute="
-GRANT USAGE ON *.* TO 'kassenadmin'@'$host%';
-GRANT USAGE ON *.* TO 'mitarbeiter'@'$host%';
-DROP USER 'kassenadmin'@'$host%';
-DROP USER 'mitarbeiter'@'$host%';
+#GRANT USAGE ON *.* TO 'kassenadmin'@'$host%';
+#GRANT USAGE ON *.* TO 'mitarbeiter'@'$host%';
+DROP USER IF EXISTS 'kassenadmin'@'$host%';
+DROP USER IF EXISTS 'mitarbeiter'@'$host%';
 CREATE USER 'kassenadmin'@'$host%' IDENTIFIED BY '$admin_pwd';
 CREATE USER 'mitarbeiter'@'$host%' IDENTIFIED BY '$mitar_pwd';
 SOURCE grants_temp.sql;

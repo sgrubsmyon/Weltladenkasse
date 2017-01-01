@@ -76,10 +76,10 @@ mitar_pwd=$mitar_pwd_1
 echo ""
 echo "Will now create the MySQL users and the database..."
 mysql --local-infile -h localhost -u root -p$root_pwd --execute="
-GRANT USAGE ON *.* TO 'kassenadmin'@'localhost';
-GRANT USAGE ON *.* TO 'mitarbeiter'@'localhost';
-DROP USER 'kassenadmin'@'localhost';
-DROP USER 'mitarbeiter'@'localhost';
+#GRANT USAGE ON *.* TO 'kassenadmin'@'localhost';
+#GRANT USAGE ON *.* TO 'mitarbeiter'@'localhost';
+DROP USER IF EXISTS 'kassenadmin'@'localhost';
+DROP USER IF EXISTS 'mitarbeiter'@'localhost';
 CREATE USER 'kassenadmin'@'localhost' IDENTIFIED BY '$admin_pwd';
 CREATE USER 'mitarbeiter'@'localhost' IDENTIFIED BY '$mitar_pwd';
 SOURCE generateDB.sql;
@@ -91,7 +91,7 @@ stats=$?
 echo ""
 if [[ $stats -eq 0 ]]; then
     echo "Looks like the MySQL server was set up without any errors!"
-    echo "You can start using the Kasse software by issuing \`java -jar Weltladenkasse_v0.9.jar'!"
+    echo "You can start using the Kasse software by issuing \`java -jar Weltladenkasse_v1.1.1.jar'!"
 else
     echo "Seems there was a problem. Please check any error messages and try to solve the problem or ask for help."
 fi
