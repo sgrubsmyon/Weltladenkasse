@@ -88,9 +88,10 @@ public class ArtikelNeuEingeben extends DialogWindow
     }
 
     private Integer retrieveGruppenID() {
-        Integer result = 12; // default: Sonstiges, 19% MwSt
+        Integer result = 76; // default: Sonstiges Kunsthandwerk
         String subStr = this.sub_id == null ? "sub_id IS NULL" : "sub_id = ?";
         String subsubStr = this.subsub_id == null ? "subsub_id IS NULL" : "subsub_id = ?";
+        System.out.println(this.sub_id + " " + this.subsub_id);
         try {
             PreparedStatement pstmt = this.conn.prepareStatement(
                     "SELECT produktgruppen_id FROM produktgruppe WHERE "+
@@ -111,7 +112,7 @@ public class ArtikelNeuEingeben extends DialogWindow
             try {
                 result = rs.getInt(1);
             } catch (SQLException ex) {
-                result = 12; // default: Sonstiges, 19% MwSt
+                result = 76; // default: Sonstiges Kunsthandwerk
             }
             rs.close();
             pstmt.close();
@@ -119,334 +120,337 @@ public class ArtikelNeuEingeben extends DialogWindow
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+        System.out.println(result);
         return result;
     }
 
     protected void showHeader() {
-        headerPanel = new JPanel();
-        artikelFormular.showHeader(headerPanel, allPanel);
+      headerPanel = new JPanel();
+      artikelFormular.showHeader(headerPanel, allPanel);
 
-        JPanel buttonPanel = new JPanel();
-        hinzufuegenButton = new JButton("Hinzufügen");
-        hinzufuegenButton.setMnemonic(KeyEvent.VK_H);
-	hinzufuegenButton.addActionListener(this);
-	hinzufuegenButton.setEnabled(false);
-        buttonPanel.add(hinzufuegenButton);
-        headerPanel.add(buttonPanel);
+      JPanel buttonPanel = new JPanel();
+      hinzufuegenButton = new JButton("Hinzufügen");
+      hinzufuegenButton.setMnemonic(KeyEvent.VK_H);
+      hinzufuegenButton.addActionListener(this);
+      hinzufuegenButton.setEnabled(false);
+      buttonPanel.add(hinzufuegenButton);
+      headerPanel.add(buttonPanel);
 
-        if (this.produktgruppen_id == null) {
-            this.produktgruppen_id = retrieveGruppenID();
-        }
-        int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(this.produktgruppen_id);
-        artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
+      System.out.println(this.produktgruppen_id);
+      if (this.produktgruppen_id == null) {
+        this.produktgruppen_id = retrieveGruppenID();
+      }
+      System.out.println(this.produktgruppen_id);
+      int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(this.produktgruppen_id);
+      artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
 
-        artikelFormular.beliebtBox.setSelectedIndex(bc.beliebtNamen.indexOf("keine Angabe"));
+      artikelFormular.beliebtBox.setSelectedIndex(bc.beliebtNamen.indexOf("keine Angabe"));
 
-        KeyAdapter enterAdapter = new KeyAdapter() {
-            public void keyPressed(KeyEvent e) {
-                if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
-                    if (hinzufuegenButton.isEnabled()){
-                        hinzufuegenButton.doClick();
-                    }
-                }
+      KeyAdapter enterAdapter = new KeyAdapter() {
+        public void keyPressed(KeyEvent e) {
+          if ( e.getKeyCode() == KeyEvent.VK_ENTER  ){
+            if (hinzufuegenButton.isEnabled()){
+              hinzufuegenButton.doClick();
             }
-        };
+          }
+        }
+      };
 
-        artikelFormular.produktgruppenBox.addActionListener(this);
-        artikelFormular.lieferantBox.addActionListener(this);
-        artikelFormular.nummerField.getDocument().addDocumentListener(this);
-        artikelFormular.nummerField.addKeyListener(enterAdapter);
-        artikelFormular.nameField.getDocument().addDocumentListener(this);
-        artikelFormular.nameField.addKeyListener(enterAdapter);
-        artikelFormular.kurznameField.getDocument().addDocumentListener(this);
-        artikelFormular.kurznameField.addKeyListener(enterAdapter);
-        artikelFormular.mengeField.getDocument().addDocumentListener(this);
-        artikelFormular.mengeField.addKeyListener(enterAdapter);
-        artikelFormular.einheitField.getDocument().addDocumentListener(this);
-        artikelFormular.einheitField.addKeyListener(enterAdapter);
-        artikelFormular.barcodeField.getDocument().addDocumentListener(this);
-        //artikelFormular.barcodeField.addKeyListener(enterAdapter); // scanner would always submit
-        artikelFormular.herkunftField.getDocument().addDocumentListener(this);
-        artikelFormular.herkunftField.addKeyListener(enterAdapter);
-        artikelFormular.vpeSpinner.addChangeListener(this);
-        artikelFormular.setSpinner.addChangeListener(this);
-        artikelFormular.vkpreisField.addKeyListener(enterAdapter);
-        artikelFormular.vkpreisField.getDocument().addDocumentListener(this);
-        artikelFormular.empfvkpreisField.addKeyListener(enterAdapter);
-        artikelFormular.empfvkpreisField.getDocument().addDocumentListener(this);
-        artikelFormular.ekrabattField.addKeyListener(enterAdapter);
-        artikelFormular.ekrabattField.getDocument().addDocumentListener(this);
-        artikelFormular.ekpreisField.addKeyListener(enterAdapter);
-        artikelFormular.ekpreisField.getDocument().addDocumentListener(this);
-        artikelFormular.preisVariabelBox.addItemListener(this);
-        artikelFormular.sortimentBox.addItemListener(this);
-        artikelFormular.lieferbarBox.addItemListener(this);
-        artikelFormular.beliebtBox.addActionListener(this);
+      artikelFormular.produktgruppenBox.addActionListener(this);
+      artikelFormular.lieferantBox.addActionListener(this);
+      artikelFormular.nummerField.getDocument().addDocumentListener(this);
+      artikelFormular.nummerField.addKeyListener(enterAdapter);
+      artikelFormular.nameField.getDocument().addDocumentListener(this);
+      artikelFormular.nameField.addKeyListener(enterAdapter);
+      artikelFormular.kurznameField.getDocument().addDocumentListener(this);
+      artikelFormular.kurznameField.addKeyListener(enterAdapter);
+      artikelFormular.mengeField.getDocument().addDocumentListener(this);
+      artikelFormular.mengeField.addKeyListener(enterAdapter);
+      artikelFormular.einheitField.getDocument().addDocumentListener(this);
+      artikelFormular.einheitField.addKeyListener(enterAdapter);
+      artikelFormular.barcodeField.getDocument().addDocumentListener(this);
+      //artikelFormular.barcodeField.addKeyListener(enterAdapter); // scanner would always submit
+      artikelFormular.herkunftField.getDocument().addDocumentListener(this);
+      artikelFormular.herkunftField.addKeyListener(enterAdapter);
+      artikelFormular.vpeSpinner.addChangeListener(this);
+      artikelFormular.setSpinner.addChangeListener(this);
+      artikelFormular.vkpreisField.addKeyListener(enterAdapter);
+      artikelFormular.vkpreisField.getDocument().addDocumentListener(this);
+      artikelFormular.empfvkpreisField.addKeyListener(enterAdapter);
+      artikelFormular.empfvkpreisField.getDocument().addDocumentListener(this);
+      artikelFormular.ekrabattField.addKeyListener(enterAdapter);
+      artikelFormular.ekrabattField.getDocument().addDocumentListener(this);
+      artikelFormular.ekpreisField.addKeyListener(enterAdapter);
+      artikelFormular.ekpreisField.getDocument().addDocumentListener(this);
+      artikelFormular.preisVariabelBox.addItemListener(this);
+      artikelFormular.sortimentBox.addItemListener(this);
+      artikelFormular.lieferbarBox.addItemListener(this);
+      artikelFormular.beliebtBox.addActionListener(this);
     }
 
     protected void showMiddle() {
-        artikelNeu.showTable(allPanel);
-        artikelNeu.myTable.getSelectionModel().addListSelectionListener(new RowSelectListener());
+      artikelNeu.showTable(allPanel);
+      artikelNeu.myTable.getSelectionModel().addListSelectionListener(new RowSelectListener());
     }
 
     private class RowSelectListener implements ListSelectionListener {
-        public void valueChanged(ListSelectionEvent event) {
-            if (event.getValueIsAdjusting()) {
-                return;
-            }
-            int[] selRows = artikelNeu.myTable.getSelectedRows();
-            if ( selRows.length == 1 ){
-                int row = artikelNeu.myTable.convertRowIndexToModel(selRows[0]); // user might have changed row order
-
-                // first row:
-                setProduktgruppenBox(row);
-                setLieferantBox(row);
-                setNummerField(row);
-                setBarcodeField(row);
-
-                // second row:
-                setNameField(row);
-                setKurznameField(row);
-                setMengeField(row);
-                setEinheitField(row);
-                setHerkunftField(row);
-
-                // third row:
-                setVPESpinner(row);
-                setSetSpinner(row);
-                setSortimentBox(row);
-                setLieferbarBox(row);
-                setBeliebtBox(row);
-
-                // fourth row:
-                setPreisVariabelBox(row);
-                setVkpreisField(row);
-                setEkpreisField(row);
-                setEmpfvkpreisField(row);
-                setEkrabattField(row);
-            }
+      public void valueChanged(ListSelectionEvent event) {
+        if (event.getValueIsAdjusting()) {
+          return;
         }
+        int[] selRows = artikelNeu.myTable.getSelectedRows();
+        if ( selRows.length == 1 ){
+          int row = artikelNeu.myTable.convertRowIndexToModel(selRows[0]); // user might have changed row order
 
-        void setProduktgruppenBox(int row){
-            int prodgrID = artikelNeu.articles.get(row).getProdGrID();
-            int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(prodgrID);
-            artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
-        }
+          // first row:
+          setProduktgruppenBox(row);
+          setLieferantBox(row);
+          setNummerField(row);
+          setBarcodeField(row);
 
-        void setLieferantBox(int row){
-            int liefID = artikelNeu.articles.get(row).getLiefID();
-            int liefIndex = artikelFormular.lieferantIDs.indexOf(liefID);
-            artikelFormular.lieferantBox.setSelectedIndex(liefIndex);
-        }
+          // second row:
+          setNameField(row);
+          setKurznameField(row);
+          setMengeField(row);
+          setEinheitField(row);
+          setHerkunftField(row);
 
-        void setNummerField(int row){
-            String nummer = artikelNeu.articles.get(row).getNummer();
-            artikelFormular.nummerField.setText(nummer);
-        }
+          // third row:
+          setVPESpinner(row);
+          setSetSpinner(row);
+          setSortimentBox(row);
+          setLieferbarBox(row);
+          setBeliebtBox(row);
 
-        void setBarcodeField(int row){
-            String barcode = artikelNeu.articles.get(row).getBarcode();
-            artikelFormular.barcodeField.setText(barcode);
+          // fourth row:
+          setPreisVariabelBox(row);
+          setVkpreisField(row);
+          setEkpreisField(row);
+          setEmpfvkpreisField(row);
+          setEkrabattField(row);
         }
+      }
 
-        void setNameField(int row){
-            String name = artikelNeu.articles.get(row).getName();
-            artikelFormular.nameField.setText(name);
-        }
+      void setProduktgruppenBox(int row){
+        int prodgrID = artikelNeu.articles.get(row).getProdGrID();
+        int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(prodgrID);
+        artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
+      }
 
-        void setKurznameField(int row){
-            String kurzname = artikelNeu.articles.get(row).getKurzname();
-            artikelFormular.kurznameField.setText(kurzname);
-        }
+      void setLieferantBox(int row){
+        int liefID = artikelNeu.articles.get(row).getLiefID();
+        int liefIndex = artikelFormular.lieferantIDs.indexOf(liefID);
+        artikelFormular.lieferantBox.setSelectedIndex(liefIndex);
+      }
 
-        void setMengeField(int row){
-            if (artikelNeu.articles.get(row).getMenge() != null){
-                String menge = bc.unifyDecimal( artikelNeu.articles.get(row).getMenge() );
-                artikelFormular.mengeField.setText(menge);
-            } else {
-                artikelFormular.mengeField.setText("");
-            }
-        }
+      void setNummerField(int row){
+        String nummer = artikelNeu.articles.get(row).getNummer();
+        artikelFormular.nummerField.setText(nummer);
+      }
 
-        void setEinheitField(int row){
-            String einheit = artikelNeu.articles.get(row).getEinheit();
-            artikelFormular.einheitField.setText(einheit);
-        }
+      void setBarcodeField(int row){
+        String barcode = artikelNeu.articles.get(row).getBarcode();
+        artikelFormular.barcodeField.setText(barcode);
+      }
 
-        void setHerkunftField(int row){
-            String herkunft = artikelNeu.articles.get(row).getHerkunft();
-            artikelFormular.herkunftField.setText(herkunft);
-        }
+      void setNameField(int row){
+        String name = artikelNeu.articles.get(row).getName();
+        artikelFormular.nameField.setText(name);
+      }
 
-        void setVPESpinner(int row){
-            if (artikelNeu.articles.get(row).getVPE() != null){
-                Integer vpe = artikelNeu.articles.get(row).getVPE();
-                artikelFormular.vpeSpinner.setValue(vpe);
-            } else {
-                artikelFormular.vpeSpinner.setValue(0);
-            }
-        }
+      void setKurznameField(int row){
+        String kurzname = artikelNeu.articles.get(row).getKurzname();
+        artikelFormular.kurznameField.setText(kurzname);
+      }
 
-        void setSetSpinner(int row){
-            Integer setgroesse = artikelNeu.articles.get(row).getSetgroesse();
-            artikelFormular.setSpinner.setValue(setgroesse);
+      void setMengeField(int row){
+        if (artikelNeu.articles.get(row).getMenge() != null){
+          String menge = bc.unifyDecimal( artikelNeu.articles.get(row).getMenge() );
+          artikelFormular.mengeField.setText(menge);
+        } else {
+          artikelFormular.mengeField.setText("");
         }
+      }
 
-        void setSortimentBox(int row){
-            Boolean sortiment = artikelNeu.articles.get(row).getSortiment();
-            artikelFormular.sortimentBox.setSelected(sortiment);
-        }
+      void setEinheitField(int row){
+        String einheit = artikelNeu.articles.get(row).getEinheit();
+        artikelFormular.einheitField.setText(einheit);
+      }
 
-        void setLieferbarBox(int row){
-            Boolean lieferbar = artikelNeu.articles.get(row).getLieferbar();
-            artikelFormular.lieferbarBox.setSelected(lieferbar);
-        }
+      void setHerkunftField(int row){
+        String herkunft = artikelNeu.articles.get(row).getHerkunft();
+        artikelFormular.herkunftField.setText(herkunft);
+      }
 
-        void setBeliebtBox(int row){
-            Integer beliebtWert = artikelNeu.articles.get(row).getBeliebt();
-            Integer beliebtIndex = bc.beliebtWerte.indexOf(beliebtWert);
-            artikelFormular.beliebtBox.setSelectedIndex(beliebtIndex);
+      void setVPESpinner(int row){
+        if (artikelNeu.articles.get(row).getVPE() != null){
+          Integer vpe = artikelNeu.articles.get(row).getVPE();
+          artikelFormular.vpeSpinner.setValue(vpe);
+        } else {
+          artikelFormular.vpeSpinner.setValue(0);
         }
+      }
 
-        void setVkpreisField(int row){
-            String vkpreis = artikelNeu.articles.get(row).getVKP();
-            artikelFormular.vkpreisField.setText(vkpreis);
-        }
+      void setSetSpinner(int row){
+        Integer setgroesse = artikelNeu.articles.get(row).getSetgroesse();
+        artikelFormular.setSpinner.setValue(setgroesse);
+      }
 
-        void setEmpfvkpreisField(int row){
-            String empfvkpreis = artikelNeu.articles.get(row).getEmpfVKP();
-            artikelFormular.empfvkpreisField.setText(empfvkpreis);
-        }
+      void setSortimentBox(int row){
+        Boolean sortiment = artikelNeu.articles.get(row).getSortiment();
+        artikelFormular.sortimentBox.setSelected(sortiment);
+      }
 
-        void setEkrabattField(int row){
-            String ekrabatt = bc.vatPercentRemover( artikelNeu.articles.get(row).getEKRabatt() );
-            artikelFormular.ekrabattField.setText(ekrabatt);
-        }
+      void setLieferbarBox(int row){
+        Boolean lieferbar = artikelNeu.articles.get(row).getLieferbar();
+        artikelFormular.lieferbarBox.setSelected(lieferbar);
+      }
 
-        void setEkpreisField(int row){
-            String ekpreis = artikelNeu.articles.get(row).getEKP();
-            artikelFormular.ekpreisField.setText(ekpreis);
-        }
+      void setBeliebtBox(int row){
+        Integer beliebtWert = artikelNeu.articles.get(row).getBeliebt();
+        Integer beliebtIndex = bc.beliebtWerte.indexOf(beliebtWert);
+        artikelFormular.beliebtBox.setSelectedIndex(beliebtIndex);
+      }
 
-        void setPreisVariabelBox(int row){
-            Boolean var = artikelNeu.articles.get(row).getVarPreis();
-            artikelFormular.preisVariabelBox.setSelected(var);
-        }
+      void setVkpreisField(int row){
+        String vkpreis = artikelNeu.articles.get(row).getVKP();
+        artikelFormular.vkpreisField.setText(vkpreis);
+      }
+
+      void setEmpfvkpreisField(int row){
+        String empfvkpreis = artikelNeu.articles.get(row).getEmpfVKP();
+        artikelFormular.empfvkpreisField.setText(empfvkpreis);
+      }
+
+      void setEkrabattField(int row){
+        String ekrabatt = bc.vatPercentRemover( artikelNeu.articles.get(row).getEKRabatt() );
+        artikelFormular.ekrabattField.setText(ekrabatt);
+      }
+
+      void setEkpreisField(int row){
+        String ekpreis = artikelNeu.articles.get(row).getEKP();
+        artikelFormular.ekpreisField.setText(ekpreis);
+      }
+
+      void setPreisVariabelBox(int row){
+        Boolean var = artikelNeu.articles.get(row).getVarPreis();
+        artikelFormular.preisVariabelBox.setSelected(var);
+      }
     }
 
     protected void showFooter() {
-        footerPanel = new JPanel();
-        submitButton = new JButton("Abschicken");
-        submitButton.setMnemonic(KeyEvent.VK_A);
-        submitButton.addActionListener(this);
-        if (artikelNeu.data.size() == 0){
-            submitButton.setEnabled(false);
-        } else {
-            submitButton.setEnabled(true);
-        }
-        footerPanel.add(submitButton);
-        deleteButton = new JButton("Verwerfen");
-        deleteButton.setMnemonic(KeyEvent.VK_V);
-        deleteButton.addActionListener(this);
-        if (artikelNeu.data.size() == 0){
-            deleteButton.setEnabled(false);
-        } else {
-            deleteButton.setEnabled(true);
-        }
-        footerPanel.add(deleteButton);
-        closeButton = new JButton("Schließen");
-        closeButton.setMnemonic(KeyEvent.VK_S);
-        closeButton.addActionListener(this);
-        if ( !willDataBeLost() ){
-            closeButton.setEnabled(true);
-        } else {
-            closeButton.setEnabled(false);
-        }
-        footerPanel.add(closeButton);
-        allPanel.add(footerPanel, BorderLayout.SOUTH);
+      footerPanel = new JPanel();
+      submitButton = new JButton("Abschicken");
+      submitButton.setMnemonic(KeyEvent.VK_A);
+      submitButton.addActionListener(this);
+      if (artikelNeu.data.size() == 0){
+        submitButton.setEnabled(false);
+      } else {
+        submitButton.setEnabled(true);
+      }
+      footerPanel.add(submitButton);
+      deleteButton = new JButton("Verwerfen");
+      deleteButton.setMnemonic(KeyEvent.VK_V);
+      deleteButton.addActionListener(this);
+      if (artikelNeu.data.size() == 0){
+        deleteButton.setEnabled(false);
+      } else {
+        deleteButton.setEnabled(true);
+      }
+      footerPanel.add(deleteButton);
+      closeButton = new JButton("Schließen");
+      closeButton.setMnemonic(KeyEvent.VK_S);
+      closeButton.addActionListener(this);
+      if ( !willDataBeLost() ){
+        closeButton.setEnabled(true);
+      } else {
+        closeButton.setEnabled(false);
+      }
+      footerPanel.add(closeButton);
+      allPanel.add(footerPanel, BorderLayout.SOUTH);
     }
 
     protected void setOriginalValues(Artikel origArticle) {
-        int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(origArticle.getProdGrID());
-        artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
+      int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(origArticle.getProdGrID());
+      artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
 
-        int liefIndex = artikelFormular.lieferantIDs.indexOf(origArticle.getLiefID());
-        artikelFormular.lieferantBox.setSelectedIndex(liefIndex);
+      int liefIndex = artikelFormular.lieferantIDs.indexOf(origArticle.getLiefID());
+      artikelFormular.lieferantBox.setSelectedIndex(liefIndex);
 
-        artikelFormular.nummerField.setText(origArticle.getNummer());
+      artikelFormular.nummerField.setText(origArticle.getNummer());
 
-        artikelFormular.nameField.setText(origArticle.getName());
+      artikelFormular.nameField.setText(origArticle.getName());
 
-        if ( origArticle.getKurzname() != null ){
-            artikelFormular.kurznameField.setText(origArticle.getKurzname());
+      if ( origArticle.getKurzname() != null ){
+        artikelFormular.kurznameField.setText(origArticle.getKurzname());
+      } else {
+        artikelFormular.kurznameField.setText("");
+      }
+      if ( origArticle.getMenge() != null ){
+        artikelFormular.mengeField.setText( bc.decimalMark(origArticle.getMenge().toString()) );
+      } else {
+        artikelFormular.mengeField.setText("");
+      }
+      if ( origArticle.getEinheit() != null ){
+        artikelFormular.einheitField.setText(origArticle.getEinheit());
+      } else {
+        artikelFormular.einheitField.setText("");
+      }
+      if ( origArticle.getBarcode() != null ){
+        artikelFormular.barcodeField.setText(origArticle.getBarcode());
+      } else {
+        artikelFormular.barcodeField.setText("");
+      }
+      if ( origArticle.getHerkunft() != null ){
+        artikelFormular.herkunftField.setText(origArticle.getHerkunft());
+      } else {
+        artikelFormular.herkunftField.setText("");
+      }
+      if ( origArticle.getVPE() != null ){
+        artikelFormular.vpeSpinner.setValue(origArticle.getVPE());
+      } else {
+        artikelFormular.vpeSpinner.setValue(0);
+      }
+
+      artikelFormular.setSpinner.setValue(origArticle.getSetgroesse());
+
+      artikelFormular.preisVariabelBox.setSelected(origArticle.getVarPreis());
+      if (!origArticle.getVarPreis()){ // if non-variable price
+        if ( origArticle.getVKP() != null ){
+          artikelFormular.vkpreisField.setText( bc.priceFormatter(origArticle.getVKP()) );
         } else {
-            artikelFormular.kurznameField.setText("");
+          artikelFormular.vkpreisField.setText("");
         }
-        if ( origArticle.getMenge() != null ){
-            artikelFormular.mengeField.setText( bc.decimalMark(origArticle.getMenge().toString()) );
+        if ( origArticle.getEmpfVKP() != null ){
+          artikelFormular.empfvkpreisField.setText( bc.priceFormatter(origArticle.getEmpfVKP()) );
         } else {
-            artikelFormular.mengeField.setText("");
+          artikelFormular.empfvkpreisField.setText("");
         }
-        if ( origArticle.getEinheit() != null ){
-            artikelFormular.einheitField.setText(origArticle.getEinheit());
+        if ( origArticle.getEKRabatt() != null ){
+          artikelFormular.ekrabattField.setText( bc.vatPercentRemover(origArticle.getEKRabatt()) );
         } else {
-            artikelFormular.einheitField.setText("");
+          artikelFormular.ekrabattField.setText("");
         }
-        if ( origArticle.getBarcode() != null ){
-            artikelFormular.barcodeField.setText(origArticle.getBarcode());
+        if ( origArticle.getEKP() != null ){
+          artikelFormular.ekpreisField.setText( bc.priceFormatter(origArticle.getEKP()) );
         } else {
-            artikelFormular.barcodeField.setText("");
+          artikelFormular.ekpreisField.setText("");
         }
-        if ( origArticle.getHerkunft() != null ){
-            artikelFormular.herkunftField.setText(origArticle.getHerkunft());
-        } else {
-            artikelFormular.herkunftField.setText("");
-        }
-        if ( origArticle.getVPE() != null ){
-            artikelFormular.vpeSpinner.setValue(origArticle.getVPE());
-        } else {
-            artikelFormular.vpeSpinner.setValue(0);
-        }
+      } else { // variable prices
+        artikelFormular.vkpreisField.setEnabled(false);
+        artikelFormular.empfvkpreisField.setEnabled(false);
+        artikelFormular.ekrabattField.setEnabled(false);
+        artikelFormular.ekpreisField.setEnabled(false);
+      }
 
-        artikelFormular.setSpinner.setValue(origArticle.getSetgroesse());
+      artikelFormular.sortimentBox.setSelected(origArticle.getSortiment());
 
-        artikelFormular.preisVariabelBox.setSelected(origArticle.getVarPreis());
-        if (!origArticle.getVarPreis()){ // if non-variable price
-            if ( origArticle.getVKP() != null ){
-                artikelFormular.vkpreisField.setText( bc.priceFormatter(origArticle.getVKP()) );
-            } else {
-                artikelFormular.vkpreisField.setText("");
-            }
-            if ( origArticle.getEmpfVKP() != null ){
-                artikelFormular.empfvkpreisField.setText( bc.priceFormatter(origArticle.getEmpfVKP()) );
-            } else {
-                artikelFormular.empfvkpreisField.setText("");
-            }
-            if ( origArticle.getEKRabatt() != null ){
-                artikelFormular.ekrabattField.setText( bc.vatPercentRemover(origArticle.getEKRabatt()) );
-            } else {
-                artikelFormular.ekrabattField.setText("");
-            }
-            if ( origArticle.getEKP() != null ){
-                artikelFormular.ekpreisField.setText( bc.priceFormatter(origArticle.getEKP()) );
-            } else {
-                artikelFormular.ekpreisField.setText("");
-            }
-        } else { // variable prices
-            artikelFormular.vkpreisField.setEnabled(false);
-            artikelFormular.empfvkpreisField.setEnabled(false);
-            artikelFormular.ekrabattField.setEnabled(false);
-            artikelFormular.ekpreisField.setEnabled(false);
-        }
+      artikelFormular.lieferbarBox.setSelected(origArticle.getLieferbar());
 
-        artikelFormular.sortimentBox.setSelected(origArticle.getSortiment());
+      artikelFormular.beliebtBox.setSelectedIndex(
+      bc.beliebtWerte.indexOf(origArticle.getBeliebt()));
 
-        artikelFormular.lieferbarBox.setSelected(origArticle.getLieferbar());
-
-        artikelFormular.beliebtBox.setSelectedIndex(
-                bc.beliebtWerte.indexOf(origArticle.getBeliebt()));
-
-        artikelFormular.updateEKPreisField();
+      artikelFormular.updateEKPreisField();
     }
 
     public void emptyTable() {

@@ -21,10 +21,10 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
        TableModelListener, ListSelectionListener, DocumentListener {
     // Attribute:
     private ArtikellisteContainer container;
-    protected Integer toplevel_id = 1;
-    protected Integer sub_id = 3;
-    protected Integer subsub_id = null;
-    protected String produktgruppenname = "Sonstiges 19% MwSt (0)";
+    protected Integer toplevel_id = 4; // for Sonstiges Kunsthandwerk
+    protected Integer sub_id = 1; // for Sonstiges Kunsthandwerk
+    protected Integer subsub_id = null; // for Sonstiges Kunsthandwerk
+    protected String produktgruppenname = "Sonstiges Kunsthandwerk (0)";
     private String searchStr = null;
 
     protected JPanel allPanel;
