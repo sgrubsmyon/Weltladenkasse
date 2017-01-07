@@ -23,6 +23,10 @@ hat, setzt.
   * Kalender DNH
   * Kohle
   * WL-Kochbuch
+
+Check, ob noch Preise fehlen:
+> SELECT produktgruppen_id, produktgruppen_name, COUNT(*) FROM artikel JOIN produktgruppe USING (produktgruppen_id) WHERE ek_preis IS NULL AND vk_preis IS NOT NULL AND artikel.aktiv = TRUE GROUP BY produktgruppen_id;
+> SELECT produktgruppen_id, produktgruppen_name, lieferant_name, artikel_name FROM artikel JOIN produktgruppe USING (produktgruppen_id) JOIN lieferant USING (lieferant_id) WHERE ek_preis IS NULL AND vk_preis IS NOT NULL AND artikel.aktiv = TRUE;
 '''
 
 # install parser
@@ -130,7 +134,7 @@ def select_rabatt_by_lieferant(conn, lieferant='GEPA', prod_gr='Kaffee', rabatt=
     selector_str = "lieferant_name = %s"
     selector_vals = [lieferant]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND ek_rabatt != %s"
+        selector_str += " AND (ek_rabatt IS NULL OR ek_rabatt != %s)"
         selector_vals += [rabatt]
     res = select_rabatt(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr, rabatt=rabatt)
@@ -142,7 +146,7 @@ def select_rabatt_by_name(conn, lieferant='GEPA', name='%credit%', prod_gr='Kaff
     selector_str = "lieferant_name = %s AND artikel_name LIKE %s"
     selector_vals = [lieferant, name]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND ek_rabatt != %s"
+        selector_str += " AND (ek_rabatt IS NULL OR ek_rabatt != %s)"
         selector_vals += [rabatt]
     res = select_rabatt(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr, rabatt=rabatt)
@@ -161,7 +165,7 @@ def select_ekp_by_lieferant(conn, lieferant='Olaf Müller', prod_gr='Honig',
     selector_str = "lieferant_name = %s"
     selector_vals = [lieferant]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND ek_preis != %s"
+        selector_str += " AND (ek_preis IS NULL OR ek_preis != %s)"
         selector_vals += [einkaufspreis]
     res = select_ekp(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr,
@@ -174,7 +178,7 @@ def select_ekp_by_name(conn, lieferant='FairMail', name='FairMail Postkarte',
     selector_str = "lieferant_name = %s AND artikel_name LIKE %s"
     selector_vals = [lieferant, name]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND ek_preis != %s"
+        selector_str += " AND (ek_preis IS NULL OR ek_preis != %s)"
         selector_vals += [einkaufspreis]
     res = select_ekp(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr,
@@ -218,7 +222,7 @@ def update_rabatt_by_lieferant(conn, lieferant='GEPA', prod_gr='Kaffee', rabatt=
     selector_str = "lieferant_name = %s"
     selector_vals = [lieferant]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND ek_rabatt != %s"
+        selector_str += " AND (ek_rabatt IS NULL OR ek_rabatt != %s)"
         selector_vals += [rabatt]
     update_rabatt(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr, rabatt=rabatt)
@@ -229,7 +233,7 @@ def update_rabatt_by_name(conn, lieferant='GEPA', name='%credit%', prod_gr='Kaff
     selector_str = "lieferant_name = %s AND artikel_name LIKE %s"
     selector_vals = [lieferant, name]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND ek_rabatt != %s"
+        selector_str += " AND (ek_rabatt IS NULL OR ek_rabatt != %s)"
         selector_vals += [rabatt]
     update_rabatt(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr, rabatt=rabatt)
@@ -246,7 +250,7 @@ def update_ekp_by_lieferant(conn, lieferant='Olaf Müller', prod_gr='Honig',
     selector_str = "lieferant_name = %s"
     selector_vals = [lieferant]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND ek_preis != %s"
+        selector_str += " AND (ek_preis IS NULL OR ek_preis != %s)"
         selector_vals += [einkaufspreis]
     update_ekp(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr,
@@ -258,7 +262,7 @@ def update_ekp_by_name(conn, lieferant='FairMail', name='FairMail Postkarte',
     selector_str = "lieferant_name = %s AND artikel_name LIKE %s"
     selector_vals = [lieferant, name]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND ek_preis != %s"
+        selector_str += " AND (ek_preis IS NULL OR ek_preis != %s)"
         selector_vals += [einkaufspreis]
     update_ekp(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr,

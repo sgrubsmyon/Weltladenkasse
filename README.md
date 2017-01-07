@@ -141,12 +141,20 @@ Set beeper options with codes on page 7-4 (p. 36).
 
 ## Optionally: Python scripts
 
-To run the script `rabatte_setzen.py` (which sets discount rates), you need to
-download
+To run the script `einkaufspreise.py` (which sets discount rates and order
+prices), you need to download
 * mysql-connector-python-2.1.3.tar.gz (platform independent): https://dev.mysql.com/downloads/connector/python/
 untar and run:
 ```
 python ./setup.py install
+```
+or, alternatively, use pip:
+```
+$ sudo pip install mysql-connector
+```
+or your package manager, e.g. on Arch:
+```
+$ sudo pacman -S python-mysql-connector
 ```
 
 
