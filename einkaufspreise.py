@@ -39,6 +39,14 @@ parser.add_option("-p", "--pwd", type="string",
         dest="PWD",
         help="The mitarbeiter password of the MySQL DB. If not set, password is "
         "prompted for.")
+parser.add_option("-n", "--dry-run", action="store_true",
+        default=False,
+        dest="DRY_RUN",
+        help="Do not change the DB, only show what would be changed?")
+parser.add_option("-e", "--exclude-existing", action="store_true",
+        default=False,
+        dest="EXCLUDE_EXISTING",
+        help="Exclude the DB entries that already have the corrent rabatt/ekp?")
 
 # get parsed args
 (options, args) = parser.parse_args()
@@ -106,10 +114,10 @@ def select(conn, selector_str, selector_vals, prod_gr='Kaffee',
         value))
     #print(query)
     cursor.execute(query, selector_vals + filtr_vals)
-    res = np.array(cursor.fetchall()).transpose()
+    res = np.array(cursor.fetchall())
     cursor.close()
     print(res)
-    return res
+    return res.transpose()
 
 
 def select_rabatt(conn, selector_str, selector_vals, prod_gr='Kaffee', rabatt=0.15):
@@ -119,15 +127,25 @@ def select_rabatt(conn, selector_str, selector_vals, prod_gr='Kaffee', rabatt=0.
 
 
 def select_rabatt_by_lieferant(conn, lieferant='GEPA', prod_gr='Kaffee', rabatt=0.15):
-    res = select_rabatt(conn, selector_str="lieferant_name = %s",
-            selector_vals=[lieferant], prod_gr=prod_gr, rabatt=rabatt)
+    selector_str = "lieferant_name = %s"
+    selector_vals = [lieferant]
+    if options.EXCLUDE_EXISTING:
+        selector_str += " AND ek_rabatt != %s"
+        selector_vals += [rabatt]
+    res = select_rabatt(conn, selector_str=selector_str,
+            selector_vals=selector_vals, prod_gr=prod_gr, rabatt=rabatt)
     return res
 
 
 def select_rabatt_by_name(conn, lieferant='GEPA', name='%credit%', prod_gr='Kaffee',
         rabatt=0.15):
-    res = select_rabatt(conn, selector_str="lieferant_name = %s AND artikel_name LIKE %s",
-            selector_vals=[lieferant, name], prod_gr=prod_gr, rabatt=rabatt)
+    selector_str = "lieferant_name = %s AND artikel_name LIKE %s"
+    selector_vals = [lieferant, name]
+    if options.EXCLUDE_EXISTING:
+        selector_str += " AND ek_rabatt != %s"
+        selector_vals += [rabatt]
+    res = select_rabatt(conn, selector_str=selector_str,
+            selector_vals=selector_vals, prod_gr=prod_gr, rabatt=rabatt)
     return res
 
 
@@ -140,16 +158,26 @@ def select_ekp(conn, selector_str, selector_vals, prod_gr='Honig',
 
 def select_ekp_by_lieferant(conn, lieferant='Olaf Müller', prod_gr='Honig',
         einkaufspreis=4.85):
-    res = select_ekp(conn, selector_str="lieferant_name = %s",
-            selector_vals=[lieferant], prod_gr=prod_gr,
+    selector_str = "lieferant_name = %s"
+    selector_vals = [lieferant]
+    if options.EXCLUDE_EXISTING:
+        selector_str += " AND ek_preis != %s"
+        selector_vals += [einkaufspreis]
+    res = select_ekp(conn, selector_str=selector_str,
+            selector_vals=selector_vals, prod_gr=prod_gr,
             einkaufspreis=einkaufspreis)
     return res
 
 
 def select_ekp_by_name(conn, lieferant='FairMail', name='FairMail Postkarte',
         prod_gr='Grußkarten', einkaufspreis=0.55):
-    res = select_ekp(conn, selector_str="lieferant_name = %s AND artikel_name LIKE %s",
-            selector_vals=[lieferant, name], prod_gr=prod_gr,
+    selector_str = "lieferant_name = %s AND artikel_name LIKE %s"
+    selector_vals = [lieferant, name]
+    if options.EXCLUDE_EXISTING:
+        selector_str += " AND ek_preis != %s"
+        selector_vals += [einkaufspreis]
+    res = select_ekp(conn, selector_str=selector_str,
+            selector_vals=selector_vals, prod_gr=prod_gr,
             einkaufspreis=einkaufspreis)
     return res
 
@@ -187,14 +215,24 @@ def update_rabatt(conn, selector_str, selector_vals, prod_gr='Kaffee', rabatt=0.
 
 
 def update_rabatt_by_lieferant(conn, lieferant='GEPA', prod_gr='Kaffee', rabatt=0.15):
-    update_rabatt(conn, selector_str="lieferant_name = %s",
-            selector_vals=[lieferant], prod_gr=prod_gr, rabatt=rabatt)
+    selector_str = "lieferant_name = %s"
+    selector_vals = [lieferant]
+    if options.EXCLUDE_EXISTING:
+        selector_str += " AND ek_rabatt != %s"
+        selector_vals += [rabatt]
+    update_rabatt(conn, selector_str=selector_str,
+            selector_vals=selector_vals, prod_gr=prod_gr, rabatt=rabatt)
 
 
 def update_rabatt_by_name(conn, lieferant='GEPA', name='%credit%', prod_gr='Kaffee',
         rabatt=0.15):
-    update_rabatt(conn, selector_str="lieferant_name = %s AND artikel_name LIKE %s",
-            selector_vals=[lieferant, name], prod_gr=prod_gr, rabatt=rabatt)
+    selector_str = "lieferant_name = %s AND artikel_name LIKE %s"
+    selector_vals = [lieferant, name]
+    if options.EXCLUDE_EXISTING:
+        selector_str += " AND ek_rabatt != %s"
+        selector_vals += [rabatt]
+    update_rabatt(conn, selector_str=selector_str,
+            selector_vals=selector_vals, prod_gr=prod_gr, rabatt=rabatt)
 
 
 def update_ekp(conn, selector_str, selector_vals, prod_gr='Honig',
@@ -205,15 +243,25 @@ def update_ekp(conn, selector_str, selector_vals, prod_gr='Honig',
 
 def update_ekp_by_lieferant(conn, lieferant='Olaf Müller', prod_gr='Honig',
         einkaufspreis=4.85):
-    update_ekp(conn, selector_str="lieferant_name = %s",
-            selector_vals=[lieferant], prod_gr=prod_gr,
+    selector_str = "lieferant_name = %s"
+    selector_vals = [lieferant]
+    if options.EXCLUDE_EXISTING:
+        selector_str += " AND ek_preis != %s"
+        selector_vals += [einkaufspreis]
+    update_ekp(conn, selector_str=selector_str,
+            selector_vals=selector_vals, prod_gr=prod_gr,
             einkaufspreis=einkaufspreis)
 
 
 def update_ekp_by_name(conn, lieferant='FairMail', name='FairMail Postkarte',
         prod_gr='Grußkarten', einkaufspreis=0.55):
-    update_ekp(conn, selector_str="lieferant_name = %s AND artikel_name LIKE %s",
-            selector_vals=[lieferant, name], prod_gr=prod_gr,
+    selector_str = "lieferant_name = %s AND artikel_name LIKE %s"
+    selector_vals = [lieferant, name]
+    if options.EXCLUDE_EXISTING:
+        selector_str += " AND ek_preis != %s"
+        selector_vals += [einkaufspreis]
+    update_ekp(conn, selector_str=selector_str,
+            selector_vals=selector_vals, prod_gr=prod_gr,
             einkaufspreis=einkaufspreis)
 
 
@@ -225,15 +273,17 @@ def update_ekp_by_name(conn, lieferant='FairMail', name='FairMail Postkarte',
 def rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Kaffee', rabatt=0.15):
     select_rabatt_by_lieferant(conn, lieferant=lieferant, prod_gr=prod_gr,
             rabatt=rabatt)
-    update_rabatt_by_lieferant(conn, lieferant=lieferant, prod_gr=prod_gr,
-            rabatt=rabatt)
+    if not options.DRY_RUN:
+        update_rabatt_by_lieferant(conn, lieferant=lieferant, prod_gr=prod_gr,
+                rabatt=rabatt)
 
 def rabatt_setzen_by_name(conn, lieferant='GEPA', name='%credit%',
         prod_gr='Kaffee', rabatt=0.15):
     select_rabatt_by_name(conn, lieferant=lieferant, name=name, prod_gr=prod_gr,
             rabatt=rabatt)
-    update_rabatt_by_name(conn, lieferant=lieferant, name=name, prod_gr=prod_gr,
-            rabatt=rabatt)
+    if not options.DRY_RUN:
+        update_rabatt_by_name(conn, lieferant=lieferant, name=name, prod_gr=prod_gr,
+                rabatt=rabatt)
 
 
 
@@ -241,16 +291,18 @@ def ekp_setzen_by_lieferant(conn, lieferant='Olaf Müller', prod_gr='Honig',
         einkaufspreis=4.85):
     select_ekp_by_lieferant(conn, lieferant=lieferant, prod_gr=prod_gr,
             einkaufspreis=einkaufspreis)
-    update_ekp_by_lieferant(conn, lieferant=lieferant, prod_gr=prod_gr,
-            einkaufspreis=einkaufspreis)
+    if not options.DRY_RUN:
+        update_ekp_by_lieferant(conn, lieferant=lieferant, prod_gr=prod_gr,
+                einkaufspreis=einkaufspreis)
 
 
 def ekp_setzen_by_name(conn, lieferant='FairMail', name='FairMail Postkarte',
         prod_gr='Grußkarten', einkaufspreis=0.55):
     select_ekp_by_name(conn, lieferant=lieferant, name=name, prod_gr=prod_gr,
             einkaufspreis=einkaufspreis)
-    update_ekp_by_name(conn, lieferant=lieferant, name=name, prod_gr=prod_gr,
-            einkaufspreis=einkaufspreis)
+    if not options.DRY_RUN:
+        update_ekp_by_name(conn, lieferant=lieferant, name=name, prod_gr=prod_gr,
+                einkaufspreis=einkaufspreis)
 
 
 
@@ -265,11 +317,12 @@ conn = mysql.connector.connect(host=options.HOST, user="mitarbeiter",
 
 count = count_missing_empf_vkp(conn)
 if (count > 0):
-    yesno = input("Bei %s Artikeln gibt es einen VK-Preis aber keinen empf. VK-Preis. "
-            "Soll für diese Artikel der VK-Preis als empf. VK-Preis übernommen "
-            "werden? (y/n) " % count)
-    if (yesno.lower() == 'y'):
-        set_vkp_as_empf_vkp(conn)
+    print("Bei %s Artikeln gibt es einen VK-Preis aber keinen empf. VK-Preis." % count)
+    if not options.DRY_RUN:
+        yesno = input("Soll für diese Artikel der VK-Preis als empf. VK-Preis übernommen "
+                "werden? (y/n) ")
+        if (yesno.lower() == 'y'):
+            set_vkp_as_empf_vkp(conn)
 
 
 #########################
