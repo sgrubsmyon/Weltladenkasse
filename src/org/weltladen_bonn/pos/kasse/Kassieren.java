@@ -1485,7 +1485,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         String kurzname = getShortName(a);
         String artikelMwSt = getVAT(selectedArticleID);
         Boolean sortiment = a.getSortiment();
-        if (color == "default") {
+        if (color.equals("default")) {
             color = sortiment ? "default" : "gray";
         }
 
@@ -1607,9 +1607,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             display.printZWS(bigPriceField.getText());
         }
 
-        if (zahlungsModus == "bar") {
+        if (zahlungsModus.equals("bar")) {
             bar();
-        } else if (zahlungsModus == "ec") {
+        } else if (zahlungsModus.equals("ec")) {
             ec();
         }
     }
@@ -1659,10 +1659,16 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             if (rechnungsNr < 0){
                 return rechnungsNr;
             }
-            //if (zahlungsModus == "ec") {
-            printQuittung(rechnungsNr);
-            printQuittung(rechnungsNr);
-            //}
+            try {
+              //if (zahlungsModus.equals("ec")) {
+              printQuittung(rechnungsNr);
+              Thread.sleep(2000); // wait for 2 seconds
+              printQuittung(rechnungsNr);
+              //}
+            } catch (InterruptedException ex) {
+              System.out.println("Exception: " + ex.getMessage());
+              ex.printStackTrace();
+            }
         }
         clearAll();
         updateAll();
@@ -2038,7 +2044,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             return;
         }
         if (e.getSource() == quittungsButton) {
-            if (zahlungsModus == "bar") {
+            if (zahlungsModus.equals("bar")) {
                 boolean ok = checkKundeGibtField();
                 if (!ok) {
                     return;
@@ -2048,7 +2054,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             return;
         }
         if (e.getSource() == neuerKundeButton) {
-            if (zahlungsModus == "bar") {
+            if (zahlungsModus.equals("bar")) {
                 boolean ok = checkKundeGibtField();
                 if (!ok) {
                     return;
