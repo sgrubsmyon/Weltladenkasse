@@ -200,7 +200,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             String row = "";
             for (Object obj : fullData.get(i)) {
                 // omit UI components:
-                if (!(obj instanceof JComponent)) {
+                if (obj != null && !(obj instanceof JComponent)) {
                     String str = obj.toString().toLowerCase();
                     row = row.concat(str + " ");
                 }
@@ -267,8 +267,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
      */
 
     protected BigDecimal calculateVAT(BigDecimal totalPrice, BigDecimal mwst) {
-        /* 
-         * VAT = bruttoPreis / (1.+mwst) * mwst; 
+        /*
+         * VAT = bruttoPreis / (1.+mwst) * mwst;
          * Alternative:
          *  // VAT = bruttoPreis * ( 1. - 1./(1.+mwst) );
          *  return totalPrice.multiply(
@@ -279,10 +279,10 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     private BigDecimal calculateEKP(BigDecimal empfVKPreis, BigDecimal ekRabatt) {
-        /* 
+        /*
          * Einkaufspreis = (1 - rabatt) * Empf. VK-Preis
          */
-        return (bc.one.subtract(ekRabatt)).multiply(empfVKPreis); 
+        return (bc.one.subtract(ekRabatt)).multiply(empfVKPreis);
     }
 
     private BigDecimal calculateEKP(String empfVKPreis, BigDecimal ekRabatt) {
