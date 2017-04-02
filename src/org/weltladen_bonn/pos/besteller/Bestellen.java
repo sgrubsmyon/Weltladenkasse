@@ -518,7 +518,7 @@ public class Bestellen extends BestellungsGrundlage implements
     private void doCSVBackupReadin() {
         // clear possible previous order
         clearAll();
-        updateAll();
+        updateTable();
 
         String backupFilename =
             System.getProperty("user.home")+bc.fileSep+".Weltladenkasse_Bestellung_"+selTyp+".backup";
