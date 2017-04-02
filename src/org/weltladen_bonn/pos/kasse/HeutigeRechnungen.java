@@ -59,30 +59,33 @@ public class HeutigeRechnungen extends Rechnungen {
     }
 
     private void stornieren(int stornoRow) {
-	Integer rechnungsnummer = Integer.parseInt(data.get(stornoRow).get(1).toString());
-	try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-		    "UPDATE verkauf SET verkauf.storniert = 1 WHERE verkauf.rechnungs_nr = ?"
-		    );
-            pstmtSetInteger(pstmt, 1, rechnungsnummer);
-	    int result = pstmt.executeUpdate();
-	    if (result != 0){
-		JOptionPane.showMessageDialog(this, "Rechnung " + rechnungsnummer + " wurde storniert.",
-			"Stornierung ausgeführt", JOptionPane.INFORMATION_MESSAGE);
+      Integer rechnungsnummer = Integer.parseInt(data.get(stornoRow).get(1).toString());
+      String zahlungsModus = data.get(stornoRow).get(3).toString();
+      try {
+        PreparedStatement pstmt = this.conn.prepareStatement(
+        "UPDATE verkauf SET verkauf.storniert = 1 WHERE verkauf.rechnungs_nr = ?"
+        );
+        pstmtSetInteger(pstmt, 1, rechnungsnummer);
+        int result = pstmt.executeUpdate();
+        if (result != 0){
+          JOptionPane.showMessageDialog(this, "Rechnung " + rechnungsnummer + " wurde storniert.",
+          "Stornierung ausgeführt", JOptionPane.INFORMATION_MESSAGE);
 
-                insertStornoIntoKassenstand(rechnungsnummer);
-	    }
-	    else {
-		JOptionPane.showMessageDialog(this,
-			"Fehler: Rechnung " + rechnungsnummer + " konnte nicht storniert werden.",
-			"Fehler bei Stornierung", JOptionPane.ERROR_MESSAGE);
-	    }
-	    pstmt.close();
-	} catch (SQLException ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    ex.printStackTrace();
-	}
-	updateTable();
+          if (zahlungsModus.equals("Bar")) { // if Barzahlung
+            insertStornoIntoKassenstand(rechnungsnummer);
+          }
+        }
+        else {
+          JOptionPane.showMessageDialog(this,
+          "Fehler: Rechnung " + rechnungsnummer + " konnte nicht storniert werden.",
+          "Fehler bei Stornierung", JOptionPane.ERROR_MESSAGE);
+        }
+        pstmt.close();
+      } catch (SQLException ex) {
+        System.out.println("Exception: " + ex.getMessage());
+        ex.printStackTrace();
+      }
+      updateTable();
     }
 
     private void insertStornoIntoKassenstand(int rechnungsNr) {
