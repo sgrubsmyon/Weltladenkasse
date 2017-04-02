@@ -54,14 +54,12 @@ public class Kundendisplay {
         String property = System.getProperty("java.library.path");
         System.out.println(property);
         HIDManager mgr = null;
-        try
-        {
+        try {
             mgr = HIDManager.getInstance();
             HIDDeviceInfo[] devs = mgr.listDevices();
             System.out.println("HID (Display) Devices:");
-            if (devs != null){
-                for(int i=0; i<devs.length; i++)
-                {
+            if (devs != null) {
+                for (int i=0; i<devs.length; i++) {
                     System.out.println(i+":\t"+devs[i]);
                     System.out.print("Manufacturer: " + devs[i].getManufacturer_string() + "\n");
                     System.out.print("Product: " + devs[i].getProduct_string() + "\n");
@@ -71,19 +69,15 @@ public class Kundendisplay {
             } else {
                 System.out.println("No devices found.");
             }
-        }
-        catch(IOException e)
-        {
+        } catch(IOException e) {
             System.err.println(e.getMessage());
             e.printStackTrace();
-        }
-        catch(NullPointerException e)
-        {
+        } catch(NullPointerException e) {
             System.err.println(e.getMessage());
             e.printStackTrace();
             System.err.println("It seems that the customer display is not connected. (No HID devices found.)");
         } finally {
-            if (null != mgr){
+            if (null != mgr) {
                 mgr.release();
             }
             System.gc();
@@ -98,7 +92,7 @@ public class Kundendisplay {
         try {
             manager = HIDManager.getInstance();
             HIDDeviceInfo[] devs = manager.listDevices();
-            if (devs != null){
+            if (devs != null) {
                 Vector<String> paths = new Vector<String>();
                 for (HIDDeviceInfo dev : devs){
                     String manufacturer = dev.getManufacturer_string();
@@ -120,9 +114,13 @@ public class Kundendisplay {
                     System.out.print("Serial Number: " + device.getSerialNumberString() + "\n");
                     setCodePage();
                 }
+            } else {
+              System.out.println("No devices found.");
             }
-        } catch(IOException e) {
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
             e.printStackTrace();
+            System.err.println("There seems to be an error with the HID device. Consider unplugging and replugging.");
             device = null;
         }
     }
@@ -138,6 +136,7 @@ public class Kundendisplay {
                 device.close();
             }
         } catch(IOException e) {
+            System.err.println(e.getMessage());
             e.printStackTrace();
         } finally {
             if (manager != null){
@@ -172,7 +171,10 @@ public class Kundendisplay {
                 int n = device.write(data);
                 //System.out.println("Number of bytes written to BA63 device: "+n);
             } catch(IOException e) {
+                System.err.println(e.getMessage());
                 e.printStackTrace();
+                System.err.println("There seems to be an error with the HID device. Consider unplugging and replugging.");
+                device = null;
             }
         }
     }
