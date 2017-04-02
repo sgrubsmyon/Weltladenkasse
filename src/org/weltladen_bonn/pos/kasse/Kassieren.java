@@ -232,8 +232,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
         };
         doc.setDocumentFilter(
-                new IntegerDocumentFilter((Integer) ((SpinnerNumberModel) anzahlSpinner.getModel()).getMinimum(),
-                        (Integer) ((SpinnerNumberModel) anzahlSpinner.getModel()).getMaximum(), "Anzahl", this));
+          new IntegerDocumentFilter((Integer) ((SpinnerNumberModel) anzahlSpinner.getModel()).getMinimum(),
+            (Integer) ((SpinnerNumberModel) anzahlSpinner.getModel()).getMaximum(), "Anzahl", this)
+        );
         spinnerField.setDocument(doc);
     }
 
@@ -304,8 +305,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         spinnerPanel.setLayout(new FlowLayout());
         BigLabel anzahlLabel = new BigLabel("Anzahl: ");
         spinnerPanel.add(anzahlLabel);
-        SpinnerNumberModel anzahlModel = new SpinnerNumberModel(1, // initial
-                                                                   // value
+        SpinnerNumberModel anzahlModel = new SpinnerNumberModel(1, // initial value
                 1, // min
                 bc.smallintMax, // max (null == no max)
                 1); // step
@@ -315,8 +315,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         anzahlSpinner.setEditor(anzahlEditor);
         anzahlField = anzahlEditor.getTextField();
         preventSpinnerOverflow(anzahlField);
-        ((NumberFormatter) anzahlField.getFormatter()).setAllowsInvalid(false); // accept
-                                                                                // only allowed values (i.e. numbers)
+        ((NumberFormatter) anzahlField.getFormatter()).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
         anzahlField.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {

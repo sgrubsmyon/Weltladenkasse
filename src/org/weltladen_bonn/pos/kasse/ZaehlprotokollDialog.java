@@ -110,25 +110,39 @@ public class ZaehlprotokollDialog extends DialogWindow
         muenz_spinners = new Vector<>();
         for (String name : bc.muenz_namen) {
             muenz_spinners.add(new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1)));
-            muenz_spinners.lastElement().addChangeListener(this);
-            muenz_spinners.lastElement().setFont(BaseClass.mediumFont);
-            JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(muenz_spinners.lastElement(), "###");
-            muenz_spinners.lastElement().setEditor(anzahlEditor);
+            JSpinner spinner = muenz_spinners.lastElement();
+            spinner.addChangeListener(this);
+            spinner.setFont(BaseClass.mediumFont);
+            JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(spinner, "###");
+            spinner.setEditor(anzahlEditor);
             JFormattedTextField anzahlField = anzahlEditor.getTextField();
             anzahlField.setColumns(3);
 //            preventSpinnerOverflow(anzahlField);
-            ((NumberFormatter) anzahlField.getFormatter()).setAllowsInvalid(false); // accept
-                                                                                    // only allowed values (i.e. numbers)
+            ((NumberFormatter) anzahlField.getFormatter()).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
+            anzahlField.addFocusListener(new FocusListener() {
+                public void focusGained(FocusEvent e) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                      public void run() {
+                        anzahlField.selectAll();
+                      }
+                    });
+                }
+                public void focusLost(FocusEvent e) {
+                  // do nothing
+                }
+            });
         }
 
 
         muenz_fields = new Vector<>();
         for (String name : bc.muenz_namen) {
             muenz_fields.add(new JFormattedTextField("0,00"));
-            ((AbstractDocument) muenz_fields.lastElement().getDocument()).setDocumentFilter(bc.geldFilter);
-            muenz_fields.lastElement().setEditable(false);
-            muenz_fields.lastElement().setFont(BaseClass.mediumFont);
-            muenz_fields.lastElement().setHorizontalAlignment(JFormattedTextField.RIGHT);
+            JFormattedTextField field = muenz_fields.lastElement();
+            ((AbstractDocument) field.getDocument()).setDocumentFilter(bc.geldFilter);
+            field.setEditable(false);
+            field.setFocusable(false);
+            field.setFont(BaseClass.mediumFont);
+            field.setHorizontalAlignment(JFormattedTextField.RIGHT);
         }
 //        kundeGibtField.getDocument().addDocumentListener(new DocumentListener() {
 //            public void insertUpdate(DocumentEvent e) {
@@ -228,23 +242,37 @@ public class ZaehlprotokollDialog extends DialogWindow
         schein_spinners = new Vector<>();
         for (String name : bc.schein_namen) {
             schein_spinners.add(new JSpinner(new SpinnerNumberModel(0, 0, bc.smallintMax, 1)));
-            schein_spinners.lastElement().addChangeListener(this);
-            schein_spinners.lastElement().setFont(BaseClass.mediumFont);
-            JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(schein_spinners.lastElement(), "###");
-            schein_spinners.lastElement().setEditor(anzahlEditor);
+            JSpinner spinner = schein_spinners.lastElement();
+            spinner.addChangeListener(this);
+            spinner.setFont(BaseClass.mediumFont);
+            JSpinner.NumberEditor anzahlEditor = new JSpinner.NumberEditor(spinner, "###");
+            spinner.setEditor(anzahlEditor);
             JFormattedTextField anzahlField = anzahlEditor.getTextField();
 //            preventSpinnerOverflow(anzahlField);
-            ((NumberFormatter) anzahlField.getFormatter()).setAllowsInvalid(false); // accept
-                                                                                    // only allowed values (i.e. numbers)
+            ((NumberFormatter) anzahlField.getFormatter()).setAllowsInvalid(false); // accept only allowed values (i.e. numbers)
+            anzahlField.addFocusListener(new FocusListener() {
+                public void focusGained(FocusEvent e) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                      public void run() {
+                        anzahlField.selectAll();
+                      }
+                    });
+                }
+                public void focusLost(FocusEvent e) {
+                  // do nothing
+                }
+            });
         }
 
         schein_fields = new Vector<>();
         for (String name : bc.schein_namen) {
             schein_fields.add(new JFormattedTextField(bc.priceFormatter("0")));
-            ((AbstractDocument) schein_fields.lastElement().getDocument()).setDocumentFilter(bc.geldFilter);
-            schein_fields.lastElement().setEditable(false);
-            schein_fields.lastElement().setFont(BaseClass.mediumFont);
-            schein_fields.lastElement().setHorizontalAlignment(JFormattedTextField.RIGHT);
+            JFormattedTextField field = schein_fields.lastElement();
+            ((AbstractDocument) field.getDocument()).setDocumentFilter(bc.geldFilter);
+            field.setEditable(false);
+            field.setFocusable(false);
+            field.setFont(BaseClass.mediumFont);
+            field.setHorizontalAlignment(JFormattedTextField.RIGHT);
         }
 
         c2.gridy = 2;
@@ -318,6 +346,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         summeField.setFont(BaseClass.mediumFont);
         summeField.setHorizontalAlignment(JFormattedTextField.RIGHT);
         summeField.setEditable(false);
+        summeField.setFocusable(false);
 
         c3.gridy = 0;
         c3.gridx = 0;
@@ -335,6 +364,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         kassenstandField.setForeground(Color.BLUE);
         kassenstandField.setHorizontalAlignment(JFormattedTextField.RIGHT);
         kassenstandField.setEditable(false);
+        kassenstandField.setFocusable(false);
 
         c3.gridy = 0;
         c3.gridx = 3;
@@ -361,6 +391,7 @@ public class ZaehlprotokollDialog extends DialogWindow
         }
         differenzField.setHorizontalAlignment(JFormattedTextField.RIGHT);
         differenzField.setEditable(false);
+        differenzField.setFocusable(false);
 
         c3.gridy = 1;
         c3.gridx = 0;

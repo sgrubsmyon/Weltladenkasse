@@ -60,7 +60,8 @@ public class Kasse {
             //	myWindow.setLocation(200, 100);
             //myWindow.setSize(1024, 768);
             //myWindow.setSize(1024, 400);
-            myWindow.setPreferredSize(new Dimension(1024, 768));
+            // myWindow.setPreferredSize(new Dimension(1024, 768));
+            myWindow.setPreferredSize(new Dimension(1200, 675));
             myWindow.pack();
 
             //WelcomeScreen welcome = new WelcomeScreen();
