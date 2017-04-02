@@ -62,7 +62,6 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
     private JButton returnButton;
 
     // for date change
-    private JButton tagesabschlussButton;
     private JSpinner startSpinner;
     private JSpinner endSpinner;
     private SpinnerDateModel startDateModel;
@@ -281,12 +280,6 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
         c1.gridx = 2;
         kassenstandAendernPanel.add(new JLabel(bc.currencySymbol), c1);
 
-        c1.gridy = 0;
-        c1.gridx = 3;
-        entnahmeCheckBox = new JCheckBox("Entnahme");
-        entnahmeCheckBox.addItemListener(this);
-        kassenstandAendernPanel.add(entnahmeCheckBox, c1);
-
         // ---
 
         /*
@@ -333,10 +326,9 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
 
         c1.gridy = 1;
         c1.gridx = 3;
-        c1.anchor = GridBagConstraints.CENTER;
-        tagesabschlussButton = new JButton("Tagesabschluss (150 €)");
-        tagesabschlussButton.addActionListener(this);
-        kassenstandAendernPanel.add(tagesabschlussButton, c1);
+        entnahmeCheckBox = new JCheckBox("Entnahme");
+        entnahmeCheckBox.addItemListener(this);
+        kassenstandAendernPanel.add(entnahmeCheckBox, c1);
 
         aendernPanel.add(kassenstandAendernPanel);
         headerPanel.add(aendernPanel);
@@ -576,12 +568,6 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             abschicken();
             return;
         }
-        if (e.getSource() == tagesabschlussButton){
-            neuerKassenstandField.setText("150,00");
-            kommentarField.setText("Tagesabschluss");
-            returnButton.doClick();
-            return;
-        }
         else if (e.getSource() == changeDateButton){
             SpinnerModel startDateModel = startSpinner.getModel();
             SpinnerModel endDateModel = endSpinner.getModel();
@@ -743,13 +729,6 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
                 showRechnungen = false;
             }
             updateTable(this.filterStr);
-        }
-        if (source == entnahmeCheckBox) {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                tagesabschlussButton.setEnabled(false);
-            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                tagesabschlussButton.setEnabled(true);
-            }
         }
     }
 
