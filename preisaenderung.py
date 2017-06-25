@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # TODO:
@@ -29,15 +29,19 @@
         PFANDKISTE2), denn wir haben ein anderes Pfandsystem (bei uns entspricht
         PFAND2 der 0,33 l Flasche für 8 ct, dafür haben wir nicht die
         GEPA-Pfandflasche 9999385 und GEPA-Pfandkiste 9999386)
-    * Spalten so benennen und arrangieren wie in der Artikelliste-Datei (gleiche Reihenfolge)
-    * Andere Spalten (z.B. Sortiment, Bestand, Barcode, etc.) leer lassen
-    * Preis (Spalte "je Einheit") geht in "Empf. VK-Preis"
-    * Spalte "Variabel" auf "Nein" setzen
+    * Spalten so benennen und arrangieren wie in der Artikelliste-Datei (gleiche Reihenfolge):
+        * Preis (Spalte "je Einheit") geht in "Empf. VK-Preis"
+        * "Bezeichnung" geht in "Kurzname"
+        * "VPE" nach "VPE", "Herkunftsland" nach "Herkunftsland"
+        * Spalten "Einheit" ("250", "g", "Beutel") und "x" ganz nach rechts verschieben in Spalten U bis X
+        * Spalte "Variabel" auf "Nein" setzen
+        * Andere Spalten (z.B. Sortiment, Bestand, Barcode, etc.) leer lassen
     * mit Formeln bearbeiten:
-        =CONCATENATE(F3, " | ", G3, " ", H3, " ", I3)       für "Bezeichnung | Einheit"
-                                                            (Kurzname ist der FHZ-Name)
-        =G3/1000                                            für "Menge"
-        =IF(I3="g", "kg", IF(I3="ml","l",""))               für "Einheit"
+        =CONCATENATE(E3, " | ", U3, " ", V3, " ", W3)       für "Bezeichnung | Einheit"
+                                                            dabei ist E3 der Kurzname (FHZ-Bezeichnung), U3, V3, W3 sind "250", "g", "Beutel"
+        =U3/1000                                            für "Menge"
+        =IF(V3="g", "kg", IF(V3="ml","l",""))               für "Einheit"
+	* Einheit-Spalte kopieren, mit Strg-V einfügen (nur Werte)
         * nach fehlender Einheit suchen (mit Ctrl-Down zu Lücken springen), in fast
             allen Fällen (außer z.B. Kokoblock) "St." eintragen und Menge anpassen (z.B.
             4 für Muskatnüsse)
@@ -45,10 +49,13 @@
         * After running script, search for "zu 0 " in output, correct the Menge
             values in the FHZ file and Einheit to "St." (e.g. Vanilleschoten
             'ma110100', 'sl115108', 'rfb116032')
-        =IF(D3="x", "Ja", "Nein")                           für "Sofort lieferbar"
+        =IF(X3="x", "Ja", "Nein")                           für "Sofort lieferbar"
     * Copy VPE column into vim, then
         :%s/[^0-9]//g
       Save as blabla, cat in terminal and copy and paste in LibreOffice
+    * Alle Spalten mit Formeln (einzeln) markieren, Strg-C, woanders
+      Strg-Shift-V (nur Werte einfügen), wieder kopieren und einfügen, sodass
+      die Formel überschrieben wird
     * Spalte "Menge": Markieren, "Format Cells", 5 decimal places
 9.) "File -> Save a Copy" und als csv-Datei exportieren.
     WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
