@@ -67,23 +67,32 @@ class KassenstandZuruecksetzenDialog extends DialogWindow
         }
         BigDecimal scheinDelta = scheinStand.subtract(bc.sollScheinKassenstand);
 
-        String gesamtDeltaText = delta.signum() >= 0 ?
-                "<span class='red'>"+bc.priceFormatter(delta)+" "+bc.currencySymbol+"</span> aus der Kasse entnommen werden, " :
-                "<span class='red'>"+bc.priceFormatter(delta.multiply(bc.minusOne))+" "+bc.currencySymbol+"</span> in die Kasse gegeben werden, ";
-        String muenzDeltaText = muenzDelta.signum() >= 0 ?
-                "<span class='red'>"+bc.priceFormatter(muenzDelta)+" "+bc.currencySymbol+"</span> in Münzen aus der Kasse entnommen werden" :
-                "<span class='red'>"+bc.priceFormatter(muenzDelta.multiply(bc.minusOne))+" "+bc.currencySymbol+"</span> in Münzen in die Kasse gegeben werden";
-        String scheinDeltaText = scheinDelta.signum() >= 0 ?
-                "<span class='red'>"+bc.priceFormatter(scheinDelta)+" "+bc.currencySymbol+"</span> in Scheinen aus der Kasse entnommen werden" :
-                "<span class='red'>"+bc.priceFormatter(scheinDelta.multiply(bc.minusOne))+" "+bc.currencySymbol+"</span> in Scheinen in die Kasse gegeben werden";
-        scheinDeltaText += " (am besten so, dass 5 mal 10 € und 10 mal 5 € verbleiben)";
+	BigDecimal kleinsterSchein = bc.schein_werte.get(0);
+	Boolean muenzMangel = false;
+	BigDecimal muenzTausch = new BigDecimal("0");
+	if (muenzDelta.signum() < 0) {
+		muenzMangel = true;
+		muenzTausch = muenzDelta.multiply(bc.minusOne).add(muenzStand.remainder(kleinsterSchein));
+		BigDecimal delta_remainder = delta.remainder(kleinsterSchein);
+		BigDecimal delta_glatt = delta.subtract(delta_remainder);
+		muenzDelta = delta_remainder;
+		scheinDelta = delta_glatt;
+	}
+	Boolean scheinMangel = false;
+	BigDecimal scheinTausch = new BigDecimal("0");
+	if (scheinDelta.signum() < 0) {
+		scheinMangel = true;
+		scheinTausch = scheinDelta.multiply(bc.minusOne);
+		muenzDelta = delta;
+		scheinDelta = new BigDecimal("0");
+	}
 
         JTextPane erklaerText = new JTextPane();
         erklaerText.setEditable(false);
-        erklaerText.setMinimumSize(new Dimension(400,200));
-        erklaerText.setPreferredSize(new Dimension(800,300));
+        erklaerText.setMinimumSize(new Dimension(400,400));
+        erklaerText.setPreferredSize(new Dimension(800,500));
         erklaerText.setContentType("text/html");
-        erklaerText.setText("<html>\n" +
+	String t = "<html>\n" +
                 "  <head>\n" +
                 "    <style type='text/css'>\n" +
                 "      body { font-family: sans-serif; font-weight: bold; font-size: 13px; }\n" +
@@ -93,26 +102,51 @@ class KassenstandZuruecksetzenDialog extends DialogWindow
                 "    </style>\n" +
                 "  </head>\n" +
                 "  <body>\n" +
-                "<p>Der Kassenstand soll, soweit möglich, auf <span class='blue'>"+
+                "<p>Der Kassenstand soll auf <span class='blue'>"+
                 bc.priceFormatter(sollKassenstand)+" "+bc.currencySymbol+"</span> "+
                 "gebracht werden. Idealerweise <span class='blue'>"+
                 bc.priceFormatter(bc.sollScheinKassenstand)+" "+bc.currencySymbol+"</span> "+
                 "in Scheinen (fünf 10 €- und zehn 5 €-Scheine) und <span class='blue'>"+
                 bc.priceFormatter(bc.sollMuenzKassenstand)+" "+bc.currencySymbol+"</span> in Münzen.</p>\n" +
-                "<p>Bei einem gezählten Kassenstand von <span class='green'>"+
+                "<p>Gezählter Kassenstand: <span class='green'>"+
                 bc.priceFormatter(gezaehlterKassenstand)+" "+bc.currencySymbol+"</span> (<span class='green'>"+
                 bc.priceFormatter(scheinStand)+" "+bc.currencySymbol+"</span> in Scheinen, <span class='green'>"+
-                bc.priceFormatter(muenzStand)+" "+bc.currencySymbol+"</span> in Münzen) müssen dafür "+
-                gesamtDeltaText +
-                "und zwar müssen:</p>\n"+
+                bc.priceFormatter(muenzStand)+" "+bc.currencySymbol+"</span> in Münzen).</p>\n"+
+		"<p>Aus der Kasse müssen entnommen werden: <span class='red'>"+
+		bc.priceFormatter(delta)+" "+bc.currencySymbol+"</span>.</p>\n"+
+                "Vorschlag:</p>\n"+
                 "<ul>\n"+
-                "  <li>"+scheinDeltaText+" und</li>\n"+
-                "  <li>"+muenzDeltaText+".</li>\n"+
-                "</ul>\n"+
-                "<p>Falls Wechselgeld gebraucht wird, kann es in der Wechselgeldkasse hinten im Lager "+
-                "gefunden werden (siehe Wiki).</p>\n"+
-                "  </body>\n"+
-                "</html>");
+                "  <li><span class='red'>"+bc.priceFormatter(scheinDelta)+" "+bc.currencySymbol+"</span> Scheingeld ";
+	if (!muenzMangel & !scheinMangel) {
+		t = t + "(am besten so, dass fünf 10 €-Scheine und zehn 5 €-Scheine verbleiben) ";
+	}
+	t = t + "und</li>\n"+
+                "  <li><span class='red'>"+bc.priceFormatter(muenzDelta)+" "+bc.currencySymbol+"</span> Münzgeld.</li>\n"+
+                "</ul>\n";
+	if (muenzMangel & !scheinMangel) {
+		t = t + "<p><b>NACH</b> der Geldentnahme zu beachten:</p>\n"+
+			"<p>Weniger als <span class='blue'>"+bc.priceFormatter(bc.sollMuenzKassenstand)+" "+bc.currencySymbol+"</span> Münzgeld in der Kasse! "+
+			"Bitte versuche, Scheine in Münzen zu tauschen.</p>\n"+
+			"<p>Vorschlag: Nimm <span class='red'>"+bc.priceFormatter(muenzTausch)+" "+bc.currencySymbol+"</span> Scheingeld aus der Kasse und tausche "+
+			"es mit Münzgeld aus der Wechselgeldkasse "+
+			"(am besten so, dass fünf 10 €-Scheine und zehn 5 €-Scheine in der Kasse verbleiben).</p>\n"+
+			"<p>Die Wechselgeldkasse befindet sich hinten im Lager (siehe Wiki).</p>\n"+
+			"<p><b>WICHTIG:</b> Der Betrag in der Kasse darf sich durchs Tauschen nicht verändern und soll "+
+			"immer noch <span class='blue'>"+bc.priceFormatter(sollKassenstand)+" "+bc.currencySymbol+"</span> betragen!</p>\n";
+	} else if (scheinMangel & !muenzMangel) {
+		t = t + "<p><b>NACH</b> der Geldentnahme zu beachten:</p>\n"+
+			"<p>Weniger als <span class='blue'>"+bc.priceFormatter(bc.sollScheinKassenstand)+" "+bc.currencySymbol+"</span> Scheingeld in der Kasse! "+
+			"Bitte versuche, Münzen in Scheine zu tauschen.</p>\n"+
+			"<p>Vorschlag: Nimm <span class='red'>"+bc.priceFormatter(scheinTausch)+" "+bc.currencySymbol+"</span> Münzgeld aus der Kasse und tausche "+
+			"es mit Scheingeld aus der Wechselgeldkasse "+
+			"(am besten so, dass sich danach fünf 10 €-Scheine und zehn 5 €-Scheine in der Kasse befinden).</p>\n"+
+			"<p>Die Wechselgeldkasse befindet sich hinten im Lager (siehe Wiki).</p>\n"+
+			"<p><b>WICHTIG:</b> Der Betrag in der Kasse darf sich durchs Tauschen nicht verändern und soll "+
+			"immer noch <span class='blue'>"+bc.priceFormatter(sollKassenstand)+" "+bc.currencySymbol+"</span> betragen.</p>\n";
+	}
+	t = t + "</body>\n"+
+		"</html>";
+        erklaerText.setText(t);
         erklaerText = makeLabelStyle(erklaerText);
         erklaerText.setFont(BaseClass.mediumFont);
         //erklaerText.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
