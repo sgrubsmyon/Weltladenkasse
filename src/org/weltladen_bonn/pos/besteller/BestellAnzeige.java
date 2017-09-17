@@ -724,7 +724,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             Date date = new SimpleDateFormat(bc.dateFormatJava).parse(oldDate);
             newDate = new SimpleDateFormat("dd.MM.yyyy").format(date);;
         } catch (java.text.ParseException ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            System.out.println("ParseException: " + ex.getMessage());
             ex.printStackTrace();
         }
 
@@ -922,8 +922,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 	    return;
 	}
         if (e.getSource() == exportButton){
-            String date = abrechnungsDates.get(exportIndex);
-            File exportDir = new File(System.getProperty("user.home")+bc.fileSep+formatDate(date, this.exportDirFormat));
+            SimpleDateFormat sdfOut = new SimpleDateFormat(bc.exportDirBestellung);
+            String formattedDate = sdfOut.format(new Date());
+            File exportDir = new File(System.getProperty("user.home") + bc.fileSep + formattedDate);
             boolean ok = true;
             if (!exportDir.exists()) {
             	ok = exportDir.mkdirs();
@@ -932,11 +933,10 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             	odsChooser.setCurrentDirectory(exportDir);
             } else {
             	JOptionPane.showMessageDialog(this,
-            			"Fehler: Ordner für "+titleStr+" unter "+exportDir+" existiert nicht "+
-            			"und konnte nicht angelegt werden.",
-            			"Fehler", JOptionPane.ERROR_MESSAGE);
+                                "Fehler: Ordner für Bestellungen unter "+exportDir+" existiert nicht "+
+                                "und konnte nicht angelegt werden.",
+                                "Fehler", JOptionPane.ERROR_MESSAGE);
             }
-
             String typ = (String)selBestellNrUndTyp.get(1);
             Vector<Object> bestellung = orderData.get(bestellNummernUndTyp.indexOf(selBestellNrUndTyp));
             if ( !typ.equals("IVT") ){
