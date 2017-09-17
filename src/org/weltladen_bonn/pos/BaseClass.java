@@ -34,6 +34,7 @@ public class BaseClass {
     public String exportDirAbrechnungTag;
     public String exportDirAbrechnungMonat;
     public String exportDirAbrechnungJahr;
+    public String exportDirBestellung;
 
     public final String fileSep = System.getProperty("file.separator");
     public final String lineSep = System.getProperty("line.separator");
@@ -196,6 +197,7 @@ public class BaseClass {
             this.exportDirAbrechnungTag = props.getProperty("exportDirAbrechnungTag");
             this.exportDirAbrechnungMonat = props.getProperty("exportDirAbrechnungMonat");
             this.exportDirAbrechnungJahr = props.getProperty("exportDirAbrechnungJahr");
+            this.exportDirBestellung = props.getProperty("exportDirBestellung");
         } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
             JOptionPane.showMessageDialog(null, "Fehler in der Konfigurationsdatei config.properties.\n"+
@@ -221,6 +223,7 @@ public class BaseClass {
             this.exportDirAbrechnungTag = "'Dokumente/Kasse/Tagesabrechnungen/'yyyy'/'MM MMMM";
             this.exportDirAbrechnungMonat = "'Dokumente/Kasse/Monatsabrechnungen/'yyyy";
             this.exportDirAbrechnungJahr = "'Dokumente/Kasse/Jahresabrechnungen'";
+            this.exportDirBestellung = "'Dokumente/Bestellungen/Bestellungen FHZ 'yyyy";
         }
         this.mysqlHost = removeQuotes(this.mysqlHost);
         this.printerName = removeQuotes(this.printerName);

@@ -922,6 +922,21 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 	    return;
 	}
         if (e.getSource() == exportButton){
+            String date = abrechnungsDates.get(exportIndex);
+            File exportDir = new File(System.getProperty("user.home")+bc.fileSep+formatDate(date, this.exportDirFormat));
+            boolean ok = true;
+            if (!exportDir.exists()) {
+            	ok = exportDir.mkdirs();
+            }
+            if (ok) {
+            	odsChooser.setCurrentDirectory(exportDir);
+            } else {
+            	JOptionPane.showMessageDialog(this,
+            			"Fehler: Ordner für "+titleStr+" unter "+exportDir+" existiert nicht "+
+            			"und konnte nicht angelegt werden.",
+            			"Fehler", JOptionPane.ERROR_MESSAGE);
+            }
+
             String typ = (String)selBestellNrUndTyp.get(1);
             Vector<Object> bestellung = orderData.get(bestellNummernUndTyp.indexOf(selBestellNrUndTyp));
             if ( !typ.equals("IVT") ){
