@@ -172,6 +172,10 @@ public class ArtikelExport extends WindowContent {
             row.add(varStr);
             row.add(herkunft);
             row.add(bestandStr);
+
+            // For poor man's progress indication:
+            System.out.println(row);
+
             data.add(row);
         }
 

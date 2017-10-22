@@ -44,7 +44,7 @@
 	* Einheit-Spalte kopieren, mit Strg-V einfügen (nur Werte)
         * nach fehlender Einheit suchen (mit Ctrl-Down zu Lücken springen), in fast
             allen Fällen (außer z.B. Kokoblock) "St." eintragen und Menge anpassen (z.B.
-            4 für Muskatnüsse)
+            5 für Muskatnüsse)
         OR:
         * After running script, search for "zu 0 " in output, correct the Menge
             values in the FHZ file and Einheit to "St." (e.g. Vanilleschoten
@@ -61,11 +61,16 @@
     WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
 10.) Dieses Skript aufrufen mit:
     --fhz FHZ_FILE.csv --wlb Artikelliste_LM.csv (-n) > log.txt
+     (-n übernimmt den Artikelnamen vom FHZ, wir haben
+     aber häufig Fehler im Namen korrigiert/angepasst, daher lieber nicht -n
+     benutzen. Außerdem generiert das unnötig viele Änderungen.)
 11.) Evtl. Probleme beheben, z.B.:
     * Dopplungen von Artikelnummern korrigieren (werden als erstes aufgelistet),
         diese erzeugen später weitere Fehlermeldungen (Fehler evtl. ans FHZ
         melden)
     * Änderungen prüfen und ggf. eingreifen
+    * ACHTUNG: Wenn Menge sich geändert hat, muss ggf. der Artikelname von Hand
+      geändert werden, wenn nicht -n benutzt wird.
     * Angebliche neue Artikel prüfen, ob nur ein Tippfehler in der Artikelnummer
         ist (Fehler evtl. ans FHZ melden)
 12.) Punkt 10 und 11 so lange ausführen, bis alles OK ist
