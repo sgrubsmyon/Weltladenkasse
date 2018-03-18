@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from optparse import OptionParser
 from getpass import getpass
@@ -9,7 +9,7 @@ z.T. gemäß der Rabattmatrix des FHZ (zwecks Inventur).
 
 * TODO: (optional) die Rundung bei Berechnung des EK-Preises aus dem Rabatt
 nicht MySQL überlassen, sondern in Python machen. Dann hat man mehr Kontrolle
-und kann z.B.  aussuchen, ob man als Rundungsmethode ROUND_HALF_UP (wie bisher
+und kann z.B. aussuchen, ob man als Rundungsmethode ROUND_HALF_UP (wie bisher
 von uns in Java genutzt und offenbar default in MySQL ist) oder eine andere
 Methode. Siehe hier:
     https://docs.python.org/3/library/decimal.html?highlight=decimal#module-decimal
@@ -25,25 +25,92 @@ hat, setzt.
   * Kohle
   * WL-Kochbuch
 
-Vor dem Ausführen gucken, ob Artikel fehlerhaften Empf. VK-Preis haben könnten (mehr als 5 Cent Abweichung)
-und ggf. korrigieren (am besten in der Java-Software, damit die Änderung dokumentiert wird und der EK-Preis
-automatisch neu berechnet wird). Query, um die Artikel aufzuspüren:
+
+## Ausführung vor der Inventur
+
+Zunächst DB-Backup anlegen.
+
+Wenn das Skript vor der Inventur ausgeführt wird (was evtl. nicht so viel Sinn
+macht, weil während der Inventur zum Teil noch Preise korrigiert werden, aber
+es könnte Sinn machen, wenn die Software bei jeder Preisänderung korrekt den
+neuen EK-Preis ausrechnet):
+
+Vor dem Ausführen gucken, ob Artikel fehlerhaften Empf. VK-Preis haben könnten
+(mehr als 5 Cent Abweichung) mit diesem SQL-Query:
+
+$ mysql -h mangopi -u mitarbeiter -p kasse
 > SELECT artikel_nr, lieferant_name, SUBSTR(artikel_name, 1, 50), setgroesse, vk_preis, ROUND(empf_vk_preis/setgroesse, 2)
 FROM artikel JOIN lieferant USING (lieferant_id)
 WHERE vk_preis IS NOT NULL AND empf_vk_preis IS NOT NULL
 AND ABS(vk_preis - empf_vk_preis/setgroesse) > 0.05 AND artikel.aktiv = TRUE;
 
+Ggf. korrigieren (am besten in der Java-Software, damit die Änderung dokumentiert
+wird und der EK-Preis automatisch neu berechnet wird).
+
+Aufruf des Skripts mit:
+$ ./einkaufspreise.py --host=mangopi -a (-n) (-e)
+Nutzung von '-a', um nur derzeit aktive Artikel zu verändern (sodass evtl.
+vorhandene alte Inventuren unangetastet bleiben).
+Nutzung von '-n' (DRY_RUN), um erst mal zu testen, was passieren wird.
+Eventuell Nutzung von '-e', falls bereits korrekte Einkaufspreise beibehalten
+werden sollen.
+
 Check, ob noch EK-Preise fehlen:
+
 > SELECT produktgruppen_id, produktgruppen_name, COUNT(*) FROM artikel JOIN produktgruppe USING (produktgruppen_id) WHERE ek_preis IS NULL AND vk_preis IS NOT NULL AND artikel.aktiv = TRUE GROUP BY produktgruppen_id;
 > SELECT produktgruppen_id, produktgruppen_name, lieferant_name, artikel_name FROM artikel JOIN produktgruppe USING (produktgruppen_id) JOIN lieferant USING (lieferant_id) WHERE ek_preis IS NULL AND vk_preis IS NOT NULL AND artikel.aktiv = TRUE;
+
+
+## Ausführung nach der Inventur
+
+Zunächst DB-Backup anlegen.
+
+Vor dem Ausführen gucken, ob Artikel fehlerhaften Empf. VK-Preis haben könnten
+(mehr als 5 Cent Abweichung) mit diesem SQL-Query (die Bestellnummern der
+Inventur, hier 246, 247 und 249, durch die jeweils gültigen ersetzen):
+
+$ mysql -h mangopi -u mitarbeiter -p kasse
+> SELECT artikel_id, artikel_nr, lieferant_name, SUBSTR(artikel_name, 1, 50), setgroesse, vk_preis, ROUND(empf_vk_preis/setgroesse, 2), artikel.aktiv
+FROM artikel JOIN lieferant USING (lieferant_id)
+WHERE vk_preis IS NOT NULL AND empf_vk_preis IS NOT NULL
+AND ABS(vk_preis - empf_vk_preis/setgroesse) > 0.05 AND artikel.artikel_id IN
+(SELECT artikel_id FROM bestellung_details WHERE bestell_nr IN (246,247,249));
+
+Ggf. korrigieren, aber nicht in der Java-Software, sondern direkt in SQL, da wir
+ja die schon inventurierten Artikel verändern müssen und keine neuen Artikel
+anlegen wollen. Also etwa:
+
+> UPDATE artikel SET vk_preis = 6.90, empf_vk_preis = 6.90 WHERE artikel_id = 30097;
+
+Aufruf des Skripts mit:
+$ ./einkaufspreise.py --host=mangopi -i 246,247,249 (-n) (-e)
+Angabe der Bestellnummern der Inventur über -i, komma-separiert.
+Nutzung von '-n' (DRY_RUN), um erst mal zu testen, was passieren wird.
+Eventuell Nutzung von '-e', falls bereits korrekte Einkaufsrabatte/Einkaufspreise
+beibehalten werden sollen. (Habe ich beim letzten mal genutzt, man kann aber
+gerne -n setzen und mal vergleichen, was sich ohne -e so tut. Eventuell gibt es
+Produkte, die zwar den richtigen Rabattwert haben, aber trotzdem einen falschen
+EK-Preis, der durch -e dann nicht neu berechnet wird. Das wird dann aber als
+"Abweichender EK-Preis bei Artikel mit ID ..." nach dem Setzen der EK-Rabatte
+angezeigt.)
+
+Check, ob noch EK-Preise fehlen (auch wieder Bestellnummern anpassen):
+
+> SELECT produktgruppen_id, produktgruppen_name, COUNT(*) FROM artikel JOIN produktgruppe USING (produktgruppen_id) WHERE ek_preis IS NULL AND vk_preis IS NOT NULL AND artikel.artikel_id IN (SELECT artikel_id FROM bestellung_details WHERE bestell_nr IN (246,247,249)) GROUP BY produktgruppen_id;
+> SELECT produktgruppen_id, produktgruppen_name, lieferant_name, artikel_name FROM artikel JOIN produktgruppe USING (produktgruppen_id) JOIN lieferant USING (lieferant_id) WHERE ek_preis IS NULL AND vk_preis IS NOT NULL AND artikel.artikel_id IN (SELECT artikel_id FROM bestellung_details WHERE bestell_nr IN (246,247,249));
 '''
 
 # install parser
 usage = "Usage: %prog   [OPTIONS]"
 parser = OptionParser(usage)
 
+def commaListToInt(option, opt, value, parser): # for parsing comma-separated values into a list of int
+    value = value.split(',')
+    value = [ int(v) for v in value ]
+    setattr(parser.values, option.dest, value)
+
 parser.add_option("--host", type="string",
-        default='localhost',
+        default="localhost",
         dest="HOST",
         help="The hostname of the host hosting the MySQL DB. (Default: "
         "'localhost')")
@@ -56,10 +123,20 @@ parser.add_option("-n", "--dry-run", action="store_true",
         default=False,
         dest="DRY_RUN",
         help="Do not change the DB, only show what would be changed?")
+parser.add_option("-a", "--on-active", action="store_true",
+        default=False,
+        dest="ONLY_ON_ACTIVE",
+        help="Operate only on currently active articles?")
 parser.add_option("-e", "--exclude-existing", action="store_true",
         default=False,
         dest="EXCLUDE_EXISTING",
-        help="Exclude the DB entries that already have the corrent rabatt/ekp?")
+        help="Exclude the active articles that already have the correct rabatt/ekp?")
+parser.add_option("-i", "--inventory_ids", action="callback",
+        default="", callback=commaListToInt, type="string",
+        dest="INVENTORY_IDS",
+        help="Only work on articles contained in the inventories with these "
+        "numbers (Bestellnummern). Comma-separated list, e.g. '246,247,249'.")
+
 
 # get parsed args
 (options, args) = parser.parse_args()
@@ -101,6 +178,7 @@ def construct_prod_gr_id_filter(conn, prod_gr='Kaffee'):
     cursor.execute(query, [prod_gr])
     #print(query, [prod_gr])
     top_id, sub_id, subsub_id = cursor.fetchall()[0]
+    cursor.close()
     filtr = "AND toplevel_id = %s "
     filtr_vals = [top_id]
     if (sub_id is not None):
@@ -112,17 +190,28 @@ def construct_prod_gr_id_filter(conn, prod_gr='Kaffee'):
     return (filtr, filtr_vals)
 
 
+def adjust_selector(selector_str, selector_vals):
+    if options.ONLY_ON_ACTIVE:
+        selector_str += " AND a.aktiv = TRUE"
+    if len(options.INVENTORY_IDS) > 0:
+        selector_str += (" AND a.artikel_id IN (SELECT artikel_id FROM bestellung_details "
+            "WHERE bestell_nr IN (" + ", ".join(np.repeat("%s", len(options.INVENTORY_IDS))) + "))")
+        selector_vals += options.INVENTORY_IDS
+    return (selector_str, selector_vals)
+
 
 def select(conn, selector_str, selector_vals, prod_gr='Kaffee',
         value_name='ek_rabatt', value_label='EK-Rabatt', value=0.15):
     res = np.array([])
     #with conn:
     cursor = conn.cursor()
+    selector_str, selector_vals = adjust_selector(selector_str, selector_vals)
     filtr, filtr_vals = construct_prod_gr_id_filter(conn, prod_gr=prod_gr)
     query = ("SELECT artikel_nr, artikel_name, "+value_name+" FROM artikel AS a "
         "INNER JOIN lieferant AS l USING (lieferant_id) "
         "INNER JOIN produktgruppe AS p USING (produktgruppen_id) "
-        "WHERE " + selector_str + " " + filtr)#"AND a.aktiv = TRUE"
+        "WHERE " + selector_str + " " + filtr)
+    print("")
     print("%s für folgende Artikel wird gesetzt auf: %s" % (value_label,
         value))
     # print(query)
@@ -130,6 +219,7 @@ def select(conn, selector_str, selector_vals, prod_gr='Kaffee',
     res = np.array(cursor.fetchall())
     cursor.close()
     print(res)
+    print("")
     return res.transpose()
 
 
@@ -143,7 +233,7 @@ def select_rabatt_by_lieferant(conn, lieferant='GEPA', prod_gr='Kaffee', rabatt=
     selector_str = "lieferant_name = %s"
     selector_vals = [lieferant]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND a.aktiv = TRUE AND (ek_rabatt IS NULL OR ek_rabatt != %s)"
+        selector_str += " AND (ek_rabatt IS NULL OR ek_rabatt != %s)"
         selector_vals += [rabatt]
     res = select_rabatt(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr, rabatt=rabatt)
@@ -155,7 +245,7 @@ def select_rabatt_by_name(conn, lieferant='GEPA', name='%credit%', prod_gr='Kaff
     selector_str = "lieferant_name = %s AND artikel_name LIKE %s"
     selector_vals = [lieferant, name]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND a.aktiv = TRUE AND (ek_rabatt IS NULL OR ek_rabatt != %s)"
+        selector_str += " AND (ek_rabatt IS NULL OR ek_rabatt != %s)"
         selector_vals += [rabatt]
     res = select_rabatt(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr, rabatt=rabatt)
@@ -174,7 +264,7 @@ def select_ekp_by_lieferant(conn, lieferant='Olaf Müller', prod_gr='Honig',
     selector_str = "lieferant_name = %s"
     selector_vals = [lieferant]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND a.aktiv = TRUE AND (ek_preis IS NULL OR ek_preis != %s)"
+        selector_str += " AND (ek_preis IS NULL OR ek_preis != %s)"
         selector_vals += [einkaufspreis]
     res = select_ekp(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr,
@@ -187,7 +277,7 @@ def select_ekp_by_name(conn, lieferant='FairMail', name='FairMail Postkarte',
     selector_str = "lieferant_name = %s AND artikel_name LIKE %s"
     selector_vals = [lieferant, name]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND a.aktiv = TRUE AND (ek_preis IS NULL OR ek_preis != %s)"
+        selector_str += " AND (ek_preis IS NULL OR ek_preis != %s)"
         selector_vals += [einkaufspreis]
     res = select_ekp(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr,
@@ -209,12 +299,13 @@ def update(conn, selector_str, selector_vals, prod_gr='Kaffee', set_str='ek_raba
         set_vals=[0.15]):
     #with conn:
     cursor = conn.cursor()
+    selector_str, selector_vals = adjust_selector(selector_str, selector_vals)
     filtr, filtr_values = construct_prod_gr_id_filter(conn, prod_gr=prod_gr)
     query = ("UPDATE artikel AS a "
         "INNER JOIN lieferant AS l USING (lieferant_id) "
         "INNER JOIN produktgruppe AS p USING (produktgruppen_id) "
         "SET " + set_str + " "
-        "WHERE " + selector_str + " " + filtr)#"AND a.aktiv = TRUE"
+        "WHERE " + selector_str + " " + filtr)
     #print(query)
     cursor.execute(query, set_vals + selector_vals + filtr_values)
     conn.commit()
@@ -231,7 +322,7 @@ def update_rabatt_by_lieferant(conn, lieferant='GEPA', prod_gr='Kaffee', rabatt=
     selector_str = "lieferant_name = %s"
     selector_vals = [lieferant]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND a.aktiv = TRUE AND (ek_rabatt IS NULL OR ek_rabatt != %s)"
+        selector_str += " AND (ek_rabatt IS NULL OR ek_rabatt != %s)"
         selector_vals += [rabatt]
     update_rabatt(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr, rabatt=rabatt)
@@ -242,7 +333,7 @@ def update_rabatt_by_name(conn, lieferant='GEPA', name='%credit%', prod_gr='Kaff
     selector_str = "lieferant_name = %s AND artikel_name LIKE %s"
     selector_vals = [lieferant, name]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND a.aktiv = TRUE AND (ek_rabatt IS NULL OR ek_rabatt != %s)"
+        selector_str += " AND (ek_rabatt IS NULL OR ek_rabatt != %s)"
         selector_vals += [rabatt]
     update_rabatt(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr, rabatt=rabatt)
@@ -259,7 +350,7 @@ def update_ekp_by_lieferant(conn, lieferant='Olaf Müller', prod_gr='Honig',
     selector_str = "lieferant_name = %s"
     selector_vals = [lieferant]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND a.aktiv = TRUE AND (ek_preis IS NULL OR ek_preis != %s)"
+        selector_str += " AND (ek_preis IS NULL OR ek_preis != %s)"
         selector_vals += [einkaufspreis]
     update_ekp(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr,
@@ -271,7 +362,7 @@ def update_ekp_by_name(conn, lieferant='FairMail', name='FairMail Postkarte',
     selector_str = "lieferant_name = %s AND artikel_name LIKE %s"
     selector_vals = [lieferant, name]
     if options.EXCLUDE_EXISTING:
-        selector_str += " AND a.aktiv = TRUE AND (ek_preis IS NULL OR ek_preis != %s)"
+        selector_str += " AND (ek_preis IS NULL OR ek_preis != %s)"
         selector_vals += [einkaufspreis]
     update_ekp(conn, selector_str=selector_str,
             selector_vals=selector_vals, prod_gr=prod_gr,
@@ -328,6 +419,8 @@ conn = mysql.connector.connect(host=options.HOST, user="mitarbeiter",
 # Setzen von fehlenden Empf. VK-Preisen
 ########################################
 
+print("")
+
 count = count_missing_empf_vkp(conn)
 if (count > 0):
     print("Bei %s Artikeln gibt es einen VK-Preis aber keinen empf. VK-Preis." % count)
@@ -336,6 +429,8 @@ if (count > 0):
                 "werden? (y/n) ")
         if (yesno.lower() == 'y'):
             set_vkp_as_empf_vkp(conn)
+
+print("")
 
 
 #########################
@@ -522,7 +617,6 @@ rabatt_setzen_by_name(conn, lieferant='GEPA', name='%Geschenkgutschein%',
 rabatt_setzen_by_lieferant(conn, lieferant='El Puente', prod_gr='Bücher', rabatt=0.15)
 
 
-
 ####################################################################
 # Prüfen, ob all EK-Preise korrekt sind und wenn nötig korrigieren #
 ####################################################################
@@ -533,17 +627,40 @@ query = ("SELECT artikel_id FROM artikel "
 cursor = conn.cursor()
 cursor.execute(query)
 res = np.array(cursor.fetchall())
-cursor.close()
 
-for artikel_id in res:
+print("")
+print("%s Artikel mit vorhandenem, aber abweichendem EK-Preis." % len(res))
+for artikel in res:
+    artikel_id = int(artikel[0])
     print("Abweichender EK-Preis bei Artikel mit ID '%s'" % artikel_id)
     if not options.DRY_RUN:
         print("Wird mit neuem EK-Preis aktualisiert.")
         query = ("UPDATE artikel SET ek_preis = (1.-ek_rabatt)*empf_vk_preis "
             "WHERE artikel_id = %s")
-        cursor.execute(query, artikel_id)
+        cursor.execute(query, [artikel_id])
+print("")
 
 
+
+query = ("SELECT artikel_id FROM artikel "
+    "WHERE ek_preis IS NULL AND empf_vk_preis IS NOT NULL AND ek_rabatt IS NOT NULL")
+cursor = conn.cursor()
+cursor.execute(query)
+res = np.array(cursor.fetchall())
+
+print("")
+print("%s Artikel mit fehlendem EK-Preis." % len(res))
+for artikel in res:
+    artikel_id = int(artikel[0])
+    print("Fehlender EK-Preis bei Artikel mit ID '%s'" % artikel_id)
+    if not options.DRY_RUN:
+        print("EK-Preis wird berechnet und aktualisiert.")
+        query = ("UPDATE artikel SET ek_preis = (1.-ek_rabatt)*empf_vk_preis "
+            "WHERE artikel_id = %s")
+        cursor.execute(query, [artikel_id])
+print("")
+
+cursor.close()
 
 
 #######################
@@ -595,19 +712,27 @@ ekp_setzen_by_name(conn, lieferant='Memo', name='collegeblock%kariert%',
         prod_gr='Sonstiges Papier', einkaufspreis=1.65)
 ekp_setzen_by_name(conn, lieferant='Memo', name='collegeblock%liniert%',
         prod_gr='Sonstiges Papier', einkaufspreis=1.65)
-ekp_setzen_by_name(conn, lieferant='Memo', name='%briefumschlag%',
-        prod_gr='Sonstiges Papier', einkaufspreis=0.04)
+ekp_setzen_by_name(conn, lieferant='Memo', name='%briefumschlag%fenster%',
+        prod_gr='Briefpapier und -umschläge', einkaufspreis=0.04)
+ekp_setzen_by_name(conn, lieferant='Memo', name='%briefumschlag%atlaspapier%',
+        prod_gr='Briefpapier und -umschläge', einkaufspreis=0.08)
 ekp_setzen_by_name(conn, lieferant='Memo', name='%kopierpapier%',
         prod_gr='Sonstiges Papier', einkaufspreis=2.37)
 ekp_setzen_by_name(conn, lieferant='Memo', name='10 teelichte%',
         prod_gr='Ergänzungsprodukte', einkaufspreis=4.15)
 ekp_setzen_by_name(conn, lieferant='Memo', name='teelichtbehälter%',
         prod_gr='Ergänzungsprodukte', einkaufspreis=0.53)
-
+ekp_setzen_by_name(conn, lieferant='Memo', name='tafelkerze%',
+        prod_gr='Ergänzungsprodukte', einkaufspreis=1.18)
 
 ### Exil Music
 ekp_setzen_by_name(conn, lieferant='Exil Music', name='Putumayo%',
         prod_gr='Putumayo', einkaufspreis=10.00)
+
+
+### Bonner Geschichtswerkstatt
+ekp_setzen_by_name(conn, lieferant='Bonner Geschichtswerkstatt', name='Lieber Leser%',
+        prod_gr='Bücher', einkaufspreis=3.00)
 
 
 conn.close()
