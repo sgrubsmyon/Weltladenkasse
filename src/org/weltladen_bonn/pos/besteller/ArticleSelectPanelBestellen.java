@@ -19,7 +19,8 @@ public class ArticleSelectPanelBestellen extends ArticleSelectPanelGrundlage {
 
     public ArticleSelectPanelBestellen(Connection conn, MainWindowGrundlage mw,
             Bestellen bestellen, TabbedPane tabbedPane) {
-        super(conn, mw, bestellen);
+        super(conn, mw, bestellen, " AND (toplevel_id IS NOT NULL OR sub_id = 2 OR sub_id = 3 OR sub_id = 4) ");
+          // filterStr: exceptions for Gutschein (sub_id = 2), regular Pfand for inventories (sub_id = 3) and Pfand optional (sub_id = 4)
         this.bestellen = bestellen;
         this.tabbedPane = tabbedPane;
     }

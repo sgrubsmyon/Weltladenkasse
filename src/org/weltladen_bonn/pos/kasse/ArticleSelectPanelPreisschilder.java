@@ -14,7 +14,7 @@ public class ArticleSelectPanelPreisschilder extends ArticleSelectPanelGrundlage
 
     public ArticleSelectPanelPreisschilder(Connection conn, MainWindowGrundlage mw,
             PreisschilderFormular preisschilder) {
-        super(conn, mw, preisschilder);
+        super(conn, mw, preisschilder, null);
         this.preisschilder = preisschilder;
     }
 

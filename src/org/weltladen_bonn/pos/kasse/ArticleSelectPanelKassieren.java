@@ -17,7 +17,7 @@ public class ArticleSelectPanelKassieren extends ArticleSelectPanelGrundlage {
 
     public ArticleSelectPanelKassieren(Connection conn, MainWindowGrundlage mw,
             Kassieren kassieren, TabbedPane tabbedPane) {
-        super(conn, mw, kassieren);
+        super(conn, mw, kassieren, null);
         this.kassieren = kassieren;
         this.tabbedPane = tabbedPane;
     }

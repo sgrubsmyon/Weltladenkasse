@@ -46,8 +46,11 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
     // Gutscheine (where toplevel_id is NULL and sub_id is 2):
     private String filterStr = " AND (toplevel_id IS NOT NULL OR sub_id = 2 OR sub_id = 4) "; // exceptions for Gutschein (sub_id = 2) and Pfand optional (sub_id = 4)
 
-    public ArticleSelectPanelGrundlage(Connection conn, MainWindowGrundlage mw, ArticleSelectUser asu) {
+    public ArticleSelectPanelGrundlage(Connection conn, MainWindowGrundlage mw, ArticleSelectUser asu, String fs) {
         super(conn, mw);
+        if (fs != null) {
+          filterStr = fs;
+        }
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         this.articleSelectUser = asu;
 
