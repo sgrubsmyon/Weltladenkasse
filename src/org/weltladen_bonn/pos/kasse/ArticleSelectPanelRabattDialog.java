@@ -16,7 +16,7 @@ public class ArticleSelectPanelRabattDialog extends ArticleSelectPanelGrundlage 
 
     public ArticleSelectPanelRabattDialog(Connection conn, MainWindowGrundlage mw,
             RabattDialog rd, OptionTabbedPane tabbedPane) {
-        super(conn, mw, rd);
+        super(conn, mw, rd, null);
         this.tabbedPane = tabbedPane;
         String filterStr = " AND variabler_preis = FALSE AND toplevel_id IS NOT NULL ";
         barcodeBox.setFilterStr(filterStr);
