@@ -617,6 +617,11 @@ rabatt_setzen_by_name(conn, lieferant='GEPA', name='%Geschenkgutschein%',
 rabatt_setzen_by_lieferant(conn, lieferant='El Puente', prod_gr='Bücher', rabatt=0.15)
 
 
+### Frida Feeling
+rabatt_setzen_by_lieferant(conn, lieferant='Frida Feeling', prod_gr='Kunsthandwerk', rabatt=0.40)
+
+
+
 ####################################################################
 # Prüfen, ob all EK-Preise korrekt sind und wenn nötig korrigieren #
 ####################################################################
