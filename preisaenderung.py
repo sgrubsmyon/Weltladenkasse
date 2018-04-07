@@ -23,7 +23,7 @@
         Ctrl-Shift-V (Formatierung wird gelöscht)
     * 'File -> Save As' als "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX.ods"
     * Alle Zeilen, die leer sind oder Überschrift (Produktgruppe) enthalten, löschen:
-        In Spalte "Lieferant" mit Ctrl-Down springen, Zellen aus Zeilen
+        In Spalte "Lieferant" oder "Bezeichnung" mit Ctrl-Down springen, Zellen aus Zeilen
         markieren, Ctrl-Minus, Delete entire row(s)
     * Alle Pfandartikel (leere Flaschen und Kästen) löschen (von PFAND1 bis
         PFANDKISTE2), denn wir haben ein anderes Pfandsystem (bei uns entspricht
@@ -34,6 +34,7 @@
         * "Bezeichnung" geht in "Kurzname"
         * "VPE" nach "VPE", "Herkunftsland" nach "Herkunftsland"
         * Spalten "Einheit" ("250", "g", "Beutel") und "x" ganz nach rechts verschieben in Spalten U bis X
+            (Einheit in U bis W, x in X)
         * Spalte "Variabel" auf "Nein" setzen
         * Andere Spalten (z.B. Sortiment, Bestand, Barcode, etc.) leer lassen
     * mit Formeln bearbeiten:
@@ -50,12 +51,13 @@
             values in the FHZ file and Einheit to "St." (e.g. Vanilleschoten
             'ma110100', 'sl115108', 'rfb116032')
         =IF(X3="x", "Ja", "Nein")                           für "Sofort lieferbar"
-    * Copy VPE column into vim, then
+    Looks like not necessary anymore:
+    (* Copy VPE column into vim, then
         :%s/[^0-9]//g
-      Save as blabla, cat in terminal and copy and paste in LibreOffice
-    * Alle Spalten mit Formeln (einzeln) markieren, Strg-C, woanders
-      Strg-Shift-V (nur Werte einfügen), wieder kopieren und einfügen, sodass
-      die Formel überschrieben wird
+      Save as blabla, cat in terminal and copy and paste in LibreOffice)
+    * Alle Spalten mit Formeln (einzeln) markieren, Strg-C, an gleicher Stelle
+      Strg-Shift-V (nur Werte einfügen), sodass die Formel überschrieben wird
+    * Dann die Spalten, die in Formeln benutzt wurden, löschen (U bis X)
     * Spalte "Menge": Markieren, "Format Cells", 5 decimal places
 9.) "File -> Save a Copy" und als csv-Datei exportieren.
     WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
@@ -69,11 +71,11 @@
         diese erzeugen später weitere Fehlermeldungen (Fehler evtl. ans FHZ
         melden)
     * Änderungen prüfen und ggf. eingreifen
-    * ACHTUNG: Wenn Menge sich geändert hat, muss ggf. der Artikelname von Hand
-      geändert werden, wenn nicht -n benutzt wird.
+    * ACHTUNG: Wenn Menge oder Einheit sich geändert haben, muss ggf. der Artikelname
+      in preisänderung.csv von Hand geändert werden, wenn nicht -n benutzt wird.
     * Angebliche neue Artikel prüfen, ob nur ein Tippfehler in der Artikelnummer
         ist (Fehler evtl. ans FHZ melden)
-12.) Punkt 10 und 11 so lange ausführen, bis alles OK ist
+12.) Punkt 10 und 11 so lange ausführen, bis alles OK ist.
 13.) Ergebnisse werden gespeichert in Dateien:
     * "preisänderung.csv" (alle Artikel, aktualisiert)
     * "preisänderung_geänderte_preise.csv" (alle Artikel, deren Preis sich verändert hat)
@@ -106,6 +108,9 @@
     entspr. Spalte eintragen. Speichern als "preisänderung_neue_artikel.ods".
 20.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
     die Datei "preisänderung_neue_artikel.ods" auswählen.
+21.) Evtl. schon vorhandene Artikel (z.B. Wein-Geschenkkartons), die jetzt rot
+    markiert sind, aus "preisänderung_neue_artikel.ods" löschen. Wenn Änderungen
+    nötig sind (z.B. Preis), dann Artikel von Hand verändern.
 '''
 
 import re
