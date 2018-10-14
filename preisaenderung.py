@@ -29,6 +29,9 @@
         PFANDKISTE2), denn wir haben ein anderes Pfandsystem (bei uns entspricht
         PFAND2 der 0,33 l Flasche für 8 ct, dafür haben wir nicht die
         GEPA-Pfandflasche 9999385 und GEPA-Pfandkiste 9999386)
+    * Artikel ohne Lieferant einen Lieferanten geben:
+        Wein-Geschenkkarton -> FHZ Rheinland
+        Kaffeefilter, Teefilter, Teefilter-Clip -> FHZ Rheinland
     * Spalten so benennen und arrangieren wie in der Artikelliste-Datei (gleiche Reihenfolge):
         * Preis (Spalte "je Einheit") geht in "Empf. VK-Preis"
         * "Bezeichnung" geht in "Kurzname"
