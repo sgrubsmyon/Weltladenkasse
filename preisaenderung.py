@@ -205,9 +205,8 @@ def returnRoundedPrice(preis):
 def writeOutAsCSV(df, filename, only_index=False):
     out = df.reset_index()
     c = out.columns.tolist()
-    # change column order: first Produktgruppe, then index (Lieferant,
-    # Artikelnummer)
-    c = c[2:3] + c[0:2] + c[3:]
+    # change column order: first Produktgruppe, then Lieferant, then Artikelnummer, then rest
+    c = [c[2], ] + [c[0], ] + [c[-1], ] + c[3:-1]
     out = out.reindex_axis(c, axis=1)
     if only_index:
         out.to_csv(filename, sep=';', index=False, columns=(c[1], c[2]))
@@ -328,6 +327,9 @@ def main():
         if i[0] == 'dwp' else i, fhz.index.tolist())), names=fhz.index.names)
 
     # Make all article numbers lower case for better comparison:
+      # First store the original article numbers:
+    fhz['orig_art_nr'] = list(map(lambda i: i[1], fhz.index.tolist()))
+    wlb['orig_art_nr'] = list(map(lambda i: i[1], wlb.index.tolist()))
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: (i[0], i[1].lower()),
         fhz.index.tolist())), names=fhz.index.names)
     wlb.index = pd.MultiIndex.from_tuples(list(map(lambda i: (i[0], i[1].lower()),
