@@ -327,10 +327,98 @@ def main():
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('dwp', convert_art_number_dwp(i[1]))
         if i[0] == 'dwp' else i, fhz.index.tolist())), names=fhz.index.names)
 
+    # Make all article numbers lower case for better comparison:
+    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: (i[0], i[1].lower()),
+        fhz.index.tolist())), names=fhz.index.names)
+    wlb.index = pd.MultiIndex.from_tuples(list(map(lambda i: (i[0], i[1].lower()),
+        wlb.index.tolist())), names=wlb.index.names)
+
 
     #################################################
     # Adopt values from FHZ (for existing articles) #
     #################################################
+
+    def adopt_values(fhz_row, fhz_preis, name, sth_printed, price_changed,
+            wlb_neu, wlb_row, geaenderte_preise, count):
+        #print(wlb_row)
+        #print(type(wlb_row))
+        # adopt the rec. sales price and the "Lieferbarkeit" directly and completely
+        # See
+        # http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy,
+        # very bottom
+        wlb_neu.loc[name, 'Empf. VK-Preis'] = str(fhz_preis)
+        wlb_neu.loc[name, 'Sofort lieferbar'] = fhz_row['Sofort lieferbar']
+        #print(wlb_row['VK-Preis'])
+        #print(type(wlb_row['VK-Preis']))
+        wlb_preis = Decimal(wlb_row['VK-Preis'])
+        setgroesse = int(wlb_row['Setgröße'])
+
+        # adopt the sale price only if significantly changed:
+        if not fhz_preis.is_nan() and not wlb_preis.is_nan():
+            if (fhz_preis >= Decimal('2.')*wlb_preis) or (setgroesse > 1):
+                # price is at least twice, this indicates that this is a set:
+                print("Setgröße > 1 detektiert.")
+                print("WLB-Preis:", wlb_preis, "FHZ-Preis:", fhz_preis,
+                        "(%s)" % fhz_row['Bezeichnung | Einheit'])
+                fhz_preis = round(fhz_preis / setgroesse, 2)
+                print("Alte (WLB) setgroesse:", setgroesse,
+                        "   (Bitte prüfen, ob korrekt!)")
+                print("FHZ-Preis wird zu FHZ-Preis / %s = %s" % (setgroesse,
+                    fhz_preis))
+                print("")
+                sth_printed = True
+            fhz_preis = returnRoundedPrice(fhz_preis)
+            #if ( abs(fhz_preis - wlb_preis) > 0.021 ):
+            if ( abs(fhz_preis - wlb_preis) > 0. ):
+                # price seems to deviate more than usual
+                count += 1
+                if wlb_row['Sortiment'] == 'Ja':
+                    print("Alter (WLB) Preis: %s   Neuer (FHZ) Preis: %s\n"
+                            "FHZ: %s   (%s)    Sortiment: %s\n"
+                            "WLB: %s   (%s)    Sortiment: %s" % (wlb_preis, fhz_preis,
+                                fhz_row['Bezeichnung | Einheit'], name, fhz_row['Sortiment'],
+                                wlb_row['Bezeichnung | Einheit'], name, wlb_row['Sortiment']))
+                    sth_printed = True
+                if wlb_row['Sortiment'] == 'Ja':
+                    print("Ändere Preis von:", str(wlb_preis), " zu:", str(fhz_preis))
+                    sth_printed = True
+                wlb_neu.loc[name, 'VK-Preis'] = str(fhz_preis)
+                geaenderte_preise = geaenderte_preise.append(wlb_neu.loc[name])
+                price_changed = True
+
+        if options.ADOPT_NAMES:
+            #### adopt the article name
+            wlb_neu.loc[name, 'Bezeichnung | Einheit'] = fhz_row['Bezeichnung | Einheit']
+
+        # adopt VPE
+        if fhz_row['VPE'] != wlb_row['VPE']:
+            print("Ändere VPE für %s (%s) von %s (WLB) zu %s (FHZ)" % (name,
+                wlb_row['Bezeichnung | Einheit'], wlb_row['VPE'], fhz_row['VPE']))
+            wlb_neu.loc[name, 'VPE'] = fhz_row['VPE']
+            sth_printed = True
+
+        # adopt Menge
+        fhz_menge = float(fhz_row['Menge (kg/l/St.)']) / setgroesse
+        if fhz_menge != float(wlb_row['Menge (kg/l/St.)']):
+            print("Ändere Menge für %s (%s) von %s (WLB) zu %s (FHZ)" % (name,
+                    wlb_row['Bezeichnung | Einheit'], float(wlb_row['Menge (kg/l/St.)']),
+                    fhz_menge))
+            wlb_neu.loc[name, 'Menge (kg/l/St.)'] = '%.5f' % fhz_menge
+            sth_printed = True
+            if not price_changed:
+                geaenderte_preise = geaenderte_preise.append(wlb_neu.loc[name])
+                price_changed = True
+
+        # adopt Einheit
+        if fhz_row['Einheit'] != wlb_row['Einheit']:
+            print("Ändere Einheit für %s (%s) von %s (WLB) zu %s (FHZ)" % (name,
+                    wlb_row['Bezeichnung | Einheit'], wlb_row['Einheit'], fhz_row['Einheit']))
+            wlb_neu.loc[name, 'Einheit'] = fhz_row['Einheit']
+            sth_printed = True
+
+        return (fhz_row, fhz_preis, name, sth_printed, price_changed, wlb_neu,
+                wlb_row, geaenderte_preise, count)
+
 
     count = 0
     print('\n\n\n')
@@ -345,78 +433,20 @@ def main():
         sth_printed = False
         price_changed = False
         try:
-            wlb_row = wlb_neu.loc[name]
-            # adopt the rec. sale price and the "Lieferbarkeit" directly and completely
-            # See
-            # http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy,
-            # very bottom
-            wlb_neu.loc[name, 'Empf. VK-Preis'] = str(fhz_preis)
-            wlb_neu.loc[name, 'Sofort lieferbar'] = fhz_row['Sofort lieferbar']
-            wlb_preis = Decimal(wlb_row['VK-Preis'])
-            setgroesse = int(wlb_row['Setgröße'])
+            wlb_match = wlb_neu.loc[name]
+            if type(wlb_match) == pd.DataFrame:
+                for j in range(len(wlb_match)):
+                    wlb_row = wlb_match.iloc[j]
+                    (fhz_row, fhz_preis, name, sth_printed, price_changed,
+                            wlb_neu, wlb_row, geaenderte_preise, count) = adopt_values(
+                                    fhz_row, fhz_preis, name, sth_printed, price_changed,
+                                    wlb_neu, wlb_row, geaenderte_preise, count)
+            else:
+                (fhz_row, fhz_preis, name, sth_printed, price_changed,
+                        wlb_neu, wlb_match, geaenderte_preise, count) = adopt_values(
+                                fhz_row, fhz_preis, name, sth_printed, price_changed,
+                                wlb_neu, wlb_match, geaenderte_preise, count)
 
-            # adopt the sale price only if significantly changed:
-            if not fhz_preis.is_nan() and not wlb_preis.is_nan():
-                if (fhz_preis >= Decimal('2.')*wlb_preis) or (setgroesse > 1):
-                    # price is at least twice, this indicates that this is a set:
-                    print("Setgröße > 1 detektiert.")
-                    print("WLB-Preis:", wlb_preis, "FHZ-Preis:", fhz_preis,
-                            "(%s)" % fhz_row['Bezeichnung | Einheit'])
-                    fhz_preis = round(fhz_preis / setgroesse, 2)
-                    print("Alte (WLB) setgroesse:", setgroesse,
-                            "   (Bitte prüfen, ob korrekt!)")
-                    print("FHZ-Preis wird zu FHZ-Preis / %s = %s" % (setgroesse,
-                        fhz_preis))
-                    print("")
-                    sth_printed = True
-                fhz_preis = returnRoundedPrice(fhz_preis)
-                #if ( abs(fhz_preis - wlb_preis) > 0.021 ):
-                if ( abs(fhz_preis - wlb_preis) > 0. ):
-                    # price seems to deviate more than usual
-                    count += 1
-                    if wlb_row['Sortiment'] == 'Ja':
-                        print("Alter (WLB) Preis: %s   Neuer (FHZ) Preis: %s\n"
-                                "FHZ: %s   (%s)    Sortiment: %s\n"
-                                "WLB: %s   (%s)    Sortiment: %s" % (wlb_preis, fhz_preis,
-                                    fhz_row['Bezeichnung | Einheit'], name, fhz_row['Sortiment'],
-                                    wlb_row['Bezeichnung | Einheit'], name, wlb_row['Sortiment']))
-                        sth_printed = True
-                    if wlb_row['Sortiment'] == 'Ja':
-                        print("Ändere Preis von:", str(wlb_preis), " zu:", str(fhz_preis))
-                        sth_printed = True
-                    wlb_neu.loc[name, 'VK-Preis'] = str(fhz_preis)
-                    geaenderte_preise = geaenderte_preise.append(wlb_neu.loc[name])
-                    price_changed = True
-
-            if options.ADOPT_NAMES:
-                #### adopt the article name
-                wlb_neu.loc[name, 'Bezeichnung | Einheit'] = fhz_row['Bezeichnung | Einheit']
-
-            # adopt VPE
-            if fhz_row['VPE'] != wlb_row['VPE']:
-                print("Ändere VPE für %s (%s) von %s (WLB) zu %s (FHZ)" % (name,
-                    wlb_row['Bezeichnung | Einheit'], wlb_row['VPE'], fhz_row['VPE']))
-                wlb_neu.loc[name, 'VPE'] = fhz_row['VPE']
-                sth_printed = True
-
-            # adopt Menge
-            fhz_menge = float(fhz_row['Menge (kg/l/St.)']) / setgroesse
-            if fhz_menge != float(wlb_row['Menge (kg/l/St.)']):
-                print("Ändere Menge für %s (%s) von %s (WLB) zu %s (FHZ)" % (name,
-                        wlb_row['Bezeichnung | Einheit'], float(wlb_row['Menge (kg/l/St.)']),
-                        fhz_menge))
-                wlb_neu.loc[name, 'Menge (kg/l/St.)'] = '%.5f' % fhz_menge
-                sth_printed = True
-                if not price_changed:
-                    geaenderte_preise = geaenderte_preise.append(wlb_neu.loc[name])
-                    price_changed = True
-
-            # adopt Einheit
-            if fhz_row['Einheit'] != wlb_row['Einheit']:
-                print("Ändere Einheit für %s (%s) von %s (WLB) zu %s (FHZ)" % (name,
-                        wlb_row['Bezeichnung | Einheit'], wlb_row['Einheit'], fhz_row['Einheit']))
-                wlb_neu.loc[name, 'Einheit'] = fhz_row['Einheit']
-                sth_printed = True
         except KeyError:
             pass
         if sth_printed:
@@ -474,8 +504,13 @@ def main():
         name = fhz_row.name
         fhz_preis = Decimal(fhz_row['Empf. VK-Preis'])
         try:
-            wlb_row = wlb_neu.loc[name]
-            wlb_preis = Decimal(wlb_row['Empf. VK-Preis'])
+            wlb_match = wlb_neu.loc[name]
+            if type(wlb_match) == pd.DataFrame:
+                for j in range(len(wlb_match)):
+                    wlb_row = wlb_match.iloc[j]
+                    wlb_preis = Decimal(wlb_row['Empf. VK-Preis'])
+            else:
+                wlb_preis = Decimal(wlb_match['Empf. VK-Preis'])
         except KeyError:
             wlb_preis = Decimal(np.nan)
         if ( not fhz_preis.is_nan() and not wlb_preis.is_nan() and
