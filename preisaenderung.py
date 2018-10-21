@@ -328,8 +328,12 @@ def main():
 
     # Make all article numbers lower case for better comparison:
       # First store the original article numbers:
-    fhz['orig_art_nr'] = list(map(lambda i: i[1], fhz.index.tolist()))
-    wlb['orig_art_nr'] = list(map(lambda i: i[1], wlb.index.tolist()))
+    fhz = fhz.rename(columns={'Artikelnummer': 'Artikelnummer kleingeschrieben'})
+    wlb = wlb.rename(columns={'Artikelnummer': 'Artikelnummer kleingeschrieben'})
+    fhz.index.names = ['Lieferant', 'Artikelnummer kleingeschrieben']
+    wlb.index.names = ['Lieferant', 'Artikelnummer kleingeschrieben']
+    fhz['Artikelnummer'] = list(map(lambda i: i[1], fhz.index.tolist()))
+    wlb['Artikelnummer'] = list(map(lambda i: i[1], wlb.index.tolist()))
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: (i[0], i[1].lower()),
         fhz.index.tolist())), names=fhz.index.names)
     wlb.index = pd.MultiIndex.from_tuples(list(map(lambda i: (i[0], i[1].lower()),
