@@ -98,7 +98,7 @@
         werden.
         Daher: Die Spalte "Menge (kg/l/St.)" anklicken und Typ auf "Text"
             setzen.
-15.) Als ods-Datei speichern (Save a copy, "Artikelliste_LM_NEU.ods").
+15.) Als ods-Datei speichern (Save As, "Artikelliste_LM_NEU.ods").
 16.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
     die Datei "Artikelliste_LM_NEU.ods" auswählen.
 17.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
