@@ -99,5 +99,6 @@ INSERT INTO `produktgruppe` (`produktgruppen_id`, `toplevel_id`, `sub_id`, `subs
 INSERT INTO `produktgruppe` (`produktgruppen_id`, `toplevel_id`, `sub_id`, `subsub_id`, `produktgruppen_name`, `mwst_id`, `pfand_id`, `std_einheit`, `n_artikel`, `n_artikel_rekursiv`, `aktiv`) VALUES (106,4,19,5,'Briefpapier und -umschläge',3,NULL,'St.',NULL,NULL,1);
 INSERT INTO `produktgruppe` (`produktgruppen_id`, `toplevel_id`, `sub_id`, `subsub_id`, `produktgruppen_name`, `mwst_id`, `pfand_id`, `std_einheit`, `n_artikel`, `n_artikel_rekursiv`, `aktiv`) VALUES (107,5,NULL,NULL,'Ergänzungsprodukte',3,NULL,'St.',NULL,NULL,1);
 INSERT INTO `produktgruppe` (`produktgruppen_id`, `toplevel_id`, `sub_id`, `subsub_id`, `produktgruppen_name`, `mwst_id`, `pfand_id`, `std_einheit`, `n_artikel`, `n_artikel_rekursiv`, `aktiv`) VALUES (108,4,19,6,'Notizbücher und Fotoalben',3,NULL,'St.',NULL,NULL,1);
+INSERT INTO `produktgruppe` (`produktgruppen_id`, `toplevel_id`, `sub_id`, `subsub_id`, `produktgruppen_name`, `mwst_id`, `pfand_id`, `std_einheit`, `n_artikel`, `n_artikel_rekursiv`, `aktiv`) VALUES (109,4,19,7,'Infomaterial',3,NULL,'St.',NULL,NULL,1);
 /*!40000 ALTER TABLE `produktgruppe` ENABLE KEYS */;
 UNLOCK TABLES;
