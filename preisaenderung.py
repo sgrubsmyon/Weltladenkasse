@@ -344,8 +344,8 @@ def main():
     # Adopt values from FHZ (for existing articles) #
     #################################################
 
-    def adopt_values(fhz_row, fhz_preis, name, sth_printed, price_changed,
-            wlb_neu, wlb_row, geaenderte_preise, count):
+    def adopt_values(fhz_row, fhz_preis, name, sth_printed, price_changed, sth_changed,
+            wlb_neu, wlb_row, geaenderte_preise, irgendeine_aenderung, count):
         #print(wlb_row)
         #print(type(wlb_row))
         # adopt the rec. sales price and the "Lieferbarkeit" directly and completely
@@ -384,13 +384,13 @@ def main():
                             "WLB: %s   (%s)    Sortiment: %s" % (wlb_preis, fhz_preis,
                                 fhz_row['Bezeichnung | Einheit'], name, fhz_row['Sortiment'],
                                 wlb_row['Bezeichnung | Einheit'], name, wlb_row['Sortiment']))
-                    sth_printed = True
-                if wlb_row['Sortiment'] == 'Ja':
                     print("Ändere Preis von:", str(wlb_preis), " zu:", str(fhz_preis))
                     sth_printed = True
                 wlb_neu.loc[name, 'VK-Preis'] = str(fhz_preis)
                 geaenderte_preise = geaenderte_preise.append(wlb_neu.loc[name])
+                irgendeine_aenderung = irgendeine_aenderung.append(wlb_neu.loc[name])
                 price_changed = True
+                sth_changed = True
 
         if options.ADOPT_NAMES:
             #### adopt the article name
@@ -402,6 +402,9 @@ def main():
                 wlb_row['Bezeichnung | Einheit'], wlb_row['VPE'], fhz_row['VPE']))
             wlb_neu.loc[name, 'VPE'] = fhz_row['VPE']
             sth_printed = True
+            if not sth_changed:
+                irgendeine_aenderung = irgendeine_aenderung.append(wlb_neu.loc[name])
+                sth_changed = True
 
         # adopt Menge
         fhz_menge = float(fhz_row['Menge (kg/l/St.)']) / setgroesse
@@ -414,6 +417,9 @@ def main():
             if not price_changed:
                 geaenderte_preise = geaenderte_preise.append(wlb_neu.loc[name])
                 price_changed = True
+            if not sth_changed:
+                irgendeine_aenderung = irgendeine_aenderung.append(wlb_neu.loc[name])
+                sth_changed = True
 
         # adopt Einheit
         if fhz_row['Einheit'] != wlb_row['Einheit']:
@@ -421,15 +427,20 @@ def main():
                     wlb_row['Bezeichnung | Einheit'], wlb_row['Einheit'], fhz_row['Einheit']))
             wlb_neu.loc[name, 'Einheit'] = fhz_row['Einheit']
             sth_printed = True
+            if not sth_changed:
+                irgendeine_aenderung = irgendeine_aenderung.append(wlb_neu.loc[name])
+                sth_changed = True
 
-        return (fhz_row, fhz_preis, name, sth_printed, price_changed, wlb_neu,
-                wlb_row, geaenderte_preise, count)
+        return (fhz_row, fhz_preis, name, sth_printed, price_changed, sth_changed,
+                wlb_neu, wlb_row, geaenderte_preise, irgendeine_aenderung, count)
 
 
     count = 0
     print('\n\n\n')
     wlb_neu = wlb.copy()
     geaenderte_preise = pd.DataFrame(columns=wlb_neu.columns,
+            index=pd.MultiIndex.from_tuples([('','')], names=wlb_neu.index.names))
+    irgendeine_aenderung = pd.DataFrame(columns=wlb_neu.columns,
             index=pd.MultiIndex.from_tuples([('','')], names=wlb_neu.index.names))
     # Loop over fhz numerical index
     for i in range(len(fhz)):
@@ -438,20 +449,25 @@ def main():
         name = fhz_row.name
         sth_printed = False
         price_changed = False
+        sth_changed = False
         try:
             wlb_match = wlb_neu.loc[name]
             if type(wlb_match) == pd.DataFrame:
                 for j in range(len(wlb_match)):
                     wlb_row = wlb_match.iloc[j]
                     (fhz_row, fhz_preis, name, sth_printed, price_changed,
-                            wlb_neu, wlb_row, geaenderte_preise, count) = adopt_values(
-                                    fhz_row, fhz_preis, name, sth_printed, price_changed,
-                                    wlb_neu, wlb_row, geaenderte_preise, count)
+                            sth_changed, wlb_neu, wlb_row, geaenderte_preise,
+                            irgendeine_aenderung, count) = adopt_values(
+                                    fhz_row, fhz_preis, name, sth_printed,
+                                    price_changed, sth_changed, wlb_neu, wlb_row,
+                                    geaenderte_preise, irgendeine_aenderung, count)
             else:
                 (fhz_row, fhz_preis, name, sth_printed, price_changed,
-                        wlb_neu, wlb_match, geaenderte_preise, count) = adopt_values(
-                                fhz_row, fhz_preis, name, sth_printed, price_changed,
-                                wlb_neu, wlb_match, geaenderte_preise, count)
+                        sth_changed, wlb_neu, wlb_match, geaenderte_preise,
+                        irgendeine_aenderung, count) = adopt_values(
+                                fhz_row, fhz_preis, name, sth_printed,
+                                price_changed, sth_changed, wlb_neu, wlb_match,
+                                geaenderte_preise, irgendeine_aenderung, count)
 
         except KeyError:
             pass
@@ -481,8 +497,10 @@ def main():
                     wlb_row['Sortiment']))
             wlb_neu.loc[name, 'VK-Preis'] = str(neuer_preis)
             geaenderte_preise = geaenderte_preise.append(wlb_row)
+            irgendeine_aenderung = irgendeine_aenderung.append(wlb_row)
     print(count, "VK-Preise wurden gerundet.")
     geaenderte_preise = removeEmptyRow(geaenderte_preise)
+    irgendeine_aenderung = removeEmptyRow(irgendeine_aenderung)
 
     # Check for duplicates in geaenderte_preise:
     gp_dup_indices = indexDuplicationCheck(geaenderte_preise)
@@ -497,7 +515,14 @@ def main():
         only_index=True)
     writeOutAsCSV(gp_sortiment,
         'preisänderung_geänderte_preise_sortiment_alle_felder.csv')
+        
+    # Check for duplicates in irgendeine_aenderung:
+    gp_dup_indices = indexDuplicationCheck(irgendeine_aenderung)
+    print("Folgende Artikel kommen mehrfach in 'irgendeine_aenderung' vor:")
+    for i in gp_dup_indices:
+        print(irgendeine_aenderung.loc[i])
 
+    writeOutAsCSV(irgendeine_aenderung, 'preisänderung_irgendeine_änderung.csv')
 
     ####################
     # Consistecy check #
