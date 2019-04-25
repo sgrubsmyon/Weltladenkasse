@@ -29,13 +29,13 @@
         PFANDKISTE2), denn wir haben ein anderes Pfandsystem (bei uns entspricht
         PFAND2 der 0,33 l Flasche für 8 ct, dafür haben wir nicht die
         GEPA-Pfandflasche 9999385 und GEPA-Pfandkiste 9999386)
-    * Artikel ohne Lieferant einen Lieferanten geben:
+    * Artikeln ohne Lieferant einen Lieferanten geben:
         Wein-Geschenkkarton -> FHZ Rheinland
         Kaffeefilter, Teefilter, Teefilter-Clip -> FHZ Rheinland
     * Spalten so benennen und arrangieren wie in der Artikelliste-Datei (gleiche Reihenfolge):
         * Preis (Spalte "je Einheit") geht in "Empf. VK-Preis"
         * "Bezeichnung" geht in "Kurzname"
-        * "VPE" nach "VPE", "Herkunftsland" nach "Herkunftsland"
+        * "VPE" -> "VPE", "Herkunftsland" -> "Herkunftsland"
         * Spalten "Einheit" ("250", "g", "Beutel") und "x" ganz nach rechts verschieben in Spalten U bis X
             (Einheit in U bis W, x in X)
         * Spalte "Variabel" auf "Nein" setzen
@@ -45,6 +45,7 @@
                                                             dabei ist E3 der Kurzname (FHZ-Bezeichnung), U3, V3, W3 sind "250", "g", "Beutel"
         =U3/1000                                            für "Menge"
         =IF(V3="g", "kg", IF(V3="ml","l",""))               für "Einheit"
+        =IF(X3="x", "Ja", "Nein")                           für "Sofort lieferbar"
 	* Einheit-Spalte kopieren, mit Strg-V einfügen (nur Werte)
         * nach fehlender Einheit suchen (mit Ctrl-Down zu Lücken springen), in fast
             allen Fällen (außer z.B. Kokoblock) "St." eintragen und Menge anpassen (z.B.
@@ -53,7 +54,6 @@
         * After running script, search for "zu 0 " in output, correct the Menge
             values in the FHZ file and Einheit to "St." (e.g. Vanilleschoten
             'ma110100', 'sl115108', 'rfb116032')
-        =IF(X3="x", "Ja", "Nein")                           für "Sofort lieferbar"
     Looks like not necessary anymore:
     (* Copy VPE column into vim, then
         :%s/[^0-9]//g
@@ -69,7 +69,7 @@
      (-n übernimmt den Artikelnamen vom FHZ, wir haben
      aber häufig Fehler im Namen korrigiert/angepasst, daher lieber nicht -n
      benutzen. Außerdem generiert das unnötig viele Änderungen.)
-11.) Evtl. Probleme beheben, z.B.:
+11.) Datei log.txt anschauen und evtl. Probleme beheben, z.B.:
     * Dopplungen von Artikelnummern korrigieren (werden als erstes aufgelistet),
         diese erzeugen später weitere Fehlermeldungen (Fehler evtl. ans FHZ
         melden)
@@ -81,11 +81,12 @@
 12.) Punkt 10 und 11 so lange ausführen, bis alles OK ist.
 13.) Ergebnisse werden gespeichert in Dateien:
     * "preisänderung.csv" (alle Artikel, aktualisiert)
+    * "preisänderung_irgendeine_änderung.csv" (alle Artikel, bei denen sich irgendwas geändert hat; für beschleunigtes Einlesen ggü. preisänderung.csv, denn Artikel ohne Änderung würden beim Einlesen sowieso ignoriert werden, verlangsamen aber den Einleseprozess)
     * "preisänderung_geänderte_preise.csv" (alle Artikel, deren Preis sich verändert hat)
     * "preisänderung_geänderte_preise_sortiment.csv" (alle Sortimentsartikel, deren Preis sich verändert hat, für Import im Preisschilder-Menü)
     * "preisänderung_geänderte_preise_sortiment_alle_felder.csv" (wie oben, für Import in LibreOffice zum besseren Erkennen der Artikel von Hand)
     * "preisänderung_neue_artikel.csv" (alle neuen Artikel)
-14.) "preisänderung.csv" mit LibreOffice öffnen:
+14.) "preisänderung.csv" bzw. für schnelleres Einlesen "preisänderung_irgendeine_änderung.csv" mit LibreOffice öffnen:
     * Separated by: Semicolon
     * Text Delimiter: '"'!
     * Problem 1:
@@ -405,6 +406,8 @@ def main():
             if not sth_changed:
                 irgendeine_aenderung = irgendeine_aenderung.append(wlb_neu.loc[name])
                 sth_changed = True
+            else:
+                irgendeine_aenderung.loc[name, 'VPE'] = fhz_row['VPE']
 
         # adopt Menge
         fhz_menge = float(fhz_row['Menge (kg/l/St.)']) / setgroesse
@@ -420,6 +423,8 @@ def main():
             if not sth_changed:
                 irgendeine_aenderung = irgendeine_aenderung.append(wlb_neu.loc[name])
                 sth_changed = True
+            else:
+                irgendeine_aenderung.loc[name, 'Menge (kg/l/St.)'] = '%.5f' % fhz_menge
 
         # adopt Einheit
         if fhz_row['Einheit'] != wlb_row['Einheit']:
@@ -430,6 +435,8 @@ def main():
             if not sth_changed:
                 irgendeine_aenderung = irgendeine_aenderung.append(wlb_neu.loc[name])
                 sth_changed = True
+            else:
+                irgendeine_aenderung.loc[name, 'Einheit'] = fhz_row['Einheit']
 
         return (fhz_row, fhz_preis, name, sth_printed, price_changed, sth_changed,
                 wlb_neu, wlb_row, geaenderte_preise, irgendeine_aenderung, count)
