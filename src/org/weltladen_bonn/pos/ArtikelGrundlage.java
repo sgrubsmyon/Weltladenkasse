@@ -23,15 +23,11 @@ public abstract class ArtikelGrundlage extends WindowContent {
     }
 
     protected void removeDefaultKeyBindings(JComponent field) {
-        field.getInputMap().put(KeyStroke.getKeyStroke("ctrl A"), "none");
-//        field.getInputMap().put(KeyStroke.getKeyStroke("ctrl C"), "none");
         field.getInputMap().put(KeyStroke.getKeyStroke("ctrl H"), "none");
         field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_SUBTRACT, 0), "none");
     }
 
     protected void removeDefaultKeyBindings(JComponent field, int condition) {
-        field.getInputMap(condition).put(KeyStroke.getKeyStroke("ctrl A"), "none");
-//        field.getInputMap(condition).put(KeyStroke.getKeyStroke("ctrl C"), "none");
         field.getInputMap(condition).put(KeyStroke.getKeyStroke("ctrl H"), "none");
         field.getInputMap(condition).put(KeyStroke.getKeyStroke(KeyEvent.VK_SUBTRACT, 0), "none");
     }

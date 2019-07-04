@@ -130,15 +130,17 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         // keyboard shortcuts:
         KeyStroke barcodeShortcut1 = KeyStroke.getKeyStroke(KeyEvent.VK_F2, 0);
         KeyStroke barcodeShortcut2 = KeyStroke.getKeyStroke("ctrl B");
-        KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke("ctrl A");
-        KeyStroke artikelNummerShortcut = KeyStroke.getKeyStroke("ctrl N");
+        KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0);
+        KeyStroke artikelNummerShortcut1 = KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0);
+        KeyStroke artikelNummerShortcut2 = KeyStroke.getKeyStroke("ctrl N");
 
         this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barcodeShortcut1, "barcode");
         this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barcodeShortcut2, "barcode");
         this.getActionMap().put("barcode", new BarcodeAction());
         this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(artikelNameShortcut, "name");
         this.getActionMap().put("name", new NameAction());
-        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(artikelNummerShortcut, "nummer");
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(artikelNummerShortcut1, "nummer");
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(artikelNummerShortcut2, "nummer");
         this.getActionMap().put("nummer", new NummerAction());
     }
 
