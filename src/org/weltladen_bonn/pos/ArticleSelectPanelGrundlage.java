@@ -128,11 +128,13 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
 
     private void setupKeyboardShortcuts() {
         // keyboard shortcuts:
-        KeyStroke barcodeShortcut = KeyStroke.getKeyStroke("ctrl B");
+        KeyStroke barcodeShortcut1 = KeyStroke.getKeyStroke(KeyEvent.VK_F2, 0);
+        KeyStroke barcodeShortcut2 = KeyStroke.getKeyStroke("ctrl B");
         KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke("ctrl A");
         KeyStroke artikelNummerShortcut = KeyStroke.getKeyStroke("ctrl N");
 
-        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barcodeShortcut, "barcode");
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barcodeShortcut1, "barcode");
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barcodeShortcut2, "barcode");
         this.getActionMap().put("barcode", new BarcodeAction());
         this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(artikelNameShortcut, "name");
         this.getActionMap().put("name", new NameAction());
@@ -168,11 +170,11 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         String artikelName = an[0];
         String liefID = an[1];
         String artikelNummer = (String) nummerBox.getSelectedItem();
-        selectedArticleID = getArticleID(Integer.parseInt(liefID), artikelNummer); // get the
-                                                                    // internal
-                                                                    // artikelID
-                                                                    // from the
-                                                                    // DB
+        try {
+          selectedArticleID = getArticleID(Integer.parseInt(liefID), artikelNummer); // get the internal artikelID from the DB
+        } catch (java.lang.NumberFormatException ex) {
+          System.out.println("liefID is invalid (probably empty string): liefId = "+liefID);
+        }
         articleSelectUser.updateSelectedArticleID(selectedArticleID);
     }
 
