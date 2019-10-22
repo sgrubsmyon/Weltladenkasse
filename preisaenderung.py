@@ -18,7 +18,7 @@
 7.) "File -> Save a Copy" und als csv-Datei exportieren.
     WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
 8.) Neue FHZ-Preisliste öffnen
-    * Wir benötigen Spalten D bis M (von "Lieferant" bis "je Einheit"), diese
+    * Wir benötigen Spalten D bis N (von "Lieferant" bis "je Einheit"), diese
         Spalten markieren, kopieren und in leeres Dokument (Ctrl-N) einfügen mit
         Ctrl-Shift-V (Formatierung wird gelöscht)
     * 'File -> Save As' als "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX.ods"
@@ -26,7 +26,7 @@
         In Spalte "Lieferant" oder "Bezeichnung" mit Ctrl-Down springen, Zellen aus Zeilen
         markieren, Ctrl-Minus, Delete entire row(s)
     * Alle Pfandartikel (leere Flaschen und Kästen) löschen (von PFAND1 bis
-        PFANDKISTE2), denn wir haben ein anderes Pfandsystem (bei uns entspricht
+        9999386), denn wir haben ein anderes Pfandsystem (bei uns entspricht
         PFAND2 der 0,33 l Flasche für 8 ct, dafür haben wir nicht die
         GEPA-Pfandflasche 9999385 und GEPA-Pfandkiste 9999386)
     * Artikeln ohne Lieferant einen Lieferanten geben:
@@ -313,6 +313,10 @@ def main():
         if i[0] == 'ethiquable' else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Libera Terra', i[1])
         if i[0] == 'Libera\nTerra' else i, fhz.index.tolist())), names=fhz.index.names)
+    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('WeltPartner', i[1])
+        if i[0] == 'Welt\nPartner' else i, fhz.index.tolist())), names=fhz.index.names)
+    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('FAIR Handelshaus Bayern', i[1])
+        if i[0] == 'Fair Han-delshaus Bayern' else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('unbekannt', i[1])
         if type(i[0]) == float and np.isnan(i[0]) else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('FHZ Rheinland', i[1])
