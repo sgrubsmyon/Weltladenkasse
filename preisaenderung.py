@@ -74,10 +74,16 @@
         diese erzeugen später weitere Fehlermeldungen (Fehler evtl. ans FHZ
         melden)
     * Änderungen prüfen und ggf. eingreifen
+    * ACHTUNG: Mini-Täfelchen nicht ändern, d.h. aus preisaenderung_irgendeine_änderung.csv löschen!
+        (Außer wenn sich der Empf. VKP von 8 EUR tatsächlich ändert). Im WLB ist
+        der VKP mit Absicht höher als der Empf. VKP und die VPE ist mit Absicht
+        (falsch) auf 1 gesetzt.
     * ACHTUNG: Wenn Menge oder Einheit sich geändert haben, muss ggf. der Artikelname
-      in preisänderung.csv von Hand geändert werden, wenn nicht -n benutzt wird.
+        in preisänderung.csv von Hand geändert werden, wenn nicht -n benutzt wird.
     * Angebliche neue Artikel prüfen, ob nur ein Tippfehler in der Artikelnummer
         ist (Fehler evtl. ans FHZ melden)
+    * Auch gucken, ob neue Artikel eigentlich beim FHZ durchgestrichen sind und
+        wir sie schon aus der DB entfernt haben.
 12.) Punkt 10 und 11 so lange ausführen, bis alles OK ist.
 13.) Ergebnisse werden gespeichert in Dateien:
     * "preisänderung.csv" (alle Artikel, aktualisiert)
@@ -155,9 +161,9 @@ def convert_art_number_ep(art_number):
     return art_number_new
 
 
-def convert_art_number_dwp(art_number):
+def convert_art_number_wp(art_number):
     '''
-    Convert dwp article number from FHZ system to original system.
+    Convert wp article number from FHZ system to original system.
     This means:
         * First remove all '-' that might be there
         * Remove leading 'r' if `art_number` starts with 3 or more letters
@@ -327,9 +333,9 @@ def main():
     # El Puente:
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('El Puente', convert_art_number_ep(i[1]))
         if i[0] == 'El Puente' else i, fhz.index.tolist())), names=fhz.index.names)
-    # dwp:
-    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('dwp', convert_art_number_dwp(i[1]))
-        if i[0] == 'dwp' else i, fhz.index.tolist())), names=fhz.index.names)
+    # wp:
+    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('WeltPartner', convert_art_number_wp(i[1]))
+        if i[0] == 'WeltPartner' else i, fhz.index.tolist())), names=fhz.index.names)
 
     # Make all article numbers lower case for better comparison:
       # First store the original article numbers:
