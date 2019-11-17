@@ -374,6 +374,22 @@ public class ArtikelFormular extends WindowContent
         }
     }
 
+    public boolean showArticleKnownWarning(int itemAlreadyKnown) {
+        if (itemAlreadyKnown == 1){
+            JOptionPane.showMessageDialog(this,
+                    "Ein Artikel mit diesem Lieferant und dieser Nummer ist bereits in der Datenbank.",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
+            return true;
+        }
+        else if (itemAlreadyKnown == 2){
+            JOptionPane.showMessageDialog(this,
+                    "Ein Artikel mit diesem Lieferant und dieser Nummer ist bereits in der angezeigten Tabelle.",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
+            return true;
+        }
+        return false;
+    }
+
     /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.
