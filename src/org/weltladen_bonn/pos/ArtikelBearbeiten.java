@@ -265,7 +265,7 @@ public class ArtikelBearbeiten extends DialogWindow
         for (int index=0; index < originalArticles.size(); index++){
             Artikel origArticle = originalArticles.get(index);
             Artikel newArticle = getNewArticle(origArticle);
-            if ( !newArticle.equals(origArticle) ){
+            if ( newArticle != null && !newArticle.equals(origArticle) ){
                 return true;
             }
         }
@@ -317,7 +317,14 @@ public class ArtikelBearbeiten extends DialogWindow
                 artikelFormular.lieferantBox.setSelectedIndex(
                         artikelFormular.lieferantIDs.indexOf(origArticle.getLiefID())
                         );
-                artikelFormular.nummerField.setText(origArticle.getNummer());
+                // From: https://stackoverflow.com/questions/15206586/getting-attempt-to-mutate-notification-exception
+                Runnable doLater = new Runnable() {
+                  @Override
+                  public void run() {
+                    artikelFormular.nummerField.setText(origArticle.getNummer());
+                  }
+                };
+                SwingUtilities.invokeLater(doLater);
                 return null;
             }
         }
