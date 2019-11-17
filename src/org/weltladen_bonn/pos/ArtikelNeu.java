@@ -142,8 +142,8 @@ public class ArtikelNeu extends WindowContent
         // always look into table, too
         for (int i=0; i<data.size(); i++){
             String tableLieferant = data.get(i).get(1).toString();
-            String tableNummer = data.get(i).get(2).toString();
-            if (tableLieferant.equals( getLieferant(lieferant_id) ) && tableNummer.equals(nummer)){
+            String tableNummer = data.get(i).get(2).toString().toLowerCase();
+            if (tableLieferant.equals( getLieferant(lieferant_id) ) && tableNummer.equals(nummer.toLowerCase())){
                 exists = 2; // item already in table
                 break;
             }

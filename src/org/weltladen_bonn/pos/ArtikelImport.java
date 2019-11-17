@@ -178,15 +178,15 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         int exists = 0;
         Vector<Object> key = new Vector<Object>();
         key.add(lieferant_id);
-        key.add(artikelnummer);
+        key.add(artikelnummer.toLowerCase());
         if ( allArticles.containsKey(key) ){
             exists = 1;
         }
         // always look into table, too
         for (int i=0; i<artikelNeu.data.size(); i++){
             String tableLieferant = artikelNeu.data.get(i).get(1).toString();
-            String tableNummer = artikelNeu.data.get(i).get(2).toString();
-            if (tableLieferant.equals(lieferant) && tableNummer.equals(artikelnummer)){
+            String tableNummer = artikelNeu.data.get(i).get(2).toString().toLowerCase();
+            if (tableLieferant.equals(lieferant) && tableNummer.equals(artikelnummer.toLowerCase())){
                 exists = 2; // item already in table
                 break;
             }
@@ -240,7 +240,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             while (rs.next()) {
                 Vector<Object> key = new Vector<Object>();
                 key.add(rs.getInt(1)); // lieferant_id
-                key.add(rs.getString(2)); // artikel_nr
+                key.add(rs.getString(2).toLowerCase()); // artikel_nr
 
                 Vector<String> value = new Vector<String>();
                 value.add(rs.getString(3)); // produktgruppen_id
@@ -281,7 +281,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
     private Vector<String> lookupAllFields(Integer lieferant_id, String artikelnummer) {
         Vector<Object> key = new Vector<Object>();
         key.add(lieferant_id);
-        key.add(artikelnummer);
+        key.add(artikelnummer.toLowerCase());
         Vector<String> value = allArticles.get(key);
         return value;
     }
