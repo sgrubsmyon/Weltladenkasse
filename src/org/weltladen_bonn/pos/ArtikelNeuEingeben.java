@@ -468,17 +468,8 @@ public class ArtikelNeuEingeben extends DialogWindow
             artikelFormular.lieferantIDs.get(artikelFormular.lieferantBox.getSelectedIndex());
         String lieferant = artikelFormular.lieferantBox.getSelectedItem().toString();
         String nummer = artikelFormular.nummerField.getText();
-        int itemAlreadyKnown = checkIfArticleAlreadyKnown(getLieferantID(lieferant), nummer);
-        if (itemAlreadyKnown == 1){
-            JOptionPane.showMessageDialog(this,
-                    "Ein Artikel mit diesem Lieferant und dieser Nummer ist bereits in der Datenbank.",
-                    "Fehler", JOptionPane.ERROR_MESSAGE);
-            return 1;
-        }
-        else if (itemAlreadyKnown == 2){
-            JOptionPane.showMessageDialog(this,
-                    "Ein Artikel mit diesem Lieferant und dieser Nummer ist bereits in der angezeigten Tabelle.",
-                    "Fehler", JOptionPane.ERROR_MESSAGE);
+        int itemAlreadyKnown = checkIfArticleAlreadyKnown(lieferantID, nummer);
+        if (artikelFormular.showArticleKnownWarning(itemAlreadyKnown)){
             return 1;
         }
         String name = artikelFormular.nameField.getText();
@@ -615,6 +606,14 @@ public class ArtikelNeuEingeben extends DialogWindow
         if (updating){
             return; // tackle the "Attempt to mutate in notification"
         }
+        if (e.getDocument() == artikelFormular.nummerField.getDocument()){
+          // check if article already known
+          Integer lieferantID =
+            artikelFormular.lieferantIDs.get(artikelFormular.lieferantBox.getSelectedIndex());
+          String nummer = artikelFormular.nummerField.getText();
+          int itemAlreadyKnown = checkIfArticleAlreadyKnown(lieferantID, nummer);
+          artikelFormular.showArticleKnownWarning(itemAlreadyKnown);
+        }
         // don't let the ekpreisField update itself:
         if (e.getDocument() != artikelFormular.ekpreisField.getDocument()){
             updating = true;
@@ -644,6 +643,15 @@ public class ArtikelNeuEingeben extends DialogWindow
      *    @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
+	if (e.getSource() == artikelFormular.lieferantBox){
+          // check if article already known
+          Integer lieferantID =
+            artikelFormular.lieferantIDs.get(artikelFormular.lieferantBox.getSelectedIndex());
+          String nummer = artikelFormular.nummerField.getText();
+          int itemAlreadyKnown = checkIfArticleAlreadyKnown(lieferantID, nummer);
+          artikelFormular.showArticleKnownWarning(itemAlreadyKnown);
+          return;
+        }
 	if (e.getSource() == submitButton){
             submit();
             artikelListe.updateAll();
