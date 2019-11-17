@@ -41,8 +41,6 @@ public class ArtikelNeu extends WindowContent
     public Vector<JButton> removeButtons;
     public Vector< Vector<Color> > colorMatrix;
 
-    public JPanel tablePanel;
-
     // Methoden:
     public ArtikelNeu(Connection conn, MainWindowGrundlage mw, UpdateTableFunctor utf) {
 	super(conn, mw);
@@ -179,7 +177,6 @@ public class ArtikelNeu extends WindowContent
     }
 
     public void updateTable(JPanel panel) {
-        panel.remove(tablePanel);
         panel.revalidate();
         showTable(panel);
     }
