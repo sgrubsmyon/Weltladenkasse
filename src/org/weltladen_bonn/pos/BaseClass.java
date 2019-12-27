@@ -35,6 +35,7 @@ public class BaseClass {
     public String exportDirAbrechnungMonat;
     public String exportDirAbrechnungJahr;
     public String exportDirBestellung;
+    public Boolean alwaysPrintReceipt;
 
     public final String fileSep = System.getProperty("file.separator");
     public final String lineSep = System.getProperty("line.separator");
@@ -198,6 +199,7 @@ public class BaseClass {
             this.exportDirAbrechnungMonat = props.getProperty("exportDirAbrechnungMonat");
             this.exportDirAbrechnungJahr = props.getProperty("exportDirAbrechnungJahr");
             this.exportDirBestellung = props.getProperty("exportDirBestellung");
+            this.alwaysPrintReceipt = new Boolean(props.getProperty("alwaysPrintReceipt"));
         } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
             JOptionPane.showMessageDialog(null, "Fehler in der Konfigurationsdatei config.properties.\n"+
@@ -224,6 +226,7 @@ public class BaseClass {
             this.exportDirAbrechnungMonat = "'Dokumente/Kasse/Monatsabrechnungen/'yyyy";
             this.exportDirAbrechnungJahr = "'Dokumente/Kasse/Jahresabrechnungen'";
             this.exportDirBestellung = "'Dokumente/Bestellungen/Bestellungen FHZ 'yyyy";
+            this.alwaysPrintReceipt = true;
         }
         this.mysqlHost = removeQuotes(this.mysqlHost);
         this.printerName = removeQuotes(this.printerName);
