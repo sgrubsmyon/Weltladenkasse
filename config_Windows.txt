@@ -18,3 +18,5 @@ sollScheinKassenstand = 100.00
 exportDirAbrechnungTag = 'Dokumente\\Kasse\\Tagesabrechnungen\\'yyyy'\\'MM MMMM
 exportDirAbrechnungMonat = 'Dokumente\\Kasse\\Monatsabrechnungen\\'yyyy
 exportDirAbrechnungJahr = 'Dokumente\\Kasse\\Jahresabrechnungen'
+exportDirBestellung = 'Dokumente\\Bestellungen\\Bestellungen FHZ 'yyyy
+alwaysPrintReceipt = true

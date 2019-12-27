@@ -1653,17 +1653,18 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 return rechnungsNr;
             }
             insertIntoKassenstand(rechnungsNr);
+            if (bc.alwaysPrintReceipt) {
+              printQuittung(rechnungsNr);
+            }
         } else { // EC-Zahlung
             rechnungsNr = insertIntoVerkauf(true, null);
             if (rechnungsNr < 0){
                 return rechnungsNr;
             }
             try {
-              //if (zahlungsModus.equals("ec")) {
               printQuittung(rechnungsNr);
-              Thread.sleep(2000); // wait for 2 seconds
+              Thread.sleep(5000); // wait for 5 seconds
               printQuittung(rechnungsNr);
-              //}
             } catch (InterruptedException ex) {
               System.out.println("Exception: " + ex.getMessage());
               ex.printStackTrace();
