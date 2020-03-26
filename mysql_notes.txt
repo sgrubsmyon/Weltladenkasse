@@ -1,4 +1,6 @@
-# Load newest DB dump:
+:# Export DB dump:
+$ mysqldump -hlocalhost -ukassenadmin -p kasse -r DB_Dump_kasse_$(date -I).sql
+# Import DB dump:
 $ mysql --local-infile -hlocalhost -ukassenadmin -p -e "source DB_Dump_2015_KW19.sql" kasse
 
 # Add new columns `lieferant_kurzname` and `einheit`:
