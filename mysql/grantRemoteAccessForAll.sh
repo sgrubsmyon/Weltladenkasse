@@ -20,7 +20,7 @@ while : ; do
     fi
 done
 
-echo "Enter domain, e.g. '192.168.2.' that shall be allowed remote access to this server (as '192.168.2.%'), so for all hosts beginning with '192.168.2.'."
+echo "Enter domain, e.g. '192.168.2.' that shall be allowed remote access to this server, so for all hosts beginning with '192.168.2.'."
 read -p "(Leave blank to grant access for all host names): " host; echo
 
 # get new passwords from user
