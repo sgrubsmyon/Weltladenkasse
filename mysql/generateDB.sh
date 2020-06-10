@@ -1,22 +1,53 @@
 #!/bin/bash
 
-cd `dirname $0`
+show_help() {
+    echo -e "Use \`-n\' to indicate that your MySQL needs no root password"
+    echo -e "(works passwordless, but with sudo, as mariadb in Arch Linux)."
+    echo -e "Without using \`-n\', you must specify the MySQL root password"
+    echo -e "as first argument."
+}
+
+# https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
+# Special getopts variable:
+OPTIND=1 # Reset in case getopts has been used previously in the shell.
+# Our own variable:
+nopwd=0
+
+while getopts "hn" opt; do
+    case "$opt" in
+    h)  show_help
+        exit 0
+	;;
+    n)  nopwd=1
+        ;;
+    esac
+done
+
+shift $((OPTIND-1))
+[ "${1:-}" = "--" ] && shift
+
+cd `dirname "$0"`
 
 if [ -n "$1" ]; then
-    root_pwd=$1
+    root_pwd="$1"
 fi
+
+SQL_CHECK_USERS_EXIST="
+SELECT EXISTS (SELECT User FROM mysql.user WHERE User = 'kassenadmin'),
+EXISTS (SELECT User FROM mysql.user WHERE User = 'mitarbeiter'),
+COUNT(SCHEMA_NAME) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = 'kasse';"
 
 # Check if users already exist
 echo "Checking if users/db already exist..."
 while : ; do
-    if [ -z "$root_pwd" ]; then
-        read -s -p "Enter MySQL root password: " root_pwd; echo
+    if [[ $nopwd -eq 0 ]]; then
+        if [ -z "$root_pwd" ]; then
+            read -s -p "Enter MySQL root password: " root_pwd; echo
+        fi
+	exists=$(mysql -h localhost -u root -p$root_pwd --skip-column-names --execute="$SQL_CHECK_USERS_EXIST")
+    else
+        exists=$(sudo mysql -u root --skip-column-names --execute="$SQL_CHECK_USERS_EXIST")
     fi
-    exists=$(mysql -h localhost -u root -p$root_pwd --skip-column-names --execute="
-    SELECT EXISTS (SELECT User FROM mysql.user WHERE User = 'kassenadmin'),
-    EXISTS (SELECT User FROM mysql.user WHERE User = 'mitarbeiter'),
-    COUNT(SCHEMA_NAME) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = 'kasse';"
-    )
     if [[ $? -eq 0 ]]; then
         break
     else
@@ -29,7 +60,6 @@ mitar_exists=${exists:2:1}
 db_exists=${exists:4:1}
 
 # print warning messages:
-echo ""
 if [[ $admin_exists -ne 0 ]]; then
     echo "WARN: MySQL user 'kassenadmin' already exists. Will DELETE AND RECREATE this user with new access privileges and password."
 fi
@@ -75,7 +105,7 @@ mitar_pwd=$mitar_pwd_1
 # create DB, grant access rights, and create tables
 echo ""
 echo "Will now create the MySQL users and the database..."
-mysql --local-infile -h localhost -u root -p$root_pwd --execute="
+command="
 #GRANT USAGE ON *.* TO 'kassenadmin'@'localhost';
 #GRANT USAGE ON *.* TO 'mitarbeiter'@'localhost';
 DROP USER IF EXISTS 'kassenadmin'@'localhost';
@@ -86,6 +116,11 @@ SOURCE generateDB.sql;
 SOURCE fillWithInternalValues.sql;
 SOURCE fillWithExampleData.sql;
 "
+if [[ $nopwd -eq 0 ]]; then
+    mysql --local-infile -h localhost -u root -p$root_pwd --execute="$command"
+else
+    sudo mysql --local-infile -u root --execute="$command"
+fi
 stats=$?
 
 echo ""

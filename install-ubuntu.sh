@@ -50,7 +50,7 @@ mysql_works=$(run_check $root_pwd)
 if [[ $mysql_works -eq 0 ]]; then echo "yes"; else echo "no"; fi
 
 if [[ $(installed_via_pm) != "yes" && $mysql_works -ne 0 ]]; then
-    echo -e "MySQL seems to be not installed. Trying to install it now (need root privilieges)."
+    echo -e "MySQL seems to be not installed. Trying to install it now (need root privileges)."
     sudo apt-get install mysql-server
     read -s -p "Enter MySQL root password: " root_pwd; echo
     echo -n "Checking if MySQL works... "
