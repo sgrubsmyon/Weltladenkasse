@@ -73,7 +73,7 @@ public abstract class Abrechnungen extends WindowContent {
     private Vector<String> abrechnungsDates;
     Vector<Integer> abrechnungsIDs;
     private Vector< Vector<BigDecimal> > abrechnungsTotals;
-    private Vector< HashMap<BigDecimal, Vector<BigDecimal>> > abrechnungsVATs;
+    protected Vector< HashMap<BigDecimal, Vector<BigDecimal>> > abrechnungsVATs;
     String incompleteAbrechnungsDate;
     Vector<BigDecimal> incompleteAbrechnungsTotals;
     HashMap<BigDecimal, Vector<BigDecimal>> incompleteAbrechnungsVATs;
@@ -581,18 +581,16 @@ public abstract class Abrechnungen extends WindowContent {
 
         // Set VATs:
         for (BigDecimal mwst : mwstSet) {
-            sheet.setValueAt(bc.vatFormatter(mwst) + " MwSt. Brutto:", 0, rowIndex);
-            sheet.setValueAt(bc.vatFormatter(mwst) + " MwSt. Netto:", 0, rowIndex + 1);
-            sheet.setValueAt(bc.vatFormatter(mwst) + " MwSt. Betrag:", 0, rowIndex + 2);
-            for (int i = 0; i < 3; i++) {
-                if (vats.containsKey(mwst)) {
+            if (vats.containsKey(mwst)) {
+                sheet.setValueAt(bc.vatFormatter(mwst) + " MwSt. Brutto:", 0, rowIndex);
+                sheet.setValueAt(bc.vatFormatter(mwst) + " MwSt. Netto:", 0, rowIndex + 1);
+                sheet.setValueAt(bc.vatFormatter(mwst) + " MwSt. Betrag:", 0, rowIndex + 2);
+                for (int i = 0; i < 3; i++) {
                     sheet.setValueAt(vats.get(mwst).get(i), 1, rowIndex);
-                } else {
-                    sheet.setValueAt(0., 1, rowIndex);
+                    rowIndex++;
                 }
-                rowIndex++;
+                rowIndex++; // empty row
             }
-            rowIndex++; // empty row
         }
 
         Vector<Object> v = new Vector<>();
