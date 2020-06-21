@@ -1096,26 +1096,33 @@ class AbrechnungenTag extends Abrechnungen {
         Sheet sheet = (Sheet) v.firstElement();
         Integer rowIndex = (Integer) v.lastElement();
 
+        // This is used only to find out what MwSt. is present:
+        HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(exportIndex); // map with values for each mwst
+
         // Set Stornos, Retouren, Entnahmen:
         for (BigDecimal mwst : mwstSet) {
-            sheet.setValueAt("Storno ("+bc.vatFormatter(mwst) + " MwSt.)", 0, rowIndex);
-            if (abrechnungsStornos != null && abrechnungsStornos.get(exportIndex).containsKey(mwst)){
-                BigDecimal bd = abrechnungsStornos.get(exportIndex).get(mwst);
-                sheet.setValueAt(bd, 1, rowIndex);
-            } else {
-                sheet.setValueAt(0., 1, rowIndex);
+            if (vats.containsKey(mwst)) {
+                sheet.setValueAt("Storno ("+bc.vatFormatter(mwst) + " MwSt.)", 0, rowIndex);
+                if (abrechnungsStornos != null && abrechnungsStornos.get(exportIndex).containsKey(mwst)){
+                    BigDecimal bd = abrechnungsStornos.get(exportIndex).get(mwst);
+                    sheet.setValueAt(bd, 1, rowIndex);
+                } else {
+                    sheet.setValueAt(0., 1, rowIndex);
+                }
+                rowIndex++;
             }
-            rowIndex++;
         }
         for (BigDecimal mwst : mwstSet) {
-            sheet.setValueAt("Retouren ("+bc.vatFormatter(mwst) + " MwSt.)", 0, rowIndex);
-            if (abrechnungsRetouren != null && abrechnungsRetouren.get(exportIndex).containsKey(mwst)){
-                BigDecimal bd = abrechnungsRetouren.get(exportIndex).get(mwst);
-                sheet.setValueAt(bd, 1, rowIndex);
-            } else {
-                sheet.setValueAt(0., 1, rowIndex);
+            if (vats.containsKey(mwst)) {
+                sheet.setValueAt("Retouren ("+bc.vatFormatter(mwst) + " MwSt.)", 0, rowIndex);
+                if (abrechnungsRetouren != null && abrechnungsRetouren.get(exportIndex).containsKey(mwst)){
+                    BigDecimal bd = abrechnungsRetouren.get(exportIndex).get(mwst);
+                    sheet.setValueAt(bd, 1, rowIndex);
+                } else {
+                    sheet.setValueAt(0., 1, rowIndex);
+                }
+                rowIndex++;
             }
-            rowIndex++;
         }
         sheet.setValueAt("Entnahmen", 0, rowIndex);
         if (abrechnungsEntnahmen != null){
