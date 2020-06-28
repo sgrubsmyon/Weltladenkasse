@@ -107,6 +107,44 @@ KERNEL=="ttyUSB0", GROUP="lp", MODE="0660"
 ```
 
 * Install Linux drivers for EPSON TM-U220 printer.
+(
+https://download.epson-biz.com/modules/pos/index.php?page=soft&pcat=5&scat=32
+https://download.epson-biz.com/modules/pos/index.php?page=single_soft&cid=6408&scat=32&pcat=5
+https://epson.com/Support/Point-of-Sale/Impact-Printers-%28Dot-Matrix%29/Epson-TM-U220/s/SPT_C31C514103?review-filter=Linux
+)
+* For installation on Arch:
+  * Install: cmake gcc libcups cups
+  * Enable and start org.cups.cupsd.service or disable org.cups.cupsd.service and enable org.cups.cupsd.socket (see https://wiki.archlinux.org/index.php/CUPS)
+  * sudo ./build.sh
+  * sudo ./install.sh
+  * Turn on and connect printer
+  * sudo lpadmin -p TM-U220 -v socket://localhost/TM-U220 -P ppd/tm-impact-receipt-rastertotmir.ppd -E
+  * (Open http://localhost:631 and add Epson printer)
+
+* In CUPS:
+  * Enter as URI: serial:/dev/ttyUSB0
+  * And enter correct settings from Self-Test (Press FEED button while turning printer on)
+```
+Baud Rate: 9600
+Parity = None
+Bits = 8
+Flow Control = DTR/DSR
+```
+  * Or enter directly the URL: serial:/dev/ttyUSB0?baud=9600+bits=8+parity=none+flow=dtrdsr
+  * Use printer name `quittungsdrucker`.
+  * At least on Arch, might need to manually choose the PPD file from the downloaded and
+    built printer driver dir in CUPS.
+
+  * Set paper roll width to 58 mm
+  * Set lower resolution for faster printing
+
+* After installing printer in CUPS (Can follow instructions in
+  tmu-cups/manual/UsersManual.en.html), print using this command:
+$ lpr -P quittungsdrucker test.txt
+
+ Paper width    number of chars
+--------------------------------
+    57 mm        31 (33 max.)
 
 
 ## Optionally: Install customer display
