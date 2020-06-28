@@ -12,10 +12,25 @@ cd Pfad/zu/meinem/Verzeichnis
 ```
 3. Bei Bedarf Namen des Quittungsdruckers in Datei `config.properties` anpassen
 
+Auf Arch-System installieren:
+-------------------------------
+
+1. Terminal öffnen und ins Verzeichnis mit der Software wechseln (wo sich
+diese Datei `README.md` befindet):
+```
+cd Pfad/zu/meinem/Verzeichnis
+```
+2. Skript install-arch.sh ausführen:
+```
+./install-arch.sh
+```
+3. Bei Bedarf Namen des Quittungsdruckers in Datei `config.properties` anpassen
+
+
 Software auf Ubuntu ausführen:
 ------------------------------
 ```
-java -jar Weltladenkasse_v1.3.0.jar
+java -jar Weltladenkasse_v1.4.0.jar
 ```
 
 Eine Version des Java Runtime Environment (JRE) muss installiert sein,
@@ -208,8 +223,8 @@ ant
 
 Compile and run locally:
 ```
-ant && java -jar Weltladenkasse_v1.3.0.jar
-ant && java -jar Weltladenbesteller_v1.3.0.jar
+ant && java -jar Weltladenkasse_v1.4.0.jar
+ant && java -jar Weltladenbesteller_v1.4.0.jar
 ```
 
 Compile and make release (**CAUTION:** default release dir is `../releases`, adjust to your needs):
