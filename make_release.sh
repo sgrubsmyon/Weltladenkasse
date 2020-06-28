@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=v1.3.0
+version=v1.4.0
 
 releasedir=../releases/Weltladenkasse_${version}
 trainingdir=../releases/Weltladenkasse_${version}_training
@@ -19,6 +19,7 @@ rsync -aPvci config_Windows.properties $releasedir
 rsync -aPvci --delete --exclude=".*" vorlagen $releasedir
 rsync -aPvci README.md $releasedir
 rsync -aPvci install-ubuntu.sh $releasedir
+rsync -aPvci install-arch.sh $releasedir
 rsync -aPvci --delete --exclude=".*" mysql $releasedir
 rsync -aPvci Weltladenkasse_$version.jar $trainingdir
 rsync -aPvci Weltladenbesteller_$version.jar $trainingdir
@@ -29,6 +30,7 @@ rsync -aPvci config_Windows.properties $trainingdir
 rsync -aPvci --delete --exclude=".*" vorlagen $trainingdir
 rsync -aPvci README.md $trainingdir
 rsync -aPvci install-ubuntu.sh $trainingdir
+rsync -aPvci install-arch.sh $trainingdir
 rsync -aPvci --delete --exclude=".*" mysql $trainingdir
 
 cd $releasedir
