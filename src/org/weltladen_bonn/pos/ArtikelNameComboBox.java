@@ -52,7 +52,7 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             for (int i=1; i<words.length; i++){
                 whereClause += "AND artikel_name LIKE ? ";
             }
-            String stmtString = 
+            String stmtString =
                 "SELECT DISTINCT a.artikel_name, l.lieferant_kurzname, a.vk_preis, a.sortiment, a.lieferant_id "+
                 "FROM artikel AS a " +
                 "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) " +
@@ -60,12 +60,6 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
                 "WHERE " + whereClause +
                 "AND a.aktiv = TRUE " + filterStr +
                 "ORDER BY a.artikel_name, l.lieferant_kurzname";
-            System.out.println("Statement:");
-            System.out.println(stmtString);
-            System.out.println("words:");
-            for (int i=0; i<words.length; i++){
-                System.out.println(words[i]);
-            }
             PreparedStatement pstmt = this.conn.prepareStatement(stmtString);
             for (int i=0; i<words.length; i++){
                 pstmt.setString(i+1, "%"+words[i]+"%");
