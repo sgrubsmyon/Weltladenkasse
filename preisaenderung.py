@@ -16,22 +16,22 @@
 6.) Alle Artikel mit "SONSTIGES" in Artikelnummer löschen, Ergebnis speichern
     als "Artikelliste_LM.ods"
 7.) "File -> Save a Copy" und als csv-Datei exportieren.
-    WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
+    WICHTIG: Als "Field Delimiter" ';' auswählen, als "String Delimiter" '"'!
 8.) Neue FHZ-Preisliste öffnen
-    * Wir benötigen Spalten D bis N (von "Lieferant" bis "je Einheit"), diese
+    * Wir benötigen Spalten D bis M (von "Lieferant" bis "je Einheit"), diese
         Spalten markieren, kopieren und in leeres Dokument (Ctrl-N) einfügen mit
         Ctrl-Shift-V (Formatierung wird gelöscht)
     * 'File -> Save As' als "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX.ods"
     * Alle Zeilen, die leer sind oder Überschrift (Produktgruppe) enthalten, löschen:
         In Spalte "Lieferant" oder "Bezeichnung" mit Ctrl-Down springen, Zellen aus Zeilen
         markieren, Ctrl-Minus, Delete entire row(s)
+    * Artikeln ohne Lieferant einen Lieferanten geben:
+        Wein-Geschenkkarton -> FHZ Rheinland
+        Kaffeefilter, Teefilter, Teefilter-Clip -> FHZ Rheinland
     * Alle Pfandartikel (leere Flaschen und Kästen) löschen (von PFAND1 bis
         9999386), denn wir haben ein anderes Pfandsystem (bei uns entspricht
         PFAND2 der 0,33 l Flasche für 8 ct, dafür haben wir nicht die
         GEPA-Pfandflasche 9999385 und GEPA-Pfandkiste 9999386)
-    * Artikeln ohne Lieferant einen Lieferanten geben:
-        Wein-Geschenkkarton -> FHZ Rheinland
-        Kaffeefilter, Teefilter, Teefilter-Clip -> FHZ Rheinland
     * Spalten so benennen und arrangieren wie in der Artikelliste-Datei (gleiche Reihenfolge):
         * Preis (Spalte "je Einheit") geht in "Empf. VK-Preis"
         * "Bezeichnung" geht in "Kurzname"
@@ -41,15 +41,15 @@
         * Spalte "Variabel" auf "Nein" setzen
         * Andere Spalten (z.B. Sortiment, Bestand, Barcode, etc.) leer lassen
     * mit Formeln bearbeiten:
-        =CONCATENATE(E3, " | ", U3, " ", V3, " ", W3)       für "Bezeichnung | Einheit"
-                                                            dabei ist E3 der Kurzname (FHZ-Bezeichnung), U3, V3, W3 sind "250", "g", "Beutel"
-        =U3/1000                                            für "Menge"
-        =IF(V3="g", "kg", IF(V3="ml","l",""))               für "Einheit"
+        =CONCATENATE(E2; " | "; F2; " "; G2; " "; H2)       für "Bezeichnung | Einheit"
+                                                            dabei ist E2 der Kurzname (FHZ-Bezeichnung), F2, G2, H2 sind "250", "g", "Beutel"
+        =F2/1000                                            für "Menge"
+        =IF(G2="g"; "kg"; IF(G2="ml";"l";""))               für "Einheit"
         =IF(X3="x", "Ja", "Nein")                           für "Sofort lieferbar"
 	* Einheit-Spalte kopieren, mit Strg-V einfügen (nur Werte)
-        * nach fehlender Einheit suchen (mit Ctrl-Down zu Lücken springen), in fast
-            allen Fällen (außer z.B. Kokoblock) "St." eintragen und Menge anpassen (z.B.
-            5 für Muskatnüsse)
+        * nach fehlender Einheit suchen (mit Ctrl-Down zu Lücken springen), in
+            fast allen Fällen (außer z.B. 70 g Gewürzgeschenkbox, Kokoblock) "St."
+            eintragen und Menge anpassen (z.B.  5 für Muskatnüsse)
         OR:
         * After running script, search for "zu 0 " in output, correct the Menge
             values in the FHZ file and Einheit to "St." (e.g. Vanilleschoten
@@ -65,7 +65,7 @@
 9.) "File -> Save a Copy" und als csv-Datei exportieren.
     WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
 10.) Dieses Skript aufrufen mit:
-    --fhz FHZ_FILE.csv --wlb Artikelliste_LM.csv (-n) > log.txt
+    ./preisaenderung.py --fhz FHZ_FILE.csv --wlb Artikelliste_LM.csv (-n) > log.txt
      (-n übernimmt den Artikelnamen vom FHZ, wir haben
      aber häufig Fehler im Namen korrigiert/angepasst, daher lieber nicht -n
      benutzen. Außerdem generiert das unnötig viele Änderungen.)
@@ -74,16 +74,20 @@
         diese erzeugen später weitere Fehlermeldungen (Fehler evtl. ans FHZ
         melden)
     * Änderungen prüfen und ggf. eingreifen
-    * ACHTUNG: Mini-Täfelchen nicht ändern, d.h. aus preisaenderung_irgendeine_änderung.csv löschen!
-        (Außer wenn sich der Empf. VKP von 8 EUR tatsächlich ändert). Im WLB ist
-        der VKP mit Absicht höher als der Empf. VKP und die VPE ist mit Absicht
-        (falsch) auf 1 gesetzt.
     * ACHTUNG: Wenn Menge oder Einheit sich geändert haben, muss ggf. der Artikelname
         in preisänderung.csv von Hand geändert werden, wenn nicht -n benutzt wird.
+        Am besten auf einem Zettel notieren und hinterher händisch machen.
     * Angebliche neue Artikel prüfen, ob nur ein Tippfehler in der Artikelnummer
         ist (Fehler evtl. ans FHZ melden)
     * Auch gucken, ob neue Artikel eigentlich beim FHZ durchgestrichen sind und
         wir sie schon aus der DB entfernt haben.
+    * ACHTUNG: Mini-Täfelchen nicht ändern, d.h. aus
+        preisaenderung_irgendeine_änderung.csv und
+        preisänderung_geänderte_preise_sortiment.csv (Nr. 8901827 und 8901828)
+        löschen!
+        (Außer wenn sich der Empf. VKP von 8 EUR tatsächlich ändert). Im WLB ist
+        der VKP mit Absicht höher als der Empf. VKP und die VPE ist mit Absicht
+        (falsch) auf 1 gesetzt.
 12.) Punkt 10 und 11 so lange ausführen, bis alles OK ist.
 13.) Ergebnisse werden gespeichert in Dateien:
     * "preisänderung.csv" (alle Artikel, aktualisiert)
@@ -94,11 +98,11 @@
     * "preisänderung_neue_artikel.csv" (alle neuen Artikel)
 14.) "preisänderung.csv" bzw. für schnelleres Einlesen "preisänderung_irgendeine_änderung.csv" mit LibreOffice öffnen:
     * Separated by: Semicolon
-    * Text Delimiter: '"'!
+    * String Delimiter: '"'!
     * Problem 1:
         nämlich dass Artikelnummern, die mit "0" beginnen ihre führenden Nullen
         verlieren.
-        Daher: Die Spalte "Artikelnr." anklicken und Typ auf "Text" setzen
+        Daher: Die Spalte "Artikelnummer" anklicken und Typ auf "Text" setzen
             (https://www.youtube.com/watch?v=TrVbvKzLhgs).
     * Problem 2:
         nämlich dass dreistellige Mengenangaben wie "0.126 kg" zu "126 kg"
@@ -111,11 +115,16 @@
 17.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
     "preisänderung_geänderte_preise_sortiment.csv" auswählen.
 18.) Die Datei "preisänderung_neue_artikel.csv" mit LibreOffice öffnen,
-    Semicolon als Separator, Text Delimiter: '"'. Auch hier wieder: Die Spalte
-    "Artikelnr." anklicken und Typ auf "Text" setzen, Spalte "Menge (kg/l/St.)"
+    Semicolon als Separator, String Delimiter: '"'. Auch hier wieder: Die Spalte
+    "Artikelnummer" anklicken und Typ auf "Text" setzen, Spalte "Menge (kg/l/St.)"
     anklicken und Typ auf "Text" setzen.
 19.) Für jeden neuen Artikel eine existierende Produktgruppe wählen und in die
     entspr. Spalte eintragen. Speichern als "preisänderung_neue_artikel.ods".
+    Viele Produktgruppen können aus Artikelliste_LM.ods per Copy/Paste übernommen werden.
+    Wein-Geschenkkarton: "Ergänzungsprodukte"
+    Kaffee-/Teefilter/Teefilterclip: "Ergänzungsprodukte"
+    Papiertragetaschen etc.: "Ergänzungsprodukte"
+    Kokoblock: "Sonstiges Kunsthandwerk"
 20.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
     die Datei "preisänderung_neue_artikel.ods" auswählen.
 21.) Evtl. schon vorhandene Artikel (z.B. Wein-Geschenkkartons), die jetzt rot
@@ -214,7 +223,7 @@ def writeOutAsCSV(df, filename, only_index=False):
     c = out.columns.tolist()
     # change column order: first Produktgruppe, then Lieferant, then Artikelnummer, then rest
     c = [c[2], ] + [c[0], ] + [c[-1], ] + c[3:-1]
-    out = out.reindex_axis(c, axis=1)
+    out = out.reindex(c, axis=1)
     if only_index:
         out.to_csv(filename, sep=';', index=False, columns=(c[1], c[2]))
     else:
@@ -309,6 +318,8 @@ def main():
     print("FHZ:", set(map(lambda i: i[0], fhz.index)))
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('El Puente', i[1])
         if i[0] == 'EP' else i, fhz.index.tolist())), names=fhz.index.names)
+    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('El Puente', i[1])
+        if i[0] == 'EP\n(fairfood)' else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Bannmühle', i[1])
         if i[0] == 'Bannmühle/dwp' else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Fairtrade Center Breisgau', i[1])
@@ -319,6 +330,8 @@ def main():
         if i[0] == 'ethiquable' else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Libera Terra', i[1])
         if i[0] == 'Libera\nTerra' else i, fhz.index.tolist())), names=fhz.index.names)
+    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('WeltPartner', i[1])
+        if i[0] == 'Welt Partner' else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('WeltPartner', i[1])
         if i[0] == 'Welt\nPartner' else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('FAIR Handelshaus Bayern', i[1])
