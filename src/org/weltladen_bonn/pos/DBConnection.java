@@ -5,7 +5,7 @@ import java.util.*; // for Vector, String
 
 // MySQL Connector/J stuff:
 import java.sql.*; // SQLException, DriverManager, Connection, Statement, ResultSet
-import com.mysql.jdbc.exceptions.jdbc4.CommunicationsException;
+// import org.mariadb.jdbc.exceptions.jdbc4.CommunicationsException; // this does not exist in new MariaDB driver
 
 // GUI stuff:
 import java.awt.*;
@@ -20,7 +20,7 @@ public class DBConnection {
     public Connection conn = null;
     public boolean connectionWorks = false;
     protected boolean noConnectionToServer = false;
-    protected boolean passwordWrong = false;
+    // protected boolean passwordWrong = false;
 
     public DBConnection() {
     }
@@ -35,8 +35,8 @@ public class DBConnection {
         Vector<String> okPassword = new Vector<String>(2);
         while (true){
             JLabel label = new JLabel("");
-            if (passwordWrong){ label = new JLabel("Falsches Passwort!"); }
-            else if (noConnectionToServer){ label = new JLabel("Keine Verbindung zum Datenbankserver..."); }
+            // if (passwordWrong){ label = new JLabel("Falsches Passwort!"); }
+            if (noConnectionToServer){ label = new JLabel("Falsches Passwort oder keine Verbindung zum Datenbankserver..."); }
             okPassword = showPasswordWindow(title, label);
             if (okPassword.get(0) == "CANCEL"){
                 return okPassword;
@@ -55,23 +55,25 @@ public class DBConnection {
     protected void createConnection(String user, String password) {
         connectionWorks = false;
         noConnectionToServer = false;
-        passwordWrong = false;
+        // passwordWrong = false;
 	try {
 	    // Load JDBC driver and register with DriverManager
-	    Class.forName("com.mysql.jdbc.Driver").newInstance();
+            // Class.forName("org.mariadb.jdbc.Driver").newInstance(); // not needed with new MariaDB driver
 	    // Obtain connection to MySQL database from DriverManager
-	    this.conn = DriverManager.getConnection("jdbc:mysql://"+bc.mysqlHost+"/kasse",
-		    user, password);
+            // this.conn = DriverManager.getConnection("jdbc:mysql://"+bc.mysqlHost+"/kasse",
+                // user, password);
+            this.conn = DriverManager.getConnection("jdbc:mariadb://"+bc.mysqlHost+":3306/kasse?user="+user+"&password="+password);
             connectionWorks = true;
-	} catch (CommunicationsException ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-            System.out.println("Connection to MySQL database failed. Check network "+
-                    "connectivity of server and client,");
-            noConnectionToServer = true;
+        // } catch (CommunicationsException ex) {
+        //     System.out.println("Exception: " + ex.getMessage());
+        //     System.out.println("Connection to MySQL database failed. Check network "+
+        //         "connectivity of server and client,");
+        //     noConnectionToServer = true;
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
-	    System.out.println("Probably password wrong.");
-            passwordWrong = true;
+            System.out.println("Perhaps password wrong or DB not online.");
+            // passwordWrong = true;
+            noConnectionToServer = true;
 	} catch (Exception ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
