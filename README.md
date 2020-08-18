@@ -99,7 +99,7 @@ For Developers:
 
 Download and put into the folder `lib` the following jars:
 
-* mysql-connector-java-5.1.25-bin.jar: http://dev.mysql.com/downloads/connector/j/
+* mariadb-java-client-2.6.2.jar: https://downloads.mariadb.org/connector-java/
 * jOpenDocument-1.3.jar: http://www.jopendocument.org/downloads.html
 * date4j.jar: http://www.date4j.net
 * jcalendar-1.4.jar: http://toedter.com/jcalendar/

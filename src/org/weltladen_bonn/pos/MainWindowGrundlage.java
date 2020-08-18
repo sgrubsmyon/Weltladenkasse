@@ -62,13 +62,13 @@ public abstract class MainWindowGrundlage extends JFrame {
         if (!dbconn.connectionWorks) return;
         this.conn = dbconn.conn;
 
-	holdAll.setLayout(new BorderLayout());
+        holdAll.setLayout(new BorderLayout());
 
-	bottomPanel.setLayout(new FlowLayout());
-	holdAll.add(bottomPanel, BorderLayout.SOUTH);
-        updateBottomPanel();
+        bottomPanel.setLayout(new FlowLayout());
+        holdAll.add(bottomPanel, BorderLayout.SOUTH);
+            updateBottomPanel();
 
-	this.getContentPane().add(holdAll, BorderLayout.CENTER);
+        this.getContentPane().add(holdAll, BorderLayout.CENTER);
     }
 
 
