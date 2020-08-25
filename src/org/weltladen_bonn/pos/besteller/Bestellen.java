@@ -200,7 +200,7 @@ public class Bestellen extends BestellungsGrundlage implements
       removeDefaultKeyBindings(bestNrField);
       bestNrField.setHorizontalAlignment(JTextField.RIGHT);
       if (selBestellNr > 0){
-        bestNrField.setText(new Integer(selBestellNr).toString());
+        bestNrField.setText(Integer.valueOf(selBestellNr).toString());
       }
       bestNrField.setEditable(false);
       datePanel.add(bestNrField);
@@ -650,7 +650,7 @@ public class Bestellen extends BestellungsGrundlage implements
         if (vpe > 0){
             System.out.println("updateAnzahlSpinner at work.");
             Integer nvpe = (Integer)vpeSpinner.getValue();
-            Integer stueck = new Integer(nvpe*vpe);
+            Integer stueck = Integer.valueOf(nvpe * vpe);
             if (
                     stueck >= (Integer)((SpinnerNumberModel)anzahlSpinner.getModel()).getMinimum() &&
                     stueck <= (Integer)((SpinnerNumberModel)anzahlSpinner.getModel()).getMaximum()
@@ -666,7 +666,7 @@ public class Bestellen extends BestellungsGrundlage implements
         if (vpe > 0){
             System.out.println("updateVPESpinner at work.");
             Integer stueck = (Integer)anzahlSpinner.getValue();
-            Integer nvpe = new Integer(stueck/vpe);
+            Integer nvpe = Integer.valueOf(stueck / vpe);
             this.vpeOrAnzahlIsChanged = true;
                 vpeSpinner.setValue(nvpe);
                 selectedNumberOfVPEs = (Integer)vpeSpinner.getValue();
