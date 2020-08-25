@@ -69,6 +69,7 @@ public class AbrechnungenMonat extends Abrechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         if (result == null){
             result = "0001-01-01"; // set date very far back, every possible date should be after this one (hopefully)
@@ -95,6 +96,7 @@ public class AbrechnungenMonat extends Abrechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -125,6 +127,7 @@ public class AbrechnungenMonat extends Abrechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return abrechnung;
     }
@@ -180,6 +183,7 @@ public class AbrechnungenMonat extends Abrechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 
@@ -261,6 +265,7 @@ public class AbrechnungenMonat extends Abrechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 

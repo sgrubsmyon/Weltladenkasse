@@ -276,6 +276,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         result.add(artikelNamen);
         result.add(artikelNummern);
@@ -369,6 +370,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         if (artikelBox.getItemCount() != 1) {
             if (artikelNamen.size() == 1) {
@@ -410,6 +412,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         if (nummerBox.getItemCount() != 1) {
             if (artikelNummern.size() == 1) {

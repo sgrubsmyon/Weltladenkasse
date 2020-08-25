@@ -45,6 +45,10 @@ public class BarcodeComboBox extends IncrementalSearchComboBox {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                "Verbindung zum Datenbank-Server unterbrochen?\n"+
+                "Fehlermeldung: "+ex.getMessage(),
+                "Fehler", JOptionPane.ERROR_MESSAGE);
         }
         // sort the results
         //Collections.sort(searchResults, new Comparator<String[]>() { // anonymous class for sorting alphabetically ignoring case

@@ -70,6 +70,7 @@ public class DBConnection {
             System.out.println("Exception: " + ex.getMessage());
             System.out.println("Perhaps password wrong or DB offline.");
             noConnectionToServer = true;
+            // showDBErrorDialog(ex.getMessage());
         } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -102,6 +103,7 @@ public class DBConnection {
             System.out.println("Exception: " + ex.getMessage());
             System.out.println("Perhaps password wrong or DB offline.");
             noConnectionToServer = true;
+            // showDBErrorDialog(ex.getMessage());
         } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

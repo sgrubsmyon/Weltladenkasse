@@ -143,6 +143,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.YEAR, year);
@@ -450,6 +451,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 
@@ -511,6 +513,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         orderDetailDisplayData = new Vector< Vector<Object> >(orderDetailData);
         initiateDisplayIndices();
@@ -566,6 +569,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return exportData;
     }
@@ -643,6 +647,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return exportData;
     }
@@ -694,6 +699,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     System.out.println("Rollback failed!");
                     System.out.println("Exception: " + ex2.getMessage());
                     ex2.printStackTrace();
+                    showDBErrorDialog("Rollback failed! Exception: "+ex2.getMessage());
                 }
             } finally {
                 try {
@@ -703,6 +709,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 } catch (SQLException ex) {
                     System.out.println("Exception: " + ex.getMessage());
                     ex.printStackTrace();
+                    showDBErrorDialog(ex.getMessage());
                 }
                 try {
                     connection.setAutoCommit(true);
@@ -711,12 +718,15 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     System.out.println("Couldn't set auto-commit to true again after manual transaction.");
                     System.out.println("Exception: " + ex.getMessage());
                     ex.printStackTrace();
+                    showDBErrorDialog("Couldn't set auto-commit to true again after manual transaction. Exception: "+ex.getMessage());
                 }
                 try {
                     connection.close();
                 } catch (SQLException ex) {
+                    System.out.println("Couldn't close the connection.");
                     System.out.println("Exception: " + ex.getMessage());
                     ex.printStackTrace();
+                    showDBErrorDialog("Couldn't close the connection. Exception: "+ex.getMessage());
                 }
             }
         }

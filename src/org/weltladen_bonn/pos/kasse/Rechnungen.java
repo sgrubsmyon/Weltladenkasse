@@ -145,6 +145,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
+        showDBErrorDialog(ex.getMessage());
 	}
 	myTable = new AnyJComponentJTable(this.data, overviewLabels);
 //	myTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
@@ -304,6 +305,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return detailData;
     }

@@ -120,6 +120,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return connection;
     }
@@ -152,6 +153,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return pstmt;
     }
@@ -198,6 +200,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return pstmt;
     }
@@ -302,6 +305,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 

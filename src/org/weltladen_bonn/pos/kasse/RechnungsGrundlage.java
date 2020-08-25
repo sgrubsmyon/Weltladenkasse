@@ -78,6 +78,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return vats;
     }

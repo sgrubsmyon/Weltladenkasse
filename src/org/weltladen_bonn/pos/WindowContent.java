@@ -349,6 +349,13 @@ public abstract class WindowContent extends JPanel implements ActionListener {
      * DB methods
      */
 
+    protected void showDBErrorDialog(String message) {
+        JOptionPane.showMessageDialog(this,
+            "Verbindung zum Datenbank-Server unterbrochen?\n"+
+            "Fehlermeldung: "+message,
+            "Fehler", JOptionPane.ERROR_MESSAGE);
+    }
+
     protected void pstmtSetInteger(PreparedStatement pstmt, int paramIndex, Integer x) {
         /**
          * Home made method to put Integer class instances (that can be null)
@@ -363,6 +370,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 
@@ -380,6 +388,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 
@@ -400,6 +409,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return exists;
     }
@@ -422,6 +432,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return hasBarcode;
     }
@@ -444,6 +455,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return hasVarPrice;
     }
@@ -469,6 +481,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -494,6 +507,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -590,6 +604,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -629,6 +644,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return a;
     }
@@ -650,6 +666,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return a;
     }
@@ -672,6 +689,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return a;
     }
@@ -692,6 +710,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return produktgruppe;
     }
@@ -712,6 +731,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return lieferant;
     }
@@ -733,6 +753,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return lieferant_id;
     }
@@ -756,6 +777,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return liefIDAndNr;
     }
@@ -776,6 +798,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return exists;
     }
@@ -796,6 +819,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return inactive;
     }
@@ -816,6 +840,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return nArticles;
     }
@@ -840,6 +865,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return nArticles;
     }
@@ -860,6 +886,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -898,6 +925,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 
@@ -962,6 +990,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -988,6 +1017,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -1007,6 +1037,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -1031,6 +1062,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -1051,6 +1083,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return exists;
     }
@@ -1071,6 +1104,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return inactive;
     }
@@ -1091,6 +1125,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return nArticles;
     }
@@ -1116,6 +1151,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return nArticles;
     }
@@ -1141,6 +1177,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return ids;
     }
@@ -1176,6 +1213,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return produktgruppen_id;
     }
@@ -1208,6 +1246,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return nArticles;
     }
@@ -1228,6 +1267,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -1248,6 +1288,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -1287,6 +1328,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 
@@ -1346,6 +1388,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 
@@ -1375,6 +1418,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -1413,6 +1457,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -1439,6 +1484,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -1458,6 +1504,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -1488,6 +1535,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.err.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -1511,6 +1559,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
@@ -1527,6 +1576,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return date;
     }

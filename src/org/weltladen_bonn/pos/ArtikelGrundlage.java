@@ -81,6 +81,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return artikelID;
     }
@@ -105,6 +106,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return artikelID;
     }
@@ -133,6 +135,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return new String[]{artikelName, lieferant, sortiment.toString()};
     }
@@ -153,6 +156,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return new String[]{artikelNumber};
     }
@@ -182,6 +186,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return kurzname;
     }
@@ -215,6 +220,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return lieferant;
     }
@@ -246,6 +252,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return liefkurz;
     }
@@ -266,6 +273,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return barcode;
     }
@@ -286,6 +294,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return variabel;
     }
@@ -306,6 +315,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return price;
     }
@@ -326,6 +336,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return price;
     }
@@ -348,6 +359,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return vat;
     }
@@ -374,6 +386,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return calculatePricePerKg(menge_bd, einheit, preis_bd);
     }
@@ -426,6 +439,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return vpe;
     }
@@ -446,6 +460,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return setgroesse;
     }
@@ -467,6 +482,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return sortimentBool;
     }

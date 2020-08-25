@@ -212,6 +212,7 @@ public class DumpDatabase extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         String[] yw = {year, week};
         return yw;

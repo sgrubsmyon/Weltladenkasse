@@ -93,6 +93,10 @@ public abstract class MainWindowGrundlage extends JFrame {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                "Verbindung zum Datenbank-Server unterbrochen?\n"+
+                "Fehlermeldung: "+ex.getMessage(),
+                "Fehler", JOptionPane.ERROR_MESSAGE);
         }
         return ks;
     }
@@ -116,6 +120,10 @@ public abstract class MainWindowGrundlage extends JFrame {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                "Verbindung zum Datenbank-Server unterbrochen?\n"+
+                "Fehlermeldung: "+ex.getMessage(),
+                "Fehler", JOptionPane.ERROR_MESSAGE);
         }
         return id;
     }
