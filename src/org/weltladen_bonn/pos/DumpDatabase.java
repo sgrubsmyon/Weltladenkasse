@@ -203,11 +203,12 @@ public class DumpDatabase extends WindowContent {
                     "bestell_nr DESC LIMIT 1"
                     );
             // Now do something with the ResultSet, should be only one result ...
-	    rs.next();
-	    year = rs.getString(1).substring(0,4);
-	    week = rs.getString(2);
-	    rs.close();
-	    stmt.close();
+            rs.next();
+            year = rs.getString(1).substring(0,4);
+            week = rs.getString(2);
+            rs.close();
+            stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

@@ -74,6 +74,7 @@ public class ProduktgruppeFormular extends WindowContent
                 ids.add( rs.getString(3) != null ? rs.getInt(3) : null );
                 rs.close();
                 pstmt.close();
+                connection.close();
             } catch (SQLException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
@@ -90,6 +91,7 @@ public class ProduktgruppeFormular extends WindowContent
             ResultSet rs = stmt.executeQuery("SELECT MAX(toplevel_id) FROM produktgruppe");
             rs.next(); id = rs.getInt(1); rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -108,6 +110,7 @@ public class ProduktgruppeFormular extends WindowContent
             ResultSet rs = pstmt.executeQuery();
             rs.next(); id = rs.getInt(1); rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -127,6 +130,7 @@ public class ProduktgruppeFormular extends WindowContent
             ResultSet rs = pstmt.executeQuery();
             rs.next(); id = rs.getInt(1); rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -221,6 +225,7 @@ public class ProduktgruppeFormular extends WindowContent
             }
             rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

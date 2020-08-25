@@ -786,6 +786,7 @@ public class Bestellen extends BestellungsGrundlage implements
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

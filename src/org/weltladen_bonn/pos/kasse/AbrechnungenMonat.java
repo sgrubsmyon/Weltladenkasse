@@ -65,6 +65,7 @@ public class AbrechnungenMonat extends Abrechnungen {
                     );
             rs.next(); result = rs.getString(1); rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -90,6 +91,7 @@ public class AbrechnungenMonat extends Abrechnungen {
             }
             rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -119,6 +121,7 @@ public class AbrechnungenMonat extends Abrechnungen {
             }
             rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -173,6 +176,7 @@ public class AbrechnungenMonat extends Abrechnungen {
                     }
                 }
             }
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -205,6 +209,7 @@ public class AbrechnungenMonat extends Abrechnungen {
             totalsValues.add(new BigDecimal(rs.getString(3) == null ? "0." : rs.getString(3)));
             rs.close();
             pstmt.close();
+            connection.close();
 
             // add the incomplete day
             Vector<BigDecimal> totalsValuesDay = queryIncompleteAbrechnungTag_Totals();

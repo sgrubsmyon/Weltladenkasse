@@ -139,6 +139,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             year = rs.getInt(3);
             rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -415,19 +416,19 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 		        "SELECT COUNT(*) FROM bestellung "+
 		        filterStrOrders
 		    );
-	    // Now do something with the ResultSet ...
-	    rs.next();
-	    bestellungsZahl = rs.getString(1);
-	    bestellungsZahlInt = Integer.parseInt(bestellungsZahl);
-	    totalPage = bestellungsZahlInt/bc.rowsPerPage + 1;
-            if (currentPage > totalPage) {
-                currentPage = totalPage;
-            }
-	    rs.close();
+            // Now do something with the ResultSet ...
+            rs.next();
+            bestellungsZahl = rs.getString(1);
+            bestellungsZahlInt = Integer.parseInt(bestellungsZahl);
+            totalPage = bestellungsZahlInt/bc.rowsPerPage + 1;
+                if (currentPage > totalPage) {
+                    currentPage = totalPage;
+                }
+            rs.close();
             rs = stmt.executeQuery(
                     "SELECT bestell_nr, typ, jahr, kw, DATE_FORMAT(bestell_datum, "+
                     "'"+bc.dateFormatSQL+"') FROM bestellung "+
-		    filterStrOrders +
+            filterStrOrders +
                     "ORDER BY bestell_nr DESC "+
                     "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
                     );
@@ -443,8 +444,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 row.add(rs.getString(5));
                 orderData.add(row);
             }
-	    rs.close();
-	    stmt.close();
+            rs.close();
+            stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -503,8 +505,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 orderDetailArtikelIDs.add(artikelID);
                 orderDetailColors.add(color);
             }
-	    rs.close();
-	    pstmt.close();
+            rs.close();
+            pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -557,8 +560,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     row.add(vpe); row.add(vkp); row.add(ekp); row.add(mwst); row.add(stueck);
                 exportData.add(row);
             }
-	    rs.close();
-	    pstmt.close();
+            rs.close();
+            pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -633,8 +637,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     row.add(total_mwst_betrag); row.add(total_brutto); row.add(total_vkp);
                 exportData.add(row);
             }
-	    rs.close();
-	    pstmt.close();
+            rs.close();
+            pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -701,8 +706,15 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 }
                 try {
                     connection.setAutoCommit(true);
+                    
                 } catch (SQLException ex) {
                     System.out.println("Couldn't set auto-commit to true again after manual transaction.");
+                    System.out.println("Exception: " + ex.getMessage());
+                    ex.printStackTrace();
+                }
+                try {
+                    connection.close();
+                } catch (SQLException ex) {
                     System.out.println("Exception: " + ex.getMessage());
                     ex.printStackTrace();
                 }

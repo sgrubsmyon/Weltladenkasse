@@ -92,7 +92,6 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         overviewLabels.add("Datum");
 	overviewLabels.add("");
 	try {
-	try {
         Connection connection = this.pool.getConnection();
 	    // Create statement for MySQL database
 	    Statement stmt = connection.createStatement();
@@ -142,6 +141,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    }
 	    rs.close();
 	    stmt.close();
+        connection.close();
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
@@ -156,72 +156,72 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     abstract void addButtonsToTable();
 
     void showTable(){
-	allPanel = new JPanel(new BorderLayout());
-	allPanel.setBorder(BorderFactory.createTitledBorder(titleStr));
-        headerPanel = new JPanel();
-	headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.PAGE_AXIS));
+        allPanel = new JPanel(new BorderLayout());
+        allPanel.setBorder(BorderFactory.createTitledBorder(titleStr));
+            headerPanel = new JPanel();
+        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.PAGE_AXIS));
 
-        addOtherStuff();
+            addOtherStuff();
 
-	JPanel pageChangePanel = new JPanel();
-	pageChangePanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-//	pageChangePanel.setMaximumSize(new Dimension(1024,30));
-	prevButton = new JButton("<<");
-	if (this.currentPage <= 1)
-	    prevButton.setEnabled(false);
-	nextButton = new JButton(">>");
-	if (this.currentPage >= totalPage)
-	    nextButton.setEnabled(false);
-	pageChangePanel.add(prevButton);
-	pageChangePanel.add(nextButton);
-	prevButton.addActionListener(this);
-	nextButton.addActionListener(this);
-	int currentPageMin = (currentPage-1)*bc.rowsPerPage + 1;
-	int currentPageMax = bc.rowsPerPage*currentPage;
-	currentPageMax = (currentPageMax <= rechnungsZahlInt) ? currentPageMax : rechnungsZahlInt;
-	JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Rechnungen "+
-	    currentPageMin + " bis "+ currentPageMax +" von "+ rechnungsZahlInt);
-	pageChangePanel.add(header);
-	headerPanel.add(pageChangePanel);
+        JPanel pageChangePanel = new JPanel();
+        pageChangePanel.setLayout(new FlowLayout(FlowLayout.LEADING));
+    //	pageChangePanel.setMaximumSize(new Dimension(1024,30));
+        prevButton = new JButton("<<");
+        if (this.currentPage <= 1)
+            prevButton.setEnabled(false);
+            nextButton = new JButton(">>");
+            if (this.currentPage >= totalPage)
+                nextButton.setEnabled(false);
+            pageChangePanel.add(prevButton);
+            pageChangePanel.add(nextButton);
+            prevButton.addActionListener(this);
+            nextButton.addActionListener(this);
+            int currentPageMin = (currentPage-1)*bc.rowsPerPage + 1;
+            int currentPageMax = bc.rowsPerPage*currentPage;
+            currentPageMax = (currentPageMax <= rechnungsZahlInt) ? currentPageMax : rechnungsZahlInt;
+            JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Rechnungen "+
+                currentPageMin + " bis "+ currentPageMax +" von "+ rechnungsZahlInt);
+            pageChangePanel.add(header);
+            headerPanel.add(pageChangePanel);
 
-        allPanel.add(headerPanel, BorderLayout.NORTH);
+                allPanel.add(headerPanel, BorderLayout.NORTH);
 
-	addButtonsToTable();
-	setOverviewTableProperties(myTable);
-	JScrollPane scrollPane = new JScrollPane(myTable);
-	allPanel.add(scrollPane, BorderLayout.CENTER);
+            addButtonsToTable();
+            setOverviewTableProperties(myTable);
+            JScrollPane scrollPane = new JScrollPane(myTable);
+            allPanel.add(scrollPane, BorderLayout.CENTER);
 
-	this.add(allPanel, BorderLayout.CENTER);
-    }
+            this.add(allPanel, BorderLayout.CENTER);
+        }
 
-    protected void updateTable(){
-	this.remove(allPanel);
-	this.revalidate();
-	fillDataArray();
-	showTable();
+        protected void updateTable(){
+        this.remove(allPanel);
+        this.revalidate();
+        fillDataArray();
+        showTable();
     }
 
     private Vector< Vector<Object> > getDetailData(int detailRow) {
-	// Now select details of the invoice
-	Vector< Vector<Object> > detailData = new Vector< Vector<Object> >();
-	try {
-        Connection connection = this.pool.getConnection();
-        PreparedStatement pstmt = connection.prepareStatement(
-                "SELECT vd.position, a.kurzname, a.artikel_name, ra.aktionsname, " +
-                "a.artikel_nr, a.sortiment, " +
-                "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, " +
-                "(p.toplevel_id IS NULL AND p.sub_id = 1 AND a.artikel_id = 2) AS rechnung_rabatt, " +
-                "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
-                "vd.stueckzahl, vd.ges_preis, vd.mwst_satz " +
-                "FROM verkauf_details AS vd LEFT JOIN artikel AS a USING (artikel_id) " +
-                "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
-                "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
-                "WHERE vd.rechnungs_nr = ?"
-        );
-        pstmtSetInteger(pstmt, 1, Integer.parseInt(this.data.get(detailRow).get(1).toString()));
-	    ResultSet rs = pstmt.executeQuery();
-	    // Now do something with the ResultSet ...
-	    while (rs.next()) {
+        // Now select details of the invoice
+        Vector< Vector<Object> > detailData = new Vector< Vector<Object> >();
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                    "SELECT vd.position, a.kurzname, a.artikel_name, ra.aktionsname, " +
+                    "a.artikel_nr, a.sortiment, " +
+                    "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, " +
+                    "(p.toplevel_id IS NULL AND p.sub_id = 1 AND a.artikel_id = 2) AS rechnung_rabatt, " +
+                    "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
+                    "vd.stueckzahl, vd.ges_preis, vd.mwst_satz " +
+                    "FROM verkauf_details AS vd LEFT JOIN artikel AS a USING (artikel_id) " +
+                    "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
+                    "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
+                    "WHERE vd.rechnungs_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, Integer.parseInt(this.data.get(detailRow).get(1).toString()));
+            ResultSet rs = pstmt.executeQuery();
+            // Now do something with the ResultSet ...
+            while (rs.next()) {
                 Integer pos = rs.getString(1) == null ? null : rs.getInt(1);
                 String kurzname = rs.getString(2);
                 String artikelname = rs.getString(3);
@@ -291,19 +291,20 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 
                 mwsts.add(mwst);
 
-		Vector<Object> row = new Vector<Object>();
-                    // add units
-                    row.add(pos);
-                    row.add(name); row.add(artikelnummer); row.add(stueck);
-                    row.add(einzelPreis); row.add(gesPreis); row.add(bc.vatFormatter(mwst));
-		detailData.add(row);
-	    }
-	    rs.close();
+                Vector<Object> row = new Vector<Object>();
+                            // add units
+                            row.add(pos);
+                            row.add(name); row.add(artikelnummer); row.add(stueck);
+                            row.add(einzelPreis); row.add(gesPreis); row.add(bc.vatFormatter(mwst));
+                detailData.add(row);
+            }
+            rs.close();
             pstmt.close();
-	} catch (SQLException ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    ex.printStackTrace();
-	}
+            connection.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
         return detailData;
     }
 
@@ -436,36 +437,36 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             return;
         }
         final int numberOfRows = detailButtons.size();
-	int detailRow = -1;
-	for (int i=0; i<numberOfRows; i++){
-	    if (e.getSource() == detailButtons.get(i) ){
-		detailRow = i;
-		break;
-	    }
-	}
-	if (detailRow > -1){
-	    showDetailTable(detailRow, this.titleStr);
-	    return;
-	}
-	if (e.getSource() == quittungsButton){
-            LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
-                getMwstsAndTheirValues();
-            BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
-            BigDecimal rueckgeld = null;
-            if (kundeGibt != null){
-                rueckgeld = kundeGibt.subtract(totalPrice);
+        int detailRow = -1;
+        for (int i=0; i<numberOfRows; i++){
+            if (e.getSource() == detailButtons.get(i) ){
+            detailRow = i;
+            break;
             }
-            DateTime datet = null;
-            if (!datum.equals(""))
-                datet = new DateTime(datum);
-            else
-                datet = DateTime.now(TimeZone.getDefault());
-            Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
-                    datet, rechnungsNr, kassierArtikel,
-                    mwstsAndTheirValues, zahlungsModus,
-                    totalPrice, kundeGibt, rueckgeld);
-            myQuittung.printReceipt();
-	    return;
-	}
+        }
+        if (detailRow > -1){
+            showDetailTable(detailRow, this.titleStr);
+            return;
+        }
+        if (e.getSource() == quittungsButton){
+                LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
+                    getMwstsAndTheirValues();
+                BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
+                BigDecimal rueckgeld = null;
+                if (kundeGibt != null){
+                    rueckgeld = kundeGibt.subtract(totalPrice);
+                }
+                DateTime datet = null;
+                if (!datum.equals(""))
+                    datet = new DateTime(datum);
+                else
+                    datet = DateTime.now(TimeZone.getDefault());
+                Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
+                        datet, rechnungsNr, kassierArtikel,
+                        mwstsAndTheirValues, zahlungsModus,
+                        totalPrice, kundeGibt, rueckgeld);
+                myQuittung.printReceipt();
+            return;
+        }
     }
 }

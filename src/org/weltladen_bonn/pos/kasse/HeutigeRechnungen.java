@@ -82,6 +82,7 @@ public class HeutigeRechnungen extends Rechnungen {
                     "Fehler bei Stornierung", JOptionPane.ERROR_MESSAGE);
             }
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -111,6 +112,7 @@ public class HeutigeRechnungen extends Rechnungen {
             pstmt.setString(3, "Storno");
             int result = pstmt.executeUpdate();
             pstmt.close();
+            connection.close();
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Kassenstand konnte nicht geändert werden.",

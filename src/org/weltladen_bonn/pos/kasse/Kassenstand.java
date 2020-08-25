@@ -126,6 +126,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             year = rs.getInt(3);
             rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -222,6 +223,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             totalPage = kassenstandZahlInt/bc.rowsPerPage + 1;
             rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

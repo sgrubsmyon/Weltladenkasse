@@ -219,6 +219,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
                 gruppenid = rs.getString(1) == null ? "" : rs.getString(1);
             rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -275,6 +276,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             }
             rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

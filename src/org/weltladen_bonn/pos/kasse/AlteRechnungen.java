@@ -85,6 +85,7 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
             year = rs.getInt(3);
             rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

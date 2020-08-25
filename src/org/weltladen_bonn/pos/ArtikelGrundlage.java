@@ -77,6 +77,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             ResultSet rs = pstmt.executeQuery();
             rs.next(); artikelID = rs.getInt(1); rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -100,6 +101,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             ResultSet rs = pstmt.executeQuery();
             rs.next(); artikelID = rs.getInt(1); rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -127,6 +129,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             sortiment = rs.getBoolean(3);
             rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -146,6 +149,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             ResultSet rs = pstmt.executeQuery();
             rs.next(); artikelNumber = rs.getString(1); rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -174,6 +178,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
                 rs.next(); kurzname = rs.getString(1); rs.close();
             }
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -206,6 +211,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             rs.next(); lieferant = rs.getString(1); rs.close();
             if ( lieferant == null ) { lieferant = ""; }
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -236,6 +242,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
                 rs.next(); liefkurz = rs.getString(1); rs.close();
             }
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -255,6 +262,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             ResultSet rs = pstmt.executeQuery();
             rs.next(); barcode = rs.getString(1); rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -274,6 +282,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             ResultSet rs = pstmt.executeQuery();
             rs.next(); variabel = ( rs.getInt(1) != 0 ); rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -293,6 +302,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             ResultSet rs = pstmt.executeQuery();
             rs.next(); price = rs.getString(1); rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -312,6 +322,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             ResultSet rs = pstmt.executeQuery();
             rs.next(); price = rs.getString(1); rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -333,6 +344,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             // Now do something with the ResultSet, should be only one result ...
             rs.next(); vat = rs.getString(1); rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -358,6 +370,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             }
             rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -409,6 +422,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             }
             rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -428,6 +442,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             ResultSet rs = pstmt.executeQuery();
             rs.next(); setgroesse = rs.getInt(1); rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -448,6 +463,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             // Now do something with the ResultSet, should be only one result ...
             rs.next(); sortimentBool = rs.getBoolean(1); rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
