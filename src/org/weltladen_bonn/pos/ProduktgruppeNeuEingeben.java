@@ -5,11 +5,7 @@ import java.util.*; // for Vector, Collections
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
-import java.sql.SQLException;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -40,10 +36,10 @@ public class ProduktgruppeNeuEingeben extends DialogWindow
     protected JButton submitButton;
 
     // Methoden:
-    public ProduktgruppeNeuEingeben(Connection conn, MainWindowGrundlage mw, Produktgruppenliste pw, JDialog dia) {
-	super(conn, mw, dia);
+    public ProduktgruppeNeuEingeben(MariaDbPoolDataSource pool, MainWindowGrundlage mw, Produktgruppenliste pw, JDialog dia) {
+	    super(pool, mw, dia);
         produktgruppenListe = pw;
-        produktgruppeFormular = new ProduktgruppeFormular(conn, mw);
+        produktgruppeFormular = new ProduktgruppeFormular(pool, mw);
         showAll();
     }
 

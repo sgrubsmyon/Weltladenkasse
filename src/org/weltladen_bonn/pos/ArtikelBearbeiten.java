@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -43,11 +44,11 @@ public class ArtikelBearbeiten extends DialogWindow
     protected boolean updating = false; /** against the "Attempt to mutate in notification" */
 
     // Methoden:
-    public ArtikelBearbeiten(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia,
+    public ArtikelBearbeiten(MariaDbPoolDataSource pool, MainWindowGrundlage mw, Artikelliste pw, JDialog dia,
             Vector<Artikel> origArties) {
-	super(conn, mw, dia);
+	    super(pool, mw, dia);
         artikelListe = pw;
-        artikelFormular = new ArtikelFormular(conn, mw, true, true, true);
+        artikelFormular = new ArtikelFormular(pool, mw, true, true, true);
         originalArticles = new Vector<Artikel>(origArties);
 
         showAll();

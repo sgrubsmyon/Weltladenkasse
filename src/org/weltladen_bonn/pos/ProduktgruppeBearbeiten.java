@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -46,14 +47,14 @@ public class ProduktgruppeBearbeiten extends DialogWindow
     protected JButton submitButton;
 
     // Methoden:
-    public ProduktgruppeBearbeiten(Connection conn, MainWindowGrundlage mw, Produktgruppenliste pw, JDialog dia,
+    public ProduktgruppeBearbeiten(MariaDbPoolDataSource pool, MainWindowGrundlage mw, Produktgruppenliste pw, JDialog dia,
             Vector< Vector<Object> > origData,
             Vector<Integer> origProdGrIDs,
             Vector<Integer> origMwStIDs,
             Vector<Integer> origPfandIDs) {
-	super(conn, mw, dia);
+	super(pool, mw, dia);
         produktgruppenListe = pw;
-        produktgruppeFormular = new ProduktgruppeFormular(conn, mw);
+        produktgruppeFormular = new ProduktgruppeFormular(pool, mw);
         originalData = new Vector< Vector<Object> >(origData);
         originalProdGrIDs = new Vector<Integer>(origProdGrIDs);
         originalParentProdGrIDs = findParentProdGrIDs(origProdGrIDs);
@@ -67,7 +68,8 @@ public class ProduktgruppeBearbeiten extends DialogWindow
         for (Integer id : prodGrIDs){
             try {
                 // get topid, subid, subsubid
-                PreparedStatement pstmt = this.conn.prepareStatement(
+                Connection connection = this.pool.getConnection();
+                PreparedStatement pstmt = connection.prepareStatement(
                         "SELECT toplevel_id FROM produktgruppe WHERE produktgruppen_id = ?"
                         );
                 pstmtSetInteger(pstmt, 1, id);
@@ -76,7 +78,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
                 Integer topid = rs.getString(1) != null ? rs.getInt(1) : null;
                 rs.close();
                 //
-                pstmt = this.conn.prepareStatement(
+                pstmt = connection.prepareStatement(
                         "SELECT sub_id FROM produktgruppe WHERE produktgruppen_id = ?"
                         );
                 pstmtSetInteger(pstmt, 1, id);
@@ -85,7 +87,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
                 Integer subid = rs.getString(1) != null ? rs.getInt(1) : null;
                 rs.close();
                 //
-                pstmt = this.conn.prepareStatement(
+                pstmt = connection.prepareStatement(
                         "SELECT subsub_id FROM produktgruppe WHERE produktgruppen_id = ?"
                         );
                 pstmtSetInteger(pstmt, 1, id);
@@ -96,7 +98,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
                 // get the parent group's id
                 String query;
                 if (subsubid != null){
-                    pstmt = this.conn.prepareStatement(
+                    pstmt = connection.prepareStatement(
                             "SELECT produktgruppen_id FROM produktgruppe "+
                             "WHERE toplevel_id = ? AND sub_id = ? AND subsub_id IS NULL"
                             );
@@ -106,7 +108,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
                     rs.next(); ppgIDs.add(rs.getInt(1)); rs.close();
                     pstmt.close();
                 } else if (subid != null){
-                    pstmt = this.conn.prepareStatement(
+                    pstmt = connection.prepareStatement(
                             "SELECT produktgruppen_id FROM produktgruppe "+
                             "WHERE toplevel_id = ? AND sub_id IS NULL AND subsub_id IS NULL"
                             );

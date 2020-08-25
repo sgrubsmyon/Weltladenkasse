@@ -5,16 +5,16 @@ import java.util.*; // for String
 import java.awt.Color;
 import java.math.BigDecimal;
 // MySQL Connector/J stuff:
-import java.sql.*; // Connection, Statement, ResultSet
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 import org.weltladen_bonn.pos.*;
 
 public class ArticleSelectPanelPreisschilder extends ArticleSelectPanelGrundlage {
     PreisschilderFormular preisschilder;
 
-    public ArticleSelectPanelPreisschilder(Connection conn, MainWindowGrundlage mw,
+    public ArticleSelectPanelPreisschilder(MariaDbPoolDataSource pool, MainWindowGrundlage mw,
             PreisschilderFormular preisschilder) {
-        super(conn, mw, preisschilder, null);
+        super(pool, mw, preisschilder, null);
         this.preisschilder = preisschilder;
     }
 

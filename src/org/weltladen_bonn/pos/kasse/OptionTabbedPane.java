@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -38,19 +39,19 @@ public class OptionTabbedPane extends TabbedPaneGrundlage {
     private ArtikellisteContainer myArtikellisteC;
 
     // Methoden:
-    public OptionTabbedPane(Connection conn, MainWindowGrundlage mw, TabbedPaneGrundlage ptp) {
-	super(conn, mw, ptp);
+    public OptionTabbedPane(MariaDbPoolDataSource pool, MainWindowGrundlage mw, TabbedPaneGrundlage ptp) {
+	    super(pool, mw, ptp);
     }
 
     @Override
     protected void createTabbedPane() {
         tabbedPane = new JTabbedPane();
 
-        myArtikellisteC = new ArtikellisteContainer(this.conn, this.mainWindow);
-        Rabattaktionen myRabattaktionen = new Rabattaktionen(this.conn, this.mainWindow, this);
-        Lieferantliste myLieferant = new Lieferantliste(this.conn, this.mainWindow);
-        Produktgruppenliste myProduktgruppe = new Produktgruppenliste(this.conn, this.mainWindow);
-        DumpDatabase myDump = new DumpDatabase(this.conn, this.mainWindow, this);
+        myArtikellisteC = new ArtikellisteContainer(this.pool, this.mainWindow);
+        Rabattaktionen myRabattaktionen = new Rabattaktionen(this.pool, this.mainWindow, this);
+        Lieferantliste myLieferant = new Lieferantliste(this.pool, this.mainWindow);
+        Produktgruppenliste myProduktgruppe = new Produktgruppenliste(this.pool, this.mainWindow);
+        DumpDatabase myDump = new DumpDatabase(this.pool, this.mainWindow, this);
         tabbedPane.addTab("Artikelliste", null, myArtikellisteC, "Artikel bearbeiten/hinzufügen");
         tabbedPane.addTab("Rabatt", null, myRabattaktionen, "Rabattaktionen bearbeiten/hinzufügen");
         tabbedPane.addTab("Lieferanten", null, myLieferant, "Lieferanten bearbeiten/hinzufügen");

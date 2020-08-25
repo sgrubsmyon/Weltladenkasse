@@ -6,6 +6,7 @@ import java.util.*; // for Vector, String
 // MySQL Connector/J stuff:
 import java.sql.*; // SQLException, DriverManager, Connection, Statement, ResultSet
 // import org.mariadb.jdbc.exceptions.jdbc4.CommunicationsException; // this does not exist in new MariaDB driver
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.*;
@@ -18,6 +19,7 @@ public class DBConnection {
 
     // Connection to MySQL database:
     public Connection conn = null;
+    public MariaDbPoolDataSource pool = null;
     public boolean connectionWorks = false;
     protected boolean noConnectionToServer = false;
     // protected boolean passwordWrong = false;
@@ -43,7 +45,8 @@ public class DBConnection {
             }
             if (okPassword.get(0) == "OK"){
                 String password = okPassword.get(1);
-                createConnection(user, password);
+                // createConnection(user, password);
+                createConnectionPool(user, password);
 
                 if (connectionWorks){
                     return okPassword;
@@ -52,32 +55,55 @@ public class DBConnection {
         }
     }
 
+    /* 
+       Deprecated: old version with single DB connection
+    */
     protected void createConnection(String user, String password) {
         connectionWorks = false;
         noConnectionToServer = false;
         // passwordWrong = false;
-	try {
-	    // Load JDBC driver and register with DriverManager
-            // Class.forName("org.mariadb.jdbc.Driver").newInstance(); // not needed with new MariaDB driver
-	    // Obtain connection to MySQL database from DriverManager
-            // this.conn = DriverManager.getConnection("jdbc:mysql://"+bc.mysqlHost+"/kasse",
-                // user, password);
+        try {
+            // Obtain connection to MySQL database from DriverManager
             this.conn = DriverManager.getConnection("jdbc:mariadb://"+bc.mysqlHost+":3306/kasse?user="+user+"&password="+password);
             connectionWorks = true;
-        // } catch (CommunicationsException ex) {
-        //     System.out.println("Exception: " + ex.getMessage());
-        //     System.out.println("Connection to MySQL database failed. Check network "+
-        //         "connectivity of server and client,");
-        //     noConnectionToServer = true;
-	} catch (SQLException ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-            System.out.println("Perhaps password wrong or DB not online.");
-            // passwordWrong = true;
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            System.out.println("Perhaps password wrong or DB offline.");
             noConnectionToServer = true;
-	} catch (Exception ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    ex.printStackTrace();
-	}
+        } catch (Exception ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    /* 
+        New version for MariaDB Java client 2.6.2:
+        Connection pool has advantages over a standard connection, e.g.
+        in case the connection is closed by the DB, it is automatically
+        re-established by the pool
+    */
+    protected void createConnectionPool(String user, String password) {
+        connectionWorks = false;
+        noConnectionToServer = false;
+        try {
+            this.pool = new MariaDbPoolDataSource("jdbc:mariadb://"+bc.mysqlHost+":3306/kasse?user="+user+"&password="+password+"&maxPoolSize=10&connectTimeout=3000");
+            // Test the connection: DB may be offline or password may be wrong:
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT CONNECTION_ID()");
+            // ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM verkauf");
+            rs.next();
+            System.out.println("DBConnection: "+rs.getLong(1));
+            connectionWorks = true;
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            System.out.println("Perhaps password wrong or DB offline.");
+            noConnectionToServer = true;
+        } catch (Exception ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        // this.pool.close(); // no, we want to use it as long as program is open
     }
 
     private static Vector<String> showPasswordWindow(String title, JLabel optionalLabel) {

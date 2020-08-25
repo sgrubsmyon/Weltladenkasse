@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -53,21 +54,21 @@ public class ArtikellisteContainer extends WindowContent {
     private JButton exportButton;
 
     // Methoden:
-    public ArtikellisteContainer(Connection conn, MainWindowGrundlage mw) {
-	super(conn, mw);
+    public ArtikellisteContainer(MariaDbPoolDataSource pool, MainWindowGrundlage mw) {
+	super(pool, mw);
 
         showProdListPanel();
 
         showBottomPanel();
         enableButtons();
 
-        artList = new Artikelliste(this.conn, this);
+        artList = new Artikelliste(this.pool, this);
     }
 
     private void showProdListPanel() {
         prodListPanel = new JPanel(new BorderLayout());
         showTopPanel();
-        prodList = new ProduktgruppenbaumArtikelliste(this.conn, this.mainWindow, this);
+        prodList = new ProduktgruppenbaumArtikelliste(this.pool, this.mainWindow, this);
         prodListPanel.add(prodList, BorderLayout.CENTER);
         this.add(prodListPanel, BorderLayout.CENTER);
     }
@@ -93,12 +94,12 @@ public class ArtikellisteContainer extends WindowContent {
     }
 
     public void switchToArtikellisteProduktgruppe(Integer topid, Integer subid, Integer subsubid, String gruppenname) {
-        Artikelliste artList = new Artikelliste(this.conn, this, topid, subid, subsubid, gruppenname);
+        Artikelliste artList = new Artikelliste(this.pool, this, topid, subid, subsubid, gruppenname);
         switchToArtikelliste(artList);
     }
 
     public void switchToArtikellisteSearchString(String searchStr) {
-        Artikelliste artList = new Artikelliste(this.conn, this, searchStr);
+        Artikelliste artList = new Artikelliste(this.pool, this, searchStr);
         switchToArtikelliste(artList);
         // remember the search string
         lastSearchStr = searchStr;
@@ -107,7 +108,7 @@ public class ArtikellisteContainer extends WindowContent {
     public void switchToProduktgruppenliste() {
         this.remove(artList);
         this.revalidate();
-        artList = new Artikelliste(this.conn, this);
+        artList = new Artikelliste(this.pool, this);
         showProdListPanel();
         // be reminded of expansion state
         JTree tree = prodList.getTree();
@@ -279,11 +280,11 @@ public class ArtikellisteContainer extends WindowContent {
         if (e.getSource() == exportButton){
             if (!artListShown) {
                 // in order to export *all* articles:
-                artList = new Artikelliste(this.conn, this, null, null, null, "Alle Artikel (0)");
+                artList = new Artikelliste(this.pool, this, null, null, null, "Alle Artikel (0)");
             }
             artList.showExportDialog();
             if (!artListShown) {
-                artList = new Artikelliste(this.conn, this);
+                artList = new Artikelliste(this.pool, this);
             }
             return;
         }

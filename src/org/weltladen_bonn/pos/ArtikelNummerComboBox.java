@@ -11,19 +11,22 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 public class ArtikelNummerComboBox extends IncrementalSearchComboBox {
-    private Connection conn; // connection to MySQL database
+    // private Connection conn; // connection to MySQL database
+    private MariaDbPoolDataSource pool; // pool of connections to MySQL database
 
-    public ArtikelNummerComboBox(Connection conn, String fstr) {
+    public ArtikelNummerComboBox(MariaDbPoolDataSource pool, String fstr) {
         super(fstr);
-        this.conn = conn;
+        this.pool = pool;
     }
 
     public Vector<String[]> doQuery() {
         Vector<String[]> searchResults = new Vector<String[]>();
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT DISTINCT artikel_nr FROM artikel AS a " +
                     "INNER JOIN produktgruppe AS p USING (produktgruppen_id) " +
                     "WHERE artikel_nr LIKE ? AND a.aktiv = TRUE " + filterStr +

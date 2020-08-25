@@ -7,6 +7,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 
 // MySQL Connector/J stuff:
 import java.sql.*;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.*; // BorderLayout, FlowLayout, Dimension
@@ -88,16 +89,16 @@ public class Bestellen extends BestellungsGrundlage implements
     /**
      *    The constructor.
      *       */
-    public Bestellen(Connection conn, MainWindowGrundlage mw, TabbedPane tp) {
-	     super(conn, mw);
-       tabbedPane = tp;
+    public Bestellen(MariaDbPoolDataSource pool, MainWindowGrundlage mw, TabbedPane tp) {
+        super(pool, mw);
+        tabbedPane = tp;
 
-       columnLabels.add("Entfernen");
+        columnLabels.add("Entfernen");
 
-       emptyTable();
-       showAll();
-       doCSVBackupReadin();
-       asPanel.emptyArtikelBox();
+        emptyTable();
+        showAll();
+        doCSVBackupReadin();
+        asPanel.emptyArtikelBox();
     }
 
     void preventSpinnerOverflow(JSpinner spinner) {
@@ -205,7 +206,7 @@ public class Bestellen extends BestellungsGrundlage implements
       datePanel.add(bestNrField);
       formPanel.add(datePanel);
 
-      asPanel = new ArticleSelectPanelBestellen(conn, mainWindow, this, tabbedPane);
+      asPanel = new ArticleSelectPanelBestellen(this.pool, mainWindow, this, tabbedPane);
       formPanel.add(asPanel);
 
       JPanel chooseArticlePanel = new JPanel();
@@ -733,13 +734,14 @@ public class Bestellen extends BestellungsGrundlage implements
         int bestellNr = -1;
         String typ = "";
         try {
+            Connection connection = this.pool.getConnection();
             PreparedStatement pstmt;
             if (selBestellNr > 0){
-                pstmt = this.conn.prepareStatement("INSERT INTO bestellung "+
-                        "SET bestell_nr = ?, typ = ?, bestell_datum = NOW(), jahr = ?, kw = ?");
+                pstmt = connection.prepareStatement("INSERT INTO bestellung "+
+                    "SET bestell_nr = ?, typ = ?, bestell_datum = NOW(), jahr = ?, kw = ?");
             } else {
-                pstmt = this.conn.prepareStatement("INSERT INTO bestellung "+
-                        "SET typ = ?, bestell_datum = NOW(), jahr = ?, kw = ?");
+                pstmt = connection.prepareStatement("INSERT INTO bestellung "+
+                    "SET typ = ?, bestell_datum = NOW(), jahr = ?, kw = ?");
             }
             int fieldCounter = 1;
             if (selBestellNr > 0){
@@ -759,7 +761,7 @@ public class Bestellen extends BestellungsGrundlage implements
             if (selBestellNr > 0){
                 bestellNr = selBestellNr;
             } else {
-                Statement stmt = this.conn.createStatement();
+                Statement stmt = connection.createStatement();
                 ResultSet rs = stmt.executeQuery(
                         "SELECT MAX(bestell_nr) FROM bestellung"
                         );
@@ -767,7 +769,7 @@ public class Bestellen extends BestellungsGrundlage implements
                 stmt.close();
             }
             for (int i=0; i<artikelIDs.size(); i++){
-                pstmt = this.conn.prepareStatement(
+                pstmt = connection.prepareStatement(
                         "INSERT INTO bestellung_details SET bestell_nr = ?, "+
                         "typ = ?, position = ?, artikel_id = ?, stueckzahl = ?"
                         );

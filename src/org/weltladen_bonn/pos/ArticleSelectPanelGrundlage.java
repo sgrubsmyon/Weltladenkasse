@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Vector;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // MySQL Connector/J stuff:
 // GUI stuff:
@@ -46,8 +47,8 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
     // Gutscheine (where toplevel_id is NULL and sub_id is 2):
     private String filterStr = " AND (toplevel_id IS NOT NULL OR sub_id = 2 OR sub_id = 4) "; // exceptions for Gutschein (sub_id = 2) and Pfand optional (sub_id = 4)
 
-    public ArticleSelectPanelGrundlage(Connection conn, MainWindowGrundlage mw, ArticleSelectUser asu, String fs) {
-        super(conn, mw);
+    public ArticleSelectPanelGrundlage(MariaDbPoolDataSource pool, MainWindowGrundlage mw, ArticleSelectUser asu, String fs) {
+        super(pool, mw);
         if (fs != null) {
           filterStr = fs;
         }
@@ -56,7 +57,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
 
         JPanel barcodePanel = new JPanel();
         //barcodePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        barcodeBox = new BarcodeComboBox(this.conn, filterStr);
+        barcodeBox = new BarcodeComboBox(this.pool, filterStr);
         barcodeBox.setFont(BaseClass.mediumFont);
         FontMetrics fm = barcodeBox.getFontMetrics(BaseClass.mediumFont);
         int height = (int)(1.5*(double)fm.getHeight());
@@ -76,7 +77,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         emptyBarcodeButton.addActionListener(this);
         barcodePanel.add(emptyBarcodeButton);
 
-        nummerBox = new ArtikelNummerComboBox(this.conn, filterStr);
+        nummerBox = new ArtikelNummerComboBox(this.pool, filterStr);
         nummerBox.setFont(BaseClass.mediumFont);
         nummerBox.setPreferredSize(new Dimension(160, height));
         nummerBox.addActionListener(this);
@@ -100,7 +101,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         this.add(Box.createRigidArea(new Dimension(0, 5))); // vertical space
 
         JPanel artikelNamePanel = new JPanel();
-        artikelBox = new ArtikelNameComboBox(this.conn, filterStr, bc);
+        artikelBox = new ArtikelNameComboBox(this.pool, filterStr, bc);
         artikelBox.addActionListener(this);
         artikelBox.addPopupMouseListener(new MouseListenerArtikelBox());
         // set preferred width etc.:
@@ -246,7 +247,8 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         Vector<String[]> artikelNummern = new Vector<String[]>();
         Vector<Vector<String[]>> result = new Vector<Vector<String[]>>();
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("SELECT DISTINCT a.artikel_name, l.lieferant_kurzname, a.vk_preis, a.sortiment, a.lieferant_id, "
                             + "a.artikel_nr FROM artikel AS a " + "LEFT JOIN lieferant AS l USING (lieferant_id) "
                             + "WHERE a.barcode = ? " + "AND a.aktiv = TRUE");
@@ -339,7 +341,8 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         Vector<String[]> artikelNamen = new Vector<String[]>();
         // get artikelName for artikelNummer
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("SELECT DISTINCT a.artikel_name, l.lieferant_kurzname, a.vk_preis, a.sortiment, a.lieferant_id "+
                             "FROM artikel AS a LEFT JOIN lieferant AS l USING (lieferant_id) "+
                             "WHERE a.artikel_nr = ? AND a.aktiv = TRUE");
@@ -388,7 +391,8 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         Vector<String[]> artikelNummern = new Vector<String[]>();
         // get artikelNummer for artikelName
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement("SELECT DISTINCT a.artikel_nr FROM artikel AS a "
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement("SELECT DISTINCT a.artikel_nr FROM artikel AS a "
                     + "WHERE a.artikel_name = ? AND a.lieferant_id = ? AND a.aktiv = TRUE");
             pstmt.setString(1, artikelName);
             pstmt.setString(2, liefID);

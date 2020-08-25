@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // OpenDocument stuff:
 import org.jopendocument.dom.spreadsheet.Sheet;
@@ -44,8 +45,8 @@ public class ArtikelExport extends WindowContent {
     private final HashMap<String, Integer> indexMap;
 
     // Methoden:
-    public ArtikelExport(Connection conn, MainWindowGrundlage mw, Artikelliste pw, HashMap<String, Integer> idxMap) {
-        super(conn, mw);
+    public ArtikelExport(MariaDbPoolDataSource pool, MainWindowGrundlage mw, Artikelliste pw, HashMap<String, Integer> idxMap) {
+        super(pool, mw);
         this.artikelListe = pw;
         this.indexMap = idxMap;
 

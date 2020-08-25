@@ -4,7 +4,7 @@ package org.weltladen_bonn.pos.kasse;
 import java.util.*; // for Vector
 
 // MySQL Connector/J stuff:
-import java.sql.Connection;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.event.*;
@@ -27,11 +27,11 @@ public class StornierteRechnungen extends Rechnungen {
     /**
      *    The constructor.
      *       */
-    public StornierteRechnungen(Connection conn, MainWindowGrundlage mw){
-	super(conn, mw, "WHERE verkauf.storniert = TRUE AND " +
-                "verkauf.verkaufsdatum > IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01') ",
-                "Stornierte Rechnungen");
-	showTable();
+    public StornierteRechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw){
+        super(pool, mw, "WHERE verkauf.storniert = TRUE AND " +
+                    "verkauf.verkaufsdatum > IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01') ",
+                    "Stornierte Rechnungen");
+        showTable();
     }
 
     void addOtherStuff() {

@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -43,17 +44,17 @@ public class RechnungenTabbedPane extends TabbedPaneGrundlage {
     /**
      *    The constructor.
      *       */
-    public RechnungenTabbedPane(Connection conn, MainWindowGrundlage mw, TabbedPaneGrundlage ptp) {
-	super(conn, mw, ptp);
+    public RechnungenTabbedPane(MariaDbPoolDataSource pool, MainWindowGrundlage mw, TabbedPaneGrundlage ptp) {
+	    super(pool, mw, ptp);
     }
 
     @Override
     protected void createTabbedPane() {
         tabbedPane = new JTabbedPane();
 
-        myRech = new HeutigeRechnungen(this.conn, this.mainWindow, this);
-        myArchiv = new AlteRechnungen(this.conn, this.mainWindow);
-        myStorniert = new StornierteRechnungen(this.conn, this.mainWindow);
+        myRech = new HeutigeRechnungen(this.pool, this.mainWindow, this);
+        myArchiv = new AlteRechnungen(this.pool, this.mainWindow);
+        myStorniert = new StornierteRechnungen(this.pool, this.mainWindow);
         tabbedPane.addTab("Heutige Rechnungen", null, myRech, "Rechnungen von heute");
         tabbedPane.addTab("Alte Rechnungen", null, myArchiv, "Rechnungen von gestern und früher");
         tabbedPane.addTab("Stornierte Rechnungen", null, myStorniert, "Heutige stornierte Rechnungen");

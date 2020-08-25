@@ -7,6 +7,7 @@ import java.lang.ArrayIndexOutOfBoundsException;
 
 // MySQL Connector/J stuff:
 import java.sql.*;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.*;
@@ -14,13 +15,14 @@ import java.awt.*;
 import javax.swing.*;
 
 public class ArtikelNameComboBox extends IncrementalSearchComboBox {
-    private Connection conn; // connection to MySQL database
+    // private Connection conn; // connection to MySQL database
+    private MariaDbPoolDataSource pool; // pool of connections to MySQL database
     private BaseClass bc;
 
-    public ArtikelNameComboBox(Connection conn, String fstr, BaseClass bc) {
+    public ArtikelNameComboBox(MariaDbPoolDataSource pool, String fstr, BaseClass bc) {
         super(fstr);
         this.setRenderer(new MultiColRenderer());
-        this.conn = conn;
+        this.pool = pool;
         this.bc = bc;
     }
 
@@ -60,7 +62,8 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
                 "WHERE " + whereClause +
                 "AND a.aktiv = TRUE " + filterStr +
                 "ORDER BY a.artikel_name, l.lieferant_kurzname";
-            PreparedStatement pstmt = this.conn.prepareStatement(stmtString);
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(stmtString);
             for (int i=0; i<words.length; i++){
                 pstmt.setString(i+1, "%"+words[i]+"%");
             }
@@ -84,10 +87,10 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
-        // sort the results
-        //Collections.sort(searchResults, new Comparator<String[]>() { // anonymous class for sorting alphabetically ignoring case
+        // // sort the results
+        // Collections.sort(searchResults, new Comparator<String[]>() { // anonymous class for sorting alphabetically ignoring case
         //    public int compare(String[] str1, String[] str2){ return str1[0].compareToIgnoreCase(str2[0]); }
-        //});
+        // });
         return searchResults;
     }
 

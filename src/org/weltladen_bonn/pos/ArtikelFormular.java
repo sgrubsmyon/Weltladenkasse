@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -65,12 +66,12 @@ public class ArtikelFormular extends WindowContent
     public Vector<Integer> lieferantIDs;
 
     // Methoden:
-    public ArtikelFormular(Connection conn, MainWindowGrundlage mw) {
-	super(conn, mw);
+    public ArtikelFormular(MariaDbPoolDataSource pool, MainWindowGrundlage mw) {
+	super(pool, mw);
         fillComboBoxes();
     }
-    public ArtikelFormular(Connection conn, MainWindowGrundlage mw, boolean hon, boolean honr, boolean hov) {
-        this(conn, mw);
+    public ArtikelFormular(MariaDbPoolDataSource pool, MainWindowGrundlage mw, boolean hon, boolean honr, boolean hov) {
+        this(pool, mw);
         hasOriginalName = hon;
         hasOriginalNummer = honr;
         hasOriginalVKP = hov;
@@ -84,7 +85,8 @@ public class ArtikelFormular extends WindowContent
         lieferantNamen = new Vector<String>();
         lieferantIDs = new Vector<Integer>();
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
                     "SELECT produktgruppen_id, toplevel_id, sub_id, subsub_id, produktgruppen_name, std_einheit "+
                     "FROM produktgruppe WHERE mwst_id IS NOT NULL AND toplevel_id IS NOT NULL "+

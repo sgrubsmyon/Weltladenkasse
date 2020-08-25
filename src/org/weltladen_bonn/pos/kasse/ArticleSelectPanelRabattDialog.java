@@ -4,7 +4,7 @@ package org.weltladen_bonn.pos.kasse;
 import java.util.*; // for String
 
 // MySQL Connector/J stuff:
-import java.sql.*; // Connection, Statement, ResultSet
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import javax.swing.SwingUtilities;
@@ -14,9 +14,9 @@ import org.weltladen_bonn.pos.*;
 public class ArticleSelectPanelRabattDialog extends ArticleSelectPanelGrundlage {
     private OptionTabbedPane tabbedPane;
 
-    public ArticleSelectPanelRabattDialog(Connection conn, MainWindowGrundlage mw,
+    public ArticleSelectPanelRabattDialog(MariaDbPoolDataSource pool, MainWindowGrundlage mw,
             RabattDialog rd, OptionTabbedPane tabbedPane) {
-        super(conn, mw, rd, null);
+        super(pool, mw, rd, null);
         this.tabbedPane = tabbedPane;
         String filterStr = " AND variabler_preis = FALSE AND toplevel_id IS NOT NULL ";
         barcodeBox.setFilterStr(filterStr);

@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -94,9 +95,9 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
     /**
      *    The constructor.
      *       */
-    public Kassenstand(Connection conn, MainWindowGrundlage mw, TabbedPane tp)
+    public Kassenstand(MariaDbPoolDataSource pool, MainWindowGrundlage mw, TabbedPane tp)
     {
-        super(conn, mw);
+        super(pool, mw);
         tabbedPane = tp;
 
         fillDataArray(filterStr);
@@ -110,8 +111,9 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
         int month = 0;
         int year = 0;
         try {
+            Connection connection = this.pool.getConnection();
             // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
+            Statement stmt = connection.createStatement();
             // Run MySQL command
             ResultSet rs = stmt.executeQuery(
                     "SELECT DAY(MIN(buchungsdatum)), MONTH(MIN(buchungsdatum)), " +
@@ -178,8 +180,9 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
         columnLabels.add("Buchungsdatum"); columnLabels.add("Neuer Kassenstand"); columnLabels.add("Manuell?");
         columnLabels.add("Entnahme?"); columnLabels.add("Rechnungsnr."); columnLabels.add("Erläuternder Kommentar");
         try {
+            Connection connection = this.pool.getConnection();
             // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
+            Statement stmt = connection.createStatement();
             String ausblendeString = new String();
             if (showRechnungen){
                 ausblendeString = "TRUE ";

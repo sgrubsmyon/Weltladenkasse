@@ -4,7 +4,7 @@ package org.weltladen_bonn.pos.kasse;
 import java.util.*; // for String
 
 // MySQL Connector/J stuff:
-import java.sql.*; // Connection, Statement, ResultSet
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import javax.swing.SwingUtilities;
@@ -15,9 +15,9 @@ public class ArticleSelectPanelKassieren extends ArticleSelectPanelGrundlage {
     private Kassieren kassieren;
     private TabbedPane tabbedPane;
 
-    public ArticleSelectPanelKassieren(Connection conn, MainWindowGrundlage mw,
+    public ArticleSelectPanelKassieren(MariaDbPoolDataSource pool, MainWindowGrundlage mw,
             Kassieren kassieren, TabbedPane tabbedPane) {
-        super(conn, mw, kassieren, null);
+        super(pool, mw, kassieren, null);
         this.kassieren = kassieren;
         this.tabbedPane = tabbedPane;
     }

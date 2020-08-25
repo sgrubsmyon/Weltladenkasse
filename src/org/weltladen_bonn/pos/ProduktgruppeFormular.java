@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -48,8 +49,8 @@ public class ProduktgruppeFormular extends WindowContent
     public Vector<Integer> pfandIDs;
 
     // Methoden:
-    public ProduktgruppeFormular(Connection conn, MainWindowGrundlage mw) {
-	super(conn, mw);
+    public ProduktgruppeFormular(MariaDbPoolDataSource pool, MainWindowGrundlage mw) {
+	super(pool, mw);
 
         fillComboBoxes();
     }
@@ -60,7 +61,8 @@ public class ProduktgruppeFormular extends WindowContent
             ids.add(null); ids.add(null); ids.add(null);
         } else {
             try {
-                PreparedStatement pstmt = this.conn.prepareStatement(
+                Connection connection = this.pool.getConnection();
+                PreparedStatement pstmt = connection.prepareStatement(
                         "SELECT toplevel_id, sub_id, subsub_id FROM produktgruppe "+
                         "WHERE produktgruppen_id = ?"
                         );
@@ -83,7 +85,8 @@ public class ProduktgruppeFormular extends WindowContent
     private int currentMaxTopID() {
         int id = 0;
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MAX(toplevel_id) FROM produktgruppe");
             rs.next(); id = rs.getInt(1); rs.close();
             stmt.close();
@@ -97,7 +100,8 @@ public class ProduktgruppeFormular extends WindowContent
     private int currentMaxSubID(Integer topID) {
         int id = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT MAX(sub_id) FROM produktgruppe WHERE toplevel_id = ?"
                     );
             pstmtSetInteger(pstmt, 1, topID);
@@ -114,7 +118,8 @@ public class ProduktgruppeFormular extends WindowContent
     private int currentMaxSubsubID(Integer topID, Integer subID) {
         int id = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT MAX(subsub_id) FROM produktgruppe WHERE toplevel_id = ? AND sub_id = ?"
                     );
             pstmtSetInteger(pstmt, 1, topID);
@@ -171,7 +176,8 @@ public class ProduktgruppeFormular extends WindowContent
         pfandNamen.add("Kein Pfand");
         pfandIDs.add(null);
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
                     "SELECT produktgruppen_id, toplevel_id, sub_id, subsub_id, produktgruppen_name "+
                     "FROM produktgruppe "+

@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -42,8 +43,8 @@ public class ArtikelNeu extends WindowContent
     public Vector< Vector<Color> > colorMatrix;
 
     // Methoden:
-    public ArtikelNeu(Connection conn, MainWindowGrundlage mw, UpdateTableFunctor utf) {
-	super(conn, mw);
+    public ArtikelNeu(MariaDbPoolDataSource pool, MainWindowGrundlage mw, UpdateTableFunctor utf) {
+	    super(pool, mw);
         this.updateTableFunc = utf;
 
         initiateTable();

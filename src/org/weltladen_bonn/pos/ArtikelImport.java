@@ -7,6 +7,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 
 // MySQL Connector/J stuff:
 import java.sql.*;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // OpenDocument stuff:
 import org.jopendocument.dom.spreadsheet.*;
@@ -72,8 +73,8 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
     protected JButton deleteButton;
 
     // Methoden:
-    public ArtikelImport(Connection conn, MainWindowGrundlage mw, Artikelliste pw, JDialog dia) {
-	super(conn, mw, dia);
+    public ArtikelImport(MariaDbPoolDataSource pool, MainWindowGrundlage mw, Artikelliste pw, JDialog dia) {
+	super(pool, mw, dia);
         artikelListe = pw;
         logString = logStringStart;
         //"<style type=\"text/css\" media=\"screen\"> \" font-family: sans-serif; \">\n";
@@ -84,7 +85,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
                 //splitPane.setBottomComponent(tablePanel);
             }
         };
-        artikelNeu = new ArtikelNeu(conn, mw, utf);
+        artikelNeu = new ArtikelNeu(pool, mw, utf);
 
         showAll();
     }
@@ -208,7 +209,8 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
     private String queryGruppenID(String gruppenname) {
         String gruppenid = "";
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT produktgruppen_id FROM produktgruppe WHERE produktgruppen_name = ?"
                     );
             pstmt.setString(1, gruppenname);
@@ -227,7 +229,8 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
     private void loadAllArticles() {
         allArticles = new HashMap<Vector<Object>, Vector<String>>();
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT lieferant_id, artikel_nr, produktgruppen_id, "+
                     "artikel_name, kurzname, menge, einheit, sortiment, "+
                     "lieferbar, beliebtheit, barcode, vpe, setgroesse, "+

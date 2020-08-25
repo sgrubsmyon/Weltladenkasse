@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -72,13 +73,13 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     /**
      *    The constructor.
      *       */
-    public Rechnungen(Connection conn, MainWindowGrundlage mw, String fs, String ts)
+    public Rechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw, String fs, String ts)
     {
-	super(conn, mw);
+	    super(pool, mw);
         filterStr = fs;
         titleStr = ts;
 
-	fillDataArray();
+	    fillDataArray();
     }
 
     void fillDataArray(){
@@ -91,8 +92,10 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         overviewLabels.add("Datum");
 	overviewLabels.add("");
 	try {
+	try {
+        Connection connection = this.pool.getConnection();
 	    // Create statement for MySQL database
-	    Statement stmt = this.conn.createStatement();
+	    Statement stmt = connection.createStatement();
 	    // Run MySQL command
 	    ResultSet rs = stmt.executeQuery(
 		    "SELECT COUNT(*) FROM verkauf " +
@@ -202,19 +205,20 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	// Now select details of the invoice
 	Vector< Vector<Object> > detailData = new Vector< Vector<Object> >();
 	try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT vd.position, a.kurzname, a.artikel_name, ra.aktionsname, " +
-                    "a.artikel_nr, a.sortiment, " +
-                    "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, " +
-                    "(p.toplevel_id IS NULL AND p.sub_id = 1 AND a.artikel_id = 2) AS rechnung_rabatt, " +
-                    "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
-                    "vd.stueckzahl, vd.ges_preis, vd.mwst_satz " +
-                    "FROM verkauf_details AS vd LEFT JOIN artikel AS a USING (artikel_id) " +
-                    "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
-                    "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
-                    "WHERE vd.rechnungs_nr = ?"
-		    );
-            pstmtSetInteger(pstmt, 1, Integer.parseInt(this.data.get(detailRow).get(1).toString()));
+        Connection connection = this.pool.getConnection();
+        PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT vd.position, a.kurzname, a.artikel_name, ra.aktionsname, " +
+                "a.artikel_nr, a.sortiment, " +
+                "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, " +
+                "(p.toplevel_id IS NULL AND p.sub_id = 1 AND a.artikel_id = 2) AS rechnung_rabatt, " +
+                "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
+                "vd.stueckzahl, vd.ges_preis, vd.mwst_satz " +
+                "FROM verkauf_details AS vd LEFT JOIN artikel AS a USING (artikel_id) " +
+                "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
+                "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
+                "WHERE vd.rechnungs_nr = ?"
+        );
+        pstmtSetInteger(pstmt, 1, Integer.parseInt(this.data.get(detailRow).get(1).toString()));
 	    ResultSet rs = pstmt.executeQuery();
 	    // Now do something with the ResultSet ...
 	    while (rs.next()) {
@@ -456,7 +460,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 datet = new DateTime(datum);
             else
                 datet = DateTime.now(TimeZone.getDefault());
-            Quittung myQuittung = new Quittung(this.conn, this.mainWindow,
+            Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
                     datet, rechnungsNr, kassierArtikel,
                     mwstsAndTheirValues, zahlungsModus,
                     totalPrice, kundeGibt, rueckgeld);

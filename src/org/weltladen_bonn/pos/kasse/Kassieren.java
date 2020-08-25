@@ -7,6 +7,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 
 // MySQL Connector/J stuff:
 import java.sql.*;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.*; // BorderLayout, FlowLayout, Dimension
@@ -95,8 +96,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     /**
      * The constructor.
      */
-    public Kassieren(Connection conn, MainWindowGrundlage mw, TabbedPane tp) {
-        super(conn, mw);
+    public Kassieren(MariaDbPoolDataSource pool, MainWindowGrundlage mw, TabbedPane tp) {
+        super(pool, mw);
         if (mw instanceof MainWindow) {
             this.mw = (MainWindow) mw;
             display = this.mw.getDisplay();
@@ -267,7 +268,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         JPanel articleSelectPanel = new JPanel();
         articleSelectPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
 
-        asPanel = new ArticleSelectPanelKassieren(conn, mainWindow, this, tabbedPane);
+        asPanel = new ArticleSelectPanelKassieren(this.pool, mainWindow, this, tabbedPane);
         articleSelectPanel.add(asPanel);
 
         JPanel sonstigesPanel = new JPanel(new GridBagLayout());
@@ -1028,7 +1029,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         Vector<Vector<Object>> mengenrabattAnzahlVector = new Vector<Vector<Object>>();
         Vector<Vector<Object>> mengenrabattRelativVector = new Vector<Vector<Object>>();
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     // get alle Rabatte auf artikelID
                     "SELECT rabatt_absolut, rabatt_relativ, mengenrabatt_schwelle, mengenrabatt_anzahl_kostenlos, "
                             + "mengenrabatt_relativ, aktionsname, rabatt_id FROM rabattaktion WHERE artikel_id = ? "
@@ -1049,7 +1051,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
             rs.close();
             pstmt.close();
-            pstmt = this.conn.prepareStatement(
+            pstmt = connection.prepareStatement(
                     // get toplevel_id, sub_id, subsub_id for produktgruppenID
                     // of artikelID
                     "SELECT toplevel_id, sub_id, subsub_id FROM produktgruppe AS p INNER JOIN "
@@ -1062,7 +1064,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             int subsubID = rs.getInt(3);
             rs.close();
             pstmt.close();
-            pstmt = this.conn.prepareStatement(
+            pstmt = connection.prepareStatement(
                     // get alle Rabatte auf produktgruppe
                     "SELECT rabatt_absolut, rabatt_relativ, mengenrabatt_schwelle, mengenrabatt_anzahl_kostenlos, "
                             + "mengenrabatt_relativ, aktionsname, rabatt_id FROM rabattaktion AS r INNER JOIN produktgruppe AS p "
@@ -1256,7 +1258,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private int queryPfandArtikelID(int artikelID) {
         int pfandArtikelID = -1;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT pfand.artikel_id FROM artikel INNER JOIN produktgruppe USING (produktgruppen_id) "
                             + "INNER JOIN pfand USING (pfand_id) " + "WHERE artikel.artikel_id = ?");
             pstmtSetInteger(pstmt, 1, artikelID);
@@ -1277,7 +1280,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         int artikelID = selectedArticleID;
         boolean hasPfand = false;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement("SELECT p.pfand_id IS NOT NULL FROM artikel AS a "
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement("SELECT p.pfand_id IS NOT NULL FROM artikel AS a "
                     + "INNER JOIN produktgruppe AS p USING (produktgruppen_id) " + "WHERE a.artikel_id = ?");
             pstmtSetInteger(pstmt, 1, artikelID);
             ResultSet rs = pstmt.executeQuery();
@@ -1298,7 +1302,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private Integer maxRechnungsNr() {
         Integer maxRechNr = null;
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MAX(rechnungs_nr) FROM verkauf");
             rs.next();
             maxRechNr = rs.getInt(1);
@@ -1314,7 +1319,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     String queryLatestVerkauf() {
         String date = "";
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MAX(verkaufsdatum) "+
                     "FROM verkauf WHERE storniert = FALSE");
             rs.next(); date = rs.getString(1); rs.close();
@@ -1343,7 +1349,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     return rechnungsNr;
                 }
             }
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("INSERT INTO verkauf SET verkaufsdatum = NOW(), ec_zahlung = ?, kunde_gibt = ?");
             pstmtSetBoolean(pstmt, 1, ec);
             pstmt.setBigDecimal(2, kundeGibt);
@@ -1356,7 +1363,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
             rechnungsNr = maxRechnungsNr();
             for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : this.vatMap.entrySet()) {
-                pstmt = this.conn.prepareStatement("INSERT INTO verkauf_mwst SET rechnungs_nr = ?, mwst_satz = ?, "
+                pstmt = connection.prepareStatement("INSERT INTO verkauf_mwst SET rechnungs_nr = ?, mwst_satz = ?, "
                         + "mwst_netto = ?, mwst_betrag = ?");
                 pstmtSetInteger(pstmt, 1, rechnungsNr);
                 pstmt.setBigDecimal(2, entry.getKey());
@@ -1371,7 +1378,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 }
             }
             for (int i = 0; i < kassierArtikel.size(); i++) {
-                pstmt = this.conn.prepareStatement("INSERT INTO verkauf_details SET rechnungs_nr = ?, position = ?, "
+                pstmt = connection.prepareStatement("INSERT INTO verkauf_details SET rechnungs_nr = ?, position = ?, "
                         + "artikel_id = ?, rabatt_id = ?, stueckzahl = ?, " + "ges_preis = ?, mwst_satz = ?");
                 pstmtSetInteger(pstmt, 1, rechnungsNr);
                 pstmtSetInteger(pstmt, 2, kassierArtikel.get(i).getPosition());
@@ -1396,7 +1403,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     private void insertIntoKassenstand(int rechnungsNr) {
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("SELECT verkaufsdatum FROM verkauf WHERE rechnungs_nr = ?");
             pstmtSetInteger(pstmt, 1, rechnungsNr);
             ResultSet rs = pstmt.executeQuery();
@@ -1407,7 +1415,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             BigDecimal betrag = new BigDecimal(getTotalPrice());
             BigDecimal alterKassenstand = mainWindow.retrieveKassenstand();
             BigDecimal neuerKassenstand = alterKassenstand.add(betrag);
-            pstmt = this.conn.prepareStatement("INSERT INTO kassenstand SET rechnungs_nr = ?," + "buchungsdatum = ?, "
+            pstmt = connection.prepareStatement("INSERT INTO kassenstand SET rechnungs_nr = ?," + "buchungsdatum = ?, "
                     + "manuell = FALSE, neuer_kassenstand = ?");
             pstmtSetInteger(pstmt, 1, rechnungsNr);
             pstmt.setString(2, verkaufsdatum);
@@ -1938,7 +1946,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (rechnungsNr == null) {
             rechnungsNr = maxRechnungsNr() + 1;
         }
-        Quittung myQuittung = new Quittung(this.conn, this.mainWindow,
+        Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
                 DateTime.now(TimeZone.getDefault()), rechnungsNr,
                 kassierArtikel, mwstsAndTheirValues, zahlungsModus, totalPrice,
                 kundeGibt, rueckgeld);

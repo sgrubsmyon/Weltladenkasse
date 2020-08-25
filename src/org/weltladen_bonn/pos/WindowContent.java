@@ -8,6 +8,7 @@ import java.math.*; // for monetary value representation and arithmetic with cor
 
 // MySQL Connector/J stuff:
 import java.sql.*;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.event.*;
@@ -29,7 +30,8 @@ import com.toedter.calendar.JSpinnerDateEditor;
 public abstract class WindowContent extends JPanel implements ActionListener {
 
     // mySQL Connection:
-    protected Connection conn = null;
+    // protected Connection conn = null;
+    protected MariaDbPoolDataSource pool; // pool of connections to MySQL database
     protected MainWindowGrundlage mainWindow = null;
     protected BaseClass bc = null;
 
@@ -52,8 +54,11 @@ public abstract class WindowContent extends JPanel implements ActionListener {
 
     // Methoden:
     // Setter:
-    void setConnection(Connection conn) {
-        this.conn = conn;
+    // void setConnection(Connection conn) {
+    //     this.conn = conn;
+    // }
+    void setConnectionPool(MariaDbPoolDataSource pool) {
+        this.pool = pool;
     }
 
     void setMainWindowPointer(MainWindowGrundlage mw) {
@@ -62,8 +67,11 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     }
 
     // Getter:
-    public Connection getConnection() {
-        return this.conn;
+    // public Connection getConnection() {
+    //     return this.conn;
+    // }
+    public MariaDbPoolDataSource getConnectionPool() {
+        return this.pool;
     }
 
     public MainWindowGrundlage getMainWindowPointer() {
@@ -73,8 +81,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     /**
      * The constructors.
      */
-    public WindowContent(Connection conn, MainWindowGrundlage mw) {
-        this.conn = conn;
+    public WindowContent(MariaDbPoolDataSource pool, MainWindowGrundlage mw) {
+        this.pool = pool;
         this.mainWindow = mw;
         this.bc = mw.bc;
 
@@ -378,7 +386,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     boolean isArticleAlreadyKnown(Integer lieferant_id, String nummer) {
         boolean exists = false;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement("SELECT COUNT(*) > 0 FROM artikel "
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement("SELECT COUNT(*) > 0 FROM artikel "
                     + "WHERE lieferant_id = ? AND artikel_nr = ? AND artikel.aktiv = TRUE");
             pstmtSetInteger(pstmt, 1, lieferant_id);
             pstmt.setString(2, nummer);
@@ -398,7 +407,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         boolean hasBarcode = false;
         try {
             // barcode shall not be NULL and not contain only whitespace
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("SELECT (barcode IS NOT NULL AND barcode NOT REGEXP '^[[:blank:]]*$') "+
                             "FROM artikel WHERE artikel_id = ?");
             pstmtSetInteger(pstmt, 1, artikel_id);
@@ -418,7 +428,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         boolean hasVarPrice = false;
         try {
             // barcode shall not be NULL and not contain only whitespace
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("SELECT variabler_preis "+
                             "FROM artikel WHERE artikel_id = ?");
             pstmtSetInteger(pstmt, 1, artikel_id);
@@ -439,7 +450,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         // (>0)
         int result = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement("UPDATE artikel SET aktiv = FALSE, bis = NOW() WHERE "
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement("UPDATE artikel SET aktiv = FALSE, bis = NOW() WHERE "
                     + "lieferant_id = ? AND " + "artikel_nr = ? AND aktiv = TRUE");
             pstmtSetInteger(pstmt, 1, a.getLiefID());
             pstmt.setString(2, a.getNummer());
@@ -462,7 +474,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         // (>0)
         int result = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement("UPDATE artikel SET aktiv = TRUE, bis = NOW() WHERE "
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement("UPDATE artikel SET aktiv = TRUE, bis = NOW() WHERE "
                     + "lieferant_id = ? AND " + "artikel_nr = ? AND aktiv = FALSE");
             pstmtSetInteger(pstmt, 1, a.getLiefID());
             pstmt.setString(2, a.getNummer());
@@ -534,7 +547,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
 
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement("INSERT INTO artikel SET "
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement("INSERT INTO artikel SET "
                     + "produktgruppen_id = ?, lieferant_id = ?, " + "artikel_nr = ?, artikel_name = ?, "
                     + "kurzname = ?, " + "menge = ?, " + "einheit = ?, " + "barcode = ?, " + "herkunft = ?, "
                     + "vpe = ?, " + "setgroesse = ?, " + "vk_preis = ?, empf_vk_preis = ?, "
@@ -616,7 +630,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected Artikel getArticle(Integer artikel_id) {
         Artikel a = new Artikel(bc);
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement(selectArticleString() + "FROM artikel " + "WHERE artikel_id = ?");
             pstmtSetInteger(pstmt, 1, artikel_id);
             ResultSet rs = pstmt.executeQuery();
@@ -635,7 +650,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected Artikel getArticle(Integer lieferant_id, String artikel_nr) {
         Artikel a = new Artikel(bc);
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(selectArticleString() + "FROM artikel "
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(selectArticleString() + "FROM artikel "
                     + "WHERE lieferant_id = ? AND " + "artikel_nr = ? AND artikel.aktiv = TRUE");
             pstmtSetInteger(pstmt, 1, lieferant_id);
             pstmt.setString(2, artikel_nr);
@@ -655,7 +671,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     String getProduktgruppe(Integer produktgruppen_id) {
         String produktgruppe = "";
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("SELECT produktgruppen_name FROM produktgruppe " + "WHERE produktgruppen_id = ?");
             pstmtSetInteger(pstmt, 1, produktgruppen_id);
             ResultSet rs = pstmt.executeQuery();
@@ -673,7 +690,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     String getLieferant(Integer lieferant_id) {
         String lieferant = "";
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("SELECT lieferant_name FROM lieferant " + "WHERE lieferant_id = ?");
             pstmtSetInteger(pstmt, 1, lieferant_id);
             ResultSet rs = pstmt.executeQuery();
@@ -691,7 +709,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     Integer getLieferantID(String lieferant) {
         Integer lieferant_id = 1;
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("SELECT lieferant_id FROM lieferant " + "WHERE lieferant_name = ?");
             pstmt.setString(1, lieferant);
             ResultSet rs = pstmt.executeQuery();
@@ -710,7 +729,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected Vector<Object> getLieferantIDArtikelNummer(Integer artikel_id) {
         Vector<Object> liefIDAndNr = new Vector<Object>();
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("SELECT lieferant_id, artikel_nr FROM artikel " + "WHERE artikel_id = ?");
             pstmtSetInteger(pstmt, 1, artikel_id);
             ResultSet rs = pstmt.executeQuery();
@@ -731,7 +751,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     boolean isLieferantAlreadyKnown(String lieferant) {
         boolean exists = false;
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("SELECT COUNT(*) > 0 FROM lieferant " + "WHERE lieferant_name = ?");
             pstmt.setString(1, lieferant);
             ResultSet rs = pstmt.executeQuery();
@@ -749,7 +770,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     boolean isLieferantInactive(String lieferant) {
         boolean inactive = false;
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("SELECT aktiv FROM lieferant " + "WHERE lieferant_name = ?");
             pstmt.setString(1, lieferant);
             ResultSet rs = pstmt.executeQuery();
@@ -767,7 +789,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     private int howManyActiveArticlesWithLieferant(Integer lieferant_id) {
         int nArticles = 0;
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("SELECT n_artikel FROM lieferant " + "WHERE lieferant_id = ?");
             pstmtSetInteger(pstmt, 1, lieferant_id);
             ResultSet rs = pstmt.executeQuery();
@@ -789,7 +812,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     private int queryActiveArticlesWithLieferant(Integer lieferant_id) {
         int nArticles = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement("SELECT COUNT(*) FROM artikel AS a "
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement("SELECT COUNT(*) FROM artikel AS a "
                     + "INNER JOIN lieferant USING (lieferant_id) " + "WHERE a.lieferant_id = ? AND a.aktiv = TRUE");
             pstmtSetInteger(pstmt, 1, lieferant_id);
             ResultSet rs = pstmt.executeQuery();
@@ -809,7 +833,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         // (>0)
         int result = 0;
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("UPDATE lieferant SET n_artikel = ? WHERE " + "lieferant_id = ?");
             pstmtSetInteger(pstmt, 1, nArticles);
             pstmtSetInteger(pstmt, 2, liefID);
@@ -843,7 +868,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
          * the number of active articles and set `n_artikel`.
          */
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT lieferant_id FROM " + "lieferant WHERE n_artikel IS NULL");
             while (rs.next()) {
                 int liefID = rs.getInt(1);
@@ -904,7 +930,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             }
         }
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("UPDATE lieferant SET lieferant_name = ?, lieferant_kurzname = ?, aktiv = ? "
                             + "WHERE lieferant_id = ?");
             pstmt.setString(1, lieferant_name);
@@ -932,7 +959,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             return result;
         }
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("UPDATE lieferant SET aktiv = FALSE WHERE " + "lieferant_id = ?");
             pstmtSetInteger(pstmt, 1, lieferant_id);
             result = pstmt.executeUpdate();
@@ -949,7 +977,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         // (>0)
         int result = 0;
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("UPDATE lieferant SET aktiv = TRUE WHERE " + "lieferant_id = ?");
             pstmtSetInteger(pstmt, 1, lieferant_id);
             result = pstmt.executeUpdate();
@@ -970,7 +999,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             return 0;
 
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement("INSERT INTO lieferant SET " + "lieferant_name = ?, "
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement("INSERT INTO lieferant SET " + "lieferant_name = ?, "
                     + "lieferant_kurzname = ?, " + "aktiv = TRUE");
             pstmt.setString(1, lieferantName);
             pstmt.setString(2, lieferantKurzname);
@@ -986,7 +1016,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     boolean isProdGrAlreadyKnown(String produktgruppe) {
         boolean exists = false;
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("SELECT COUNT(*) > 0 FROM produktgruppe " + "WHERE produktgruppen_name = ?");
             pstmt.setString(1, produktgruppe);
             ResultSet rs = pstmt.executeQuery();
@@ -1004,7 +1035,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     boolean isProdGrInactive(String produktgruppe) {
         boolean inactive = false;
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("SELECT aktiv FROM produktgruppe " + "WHERE produktgruppen_name = ?");
             pstmt.setString(1, produktgruppe);
             ResultSet rs = pstmt.executeQuery();
@@ -1022,7 +1054,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     private int howManyActiveArticlesWithProduktgruppe(Integer produktgruppen_id) {
         int nArticles = 0;
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("SELECT n_artikel FROM produktgruppe " + "WHERE produktgruppen_id = ? ");
             pstmtSetInteger(pstmt, 1, produktgruppen_id);
             ResultSet rs = pstmt.executeQuery();
@@ -1044,7 +1077,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     private int queryActiveArticlesWithProduktgruppe(Integer produktgruppen_id) {
         int nArticles = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT COUNT(*) FROM artikel AS a " + "INNER JOIN produktgruppe USING (produktgruppen_id) "
                             + "WHERE a.produktgruppen_id = ? AND a.aktiv = TRUE");
             pstmtSetInteger(pstmt, 1, produktgruppen_id);
@@ -1066,7 +1100,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         ids.add(null);
         ids.add(null);
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT toplevel_id, sub_id, subsub_id FROM produktgruppe " + "WHERE produktgruppen_id = ?");
             pstmtSetInteger(pstmt, 1, produktgruppen_id);
             ResultSet rs = pstmt.executeQuery();
@@ -1092,7 +1127,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             String subid_str = (subid == null) ? "IS NULL" : "= ?";
             String subsubid_str = (subsubid == null) ? "IS NULL" : "= ?";
             //System.out.println(topid + " " + subid + " " + subsubid);
-            PreparedStatement pstmt = this.conn.prepareStatement("SELECT produktgruppen_id FROM produktgruppe "
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement("SELECT produktgruppen_id FROM produktgruppe "
                     + "WHERE toplevel_id = ? AND sub_id " + subid_str + " AND subsub_id " + subsubid_str);
             int i = 1;
             pstmtSetInteger(pstmt, i, topid);
@@ -1132,7 +1168,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             if (subsubid != null)
                 filter += " AND produktgruppe.subsub_id = " + subsubid + " ";
 
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM artikel AS a "
                     + "INNER JOIN produktgruppe USING (produktgruppen_id) " + "WHERE a.aktiv = TRUE AND " + filter);
             rs.next();
@@ -1151,7 +1188,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         // (>0)
         int result = 0;
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("UPDATE produktgruppe SET n_artikel = ? WHERE " + "produktgruppen_id = ?");
             pstmtSetInteger(pstmt, 1, nArticles);
             pstmtSetInteger(pstmt, 2, prodGrID);
@@ -1169,7 +1207,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         // (>0)
         int result = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "UPDATE produktgruppe SET n_artikel_rekursiv = ? WHERE " + "produktgruppen_id = ?");
             pstmtSetInteger(pstmt, 1, nArticles);
             pstmtSetInteger(pstmt, 2, prodGrID);
@@ -1203,7 +1242,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
          * for the number of active articles and set `n_artikel`.
          */
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt
                     .executeQuery("SELECT produktgruppen_id FROM " + "produktgruppe WHERE n_artikel IS NULL");
             while (rs.next()) {
@@ -1260,7 +1300,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
          * `n_artikel_rekursiv`.
          */
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt
                     .executeQuery("SELECT produktgruppen_id FROM " + "produktgruppe WHERE n_artikel_rekursiv IS NULL");
             while (rs.next()) {
@@ -1289,7 +1330,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             }
         }
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "UPDATE produktgruppe SET produktgruppen_name = ?, aktiv = ? WHERE " + "produktgruppen_id = ?");
             pstmt.setString(1, produktgruppen_name);
             pstmt.setBoolean(2, aktiv);
@@ -1318,7 +1360,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             }
         }
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("UPDATE produktgruppe SET toplevel_id = ?, sub_id = ?, subsub_id = ?, "
                             + "produktgruppen_name = ?, mwst_id = ?, pfand_id = ?, aktiv = ? WHERE "
                             + "produktgruppen_id = ?");
@@ -1351,7 +1394,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             return result;
         }
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("UPDATE produktgruppe SET aktiv = FALSE WHERE " + "produktgruppen_id = ?");
             pstmtSetInteger(pstmt, 1, produktgruppen_id);
             result = pstmt.executeUpdate();
@@ -1368,7 +1412,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         // (>0)
         int result = 0;
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("UPDATE produktgruppe SET aktiv = TRUE WHERE " + "produktgruppen_id = ?");
             pstmtSetInteger(pstmt, 1, produktgruppen_id);
             result = pstmt.executeUpdate();
@@ -1390,7 +1435,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             return 0;
 
         try {
-            PreparedStatement pstmt = this.conn
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection
                     .prepareStatement("INSERT INTO produktgruppe SET " + "toplevel_id = ?, sub_id = ?, subsub_id = ?, "
                             + "produktgruppen_name = ?, mwst_id = ?, pfand_id = ?, " + "aktiv = TRUE");
             pstmtSetInteger(pstmt, 1, topid);
@@ -1412,7 +1458,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected int insertIntoKassenstand(BigDecimal neuerKassenstand, Boolean entnahme, String kommentar) {
         int result = 0;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "INSERT INTO kassenstand SET buchungsdatum = NOW(), " +
                             "neuer_kassenstand = ?, manuell = TRUE, " +
                             "entnahme = ?, kommentar = ?"
@@ -1432,7 +1479,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected String now() {
         String date = "";
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT NOW()");
             rs.next(); date = rs.getString(1); rs.close();
             stmt.close();

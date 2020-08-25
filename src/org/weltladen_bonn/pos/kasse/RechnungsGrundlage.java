@@ -18,6 +18,7 @@ import javax.swing.table.*;
 
 // MySQL Connector/J stuff:
 import java.sql.*;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 import org.weltladen_bonn.pos.*;
 
@@ -38,15 +39,16 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     /**
      *    The constructor.
      *       */
-    public RechnungsGrundlage(Connection conn, MainWindowGrundlage mw)
+    public RechnungsGrundlage(MariaDbPoolDataSource pool, MainWindowGrundlage mw)
     {
-	super(conn, mw);
+	    super(pool, mw);
         initiateVectors();
     }
+
     private void initiateVectors() {
-	columnLabels = new Vector<String>();
+	    columnLabels = new Vector<String>();
         columnLabels.add("Pos.");
-	columnLabels.add("Artikel-Name"); columnLabels.add("Artikel-Nr."); columnLabels.add("Stückzahl");
+	    columnLabels.add("Artikel-Name"); columnLabels.add("Artikel-Nr."); columnLabels.add("Stückzahl");
         columnLabels.add("Einzelpreis"); columnLabels.add("Gesamtpreis"); columnLabels.add("MwSt.");
         kassierArtikel = new Vector<KassierArtikel>();
         mwsts = new Vector<BigDecimal>();
@@ -62,7 +64,8 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     protected Vector<BigDecimal> retrieveVATs() {
         Vector<BigDecimal> vats = new Vector<BigDecimal>();
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
                     "SELECT mwst_satz FROM mwst ORDER BY mwst_id"
                     );

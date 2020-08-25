@@ -9,6 +9,7 @@ import java.text.ParseException;
 
 // MySQL Connector/J stuff:
 import java.sql.*;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -111,17 +112,17 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
     /**
      *    The constructor.
      *       */
-    public RabattDialog(Connection conn, MainWindowGrundlage mw, Rabattaktionen r, JDialog dia, OptionTabbedPane tabbedPane) {
-	super(conn, mw, dia);
+    public RabattDialog(MariaDbPoolDataSource pool, MainWindowGrundlage mw, Rabattaktionen r, JDialog dia, OptionTabbedPane tabbedPane) {
+	    super(pool, mw, dia);
         this.rabattaktionen = r;
         this.tabbedPane = tabbedPane;
 
         fillComboBoxes();
         showAll();
     }
-    public RabattDialog(Connection conn, MainWindowGrundlage mw, Rabattaktionen r, JDialog dia, OptionTabbedPane tabbedPane,
+    public RabattDialog(MariaDbPoolDataSource pool, MainWindowGrundlage mw, Rabattaktionen r, JDialog dia, OptionTabbedPane tabbedPane,
             String bt, boolean editMode, int rabattID, boolean nandb) {
-	super(conn, mw, dia);
+	    super(pool, mw, dia);
         this.rabattaktionen = r;
         this.tabbedPane = tabbedPane;
         this.borderTitle = bt;
@@ -150,7 +151,8 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         nullIDs.add(null); nullIDs.add(null); nullIDs.add(null);
         produktgruppenIDsList.add(nullIDs);
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
                     "SELECT produktgruppen_id, toplevel_id, sub_id, subsub_id, produktgruppen_name "+
                     "FROM produktgruppe WHERE mwst_id IS NOT NULL AND toplevel_id IS NOT NULL "+
@@ -178,7 +180,8 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
 
     void queryPresetValues() {
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT r.aktionsname, r.von, r.bis, a.artikel_name, a.lieferant_id, a.artikel_nr, "+
                     "r.produktgruppen_id, r.rabatt_absolut, r.rabatt_relativ, "+
                     "r.mengenrabatt_schwelle, r.mengenrabatt_anzahl_kostenlos, r.mengenrabatt_relativ "+
@@ -356,7 +359,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             produktDropDown.addItemListener(this);
             artikelPanel.add(produktDropDown);
             produktModus = produktDropDownOptions[0];
-                artikelCard = new ArticleSelectPanelRabattDialog(conn, mainWindow, this, tabbedPane);
+                artikelCard = new ArticleSelectPanelRabattDialog(this.pool, mainWindow, this, tabbedPane);
 
                 JPanel produktgruppenCard = new JPanel();
                     JPanel produktgruppenPanel = new JPanel();// produktgruppenPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
@@ -592,7 +595,8 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                 JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (answer == JOptionPane.YES_OPTION){
             try {
-                PreparedStatement pstmt = this.conn.prepareStatement(
+                Connection connection = this.pool.getConnection();
+                PreparedStatement pstmt = connection.prepareStatement(
                         "INSERT INTO rabattaktion SET aktionsname = ?, "+
                         "rabatt_relativ = ?, "+
                         "rabatt_absolut = ?, "+
@@ -667,10 +671,11 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                 JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (answer == JOptionPane.YES_OPTION){
             try {
+                Connection connection = this.pool.getConnection();
                 // Create statement for MySQL database
-                Statement stmt = this.conn.createStatement();
+                Statement stmt = connection.createStatement();
                 // Run MySQL command
-                PreparedStatement pstmt = this.conn.prepareStatement(
+                PreparedStatement pstmt = connection.prepareStatement(
                         "UPDATE rabattaktion SET aktionsname = ?, rabatt_relativ = ?, "+
                         "rabatt_absolut = ?, "+ "mengenrabatt_schwelle = ?, "+
                         "mengenrabatt_anzahl_kostenlos = ?, mengenrabatt_relativ = ?, "+

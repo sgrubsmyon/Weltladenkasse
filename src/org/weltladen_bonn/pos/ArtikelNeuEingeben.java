@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -49,9 +50,9 @@ public class ArtikelNeuEingeben extends DialogWindow
     protected boolean updating = false; /** against the "Attempt to mutate in notification" */
 
     // Methoden:
-    public ArtikelNeuEingeben(Connection conn, MainWindowGrundlage mw,
+    public ArtikelNeuEingeben(MariaDbPoolDataSource pool, MainWindowGrundlage mw,
             Artikelliste pw, JDialog dia, Integer tid, Integer sid, Integer ssid) {
-	super(conn, mw, dia);
+	      super(pool, mw, dia);
         artikelListe = pw;
         toplevel_id = tid;
         sub_id = sid;
@@ -63,15 +64,15 @@ public class ArtikelNeuEingeben extends DialogWindow
                 showFooter();
             }
         };
-        artikelNeu = new ArtikelNeu(conn, mw, utf);
-        artikelFormular = new ArtikelFormular(conn, mw);
+        artikelNeu = new ArtikelNeu(pool, mw, utf);
+        artikelFormular = new ArtikelFormular(pool, mw);
         this.setPreferredSize(new Dimension(980, 600));
         showAll();
     }
 
-    public ArtikelNeuEingeben(Connection conn, MainWindowGrundlage mw,
+    public ArtikelNeuEingeben(MariaDbPoolDataSource pool, MainWindowGrundlage mw,
             Artikelliste pw, JDialog dia, Integer prodgrID) {
-	super(conn, mw, dia);
+	super(pool, mw, dia);
         artikelListe = pw;
         produktgruppen_id = prodgrID;
         UpdateTableFunctor utf = new UpdateTableFunctor() {
@@ -81,8 +82,8 @@ public class ArtikelNeuEingeben extends DialogWindow
                 showFooter();
             }
         };
-        artikelNeu = new ArtikelNeu(conn, mw, utf);
-        artikelFormular = new ArtikelFormular(conn, mw);
+        artikelNeu = new ArtikelNeu(pool, mw, utf);
+        artikelFormular = new ArtikelFormular(pool, mw);
         this.setPreferredSize(new Dimension(980, 600));
         showAll();
     }
@@ -93,7 +94,8 @@ public class ArtikelNeuEingeben extends DialogWindow
         String subsubStr = this.subsub_id == null ? "subsub_id IS NULL" : "subsub_id = ?";
         System.out.println(this.sub_id + " " + this.subsub_id);
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT produktgruppen_id FROM produktgruppe WHERE "+
                     "toplevel_id = ? AND "+subStr+" AND "+subsubStr+" AND aktiv = TRUE"
                     );

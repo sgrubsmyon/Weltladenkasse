@@ -20,9 +20,9 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
-import java.sql.Connection;
 import java.util.LinkedHashMap;
 import java.util.Vector;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 public class ZaehlprotokollDialog extends DialogWindow
         implements ChangeListener, DocumentListener {
@@ -46,9 +46,9 @@ public class ZaehlprotokollDialog extends DialogWindow
     private JButton cancelButton;
 
     // Methoden:
-    public ZaehlprotokollDialog(Connection conn, MainWindowGrundlage mw,
+    public ZaehlprotokollDialog(MariaDbPoolDataSource pool, MainWindowGrundlage mw,
                                 AbrechnungenTag at, JDialog dia) {
-        super(conn, mw, dia);
+        super(pool, mw, dia);
         this.abrechnungen = at;
         showAll();
     }

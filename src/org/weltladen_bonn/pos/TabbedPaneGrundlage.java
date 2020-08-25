@@ -1,10 +1,7 @@
 package org.weltladen_bonn.pos;
 
 // MySQL Connector/J stuff:
-import java.sql.SQLException;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 import javax.swing.JTabbedPane;
 
@@ -13,8 +10,8 @@ public abstract class TabbedPaneGrundlage extends WindowContent {
     protected TabbedPaneGrundlage parentTabbedPane = null;
 
     // Methoden:
-    public TabbedPaneGrundlage(Connection conn, MainWindowGrundlage mw, TabbedPaneGrundlage ptp) {
-	super(conn, mw);
+    public TabbedPaneGrundlage(MariaDbPoolDataSource pool, MainWindowGrundlage mw, TabbedPaneGrundlage ptp) {
+	    super(pool, mw);
         parentTabbedPane = ptp;
         updateNArtikelInProduktgruppe();
         updateNArtikelRekursivInProduktgruppe();

@@ -6,6 +6,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 
 // MySQL Connector/J stuff:
 import java.sql.*;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.*;
@@ -77,9 +78,9 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
     //private ArtikelImport itemsFromFile;
 
     // Methoden:
-    protected Artikelliste(Connection conn, ArtikellisteContainer ac, Integer
+    protected Artikelliste(MariaDbPoolDataSource pool, ArtikellisteContainer ac, Integer
             tid, Integer sid, Integer ssid, String gn) {
-        super(conn, ac.getMainWindowPointer());
+        super(pool, ac.getMainWindowPointer());
         this.container = ac;
         this.toplevel_id = tid;
         this.sub_id = sid;
@@ -90,8 +91,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         showAll();
     }
 
-    protected Artikelliste(Connection conn, ArtikellisteContainer ac, String searchStr) {
-        super(conn, ac.getMainWindowPointer());
+    protected Artikelliste(MariaDbPoolDataSource pool, ArtikellisteContainer ac, String searchStr) {
+        super(pool, ac.getMainWindowPointer());
         this.container = ac;
         this.searchStr = searchStr;
         this.produktgruppenname = "Suchergebnis (0)";
@@ -100,16 +101,16 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         showAll();
     }
 
-    protected Artikelliste(Connection conn, ArtikellisteContainer ac) {
-        super(conn, ac.getMainWindowPointer());
+    protected Artikelliste(MariaDbPoolDataSource pool, ArtikellisteContainer ac) {
+        super(pool, ac.getMainWindowPointer());
         this.container = ac;
 
         fillDataArray();
         showAll();
     }
 
-    protected Artikelliste(Connection conn, MainWindowGrundlage mwp) {
-        super(conn, mwp);
+    protected Artikelliste(MariaDbPoolDataSource pool, MainWindowGrundlage mwp) {
+        super(pool, mwp);
     }
 
     private PreparedStatement prepareStatement(String filter) {
@@ -136,7 +137,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         PreparedStatement pstmt = null;
         //System.out.println("Artikelliste SQL query string:\n"+queryStr);
         try {
-            pstmt = this.conn.prepareStatement(queryStr);
+            Connection connection = this.pool.getConnection();
+            pstmt = connection.prepareStatement(queryStr);
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -1052,7 +1054,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             //        articles.get(selection[i]).getKurzname()+", "+articles.get(selection[i]).getVKP()+", "+articles.get(selection[i]).getEKP());
         }
         JDialog editDialog = new JDialog(this.mainWindow, "Artikel bearbeiten", true);
-        ArtikelBearbeiten bearb = new ArtikelBearbeiten(this.conn, this.mainWindow, this, editDialog,
+        ArtikelBearbeiten bearb = new ArtikelBearbeiten(this.pool, this.mainWindow, this, editDialog,
                 selectedArticles);
         editDialog.getContentPane().add(bearb, BorderLayout.CENTER);
         editDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
@@ -1065,7 +1067,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
 
     void showNewItemDialog() {
         JDialog newItemDialog = new JDialog(this.mainWindow, "Neue Artikel hinzufügen", true);
-        ArtikelNeuEingeben newItems = new ArtikelNeuEingeben(this.conn, this.mainWindow, this, newItemDialog, toplevel_id, sub_id, subsub_id);
+        ArtikelNeuEingeben newItems = new ArtikelNeuEingeben(this.pool, this.mainWindow, this, newItemDialog, toplevel_id, sub_id, subsub_id);
         newItemDialog.getContentPane().add(newItems, BorderLayout.CENTER);
         newItemDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         WindowAdapterDialog wad = new WindowAdapterDialog(newItems, newItemDialog, "Achtung: Neue Artikel gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
@@ -1083,7 +1085,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         index = displayIndices.get(index); // convert from displayData index to data/articles index
         Artikel selectedArticle = articles.get(index);
         JDialog newItemDialog = new JDialog(this.mainWindow, "Ähnliche Artikel hinzufügen", true);
-        ArtikelNeuEingeben newItems = new ArtikelNeuEingeben(this.conn, this.mainWindow, this, newItemDialog, selectedArticle.getProdGrID());
+        ArtikelNeuEingeben newItems = new ArtikelNeuEingeben(this.pool, this.mainWindow, this, newItemDialog, selectedArticle.getProdGrID());
         newItems.setOriginalValues(selectedArticle);
         newItemDialog.getContentPane().add(newItems, BorderLayout.CENTER);
         newItemDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
@@ -1095,7 +1097,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
 
     void showReadFromFileDialog() {
         readFromFileDialog = new JDialog(this.mainWindow, "Artikel aus Datei einlesen", true);
-        ArtikelImport itemsFromFile = new ArtikelImport(this.conn, this.mainWindow, this, readFromFileDialog);
+        ArtikelImport itemsFromFile = new ArtikelImport(this.pool, this.mainWindow, this, readFromFileDialog);
         readFromFileDialog.getContentPane().add(itemsFromFile, BorderLayout.CENTER);
         readFromFileDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         WindowAdapterDialog wad = new WindowAdapterDialog(itemsFromFile, readFromFileDialog, "Achtung: Neue Artikel gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");
@@ -1105,7 +1107,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
     }
 
     void showExportDialog() {
-        ArtikelExport itemsToFile = new ArtikelExport(this.conn, this.mainWindow, this, indexMap);
+        ArtikelExport itemsToFile = new ArtikelExport(this.pool, this.mainWindow, this, indexMap);
     }
 
     int changeLossConfirmDialog() {
