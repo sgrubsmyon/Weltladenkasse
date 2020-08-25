@@ -792,6 +792,7 @@ public class Bestellen extends BestellungsGrundlage implements
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
                     "Fehler: Bestellung konnte nicht vollständig abgespeichert werden.\n"+
+                    "Keine Verbindung zum Datenbank-Server?\n"+
                     "Fehlermeldung: "+ex.getMessage(),
                     "Fehler", JOptionPane.ERROR_MESSAGE);
             bestellNr = -1;

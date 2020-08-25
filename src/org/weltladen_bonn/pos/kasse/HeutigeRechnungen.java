@@ -86,6 +86,7 @@ public class HeutigeRechnungen extends Rechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         updateTable();
     }
@@ -123,6 +124,7 @@ public class HeutigeRechnungen extends Rechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 

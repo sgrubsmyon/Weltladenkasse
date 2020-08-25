@@ -122,6 +122,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         System.out.println(result);
         return result;

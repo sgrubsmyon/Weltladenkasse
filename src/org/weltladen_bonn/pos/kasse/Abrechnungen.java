@@ -137,6 +137,7 @@ public abstract class Abrechnungen extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return id;
     }
@@ -188,6 +189,7 @@ public abstract class Abrechnungen extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return values;
     }
@@ -249,6 +251,7 @@ public abstract class Abrechnungen extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return map;
     }
@@ -340,6 +343,7 @@ public abstract class Abrechnungen extends WindowContent {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 

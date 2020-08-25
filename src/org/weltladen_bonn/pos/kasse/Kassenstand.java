@@ -130,6 +130,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.YEAR, year);
@@ -227,6 +228,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         myTable = new AnyJComponentJTable(data, columnLabels);
 //	myTable.setPreferredScrollableViewportSize(new Dimension(500, 70));

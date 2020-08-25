@@ -223,6 +223,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return gruppenid;
     }
@@ -280,6 +281,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 

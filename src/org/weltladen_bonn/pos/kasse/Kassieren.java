@@ -1093,6 +1093,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
 
         /*
@@ -1274,6 +1275,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return pfandArtikelID;
     }
@@ -1295,6 +1297,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return hasPfand;
     }
@@ -1316,6 +1319,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return maxRechNr;
     }
@@ -1336,6 +1340,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return date;
     }
@@ -1403,6 +1408,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return rechnungsNr;
     }
@@ -1438,6 +1444,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 

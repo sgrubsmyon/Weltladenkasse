@@ -129,6 +129,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
+        showDBErrorDialog(ex.getMessage());
 	}
 	Calendar earlyCalendar = Calendar.getInstance();
 	earlyCalendar.set(Calendar.YEAR, earlyYear);
@@ -190,8 +191,8 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
         deleteButtons = new Vector<JButton>();
 	rabattIDs = new Vector<Integer>();
 	columnLabels.add("Aktionsname"); columnLabels.add("von"); columnLabels.add("bis");
-        columnLabels.add("Artikel"); columnLabels.add("Produktgruppe");
-        columnLabels.add("Rabatt relativ"); columnLabels.add("Rabatt absolut");
+    columnLabels.add("Artikel"); columnLabels.add("Produktgruppe");
+    columnLabels.add("Rabatt relativ"); columnLabels.add("Rabatt absolut");
 	columnLabels.add("Mengenrabatt-Schwelle"); columnLabels.add("Mengenrabatt Anzahl kostenlos"); columnLabels.add("Mengenrabatt relativ");
 	columnLabels.add("Bearbeiten"); columnLabels.add("Löschen");
 	try {
@@ -280,16 +281,17 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
+        showDBErrorDialog(ex.getMessage());
 	}
-        myTable = new AnyJComponentJTable(data, columnLabels) { // subclass the AnyJComponentJTable to set font properties and tool tip text
-            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-                Component c = super.prepareRenderer(renderer, row, column);
-                // add custom rendering here
-                //int realRowIndex = convertRowIndexToModel(row);
-                //c.setForeground(Color.BLACK);
-                return c;
-            }
-        };
+    myTable = new AnyJComponentJTable(data, columnLabels) { // subclass the AnyJComponentJTable to set font properties and tool tip text
+        public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+            Component c = super.prepareRenderer(renderer, row, column);
+            // add custom rendering here
+            //int realRowIndex = convertRowIndexToModel(row);
+            //c.setForeground(Color.BLACK);
+            return c;
+        }
+    };
 //	myTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
 //	myTable.setFillsViewportHeight(true);
     }
@@ -448,6 +450,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
             } catch (SQLException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
+                showDBErrorDialog(ex.getMessage());
             }
         } else { // NO_OPTION
             JOptionPane.showMessageDialog(this, "Datenbank unverändert!",
@@ -476,6 +479,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
+        showDBErrorDialog(ex.getMessage());
 	}
         return vonAfterNow;
     }
@@ -494,6 +498,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
+        showDBErrorDialog(ex.getMessage());
 	}
         return bisAfterNow;
     }

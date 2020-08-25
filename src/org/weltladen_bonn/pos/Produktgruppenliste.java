@@ -150,6 +150,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         this.originalData = new Vector< Vector<Object> >();
         for ( Vector<Object> row : data ){

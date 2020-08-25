@@ -193,6 +193,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
+        showDBErrorDialog(ex.getMessage());
 	}
         return produktgruppen;
     }
@@ -226,6 +227,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
+        showDBErrorDialog(ex.getMessage());
 	}
         return subgruppen;
     }
@@ -260,6 +262,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
+        showDBErrorDialog(ex.getMessage());
 	}
         return subsubgruppen;
     }
@@ -285,6 +288,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return artikelCount;
     }

@@ -204,6 +204,7 @@ class AbrechnungenTag extends Abrechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 
@@ -324,6 +325,7 @@ class AbrechnungenTag extends Abrechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 
@@ -410,6 +412,7 @@ class AbrechnungenTag extends Abrechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 
@@ -438,6 +441,7 @@ class AbrechnungenTag extends Abrechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return abrechnungBarBrutto;
     }
@@ -838,6 +842,7 @@ class AbrechnungenTag extends Abrechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return date;
     }
@@ -856,6 +861,7 @@ class AbrechnungenTag extends Abrechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return date;
     }
@@ -922,6 +928,7 @@ class AbrechnungenTag extends Abrechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 
@@ -995,7 +1002,9 @@ class AbrechnungenTag extends Abrechnungen {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                    "Fehler: Tagesabrechnung konnte nicht gespeichert werden.",
+                    "Fehler: Tagesabrechnung konnte nicht gespeichert werden.\n"+
+                    "Keine Verbindung zum Datenbank-Server?\n"+
+                    "Fehlermeldung: "+ex.getMessage(),
                     "Fehler", JOptionPane.ERROR_MESSAGE);
             id = null;
         }
@@ -1016,6 +1025,7 @@ class AbrechnungenTag extends Abrechnungen {
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
         return maxZaehlID;
     }
@@ -1065,7 +1075,9 @@ class AbrechnungenTag extends Abrechnungen {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                    "Fehler: Zählprotokoll konnte nicht gespeichert werden.",
+                    "Fehler: Zählprotokoll konnte nicht gespeichert werden.\n"+
+                    "Keine Verbindung zum Datenbank-Server?\n"+
+                    "Fehlermeldung: "+ex.getMessage(),
                     "Fehler", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -1090,7 +1102,9 @@ class AbrechnungenTag extends Abrechnungen {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                    "Fehler: Altes Zählprotokoll konnte nicht inaktiv gesetzt werden.",
+                    "Fehler: Altes Zählprotokoll konnte nicht inaktiv gesetzt werden.\n"+
+                    "Keine Verbindung zum Datenbank-Server?\n"+
+                    "Fehlermeldung: "+ex.getMessage(),
                     "Fehler", JOptionPane.ERROR_MESSAGE);
         }
     }

@@ -176,6 +176,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 
@@ -213,6 +214,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
         }
     }
 
@@ -635,6 +637,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             } catch (SQLException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
+                showDBErrorDialog(ex.getMessage());
             }
         } else { // NO_OPTION
             JOptionPane.showMessageDialog(this, "Datenbank unverändert!",
@@ -712,6 +715,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             } catch (SQLException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
+                showDBErrorDialog(ex.getMessage());
             }
         } else { // NO_OPTION
             JOptionPane.showMessageDialog(this, "Datenbank unverändert!",
