@@ -43,6 +43,7 @@
         <javac srcdir="${src}" destdir="${build}" debug="on" debuglevel="lines,vars,source"
             includeantruntime="false" classpathref="classpath">
             <compilerarg value="-Xlint:unchecked"/>
+            <compilerarg value="-Xlint:deprecation"/>
         </javac>
     </target>
 
