@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
 //import java.sql.Date;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -57,8 +58,8 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
     /**
      * The constructor.
      */
-    public AlteRechnungen(Connection conn, MainWindowGrundlage mw) {
-        super(conn, mw, "WHERE verkauf.verkaufsdatum <= " + "(SELECT MAX(zeitpunkt_real) FROM abrechnung_tag) AND "
+    public AlteRechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw) {
+        super(pool, mw, "WHERE verkauf.verkaufsdatum <= " + "(SELECT MAX(zeitpunkt_real) FROM abrechnung_tag) AND "
                 + "verkauf.storniert = FALSE ", "Alte Rechnungen");
         queryEarliestRechnung();
         initiateSpinners();
@@ -70,8 +71,9 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
         int month = 0;
         int year = 0;
         try {
+            Connection connection = this.pool.getConnection();
             // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
+            Statement stmt = connection.createStatement();
             // Run MySQL command
             ResultSet rs = stmt
                     .executeQuery("SELECT DAY(MIN(verkauf.verkaufsdatum)), MONTH(MIN(verkauf.verkaufsdatum)), "

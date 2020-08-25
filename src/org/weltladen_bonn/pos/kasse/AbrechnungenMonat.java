@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -41,8 +42,8 @@ public class AbrechnungenMonat extends Abrechnungen {
     /**
      *    The constructor.
      *       */
-    public AbrechnungenMonat(Connection conn, MainWindowGrundlage mw){
-        super(conn, mw, "", "Monatsabrechnung", "yyyy-MM-dd", "MMM yyyy",
+    public AbrechnungenMonat(MariaDbPoolDataSource pool, MainWindowGrundlage mw){
+        super(pool, mw, "", "Monatsabrechnung", "yyyy-MM-dd", "MMM yyyy",
                 "monat", "abrechnung_monat");
         this.setExportDirFormat(bc.exportDirAbrechnungMonat);
         showTable();
@@ -57,7 +58,8 @@ public class AbrechnungenMonat extends Abrechnungen {
     String returnMaxAbrechnungDate() {
         String result = "";
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
                     "SELECT MAX(monat) FROM abrechnung_monat"
                     );
@@ -76,7 +78,8 @@ public class AbrechnungenMonat extends Abrechnungen {
     Vector<String> returnAllNewMonths(String maxDate) { // all months to be put into the db (abrechnung_monat table)
         Vector<String> result = new Vector<String>();
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT DISTINCT DATE_FORMAT(zeitpunkt, '%Y-%m-01') FROM abrechnung_tag "+
                     "WHERE zeitpunkt >= (? + INTERVAL 1 MONTH)"
                     );
@@ -97,7 +100,8 @@ public class AbrechnungenMonat extends Abrechnungen {
     HashMap<BigDecimal, Vector<BigDecimal>> queryMonatsAbrechnung(String month) {
         HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM abrechnung_tag "+
                     "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 MONTH) GROUP BY mwst_satz"
                     );
@@ -124,10 +128,11 @@ public class AbrechnungenMonat extends Abrechnungen {
 
     void insertNewMonths(Vector<String> months) { // all months to be put into the db (abrechnung_monat table)
         try {
+            Connection connection = this.pool.getConnection();
             for (String month : months){
                 Integer id = id();
                 System.out.println("new month: "+month);
-                PreparedStatement pstmt = this.conn.prepareStatement(
+                PreparedStatement pstmt = connection.prepareStatement(
                         "SELECT ? < DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')"
                         );
                 pstmt.setString(1, month);
@@ -141,7 +146,7 @@ public class AbrechnungenMonat extends Abrechnungen {
                         Vector<BigDecimal> betraege = entry.getValue();
                         System.out.println("mwst_satz: "+mwst_satz);
                         System.out.println("betraege "+betraege);
-                        pstmt = this.conn.prepareStatement(
+                        pstmt = connection.prepareStatement(
                                 "INSERT INTO abrechnung_monat SET id = ?, monat = ?, "+
                                 "mwst_satz = ?, "+
                                 "mwst_netto = ?, "+
@@ -176,7 +181,8 @@ public class AbrechnungenMonat extends Abrechnungen {
 
     void queryIncompleteAbrechnung() { // create new abrechnung (for display) from time of last abrechnung until now
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
                     "SELECT DATE_FORMAT(CURDATE(), '%Y-%m-01')"
                     );
@@ -184,7 +190,7 @@ public class AbrechnungenMonat extends Abrechnungen {
             stmt.close();
 
             // totals (sum over mwsts)
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT SUM(mwst_netto + mwst_betrag), SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) FROM abrechnung_tag " +
                        //   ^^^ Gesamt Brutto              ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
                     "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 MONTH)"

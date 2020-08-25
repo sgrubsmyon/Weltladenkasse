@@ -20,6 +20,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -90,10 +91,10 @@ public abstract class Abrechnungen extends WindowContent {
     /**
      *    The constructor.
      *       */
-    public Abrechnungen(Connection conn, MainWindowGrundlage mw, String fs, String ts, String dif, String dof,
+    public Abrechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw, String fs, String ts, String dif, String dof,
                         String tn, String atn)
     {
-        super(conn, mw);
+        super(pool, mw);
         filterStr = fs;
         titleStr = ts;
         dateInFormat = dif;
@@ -125,7 +126,8 @@ public abstract class Abrechnungen extends WindowContent {
     Integer id() {
         Integer id = -1;
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT IFNULL("+
                     "(SELECT MAX(id) FROM "+abrechnungsTableName+"), "+
                     "0)");
@@ -146,7 +148,8 @@ public abstract class Abrechnungen extends WindowContent {
     protected Vector<BigDecimal> queryIncompleteAbrechnungTag_Totals() {
         Vector<BigDecimal> values = new Vector<>();
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             // for filling the diplayed table:
 
             // first, get the totals:
@@ -190,7 +193,8 @@ public abstract class Abrechnungen extends WindowContent {
     protected HashMap<BigDecimal, Vector<BigDecimal>> queryIncompleteAbrechnungTag_VATs() {
         HashMap<BigDecimal, Vector<BigDecimal>> map = new HashMap<>();
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
                 // OLD: SUM OF ROUND in MySQL (MySQL's round is ROUND_HALF_UP
                 // as in Java (away from zero), "kaufmännisches Runden", see
@@ -260,7 +264,8 @@ public abstract class Abrechnungen extends WindowContent {
         }
 
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             // first, derive the limits of the real query from the number of rows that belong to
             // the desired abrechnung range:
             int offset = ((currentPage-1)*abrechnungenProSeite-1); // "-1" because of one red column on 1st page
@@ -294,7 +299,7 @@ public abstract class Abrechnungen extends WindowContent {
 
             // third, get the actual abrechnungen (for each date):
             for (String date : abrechnungsDates){
-                PreparedStatement pstmt = this.conn.prepareStatement(
+                PreparedStatement pstmt = connection.prepareStatement(
                         "SELECT mwst_satz, mwst_netto, mwst_betrag " +
                         "FROM "+abrechnungsTableName+" " +
                         "WHERE "+timeName+" = ? " +

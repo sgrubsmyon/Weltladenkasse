@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -48,10 +49,9 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
     /**
      *    The constructor.
      *       */
-    public ProduktgruppenbaumGrundlage(Connection conn, MainWindowGrundlage mw) {
-	super(conn, mw);
-
-	showTree(titleStr);
+    public ProduktgruppenbaumGrundlage(MariaDbPoolDataSource pool, MainWindowGrundlage mw) {
+	    super(pool, mw);
+	    showTree(titleStr);
     }
 
     public JPanel getGroupListPanel() { return groupListPanel; }
@@ -167,8 +167,9 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
     private Vector< Vector<String> > queryTopGruppen() { // select top level nodes in tree
         Vector< Vector<String> > produktgruppen = new Vector< Vector<String> >();
 	try {
+        Connection connection = this.pool.getConnection();
 	    // Create statement for MySQL database
-	    Statement stmt = this.conn.createStatement();
+	    Statement stmt = connection.createStatement();
 	    // Run MySQL command
 	    ResultSet rs = stmt.executeQuery(
 		    "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name, n_artikel_rekursiv "+
@@ -198,25 +199,26 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
     private Vector< Vector<String> > querySubGruppen(Integer topid) { // select second level nodes in tree
         Vector< Vector<String> > subgruppen = new Vector< Vector<String> >();
 	try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-		    "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name, n_artikel_rekursiv "+
-                    "FROM produktgruppe " +
-                    "WHERE toplevel_id = ? " +
-                    "AND sub_id IS NOT NULL AND subsub_id IS NULL " + aktivFilterStr +
-                    "ORDER BY sub_id"
-		    );
-            pstmtSetInteger(pstmt, 1, topid);
+        Connection connection = this.pool.getConnection();
+        PreparedStatement pstmt = connection.prepareStatement(
+          "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name, n_artikel_rekursiv "+
+          "FROM produktgruppe " +
+          "WHERE toplevel_id = ? " +
+          "AND sub_id IS NOT NULL AND subsub_id IS NULL " + aktivFilterStr +
+          "ORDER BY sub_id"
+        );
+        pstmtSetInteger(pstmt, 1, topid);
 	    ResultSet rs = pstmt.executeQuery();
 	    // Now do something with the ResultSet ...
 	    while (rs.next()){
-                Vector<String> rowVector = new Vector<String>();
-                rowVector.add(rs.getString(1));
-                rowVector.add(rs.getString(2));
-                rowVector.add(rs.getString(3));
-                rowVector.add(rs.getString(4));
-                rowVector.add(rs.getString(5));
-                subgruppen.add(rowVector);
-            }
+            Vector<String> rowVector = new Vector<String>();
+            rowVector.add(rs.getString(1));
+            rowVector.add(rs.getString(2));
+            rowVector.add(rs.getString(3));
+            rowVector.add(rs.getString(4));
+            rowVector.add(rs.getString(5));
+            subgruppen.add(rowVector);
+        }
 	    rs.close();
 	    pstmt.close();
 	} catch (SQLException ex) {
@@ -229,26 +231,27 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
     private Vector< Vector<String> > querySubSubGruppen(Integer topid, Integer subid) { // select third level nodes in tree
         Vector< Vector<String> > subsubgruppen = new Vector< Vector<String> >();
 	try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-		    "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name, n_artikel_rekursiv "+
-                    "FROM produktgruppe " +
-                    "WHERE toplevel_id = ? " +
-                    "AND sub_id = ? AND subsub_id IS NOT NULL " + aktivFilterStr +
-                    "ORDER BY subsub_id"
-		    );
-            pstmtSetInteger(pstmt, 1, topid);
-            pstmtSetInteger(pstmt, 2, subid);
+        Connection connection = this.pool.getConnection();
+        PreparedStatement pstmt = connection.prepareStatement(
+            "SELECT toplevel_id, sub_id, subsub_id, produktgruppen_name, n_artikel_rekursiv "+
+            "FROM produktgruppe " +
+            "WHERE toplevel_id = ? " +
+            "AND sub_id = ? AND subsub_id IS NOT NULL " + aktivFilterStr +
+            "ORDER BY subsub_id"
+        );
+        pstmtSetInteger(pstmt, 1, topid);
+        pstmtSetInteger(pstmt, 2, subid);
 	    ResultSet rs = pstmt.executeQuery();
 	    // Now do something with the ResultSet ...
 	    while (rs.next()){
-                Vector<String> rowVector = new Vector<String>();
-                rowVector.add(rs.getString(1));
-                rowVector.add(rs.getString(2));
-                rowVector.add(rs.getString(3));
-                rowVector.add(rs.getString(4));
-                rowVector.add(rs.getString(5));
-                subsubgruppen.add(rowVector);
-            }
+            Vector<String> rowVector = new Vector<String>();
+            rowVector.add(rs.getString(1));
+            rowVector.add(rs.getString(2));
+            rowVector.add(rs.getString(3));
+            rowVector.add(rs.getString(4));
+            rowVector.add(rs.getString(5));
+            subsubgruppen.add(rowVector);
+        }
 	    rs.close();
 	    pstmt.close();
 	} catch (SQLException ex) {
@@ -261,8 +264,9 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
     private Integer returnTotalArticleCount() {
         Integer artikelCount = new Integer(0);
         try {
+            Connection connection = this.pool.getConnection();
             // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
+            Statement stmt = connection.createStatement();
             // Run MySQL command
             ResultSet rs = stmt.executeQuery(
                     "SELECT COUNT(*) FROM artikel INNER JOIN produktgruppe " +

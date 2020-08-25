@@ -5,11 +5,7 @@ import java.util.*; // for Vector, Collections
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
-import java.sql.SQLException;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -42,8 +38,8 @@ public class LieferantNeuEingeben extends DialogWindow
     private JTextField lieferantKurznameField;
 
     // Methoden:
-    public LieferantNeuEingeben(Connection conn, MainWindowGrundlage mw, Lieferantliste pw, JDialog dia) {
-	super(conn, mw, dia);
+    public LieferantNeuEingeben(MariaDbPoolDataSource pool, MainWindowGrundlage mw, Lieferantliste pw, JDialog dia) {
+	    super(pool, mw, dia);
         this.lieferantListe = pw;
         showAll();
     }

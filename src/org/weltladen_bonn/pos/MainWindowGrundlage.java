@@ -7,6 +7,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 
 // MySQL Connector/J stuff:
 import java.sql.*; // SQLException, DriverManager, Connection, Statement, ResultSet
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.BorderLayout;
@@ -29,7 +30,8 @@ public abstract class MainWindowGrundlage extends JFrame {
 
     // Connection to MySQL database:
     public DBConnection dbconn = null;
-    public Connection conn = null;
+    // public Connection conn = null;
+    public MariaDbPoolDataSource pool = null;
 
     // Panels:
     protected JPanel holdAll = new JPanel(); // The top level panel which holds all.
@@ -59,8 +61,8 @@ public abstract class MainWindowGrundlage extends JFrame {
 
     public void initiate(){
         this.dbconn = new DBConnection(bc);
-        if (!dbconn.connectionWorks) return;
-        this.conn = dbconn.conn;
+        if (!this.dbconn.connectionWorks) return;
+        this.pool = this.dbconn.pool;
 
         holdAll.setLayout(new BorderLayout());
 
@@ -74,21 +76,23 @@ public abstract class MainWindowGrundlage extends JFrame {
 
     public BigDecimal retrieveKassenstand(){
         BigDecimal ks = new BigDecimal("0.00");
-	try {
-	    // Create statement for MySQL database
-	    Statement stmt = this.conn.createStatement();
-	    // Run MySQL command
-	    ResultSet rs = stmt.executeQuery(
-                    "SELECT neuer_kassenstand FROM kassenstand WHERE "+
-                    "kassenstand_id = (SELECT MAX(kassenstand_id) FROM kassenstand)"
-                    );
-	    if ( rs.next() ){ ks = rs.getBigDecimal(1); }
-	    rs.close();
-	    stmt.close();
-	} catch (SQLException ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    ex.printStackTrace();
-	}
+        try {
+            // Grab connection from the pool
+            Connection connection = this.pool.getConnection();
+            // Create statement for MySQL database
+            Statement stmt = connection.createStatement();
+            // Run MySQL command
+            ResultSet rs = stmt.executeQuery(
+                        "SELECT neuer_kassenstand FROM kassenstand WHERE "+
+                        "kassenstand_id = (SELECT MAX(kassenstand_id) FROM kassenstand)"
+                        );
+            if ( rs.next() ){ ks = rs.getBigDecimal(1); }
+            rs.close();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
         return ks;
     }
 
@@ -96,8 +100,10 @@ public abstract class MainWindowGrundlage extends JFrame {
     public Integer retrieveKassenstandId(){
         Integer id = null;
         try {
+            // Grab connection from the pool
+            Connection connection = this.pool.getConnection();
             // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
+            Statement stmt = connection.createStatement();
             // Run MySQL command
             ResultSet rs = stmt.executeQuery(
                     "SELECT MAX(kassenstand_id) FROM kassenstand"

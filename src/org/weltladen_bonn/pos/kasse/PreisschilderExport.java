@@ -11,7 +11,7 @@ import javax.swing.*; // JFrame, JPanel, JTable, JButton etc.
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 // MySQL Connector/J stuff:
-import java.sql.*; // Connection, Statement, ResultSet ...
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // jOpenDocument stuff:
 import org.jopendocument.dom.template.*; // JavaScriptTemplate, TemplateException
@@ -36,13 +36,13 @@ public class PreisschilderExport extends WindowContent {
     private Vector<String> herkuenfte;
     private FileExistsAwareFileChooser odtChooser;
 
-    public PreisschilderExport(Connection conn, MainWindowGrundlage mw, String typ, Vector<String> lieferanten,
+    public PreisschilderExport(MariaDbPoolDataSource pool, MainWindowGrundlage mw, String typ, Vector<String> lieferanten,
             Vector<String> namen, Vector<String> nummern, Vector<String> mengen, Vector<String> preise,
             Vector<String> kgPreise, Vector<String> einheiten, Vector<String> herkuenfte) {
         /**
          * typ is either "lm" for Lebensmittel or "khw" for "Kunsthandwerk"
          */
-        super(conn, mw);
+        super(pool, mw);
 
         this.typ = typ;
         this.namen = namen;

@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.*;
@@ -62,8 +63,8 @@ class AbrechnungenTag extends Abrechnungen {
     /**
      *    The constructor.
      *       */
-    AbrechnungenTag(Connection conn, MainWindowGrundlage mw, AbrechnungenTabbedPane atp, TabbedPane tp, Integer exportIndex){
-        super(conn, mw, "", "Tagesabrechnung", "yyyy-MM-dd HH:mm:ss", "dd.MM. HH:mm (E)",
+    AbrechnungenTag(MariaDbPoolDataSource pool, MainWindowGrundlage mw, AbrechnungenTabbedPane atp, TabbedPane tp, Integer exportIndex){
+        super(pool, mw, "", "Tagesabrechnung", "yyyy-MM-dd HH:mm:ss", "dd.MM. HH:mm (E)",
                 "zeitpunkt", "abrechnung_tag");
         this.setExportDirFormat(bc.exportDirAbrechnungTag);
         this.abrechTabbedPane = atp;
@@ -96,7 +97,8 @@ class AbrechnungenTag extends Abrechnungen {
 
     private ResultSet doQueryStornos(Integer abrechnung_tag_id) throws SQLException {
         // Summe über Stornos:
-        PreparedStatement pstmt = this.conn.prepareStatement(
+        Connection connection = this.pool.getConnection();
+        PreparedStatement pstmt = connection.prepareStatement(
                 // SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) WHERE storniert = TRUE AND verkaufsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 17 LIMIT 1), '0001-01-01') AND verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 18 LIMIT 1), '9999-01-01') GROUP BY mwst_satz;
                 "SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) " +
                         "FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) " +
@@ -112,7 +114,8 @@ class AbrechnungenTag extends Abrechnungen {
 
     private ResultSet doQueryRetouren(Integer abrechnung_tag_id) throws SQLException {
         // Summe über Retouren:
-        PreparedStatement pstmt = this.conn.prepareStatement(
+        Connection connection = this.pool.getConnection();
+        PreparedStatement pstmt = connection.prepareStatement(
                 // SELECT mwst_satz, SUM(ges_preis) FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) INNER JOIN artikel USING (artikel_id) WHERE storniert = FALSE AND verkaufsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 0 LIMIT 1), '0001-01-01') AND verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 9999999999999 LIMIT 1), '9999-01-01') AND stueckzahl < 0 AND produktgruppen_id >= 9 GROUP BY mwst_satz;
                 "SELECT mwst_satz, SUM(ges_preis) " +
                         "FROM verkauf_details " +
@@ -132,7 +135,8 @@ class AbrechnungenTag extends Abrechnungen {
 
     private ResultSet doQueryEntnahmen(Integer abrechnung_tag_id) throws SQLException {
         // Summe über Entnahmen:
-        PreparedStatement pstmt = this.conn.prepareStatement(
+        Connection connection = this.pool.getConnection();
+        PreparedStatement pstmt = connection.prepareStatement(
                 // SELECT SUM(entnahme_betrag) FROM (SELECT kassenstand_id AS kid, neuer_kassenstand - (SELECT neuer_kassenstand FROM kassenstand WHERE kassenstand_id = kid-1) AS entnahme_betrag FROM kassenstand WHERE buchungsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 0 LIMIT 1), '0001-01-01') AND buchungsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 9999999999999 LIMIT 1), '9999-01-01') AND entnahme = TRUE) AS entnahme_table;
                 "SELECT SUM(entnahme_betrag) " +
                         "FROM (" +
@@ -208,8 +212,9 @@ class AbrechnungenTag extends Abrechnungen {
         zaehlprotokollEinnahmen = new Vector<>();
         zaehlprotokolle = new Vector<>();
         try {
+            Connection connection = this.pool.getConnection();
             for (Integer id : abrechnungsIDs) {
-                PreparedStatement pstmt = this.conn.prepareStatement(
+                PreparedStatement pstmt = connection.prepareStatement(
                         "SELECT id, zeitpunkt, kommentar, aktiv " +
                                 "FROM zaehlprotokoll " +
                                 "WHERE abrechnung_tag_id = ? " +
@@ -225,7 +230,7 @@ class AbrechnungenTag extends Abrechnungen {
                     zeitpunkte.add(rs.getString(2));
                     kommentare.add(rs.getString(3));
                     //
-                    PreparedStatement pstmt2 = this.conn.prepareStatement(
+                    PreparedStatement pstmt2 = connection.prepareStatement(
                             "SELECT SUM(anzahl*einheit) " +
                                     "FROM zaehlprotokoll_details " +
                                     "WHERE zaehlprotokoll_id = ?"
@@ -238,7 +243,7 @@ class AbrechnungenTag extends Abrechnungen {
                     }
                     summen.add(summe);
                     //
-                    pstmt2 = this.conn.prepareStatement(
+                    pstmt2 = connection.prepareStatement(
                             "SELECT einheit, anzahl " +
                                     "FROM zaehlprotokoll_details " +
                                     "WHERE zaehlprotokoll_id = ? " +
@@ -254,7 +259,7 @@ class AbrechnungenTag extends Abrechnungen {
                 }
                 rs.close();
                 //
-                pstmt = this.conn.prepareStatement(
+                pstmt = connection.prepareStatement(
                         "SELECT neuer_kassenstand " +
                                 "FROM kassenstand INNER JOIN abrechnung_tag USING (kassenstand_id) " +
                                 "WHERE abrechnung_tag.id = ? " +
@@ -276,7 +281,7 @@ class AbrechnungenTag extends Abrechnungen {
                     differenzen.add(diff);
                 }
                 //
-                pstmt = this.conn.prepareStatement(
+                pstmt = connection.prepareStatement(
                         "SELECT neuer_kassenstand "+
                                 "FROM kassenstand "+
                                 "WHERE kassenstand_id > "+
@@ -395,7 +400,8 @@ class AbrechnungenTag extends Abrechnungen {
     private HashMap<BigDecimal, BigDecimal> queryIncompleteAbrechnung_BarBruttoVATs() {
         HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = new HashMap<>();
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
                     "SELECT mwst_satz, SUM(ges_preis) AS bar_brutto " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
@@ -804,7 +810,8 @@ class AbrechnungenTag extends Abrechnungen {
     private String queryEarliestVerkauf() {
         String date = "";
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MIN(verkaufsdatum) "+
                     "FROM verkauf WHERE storniert = FALSE AND verkaufsdatum > "+
                     "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag),'0001-01-01')");
@@ -820,7 +827,8 @@ class AbrechnungenTag extends Abrechnungen {
     private String queryLatestVerkauf() {
         String date = "";
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MAX(verkaufsdatum) "+
                     "FROM verkauf WHERE storniert = FALSE AND verkaufsdatum > "+
                     "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01')");
@@ -837,7 +845,7 @@ class AbrechnungenTag extends Abrechnungen {
     private void showSelectZeitpunktDialog(DateTime firstDate, DateTime lastDate, DateTime nowDate) {
         JDialog dialog = new JDialog(this.mainWindow, "Zeitpunkt manuell auswählen", true);
         SelectZeitpunktForAbrechnungDialog selZeitpunkt = 
-            new SelectZeitpunktForAbrechnungDialog(this.conn, this.mainWindow,
+            new SelectZeitpunktForAbrechnungDialog(this.pool, this.mainWindow,
                     this, dialog, firstDate, lastDate, nowDate);
         dialog.getContentPane().add(selZeitpunkt, BorderLayout.CENTER);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -867,7 +875,8 @@ class AbrechnungenTag extends Abrechnungen {
                                           String zeitpunktParsing, String zeitpunkt) {
         /** Delete Monats-/Jahresabrechnung if there was already one for the given zeitpunkt */
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT COUNT(*) FROM "+abrechnungsName+" "+
                     "WHERE "+timeName+" = "+zeitpunktParsing
                     );
@@ -876,7 +885,7 @@ class AbrechnungenTag extends Abrechnungen {
             rs.next(); int count = rs.getInt(1); rs.close();
             pstmt.close();
             if (count > 0){
-                pstmt = this.conn.prepareStatement(
+                pstmt = connection.prepareStatement(
                         "DELETE FROM "+abrechnungsName+" "+
                         "WHERE "+timeName+" = "+zeitpunktParsing
                         );
@@ -930,7 +939,8 @@ class AbrechnungenTag extends Abrechnungen {
                 //System.out.println("INSERT INTO abrechnung_tag: id: "+id+
                 //        "  "+mwst_satz+"  "+mwst_netto+"  "+mwst_betrag+
                 //        "   "+bar_brutto);
-                PreparedStatement pstmt = this.conn.prepareStatement(
+                Connection connection = this.pool.getConnection();
+                PreparedStatement pstmt = connection.prepareStatement(
                         "INSERT INTO abrechnung_tag SET id = ?, "+
                                 "zeitpunkt = ?, "+
                                 "zeitpunkt_real = ?, "+
@@ -974,7 +984,8 @@ class AbrechnungenTag extends Abrechnungen {
     private Integer maxZaehlprotokollID() {
         Integer maxZaehlID = null;
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MAX(id) FROM zaehlprotokoll");
             rs.next();
             maxZaehlID = rs.getInt(1);
@@ -989,7 +1000,8 @@ class AbrechnungenTag extends Abrechnungen {
 
     private void insertZaehlprotokoll(Integer abrechnung_tag_id) {
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "INSERT INTO zaehlprotokoll SET abrechnung_tag_id = ?, "+
                             "zeitpunkt = ?, "+
                             "kommentar = ?"
@@ -1007,7 +1019,8 @@ class AbrechnungenTag extends Abrechnungen {
             for ( Map.Entry<BigDecimal, Integer> entry : zaehlprotokoll.entrySet() ){
                 BigDecimal wert = entry.getKey();
                 Integer anzahl = entry.getValue();
-                pstmt = this.conn.prepareStatement(
+                connection = this.pool.getConnection();
+                pstmt = connection.prepareStatement(
                         "INSERT INTO zaehlprotokoll_details SET zaehlprotokoll_id = ?, "+
                                 "anzahl = ?, "+
                                 "einheit = ?"
@@ -1037,7 +1050,8 @@ class AbrechnungenTag extends Abrechnungen {
 
     private void setZaehlprotokollInactive(Integer abrechnung_tag_id) {
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "UPDATE zaehlprotokoll SET aktiv = FALSE "+
                             "WHERE abrechnung_tag_id = ? AND aktiv = TRUE"
             );
@@ -1060,7 +1074,7 @@ class AbrechnungenTag extends Abrechnungen {
 
     private void showZaehlprotokollDialog() {
         JDialog dialog = new JDialog(this.mainWindow, "Erfassung des Kassenbestands", true);
-        ZaehlprotokollDialog zd = new ZaehlprotokollDialog(this.conn, this.mainWindow, this, dialog);
+        ZaehlprotokollDialog zd = new ZaehlprotokollDialog(this.pool, this.mainWindow, this, dialog);
         dialog.getContentPane().add(zd, BorderLayout.CENTER);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.pack();
@@ -1069,7 +1083,7 @@ class AbrechnungenTag extends Abrechnungen {
 
     private void showZaehlprotokollEditDialog(int editIndex) {
         JDialog dialog = new JDialog(this.mainWindow, "Bearbeitung des Kassenbestands", true);
-        ZaehlprotokollDialog zd = new ZaehlprotokollDialog(this.conn, this.mainWindow, this, dialog);
+        ZaehlprotokollDialog zd = new ZaehlprotokollDialog(this.pool, this.mainWindow, this, dialog);
         zd.setZaehlprotokoll(zaehlprotokolle.get(editIndex).get(0));
         zd.setKassenstand(zaehlprotokollSollKassenstaende.get(editIndex));
         zd.setKommentarErklaerText("Bitte rechts eingeben:\n"+
@@ -1083,7 +1097,7 @@ class AbrechnungenTag extends Abrechnungen {
 
     private void showKassenstandZuruecksetzenDialog() {
         JDialog dialog = new JDialog(this.mainWindow, "Kassenstand zurücksetzen", true);
-        KassenstandZuruecksetzenDialog kzd = new KassenstandZuruecksetzenDialog(this.conn, this.mainWindow, dialog, this.zaehlprotokoll, this);
+        KassenstandZuruecksetzenDialog kzd = new KassenstandZuruecksetzenDialog(this.pool, this.mainWindow, dialog, this.zaehlprotokoll, this);
         dialog.getContentPane().add(kzd, BorderLayout.CENTER);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.pack();

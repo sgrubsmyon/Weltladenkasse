@@ -14,6 +14,7 @@ import java.awt.event.*;
 // MySQL Connector/J stuff:
 // Connection, Statement, ResultSet
 import java.sql.*;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // JFrame, JPanel, JTable, JButton etc.
 import javax.swing.*;
@@ -84,8 +85,8 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
     /**
      * The constructor.
      */
-    public PreisschilderFormular(Connection conn, MainWindowGrundlage mw, TabbedPaneGrundlage tp) {
-        super(conn, mw);
+    public PreisschilderFormular(MariaDbPoolDataSource pool, MainWindowGrundlage mw, TabbedPaneGrundlage tp) {
+        super(pool, mw);
         initiateVectors();
 
         csvChooser = new JFileChooser();
@@ -133,7 +134,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
 
         formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        asPanel = new ArticleSelectPanelPreisschilder(conn, mainWindow, this);
+        asPanel = new ArticleSelectPanelPreisschilder(this.pool, mainWindow, this);
         formPanel.add(asPanel);
 
         EnterAdapter enterAdapter = new EnterAdapter();
@@ -713,7 +714,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         }
         if (e.getSource() == printButton) {
             String type = lmButton.isSelected() ? "lm" : khwButton.isSelected() ? "khw" : "";
-            new PreisschilderExport(this.conn, this.mainWindow, type, kurzlieferanten, kurznamen, articleNumbers, mengen,
+            new PreisschilderExport(this.pool, this.mainWindow, type, kurzlieferanten, kurznamen, articleNumbers, mengen,
                     preise, kgPreise, einheiten, herkuenfte);
             return;
         }

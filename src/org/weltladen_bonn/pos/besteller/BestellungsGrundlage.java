@@ -19,10 +19,7 @@ import java.awt.Point;
 import javax.swing.JTable;
 
 // MySQL Connector/J stuff:
-import java.sql.SQLException;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 import org.weltladen_bonn.pos.MainWindowGrundlage;
 import org.weltladen_bonn.pos.ArtikelGrundlage;
@@ -39,12 +36,11 @@ public abstract class BestellungsGrundlage extends ArtikelGrundlage {
     /**
      *    The constructor.
      *       */
-    public BestellungsGrundlage(Connection conn, MainWindowGrundlage mw)
-    {
-	super(conn, mw);
-	columnLabels = new Vector<String>();
+    public BestellungsGrundlage(MariaDbPoolDataSource pool, MainWindowGrundlage mw) {
+		super(pool, mw);
+		columnLabels = new Vector<String>();
         columnLabels.add("Pos.");
-	columnLabels.add("Lieferant"); columnLabels.add("Artikel-Nr."); columnLabels.add("Artikel-Name"); 
+		columnLabels.add("Lieferant"); columnLabels.add("Artikel-Nr."); columnLabels.add("Artikel-Name"); 
         columnLabels.add("Einzelpreis"); columnLabels.add("VPE"); columnLabels.add("Stückzahl");
         columnLabels.add("Beliebtheit");
     }

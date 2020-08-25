@@ -16,7 +16,7 @@ import javax.print.attribute.*;
 import javax.print.attribute.standard.*;
 
 // MySQL Connector/J stuff:
-import java.sql.*; // Connection, Statement, ResultSet ...
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // DateTime from date4j (http://www.date4j.net/javadoc/index.html)
 import hirondelle.date4j.DateTime;
@@ -46,12 +46,12 @@ public class Quittung extends WindowContent {
     /**
      *    The constructor.
      *       */
-    public Quittung(Connection conn, MainWindowGrundlage mw,
+    public Quittung(MariaDbPoolDataSource pool, MainWindowGrundlage mw,
             DateTime dt, Integer rechnungsNr,
             Vector<KassierArtikel> ka,
             LinkedHashMap< BigDecimal, Vector<BigDecimal> > matv,
             String zm, BigDecimal tp, BigDecimal kgb, BigDecimal rg) {
-	super(conn, mw);
+	    super(pool, mw);
         this.datetime = dt;
         this.rechnungsNr = rechnungsNr;
         this.kassierArtikel = ka;

@@ -6,6 +6,7 @@ import java.math.*; // for BigDecimal and RoundingMode
 
 // MySQL Connector/J stuff:
 import java.sql.*; // Connection, Statement, ResultSet ...
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.*;
@@ -18,8 +19,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
     /**
      *    The constructor.
      *       */
-    public ArtikelGrundlage(Connection conn, MainWindowGrundlage mw) {
-	super(conn, mw);
+    public ArtikelGrundlage(MariaDbPoolDataSource pool, MainWindowGrundlage mw) {
+	    super(pool, mw);
     }
 
     protected void removeDefaultKeyBindings(JComponent field) {
@@ -59,7 +60,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
         int artikelID = -1;
         String lieferantQuery = lieferant.equals("") ? "IS NULL" : "= ?";
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT a.artikel_id FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
                     "WHERE l.lieferant_name "+lieferantQuery+" " +
@@ -86,7 +88,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
         // get artikelID for lieferant and artikelNummer
         int artikelID = -1;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT a.artikel_id FROM artikel AS a " +
                     "WHERE a.lieferant_id = ? "+
                     "AND a.artikel_nr = ? " +
@@ -109,7 +112,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
         String lieferant = new String();
         Boolean sortiment = false;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT a.artikel_name, l.lieferant_name, a.sortiment FROM artikel AS a " +
                     "LEFT JOIN lieferant AS l USING (lieferant_id) " +
                     "WHERE a.artikel_id = ? " +
@@ -133,7 +137,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
     public String[] getArticleNumber(int artikelID) {
         String artikelNumber = new String();
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT artikel_nr FROM artikel WHERE artikel_id = ? " +
                     "AND aktiv = TRUE"
                     );
@@ -151,7 +156,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
     public String getShortName(int artikelID) {
         String kurzname = new String();
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT IFNULL(kurzname, artikel_name) FROM artikel WHERE artikel_id = ? " +
                     "AND aktiv = TRUE"
                     );
@@ -159,7 +165,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             ResultSet rs = pstmt.executeQuery();
             rs.next(); kurzname = rs.getString(1); rs.close();
             if ( kurzname.equals("") ){
-                pstmt = this.conn.prepareStatement(
+                pstmt = connection.prepareStatement(
                         "SELECT artikel_name FROM artikel WHERE artikel_id = ? " +
                         "AND aktiv = TRUE"
                         );
@@ -189,7 +195,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
     public String getLieferantName(int artikelID) {
         String lieferant = new String();
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT lieferant_name "+
                     "FROM lieferant AS l INNER JOIN artikel AS a USING (lieferant_id) WHERE artikel_id = ? "+
                     "AND a.aktiv = TRUE"
@@ -209,7 +216,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
     public String getShortLieferantName(int artikelID) {
         String liefkurz = new String();
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT IFNULL(lieferant_kurzname, lieferant_name) "+
                     "FROM lieferant AS l INNER JOIN artikel AS a USING (lieferant_id) WHERE artikel_id = ? "+
                     "AND a.aktiv = TRUE"
@@ -218,7 +226,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             ResultSet rs = pstmt.executeQuery();
             rs.next(); liefkurz = rs.getString(1); rs.close();
             if ( liefkurz.equals("") ){
-                pstmt = this.conn.prepareStatement(
+                pstmt = connection.prepareStatement(
                     "SELECT lieferant_name "+
                     "FROM lieferant AS l INNER JOIN artikel AS a USING (lieferant_id) WHERE artikel_id = ? "+
                     "AND a.aktiv = TRUE"
@@ -238,7 +246,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
     public String getBarcode(int artikelID) {
         String barcode = new String();
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT barcode FROM artikel WHERE artikel_id = ? " +
                     "AND aktiv = TRUE"
                     );
@@ -257,7 +266,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
         // is price variable for artikelID?
         boolean variabel = false;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT variabler_preis FROM artikel WHERE artikel_id = ?"
                     );
             pstmtSetInteger(pstmt, 1, artikelID);
@@ -275,7 +285,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
         /** returns vk_preis from DB, this is price per article */
         String price = "";
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT vk_preis FROM artikel WHERE artikel_id = ?"
                     );
             pstmtSetInteger(pstmt, 1, artikelID);
@@ -293,7 +304,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
         /** returns empf_vk_preis from DB, this is price per set */
         String price = "";
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT empf_vk_preis FROM artikel WHERE artikel_id = ?"
                     );
             pstmtSetInteger(pstmt, 1, artikelID);
@@ -311,7 +323,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
         // get VAT rate for artikelID
         String vat = "";
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT mwst.mwst_satz FROM mwst INNER JOIN produktgruppe USING (mwst_id) "+
                     "INNER JOIN artikel USING (produktgruppen_id) WHERE artikel.artikel_id = ?"
                     );
@@ -332,7 +345,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
         String einheit = new String("");
         BigDecimal preis_bd = new BigDecimal("0");
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT menge, einheit, vk_preis FROM artikel WHERE artikel_id = ?"
                     );
             pstmtSetInteger(pstmt, 1, artikelID);
@@ -384,7 +398,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
     public String getVPE(int artikelID) {
         String vpe = "";
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT vpe FROM artikel WHERE artikel_id = ?"
                     );
             pstmtSetInteger(pstmt, 1, artikelID);
@@ -405,7 +420,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
         // is price variable for artikelID?
         int setgroesse = 1;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT setgroesse FROM artikel WHERE artikel_id = ?"
                     );
             pstmtSetInteger(pstmt, 1, artikelID);
@@ -422,7 +438,8 @@ public abstract class ArtikelGrundlage extends WindowContent {
     public Boolean getSortimentBool(int artikelID) {
         Boolean sortimentBool = false;
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT sortiment FROM artikel "+
                     "WHERE artikel_id = ?"
                     );

@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -74,8 +75,8 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
     private JDialog readFromFileDialog;
 
     // Methoden:
-    public Produktgruppenliste(Connection conn, MainWindowGrundlage mw) {
-        super(conn, mw);
+    public Produktgruppenliste(MariaDbPoolDataSource pool, MainWindowGrundlage mw) {
+        super(pool, mw);
 
         fillDataArray();
         showAll();
@@ -95,7 +96,8 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
 
         String filter = "p.toplevel_id IS NOT NULL "; // exclude 'unbekannt'
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT p.produktgruppen_id, p.toplevel_id, p.sub_id, p.subsub_id, "+
                     "p.produktgruppen_name, p.n_artikel, "+
                     "p.aktiv, "+
@@ -511,7 +513,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
             selectedPfandIDs.add( pfandIDs.get(selection[i]) );
         }
         JDialog editDialog = new JDialog(this.mainWindow, "Produktgruppe(n) bearbeiten", true);
-        ProduktgruppeBearbeiten bearb = new ProduktgruppeBearbeiten(this.conn, this.mainWindow, this, editDialog,
+        ProduktgruppeBearbeiten bearb = new ProduktgruppeBearbeiten(this.pool, this.mainWindow, this, editDialog,
                 selectedData, selectedProdGrIDs, selectedMwStIDs, selectedPfandIDs);
         editDialog.getContentPane().add(bearb, BorderLayout.CENTER);
         editDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
@@ -523,7 +525,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
 
     void showNewProduktgruppenDialog() {
         JDialog newProduktgruppenDialog = new JDialog(this.mainWindow, "Neue Produktgruppe hinzufügen", true);
-        ProduktgruppeNeuEingeben newProduktgruppe = new ProduktgruppeNeuEingeben(this.conn, this.mainWindow, this, newProduktgruppenDialog);
+        ProduktgruppeNeuEingeben newProduktgruppe = new ProduktgruppeNeuEingeben(this.pool, this.mainWindow, this, newProduktgruppenDialog);
         newProduktgruppenDialog.getContentPane().add(newProduktgruppe, BorderLayout.CENTER);
         newProduktgruppenDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         WindowAdapterDialog wad = new WindowAdapterDialog(newProduktgruppe, newProduktgruppenDialog, "Achtung: Änderungen gehen verloren (noch nicht abgeschickt).\nWirklich schließen?");

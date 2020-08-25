@@ -33,7 +33,7 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
     public MainWindow(){
         super();
         if (dbconn.connectionWorks){
-            myTabbedPane = new TabbedPane(this.conn, this);
+            myTabbedPane = new TabbedPane(this.pool, this);
             setContentPanel(myTabbedPane);
         }
     }

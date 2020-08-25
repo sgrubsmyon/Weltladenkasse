@@ -4,7 +4,7 @@ package org.weltladen_bonn.pos.besteller;
 import java.util.*; // for String
 
 // MySQL Connector/J stuff:
-import java.sql.*; // Connection, Statement, ResultSet
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.*; // BorderLayout, FlowLayout, Dimension
@@ -17,9 +17,9 @@ public class ArticleSelectPanelBestellen extends ArticleSelectPanelGrundlage {
     private Bestellen bestellen;
     private TabbedPane tabbedPane;
 
-    public ArticleSelectPanelBestellen(Connection conn, MainWindowGrundlage mw,
+    public ArticleSelectPanelBestellen(MariaDbPoolDataSource pool, MainWindowGrundlage mw,
             Bestellen bestellen, TabbedPane tabbedPane) {
-        super(conn, mw, bestellen, " AND (toplevel_id IS NOT NULL OR sub_id = 2 OR sub_id = 3 OR sub_id = 4) ");
+        super(pool, mw, bestellen, " AND (toplevel_id IS NOT NULL OR sub_id = 2 OR sub_id = 3 OR sub_id = 4) ");
           // filterStr: exceptions for Gutschein (sub_id = 2), regular Pfand for inventories (sub_id = 3) and Pfand optional (sub_id = 4)
         this.bestellen = bestellen;
         this.tabbedPane = tabbedPane;
@@ -118,7 +118,7 @@ public class ArticleSelectPanelBestellen extends ArticleSelectPanelGrundlage {
 
     protected void showEditDialog(Vector<Artikel> selectedArticles) {
         JDialog editDialog = new JDialog(mainWindow, "Artikel bearbeiten", true);
-        ArtikelBearbeiten bearb = new ArtikelBearbeiten(conn,
+        ArtikelBearbeiten bearb = new ArtikelBearbeiten(this.pool,
                 mainWindow, tabbedPane.getArtikelliste(), editDialog,
                 selectedArticles);
         bearb.getArtikelFormular().sortimentBox.setSelected(true);

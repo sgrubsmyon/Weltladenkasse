@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat;
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
-import java.sql.Connection;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -63,10 +63,10 @@ public class SelectZeitpunktForAbrechnungDialog extends DialogWindow
     private JButton cancelButton;
 
     // Methoden:
-    public SelectZeitpunktForAbrechnungDialog(Connection conn, MainWindowGrundlage mw,
+    public SelectZeitpunktForAbrechnungDialog(MariaDbPoolDataSource pool, MainWindowGrundlage mw,
             AbrechnungenTag at, JDialog dia,
             DateTime fd, DateTime ld, DateTime nd) {
-	super(conn, mw, dia);
+	    super(pool, mw, dia);
         this.abrechnungen = at;
         // make second = 0, because seconds cause problems:
         this.firstDateTime = fd.minus(0, 0, 0, 0, 0, fd.getSecond(), 0, DateTime.DayOverflow.LastDay);

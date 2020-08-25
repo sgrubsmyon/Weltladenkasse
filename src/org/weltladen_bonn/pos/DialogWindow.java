@@ -4,7 +4,7 @@ package org.weltladen_bonn.pos;
 //import java.util.*; // for Vector, Collections
 
 // MySQL Connector/J stuff:
-import java.sql.Connection;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -30,8 +30,8 @@ public abstract class DialogWindow extends WindowContent {
     protected JButton closeButton;
 
     // Methoden:
-    public DialogWindow(Connection conn, MainWindowGrundlage mw, JDialog dia) {
-        super(conn, mw);
+    public DialogWindow(MariaDbPoolDataSource pool, MainWindowGrundlage mw, JDialog dia) {
+        super(pool, mw);
         this.window = dia;
     }
 

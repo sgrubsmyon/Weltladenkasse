@@ -16,6 +16,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // OpenDocument stuff:
 import org.jopendocument.dom.spreadsheet.Sheet;
@@ -103,9 +104,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     /**
      *    The constructor.
      *       */
-    public BestellAnzeige(Connection conn, MainWindowGrundlage mw, TabbedPane tp)
+    public BestellAnzeige(MariaDbPoolDataSource pool, MainWindowGrundlage mw, TabbedPane tp)
     {
-	super(conn, mw);
+	    super(pool, mw);
         tabbedPane = tp;
         selBestellNrUndTyp = new Vector<Object>();
         selBestellNrUndTyp.add(-1); selBestellNrUndTyp.add("");
@@ -124,8 +125,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         int month = 0;
         int year = 0;
         try {
+            Connection connection = this.pool.getConnection();
             // Create statement for MySQL database
-            Statement stmt = this.conn.createStatement();
+            Statement stmt = connection.createStatement();
             // Run MySQL command
             ResultSet rs = stmt
                     .executeQuery("SELECT DAY(MIN(bestellung.bestell_datum)), MONTH(MIN(bestellung.bestell_datum)), "
@@ -407,10 +409,11 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         orderData = new Vector< Vector<Object> >();
         bestellNummernUndTyp = new Vector< Vector<Object> >();
         try {
-            Statement stmt = this.conn.createStatement();
-	    ResultSet rs = stmt.executeQuery(
-		    "SELECT COUNT(*) FROM bestellung "+
-		    filterStrOrders
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
+	        ResultSet rs = stmt.executeQuery(
+		        "SELECT COUNT(*) FROM bestellung "+
+		        filterStrOrders
 		    );
 	    // Now do something with the ResultSet ...
 	    rs.next();
@@ -453,7 +456,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         orderDetailArtikelIDs = new Vector<Integer>();
         orderDetailColors = new Vector<String>();
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT bd.position, l.lieferant_name, a.artikel_nr, a.artikel_name, "+
                     "a.empf_vk_preis, a.vk_preis, a.vpe, bd.stueckzahl, a.beliebtheit, a.sortiment, bd.artikel_id "+
                     "FROM bestellung_details AS bd "+
@@ -512,7 +516,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     Vector< Vector<Object> > retrieveOrderDetailData_forExport(Vector<Object> bestellNrUndTyp) {
         Vector< Vector<Object> > exportData = new Vector< Vector<Object> >();
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT bd.position, l.lieferant_name, a.artikel_nr, a.artikel_name, "+
                     "a.vpe, a.empf_vk_preis, a.vk_preis, a.ek_preis, m.mwst_satz, bd.stueckzahl "+
                     "FROM bestellung_details AS bd "+
@@ -564,7 +569,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     Vector< Vector<Object> > retrieveInventurDetailData_forExport(Vector<Object> bestellNrUndTyp) {
         Vector< Vector<Object> > exportData = new Vector< Vector<Object> >();
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT l.lieferant_kurzname, a.artikel_nr, a.artikel_name, "+
                     "a.vk_preis, a.empf_vk_preis, a.ek_rabatt, a.ek_preis, "+
                     "a.setgroesse, m.mwst_satz, bd.stueckzahl "+
@@ -639,11 +645,13 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     private void deleteOrderFromDB(Vector<Object> bestellNrUndTyp) {
         if ( (Integer)bestellNrUndTyp.get(0) > 0 ){
             PreparedStatement pstmt = null;
+            Connection connection = null;
             try {
                 // try a transaction:
-                conn.setAutoCommit(false);
+                connection = this.pool.getConnection();
+                connection.setAutoCommit(false);
                 // first delete from bestellung_details (child)
-                pstmt = conn.prepareStatement(
+                pstmt = connection.prepareStatement(
                         "DELETE FROM bestellung_details "+
                         "WHERE bestell_nr = ? AND typ = ?"
                         );
@@ -658,7 +666,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 }
                 pstmt.close();
                 // then delete from bestellung (parent)
-                pstmt = conn.prepareStatement(
+                pstmt = connection.prepareStatement(
                         "DELETE FROM bestellung "+
                         "WHERE bestell_nr = ? AND typ = ?"
                         );
@@ -671,12 +679,12 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                             "Sie könnte beim nächsten Abschließen doppelt in DB enthalten sein.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
-                conn.commit();
+                connection.commit();
             } catch (SQLException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
                 try {
-                    conn.rollback();
+                    connection.rollback();
                 } catch (SQLException ex2) {
                     System.out.println("Rollback failed!");
                     System.out.println("Exception: " + ex2.getMessage());
@@ -692,7 +700,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     ex.printStackTrace();
                 }
                 try {
-                    conn.setAutoCommit(true);
+                    connection.setAutoCommit(true);
                 } catch (SQLException ex) {
                     System.out.println("Couldn't set auto-commit to true again after manual transaction.");
                     System.out.println("Exception: " + ex.getMessage());

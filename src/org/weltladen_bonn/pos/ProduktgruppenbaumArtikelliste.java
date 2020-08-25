@@ -5,10 +5,7 @@ import java.util.*; // for Vector
 import java.text.*; // for NumberFormat, DecimalFormat
 
 // MySQL Connector/J stuff:
-import java.sql.SQLException;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -41,8 +38,8 @@ public class ProduktgruppenbaumArtikelliste extends ProduktgruppenbaumGrundlage 
     /**
      *    The constructor.
      *       */
-    public ProduktgruppenbaumArtikelliste(Connection conn, MainWindowGrundlage mw, ArtikellisteContainer ac) {
-	super(conn, mw);
+    public ProduktgruppenbaumArtikelliste(MariaDbPoolDataSource pool, MainWindowGrundlage mw, ArtikellisteContainer ac) {
+	    super(pool, mw);
 
         container = ac;
     }

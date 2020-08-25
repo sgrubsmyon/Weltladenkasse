@@ -5,6 +5,7 @@ import java.util.*;
 
 // MySQL Connector/J stuff:
 import java.sql.*;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.event.*;
@@ -12,11 +13,12 @@ import javax.swing.event.*;
 import javax.swing.*;
 
 public class BarcodeComboBox extends IncrementalSearchComboBox {
-    private Connection conn; // connection to MySQL database
+    // private Connection conn; // connection to MySQL database
+    private MariaDbPoolDataSource pool; // pool of connections to MySQL database
 
-    public BarcodeComboBox(Connection conn, String fstr) {
+    public BarcodeComboBox(MariaDbPoolDataSource pool, String fstr) {
         super(fstr);
-        this.conn = conn;
+        this.pool = pool;
         textFeld.removeKeyListener(keyListener);
         textFeld.addKeyListener(new BarcodeKeyListener());
     }
@@ -24,7 +26,8 @@ public class BarcodeComboBox extends IncrementalSearchComboBox {
     public Vector<String[]> doQuery() {
         Vector<String[]> searchResults = new Vector<String[]>();
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT DISTINCT barcode FROM artikel AS a " +
                     "INNER JOIN produktgruppe AS p USING (produktgruppen_id) " +
                     "WHERE barcode LIKE ? AND a.aktiv = TRUE " + filterStr +

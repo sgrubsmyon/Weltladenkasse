@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.*;
@@ -36,20 +37,20 @@ public class TabbedPane extends TabbedPaneGrundlage implements ChangeListener {
     public Boolean kassenstandNeedsToChange = false;
 
     // Methoden:
-    public TabbedPane(Connection conn, MainWindow mw) {
-	super(conn, mw, null);
+    public TabbedPane(MariaDbPoolDataSource pool, MainWindow mw) {
+	    super(pool, mw, null);
     }
 
     @Override
     protected void createTabbedPane() {
         tabbedPane = new JTabbedPane();
 
-        myKassieren = new Kassieren(this.conn, this.mainWindow, this);
-        myRech = new RechnungenTabbedPane(this.conn, this.mainWindow, this);
-        myAbrech = new AbrechnungenTabbedPane(this.conn, this.mainWindow, this);
-        myKassenstand = new Kassenstand(this.conn, this.mainWindow, this);
-        myPreisschild = new PreisschilderFormular(this.conn, this.mainWindow, this);
-        myOptPane = new OptionTabbedPane(this.conn, this.mainWindow, this);
+        myKassieren = new Kassieren(this.pool, this.mainWindow, this);
+        myRech = new RechnungenTabbedPane(this.pool, this.mainWindow, this);
+        myAbrech = new AbrechnungenTabbedPane(this.pool, this.mainWindow, this);
+        myKassenstand = new Kassenstand(this.pool, this.mainWindow, this);
+        myPreisschild = new PreisschilderFormular(this.pool, this.mainWindow, this);
+        myOptPane = new OptionTabbedPane(this.pool, this.mainWindow, this);
         tabbedPane.addTab("Kassieren", null, myKassieren, "Kunden abkassieren");
         tabbedPane.addTab("Rechnungen", null, myRech, "Rechnungen ansehen/stornieren");
         tabbedPane.addTab("Abrechnungen", null, myAbrech, "Tages-/Monats-/Jahresabschluss");

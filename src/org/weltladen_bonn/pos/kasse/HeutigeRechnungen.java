@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.event.*;
@@ -33,12 +34,12 @@ public class HeutigeRechnungen extends Rechnungen {
     /**
      *    The constructor.
      *       */
-    public HeutigeRechnungen(Connection conn, MainWindowGrundlage mw, RechnungenTabbedPane tp){
-	super(conn, mw, "WHERE verkauf.verkaufsdatum > " +
+    public HeutigeRechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw, RechnungenTabbedPane tp){
+	    super(pool, mw, "WHERE verkauf.verkaufsdatum > " +
                 "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag),'0001-01-01') AND "+
                 "verkauf.storniert = FALSE ", "Heutige Rechnungen");
         tabbedPane = tp;
-	showTable();
+	    showTable();
     }
 
     void addOtherStuff() {
@@ -59,38 +60,39 @@ public class HeutigeRechnungen extends Rechnungen {
     }
 
     private void stornieren(int stornoRow) {
-      Integer rechnungsnummer = Integer.parseInt(data.get(stornoRow).get(1).toString());
-      String zahlungsModus = data.get(stornoRow).get(3).toString();
-      try {
-        PreparedStatement pstmt = this.conn.prepareStatement(
-        "UPDATE verkauf SET verkauf.storniert = 1 WHERE verkauf.rechnungs_nr = ?"
-        );
-        pstmtSetInteger(pstmt, 1, rechnungsnummer);
-        int result = pstmt.executeUpdate();
-        if (result != 0){
-          JOptionPane.showMessageDialog(this, "Rechnung " + rechnungsnummer + " wurde storniert.",
-          "Stornierung ausgeführt", JOptionPane.INFORMATION_MESSAGE);
+        Integer rechnungsnummer = Integer.parseInt(data.get(stornoRow).get(1).toString());
+        String zahlungsModus = data.get(stornoRow).get(3).toString();
+        try { 
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "UPDATE verkauf SET verkauf.storniert = 1 WHERE verkauf.rechnungs_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, rechnungsnummer);
+            int result = pstmt.executeUpdate();
+            if (result != 0){
+                JOptionPane.showMessageDialog(this, "Rechnung " + rechnungsnummer + " wurde storniert.",
+                    "Stornierung ausgeführt", JOptionPane.INFORMATION_MESSAGE);
 
-          if (zahlungsModus.equals("Bar")) { // if Barzahlung
-            insertStornoIntoKassenstand(rechnungsnummer);
-          }
+                if (zahlungsModus.equals("Bar")) { // if Barzahlung
+                    insertStornoIntoKassenstand(rechnungsnummer);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this,
+                    "Fehler: Rechnung " + rechnungsnummer + " konnte nicht storniert werden.",
+                    "Fehler bei Stornierung", JOptionPane.ERROR_MESSAGE);
+            }
+            pstmt.close();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
         }
-        else {
-          JOptionPane.showMessageDialog(this,
-          "Fehler: Rechnung " + rechnungsnummer + " konnte nicht storniert werden.",
-          "Fehler bei Stornierung", JOptionPane.ERROR_MESSAGE);
-        }
-        pstmt.close();
-      } catch (SQLException ex) {
-        System.out.println("Exception: " + ex.getMessage());
-        ex.printStackTrace();
-      }
-      updateTable();
+        updateTable();
     }
 
     private void insertStornoIntoKassenstand(int rechnungsNr) {
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT SUM(ges_preis) FROM verkauf_details WHERE rechnungs_nr = ?"
                     );
             pstmtSetInteger(pstmt, 1, rechnungsNr);
@@ -99,7 +101,7 @@ public class HeutigeRechnungen extends Rechnungen {
             pstmt.close();
             BigDecimal alterKassenstand = mainWindow.retrieveKassenstand();
             BigDecimal neuerKassenstand = alterKassenstand.subtract(betrag);
-            pstmt = this.conn.prepareStatement(
+            pstmt = connection.prepareStatement(
                     "INSERT INTO kassenstand SET rechnungs_nr = ?,"+
                     "buchungsdatum = NOW(), "+
                     "manuell = FALSE, neuer_kassenstand = ?, kommentar = ?"

@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -94,20 +95,21 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
     /**
      *    The constructor.
      *       */
-    public Rabattaktionen(Connection conn, MainWindowGrundlage mw, OptionTabbedPane tabbedPane) {
-	super(conn, mw);
+    public Rabattaktionen(MariaDbPoolDataSource pool, MainWindowGrundlage mw, OptionTabbedPane tabbedPane) {
+	    super(pool, mw);
         this.tabbedPane = tabbedPane;
 
-	initiateSpinners();
-	showAll();
+	    initiateSpinners();
+	    showAll();
     }
 
     private void queryEarliestAndLatestRabattaktion() {
 	int earlyDay = 0; int earlyMonth = 0; int earlyYear = 0;
 	int lateDay = 0; int lateMonth = 0; int lateYear = 0;
 	try {
+        Connection connection = this.pool.getConnection();
 	    // Create statement for MySQL database
-	    Statement stmt = this.conn.createStatement();
+	    Statement stmt = connection.createStatement();
 	    // Run MySQL command
 	    ResultSet rs = stmt.executeQuery(
 		    "SELECT DAY(MIN(von)), MONTH(MIN(von)), YEAR(MIN(von)), " +
@@ -192,8 +194,9 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	columnLabels.add("Mengenrabatt-Schwelle"); columnLabels.add("Mengenrabatt Anzahl kostenlos"); columnLabels.add("Mengenrabatt relativ");
 	columnLabels.add("Bearbeiten"); columnLabels.add("Löschen");
 	try {
+        Connection connection = this.pool.getConnection();
 	    // Create statement for MySQL database
-	    Statement stmt = this.conn.createStatement();
+	    Statement stmt = connection.createStatement();
 	    // Run MySQL command
 	    ResultSet rs = stmt.executeQuery(
 		    "SELECT r.rabatt_id, r.aktionsname, r.rabatt_relativ, r.rabatt_absolut, "+
@@ -424,7 +427,8 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
                 JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (answer == JOptionPane.YES_OPTION){
             try {
-                PreparedStatement pstmt = this.conn.prepareStatement(
+                Connection connection = this.pool.getConnection();
+                PreparedStatement pstmt = connection.prepareStatement(
                         "UPDATE rabattaktion SET bis = "+bis+" WHERE rabatt_id = ?"
                         );
                 pstmtSetInteger(pstmt, 1, rabattID);
@@ -456,10 +460,11 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
     private Boolean isVonDateAfterNow(Integer rabattID) {
         Boolean vonAfterNow = null;
 	try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT von > NOW() FROM rabattaktion WHERE rabatt_id = ?"
-                    );
-            pstmtSetInteger(pstmt, 1, rabattID);
+        Connection connection = this.pool.getConnection();
+        PreparedStatement pstmt = connection.prepareStatement(
+            "SELECT von > NOW() FROM rabattaktion WHERE rabatt_id = ?"
+        );
+        pstmtSetInteger(pstmt, 1, rabattID);
 	    ResultSet rs = pstmt.executeQuery();
 	    rs.next(); vonAfterNow = rs.getBoolean(1); rs.close();
 	    pstmt.close();
@@ -472,10 +477,11 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
     private Boolean isBisDateAfterNow(Integer rabattID) {
         Boolean bisAfterNow = null;
 	try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
-                    "SELECT bis > NOW() OR bis IS NULL FROM rabattaktion WHERE rabatt_id = ?"
-                    );
-            pstmtSetInteger(pstmt, 1, rabattID);
+        Connection connection = this.pool.getConnection();
+        PreparedStatement pstmt = connection.prepareStatement(
+            "SELECT bis > NOW() OR bis IS NULL FROM rabattaktion WHERE rabatt_id = ?"
+        );
+        pstmtSetInteger(pstmt, 1, rabattID);
 	    ResultSet rs = pstmt.executeQuery();
 	    rs.next(); bisAfterNow = rs.getBoolean(1); rs.close();
 	    pstmt.close();
@@ -538,7 +544,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 
     void showNewRabattDialog() {
         newRabattDialog = new JDialog(this.mainWindow, "Neue Rabattaktion hinzufügen", true);
-        newRabatt = new RabattDialog(this.conn, this.mainWindow, this, newRabattDialog, tabbedPane);
+        newRabatt = new RabattDialog(this.pool, this.mainWindow, this, newRabattDialog, tabbedPane);
         newRabattDialog.getContentPane().add(newRabatt, BorderLayout.CENTER);
         newRabattDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         WindowAdapterNewRabatt wanr = new WindowAdapterNewRabatt(newRabatt, newRabattDialog);
@@ -549,7 +555,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 
     void showEditRabattDialog(Integer rabattID, boolean onlyNameAndBis) {
         editRabattDialog = new JDialog(this.mainWindow, "Rabattaktion bearbeiten", true);
-        editRabatt = new RabattDialog(this.conn, this.mainWindow, this, editRabattDialog, tabbedPane,
+        editRabatt = new RabattDialog(this.pool, this.mainWindow, this, editRabattDialog, tabbedPane,
                 "Rabattaktion bearbeiten", true, rabattID, onlyNameAndBis);
         editRabattDialog.getContentPane().add(editRabatt, BorderLayout.CENTER);
         editRabattDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);

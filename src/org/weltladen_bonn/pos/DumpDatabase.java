@@ -13,6 +13,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.*;
@@ -40,9 +41,9 @@ public class DumpDatabase extends WindowContent {
     /**
      *    The constructor.
      *       */
-    public DumpDatabase(Connection conn, MainWindowGrundlage mw, TabbedPaneGrundlage tp)
+    public DumpDatabase(MariaDbPoolDataSource pool, MainWindowGrundlage mw, TabbedPaneGrundlage tp)
     {
-	super(conn, mw);
+	super(pool, mw);
         tabbedPane = tp;
 
         JPanel buttonPanel = new JPanel();
@@ -194,7 +195,8 @@ public class DumpDatabase extends WindowContent {
     private String[] queryMostRecentOrderYearAndWeek() {
         String year = "", week = "";
         try {
-            Statement stmt = this.conn.createStatement();
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
                     "SELECT jahr, kw "+
                     "FROM bestellung ORDER BY "+

@@ -12,9 +12,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
-import java.sql.Connection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 /**
  * Created by mvoge on 26.11.16.
@@ -27,9 +27,9 @@ class KassenstandZuruecksetzenDialog extends DialogWindow
     private JTextField newKassenstandField;
     private JButton submitButton;
 
-    public KassenstandZuruecksetzenDialog(Connection conn, MainWindowGrundlage mw, JDialog dia,
+    public KassenstandZuruecksetzenDialog(MariaDbPoolDataSource pool, MainWindowGrundlage mw, JDialog dia,
                                           LinkedHashMap<BigDecimal, Integer> zaehlprotokoll, AbrechnungenTag at) {
-        super(conn, mw, dia);
+        super(pool, mw, dia);
         this.zaehlprotokoll = zaehlprotokoll;
         this.abrechnungenTag = at;
         showAll();

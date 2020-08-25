@@ -5,6 +5,7 @@ import java.util.*; // for Vector
 
 // MySQL Connector/J stuff:
 import java.sql.*;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 import java.awt.BorderLayout;
@@ -43,7 +44,7 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
         setDisplayBlankTimer();
 
         if (dbconn.connectionWorks){
-            myTabbedPane = new TabbedPane(this.conn, this);
+            myTabbedPane = new TabbedPane(this.pool, this);
             setContentPanel(myTabbedPane);
         }
 	//topPanel.setLayout(new FlowLayout());

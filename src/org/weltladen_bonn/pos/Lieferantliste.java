@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // GUI stuff:
 //import java.awt.BorderLayout;
@@ -71,8 +72,8 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     private JDialog readFromFileDialog;
 
     // Methoden:
-    public Lieferantliste(Connection conn, MainWindowGrundlage mw) {
-        super(conn, mw);
+    public Lieferantliste(MariaDbPoolDataSource pool, MainWindowGrundlage mw) {
+        super(pool, mw);
 
         fillDataArray();
         showAll();
@@ -89,7 +90,8 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
 
         String filter = "lieferant_id != 1 "; // exclude 'unbekannt'
         try {
-            PreparedStatement pstmt = this.conn.prepareStatement(
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT lieferant_id, lieferant_name, lieferant_kurzname, n_artikel, aktiv "+
                     "FROM lieferant "+
                     "WHERE " + filter +
@@ -463,7 +465,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
 
     void showNewLieferantDialog() {
         JDialog newLieferantDialog = new JDialog(this.mainWindow, "Neuen Lieferanten hinzufügen", true);
-        LieferantNeuEingeben newLieferants = new LieferantNeuEingeben(this.conn, this.mainWindow, this, newLieferantDialog);
+        LieferantNeuEingeben newLieferants = new LieferantNeuEingeben(this.pool, this.mainWindow, this, newLieferantDialog);
         newLieferantDialog.getContentPane().add(newLieferants, BorderLayout.CENTER);
         newLieferantDialog.pack();
         newLieferantDialog.setVisible(true);
