@@ -93,7 +93,10 @@ public class DBConnection {
             ResultSet rs = stmt.executeQuery("SELECT CONNECTION_ID()");
             // ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM verkauf");
             rs.next();
-            System.out.println("DBConnection: "+rs.getLong(1));
+            System.out.println("DBConnection CONNECTION_ID: "+rs.getLong(1));
+            rs.close();
+            stmt.close();
+            connection.close();
             connectionWorks = true;
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());

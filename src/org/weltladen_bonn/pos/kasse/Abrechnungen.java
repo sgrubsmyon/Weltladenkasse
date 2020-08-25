@@ -133,6 +133,7 @@ public abstract class Abrechnungen extends WindowContent {
                     "0)");
             rs.next(); id = rs.getInt(1)+1; rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -183,6 +184,7 @@ public abstract class Abrechnungen extends WindowContent {
             values.add(tagesGesamtECBrutto);
 
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -243,6 +245,7 @@ public abstract class Abrechnungen extends WindowContent {
             }
             rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -333,6 +336,7 @@ public abstract class Abrechnungen extends WindowContent {
             totalPage = (abrechnungsZahl-1)/abrechnungenProSeite + 1;
             rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

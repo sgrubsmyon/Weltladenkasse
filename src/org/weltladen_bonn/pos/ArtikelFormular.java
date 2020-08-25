@@ -119,6 +119,7 @@ public class ArtikelFormular extends WindowContent
             }
             rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

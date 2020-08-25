@@ -106,7 +106,6 @@ public class ProduktgruppeBearbeiten extends DialogWindow
                     pstmtSetInteger(pstmt, 2, subid);
                     rs = pstmt.executeQuery();
                     rs.next(); ppgIDs.add(rs.getInt(1)); rs.close();
-                    pstmt.close();
                 } else if (subid != null){
                     pstmt = connection.prepareStatement(
                             "SELECT produktgruppen_id FROM produktgruppe "+
@@ -115,11 +114,12 @@ public class ProduktgruppeBearbeiten extends DialogWindow
                     pstmtSetInteger(pstmt, 1, topid);
                     rs = pstmt.executeQuery();
                     rs.next(); ppgIDs.add(rs.getInt(1)); rs.close();
-                    pstmt.close();
                 } else {
                     // has no parent, is at top level
                     ppgIDs.add(null);
                 }
+                pstmt.close();
+                connection.close();
             } catch (SQLException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();

@@ -146,6 +146,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
             }
             rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

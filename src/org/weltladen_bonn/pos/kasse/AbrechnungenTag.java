@@ -95,9 +95,8 @@ class AbrechnungenTag extends Abrechnungen {
 // ----------------------------------------------------------------------------
 
 
-    private ResultSet doQueryStornos(Integer abrechnung_tag_id) throws SQLException {
+    private PreparedStatement prepareStmtStornos(Connection connection, Integer abrechnung_tag_id) throws SQLException {
         // Summe über Stornos:
-        Connection connection = this.pool.getConnection();
         PreparedStatement pstmt = connection.prepareStatement(
                 // SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) WHERE storniert = TRUE AND verkaufsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 17 LIMIT 1), '0001-01-01') AND verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 18 LIMIT 1), '9999-01-01') GROUP BY mwst_satz;
                 "SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) " +
@@ -109,12 +108,11 @@ class AbrechnungenTag extends Abrechnungen {
         );
         pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
         pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
-        return pstmt.executeQuery();
+        return pstmt;
     }
 
-    private ResultSet doQueryRetouren(Integer abrechnung_tag_id) throws SQLException {
+    private PreparedStatement prepareStmtRetouren(Connection connection, Integer abrechnung_tag_id) throws SQLException {
         // Summe über Retouren:
-        Connection connection = this.pool.getConnection();
         PreparedStatement pstmt = connection.prepareStatement(
                 // SELECT mwst_satz, SUM(ges_preis) FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) INNER JOIN artikel USING (artikel_id) WHERE storniert = FALSE AND verkaufsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 0 LIMIT 1), '0001-01-01') AND verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 9999999999999 LIMIT 1), '9999-01-01') AND stueckzahl < 0 AND produktgruppen_id >= 9 GROUP BY mwst_satz;
                 "SELECT mwst_satz, SUM(ges_preis) " +
@@ -130,12 +128,11 @@ class AbrechnungenTag extends Abrechnungen {
         );
         pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
         pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
-        return pstmt.executeQuery();
+        return pstmt;
     }
 
-    private ResultSet doQueryEntnahmen(Integer abrechnung_tag_id) throws SQLException {
+    private PreparedStatement prepareStmtEntnahmen(Connection connection, Integer abrechnung_tag_id) throws SQLException {
         // Summe über Entnahmen:
-        Connection connection = this.pool.getConnection();
         PreparedStatement pstmt = connection.prepareStatement(
                 // SELECT SUM(entnahme_betrag) FROM (SELECT kassenstand_id AS kid, neuer_kassenstand - (SELECT neuer_kassenstand FROM kassenstand WHERE kassenstand_id = kid-1) AS entnahme_betrag FROM kassenstand WHERE buchungsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 0 LIMIT 1), '0001-01-01') AND buchungsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 9999999999999 LIMIT 1), '9999-01-01') AND entnahme = TRUE) AS entnahme_table;
                 "SELECT SUM(entnahme_betrag) " +
@@ -150,7 +147,7 @@ class AbrechnungenTag extends Abrechnungen {
         );
         pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
         pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
-        return pstmt.executeQuery();
+        return pstmt;
     }
 
     void queryStornosRetourenEntnahmen() {
@@ -159,9 +156,11 @@ class AbrechnungenTag extends Abrechnungen {
         abrechnungsRetouren = new Vector<>();
         abrechnungsEntnahmen = new Vector<>();
         try {
+            Connection connection = this.pool.getConnection();
             for (Integer id : abrechnungsIDs) {
                 // Summe über Stornos:
-                ResultSet rs = doQueryStornos(id);
+                PreparedStatement pstmt = prepareStmtStornos(connection, id);
+                ResultSet rs = pstmt.executeQuery();
                 HashMap<BigDecimal, BigDecimal> map = new HashMap<>();
                 while (rs.next()) {
                     BigDecimal mwst_satz = rs.getBigDecimal(1);
@@ -170,10 +169,12 @@ class AbrechnungenTag extends Abrechnungen {
                     mwstSet.add(mwst_satz);
                 }
                 rs.close();
+                pstmt.close();
                 abrechnungsStornos.add(map);
 
                 // Summe über Retouren:
-                rs = doQueryRetouren(id);
+                pstmt = prepareStmtRetouren(connection, id);
+                rs = pstmt.executeQuery();
                 HashMap<BigDecimal, BigDecimal> map2 = new HashMap<>();
                 while (rs.next()) {
                     BigDecimal mwst_satz = rs.getBigDecimal(1);
@@ -182,10 +183,12 @@ class AbrechnungenTag extends Abrechnungen {
                     mwstSet.add(mwst_satz);
                 }
                 rs.close();
+                pstmt.close();
                 abrechnungsRetouren.add(map2);
 
                 // Summe über Entnahmen:
-                rs = doQueryEntnahmen(id);
+                pstmt = prepareStmtEntnahmen(connection, id);
+                rs = pstmt.executeQuery();
                 BigDecimal entnahme_sum = new BigDecimal("0.00");
                 if (rs.next()) {
                     BigDecimal sum = rs.getBigDecimal(1);
@@ -193,9 +196,11 @@ class AbrechnungenTag extends Abrechnungen {
                         entnahme_sum = sum;
                     }
                 }
-                abrechnungsEntnahmen.add(entnahme_sum);
                 rs.close();
+                pstmt.close();
+                abrechnungsEntnahmen.add(entnahme_sum);
             }
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -315,6 +320,7 @@ class AbrechnungenTag extends Abrechnungen {
                 zaehlprotokollEinnahmen.add(einnahmen);
                 zaehlprotokolle.add(zps);
             }
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -362,9 +368,12 @@ class AbrechnungenTag extends Abrechnungen {
         incompleteAbrechnungsStornos = new HashMap<>();
         incompleteAbrechnungsRetouren = new HashMap<>();
         try {
+            Connection connection = this.pool.getConnection();
             Integer id = id(); // ID of new, yet to come, abrechnung
+            
             // Summe über Stornos:
-            ResultSet rs = doQueryStornos(id);
+            PreparedStatement pstmt = prepareStmtStornos(connection, id);
+            ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 BigDecimal mwst_satz = rs.getBigDecimal(1);
                 BigDecimal storno_sum = rs.getBigDecimal(2);
@@ -372,9 +381,11 @@ class AbrechnungenTag extends Abrechnungen {
                 mwstSet.add(mwst_satz);
             }
             rs.close();
+            pstmt.close();
 
             // Summe über Retouren:
-            rs = doQueryRetouren(id);
+            pstmt = prepareStmtRetouren(connection, id);
+            rs = pstmt.executeQuery();
             while (rs.next()) {
                 BigDecimal mwst_satz = rs.getBigDecimal(1);
                 BigDecimal retoure_sum = rs.getBigDecimal(2);
@@ -382,15 +393,20 @@ class AbrechnungenTag extends Abrechnungen {
                 mwstSet.add(mwst_satz);
             }
             rs.close();
+            pstmt.close();
 
             // Summe über Entnahmen:
-            rs = doQueryEntnahmen(id);
+            pstmt = prepareStmtEntnahmen(connection, id);
+            rs = pstmt.executeQuery();
             if (rs.next()) {
                 incompleteAbrechnungsEntnahmen = rs.getBigDecimal(1);
             } else {
                 incompleteAbrechnungsEntnahmen = new BigDecimal("0.00");
             }
             rs.close();
+            pstmt.close();
+            
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -418,6 +434,7 @@ class AbrechnungenTag extends Abrechnungen {
             }
             rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -817,6 +834,7 @@ class AbrechnungenTag extends Abrechnungen {
                     "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag),'0001-01-01')");
             rs.next(); date = rs.getString(1); rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -834,6 +852,7 @@ class AbrechnungenTag extends Abrechnungen {
                     "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01')");
             rs.next(); date = rs.getString(1); rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -899,6 +918,7 @@ class AbrechnungenTag extends Abrechnungen {
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -960,6 +980,7 @@ class AbrechnungenTag extends Abrechnungen {
                 pstmtSetInteger(pstmt, 8, kassenstand_id);
                 int result = pstmt.executeUpdate();
                 pstmt.close();
+                connection.close();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
                             "Fehler: Tagesabrechnung konnte nicht gespeichert werden.",
@@ -991,6 +1012,7 @@ class AbrechnungenTag extends Abrechnungen {
             maxZaehlID = rs.getInt(1);
             rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -1019,7 +1041,6 @@ class AbrechnungenTag extends Abrechnungen {
             for ( Map.Entry<BigDecimal, Integer> entry : zaehlprotokoll.entrySet() ){
                 BigDecimal wert = entry.getKey();
                 Integer anzahl = entry.getValue();
-                connection = this.pool.getConnection();
                 pstmt = connection.prepareStatement(
                         "INSERT INTO zaehlprotokoll_details SET zaehlprotokoll_id = ?, "+
                                 "anzahl = ?, "+
@@ -1034,6 +1055,7 @@ class AbrechnungenTag extends Abrechnungen {
                     break;
                 }
             }
+            connection.close();
             if (result == 0) {
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Zählprotokoll-Details konnten nicht gespeichert werden.",
@@ -1058,6 +1080,7 @@ class AbrechnungenTag extends Abrechnungen {
             pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
             int result = pstmt.executeUpdate();
             pstmt.close();
+            connection.close();
             if (result == 0){
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Altes Zählprotokoll konnte nicht inaktiv gesetzt werden.",

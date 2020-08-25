@@ -1089,6 +1089,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
             rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -1269,6 +1270,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
             rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -1289,6 +1291,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             hasPfand = rs.getBoolean(1);
             rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -1309,6 +1312,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             maxRechNr = rs.getInt(1);
             rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -1328,6 +1332,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 date = "";
             }
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -1394,6 +1399,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                             + " konnte " + "nicht abgespeichert werden.", "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -1422,6 +1428,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             pstmt.setBigDecimal(3, neuerKassenstand);
             int result = pstmt.executeUpdate();
             pstmt.close();
+            connection.close();
             if (result == 0) {
                 JOptionPane.showMessageDialog(this, "Fehler: Kassenstand konnte nicht geändert werden.", "Fehler",
                         JOptionPane.ERROR_MESSAGE);

@@ -113,7 +113,18 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         super(pool, mwp);
     }
 
-    private PreparedStatement prepareStatement(String filter) {
+    private Connection createConnection() {
+        Connection connection = null;
+        try {
+            connection = this.pool.getConnection();
+        } catch (SQLException ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return connection;
+    }
+
+    private PreparedStatement prepareStatement(Connection connection, String filter) {
         String queryStr =
             "SELECT artikel_id, produktgruppen_id, produktgruppen_name, "+
             "lieferant_id, lieferant_name, "+
@@ -137,7 +148,6 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         PreparedStatement pstmt = null;
         //System.out.println("Artikelliste SQL query string:\n"+queryStr);
         try {
-            Connection connection = this.pool.getConnection();
             pstmt = connection.prepareStatement(queryStr);
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
@@ -146,7 +156,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         return pstmt;
     }
 
-    private PreparedStatement prepareStatementProduktgruppe() {
+    private PreparedStatement prepareStatementProduktgruppe(Connection connection) {
         String filter = "";
         if (toplevel_id == null){ // if user clicked on "Alle Artikel"
             if (showInternals)
@@ -160,10 +170,10 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             filter += " AND p.sub_id = " + sub_id + " ";
         if (subsub_id != null)
             filter += " AND p.subsub_id = " + subsub_id + " ";
-        return prepareStatement(filter);
+        return prepareStatement(connection, filter);
     }
 
-    private PreparedStatement prepareStatementSearchString() {
+    private PreparedStatement prepareStatementSearchString(Connection connection) {
         String[] words = searchStr.split("\\s+");
         String baseClause = "(produktgruppen_name LIKE ? OR lieferant_name LIKE ? OR "+
             "artikel_nr LIKE ? OR artikel_name LIKE ? OR kurzname LIKE ? OR "+
@@ -178,7 +188,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         }
         PreparedStatement pstmt = null;
         try {
-            pstmt = prepareStatement(filter);
+            pstmt = prepareStatement(connection, filter);
             for (int i=0; i<words.length; i++) {
                 for (int j=i*nQuestionMark+1; j<=(i+1)*nQuestionMark; j++) {
                     pstmt.setString(j, "%"+words[i]+"%");
@@ -192,7 +202,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         return pstmt;
     }
 
-    private void queryDatabase(PreparedStatement pstmt) {
+    private void queryDatabase(Connection connection, PreparedStatement pstmt) {
         try {
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -288,6 +298,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             }
             rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -403,13 +414,14 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         documentFilterMap.put("Herkunft", bc.herkunftFilter);
         documentFilterMap.put("Bestand", bc.intFilter);
 
+        Connection connection = createConnection();
         PreparedStatement pstmt;
         if (this.searchStr == null) {
-            pstmt = prepareStatementProduktgruppe();
+            pstmt = prepareStatementProduktgruppe(connection);
         } else {
-            pstmt = prepareStatementSearchString();
+            pstmt = prepareStatementSearchString(connection);
         }
-        queryDatabase(pstmt);
+        queryDatabase(connection, pstmt);
         refreshOriginalData();
         displayData = new Vector< Vector<Object> >(data);
         initiateDisplayIndices();

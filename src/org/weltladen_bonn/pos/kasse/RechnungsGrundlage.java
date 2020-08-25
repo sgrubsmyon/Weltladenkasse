@@ -69,11 +69,12 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
             ResultSet rs = stmt.executeQuery(
                     "SELECT mwst_satz FROM mwst ORDER BY mwst_id"
                     );
-	    while (rs.next()) {
+	        while (rs.next()) {
                 vats.add(rs.getBigDecimal(1));
             }
             rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();

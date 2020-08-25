@@ -172,6 +172,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             }
             rs.close();
             stmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -208,6 +209,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             }
             rs.close();
             pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
@@ -629,6 +631,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
                 pstmt.close();
+                connection.close();
             } catch (SQLException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
@@ -705,6 +708,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
                 pstmt.close();
+                connection.close();
             } catch (SQLException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();

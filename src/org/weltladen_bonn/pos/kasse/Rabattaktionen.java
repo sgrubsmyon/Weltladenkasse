@@ -125,6 +125,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    lateYear = rs.getInt(6);
 	    rs.close();
 	    stmt.close();
+        connection.close();
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
@@ -212,55 +213,56 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 		    );
 	    // Now do something with the ResultSet ...
 	    while (rs.next()) {
-                Integer rabattID = rs.getInt(1);
-                String aktionsname = rs.getString(2);
-                String rabattRel = rs.getString(3);
-                String rabattAbs = rs.getString(4);
-                String schwelle = rs.getString(5);
-                String mengenAnz = rs.getString(6);
-                String mengenRel = rs.getString(7);
-                Boolean vonAfterNow = rs.getBoolean(8);
-                Boolean bisAfterNow = rs.getBoolean(9);
-                String von = rs.getString(10); // configured format
-                String bis = rs.getString(11); // configured format
-                String artikel = rs.getString(12);
-                String produktgr = rs.getString(13);
+            Integer rabattID = rs.getInt(1);
+            String aktionsname = rs.getString(2);
+            String rabattRel = rs.getString(3);
+            String rabattAbs = rs.getString(4);
+            String schwelle = rs.getString(5);
+            String mengenAnz = rs.getString(6);
+            String mengenRel = rs.getString(7);
+            Boolean vonAfterNow = rs.getBoolean(8);
+            Boolean bisAfterNow = rs.getBoolean(9);
+            String von = rs.getString(10); // configured format
+            String bis = rs.getString(11); // configured format
+            String artikel = rs.getString(12);
+            String produktgr = rs.getString(13);
 
-                aktionsname = aktionsname == null ? "" : aktionsname;
-                rabattRel = rabattRel == null ? "" : bc.vatFormatter(rabattRel);
-                rabattAbs = rabattAbs == null ? "" : rabattAbs.replace('.',',')+" "+bc.currencySymbol;
-                schwelle = schwelle == null ? "" : schwelle;
-                mengenAnz = mengenAnz == null ? "" : mengenAnz;
-                mengenRel = mengenRel == null ? "" : bc.vatFormatter(mengenRel);
-                von = von == null ? "" : von;
-                bis = bis == null ? "" : bis;
-                artikel = artikel == null ? "" : artikel;
-                produktgr = produktgr == null ? "" : produktgr;
+            aktionsname = aktionsname == null ? "" : aktionsname;
+            rabattRel = rabattRel == null ? "" : bc.vatFormatter(rabattRel);
+            rabattAbs = rabattAbs == null ? "" : rabattAbs.replace('.',',')+" "+bc.currencySymbol;
+            schwelle = schwelle == null ? "" : schwelle;
+            mengenAnz = mengenAnz == null ? "" : mengenAnz;
+            mengenRel = mengenRel == null ? "" : bc.vatFormatter(mengenRel);
+            von = von == null ? "" : von;
+            bis = bis == null ? "" : bis;
+            artikel = artikel == null ? "" : artikel;
+            produktgr = produktgr == null ? "" : produktgr;
 
-                editButtons.add(new JButton("B"));
-                editButtons.lastElement().addActionListener(this);
-                editButtons.lastElement().setEnabled(false);
-                deleteButtons.add(new JButton("L"));
-                deleteButtons.lastElement().addActionListener(this);
-                deleteButtons.lastElement().setEnabled(false);
-		Vector<Object> row = new Vector<Object>();
-		row.add(aktionsname); row.add(von); row.add(bis);
-		row.add(artikel); row.add(produktgr);
-                row.add(rabattRel); row.add(rabattAbs);
-		row.add(schwelle); row.add(mengenAnz); row.add(mengenRel);
-		row.add(editButtons.lastElement()); row.add(deleteButtons.lastElement());
-		data.add(row);
+            editButtons.add(new JButton("B"));
+            editButtons.lastElement().addActionListener(this);
+            editButtons.lastElement().setEnabled(false);
+            deleteButtons.add(new JButton("L"));
+            deleteButtons.lastElement().addActionListener(this);
+            deleteButtons.lastElement().setEnabled(false);
+            
+            Vector<Object> row = new Vector<Object>();
+            row.add(aktionsname); row.add(von); row.add(bis);
+            row.add(artikel); row.add(produktgr);
+                    row.add(rabattRel); row.add(rabattAbs);
+            row.add(schwelle); row.add(mengenAnz); row.add(mengenRel);
+            row.add(editButtons.lastElement()); row.add(deleteButtons.lastElement());
+            data.add(row);
 
-                if ( vonAfterNow != null ){ // if von date is null, there's something fishy -> don't enable anything
-                    if ( vonAfterNow ){ // Rabattaktion lies in the future
-                        editButtons.lastElement().setEnabled(true); // everything can be changed
-                        deleteButtons.lastElement().setEnabled(true); // can still be deleted
-                    } else if ( bisAfterNow ){ // Rabattaktion has started, but not ended yet
-                        editButtons.lastElement().setEnabled(true); // only name and bis date can be changed
-                        deleteButtons.lastElement().setEnabled(true); // this actually doesn't delete it, but sets bis to now
-                    }
+            if ( vonAfterNow != null ){ // if von date is null, there's something fishy -> don't enable anything
+                if ( vonAfterNow ){ // Rabattaktion lies in the future
+                    editButtons.lastElement().setEnabled(true); // everything can be changed
+                    deleteButtons.lastElement().setEnabled(true); // can still be deleted
+                } else if ( bisAfterNow ){ // Rabattaktion has started, but not ended yet
+                    editButtons.lastElement().setEnabled(true); // only name and bis date can be changed
+                    deleteButtons.lastElement().setEnabled(true); // this actually doesn't delete it, but sets bis to now
                 }
-                rabattIDs.add(rabattID);
+            }
+            rabattIDs.add(rabattID);
 	    }
 	    rs.close();
 	    rs = stmt.executeQuery(
@@ -274,6 +276,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    totalPage = kassenstandZahlInt/bc.rowsPerPage + 1;
 	    rs.close();
 	    stmt.close();
+        connection.close();
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
@@ -441,6 +444,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
                 pstmt.close();
+                connection.close();
             } catch (SQLException ex) {
                 System.out.println("Exception: " + ex.getMessage());
                 ex.printStackTrace();
@@ -468,6 +472,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    ResultSet rs = pstmt.executeQuery();
 	    rs.next(); vonAfterNow = rs.getBoolean(1); rs.close();
 	    pstmt.close();
+        connection.close();
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
@@ -485,6 +490,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    ResultSet rs = pstmt.executeQuery();
 	    rs.next(); bisAfterNow = rs.getBoolean(1); rs.close();
 	    pstmt.close();
+        connection.close();
 	} catch (SQLException ex) {
 	    System.out.println("Exception: " + ex.getMessage());
 	    ex.printStackTrace();
