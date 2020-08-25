@@ -268,7 +268,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
     }
 
     private Integer returnTotalArticleCount() {
-        Integer artikelCount = new Integer(0);
+        Integer artikelCount = Integer.valueOf(0);
         try {
             Connection connection = this.pool.getConnection();
             // Create statement for MySQL database

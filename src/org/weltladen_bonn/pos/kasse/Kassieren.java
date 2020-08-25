@@ -1157,21 +1157,21 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             Vector<Vector<Object>> mengenrabattAnzahlVector, Vector<Vector<Object>> mengenrabattRelativVector) {
         if (einzelAbsolut != null) {
             Vector<Object> temp = new Vector<Object>(3);
-            temp.add(new Integer(rabattID));
+            temp.add(Integer.valueOf(rabattID));
             temp.add(aktionsname);
             temp.add(einzelAbsolut);
             einzelrabattAbsolutVector.add(temp);
         }
         if (einzelRelativ != null) {
             Vector<Object> temp = new Vector<Object>(3);
-            temp.add(new Integer(rabattID));
+            temp.add(Integer.valueOf(rabattID));
             temp.add(aktionsname);
             temp.add(einzelRelativ);
             einzelrabattRelativVector.add(temp);
         }
         if (mengenSchwelle != null && mengenAnzahl != null) {
             Vector<Object> temp = new Vector<Object>(4);
-            temp.add(new Integer(rabattID));
+            temp.add(Integer.valueOf(rabattID));
             temp.add(aktionsname);
             temp.add(mengenSchwelle);
             temp.add(mengenAnzahl);
@@ -1179,7 +1179,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
         if (mengenSchwelle != null && mengenRelativ != null) {
             Vector<Object> temp = new Vector<Object>(4);
-            temp.add(new Integer(rabattID));
+            temp.add(Integer.valueOf(rabattID));
             temp.add(aktionsname);
             temp.add(mengenSchwelle);
             temp.add(mengenRelativ);
