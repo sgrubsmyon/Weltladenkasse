@@ -15,6 +15,10 @@ import java.sql.SQLException;
 import java.util.Vector;
 import org.mariadb.jdbc.MariaDbPoolDataSource;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 // MySQL Connector/J stuff:
 // GUI stuff:
 
@@ -22,6 +26,8 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
     /**
      *
      */
+    private static final Logger logger = LogManager.getLogger(ArticleSelectPanelGrundlage.class);
+
     private static final long serialVersionUID = 1L;
     // Text Fields
     public BarcodeComboBox barcodeBox;
@@ -176,7 +182,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
         try {
           selectedArticleID = getArticleID(Integer.parseInt(liefID), artikelNummer); // get the internal artikelID from the DB
         } catch (java.lang.NumberFormatException ex) {
-          System.out.println("liefID is invalid (probably empty string): liefId = "+liefID);
+          logger.warn("liefID is invalid (probably empty string): liefId = {}", liefID);
         }
         articleSelectUser.updateSelectedArticleID(selectedArticleID);
     }
@@ -274,8 +280,9 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
+            // System.out.println("Exception: " + ex.getMessage());
+            // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
         }
         result.add(artikelNamen);
@@ -368,8 +375,9 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
+            // System.out.println("Exception: " + ex.getMessage());
+            // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
         }
         if (artikelBox.getItemCount() != 1) {
@@ -410,8 +418,9 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
+            // System.out.println("Exception: " + ex.getMessage());
+            // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
         }
         if (nummerBox.getItemCount() != 1) {

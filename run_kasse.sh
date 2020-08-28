@@ -10,6 +10,7 @@ lib_dir=../lib
 main_class=org.weltladen_bonn.pos.kasse.Kasse
 
 cp config_local.properties $build_dir/config.properties
+cp config_log4j2.xml $build_dir
 cp -r vorlagen $build_dir
 cd $build_dir
 java=java
@@ -22,4 +23,5 @@ else
     $java -cp "$lib_dir/*":. $main_class
 fi
 rm config.properties
+rm config_log4j2.xml
 rm -r vorlagen

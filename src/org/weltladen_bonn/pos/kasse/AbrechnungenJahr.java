@@ -33,10 +33,15 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.table.*;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.weltladen_bonn.pos.MainWindowGrundlage;
 
 public class AbrechnungenJahr extends Abrechnungen {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(AbrechnungenJahr.class);
 
     // Methoden:
     /**
@@ -67,8 +72,7 @@ public class AbrechnungenJahr extends Abrechnungen {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         if (result == null){
@@ -94,8 +98,7 @@ public class AbrechnungenJahr extends Abrechnungen {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return result;
@@ -125,8 +128,7 @@ public class AbrechnungenJahr extends Abrechnungen {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return abrechnung;
@@ -137,7 +139,7 @@ public class AbrechnungenJahr extends Abrechnungen {
             Connection connection = this.pool.getConnection();
             for (String year : years){
                 Integer id = id();
-                System.out.println("new year: "+year);
+                logger.info("new year: "+year);
                 PreparedStatement pstmt = connection.prepareStatement(
                         "SELECT ? < DATE_FORMAT(CURRENT_DATE, '%Y-01-01')"
                         );
@@ -150,8 +152,8 @@ public class AbrechnungenJahr extends Abrechnungen {
                     for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : sachen.entrySet() ){
                         BigDecimal mwst_satz = entry.getKey();
                         Vector<BigDecimal> betraege = entry.getValue();
-                        System.out.println("mwst_satz: "+mwst_satz);
-                        System.out.println("betraege "+betraege);
+                        logger.info("mwst_satz: "+mwst_satz);
+                        logger.info("betraege "+betraege);
                         pstmt = connection.prepareStatement(
                                 "INSERT INTO abrechnung_jahr SET id = ?, jahr = ?, "+
                                 "mwst_satz = ?, "+
@@ -181,8 +183,7 @@ public class AbrechnungenJahr extends Abrechnungen {
             }
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -263,8 +264,7 @@ public class AbrechnungenJahr extends Abrechnungen {
                 mwstSet.add(mwst_satz);
             }
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -272,8 +272,8 @@ public class AbrechnungenJahr extends Abrechnungen {
     void queryAbrechnungenSpecial() {
         String maxDate = returnMaxAbechnungDate();
         Vector<String> years = returnAllNewYears(maxDate);
-        System.out.println("max date is: "+maxDate);
-        System.out.println("new years are: "+years);
+        logger.debug("max date is: "+maxDate);
+        logger.debug("new years are: "+years);
         insertNewYears(years);
     }
 
@@ -284,8 +284,7 @@ public class AbrechnungenJahr extends Abrechnungen {
             cal.setTime(sdfIn.parse(date));
             cal.set(Calendar.DAY_OF_MONTH, 15);
         } catch (ParseException ex) {
-            System.out.println("ParseException: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("ParseException: {}", ex);
         }
         return cal.getTime();
     }

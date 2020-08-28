@@ -27,9 +27,15 @@ import org.jopendocument.dom.OOUtils;
 import org.jopendocument.model.OpenDocument;
 import org.jopendocument.print.ODTPrinter;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.weltladen_bonn.pos.*;
 
 public class Quittung extends WindowContent {
+    private static final Logger logger = LogManager.getLogger(Quittung.class);
+
     private DateTime datetime;
     private Integer rechnungsNr;
     private Vector<KassierArtikel> kassierArtikel;
@@ -75,8 +81,7 @@ public class Quittung extends WindowContent {
             }
             sheet = SpreadSheet.createFromFile(infile).getSheet(0);
         } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             return null;
         }
         return sheet;
@@ -212,19 +217,19 @@ public class Quittung extends WindowContent {
         String program = constructProgramPath(bc.sofficePath, "soffice");
         String[] executeCmd = new String[] {program, "--headless",
             "-pt", bc.printerName, filename};
-        System.out.print("Print command: ");
+        String log = "Print command: ";
         for (String s : executeCmd){
-            System.out.print(s+" ");
+            log += s+" ";
         }
-        System.out.println();
+        logger.info(log);
         try {
             Runtime shell = Runtime.getRuntime();
             Process proc = shell.exec(executeCmd);
             int processComplete = proc.waitFor();
             if (processComplete == 0) {
-                System.out.println("Printing of file '"+filename+"' with soffice was successful");
+                logger.info("Printing of file '"+filename+"' with soffice was successful");
             } else {
-                System.out.println("Could not print file '"+filename+"' with soffice");
+                logger.info("Could not print file '"+filename+"' with soffice");
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -266,11 +271,9 @@ public class Quittung extends WindowContent {
                 tmpFile.deleteOnExit();
                 //tmpFile.delete();
             } catch (FileNotFoundException ex) {
-                System.out.println("Exception: " + ex.getMessage());
-                ex.printStackTrace();
+                logger.error("Exception: {}", ex);
             } catch (IOException ex) {
-                System.out.println("Exception: " + ex.getMessage());
-                ex.printStackTrace();
+                logger.error("Exception: {}", ex);
             }
         }
     }

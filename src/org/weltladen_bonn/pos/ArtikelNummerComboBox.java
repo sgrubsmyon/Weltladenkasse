@@ -16,7 +16,13 @@ import org.mariadb.jdbc.MariaDbPoolDataSource;
 // GUI stuff:
 import javax.swing.JOptionPane;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class ArtikelNummerComboBox extends IncrementalSearchComboBox {
+    private static final Logger logger = LogManager.getLogger(ArtikelNummerComboBox.class);
+
     // private Connection conn; // connection to MySQL database
     private MariaDbPoolDataSource pool; // pool of connections to MySQL database
 
@@ -45,8 +51,7 @@ public class ArtikelNummerComboBox extends IncrementalSearchComboBox {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             JOptionPane.showMessageDialog(this,
                 "Verbindung zum Datenbank-Server unterbrochen?\n"+
                 "Fehlermeldung: "+ex.getMessage(),

@@ -51,10 +51,16 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import com.toedter.calendar.JDateChooser;
 import com.toedter.calendar.JSpinnerDateEditor;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.weltladen_bonn.pos.*;
 
 public class BestellAnzeige extends BestellungsGrundlage implements DocumentListener {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(BestellAnzeige.class);
+
     private int currentPage = 1;
     private int totalPage;
     private String bestellungsZahl;
@@ -141,8 +147,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         Calendar calendar = Calendar.getInstance();
@@ -296,7 +301,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     private class RowListener implements ListSelectionListener {
         public void valueChanged(ListSelectionEvent event) {
             if (event.getValueIsAdjusting()) {
-                System.out.println("The mouse button has not yet been released");
+                logger.debug("The mouse button has not yet been released");
                 return;
             }
             int[] selRows = orderTable.getSelectedRows();
@@ -449,8 +454,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -511,8 +515,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         orderDetailDisplayData = new Vector< Vector<Object> >(orderDetailData);
@@ -567,8 +570,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return exportData;
@@ -645,8 +647,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return exportData;
@@ -691,14 +692,12 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 }
                 connection.commit();
             } catch (SQLException ex) {
-                System.out.println("Exception: " + ex.getMessage());
-                ex.printStackTrace();
+                logger.error("Exception: {}", ex);
                 try {
                     connection.rollback();
                 } catch (SQLException ex2) {
-                    System.out.println("Rollback failed!");
-                    System.out.println("Exception: " + ex2.getMessage());
-                    ex2.printStackTrace();
+                    logger.error("Rollback failed!");
+                    logger.error("Exception: {}", ex2);
                     showDBErrorDialog("Rollback failed! Exception: "+ex2.getMessage());
                 }
             } finally {
@@ -707,25 +706,22 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                         pstmt.close();
                     }
                 } catch (SQLException ex) {
-                    System.out.println("Exception: " + ex.getMessage());
-                    ex.printStackTrace();
+                    logger.error("Exception: {}", ex);
                     showDBErrorDialog(ex.getMessage());
                 }
                 try {
                     connection.setAutoCommit(true);
                     
                 } catch (SQLException ex) {
-                    System.out.println("Couldn't set auto-commit to true again after manual transaction.");
-                    System.out.println("Exception: " + ex.getMessage());
-                    ex.printStackTrace();
+                    logger.error("Couldn't set auto-commit to true again after manual transaction.");
+                    logger.error("Exception: {}", ex);
                     showDBErrorDialog("Couldn't set auto-commit to true again after manual transaction. Exception: "+ex.getMessage());
                 }
                 try {
                     connection.close();
                 } catch (SQLException ex) {
-                    System.out.println("Couldn't close the connection.");
-                    System.out.println("Exception: " + ex.getMessage());
-                    ex.printStackTrace();
+                    logger.error("Couldn't close the connection.");
+                    logger.error("Exception: {}", ex);
                     showDBErrorDialog("Couldn't close the connection. Exception: "+ex.getMessage());
                 }
             }
@@ -754,8 +750,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             Date date = new SimpleDateFormat(bc.dateFormatJava).parse(oldDate);
             newDate = new SimpleDateFormat("dd.MM.yyyy").format(date);;
         } catch (java.text.ParseException ex) {
-            System.out.println("ParseException: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("ParseException: {}", ex);
         }
 
         // Load the template file
@@ -772,8 +767,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             }
             sheet = SpreadSheet.createFromFile(infile).getSheet(0);
         } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             return;
         }
 
@@ -784,10 +778,10 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
         // Insert order items
         Vector< Vector<Object> > data = retrieveOrderDetailData_forExport(selBestellNrUndTyp);
-        System.out.println("Export data: "+data);
+        logger.debug("Export data: "+data);
         for (int row=0; row<data.size(); row++){
             for (int col=0; col<data.get(row).size(); col++){
-                System.out.println("Setting value at "+(8+row)+","+col+": "+data.get(row).get(col));
+                logger.debug("Setting value at "+(8+row)+","+col+": "+data.get(row).get(col));
                 sheet.setValueAt(data.get(row).get(col), col, 8+row);
             }
         }
@@ -796,11 +790,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             // Save to file and open it.
             OOUtils.open(sheet.getSpreadSheet().saveAs(file));
         } catch (FileNotFoundException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
         } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
         }
     }
 
@@ -824,8 +816,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             }
             sheet = SpreadSheet.createFromFile(infile).getSheet(0);
         } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             return;
         }
 
@@ -834,10 +825,10 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
         // Insert inventory items
         Vector< Vector<Object> > data = retrieveInventurDetailData_forExport(selBestellNrUndTyp);
-        //System.out.println("Export data: "+data);
+        logger.debug("Export data: "+data);
         for (int row=0; row<data.size(); row++){
             for (int col=0; col<data.get(row).size(); col++){
-                System.out.println("Setting value at "+(3+row)+","+col+": "+data.get(row).get(col));
+                logger.debug("Setting value at "+(3+row)+","+col+": "+data.get(row).get(col));
                 sheet.setValueAt(data.get(row).get(col), col, 3+row);
             }
         }
@@ -846,11 +837,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             // Save to file and open it.
             OOUtils.open(sheet.getSpreadSheet().saveAs(file));
         } catch (FileNotFoundException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
         } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
         }
     }
 
@@ -983,9 +972,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
                 writeSpreadSheet(file);
 
-                System.out.println("Written to " + file.getAbsolutePath());
+                logger.info("Written to " + file.getAbsolutePath());
             } else {
-                System.out.println("Save command cancelled by user.");
+                logger.info("Save command cancelled by user.");
             }
             return;
 	}

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Appenders>
+        <Console name="LogToConsole" target="SYSTEM_OUT">
+            <!-- <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"/> -->
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %p [%t] %C: %m%n"/>
+        </Console>
+        <!-- Rotate log files daily and when size limit of 100 MB is reached, https://mkyong.com/logging/apache-log4j-2-tutorials/ -->
+        <RollingFile name="LogKasseToRollingFile" fileName="${sys:user.home}/.Weltladenkasse_logs/Kasse.log"
+            filePattern="${sys:user.home}/.Weltladenkasse_logs/Kasse-%d{uu-EE}-%i.log">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %p [%t] %C: %m%n"/>
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+				<SizeBasedTriggeringPolicy size="100MB"/>
+			</Policies>
+            <DefaultRolloverStrategy max="7"/>
+		</RollingFile>
+        <RollingFile name="LogBestellerToRollingFile" fileName="${sys:user.home}/.Weltladenkasse_logs/Besteller.log"
+            filePattern="${sys:user.home}/.Weltladenkasse_logs/Besteller-%d{uu-EE}-%i.log">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %p [%t] %C: %m%n"/>
+            <Policies>
+				<TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+				<SizeBasedTriggeringPolicy size="100MB"/>
+			</Policies>
+            <DefaultRolloverStrategy max="7"/>
+		</RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <!-- avoid duplicated logs with additivity=false -->
+        <!-- Log for code shared by both Kasse and Besteller -->
+        <Logger name="org.weltladen_bonn.pos" level="debug" additivity="true">
+            <AppenderRef ref="LogKasseToRollingFile"/>
+            <AppenderRef ref="LogBestellerToRollingFile"/>
+        </Logger>
+        <!-- Log for Kasse -->
+        <Logger name="org.weltladen_bonn.pos.kasse" level="debug" additivity="true">
+            <AppenderRef ref="LogKasseToRollingFile"/>
+        </Logger>
+        <!-- Log for Besteller -->
+        <Logger name="org.weltladen_bonn.pos.besteller" level="debug" additivity="true">
+            <AppenderRef ref="LogBestellerToRollingFile"/>
+        </Logger>
+        <Root level="error">
+            <AppenderRef ref="LogToConsole"/>
+        </Root>
+    </Loggers>
+</Configuration>

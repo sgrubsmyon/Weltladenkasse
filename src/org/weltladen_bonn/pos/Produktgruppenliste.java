@@ -34,9 +34,15 @@ import javax.swing.table.*;
 import javax.swing.event.*; // for TableModelListener
 import javax.swing.text.*; // for DocumentFilter
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class Produktgruppenliste extends WindowContent implements ItemListener, TableModelListener,
        ListSelectionListener, DocumentListener {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(Produktgruppenliste.class);
+
     private JPanel allPanel;
     private JPanel produktgruppenListPanel;
     private JScrollPane scrollPane;
@@ -148,8 +154,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         this.originalData = new Vector< Vector<Object> >();

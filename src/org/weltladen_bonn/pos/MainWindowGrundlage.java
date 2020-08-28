@@ -21,8 +21,14 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 // interface holding the window of the application GUI:
 public abstract class MainWindowGrundlage extends JFrame {
+    private static final Logger logger = LogManager.getLogger(MainWindowGrundlage.class);
+
     //***************************************************
     // Members
     //***************************************************
@@ -91,8 +97,7 @@ public abstract class MainWindowGrundlage extends JFrame {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             JOptionPane.showMessageDialog(this,
                 "Verbindung zum Datenbank-Server unterbrochen?\n"+
                 "Fehlermeldung: "+ex.getMessage(),
@@ -118,8 +123,7 @@ public abstract class MainWindowGrundlage extends JFrame {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             JOptionPane.showMessageDialog(this,
                 "Verbindung zum Datenbank-Server unterbrochen?\n"+
                 "Fehlermeldung: "+ex.getMessage(),

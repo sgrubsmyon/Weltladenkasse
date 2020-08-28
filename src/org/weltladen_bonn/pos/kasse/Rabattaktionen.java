@@ -45,8 +45,14 @@ import org.weltladen_bonn.pos.MainWindowGrundlage;
 import org.weltladen_bonn.pos.ArtikelGrundlage;
 import org.weltladen_bonn.pos.AnyJComponentJTable;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, TableModelListener {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(Rabattaktionen.class);
+
     private int currentPage = 1;
     private int totalPage;
     private String filterStr = "WHERE r.bis != r.von OR r.bis IS NULL ";
@@ -127,8 +133,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    stmt.close();
         connection.close();
 	} catch (SQLException ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    ex.printStackTrace();
+	    logger.error("Exception: {}", ex);
         showDBErrorDialog(ex.getMessage());
 	}
 	Calendar earlyCalendar = Calendar.getInstance();
@@ -163,7 +168,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 
     public void initiateSpinners(){
 	queryEarliestAndLatestRabattaktion();
-        System.out.println("Rabattaktionen spinner values: "+oneDayBeforeEarliestDate+" "+earliestDate+" "+latestDate);
+        logger.debug("Rabattaktionen spinner values: "+oneDayBeforeEarliestDate+" "+earliestDate+" "+latestDate);
         startDateModel = new SpinnerDateModel(earliestDate, // Startwert
                                      oneDayBeforeEarliestDate, // kleinster Wert
                                      latestDate, // groesster Wert
@@ -279,8 +284,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    stmt.close();
         connection.close();
 	} catch (SQLException ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    ex.printStackTrace();
+	    logger.error("Exception: {}", ex);
         showDBErrorDialog(ex.getMessage());
 	}
     myTable = new AnyJComponentJTable(data, columnLabels) { // subclass the AnyJComponentJTable to set font properties and tool tip text
@@ -448,8 +452,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
                 pstmt.close();
                 connection.close();
             } catch (SQLException ex) {
-                System.out.println("Exception: " + ex.getMessage());
-                ex.printStackTrace();
+                logger.error("Exception: {}", ex);
                 showDBErrorDialog(ex.getMessage());
             }
         } else { // NO_OPTION
@@ -477,8 +480,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    pstmt.close();
         connection.close();
 	} catch (SQLException ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    ex.printStackTrace();
+	    logger.error("Exception: {}", ex);
         showDBErrorDialog(ex.getMessage());
 	}
         return vonAfterNow;
@@ -496,8 +498,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    pstmt.close();
         connection.close();
 	} catch (SQLException ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    ex.printStackTrace();
+	    logger.error("Exception: {}", ex);
         showDBErrorDialog(ex.getMessage());
 	}
         return bisAfterNow;
@@ -630,10 +631,10 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
             if ( vonAfterNow != null ){
                 String aktionsname = (String)data.get(deleteRow).get(0);
                 if ( vonAfterNow ){ // if Rabattaktion still hasn't started yet
-                    System.out.println("Setting bis date to von date to delete Rabattaktion.");
+                    logger.info("Setting bis date to von date to delete Rabattaktion.");
                     setBisDateToVonDate(rabattID, aktionsname);
                 } else if ( bisAfterNow ){ // if Rabattaktion has started, but hasn't ended yet
-                    System.out.println("Setting bis date to now to end Rabattaktion.");
+                    logger.info("Setting bis date to now to end Rabattaktion.");
                     setBisDateToNow(rabattID, aktionsname);
                 }
             }

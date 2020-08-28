@@ -32,9 +32,15 @@ import javax.swing.table.*;
 import javax.swing.event.*; // for DocumentListener
 import javax.swing.text.*; // for DocumentFilter
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class ProduktgruppeFormular extends WindowContent
     implements ProduktgruppeFormularInterface {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(ProduktgruppeFormular.class);
+
     public JComboBox<String> parentProdGrBox;
     public JTextField nameField;
     public JComboBox<String> mwstBox;
@@ -76,8 +82,7 @@ public class ProduktgruppeFormular extends WindowContent
                 pstmt.close();
                 connection.close();
             } catch (SQLException ex) {
-                System.out.println("Exception: " + ex.getMessage());
-                ex.printStackTrace();
+                logger.error("Exception: {}", ex);
                 showDBErrorDialog(ex.getMessage());
             }
         }
@@ -94,8 +99,7 @@ public class ProduktgruppeFormular extends WindowContent
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return id;
@@ -114,8 +118,7 @@ public class ProduktgruppeFormular extends WindowContent
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return id;
@@ -135,8 +138,7 @@ public class ProduktgruppeFormular extends WindowContent
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return id;
@@ -231,8 +233,7 @@ public class ProduktgruppeFormular extends WindowContent
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }

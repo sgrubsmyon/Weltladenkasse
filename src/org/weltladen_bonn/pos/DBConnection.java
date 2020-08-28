@@ -13,7 +13,13 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class DBConnection {
+    private static final Logger logger = LogManager.getLogger(DBConnection.class);
+
     protected BaseClass bc;
     public String passwordReturn;
 
@@ -67,13 +73,12 @@ public class DBConnection {
             this.conn = DriverManager.getConnection("jdbc:mariadb://"+bc.mysqlHost+":3306/kasse?user="+user+"&password="+password);
             connectionWorks = true;
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            System.out.println("Perhaps password wrong or DB offline.");
+            logger.error("Exception: Perhaps password wrong or DB offline.");
+            logger.error("Exception: {}", ex);
             noConnectionToServer = true;
             // showDBErrorDialog(ex.getMessage());
         } catch (Exception ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
         }
     }
 
@@ -94,19 +99,18 @@ public class DBConnection {
             ResultSet rs = stmt.executeQuery("SELECT CONNECTION_ID()");
             // ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM verkauf");
             rs.next();
-            System.out.println("DBConnection CONNECTION_ID: "+rs.getLong(1));
+            logger.info("DBConnection CONNECTION_ID: "+rs.getLong(1));
             rs.close();
             stmt.close();
             connection.close();
             connectionWorks = true;
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            System.out.println("Perhaps password wrong or DB offline.");
+            logger.error("Exception: Perhaps password wrong or DB offline.");
+            logger.error("Exception: {}", ex);
             noConnectionToServer = true;
             // showDBErrorDialog(ex.getMessage());
         } catch (Exception ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
         }
         // this.pool.close(); // no, we want to use it as long as program is open
     }

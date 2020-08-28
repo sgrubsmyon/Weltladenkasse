@@ -14,7 +14,13 @@ import java.awt.*;
 
 import javax.swing.*;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class ArtikelNameComboBox extends IncrementalSearchComboBox {
+    private static final Logger logger = LogManager.getLogger(ArtikelNameComboBox.class);
+
     // private Connection conn; // connection to MySQL database
     private MariaDbPoolDataSource pool; // pool of connections to MySQL database
     private BaseClass bc;
@@ -31,8 +37,8 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             String[] item = this.items.get(this.getSelectedIndex());
             return new String[]{item[0], item[4]};
         } catch (ArrayIndexOutOfBoundsException ex){
-            System.out.println("For some reason, selected index in ArtikelNameComboBox is "+
-                    this.getSelectedIndex()+", which is out of bounds for array `items`.");
+            logger.warn("For some reason, selected index in ArtikelNameComboBox is {}, "+
+                    "which is out of bounds for array `items`.", this.getSelectedIndex());
             return new String[]{"", ""};
         }
     }
@@ -85,8 +91,7 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             JOptionPane.showMessageDialog(this,
                 "Verbindung zum Datenbank-Server unterbrochen?\n"+
                 "Fehlermeldung: "+ex.getMessage(),

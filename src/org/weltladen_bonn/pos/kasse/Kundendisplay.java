@@ -10,11 +10,17 @@ import com.codeminders.hidapi.*;
 //import org.weltladen_bonn.pos.JNIFromJar;
 import org.weltladen_bonn.pos.BaseClass;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * This class is for interaction with VFD customer display Wincor Nixdorf BA63
  * USB.
  */
 public class Kundendisplay {
+    private static final Logger logger = LogManager.getLogger(Kundendisplay.class);
+
     private BaseClass bc;
 
     static {
@@ -52,22 +58,22 @@ public class Kundendisplay {
      * attached to the system.
      */
         String property = System.getProperty("java.library.path");
-        System.out.println(property);
+        logger.info(property);
         HIDManager mgr = null;
         try {
             mgr = HIDManager.getInstance();
             HIDDeviceInfo[] devs = mgr.listDevices();
-            System.out.println("HID (Display) Devices:");
+            logger.info("HID (Display) Devices:");
             if (devs != null) {
                 for (int i=0; i<devs.length; i++) {
-                    System.out.println(i+":\t"+devs[i]);
-                    System.out.print("Manufacturer: " + devs[i].getManufacturer_string() + "\n");
-                    System.out.print("Product: " + devs[i].getProduct_string() + "\n");
-                    System.out.print("Serial Number: " + devs[i].getSerial_number() + "\n");
-                    System.out.println("---------------------------------------------\n");
+                    logger.info("{}:\t{}", i, devs[i]);
+                    logger.info("Manufacturer: {}", devs[i].getManufacturer_string());
+                    logger.info("Product: {}", devs[i].getProduct_string());
+                    logger.info("Serial Number: {}", devs[i].getSerial_number());
+                    logger.info("---------------------------------------------\n");
                 }
             } else {
-                System.out.println("No devices found.");
+                logger.info("No devices found.");
             }
         } catch(IOException e) {
             System.err.println(e.getMessage());
@@ -107,15 +113,15 @@ public class Kundendisplay {
                     // always use the second device, first is defunct (don't know why)
                     String path = paths.lastElement();
                     //device = manager.openByPath("0004:0002:01");
-                    System.out.println("Trying to open device at path "+path);
+                    logger.info("Trying to open device at path {}", path);
                     device = manager.openByPath(path);
-                    System.out.print("Manufacturer: " + device.getManufacturerString() + "\n");
-                    System.out.print("Product: " + device.getProductString() + "\n");
-                    System.out.print("Serial Number: " + device.getSerialNumberString() + "\n");
+                    logger.info("Manufacturer: {}", device.getManufacturerString());
+                    logger.info("Product: {}", device.getProductString());
+                    logger.info("Serial Number: {}", device.getSerialNumberString());
                     setCodePage();
                 }
             } else {
-              System.out.println("No devices found.");
+              logger.info("No devices found.");
             }
         } catch (IOException e) {
             System.err.println(e.getMessage());

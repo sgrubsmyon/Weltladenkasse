@@ -39,8 +39,14 @@ import java.util.Date;
 import org.weltladen_bonn.pos.WindowContent;
 import org.weltladen_bonn.pos.MainWindowGrundlage;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class AlteRechnungen extends Rechnungen implements ChangeListener {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(AlteRechnungen.class);
+
     private JSpinner startSpinner;
     private JSpinner endSpinner;
     private SpinnerDateModel startDateModel;
@@ -87,8 +93,7 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         Calendar calendar = Calendar.getInstance();
@@ -116,7 +121,7 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
     }
 
     private void initiateSpinners() {
-        System.out.println(
+        logger.debug(
                 "AlteRechnungen spinner values: " + oneDayBeforeEarliestDate + " <= " + earliestDate + " <= " + latestDate);
         startDateModel = new SpinnerDateModel(earliestDate, // Startwert
                 oneDayBeforeEarliestDate, // kleinster Wert

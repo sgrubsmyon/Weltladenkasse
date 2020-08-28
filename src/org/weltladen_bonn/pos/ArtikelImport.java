@@ -34,8 +34,14 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.beans.*; // PropertyChangeListener
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, PropertyChangeListener {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(ArtikelImport.class);
+
     protected Artikelliste artikelListe;
     protected ArtikelNeu artikelNeu;
     protected UpdateTableFunctor utf;
@@ -221,8 +227,9 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
+            // System.out.println("Exception: " + ex.getMessage());
+            // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
         }
         return gruppenid;
@@ -279,8 +286,9 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
+            // System.out.println("Exception: " + ex.getMessage());
+            // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -597,7 +605,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         for (int i=0; i<colors.size(); i++){
             if (colors.get(i) == Color.red){
                 itemChanged = true;
-                System.out.println("Row "+lineCount+" ("+name+"), Change in column "+i);
+                logger.info("Row "+lineCount+" ("+name+"), Change in column "+i);
                 //break;
             }
         }
@@ -678,7 +686,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         @Override
         public void done() {
             setCursor(null); //turn off the wait cursor
-            System.out.println("Datei " + file.getName() + " wurde komplett eingelesen.");
+            logger.info("Datei " + file.getName() + " wurde komplett eingelesen.");
             logString += "<div style=\""+baseStyle+"\">Datei " + file.getName() + " wurde komplett eingelesen.</div>\n";
             log.setText(logString+logStringEnd);
             updateAll();
@@ -695,8 +703,9 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         try {
             sheet = SpreadSheet.createFromFile(file).getSheet(0);
         } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
+            // System.out.println("Exception: " + ex.getMessage());
+            // ex.printStackTrace();
             return;
         }
 
@@ -739,9 +748,9 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
                 //utf.updateTable();
                 updateAll();
 
-                System.out.println("Opened " + file.getName());
+                logger.info("Opened " + file.getName());
             } else {
-                System.out.println("Open command cancelled by user.");
+                logger.info("Open command cancelled by user.");
             }
             return;
         }

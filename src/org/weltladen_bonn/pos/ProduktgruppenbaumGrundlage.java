@@ -34,8 +34,14 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.*;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public abstract class ProduktgruppenbaumGrundlage extends WindowContent implements TreeSelectionListener {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(ProduktgruppenbaumGrundlage.class);
+
     protected final String titleStr = "Produktgruppen";
     private String aktivFilterStr = " AND aktiv = TRUE ";
 
@@ -112,7 +118,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
             try {
                 artikelCount = Integer.parseInt(group.get(4)); // how many artikel are there in this gruppe?
             } catch (NumberFormatException ex) {
-                System.out.println("Exception: " + ex.getMessage());
+                logger.error("Exception: {}", ex);
                 artikelCount = null;
             }
             groupNode = new DefaultMutableTreeNode(new Gruppe(topid, subid, subsubid, groupname+" ("+artikelCount+")"));
@@ -125,7 +131,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
                 try {
                     artikelCount = Integer.parseInt(subgroup.get(4));
                 } catch (NumberFormatException ex) {
-                    System.out.println("Exception: " + ex.getMessage());
+                    logger.error("Exception: {}", ex);
                     artikelCount = null;
                 }
                 subgroupNode = new DefaultMutableTreeNode(new Gruppe(topid, subid, subsubid, groupname+" ("+artikelCount+")"));
@@ -138,7 +144,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
                     try {
                         artikelCount = Integer.parseInt(subsubgroup.get(4));
                     } catch (NumberFormatException ex) {
-                        System.out.println("Exception: " + ex.getMessage());
+                        logger.error("Exception: {}", ex);
                         artikelCount = null;
                     }
                     subsubgroupNode = new DefaultMutableTreeNode(new Gruppe(topid, subid, subsubid, groupname+" ("+artikelCount+")"));
@@ -191,8 +197,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
 	    stmt.close();
         connection.close();
 	} catch (SQLException ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    ex.printStackTrace();
+	    logger.error("Exception: {}", ex);
         showDBErrorDialog(ex.getMessage());
 	}
         return produktgruppen;
@@ -225,8 +230,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
 	    pstmt.close();
         connection.close();
 	} catch (SQLException ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    ex.printStackTrace();
+	    logger.error("Exception: {}", ex);
         showDBErrorDialog(ex.getMessage());
 	}
         return subgruppen;
@@ -260,8 +264,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
 	    pstmt.close();
         connection.close();
 	} catch (SQLException ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    ex.printStackTrace();
+	    logger.error("Exception: {}", ex);
         showDBErrorDialog(ex.getMessage());
 	}
         return subsubgruppen;
@@ -286,8 +289,7 @@ public abstract class ProduktgruppenbaumGrundlage extends WindowContent implemen
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return artikelCount;

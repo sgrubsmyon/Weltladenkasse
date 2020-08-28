@@ -37,10 +37,16 @@ import hirondelle.date4j.DateTime;
 
 import org.weltladen_bonn.pos.*;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public abstract class Rechnungen extends RechnungsGrundlage {
     /**
      * Base class for displaying orders
      */
+    private static final Logger logger = LogManager.getLogger(Rechnungen.class);
+
     private static final long serialVersionUID = 1L;
     // Attribute:
     protected int currentPage = 1;
@@ -143,8 +149,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    stmt.close();
         connection.close();
 	} catch (SQLException ex) {
-	    System.out.println("Exception: " + ex.getMessage());
-	    ex.printStackTrace();
+	    logger.error("Exception: {}", ex);
         showDBErrorDialog(ex.getMessage());
 	}
 	myTable = new AnyJComponentJTable(this.data, overviewLabels);
@@ -303,8 +308,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return detailData;

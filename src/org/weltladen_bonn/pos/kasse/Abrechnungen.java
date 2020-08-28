@@ -47,8 +47,14 @@ import org.weltladen_bonn.pos.MainWindowGrundlage;
 import org.weltladen_bonn.pos.AnyJComponentJTable;
 import org.weltladen_bonn.pos.FileExistsAwareFileChooser;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public abstract class Abrechnungen extends WindowContent {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(Abrechnungen.class);
+
     private int abrechnungenProSeite = 7;
     int currentPage = 1;
     int totalPage;
@@ -135,8 +141,7 @@ public abstract class Abrechnungen extends WindowContent {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return id;
@@ -187,8 +192,7 @@ public abstract class Abrechnungen extends WindowContent {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return values;
@@ -249,8 +253,7 @@ public abstract class Abrechnungen extends WindowContent {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return map;
@@ -341,8 +344,7 @@ public abstract class Abrechnungen extends WindowContent {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -354,8 +356,7 @@ public abstract class Abrechnungen extends WindowContent {
         try {
             formattedDate = sdfOut.format( sdfIn.parse(date) );
         } catch (ParseException ex) {
-            System.out.println("ParseException: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("ParseException: {}", ex);
         }
         return formattedDate;
     }
@@ -366,8 +367,7 @@ public abstract class Abrechnungen extends WindowContent {
         try {
             d = sdfIn.parse(date);
         } catch (ParseException ex) {
-            System.out.println("ParseException: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("ParseException: {}", ex);
         }
         return d;
     }
@@ -555,7 +555,7 @@ public abstract class Abrechnungen extends WindowContent {
         // Get data
         String date = abrechnungsDates.get(exportIndex);
         Date ddate = createDate(date);
-        System.out.println("ddate: " + ddate);
+        logger.trace("ddate: " + ddate);
         Integer id = abrechnungsIDs.get(exportIndex);
         Vector<BigDecimal> totals = abrechnungsTotals.get(exportIndex);
         HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(exportIndex); // map with values for each mwst
@@ -574,8 +574,7 @@ public abstract class Abrechnungen extends WindowContent {
             }
             sheet = SpreadSheet.createFromFile(infile).getSheet(0);
         } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             return null;
         }
 
@@ -617,8 +616,7 @@ public abstract class Abrechnungen extends WindowContent {
             // Save to file and open it.
             OOUtils.open(sheet.getSpreadSheet().saveAs(file));
         } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
         }
     }
 
@@ -646,9 +644,9 @@ public abstract class Abrechnungen extends WindowContent {
             Sheet sheet = (Sheet) v.firstElement();
             writeSpreadSheet(sheet, file);
 
-            System.out.println("Written to " + file.getName());
+            logger.info("Written to " + file.getName());
         } else {
-            System.out.println("Save command cancelled by user.");
+            logger.info("Save command cancelled by user.");
         }
     }
 
@@ -663,7 +661,7 @@ public abstract class Abrechnungen extends WindowContent {
         for (int i=0; i<exportButtons.size(); i++){
             if (e.getSource() == exportButtons.get(i) ){
                 exportIndex = i;
-                System.out.println("exportIndex: "+exportIndex);
+                logger.trace("exportIndex: "+exportIndex);
                 break;
             }
         }
