@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=v1.4.0
+version=v1.5.0
 
 releasedir=../releases/Weltladenkasse_${version}
 trainingdir=../releases/Weltladenkasse_${version}_training
