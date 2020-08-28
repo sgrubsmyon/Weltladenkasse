@@ -16,6 +16,7 @@ rsync -aPvci Weltladenkasse.bat $releasedir
 rsync -aPvci Weltladenbesteller.bat $releasedir
 rsync -aPvci config.properties $releasedir
 rsync -aPvci config_Windows.properties $releasedir
+rsync -aPvci config_log4j2.xml $releasedir
 rsync -aPvci --delete --exclude=".*" vorlagen $releasedir
 rsync -aPvci README.md $releasedir
 rsync -aPvci install-ubuntu.sh $releasedir
@@ -27,6 +28,7 @@ rsync -aPvci Weltladenkasse.bat $trainingdir
 rsync -aPvci Weltladenbesteller.bat $trainingdir
 rsync -aPvci config_local.properties $trainingdir/config.properties
 rsync -aPvci config_Windows.properties $trainingdir
+rsync -aPvci config_log4j2.xml $trainingdir
 rsync -aPvci --delete --exclude=".*" vorlagen $trainingdir
 rsync -aPvci README.md $trainingdir
 rsync -aPvci install-ubuntu.sh $trainingdir

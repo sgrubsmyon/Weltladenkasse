@@ -25,8 +25,14 @@ import org.weltladen_bonn.pos.BaseClass;
 import org.weltladen_bonn.pos.DialogWindow;
 import org.weltladen_bonn.pos.MainWindowGrundlage;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 class AbrechnungenTag extends Abrechnungen {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(AbrechnungenTag.class);
+
     private AbrechnungenTabbedPane abrechTabbedPane;
     private TabbedPane tabbedPane;
 
@@ -202,8 +208,7 @@ class AbrechnungenTag extends Abrechnungen {
             }
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -323,8 +328,7 @@ class AbrechnungenTag extends Abrechnungen {
             }
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -410,8 +414,7 @@ class AbrechnungenTag extends Abrechnungen {
             
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -439,8 +442,7 @@ class AbrechnungenTag extends Abrechnungen {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return abrechnungBarBrutto;
@@ -508,8 +510,8 @@ class AbrechnungenTag extends Abrechnungen {
 
         zpNumber = maxZaehlprotokollNumber();
         zpEinheiten = zaehlprotokollEinheiten();
-        System.out.println(zpNumber);
-        System.out.println(zpEinheiten);
+        logger.trace(zpNumber);
+        logger.trace(zpEinheiten);
         for (int i = 0; i < zpNumber; i++) {
             Color def_col = Color.BLACK;
             if (i == 0) {
@@ -840,8 +842,7 @@ class AbrechnungenTag extends Abrechnungen {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return date;
@@ -859,8 +860,7 @@ class AbrechnungenTag extends Abrechnungen {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return date;
@@ -926,8 +926,7 @@ class AbrechnungenTag extends Abrechnungen {
             }
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -941,9 +940,9 @@ class AbrechnungenTag extends Abrechnungen {
             String lastDate = queryLatestVerkauf();
             String nowDate = now();
             String zeitpunkt = decideOnZeitpunkt(firstDate, lastDate, nowDate);
-            System.out.println("Selected Zeitpunkt: "+zeitpunkt);
+            logger.info("Selected Zeitpunkt: "+zeitpunkt);
             if (zeitpunkt == null){
-                System.out.println("insertTagesAbrechnung was cancelled!");
+                logger.info("insertTagesAbrechnung was cancelled!");
                 return null; // don't do anything, user cancelled (or did not select date properly)
             }
             // get ID of current kassenstand (highest ID due to auto-increment)
@@ -999,8 +998,7 @@ class AbrechnungenTag extends Abrechnungen {
             deleteAbrechnungIfNeedBe("abrechnung_monat", "monat", "DATE_FORMAT(?, '%Y-%m-01')", zeitpunkt);
             deleteAbrechnungIfNeedBe("abrechnung_jahr", "jahr", "YEAR(?)", zeitpunkt);
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             JOptionPane.showMessageDialog(this,
                     "Fehler: Tagesabrechnung konnte nicht gespeichert werden.\n"+
                     "Keine Verbindung zum Datenbank-Server?\n"+
@@ -1023,8 +1021,7 @@ class AbrechnungenTag extends Abrechnungen {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return maxZaehlID;
@@ -1072,8 +1069,7 @@ class AbrechnungenTag extends Abrechnungen {
                         "Fehler", JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             JOptionPane.showMessageDialog(this,
                     "Fehler: Zählprotokoll konnte nicht gespeichert werden.\n"+
                     "Keine Verbindung zum Datenbank-Server?\n"+
@@ -1099,8 +1095,7 @@ class AbrechnungenTag extends Abrechnungen {
                         "Fehler", JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             JOptionPane.showMessageDialog(this,
                     "Fehler: Altes Zählprotokoll konnte nicht inaktiv gesetzt werden.\n"+
                     "Keine Verbindung zum Datenbank-Server?\n"+
@@ -1194,7 +1189,7 @@ class AbrechnungenTag extends Abrechnungen {
             try {
                 sheet.setValueAt("Zählprotokoll:", 0, rowIndex);
                 Date zpDate = createDate(zaehlprotokollZeitpunkte.get(exportIndex).get(i));
-                System.out.println(zpDate);
+                logger.trace(zpDate);
                 sheet.setValueAt(zpDate, 1, rowIndex);
             } catch (ArrayIndexOutOfBoundsException ignored) {}
             rowIndex++;

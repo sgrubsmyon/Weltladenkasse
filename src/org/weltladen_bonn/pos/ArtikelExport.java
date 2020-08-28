@@ -37,8 +37,14 @@ import javax.swing.table.*;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class ArtikelExport extends WindowContent {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(ArtikelExport.class);
+
     private FileExistsAwareFileChooser odsChooser;
     private Artikelliste artikelListe;
 
@@ -62,9 +68,9 @@ public class ArtikelExport extends WindowContent {
             // writeCSVToFile(file);
             writeToODSFile(file);
 
-            System.out.println("Written to " + file.getName());
+            logger.info("Written to " + file.getName());
         } else {
-            System.out.println("Open command cancelled by user.");
+            logger.info("Open command cancelled by user.");
         }
     }
 
@@ -113,7 +119,7 @@ public class ArtikelExport extends WindowContent {
                 try {
                     beliebtIndex = bc.beliebtWerte.indexOf(beliebtWert);
                 } catch (ArrayIndexOutOfBoundsException ex) {
-                    System.out.println("Unknown beliebtWert: " + beliebtWert);
+                    logger.warn("Unknown beliebtWert: " + beliebtWert);
                 }
             }
             String beliebtheit = bc.beliebtNamen.get(beliebtIndex);
@@ -175,7 +181,7 @@ public class ArtikelExport extends WindowContent {
             row.add(bestandStr);
 
             // For poor man's progress indication:
-            System.out.println(row);
+            logger.info(row);
 
             data.add(row);
         }
@@ -187,11 +193,13 @@ public class ArtikelExport extends WindowContent {
             SpreadSheet.createEmpty(model).saveAs(file);
             OOUtils.open(file);
         } catch (FileNotFoundException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
+            // System.out.println("Exception: " + ex.getMessage());
+            // ex.printStackTrace();
         } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
+            // System.out.println("Exception: " + ex.getMessage());
+            // ex.printStackTrace();
         }
     }
 

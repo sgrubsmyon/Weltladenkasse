@@ -22,7 +22,13 @@ import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 import org.weltladen_bonn.pos.*;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public abstract class RechnungsGrundlage extends ArtikelGrundlage {
+    private static final Logger logger = LogManager.getLogger(RechnungsGrundlage.class);
+
     protected JTextField totalPriceField;
     protected Vector<KassierArtikel> kassierArtikel;
     protected Vector<BigDecimal> mwsts;
@@ -76,8 +82,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return vats;

@@ -18,9 +18,15 @@ import javax.swing.table.*;
 import javax.swing.event.*; // for TableModelListener
 import javax.swing.text.*; // for DocumentFilter
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class Artikelliste extends ArtikelGrundlage implements ItemListener,
        TableModelListener, ListSelectionListener, DocumentListener {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(Artikelliste.class);
+
     private ArtikellisteContainer container;
     protected Integer toplevel_id = 4; // for Sonstiges Kunsthandwerk
     protected Integer sub_id = 1; // for Sonstiges Kunsthandwerk
@@ -118,8 +124,9 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         try {
             connection = this.pool.getConnection();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
+            // System.out.println("Exception: " + ex.getMessage());
+            // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
         }
         return connection;
@@ -151,8 +158,9 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         try {
             pstmt = connection.prepareStatement(queryStr);
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
+            // System.out.println("Exception: " + ex.getMessage());
+            // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
         }
         return pstmt;
@@ -198,8 +206,9 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 }
             }
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
+            // System.out.println("Exception: " + ex.getMessage());
+            // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
         }
         return pstmt;
@@ -266,7 +275,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                     try {
                         beliebtIndex = bc.beliebtWerte.indexOf(beliebtWert);
                     } catch (ArrayIndexOutOfBoundsException ex){
-                        System.out.println("Unknown beliebtWert: "+beliebtWert);
+                        logger.warn("Unknown beliebtWert: "+beliebtWert);
                     }
                 }
                 String bestandStr = "";
@@ -303,8 +312,9 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
+            // System.out.println("Exception: " + ex.getMessage());
+            // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -536,7 +546,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             try {
                 obj = displayData.get(row).get(col);
             } catch (ArrayIndexOutOfBoundsException ex){
-                System.out.println("No data at row "+row+", column "+col);
+                logger.info("No data at row "+row+", column "+col);
                 obj = "";
             }
             return obj;
@@ -565,8 +575,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             try {
                 articleIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
             } catch (ArrayIndexOutOfBoundsException ex){
-                System.out.println("No display data at row "+realRowIndex);
-                System.out.println("No information about editability in isCellEditable().");
+                logger.warn("No display data at row "+realRowIndex);
+                logger.warn("No information about editability in isCellEditable().");
                 return false;
             }
             /*
@@ -598,8 +608,8 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             try {
                 articleIndex = displayIndices.get(realRowIndex); // convert from displayData index to data index
             } catch (ArrayIndexOutOfBoundsException ex){
-                System.out.println("No display data at row "+realRowIndex);
-                System.out.println("No special rendering possible.");
+                logger.warn("No display data at row "+realRowIndex);
+                logger.warn("No special rendering possible.");
                 return c;
             }
             /*
@@ -997,7 +1007,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
     public void tableChanged(TableModelEvent e) {
         // get info about edited cell
         int row = e.getFirstRow();
-        System.out.println("first edited row: "+row);
+        logger.info("first edited row: "+row);
         // index is already converted to model, i.e. displayData index
         //int realRowIndex = model.convertRowIndexToModel(row);
         int dataRow = displayIndices.get(row); // convert from displayData index to data index
@@ -1007,7 +1017,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         Integer origArtikelID = artikelIDs.get(dataRow);
         Artikel origArticle = getArticle(origArtikelID);
         int changeIndex = editedArticles.indexOf(origArticle); // look up artikelNummer in change list
-        System.out.println("changeIndex: "+changeIndex);
+        logger.info("changeIndex: "+changeIndex);
 
         parseCell(model, row, column, dataRow, origArticle);
 

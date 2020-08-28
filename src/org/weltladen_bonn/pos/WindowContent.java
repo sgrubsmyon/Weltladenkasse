@@ -27,7 +27,12 @@ import org.weltladen_bonn.pos.jcalendarbutton.JCalendarButton;
 import com.toedter.calendar.JDateChooser;
 import com.toedter.calendar.JSpinnerDateEditor;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public abstract class WindowContent extends JPanel implements ActionListener {
+    private static final Logger logger = LogManager.getLogger(WindowContent.class);
 
     // mySQL Connection:
     // protected Connection conn = null;
@@ -1557,8 +1562,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return result;
@@ -1574,8 +1578,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return date;

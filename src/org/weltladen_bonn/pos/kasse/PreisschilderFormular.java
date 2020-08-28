@@ -25,12 +25,18 @@ import javax.swing.table.TableColumn;
 import javax.swing.text.AbstractDocument;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.weltladen_bonn.pos.*;
 
 public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSelectUser, DocumentListener {
     /**
      * Form to select articles for price tag printing
      */
+    private static final Logger logger = LogManager.getLogger(PreisschilderFormular.class);
+
     private static final long serialVersionUID = 1L;
 
     // Text Fields
@@ -499,9 +505,9 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
             newArticle.setSortiment(user_sortiment);
             updateArticle(origArticle, newArticle);
 
-            System.out.println("old selectedArticleID: " + selectedArticleID);
+            logger.debug("old selectedArticleID: {}", selectedArticleID);
             asPanel.updateSelectedArticleID();
-            System.out.println("new selectedArticleID: " + selectedArticleID);
+            logger.debug("new selectedArticleID: {}", selectedArticleID);
         }
     }
 
@@ -560,7 +566,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
 
     private void artikelHinzufuegen() {
         if (asPanel.artikelBox.getItemCount() != 1 || asPanel.nummerBox.getItemCount() != 1) {
-            System.out.println("Error: article not selected unambiguously.");
+            logger.error("Error: article not selected unambiguously.");
             return;
         }
         Artikel origArticle = getArticle(selectedArticleID);
@@ -593,7 +599,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
 
                 String lieferant = fields[0];
                 String nummer = fields[1];
-                System.out.println(lieferant+"   "+nummer);
+                logger.debug(lieferant+"   "+nummer);
 
                 selectedArticleID = getArticleID(lieferant, nummer);
                 if (selectedArticleID < 0) {
@@ -606,10 +612,9 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
                 }
             }
         } catch (FileNotFoundException ex) {
-            System.out.println("CSV list file for price tags not found.");
+            logger.error("CSV list file for price tags not found.");
         } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
         }
     }
 
@@ -697,9 +702,9 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
             if (returnVal == JFileChooser.APPROVE_OPTION){
                 File file = csvChooser.getSelectedFile();
                 doCSVListReadin(file);
-                System.out.println("Opened " + file.getName());
+                logger.info("Opened " + file.getName());
             } else {
-                System.out.println("Open command cancelled by user.");
+                logger.info("Open command cancelled by user.");
             }
             return;
         }

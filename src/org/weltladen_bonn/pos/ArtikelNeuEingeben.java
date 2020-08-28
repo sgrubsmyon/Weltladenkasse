@@ -32,9 +32,15 @@ import javax.swing.table.*;
 import javax.swing.event.*; // for DocumentListener
 import javax.swing.text.*; // for DocumentFilter
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class ArtikelNeuEingeben extends DialogWindow
     implements ArtikelNeuInterface, ArtikelFormularInterface, DocumentListener, ItemListener, ChangeListener {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(ArtikelNeuEingeben.class);
+
     protected Artikelliste artikelListe;
     protected ArtikelNeu artikelNeu;
     protected ArtikelFormular artikelFormular;
@@ -92,7 +98,7 @@ public class ArtikelNeuEingeben extends DialogWindow
         Integer result = 76; // default: Sonstiges Kunsthandwerk
         String subStr = this.sub_id == null ? "sub_id IS NULL" : "sub_id = ?";
         String subsubStr = this.subsub_id == null ? "subsub_id IS NULL" : "subsub_id = ?";
-        System.out.println(this.sub_id + " " + this.subsub_id);
+        logger.info(this.sub_id + " " + this.subsub_id);
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
@@ -120,11 +126,10 @@ public class ArtikelNeuEingeben extends DialogWindow
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
-        System.out.println(result);
+        logger.debug(result);
         return result;
     }
 
@@ -140,11 +145,11 @@ public class ArtikelNeuEingeben extends DialogWindow
       buttonPanel.add(hinzufuegenButton);
       headerPanel.add(buttonPanel);
 
-      System.out.println(this.produktgruppen_id);
+      logger.debug(this.produktgruppen_id);
       if (this.produktgruppen_id == null) {
         this.produktgruppen_id = retrieveGruppenID();
       }
-      System.out.println(this.produktgruppen_id);
+      logger.debug(this.produktgruppen_id);
       int prodGrIndex = artikelFormular.produktgruppenIDs.indexOf(this.produktgruppen_id);
       artikelFormular.produktgruppenBox.setSelectedIndex(prodGrIndex);
 

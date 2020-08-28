@@ -32,9 +32,15 @@ import javax.swing.*;
 import javax.swing.event.*; // for DocumentListener
 import javax.swing.text.*; // for DocumentFilter
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class ProduktgruppeBearbeiten extends DialogWindow
     implements ProduktgruppeFormularInterface, DocumentListener, ItemListener {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(ProduktgruppeBearbeiten.class);
+
     protected Produktgruppenliste produktgruppenListe;
     protected ProduktgruppeFormular produktgruppeFormular;
     protected Vector< Vector<Object> > originalData;
@@ -121,8 +127,7 @@ public class ProduktgruppeBearbeiten extends DialogWindow
                 pstmt.close();
                 connection.close();
             } catch (SQLException ex) {
-                System.out.println("Exception: " + ex.getMessage());
-                ex.printStackTrace();
+                logger.error("Exception: {}", ex);
                 showDBErrorDialog(ex.getMessage());
             }
         }

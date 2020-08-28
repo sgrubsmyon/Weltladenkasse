@@ -10,7 +10,13 @@ import java.awt.*; // for Color
 import javax.swing.*;
 import javax.swing.text.*; // for DocumentFilter
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class BaseClass {
+    private static final Logger logger = LogManager.getLogger(BaseClass.class);
+
     public final Locale myLocale = Locale.GERMAN;
 
     // configurable parameters:
@@ -199,9 +205,9 @@ public class BaseClass {
             this.exportDirAbrechnungMonat = props.getProperty("exportDirAbrechnungMonat");
             this.exportDirAbrechnungJahr = props.getProperty("exportDirAbrechnungJahr");
             this.exportDirBestellung = props.getProperty("exportDirBestellung");
-            this.alwaysPrintReceipt = new Boolean(props.getProperty("alwaysPrintReceipt"));
+            this.alwaysPrintReceipt = Boolean.valueOf(props.getProperty("alwaysPrintReceipt"));
         } catch (Exception ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            logger.error("Exception: {}", ex);
             JOptionPane.showMessageDialog(null, "Fehler in der Konfigurationsdatei config.properties.\n"+
                     "Es werden die Standardwerte benutzt.", "Fehler",
                     JOptionPane.ERROR_MESSAGE);
@@ -280,7 +286,6 @@ public class BaseClass {
      */
 
     public static boolean equalsThatHandlesNull(Object a, Object b) {
-        //System.out.println(a+" "+b);
         if ( (a != null) && (b != null) ){
             if ( a.equals(b) ){ return true; }
         } else {

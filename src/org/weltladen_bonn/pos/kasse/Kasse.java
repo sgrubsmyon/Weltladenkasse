@@ -1,6 +1,7 @@
 package org.weltladen_bonn.pos.kasse;
 
 import java.util.Vector;
+import java.io.File;
 
 // GUI stuff:
 import java.awt.*;
@@ -8,8 +9,14 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 // Class holding only the main function
 public class Kasse {
+    private static Logger logger = null;
+
     /**
      * Create the GUI and show it.  For thread safety,
      * this method should be invoked from the
@@ -69,7 +76,7 @@ public class Kasse {
 
             // Show it!
             myWindow.setVisible(true);
-            System.out.println("Password was correct.");
+            logger.info("Password was correct.");
 
             // Check if there is an incomplete Tagesabrechnung from the start!
             if ( myWindow.isThereIncompleteAbrechnungTag() ){
@@ -86,12 +93,17 @@ public class Kasse {
      * @param args input strings value.
      */
     public static void main(String[] args) {
+        // Configure logger:
+        System.setProperty("log4j.configurationFile", "config_log4j2.xml");
+        logger = LogManager.getLogger(Kasse.class);
+
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 //Turn off metal's use of bold fonts
                 //UIManager.put("swing.boldMetal", Boolean.FALSE);
+
                 /*
                 // Set System Look&Feel
                 try {
@@ -114,13 +126,9 @@ public class Kasse {
                     ex.printStackTrace();
                 }
                 */
+
+                logger.info("Hello from Log4j2");
                 createAndShowGUI();
-	//	try {
-	//	    myKasse.conn.close();
-	//	} catch (SQLException ex) {
-	//	    System.out.println("Exception: " + ex.getMessage());
-	//	    ex.printStackTrace();
-	//	}
             }
         });
     }

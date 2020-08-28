@@ -25,10 +25,16 @@ import org.weltladen_bonn.pos.*;
 import org.weltladen_bonn.pos.BaseClass.BigLabel;
 import org.weltladen_bonn.pos.BaseClass.BigButton;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, DocumentListener {
     /**
      * Main class of the cashier POS software
      */
+    private static final Logger logger = LogManager.getLogger(Kassieren.class);
+
     private static final long serialVersionUID = 1L;
     // Attribute:
     private final BigDecimal mitarbeiterRabatt = new BigDecimal("0.1");
@@ -1091,8 +1097,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
 
@@ -1273,8 +1278,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return pfandArtikelID;
@@ -1295,8 +1299,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return hasPfand;
@@ -1317,8 +1320,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return maxRechNr;
@@ -1338,8 +1340,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return date;
@@ -1406,8 +1407,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return rechnungsNr;
@@ -1442,8 +1442,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 mainWindow.updateBottomPanel();
             }
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -1489,7 +1488,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     private void updateDisplay(String kurzname, Integer stueck, String artikelPreis) {
         if (display != null && display.deviceWorks()) {
-            // System.out.println("Going to display article.");
             String zws = totalPriceField.getText();
             display.printArticle(kurzname, stueck, artikelPreis, zws);
             tabbedPane.esWirdKassiert = true;
@@ -1551,7 +1549,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private void artikelHinzufuegen() {
         Integer stueck = (Integer) anzahlSpinner.getValue();
         if (asPanel.artikelBox.getItemCount() != 1 || asPanel.nummerBox.getItemCount() != 1) {
-            System.out.println("Error: article not selected unambiguously.");
+            logger.error("Error: article not selected unambiguously.");
             JOptionPane.showMessageDialog(this, "Fehler: Artikel nicht eindeutig ausgewählt.", "Fehler",
                     JOptionPane.ERROR_MESSAGE);
             return;
@@ -1688,8 +1686,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
               Thread.sleep(5000); // wait for 5 seconds
               printQuittung(rechnungsNr);
             } catch (InterruptedException ex) {
-              System.out.println("Exception: " + ex.getMessage());
-              ex.printStackTrace();
+              logger.error("Exception: {}", ex);
             }
         }
         clearAll();

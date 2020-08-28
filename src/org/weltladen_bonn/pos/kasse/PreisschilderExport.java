@@ -20,10 +20,16 @@ import org.jdom.JDOMException;
 
 import org.weltladen_bonn.pos.*;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class PreisschilderExport extends WindowContent {
     /**
      * Class for generating OpenDocument Text document with price tags
      */
+    private static final Logger logger = LogManager.getLogger(PreisschilderExport.class);
+
     private static final long serialVersionUID = 1L;
     private String typ;
     private Vector<String> namen;
@@ -82,16 +88,13 @@ public class PreisschilderExport extends WindowContent {
             }
             template = new JavaScriptTemplate(infile);
         } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             return null;
         } catch (TemplateException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             return null;
         } catch (JDOMException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             return null;
         }
         return template;
@@ -196,9 +199,9 @@ public class PreisschilderExport extends WindowContent {
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File outFile = odtChooser.getSelectedFile();
 
-                    System.out.println("Going to save price tag list.");
+                    logger.info("Going to save price tag list.");
                     template.saveAs(outFile);
-                    System.out.println("Done.");
+                    logger.info("Done.");
 
                     String wantedPath = outFile.getAbsolutePath();
                     String actualPath = wantedPath + ".fodt"; // strange bug?
@@ -206,18 +209,18 @@ public class PreisschilderExport extends WindowContent {
                                                               // like this
                     File existingFile = new File(actualPath);
                     existingFile.renameTo(new File(wantedPath));
-                    System.out.println("Written to " + wantedPath);
+                    logger.info("Written to " + wantedPath);
 
                     // Open the document with OpenOffice.org !
                     OOUtils.open(outFile);
                 } else {
-                    System.out.println("Save command cancelled by user.");
+                    logger.info("Save command cancelled by user.");
                 }
             } catch (IOException ex) {
-                System.out.println("Exception: " + ex.getMessage());
+                logger.info("Exception: " + ex.getMessage());
                 ex.printStackTrace();
             } catch (TemplateException ex) {
-                System.out.println("Exception: " + ex.getMessage());
+                logger.info("Exception: " + ex.getMessage());
                 ex.printStackTrace();
             }
         }

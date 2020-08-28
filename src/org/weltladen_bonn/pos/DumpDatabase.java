@@ -28,7 +28,13 @@ import javax.swing.JDialog;
 import javax.swing.JPasswordField;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class DumpDatabase extends WindowContent {
+    private static final Logger logger = LogManager.getLogger(DumpDatabase.class);
+
     private JButton dumpButton;
     private JButton readButton;
     private FileExistsAwareFileChooser sqlSaveChooser;
@@ -75,11 +81,11 @@ public class DumpDatabase extends WindowContent {
         int returnVal = sqlSaveChooser.showSaveDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION){
             File file = sqlSaveChooser.getSelectedFile();
-            System.out.println("Selected dump file "+file.getAbsolutePath());
+            logger.info("Selected dump file "+file.getAbsolutePath());
             //return file.getName();
             return file.getAbsolutePath();
         } else {
-            System.out.println("Save command cancelled by user.");
+            logger.info("Save command cancelled by user.");
         }
         return null;
     }
@@ -88,11 +94,11 @@ public class DumpDatabase extends WindowContent {
         int returnVal = sqlLoadChooser.showOpenDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION){
             File file = sqlLoadChooser.getSelectedFile();
-            System.out.println("Selected read file "+file.getAbsolutePath());
+            logger.info("Selected read file "+file.getAbsolutePath());
             //return file.getName();
             return file.getAbsolutePath();
         } else {
-            System.out.println("Open command cancelled by user.");
+            logger.info("Open command cancelled by user.");
         }
         return null;
     }
@@ -105,7 +111,7 @@ public class DumpDatabase extends WindowContent {
     void dumpDatabase(String password, String filename) {
         // From: http://www.jvmhost.com/articles/mysql-postgresql-dump-restore-java-jsp-code#sthash.6M0ty78M.dpuf
         String program = constructProgramPath(bc.mysqlPath, "mysqldump");
-        System.out.println("MySQL path from config.properties: *"+program+"*");
+        logger.debug("MySQL path from config.properties: *"+program+"*");
         // 'destructive' dump, resulting in exact copy of DB:
         String[] executeCmd = new String[] {program,
             "-h"+bc.mysqlHost, "-ukassenadmin", "-p"+password, "kasse", "-r", filename};
@@ -117,12 +123,12 @@ public class DumpDatabase extends WindowContent {
             Process proc = shell.exec(executeCmd);
             int processComplete = proc.waitFor();
             if (processComplete == 0) {
-                System.out.println("Dump created successfully");
+                logger.info("Dump created successfully");
                 JOptionPane.showMessageDialog(this,
                         "Datenbank-Dump '"+filename+"' wurde erfolgreich angelegt.",
                         "Info", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                System.out.println("Could not create the dump");
+                logger.info("Could not create the dump");
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Dump-Datei "+filename+" konnte nicht erstellt werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
@@ -155,7 +161,7 @@ public class DumpDatabase extends WindowContent {
         //String executeCmd = "mysql -u kassenadmin -p"+password+" kasse < "+filename;
         //String[] executeCmd = new String[] {"/bin/sh", "-c", "mysql -u kassenadmin -p"+password+" kasse < "+filename};
         String program = constructProgramPath(bc.mysqlPath, "mysql");
-        System.out.println("MySQL path from config.properties: *"+program+"*");
+        logger.debug("MySQL path from config.properties: *"+program+"*");
         String[] executeCmd = new String[] {program, "--local-infile",
             "-h"+bc.mysqlHost, "-ukassenadmin", "-p"+password,
             "-e", "source "+filename, "kasse"};
@@ -166,23 +172,23 @@ public class DumpDatabase extends WindowContent {
                                      InputStreamReader(proc.getInputStream()));
             BufferedReader stdError = new BufferedReader(new
                                      InputStreamReader(proc.getErrorStream()));
-            System.out.println("Here is the standard output of the mysql read-in command (if any):");
+            logger.debug("Here is the standard output of the mysql read-in command (if any):");
             String s = null;
             while ((s = stdInput.readLine()) != null) {
-                System.out.println(s);
+                logger.debug(s);
             }
-            System.out.println("Here is the standard error of the mysql read-in command (if any):");
+            logger.debug("Here is the standard error of the mysql read-in command (if any):");
             while ((s = stdError.readLine()) != null) {
-                System.out.println(s);
+                logger.debug(s);
             }
             int processComplete = proc.waitFor();
             if (processComplete == 0) {
-                System.out.println("Dump read in successfully");
+                logger.info("Dump read in successfully");
                 JOptionPane.showMessageDialog(this,
                         "Datenbank-Dump '"+filename+"' wurde erfolgreich eingelesen.",
                         "Info", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                System.out.println("Could not read in the dump");
+                logger.warn("Could not read in the dump");
                 JOptionPane.showMessageDialog(this,
                         "Fehler: Dump-Datei "+filename+" konnte nicht gelesen werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
@@ -210,8 +216,7 @@ public class DumpDatabase extends WindowContent {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         String[] yw = {year, week};

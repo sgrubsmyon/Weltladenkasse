@@ -18,11 +18,17 @@ import javax.swing.table.*;
 import javax.swing.text.*; // for DocumentFilter
 import javax.swing.event.*;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.weltladen_bonn.pos.*;
 
 public class Bestellen extends BestellungsGrundlage implements
     ArticleSelectUser, DocumentListener, TableModelListener {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(Bestellen.class);
+
     private final BigDecimal minusOne = new BigDecimal(-1);
     private final BigDecimal percent = new BigDecimal("0.01");
 
@@ -500,17 +506,15 @@ public class Bestellen extends BestellungsGrundlage implements
             writer = new BufferedWriter(new FileWriter(file));
             writer.write(fileStr);
         } catch (Exception ex) {
-            System.out.println("Error writing to file " + file.getName());
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Error writing to file {}", file.getName());
+            logger.error("Exception: {}", ex);
         } finally {
             try {
                 // Close the writer regardless of what happens...
                 writer.close();
             } catch (Exception ex) {
-                System.out.println("Error closing file " + file.getName());
-                System.out.println("Exception: " + ex.getMessage());
-                ex.printStackTrace();
+                logger.error("Error closing file {}", file.getName());
+                logger.error("Exception: {}", ex);
             }
         }
     }
@@ -566,10 +570,9 @@ public class Bestellen extends BestellungsGrundlage implements
             }
             updateAll();
         } catch (FileNotFoundException ex) {
-            System.out.println("No backup file found. No backed up order loaded.");
+            logger.info("No backup file found. No backed up order loaded.");
         } catch (IOException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
         }
     }
 
@@ -648,7 +651,7 @@ public class Bestellen extends BestellungsGrundlage implements
 
     private void updateAnzahlSpinner(Integer vpe) {
         if (vpe > 0){
-            System.out.println("updateAnzahlSpinner at work.");
+            logger.trace("updateAnzahlSpinner at work.");
             Integer nvpe = (Integer)vpeSpinner.getValue();
             Integer stueck = Integer.valueOf(nvpe * vpe);
             if (
@@ -664,7 +667,7 @@ public class Bestellen extends BestellungsGrundlage implements
 
     private void updateVPESpinner(Integer vpe) {
         if (vpe > 0){
-            System.out.println("updateVPESpinner at work.");
+            logger.trace("updateVPESpinner at work.");
             Integer stueck = (Integer)anzahlSpinner.getValue();
             Integer nvpe = Integer.valueOf(stueck / vpe);
             this.vpeOrAnzahlIsChanged = true;
@@ -704,7 +707,7 @@ public class Bestellen extends BestellungsGrundlage implements
 
     private void fuegeArtikelHinzu(Integer stueck) {
         if (asPanel.artikelBox.getItemCount() != 1 || asPanel.nummerBox.getItemCount() != 1){
-            System.out.println("Error: article not selected unambiguously.");
+            logger.error("Error: article not selected unambiguously.");
             return;
         }
         Artikel a = getArticle(selectedArticleID);
@@ -788,8 +791,7 @@ public class Bestellen extends BestellungsGrundlage implements
             }
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             JOptionPane.showMessageDialog(this,
                     "Fehler: Bestellung konnte nicht vollständig abgespeichert werden.\n"+
                     "Keine Verbindung zum Datenbank-Server?\n"+

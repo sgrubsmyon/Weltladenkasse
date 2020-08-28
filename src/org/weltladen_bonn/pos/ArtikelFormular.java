@@ -31,9 +31,15 @@ import javax.swing.table.*;
 import javax.swing.event.*; // for DocumentListener
 import javax.swing.text.*; // for DocumentFilter
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class ArtikelFormular extends WindowContent
     implements ArtikelFormularInterface {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(ArtikelFormular.class);
+
     public JComboBox<String> produktgruppenBox;
     public JComboBox<String> lieferantBox;
     public JTextField nummerField;
@@ -121,8 +127,9 @@ public class ArtikelFormular extends WindowContent
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
+            // System.out.println("Exception: " + ex.getMessage());
+            // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
         }
     }

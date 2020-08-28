@@ -38,8 +38,14 @@ import org.weltladen_bonn.pos.jcalendarbutton.JCalendarButton;
 
 import org.weltladen_bonn.pos.*;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class RabattDialog extends DialogWindow implements ChangeListener, DocumentListener, ItemListener, ArticleSelectUser {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(RabattDialog.class);
+
     protected final BigDecimal percent = new BigDecimal("0.01");
     protected Rabattaktionen rabattaktionen;
     protected OptionTabbedPane tabbedPane;
@@ -174,8 +180,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -212,8 +217,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -549,7 +553,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             artName = artNameValue()[0];
             liefID = artNameValue()[1];
             artNummer = artNummerValue();
-            System.out.println("getting id for name, liefID, nummer "+artName+" "+liefID+" "+artNummer);
+            logger.debug("getting id for name: '{}', liefID: '{}', nummer: '{}'", artName, liefID, artNummer);
             artikelID = this.rabattaktionen.getArticleID(Integer.parseInt(liefID), artNummer); // get the internal artikelID from the DB
         }
 
@@ -579,7 +583,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         Integer schwelle = (Integer)values[10];
         Integer mengeKostenlos = (Integer)values[11];
         BigDecimal mengeRel = (BigDecimal)values[12];
-        System.out.println(
+        logger.debug(
                 "aktname: " + aktname + "\n" +
                 "absolutValue: " + absolutValue + "\n" +
                 "relativValue: " + relativValue + "\n" +
@@ -635,8 +639,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                 pstmt.close();
                 connection.close();
             } catch (SQLException ex) {
-                System.out.println("Exception: " + ex.getMessage());
-                ex.printStackTrace();
+                logger.error("Exception: {}", ex);
                 showDBErrorDialog(ex.getMessage());
             }
         } else { // NO_OPTION
@@ -660,7 +663,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
         Integer schwelle = (Integer)values[10];
         Integer mengeKostenlos = (Integer)values[11];
         BigDecimal mengeRel = (BigDecimal)values[12];
-        System.out.println(
+        logger.debug(
                 "aktname: " + aktname + "\n" +
                 "absolutValue: " + absolutValue + "\n" +
                 "relativValue: " + relativValue + "\n" +
@@ -713,8 +716,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                 pstmt.close();
                 connection.close();
             } catch (SQLException ex) {
-                System.out.println("Exception: " + ex.getMessage());
-                ex.printStackTrace();
+                logger.error("Exception: {}", ex);
                 showDBErrorDialog(ex.getMessage());
             }
         } else { // NO_OPTION
@@ -890,28 +892,28 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
     boolean areThereChanges() {
         boolean changes = false;
         if (!changes) changes = !nameValue().equals(this.aktionsname);
-        System.out.println("\nchanges 1: "+changes);
+        logger.trace("\nchanges 1: "+changes);
         if (!changes) changes = !vonValue().equals(this.von);
-        System.out.println("changes 2: "+changes);
+        logger.trace("changes 2: "+changes);
         if ( this.unlimited ){
             if (!changes) changes = unlimitedValue() != this.unlimited;
         } else {
             if (!changes) changes = !bisValue().equals(this.bis);
         }
-        System.out.println("changes 3: "+changes);
+        logger.trace("changes 3: "+changes);
         if (!changes) changes = !produktModus.equals(this.presetProduktModus);
-        System.out.println("changes 4: "+changes);
+        logger.trace("changes 4: "+changes);
         if (!changes) changes = !rabattModus.equals(this.presetRabattModus);
-        System.out.println("changes 5: "+changes);
+        logger.trace("changes 5: "+changes);
         if (!changes && produktModus == produktDropDownOptions[0])
             changes = !artNameValue()[0].equals(this.artikelName);
-        System.out.println("changes 6: "+changes);
+        logger.trace("changes 6: "+changes);
         if (!changes && produktModus == produktDropDownOptions[0])
             changes = !artNummerValue().equals(this.artikelNummer);
-        System.out.println("changes 7: "+changes);
+        logger.trace("changes 7: "+changes);
         if (!changes && produktModus == produktDropDownOptions[1])
             changes = !produktgruppenValue().equals(this.produktgruppenID);
-        System.out.println("changes 8: "+changes);
+        logger.trace("changes 8: "+changes);
 
         if (this.rabattAbsolut == null && absolutValue() != null)
             changes = true;
@@ -921,7 +923,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             if (!changes && rabattModus == rabattDropDownOptions[0])
                 changes = !absolutValue().equals(this.rabattAbsolut);
         }
-        System.out.println("changes 9: "+changes);
+        logger.trace("changes 9: "+changes);
 
         if (this.rabattRelativ == null && relativValue() != null)
             changes = true;
@@ -931,17 +933,17 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             if (!changes && rabattModus == rabattDropDownOptions[0])
                 changes = !relativValue().equals(this.rabattRelativ);
         }
-        System.out.println("changes 10: "+changes);
+        logger.trace("changes 10: "+changes);
 
         if (!changes && rabattModus == rabattDropDownOptions[1])
             changes = !schwelleValue().equals(this.mengenrabattSchwelle);
-        System.out.println("changes 11: "+changes);
+        logger.trace("changes 11: "+changes);
         if (!changes && rabattModus == rabattDropDownOptions[1])
             changes = !kostenlosValue().equals(this.mengenrabattAnzahl);
-        System.out.println("changes 12: "+changes);
+        logger.trace("changes 12: "+changes);
         if (!changes && rabattModus == rabattDropDownOptions[1])
             changes = !mengeRelativValue().equals(this.mengenrabattRelativ);
-        System.out.println("changes 13: "+changes);
+        logger.trace("changes 13: "+changes);
         return changes;
     }
 

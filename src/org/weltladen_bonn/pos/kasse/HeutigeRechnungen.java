@@ -26,8 +26,14 @@ import javax.swing.*;
 
 import org.weltladen_bonn.pos.MainWindowGrundlage;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class HeutigeRechnungen extends Rechnungen {
     // Attribute:
+    private static final Logger logger = LogManager.getLogger(HeutigeRechnungen.class);
+
     private RechnungenTabbedPane tabbedPane;
 
     // Methoden:
@@ -46,17 +52,17 @@ public class HeutigeRechnungen extends Rechnungen {
     }
 
     void addButtonsToTable(){
-	// create the buttons for each row:
-	detailButtons = new Vector<JButton>();
-	stornoButtons = new Vector<JButton>();
-	for (int i=0; i<data.size(); i++){
-	    detailButtons.add(new JButton("+"));
-	    detailButtons.get(i).addActionListener(this);
-	    myTable.setValueAt( detailButtons.get(i), i, 0 );
-	    stornoButtons.add(new JButton("Storno"));
-	    stornoButtons.get(i).addActionListener(this);
-	    myTable.setValueAt( stornoButtons.get(i), i, overviewLabels.size()-1 );
-	}
+        // create the buttons for each row:
+        detailButtons = new Vector<JButton>();
+        stornoButtons = new Vector<JButton>();
+        for (int i=0; i<data.size(); i++){
+            detailButtons.add(new JButton("+"));
+            detailButtons.get(i).addActionListener(this);
+            myTable.setValueAt( detailButtons.get(i), i, 0 );
+            stornoButtons.add(new JButton("Storno"));
+            stornoButtons.get(i).addActionListener(this);
+            myTable.setValueAt( stornoButtons.get(i), i, overviewLabels.size()-1 );
+        }
     }
 
     private void stornieren(int stornoRow) {
@@ -84,8 +90,7 @@ public class HeutigeRechnungen extends Rechnungen {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         updateTable();
@@ -122,8 +127,7 @@ public class HeutigeRechnungen extends Rechnungen {
                 mainWindow.updateBottomPanel();
             }
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }

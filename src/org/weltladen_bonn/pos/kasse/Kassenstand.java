@@ -45,8 +45,14 @@ import org.weltladen_bonn.pos.MainWindowGrundlage;
 import org.weltladen_bonn.pos.AnyJComponentJTable;
 import org.weltladen_bonn.pos.StringDocumentFilter;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class Kassenstand extends WindowContent implements ChangeListener, DocumentListener, ItemListener {
     // Attributes:
+    private static final Logger logger = LogManager.getLogger(Kassenstand.class);
+
     private int currentPage = 1;
     private int totalPage;
     private String filterStr = "";
@@ -128,8 +134,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         Calendar calendar = Calendar.getInstance();
@@ -226,8 +231,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            System.out.println("Exception: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Exception: {}", ex);
             showDBErrorDialog(ex.getMessage());
         }
         myTable = new AnyJComponentJTable(data, columnLabels);
