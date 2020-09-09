@@ -17,6 +17,120 @@
     als "Artikelliste_LM.ods"
 7.) "File -> Save a Copy" und als csv-Datei exportieren.
     WICHTIG: Als "Field Delimiter" ';' auswählen, als "String Delimiter" '"'!
+8.) Von der letzten Preisänderung die Datei "..._mitFormeln.ods" in den
+    aktuellen Ordner als
+    "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX_mitFormeln.ods"
+    kopieren.
+9.) Neue FHZ-Preisliste öffnen
+    * Wir benötigen Spalten D bis M (von "Lieferant" bis "je Einheit"), diese
+        Spalten markieren, kopieren (Ctrl-C)
+    * In die Datei "..._mitFormeln.ods" ganz rechts (ab Spalte V) einfügen mit
+        Ctrl-Shift-V (Formatierung wird gelöscht)
+    * Alle Zeilen, die leer sind oder Überschrift (Produktgruppe) enthalten, löschen und zwar so:
+        In Spalte "Lieferant" oder "Bezeichnung" mit Ctrl-Down springen, Zellen
+        aus zu löschenden Zeilen markieren, Ctrl-Minus, Delete entire row(s)
+    * Artikeln ohne Lieferant einen Lieferanten geben:
+        Wein-Geschenkkarton -> FHZ Rheinland
+        Kaffeefilter, Teefilter, Teefilter-Clip -> FHZ Rheinland
+    * Alle Pfandartikel (leere Flaschen und Kästen) löschen (von PFAND1 bis
+        9999386), denn wir haben ein anderes Pfandsystem (bei uns entspricht
+        PFAND2 der 0,33 l Flasche für 8 ct, dafür haben wir nicht die
+        GEPA-Pfandflasche 9999385 und GEPA-Pfandkiste 9999386)
+    * Nach fehlender Einheit suchen (mit Ctrl-Down zu Lücken springen), in
+        fast allen Fällen (außer z.B. 70 g Gewürzgeschenkbox, Kokoblock) "St."
+        eintragen und Menge anpassen (z.B. 5 für Muskatnüsse)
+    OR:
+    * After running script, search for "zu 0 " in output, correct the Menge
+        values in the FHZ file and Einheit to "St." (e.g. Vanilleschoten
+        'ma110100', 'sl115108', 'rfb116032')
+10.) Datei
+    "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX_mitFormeln.ods"
+    kopieren, einfügen und umbenennen in
+    "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX_ohneFormeln.ods".
+    Neue Datei "ohneFormeln" öffnen. Die linken Spalten (A bis T) markieren,
+    kopieren (Ctrl-C) und mit Ctrl-Shift-V einfügen, so dass die Formeln
+    verschwinden. Dann den rechten Block (ab Spalte V) markieren und mit
+    Ctrl-Minus löschen. Speichern.
+11.) "File -> Save a Copy" und als csv-Datei
+    "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX.csv" exportieren.
+    WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
+12.) Dieses Skript aufrufen mit:
+    ./preisaenderung.py --fhz FHZ_FILE.csv --wlb Artikelliste_LM.csv (-n) > log.txt
+     (-n übernimmt den Artikelnamen vom FHZ, wir haben
+     aber häufig Fehler im Namen korrigiert/angepasst, daher lieber nicht -n
+     benutzen. Außerdem generiert das unnötig viele Änderungen.)
+13.) Datei log.txt anschauen und evtl. Probleme beheben, z.B.:
+    * Dopplungen von Artikelnummern korrigieren (werden als erstes aufgelistet),
+        diese erzeugen später weitere Fehlermeldungen (Fehler evtl. ans FHZ
+        melden)
+    * Änderungen prüfen und ggf. eingreifen
+    * ACHTUNG: Wenn Menge oder Einheit sich geändert haben, muss ggf. der Artikelname
+        in preisänderung.csv von Hand geändert werden, wenn nicht -n benutzt wird.
+        Am besten auf einem Zettel notieren und hinterher händisch machen.
+    * Angebliche neue Artikel prüfen, ob nur ein Tippfehler in der Artikelnummer
+        ist (Fehler evtl. ans FHZ melden)
+    * Auch gucken, ob neue Artikel eigentlich beim FHZ durchgestrichen sind und
+        wir sie schon aus der DB entfernt haben.
+    * ACHTUNG: Mini-Täfelchen nicht ändern, d.h. aus
+        preisaenderung_irgendeine_änderung.csv und
+        preisänderung_geänderte_preise_sortiment.csv (Nr. 8901827 und 8901828)
+        löschen! (VPE ist zwar 5, aber auf 1 lassen, weil wir sowieso keinen Rabatt
+        kriegen und 500 Täfelchen ein MHD-Problem verursachen.)
+        (Außer wenn sich der Empf. VKP von 8 EUR tatsächlich ändert). Im WLB ist
+        der VKP mit Absicht höher als der Empf. VKP und die VPE ist mit Absicht
+        (falsch) auf 1 gesetzt.
+    * ACHTUNG: Artikel LT401 (Limoncello) ist beim FHZ von CTM, ist aber eigentlich
+        Libera Terra, bei uns ist der Lieferant also Libera Terra. Manuell in der
+        FHZ-Liste ändern und nicht neuen Artikel anlegen lassen! (Macht sonst Probleme
+        beim Scannen)
+14.) Punkt 10 und 11 so lange ausführen, bis alles OK ist.
+15.) Ergebnisse werden gespeichert in Dateien:
+    * "preisänderung.csv" (alle Artikel, aktualisiert)
+    * "preisänderung_irgendeine_änderung.csv" (alle Artikel, bei denen sich
+        irgendwas geändert hat; für beschleunigtes Einlesen ggü. preisänderung.csv,
+        denn Artikel ohne Änderung würden beim Einlesen sowieso ignoriert werden,
+        verlangsamen aber den Einleseprozess)
+    * "preisänderung_geänderte_preise.csv" (alle Artikel, deren Preis sich verändert hat)
+    * "preisänderung_geänderte_preise_sortiment.csv" (alle Sortimentsartikel, deren Preis sich verändert hat, für Import im Preisschilder-Menü)
+    * "preisänderung_geänderte_preise_sortiment_alle_felder.csv" (wie oben, für Import in LibreOffice zum besseren Erkennen der Artikel von Hand)
+    * "preisänderung_neue_artikel.csv" (alle neuen Artikel)
+16.) "preisänderung.csv" bzw. für schnelleres Einlesen "preisänderung_irgendeine_änderung.csv" mit LibreOffice öffnen:
+    * Separated by: Semicolon
+    * String Delimiter: '"'!
+    * Problem 1:
+        nämlich dass Artikelnummern, die mit "0" beginnen ihre führenden Nullen
+        verlieren.
+        Daher: Die Spalte "Artikelnummer" anklicken und Typ auf "Text" setzen
+            (https://www.youtube.com/watch?v=TrVbvKzLhgs).
+    * Problem 2:
+        nämlich dass dreistellige Mengenangaben wie "0.126 kg" zu "126 kg"
+        werden.
+        Daher: Die Spalte "Menge (kg/l/St.)" anklicken und Typ auf "Text"
+            setzen.
+17.) Als ods-Datei speichern (Save As, "Artikelliste_LM_NEU.ods").
+18.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
+    die Datei "Artikelliste_LM_NEU.ods" auswählen.
+19.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
+    "preisänderung_geänderte_preise_sortiment.csv" auswählen.
+20.) Die Datei "preisänderung_neue_artikel.csv" mit LibreOffice öffnen,
+    Semicolon als Separator, String Delimiter: '"'. Auch hier wieder: Die Spalte
+    "Artikelnummer" anklicken und Typ auf "Text" setzen, Spalte "Menge (kg/l/St.)"
+    anklicken und Typ auf "Text" setzen.
+21.) Für jeden neuen Artikel eine existierende Produktgruppe wählen und in die
+    entspr. Spalte eintragen. Speichern als "preisänderung_neue_artikel.ods".
+    Viele Produktgruppen können aus Artikelliste_LM.ods per Copy/Paste übernommen werden.
+    Wein-Geschenkkarton: "Ergänzungsprodukte"
+    Kaffee-/Teefilter/Teefilterclip: "Ergänzungsprodukte"
+    Papiertragetaschen etc.: "Ergänzungsprodukte"
+    Kokoblock: "Sonstiges Kunsthandwerk"
+22.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
+    die Datei "preisänderung_neue_artikel.ods" auswählen.
+23.) Evtl. schon vorhandene Artikel (z.B. Wein-Geschenkkartons), die jetzt rot
+    markiert sind, aus "preisänderung_neue_artikel.ods" löschen. Wenn Änderungen
+    nötig sind (z.B. Preis), dann Artikel von Hand verändern.
+
+Alter Schritt 8) jetzt obsolet, hier noch falls es irgendwann noch mal gebraucht wird:
+
 8.) Neue FHZ-Preisliste öffnen
     * Wir benötigen Spalten D bis M (von "Lieferant" bis "je Einheit"), diese
         Spalten markieren, kopieren und in leeres Dokument (Ctrl-N) einfügen mit
@@ -39,7 +153,7 @@
         * Spalten "Einheit" ("250", "g", "Beutel") und "x" ganz nach rechts verschieben in Spalten U bis X
             (Einheit in U bis W, x in X)
         * Spalte "Variabel" auf "Nein" setzen
-        * Andere Spalten (z.B. Sortiment, Bestand, Barcode, etc.) leer lassen
+        * Andere Spalten (z.B. Sortiment, Beliebtheit, Barcode, Setgröße, VK-Preis, EK-Rabatt, EK-Preis, Bestand) leer lassen
     * mit Formeln bearbeiten:
         =CONCATENATE(E2; " | "; F2; " "; G2; " "; H2)       für "Bezeichnung | Einheit"
                                                             dabei ist E2 der Kurzname (FHZ-Bezeichnung), F2, G2, H2 sind "250", "g", "Beutel"
@@ -62,74 +176,6 @@
       Strg-Shift-V (nur Werte einfügen), sodass die Formel überschrieben wird
     * Dann die Spalten, die in Formeln benutzt wurden, löschen (U bis X)
     * Spalte "Menge": Markieren, "Format Cells", 5 decimal places
-9.) "File -> Save a Copy" und als csv-Datei exportieren.
-    WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
-10.) Dieses Skript aufrufen mit:
-    ./preisaenderung.py --fhz FHZ_FILE.csv --wlb Artikelliste_LM.csv (-n) > log.txt
-     (-n übernimmt den Artikelnamen vom FHZ, wir haben
-     aber häufig Fehler im Namen korrigiert/angepasst, daher lieber nicht -n
-     benutzen. Außerdem generiert das unnötig viele Änderungen.)
-11.) Datei log.txt anschauen und evtl. Probleme beheben, z.B.:
-    * Dopplungen von Artikelnummern korrigieren (werden als erstes aufgelistet),
-        diese erzeugen später weitere Fehlermeldungen (Fehler evtl. ans FHZ
-        melden)
-    * Änderungen prüfen und ggf. eingreifen
-    * ACHTUNG: Wenn Menge oder Einheit sich geändert haben, muss ggf. der Artikelname
-        in preisänderung.csv von Hand geändert werden, wenn nicht -n benutzt wird.
-        Am besten auf einem Zettel notieren und hinterher händisch machen.
-    * Angebliche neue Artikel prüfen, ob nur ein Tippfehler in der Artikelnummer
-        ist (Fehler evtl. ans FHZ melden)
-    * Auch gucken, ob neue Artikel eigentlich beim FHZ durchgestrichen sind und
-        wir sie schon aus der DB entfernt haben.
-    * ACHTUNG: Mini-Täfelchen nicht ändern, d.h. aus
-        preisaenderung_irgendeine_änderung.csv und
-        preisänderung_geänderte_preise_sortiment.csv (Nr. 8901827 und 8901828)
-        löschen!
-        (Außer wenn sich der Empf. VKP von 8 EUR tatsächlich ändert). Im WLB ist
-        der VKP mit Absicht höher als der Empf. VKP und die VPE ist mit Absicht
-        (falsch) auf 1 gesetzt.
-12.) Punkt 10 und 11 so lange ausführen, bis alles OK ist.
-13.) Ergebnisse werden gespeichert in Dateien:
-    * "preisänderung.csv" (alle Artikel, aktualisiert)
-    * "preisänderung_irgendeine_änderung.csv" (alle Artikel, bei denen sich irgendwas geändert hat; für beschleunigtes Einlesen ggü. preisänderung.csv, denn Artikel ohne Änderung würden beim Einlesen sowieso ignoriert werden, verlangsamen aber den Einleseprozess)
-    * "preisänderung_geänderte_preise.csv" (alle Artikel, deren Preis sich verändert hat)
-    * "preisänderung_geänderte_preise_sortiment.csv" (alle Sortimentsartikel, deren Preis sich verändert hat, für Import im Preisschilder-Menü)
-    * "preisänderung_geänderte_preise_sortiment_alle_felder.csv" (wie oben, für Import in LibreOffice zum besseren Erkennen der Artikel von Hand)
-    * "preisänderung_neue_artikel.csv" (alle neuen Artikel)
-14.) "preisänderung.csv" bzw. für schnelleres Einlesen "preisänderung_irgendeine_änderung.csv" mit LibreOffice öffnen:
-    * Separated by: Semicolon
-    * String Delimiter: '"'!
-    * Problem 1:
-        nämlich dass Artikelnummern, die mit "0" beginnen ihre führenden Nullen
-        verlieren.
-        Daher: Die Spalte "Artikelnummer" anklicken und Typ auf "Text" setzen
-            (https://www.youtube.com/watch?v=TrVbvKzLhgs).
-    * Problem 2:
-        nämlich dass dreistellige Mengenangaben wie "0.126 kg" zu "126 kg"
-        werden.
-        Daher: Die Spalte "Menge (kg/l/St.)" anklicken und Typ auf "Text"
-            setzen.
-15.) Als ods-Datei speichern (Save As, "Artikelliste_LM_NEU.ods").
-16.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
-    die Datei "Artikelliste_LM_NEU.ods" auswählen.
-17.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
-    "preisänderung_geänderte_preise_sortiment.csv" auswählen.
-18.) Die Datei "preisänderung_neue_artikel.csv" mit LibreOffice öffnen,
-    Semicolon als Separator, String Delimiter: '"'. Auch hier wieder: Die Spalte
-    "Artikelnummer" anklicken und Typ auf "Text" setzen, Spalte "Menge (kg/l/St.)"
-    anklicken und Typ auf "Text" setzen.
-19.) Für jeden neuen Artikel eine existierende Produktgruppe wählen und in die
-    entspr. Spalte eintragen. Speichern als "preisänderung_neue_artikel.ods".
-    Viele Produktgruppen können aus Artikelliste_LM.ods per Copy/Paste übernommen werden.
-    Wein-Geschenkkarton: "Ergänzungsprodukte"
-    Kaffee-/Teefilter/Teefilterclip: "Ergänzungsprodukte"
-    Papiertragetaschen etc.: "Ergänzungsprodukte"
-    Kokoblock: "Sonstiges Kunsthandwerk"
-20.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
-    die Datei "preisänderung_neue_artikel.ods" auswählen.
-21.) Evtl. schon vorhandene Artikel (z.B. Wein-Geschenkkartons), die jetzt rot
-    markiert sind, aus "preisänderung_neue_artikel.ods" löschen. Wenn Änderungen
-    nötig sind (z.B. Preis), dann Artikel von Hand verändern.
 '''
 
 import re
