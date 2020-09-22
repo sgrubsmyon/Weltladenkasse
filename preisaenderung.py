@@ -118,7 +118,7 @@
     anklicken und Typ auf "Text" setzen.
 21.) Für jeden neuen Artikel eine existierende Produktgruppe wählen und in die
     entspr. Spalte eintragen. Speichern als "preisänderung_neue_artikel.ods".
-    Viele Produktgruppen können aus Artikelliste_LM.ods per Copy/Paste übernommen werden.
+    Produktgruppen können aus "Produktgruppen.ods" im Ordner der Weltladenkasse übernommen werden.
     Wein-Geschenkkarton: "Ergänzungsprodukte"
     Kaffee-/Teefilter/Teefilterclip: "Ergänzungsprodukte"
     Papiertragetaschen etc.: "Ergänzungsprodukte"
