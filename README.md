@@ -105,6 +105,7 @@ Download and put into the folder `lib` the following jars:
 * jcalendar-1.4.jar: http://toedter.com/jcalendar/
 * hidapi-1.1.jar: https://code.google.com/p/javahidapi/
 * log4j-api-2.13.3.jar and log4j-core-2.13.3.jar (extracted from apache-log4j-2.13.3-bin.tar.gz): https://logging.apache.org/log4j/2.x/download.html
+* jna-5.6.0.jar: https://github.com/java-native-access/jna#download (needed for cryptovision TSE support)
 
 Unjar the hidapi-1.1.jar (with `jar -xvf hidapi-1.1.jar`) and copy the content
 of the `native/*` folders (files ending with `.so`, `.dll` or `.jnilib`) into
