@@ -11,6 +11,7 @@ main_class=org.weltladen_bonn.pos.kasse.Kasse
 
 cp config_local.properties $build_dir/config.properties
 cp config_log4j2.xml $build_dir
+cp config_tse.txt $build_dir
 cp -r vorlagen $build_dir
 cd $build_dir
 java=java
@@ -24,4 +25,5 @@ else
 fi
 rm config.properties
 rm config_log4j2.xml
+rm config_tse.txt
 rm -r vorlagen
