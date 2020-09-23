@@ -2,6 +2,8 @@ package org.weltladen_bonn.pos.kasse;
 
 import java.util.Vector;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 // GUI stuff:
 import java.awt.*;
@@ -13,9 +15,14 @@ import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+// TSE: (BSI, use implementation by Bundesdruckerei)
+import com.cryptovision.SEAPI.TSE;
+import com.cryptovision.SEAPI.exceptions.SEException;
+
 // Class holding only the main function
 public class Kasse {
     private static Logger logger = null;
+    private static TSE tse = null;
 
     /**
      * Create the GUI and show it.  For thread safety,
@@ -96,6 +103,22 @@ public class Kasse {
         // Configure logger:
         System.setProperty("log4j.configurationFile", "config_log4j2.xml");
         logger = LogManager.getLogger(Kasse.class);
+
+        // Configure TSE:
+        try {
+            try {
+                tse = TSE.getInstance("config_tse.txt");
+            } catch (FileNotFoundException ex) {
+                logger.error("TSE config file not found under '{}'", "config_tse.txt");
+                logger.error("Exception: {}", ex);
+            } catch (IOException ex) {
+                logger.error("TSE config file could not be read from '{}'", "config_tse.txt");
+                logger.error("Exception: {}", ex);
+            }
+            logger.info(tse.getPinStatus());
+        } catch (SEException ex) {
+            logger.error("Exception: {}", ex);
+        }
 
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.
