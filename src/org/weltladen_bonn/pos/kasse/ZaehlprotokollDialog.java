@@ -133,7 +133,6 @@ public class ZaehlprotokollDialog extends DialogWindow
             });
         }
 
-
         muenz_fields = new Vector<>();
         for (String name : bc.muenz_namen) {
             muenz_fields.add(new JFormattedTextField("0,00"));
@@ -213,10 +212,6 @@ public class ZaehlprotokollDialog extends DialogWindow
             muenzPanel.add(new BigLabel(bc.currencySymbol), c);
             index += 2;
         }
-
-
-
-
 
         JPanel scheinPanel = new JPanel(new GridBagLayout());
         scheinPanel.setBorder(BorderFactory.createTitledBorder("Scheine" ));
@@ -331,8 +326,6 @@ public class ZaehlprotokollDialog extends DialogWindow
             index += 2;
         }
 
-
-
         JPanel summePanel = new JPanel(new GridBagLayout());
         summePanel.setBorder(BorderFactory.createTitledBorder("Summe" ));
         GridBagConstraints c3 = new GridBagConstraints();
@@ -403,8 +396,6 @@ public class ZaehlprotokollDialog extends DialogWindow
         c3.gridx = 2;
         summePanel.add(new BigLabel(bc.currencySymbol), c3);
 
-
-
         JPanel kommentarPanel = new JPanel(new GridBagLayout());
         kommentarPanel.setBorder(BorderFactory.createTitledBorder("Kommentar" ));
         GridBagConstraints c4 = new GridBagConstraints();
@@ -413,7 +404,6 @@ public class ZaehlprotokollDialog extends DialogWindow
         c4.ipady = 5;
 //        c4.insets = new Insets(3, 10, 3, 10);
         c4.insets = new Insets(3, 0, 3, 3);
-
 
         kommentarErklaerText = new JTextArea(5, 30);
         kommentarErklaerText.append("Bitte rechts eingeben:\n"+
@@ -450,8 +440,6 @@ public class ZaehlprotokollDialog extends DialogWindow
         c4.gridy = 0;
         c4.gridx = 1;
         kommentarPanel.add(kommentarScrollPane, c4);
-
-
 
         middlePanel.add(muenzPanel);
         middlePanel.add(scheinPanel);
