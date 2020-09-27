@@ -74,7 +74,7 @@ public abstract class MainWindowGrundlage extends JFrame {
 
         bottomPanel.setLayout(new FlowLayout());
         holdAll.add(bottomPanel, BorderLayout.SOUTH);
-            updateBottomPanel();
+        updateBottomPanel();
 
         this.getContentPane().add(holdAll, BorderLayout.CENTER);
     }
