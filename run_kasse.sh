@@ -21,7 +21,7 @@ fi
 if [ $runprofiler == true ]; then
     $java -javaagent:$HOME/bin/profiler4j-1.0-beta2/agent.jar -cp "$lib_dir/*":. $main_class
 else
-    $java -cp "$lib_dir/*":. $main_class
+    $java -cp "$lib_dir/*":"$lib_dir":. $main_class
 fi
 rm config.properties
 rm config_log4j2.xml
