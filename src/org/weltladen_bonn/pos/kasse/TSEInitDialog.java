@@ -11,12 +11,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowListener;
 import java.awt.event.WindowEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.DocumentEvent;
 
 // Logging:
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class TSEInitDialog extends DialogWindow implements WindowListener {
+public class TSEInitDialog extends DialogWindow implements WindowListener, DocumentListener {
     private static final Logger logger = LogManager.getLogger(TSEInitDialog.class);
 
     private JTextField adminPINField;
@@ -70,24 +72,66 @@ public class TSEInitDialog extends DialogWindow implements WindowListener {
         middlePanel.setLayout(new BoxLayout(middlePanel, BoxLayout.Y_AXIS));
 
         JPanel adminPanel = new JPanel(new GridBagLayout());
-        adminPanel.setBorder(BorderFactory.createTitledBorder("Admin"));
+        // adminPanel.setBorder(BorderFactory.createTitledBorder("Admin"));
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.CENTER;
-        c.ipady = 5;
+        c.ipadx = 15;
+        c.ipady = 10;
         c.insets = new Insets(3, 0, 3, 3);
         c.gridy = 0;
         c.gridx = 0;
         adminPanel.add(new BigLabel("Admin PIN:"), c);
         c.gridx = 1;
         adminPINField = new JTextField();
+        adminPINField.setColumns(20);
+        adminPINField.setHorizontalAlignment(SwingConstants.RIGHT);
+        adminPINField.getDocument().addDocumentListener(this);
         adminPanel.add(adminPINField, c);
         c.gridx = 2;
         adminPanel.add(new BigLabel("Admin PUK:"), c);
         c.gridx = 3;
-        adminPanel.add(new BigLabel("TEXTFELD"), c);
+        adminPUKField = new JTextField();
+        adminPUKField.setColumns(20);
+        adminPUKField.setHorizontalAlignment(SwingConstants.RIGHT);
+        adminPUKField.getDocument().addDocumentListener(this);
+        adminPanel.add(adminPUKField, c);
+        c.gridy = 1;
+        c.gridx = 0;
+        adminPanel.add(new BigLabel("TimeAdmin PIN:"), c);
+        c.gridx = 1;
+        timeAdminPINField = new JTextField();
+        timeAdminPINField.setColumns(20);
+        timeAdminPINField.setHorizontalAlignment(SwingConstants.RIGHT);
+        timeAdminPINField.getDocument().addDocumentListener(this);
+        adminPanel.add(timeAdminPINField, c);
+        c.gridx = 2;
+        adminPanel.add(new BigLabel("TimeAdmin PUK:"), c);
+        c.gridx = 3;
+        timeAdminPUKField = new JTextField();
+        timeAdminPUKField.setColumns(20);
+        timeAdminPUKField.setHorizontalAlignment(SwingConstants.RIGHT);
+        timeAdminPUKField.getDocument().addDocumentListener(this);
+        adminPanel.add(timeAdminPUKField, c);
+        
+        // JPanel timeAdminPanel = new JPanel(new GridBagLayout());
+        // timeAdminPanel.setBorder(BorderFactory.createTitledBorder("TimeAdmin"));
+        // c.gridy = 1;
+        // c.gridx = 0;
+        // timeAdminPanel.add(new BigLabel("TimeAdmin PIN:"), c);
+        // c.gridx = 1;
+        // timeAdminPINField = new JTextField();
+        // timeAdminPINField.setColumns(20);
+        // timeAdminPanel.add(timeAdminPINField, c);
+        // c.gridx = 2;
+        // timeAdminPanel.add(new BigLabel("TimeAdmin PUK:"), c);
+        // c.gridx = 3;
+        // timeAdminPUKField = new JTextField();
+        // timeAdminPUKField.setColumns(20);
+        // timeAdminPanel.add(timeAdminPUKField, c);
 
         middlePanel.add(adminPanel);
+        // middlePanel.add(timeAdminPanel);
 
         allPanel.add(middlePanel, BorderLayout.CENTER);
     }
@@ -179,5 +223,31 @@ public class TSEInitDialog extends DialogWindow implements WindowListener {
     }
     
     public void windowOpened(WindowEvent e) {
+    }
+
+    /**
+     * Each non abstract class that implements the DocumentListener must have
+     * these methods.
+     *
+     * @param documentEvent
+     *            the document event.
+     **/
+    @Override
+    public void insertUpdate(DocumentEvent documentEvent) {
+        if (adminPINField.getDocument().getLength() >= 1) {
+            okButton.setEnabled(true);
+        } else {
+            okButton.setEnabled(false);
+        }
+    }
+
+    @Override
+    public void removeUpdate(DocumentEvent documentEvent) {
+        insertUpdate(documentEvent);
+    }
+
+    @Override
+    public void changedUpdate(DocumentEvent documentEvent) {
+        // Plain text components do not fire these events
     }
 }
