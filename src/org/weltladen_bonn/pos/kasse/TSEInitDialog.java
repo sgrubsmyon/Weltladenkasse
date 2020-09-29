@@ -71,6 +71,10 @@ public class TSEInitDialog extends DialogWindow implements WindowListener, Docum
         JPanel middlePanel = new JPanel();
         middlePanel.setLayout(new BoxLayout(middlePanel, BoxLayout.Y_AXIS));
 
+        // borders:
+        int top = 10, left = 10, bottom = 10, right = 10;
+        middlePanel.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
+
         JPanel adminPanel = new JPanel(new GridBagLayout());
         // adminPanel.setBorder(BorderFactory.createTitledBorder("Admin"));
         GridBagConstraints c = new GridBagConstraints();
