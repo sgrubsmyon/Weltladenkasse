@@ -40,7 +40,8 @@ public class Kundendisplay {
 
     /**
      *    The constructor.
-     *       */
+     *
+     */
     public Kundendisplay(BaseClass bc_) {
         bc = bc_;
         listDevices();
@@ -151,21 +152,6 @@ public class Kundendisplay {
             System.gc();
         }
     }
-
-    /**
-     * Release resources. Will call closeDevice().
-     *
-     * @throws Throwable
-     */
-    protected void finalize() throws Throwable {
-        // It is important to call closeDevice() if user forgot to do so.
-        try {
-           closeDevice();
-        } finally {
-           super.finalize();
-        }
-    }
-
 
     private void writeToDevice(byte[] data) {
         if (device != null){

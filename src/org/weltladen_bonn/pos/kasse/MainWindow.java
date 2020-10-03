@@ -10,8 +10,10 @@ import org.mariadb.jdbc.MariaDbPoolDataSource;
 // GUI stuff:
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.WindowListener;
+import java.awt.event.WindowEvent;
 
 import javax.swing.*; // JFrame, JPanel, JButton, JLabel, ...
 import javax.swing.Timer; // ambiguity with java.util.Timer
@@ -19,7 +21,7 @@ import javax.swing.Timer; // ambiguity with java.util.Timer
 import org.weltladen_bonn.pos.MainWindowGrundlage;
 
 // Class holding the window of the application GUI:
-public class MainWindow extends MainWindowGrundlage implements ActionListener {
+public class MainWindow extends MainWindowGrundlage implements ActionListener, WindowListener {
     //***************************************************
     // Members
     //***************************************************
@@ -27,6 +29,9 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
 
     // class to talk to Kundendisplay
     private Kundendisplay display;
+
+    // class to talk to TSE
+    private WeltladenTSE tse;
 
     private JButton beendenButton = new JButton("Beenden");
 
@@ -42,6 +47,8 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
 
         display = new Kundendisplay(bc);
         setDisplayBlankTimer();
+
+        tse = new WeltladenTSE(this);
 
         if (dbconn.connectionWorks){
             myTabbedPane = new TabbedPane(this.pool, this);
@@ -85,14 +92,20 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
 
     @Override
     public void dispose() {
+        System.out.println("Closing HID Device!!!!!!!!!!!!!!");
         if (display != null)
             display.closeDevice();
+        // XXX TODO close connection to TSE (logOut)
         super.dispose();
     }
 
 
     public Kundendisplay getDisplay() {
         return display;
+    }
+
+    public WeltladenTSE getTSE() {
+        return tse;
     }
 
 
@@ -115,5 +128,36 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
         //        System.exit(0);
 	//    return;
 	//}
+    }
+
+        /**
+     * Each non abstract class that implements the WindowListener
+     * must have these methods.
+     *
+     * @param e the action event.
+     **/
+    public void windowClosed(WindowEvent e) {
+        // Do clean-up:
+        System.out.println("Closing HID Device again!!!!!!!!!!!!!!!!!!!!!!!");
+        display.closeDevice();
+        // XXX TODO close connection to TSE (logOut)
+    }
+
+    public void windowDeactivated(WindowEvent e) {
+    }
+
+    public void windowActivated(WindowEvent e) {
+    }
+
+    public void windowDeiconified(WindowEvent e) {
+    }
+
+    public void windowIconified(WindowEvent e) {
+    }
+    
+    public void windowClosing(WindowEvent e) {
+    }
+    
+    public void windowOpened(WindowEvent e) {
     }
 }
