@@ -14,12 +14,19 @@ import java.awt.event.WindowEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.DocumentEvent;
 
+// TSE: (BSI, use implementation by Bundesdruckerei/D-Trust/cryptovision)
+import com.cryptovision.SEAPI.TSE;
+import com.cryptovision.SEAPI.exceptions.SEException;
+import com.cryptovision.SEAPI.exceptions.ErrorTSECommandDataInvalid;
+
 // Logging:
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class TSEInitDialog extends DialogWindow implements WindowListener, DocumentListener {
     private static final Logger logger = LogManager.getLogger(TSEInitDialog.class);
+
+    private TSE tse = null;
 
     private JTextField adminPINField;
     private JTextField adminPUKField;
@@ -31,10 +38,11 @@ public class TSEInitDialog extends DialogWindow implements WindowListener, Docum
     private boolean aborted = true;
 
     // Methoden:
-    public TSEInitDialog(MainWindowGrundlage mw, JDialog dia) {
+    public TSEInitDialog(MainWindowGrundlage mw, JDialog dia, TSE _tse) {
         super(null, mw, dia);
         showAll();
         dia.addWindowListener(this);
+        this.tse = _tse;
     }
 
     // will data be lost on close?
@@ -146,6 +154,38 @@ public class TSEInitDialog extends DialogWindow implements WindowListener, Docum
         return 0;
     }
 
+    public void initialize() {
+        byte[] adminPIN = adminPINField.getText().getBytes();
+        byte[] adminPUK = adminPUKField.getText().getBytes();
+        byte[] timeAdminPIN = timeAdminPINField.getText().getBytes();
+        byte[] timeAdminPUK = timeAdminPUKField.getText().getBytes();
+        boolean passed = false;
+        String error = "";
+        // try {
+        //     tse.initializePinValues(adminPIN, adminPUK, timeAdminPIN, timeAdminPUK);
+        //     passed = true;
+        // } catch (ErrorTSECommandDataInvalid ex) {
+        //     error = "Data given to TSE's initializePinValues() invalid";
+        //     logger.fatal("Fatal Error: {}", error);
+        //     logger.fatal("Exception: {}", ex);
+        // } catch (SEException ex) {
+        //     error = "Unknown error during initializePinValues()";
+        //     logger.fatal("Fatal Error: {}", error);
+        //     logger.fatal("Exception: {}", ex);
+        // }
+        if (!passed) {
+            JOptionPane.showMessageDialog(this.mainWindow,
+                "ACHTUNG: Die TSE konnte nicht initialisiert werden!\n\n"+
+                "Fehler: "+error+"\n\n"+
+                "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
+                "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
+                "erneut versuchen.",
+                "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
+            // Exit application upon this fatal error
+            System.exit(1);
+        }
+    }
+
     /**
      * Each non abstract class that implements the ActionListener
      * must have this method.
@@ -154,19 +194,18 @@ public class TSEInitDialog extends DialogWindow implements WindowListener, Docum
      **/
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == okButton) {
-            // int answer = JOptionPane.showConfirmDialog(this,
-            //         "Bitte genau prüfen, ob die Eingaben stimmen!\n\n"+
-            //                 "Stimmt alles?",
-            //         "Alles korrekt?",
-            //         JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-            // if (answer == JOptionPane.YES_OPTION) {
-            //     LinkedHashMap<BigDecimal, Integer> zaehlprotokoll = getZaehlprotokoll();
-            //     // communicate that zehlprotokoll was successful:
-            //     this.abrechnungen.setZaehlprotokoll(zaehlprotokoll);
-            //     this.abrechnungen.setZaehlprotokollKommentar(kommentarArea.getText());
-            //     this.window.dispose();
-            // }
-            this.aborted = false;
+            int answer = JOptionPane.showConfirmDialog(this,
+                "Ganz sicher, dass die PINs und PUKs stimmen?\n"+
+                "Bitte die PINs/PUKs sorgfältig notieren.\n\n"+
+                "Dieser Schritt kann nicht rückgängig gemacht werden und\n"+
+                "die PINs/PUKs können nicht erneut gesetzt werden!",
+                "Fortfahren?",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (answer == JOptionPane.YES_OPTION) {
+                this.aborted = false;
+                initialize();
+                this.window.dispose();
+            }
             return;
         }
         if (e.getSource() == cancelButton) {
