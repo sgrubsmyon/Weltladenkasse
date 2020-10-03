@@ -76,66 +76,50 @@ public class TSEInitDialog extends DialogWindow implements WindowListener, Docum
         middlePanel.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
 
         JPanel adminPanel = new JPanel(new GridBagLayout());
-        // adminPanel.setBorder(BorderFactory.createTitledBorder("Admin"));
         GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.HORIZONTAL;
+        c.fill = GridBagConstraints.VERTICAL;
         c.anchor = GridBagConstraints.CENTER;
         c.ipadx = 15;
         c.ipady = 10;
         c.insets = new Insets(3, 0, 3, 3);
         c.gridy = 0;
         c.gridx = 0;
-        adminPanel.add(new BigLabel("Admin PIN:"), c);
+        adminPanel.add(new BigLabel("Admin PIN: (8-stellig)"), c);
         c.gridx = 1;
         adminPINField = new JTextField();
         adminPINField.setColumns(20);
         adminPINField.setHorizontalAlignment(SwingConstants.RIGHT);
         adminPINField.getDocument().addDocumentListener(this);
         adminPanel.add(adminPINField, c);
-        c.gridx = 2;
-        adminPanel.add(new BigLabel("Admin PUK:"), c);
-        c.gridx = 3;
+        c.gridy = 1;
+        c.gridx = 0;
+        adminPanel.add(new BigLabel("Admin PUK: (10-stellig)"), c);
+        c.gridx = 1;
         adminPUKField = new JTextField();
         adminPUKField.setColumns(20);
         adminPUKField.setHorizontalAlignment(SwingConstants.RIGHT);
         adminPUKField.getDocument().addDocumentListener(this);
         adminPanel.add(adminPUKField, c);
-        c.gridy = 1;
-        c.gridx = 0;
-        adminPanel.add(new BigLabel("TimeAdmin PIN:"), c);
-        c.gridx = 1;
+        c.gridy = 0;
+        c.gridx = 2;
+        adminPanel.add(new BigLabel("TimeAdmin PIN: (8-stellig)"), c);
+        c.gridx = 3;
         timeAdminPINField = new JTextField();
         timeAdminPINField.setColumns(20);
         timeAdminPINField.setHorizontalAlignment(SwingConstants.RIGHT);
         timeAdminPINField.getDocument().addDocumentListener(this);
         adminPanel.add(timeAdminPINField, c);
+        c.gridy = 1;
         c.gridx = 2;
-        adminPanel.add(new BigLabel("TimeAdmin PUK:"), c);
+        adminPanel.add(new BigLabel("TimeAdmin PUK: (10-stellig)"), c);
         c.gridx = 3;
         timeAdminPUKField = new JTextField();
         timeAdminPUKField.setColumns(20);
         timeAdminPUKField.setHorizontalAlignment(SwingConstants.RIGHT);
         timeAdminPUKField.getDocument().addDocumentListener(this);
         adminPanel.add(timeAdminPUKField, c);
-        
-        // JPanel timeAdminPanel = new JPanel(new GridBagLayout());
-        // timeAdminPanel.setBorder(BorderFactory.createTitledBorder("TimeAdmin"));
-        // c.gridy = 1;
-        // c.gridx = 0;
-        // timeAdminPanel.add(new BigLabel("TimeAdmin PIN:"), c);
-        // c.gridx = 1;
-        // timeAdminPINField = new JTextField();
-        // timeAdminPINField.setColumns(20);
-        // timeAdminPanel.add(timeAdminPINField, c);
-        // c.gridx = 2;
-        // timeAdminPanel.add(new BigLabel("TimeAdmin PUK:"), c);
-        // c.gridx = 3;
-        // timeAdminPUKField = new JTextField();
-        // timeAdminPUKField.setColumns(20);
-        // timeAdminPanel.add(timeAdminPUKField, c);
 
         middlePanel.add(adminPanel);
-        // middlePanel.add(timeAdminPanel);
 
         allPanel.add(middlePanel, BorderLayout.CENTER);
     }
@@ -238,7 +222,12 @@ public class TSEInitDialog extends DialogWindow implements WindowListener, Docum
      **/
     @Override
     public void insertUpdate(DocumentEvent documentEvent) {
-        if (adminPINField.getDocument().getLength() >= 1) {
+        if (
+            adminPINField.getDocument().getLength() == 8 &&
+            adminPUKField.getDocument().getLength() == 10 &&
+            timeAdminPINField.getDocument().getLength() == 8 &&
+            timeAdminPUKField.getDocument().getLength() == 10
+        ) {
             okButton.setEnabled(true);
         } else {
             okButton.setEnabled(false);
