@@ -3,6 +3,7 @@ package org.weltladen_bonn.pos.kasse;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
 
 // GUI stuff:
 import java.awt.BorderLayout;
@@ -13,6 +14,10 @@ import javax.swing.JOptionPane;
 import com.cryptovision.SEAPI.TSE;
 import com.cryptovision.SEAPI.TSE.LCS;
 import com.cryptovision.SEAPI.exceptions.SEException;
+import com.cryptovision.SEAPI.exceptions.ErrorTSECommandDataInvalid;
+import com.cryptovision.SEAPI.exceptions.ErrorSECommunicationFailed;
+import com.cryptovision.SEAPI.exceptions.ErrorSigningSystemOperationDataFailed;
+import com.cryptovision.SEAPI.exceptions.ErrorStorageFailure;
 
 // Logging:
 import org.apache.logging.log4j.LogManager;
@@ -99,7 +104,7 @@ public class WeltladenTSE {
                     "Es können jetzt die PINs und PUKs gesetzt werden, um die TSE zu initialisieren.\n"+
                     "Danach ist die TSE 'in Benutzung'.",
                     "Uninitialisierte TSE gefunden", JOptionPane.INFORMATION_MESSAGE);
-                initializeTSE();
+                showInitializeTSEDialog();
                 // Re-check if TSE was actually initialized:
                 pin_status = tse.getPinStatus();
                 transport_state = pin_status[0];
@@ -133,7 +138,7 @@ public class WeltladenTSE {
     private void printStatusValues() {
         System.out.println(
             "Eindeutige D-Trust-ID: "+
-            new String(tse.getUniqueId()) // (Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE)
+            new String(tse.getUniqueId(), StandardCharsets.ISO_8859_1) // (Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE)
         );
         try {
             LCS lcs = tse.getLifeCycleState(); // (Status-Abfrage des Lebenszyklus)
@@ -145,45 +150,131 @@ public class WeltladenTSE {
                 "Firmware-ID: "+
                 tse.getFirmwareId() // (Abfrage des Firmware Identifikations-Strings)
             );
-            System.out.println("Lebenszyklus: "+lcs);
+            System.out.println(
+                "Lebenszyklus: "+
+                lcs
+            );
+            System.out.println(
+                "Gesamte Speichergröße: "+
+                tse.getTotalLogMemory() / 1024 / 1024 + // (Abfrage der Größe des gesamten Speichers für abgesicherte Anwendungs- und Protokolldaten)
+                " MB"
+            );
+            System.out.println(
+                "Verfügbare Speichergröße: "+
+                tse.getAvailableLogMemory() / 1024 / 1024 + // (Abfrage der Größe des freien Speichers für abgesicherte Anwendungs- und Protokolldaten)
+                " MB"
+            );
+            System.out.println(
+                "Verschleiß des Speichers: "+
+                tse.getWearIndicator() // (Verschleißabfrage für den Speicher der abgesicherte Anwendungs- und Protokolldaten)
+            );
             if (lcs.toString() != "notInitialized") {
+                byte[] data = tse.exportSerialNumbers(); // (Rückgabe aller Signaturschlüssel-Seriennummern, sowie deren Verwendung)
+		        byte[] serialNumber = Arrays.copyOfRange(data, 6, 6+32);
                 System.out.println(
                     "Seriennummer(n) des/der Schlüssel(s): "+
-                    tse.exportSerialNumbers() // (Rückgabe aller Signaturschlüssel-Seriennummern, sowie deren Verwendung)
+                    serialNumber
                 );
-                // System.out.println(
-                //     "Ablaufdatum des Zertifikats: "+
-                // );
+                System.out.println(
+                    "Öffentlicher Schlüssel: "+
+                    tse.exportPublicKey(serialNumber) // (Rückgabe eines öffentlichen Schlüssels)
+                );
+                System.out.println(
+                    "Ablaufdatum des Zertifikats: "+
+                    tse.getCertificateExpirationDate(serialNumber) // (Abfrage des Ablaufdatums eines Zertifikats)
+                );
+                System.out.println(
+                    "Signatur-Zähler der letzten Signatur: "+
+                    tse.getSignatureCounter(serialNumber) // (Abfrage des Signatur-Zählers der letzten Signatur)
+                );
+                System.out.println(
+                    "Signatur-Algorithmus: "+
+                    tse.getSignatureAlgorithm() // (Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten)
+                );
+                System.out.println(
+                    "Zuordnungen von IDs zu Schlüsseln: "+
+                    new String(tse.getERSMappings(), StandardCharsets.ISO_8859_1) // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
+                );
+                System.out.println(
+                    "Maximale Clientzahl: "+
+                    tse.getMaxNumberOfClients() // (Abfrage der maximal gleichzeitig unterstützten Kassen-Terminals)
+                );
+                System.out.println(
+                    "Aktuelle Clientzahl: "+
+                    tse.getCurrentNumberOfClients() // (Abfrage der derzeit in Benutzung befindlichen Kassen-Terminals)
+                );
+                System.out.println(
+                    "Maximale Zahl offener Transaktionen: "+
+                    tse.getMaxNumberOfTransactions() // (Abfrage der maximal gleichzeitig offenen Transaktionen)
+                );
+                System.out.println(
+                    "Aktuelle Zahl offener Transaktionen: "+
+                    tse.getCurrentNumberOfTransactions() // (Abfrage der Anzahl der derzeit offenen Transaktionen)
+                );
+                System.out.println(
+                    "Transaktionsnummer der letzten Transaktionen: "+
+                    tse.getTransactionCounter() // (Abfrage der Transaktionsnummer der letzten Transaktion)
+                );
+                System.out.println(
+                    "Letzte Protokolldaten: "+
+                    new String(tse.readLogMessage(), StandardCharsets.ISO_8859_1) // (Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes)
+                );
             }
         } catch (SEException ex) {
             logger.error("Error at reading of TSE status values");
             logger.error("Exception: {}", ex);
         }
-        // tse.getCertificateExpirationDate() // (Abfrage des Ablaufdatums eines Zertifikats)
-        // tse.getERSMappings() // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
-        // tse.readLogMessage() // (Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes)
-        // tse.getMaxNumberOfClients() // (Abfrage der maximal gleichzeitig unterstützten Kassen-Terminals)
-        // tse.getCurrentNumberOfClients() // (Abfrage der derzeit in Benutzung befindlichen Kassen-Terminals)
-        // tse.getMaxNumberOfTransactions() // (Abfrage der maximal gleichzeitig offenen Transaktionen)
-        // tse.getCurrentNumberOfTransactions() // (Abfrage der Anzahl der derzeit offenen Transaktionen)
-        // tse.getTransactionCounter() // (Abfrage der Transaktionsnummer der letzten Transaktion)
-        // tse.getTotalLogMemory() // (Abfrage der Größe des gesamten Speichers für abgesicherte Anwendungs- und Protokolldaten)
-        // tse.getAvailableLogMemory() // (Abfrage der Größe des freien Speichers für abgesicherte Anwendungs- und Protokolldaten)
-        // tse.getSignatureCounter() // (Abfrage des Signatur-Zählers  der letzten Signatur)
-        // tse.getSignatureAlgorithm() // (Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten)
-        // tse.getWearIndicator() // (Verschleißabfrage für den Speicher der abgesicherte Anwendungs- und Protokolldaten)
-        // tse.exportPublicKey() // (Rückgabe eines öffentlichen Schlüssels)
     }
 
-    private void initializeTSE() {
+    private void showInitializeTSEDialog() {
         JDialog dialog = new JDialog(this.mainWindow, "Bitte PINs und PUKs der TSE eingeben", true);
-        TSEInitDialog tseid = new TSEInitDialog(this.mainWindow, dialog, tse);
+        TSEInitDialog tseid = new TSEInitDialog(this.mainWindow, dialog, this);
         dialog.getContentPane().add(tseid, BorderLayout.CENTER);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.pack();
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
         return;
+    }
+
+    public void initializeTSE(byte[] adminPIN, byte[] adminPUK, byte[] timeAdminPIN, byte[] timeAdminPUK) {
+        boolean passed = false;
+        String error = "";
+        try {
+            tse.initializePinValues(adminPIN, adminPUK, timeAdminPIN, timeAdminPUK);
+            passed = true;
+        } catch (ErrorTSECommandDataInvalid ex) {
+            error = "Data given to TSE's initializePinValues() invalid";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorSECommunicationFailed ex) {
+            error = "SE communication failed";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorSigningSystemOperationDataFailed ex) {
+            error = "Signing system operation data failed";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorStorageFailure ex) {
+            error = "Storage failure";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (SEException ex) {
+            error = "Unknown error during initializePinValues()";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        }
+        if (!passed) {
+            JOptionPane.showMessageDialog(this.mainWindow,
+                "ACHTUNG: Die TSE konnte nicht initialisiert werden!\n\n"+
+                "Fehler: "+error+"\n\n"+
+                "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
+                "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
+                "erneut versuchen.",
+                "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
+            // Exit application upon this fatal error
+            System.exit(1);
+        }
     }
 
 }
