@@ -3,7 +3,14 @@ package org.weltladen_bonn.pos.kasse;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
+import java.util.Set;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.FileSystems;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.nio.file.Path;
 
 // GUI stuff:
 import java.awt.BorderLayout;
@@ -135,7 +142,7 @@ public class WeltladenTSE {
         return;
     }
 
-    private void printStatusValues() {
+    public void printStatusValues() {
         System.out.println(
             "Eindeutige D-Trust-ID: "+
             new String(tse.getUniqueId(), StandardCharsets.ISO_8859_1) // (Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE)
@@ -240,29 +247,42 @@ public class WeltladenTSE {
     public void initializeTSE(byte[] adminPIN, byte[] adminPUK, byte[] timeAdminPIN, byte[] timeAdminPUK) {
         boolean passed = false;
         String error = "";
-        try {
-            tse.initializePinValues(adminPIN, adminPUK, timeAdminPIN, timeAdminPUK);
+        // try {
+            System.out.println("BEFORE:");
+            printStatusValues();
+            // tse.initializePinValues(adminPIN, adminPUK, timeAdminPIN, timeAdminPUK);
+            System.out.println("AFTER:");
+            printStatusValues();
             passed = true;
-        } catch (ErrorTSECommandDataInvalid ex) {
-            error = "Data given to TSE's initializePinValues() invalid";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
-        } catch (ErrorSECommunicationFailed ex) {
-            error = "SE communication failed";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
-        } catch (ErrorSigningSystemOperationDataFailed ex) {
-            error = "Signing system operation data failed";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
-        } catch (ErrorStorageFailure ex) {
-            error = "Storage failure";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
-        } catch (SEException ex) {
-            error = "Unknown error during initializePinValues()";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+        // } catch (ErrorTSECommandDataInvalid ex) {
+        //     error = "Data given to TSE's initializePinValues() invalid";
+        //     logger.fatal("Fatal Error: {}", error);
+        //     logger.fatal("Exception: {}", ex);
+        // } catch (ErrorSECommunicationFailed ex) {
+        //     error = "SE communication failed";
+        //     logger.fatal("Fatal Error: {}", error);
+        //     logger.fatal("Exception: {}", ex);
+        // } catch (ErrorSigningSystemOperationDataFailed ex) {
+        //     error = "Signing system operation data failed";
+        //     logger.fatal("Fatal Error: {}", error);
+        //     logger.fatal("Exception: {}", ex);
+        // } catch (ErrorStorageFailure ex) {
+        //     error = "Storage failure";
+        //     logger.fatal("Fatal Error: {}", error);
+        //     logger.fatal("Exception: {}", ex);
+        // } catch (SEException ex) {
+        //     error = "Unknown error during initializePinValues()";
+        //     logger.fatal("Fatal Error: {}", error);
+        //     logger.fatal("Exception: {}", ex);
+        // }
+        try {
+            Set<PosixFilePermission> ownerReadOnly = PosixFilePermissions.fromString("rw-------");
+            FileAttribute<?> permissions = PosixFilePermissions.asFileAttribute(ownerReadOnly);
+            Path path = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".Weltladenkasse_tse");
+            Files.createFile(path, permissions);
+        } catch (IOException ex) {
+            logger.error("Could not create file '~/.Weltladenkasse_tse' storing the TSE timeAdminPIN");
+            logger.error("Exception: {}", ex);
         }
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
