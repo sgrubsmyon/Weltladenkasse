@@ -2,8 +2,10 @@ package org.weltladen_bonn.pos.kasse;
 
 import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Set;
+import java.util.Properties;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.FileSystems;
@@ -247,42 +249,33 @@ public class WeltladenTSE {
     public void initializeTSE(byte[] adminPIN, byte[] adminPUK, byte[] timeAdminPIN, byte[] timeAdminPUK) {
         boolean passed = false;
         String error = "";
-        // try {
+        try {
             System.out.println("BEFORE:");
             printStatusValues();
-            // tse.initializePinValues(adminPIN, adminPUK, timeAdminPIN, timeAdminPUK);
+            tse.initializePinValues(adminPIN, adminPUK, timeAdminPIN, timeAdminPUK);
             System.out.println("AFTER:");
             printStatusValues();
             passed = true;
-        // } catch (ErrorTSECommandDataInvalid ex) {
-        //     error = "Data given to TSE's initializePinValues() invalid";
-        //     logger.fatal("Fatal Error: {}", error);
-        //     logger.fatal("Exception: {}", ex);
-        // } catch (ErrorSECommunicationFailed ex) {
-        //     error = "SE communication failed";
-        //     logger.fatal("Fatal Error: {}", error);
-        //     logger.fatal("Exception: {}", ex);
-        // } catch (ErrorSigningSystemOperationDataFailed ex) {
-        //     error = "Signing system operation data failed";
-        //     logger.fatal("Fatal Error: {}", error);
-        //     logger.fatal("Exception: {}", ex);
-        // } catch (ErrorStorageFailure ex) {
-        //     error = "Storage failure";
-        //     logger.fatal("Fatal Error: {}", error);
-        //     logger.fatal("Exception: {}", ex);
-        // } catch (SEException ex) {
-        //     error = "Unknown error during initializePinValues()";
-        //     logger.fatal("Fatal Error: {}", error);
-        //     logger.fatal("Exception: {}", ex);
-        // }
-        try {
-            Set<PosixFilePermission> ownerReadOnly = PosixFilePermissions.fromString("rw-------");
-            FileAttribute<?> permissions = PosixFilePermissions.asFileAttribute(ownerReadOnly);
-            Path path = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".Weltladenkasse_tse");
-            Files.createFile(path, permissions);
-        } catch (IOException ex) {
-            logger.error("Could not create file '~/.Weltladenkasse_tse' storing the TSE timeAdminPIN");
-            logger.error("Exception: {}", ex);
+        } catch (ErrorTSECommandDataInvalid ex) {
+            error = "Data given to TSE's initializePinValues() invalid";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorSECommunicationFailed ex) {
+            error = "SE communication failed";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorSigningSystemOperationDataFailed ex) {
+            error = "Signing system operation data failed";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorStorageFailure ex) {
+            error = "Storage failure";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (SEException ex) {
+            error = "Unknown error during initializePinValues()";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
         }
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
@@ -294,6 +287,25 @@ public class WeltladenTSE {
                 "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error
             System.exit(1);
+        } else {
+            writeTimeAdminPINtoFile(timeAdminPIN);
+        }
+    }
+
+    private void writeTimeAdminPINtoFile(byte[] timeAdminPIN) {
+        try {
+            // Create a file in user's home directory that only she is allowed to read/write to
+            Set<PosixFilePermission> ownerOnly = PosixFilePermissions.fromString("rw-------");
+            FileAttribute<?> permissions = PosixFilePermissions.asFileAttribute(ownerOnly);
+            Path path = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".Weltladenkasse_tse");
+            Files.createFile(path, permissions);
+            // Save the timeAdminPIN as a property to that file
+            Properties props = new Properties();
+            props.setProperty("timeAdminPIN", new String(timeAdminPIN));
+            props.store(new FileOutputStream(path.toFile()), "TSE properties for Weltladenkasse");
+        } catch (IOException ex) {
+            logger.error("Could not create file '~/.Weltladenkasse_tse' storing the TSE timeAdminPIN");
+            logger.error("Exception: {}", ex);
         }
     }
 
