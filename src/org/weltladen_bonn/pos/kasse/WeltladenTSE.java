@@ -2,6 +2,7 @@ package org.weltladen_bonn.pos.kasse;
 
 import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Set;
@@ -22,11 +23,15 @@ import javax.swing.JOptionPane;
 // TSE: (BSI, use implementation by Bundesdruckerei/D-Trust/cryptovision)
 import com.cryptovision.SEAPI.TSE;
 import com.cryptovision.SEAPI.TSE.LCS;
+import com.cryptovision.SEAPI.TSE.AuthenticateUserResult;
+import com.cryptovision.SEAPI.TSE.AuthenticationResult;
 import com.cryptovision.SEAPI.exceptions.SEException;
 import com.cryptovision.SEAPI.exceptions.ErrorTSECommandDataInvalid;
 import com.cryptovision.SEAPI.exceptions.ErrorSECommunicationFailed;
 import com.cryptovision.SEAPI.exceptions.ErrorSigningSystemOperationDataFailed;
 import com.cryptovision.SEAPI.exceptions.ErrorStorageFailure;
+import com.cryptovision.SEAPI.exceptions.ErrorRetrieveLogMessageFailed;
+import com.cryptovision.SEAPI.exceptions.ErrorSecureElementDisabled;
 
 // Logging:
 import org.apache.logging.log4j.LogManager;
@@ -43,6 +48,7 @@ public class WeltladenTSE {
 
     private TSE tse = null;
     private MainWindow mainWindow = null;
+    private Path pin_path = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".Weltladenkasse_tse");
 
     /**
      *    The constructor.
@@ -84,7 +90,7 @@ public class WeltladenTSE {
             // (so it seems usage of TSE is desired), but it could not be read from it.
             System.exit(1);
         } catch (SEException ex) {
-            logger.fatal("Unable to open connection to TSE, given configuration provided by '{}'.", "config.txt");
+            logger.fatal("Unable to open connection to TSE, given configuration provided by '{}'.", "config_tse.txt");
             logger.fatal("Exception: {}", ex);
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Es konnte keine Verbindung zur TSE aufgebaut werden!\n"+
@@ -106,6 +112,7 @@ public class WeltladenTSE {
         try {
             boolean[] pin_status = tse.getPinStatus();
             boolean transport_state = pin_status[0];
+            byte[] adminPIN = null;
             if (transport_state) {
                 JOptionPane.showMessageDialog(this.mainWindow,
                     "ACHTUNG: Eine noch nicht initialisierte TSE wurde gefunden.\n"+
@@ -113,7 +120,7 @@ public class WeltladenTSE {
                     "Es können jetzt die PINs und PUKs gesetzt werden, um die TSE zu initialisieren.\n"+
                     "Danach ist die TSE 'in Benutzung'.",
                     "Uninitialisierte TSE gefunden", JOptionPane.INFORMATION_MESSAGE);
-                showInitializeTSEDialog();
+                adminPIN = showInitializeTSEDialog();
                 // Re-check if TSE was actually initialized:
                 pin_status = tse.getPinStatus();
                 transport_state = pin_status[0];
@@ -127,6 +134,9 @@ public class WeltladenTSE {
                         "Fehler bei der Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
                     System.exit(1);
                 }
+            }
+            if (tse.getLifeCycleState() == LCS.notInitialized) {
+                initializeTSE(adminPIN);
             }
         } catch (SEException ex) {
             logger.fatal("Unable to check initialization status of TSE");
@@ -235,7 +245,7 @@ public class WeltladenTSE {
         }
     }
 
-    private void showInitializeTSEDialog() {
+    private byte[] showInitializeTSEDialog() {
         JDialog dialog = new JDialog(this.mainWindow, "Bitte PINs und PUKs der TSE eingeben", true);
         TSEInitDialog tseid = new TSEInitDialog(this.mainWindow, dialog, this);
         dialog.getContentPane().add(tseid, BorderLayout.CENTER);
@@ -243,17 +253,28 @@ public class WeltladenTSE {
         dialog.pack();
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
-        return;
+        return tseid.getAdminPIN();
     }
 
-    public void initializeTSE(byte[] adminPIN, byte[] adminPUK, byte[] timeAdminPIN, byte[] timeAdminPUK) {
+    private byte[] showPINentryDialog(String role, String numbertype, int places) {
+        JDialog dialog = new JDialog(this.mainWindow, "Bitte "+role+" "+numbertype+" der TSE eingeben", true);
+        TSEPINEntryDialog tseped = new TSEPINEntryDialog(this.mainWindow, dialog, this, role, numbertype, places);
+        dialog.getContentPane().add(tseped, BorderLayout.CENTER);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.pack();
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
+        return tseped.getPIN();
+    }
+
+    public void setPINandPUK(byte[] adminPIN, byte[] adminPUK, byte[] timeAdminPIN, byte[] timeAdminPUK) {
         boolean passed = false;
         String error = "";
         try {
-            System.out.println("BEFORE:");
+            System.out.println("BEFORE initializePinValues():");
             printStatusValues();
             tse.initializePinValues(adminPIN, adminPUK, timeAdminPIN, timeAdminPUK);
-            System.out.println("AFTER:");
+            System.out.println("AFTER initializePinValues():");
             printStatusValues();
             passed = true;
         } catch (ErrorTSECommandDataInvalid ex) {
@@ -279,7 +300,7 @@ public class WeltladenTSE {
         }
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Die TSE konnte nicht initialisiert werden!\n\n"+
+                "ACHTUNG: Die PINs und PUKs der TSE konnten nicht gesetzt werden!\n\n"+
                 "Fehler: "+error+"\n\n"+
                 "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
                 "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
@@ -292,21 +313,100 @@ public class WeltladenTSE {
         }
     }
 
-    private void writeTimeAdminPINtoFile(byte[] timeAdminPIN) {
+    public void writeTimeAdminPINtoFile(byte[] timeAdminPIN) {
         try {
-            // Create a file in user's home directory that only she is allowed to read/write to
-            Set<PosixFilePermission> ownerOnly = PosixFilePermissions.fromString("rw-------");
-            FileAttribute<?> permissions = PosixFilePermissions.asFileAttribute(ownerOnly);
-            Path path = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".Weltladenkasse_tse");
-            Files.createFile(path, permissions);
+            // Create a file in user's home directory that only she is allowed to read/write to (at least on Linux where file permissions exist)
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("win")) {
+                Files.createFile(pin_path);
+            } else {
+                Set<PosixFilePermission> ownerOnly = PosixFilePermissions.fromString("rw-------");
+                FileAttribute<?> permissions = PosixFilePermissions.asFileAttribute(ownerOnly);
+                Files.createFile(pin_path, permissions);
+            }
             // Save the timeAdminPIN as a property to that file
             Properties props = new Properties();
             props.setProperty("timeAdminPIN", new String(timeAdminPIN));
-            props.store(new FileOutputStream(path.toFile()), "TSE properties for Weltladenkasse");
+            props.store(new FileOutputStream(pin_path.toFile()), "TSE properties for Weltladenkasse");
         } catch (IOException ex) {
             logger.error("Could not create file '~/.Weltladenkasse_tse' storing the TSE timeAdminPIN");
             logger.error("Exception: {}", ex);
         }
     }
 
+    // method for reading the timeAdminPIN from a file in home directory whenever it is needed
+    private byte[] readTimeAdminPINFromFile() {
+        try {
+            Properties props = new Properties();
+            props.load(new FileInputStream(pin_path.toFile()));
+            return props.getProperty("timeAdminPIN").getBytes();
+        } catch (FileNotFoundException ex) {
+            logger.error("File '~/.Weltladenkasse_tse' for storing timeAdminPIN not found.");
+            logger.error("Exception: {}", ex);
+            return showPINentryDialog("TimeAdmin", "PIN", 8);
+        } catch (IOException ex) {
+            logger.error("Could not read timeAdminPIN from file '~/.Weltladenkasse_tse'");
+            logger.error("Exception: {}", ex);
+            return showPINentryDialog("TimeAdmin", "PIN", 8);
+        }
+    }
+
+    private void initializeTSE(byte[] adminPIN) {
+        if (null == adminPIN) {
+            adminPIN = showPINentryDialog("Admin", "PIN", 8);
+        }
+        boolean passed = false;
+        String error = "";
+        try {
+            AuthenticateUserResult res = tse.authenticateUser("Admin", adminPIN);
+            if (res.authenticationResult != AuthenticationResult.ok) {
+                JOptionPane.showMessageDialog(this.mainWindow,
+                    "ACHTUNG: Authentifizierungsfehler bei der TSE!\n\n"+
+                    "authenticationResult: "+res.authenticationResult.toString()+"\n\n"+
+                    "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
+                    "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
+                    "erneut versuchen.",
+                    "Fehlgeschlagene Authentifizierung bei der TSE", JOptionPane.ERROR_MESSAGE);
+                // Exit application upon this fatal error
+                System.exit(1);
+            }
+            System.out.println("BEFORE initialize():");
+            printStatusValues();
+            tse.initialize();
+            System.out.println("AFTER initialize():");
+            printStatusValues();
+            passed = true;
+        } catch (ErrorSigningSystemOperationDataFailed ex) {
+            error = "Signing system operation data failed";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorRetrieveLogMessageFailed ex) {
+            error = "Retrieve log message failed";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorStorageFailure ex) {
+            error = "Storage failure";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorSecureElementDisabled ex) {
+            error = "Secure Element disabled";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (SEException ex) {
+            error = "Unknown error during initializeTSE()";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        }
+        if (!passed) {
+            JOptionPane.showMessageDialog(this.mainWindow,
+                "ACHTUNG: Die TSE konnte nicht initialisiert werden!\n\n"+
+                "Fehler: "+error+"\n\n"+
+                "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
+                "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
+                "erneut versuchen.",
+                "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
+            // Exit application upon this fatal error
+            System.exit(1);
+        }
+    }
 }

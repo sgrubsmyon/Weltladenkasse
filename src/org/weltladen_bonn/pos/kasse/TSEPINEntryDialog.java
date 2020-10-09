@@ -18,26 +18,29 @@ import javax.swing.event.DocumentEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class TSEInitDialog extends DialogWindow implements WindowListener, DocumentListener {
+public class TSEPINEntryDialog extends DialogWindow implements WindowListener, DocumentListener {
     private static final Logger logger = LogManager.getLogger(TSEInitDialog.class);
 
     private WeltladenTSE tse = null;
 
-    private JTextField adminPINField;
-    private JTextField adminPUKField;
-    private JTextField timeAdminPINField;
-    private JTextField timeAdminPUKField;
+    private JTextField pinField;
+    private String role;
+    private String numbertype;
+    private int places;
 
     private JButton okButton;
     private JButton cancelButton;
     private boolean aborted = true;
 
     // Methoden:
-    public TSEInitDialog(MainWindowGrundlage mw, JDialog dia, WeltladenTSE _tse) {
+    public TSEPINEntryDialog(MainWindowGrundlage mw, JDialog dia, WeltladenTSE _tse, String r, String nt, int p) {
         super(null, mw, dia);
         showAll();
         dia.addWindowListener(this);
         this.tse = _tse;
+        this.role = r;
+        this.numbertype = nt;
+        this.places = p;
     }
 
     // will data be lost on close?
@@ -57,8 +60,15 @@ public class TSEInitDialog extends DialogWindow implements WindowListener, Docum
         headerPanel.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
 
         JTextArea erklaerText = new JTextArea(2, 30);
-        erklaerText.append("Die TSE muss vor ihrer ersten Benutzung initialisiert werden.\n" +
-                "Dies geschieht durch die Eingabe der PIN- und PUK-Codes.");
+        if (role == "TimeAdmin" && numbertype == "PIN") {
+            erklaerText.append(
+                "Die TimeAdmin PIN der TSE konnte nicht geladen werden.\n"+
+                "Bitte jetzt eingeben.\n"+
+                "Es wird dann (erneut) versucht, die PIN dauerhaft\n"+
+                "zu speichern.");
+        } else {
+            erklaerText.append("Bitte die "+role+" "+numbertype+" der TSE eingeben.");
+        }
         erklaerText = makeLabelStyle(erklaerText);
         erklaerText.setFont(BaseClass.mediumFont);
         erklaerText.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
@@ -87,40 +97,13 @@ public class TSEInitDialog extends DialogWindow implements WindowListener, Docum
         c.insets = new Insets(3, 0, 3, 3);
         c.gridy = 0;
         c.gridx = 0;
-        adminPanel.add(new BigLabel("Admin PIN: (8-stellig)"), c);
+        adminPanel.add(new BigLabel(role+" "+numbertype+": ("+places+"-stellig)"), c);
         c.gridx = 1;
-        adminPINField = new JTextField();
-        adminPINField.setColumns(20);
-        adminPINField.setHorizontalAlignment(SwingConstants.RIGHT);
-        adminPINField.getDocument().addDocumentListener(this);
-        adminPanel.add(adminPINField, c);
-        c.gridy = 1;
-        c.gridx = 0;
-        adminPanel.add(new BigLabel("Admin PUK: (10-stellig)"), c);
-        c.gridx = 1;
-        adminPUKField = new JTextField();
-        adminPUKField.setColumns(20);
-        adminPUKField.setHorizontalAlignment(SwingConstants.RIGHT);
-        adminPUKField.getDocument().addDocumentListener(this);
-        adminPanel.add(adminPUKField, c);
-        c.gridy = 0;
-        c.gridx = 2;
-        adminPanel.add(new BigLabel("TimeAdmin PIN: (8-stellig)"), c);
-        c.gridx = 3;
-        timeAdminPINField = new JTextField();
-        timeAdminPINField.setColumns(20);
-        timeAdminPINField.setHorizontalAlignment(SwingConstants.RIGHT);
-        timeAdminPINField.getDocument().addDocumentListener(this);
-        adminPanel.add(timeAdminPINField, c);
-        c.gridy = 1;
-        c.gridx = 2;
-        adminPanel.add(new BigLabel("TimeAdmin PUK: (10-stellig)"), c);
-        c.gridx = 3;
-        timeAdminPUKField = new JTextField();
-        timeAdminPUKField.setColumns(20);
-        timeAdminPUKField.setHorizontalAlignment(SwingConstants.RIGHT);
-        timeAdminPUKField.getDocument().addDocumentListener(this);
-        adminPanel.add(timeAdminPUKField, c);
+        pinField = new JTextField();
+        pinField.setColumns(20);
+        pinField.setHorizontalAlignment(SwingConstants.RIGHT);
+        pinField.getDocument().addDocumentListener(this);
+        adminPanel.add(pinField, c);
 
         middlePanel.add(adminPanel);
 
@@ -149,8 +132,8 @@ public class TSEInitDialog extends DialogWindow implements WindowListener, Docum
         return 0;
     }
 
-    public byte[] getAdminPIN() {
-        return adminPINField.getText().getBytes();
+    public byte[] getPIN() {
+        return pinField.getText().getBytes();
     }
 
     /**
@@ -162,19 +145,15 @@ public class TSEInitDialog extends DialogWindow implements WindowListener, Docum
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == okButton) {
             int answer = JOptionPane.showConfirmDialog(this,
-                "Ganz sicher, dass die PINs und PUKs stimmen?\n"+
-                "Bitte die PINs/PUKs sorgfältig notieren.\n\n"+
-                "Dieser Schritt kann nicht rückgängig gemacht werden und\n"+
-                "die PINs/PUKs können nicht erneut gesetzt werden!",
+                "Sicher, dass die "+role+" "+numbertype+" stimmt?",
                 "Fortfahren?",
                 JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (answer == JOptionPane.YES_OPTION) {
                 this.aborted = false;
-                byte[] adminPIN = adminPINField.getText().getBytes();
-                byte[] adminPUK = adminPUKField.getText().getBytes();
-                byte[] timeAdminPIN = timeAdminPINField.getText().getBytes();
-                byte[] timeAdminPUK = timeAdminPUKField.getText().getBytes();
-                tse.setPINandPUK(adminPIN, adminPUK, timeAdminPIN, timeAdminPUK);
+                if (role == "TimeAdmin" && numbertype == "PIN") {
+                    byte[] timeAdminPIN = pinField.getText().getBytes();
+                    tse.writeTimeAdminPINtoFile(timeAdminPIN);
+                }
                 this.window.dispose();
             }
             return;
@@ -194,13 +173,13 @@ public class TSEInitDialog extends DialogWindow implements WindowListener, Docum
      **/
     public void windowClosed(WindowEvent e) {
         if (this.aborted) {
-            logger.fatal("TSE initialization was canceled by user!");
+            logger.fatal("TSE PIN entry was canceled by user!");
             JOptionPane.showMessageDialog(this.window,
-                "ACHTUNG: Die Initialisierung der TSE wurde abgebrochen!\n"+
-                "Ohne Initialisierung kann eine neue TSE nicht verwendet werden.\n"+
+                "ACHTUNG: Die "+numbertype+"-Eingabe der TSE wurde abgebrochen!\n"+
+                "Ohne "+numbertype+" kann die TSE nicht verwendet werden.\n"+
                 "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
-                "Bitte beim nächsten Start der Kassensoftware die TSE initialisieren.",
-                "Abbruch der Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
+                "Bitte beim nächsten mal die "+numbertype+" eingeben.",
+                "Abbruch der "+numbertype+"-Eingabe der TSE", JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         }
     }
@@ -232,12 +211,7 @@ public class TSEInitDialog extends DialogWindow implements WindowListener, Docum
      **/
     @Override
     public void insertUpdate(DocumentEvent documentEvent) {
-        if (
-            adminPINField.getDocument().getLength() == 8 &&
-            adminPUKField.getDocument().getLength() == 10 &&
-            timeAdminPINField.getDocument().getLength() == 8 &&
-            timeAdminPUKField.getDocument().getLength() == 10
-        ) {
+        if (pinField.getDocument().getLength() == 8) {
             okButton.setEnabled(true);
         } else {
             okButton.setEnabled(false);
