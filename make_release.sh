@@ -18,11 +18,13 @@ rsync -aPvci config.properties $releasedir
 rsync -aPvci config_Windows.properties $releasedir
 rsync -aPvci config_log4j2.xml $releasedir
 rsync -aPvci config_tse.txt $releasedir
+rsync -aPvci dll/ $releasedir
 rsync -aPvci --delete --exclude=".*" vorlagen $releasedir
 rsync -aPvci README.md $releasedir
 rsync -aPvci install-ubuntu.sh $releasedir
 rsync -aPvci install-arch.sh $releasedir
 rsync -aPvci --delete --exclude=".*" mysql $releasedir
+
 rsync -aPvci Weltladenkasse_$version.jar $trainingdir
 rsync -aPvci Weltladenbesteller_$version.jar $trainingdir
 rsync -aPvci Weltladenkasse.bat $trainingdir
