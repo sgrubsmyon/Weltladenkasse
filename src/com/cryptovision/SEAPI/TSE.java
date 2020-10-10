@@ -342,7 +342,7 @@ public abstract class TSE {
 	/**
 	 * maximum size of <code>processData</code>.
 	 * @since 0.99+
-	 * @Deprecated see {@link #MAX_SIZE_TRANSPORT_LAYER}
+	 * @deprecated see {@link #MAX_SIZE_TRANSPORT_LAYER}
 	 */
 	public static final int MAX_LEN_PROCESS_DATA    = 8096;
 	/**
@@ -504,7 +504,7 @@ public abstract class TSE {
 	 * @throws ErrorParameterMismatch
 	 * @throws ErrorSeApiNotInitialized
 	 * @throws IOException
-	 * @Deprecated Use {@link #exportData(String, Long, Long, Long, Long, Long, Long)} instead.
+	 * @deprecated Use {@link #exportData(String, Long, Long, Long, Long, Long, Long)} instead.
 	 */
 	public final byte[] exportData(String clientId, long transactionNumber, long startTransactionNumber, long endTransactionNumber, long startDate, long endDate, long maximumNumberRecords) throws SEException, IOException {
 		Long transactionNumberL      = transactionNumber;
@@ -580,7 +580,7 @@ public abstract class TSE {
 	 */
 	public abstract byte[] exportCertificates() throws SEException;
 	/**
-	 * @Deprecated typo in method name compared to TR-03151, use {@link #exportCertificates()}
+	 * @deprecated typo in method name compared to TR-03151, use {@link #exportCertificates()}
 	 */
 	public final byte[] exportCertificate() throws SEException { return exportCertificates(); }
 
@@ -757,7 +757,7 @@ public abstract class TSE {
 	 * @throws ErrorSeApiNotInitialized
 	 * @throws ErrorSecureElementDisabled
 	 * @since 0.97
-	 * @Deprecated see {@link #getTimeSyncInterval()}
+	 * @deprecated see {@link #getTimeSyncInterval()}
 	 */
 	public final int getTimeUpdateInterval() throws SEException {
 		return getTimeSyncInterval();
@@ -810,7 +810,7 @@ public abstract class TSE {
 
 	/**
 	 * Log out a user.
-	 * @Deprecated see {@link #logOut(String)}
+	 * @deprecated see {@link #logOut(String)}
 	 *
 	 * @throws ErrorUserIdNotManaged
 	 * @throws ErrorSigningSystemOperationDataFailed

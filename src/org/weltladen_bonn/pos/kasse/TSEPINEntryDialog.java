@@ -35,12 +35,12 @@ public class TSEPINEntryDialog extends DialogWindow implements WindowListener, D
     // Methoden:
     public TSEPINEntryDialog(MainWindowGrundlage mw, JDialog dia, WeltladenTSE _tse, String r, String nt, int p) {
         super(null, mw, dia);
-        showAll();
-        dia.addWindowListener(this);
         this.tse = _tse;
         this.role = r;
         this.numbertype = nt;
         this.places = p;
+        showAll();
+        dia.addWindowListener(this);
     }
 
     // will data be lost on close?
