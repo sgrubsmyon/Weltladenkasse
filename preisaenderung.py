@@ -36,13 +36,6 @@
         9999386), denn wir haben ein anderes Pfandsystem (bei uns entspricht
         PFAND2 der 0,33 l Flasche für 8 ct, dafür haben wir nicht die
         GEPA-Pfandflasche 9999385 und GEPA-Pfandkiste 9999386)
-    * Nach fehlender Einheit suchen (mit Ctrl-Down zu Lücken springen), in
-        fast allen Fällen (außer z.B. 70 g Gewürzgeschenkbox, Kokoblock) "St."
-        eintragen und Menge anpassen (z.B. 5 für Muskatnüsse)
-    OR:
-    * After running script, search for "zu 0 " in output, correct the Menge
-        values in the FHZ file and Einheit to "St." (e.g. Vanilleschoten
-        'ma110100', 'sl115108', 'rfb116032')
 10.) Datei
     "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX_mitFormeln.ods"
     kopieren, einfügen und umbenennen in
@@ -50,7 +43,15 @@
     Neue Datei "ohneFormeln" öffnen. Die linken Spalten (A bis T) markieren,
     kopieren (Ctrl-C) und mit Ctrl-Shift-V einfügen, so dass die Formeln
     verschwinden. Dann den rechten Block (ab Spalte V) markieren und mit
-    Ctrl-Minus löschen. Speichern.
+    Ctrl-Minus löschen.
+    * Nach fehlender Einheit suchen (mit Ctrl-Down zu Lücken springen), in
+        fast allen Fällen (außer z.B. 70 g Gewürzgeschenkbox, Kokoblock) "St."
+        eintragen und Menge anpassen (z.B. 5 für Muskatnüsse)
+    OR:
+    * After running script, search for "zu 0 " in output, correct the Menge
+        values in the FHZ file and Einheit to "St." (e.g. Vanilleschoten
+        'ma110100', 'sl115108', 'rfb116032')
+    Speichern.
 11.) "File -> Save a Copy" und als csv-Datei
     "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX.csv" exportieren.
     WICHTIG: Als "Field Delimiter" ';' auswählen, als "Text Delimiter" '"'!
@@ -64,6 +65,14 @@
         diese erzeugen später weitere Fehlermeldungen (Fehler evtl. ans FHZ
         melden)
     * Änderungen prüfen und ggf. eingreifen
+    * ACHTUNG: Mini-Täfelchen nicht ändern, d.h. aus
+        preisänderung_irgendeine_änderung.csv und
+        preisänderung_geänderte_preise_sortiment.csv (Nr. 8901827 und 8901828)
+        löschen! (VPE ist zwar 5, aber auf 1 lassen, weil wir sowieso keinen Rabatt
+        kriegen und 500 Täfelchen ein MHD-Problem verursachen.)
+        (Außer wenn sich der Empf. VKP von 9 EUR tatsächlich ändert). Im WLB ist
+        der VKP mit Absicht höher als der Empf. VKP und die VPE ist mit Absicht
+        (falsch) auf 1 gesetzt.
     * ACHTUNG: Wenn Menge oder Einheit sich geändert haben, muss ggf. der Artikelname
         in preisänderung.csv von Hand geändert werden, wenn nicht -n benutzt wird.
         Am besten auf einem Zettel notieren und hinterher händisch machen.
@@ -71,18 +80,6 @@
         ist (Fehler evtl. ans FHZ melden)
     * Auch gucken, ob neue Artikel eigentlich beim FHZ durchgestrichen sind und
         wir sie schon aus der DB entfernt haben.
-    * ACHTUNG: Mini-Täfelchen nicht ändern, d.h. aus
-        preisaenderung_irgendeine_änderung.csv und
-        preisänderung_geänderte_preise_sortiment.csv (Nr. 8901827 und 8901828)
-        löschen! (VPE ist zwar 5, aber auf 1 lassen, weil wir sowieso keinen Rabatt
-        kriegen und 500 Täfelchen ein MHD-Problem verursachen.)
-        (Außer wenn sich der Empf. VKP von 8 EUR tatsächlich ändert). Im WLB ist
-        der VKP mit Absicht höher als der Empf. VKP und die VPE ist mit Absicht
-        (falsch) auf 1 gesetzt.
-    * ACHTUNG: Artikel LT401 (Limoncello) ist beim FHZ von CTM, ist aber eigentlich
-        Libera Terra, bei uns ist der Lieferant also Libera Terra. Manuell in der
-        FHZ-Liste ändern und nicht neuen Artikel anlegen lassen! (Macht sonst Probleme
-        beim Scannen)
 14.) Punkt 10 und 11 so lange ausführen, bis alles OK ist.
 15.) Ergebnisse werden gespeichert in Dateien:
     * "preisänderung.csv" (alle Artikel, aktualisiert)
@@ -107,9 +104,9 @@
         werden.
         Daher: Die Spalte "Menge (kg/l/St.)" anklicken und Typ auf "Text"
             setzen.
-17.) Als ods-Datei speichern (Save As, "Artikelliste_LM_NEU.ods").
+17.) Als ods-Datei speichern (Save As, "Artikelliste_LM_neu.ods").
 18.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
-    die Datei "Artikelliste_LM_NEU.ods" auswählen.
+    die Datei "Artikelliste_LM_neu.ods" auswählen.
 19.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
     "preisänderung_geänderte_preise_sortiment.csv" auswählen.
 20.) Die Datei "preisänderung_neue_artikel.csv" mit LibreOffice öffnen,
@@ -366,8 +363,6 @@ def main():
         if i[0] == 'EP' else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('El Puente', i[1])
         if i[0] == 'EP\n(fairfood)' else i, fhz.index.tolist())), names=fhz.index.names)
-    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Bannmühle', i[1])
-        if i[0] == 'Bannmühle/dwp' else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Fairtrade Center Breisgau', i[1])
         if i[0] == 'ftc' else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('Café Libertad', i[1])
