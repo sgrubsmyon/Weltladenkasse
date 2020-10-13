@@ -80,7 +80,7 @@ public abstract class Transport {
 	protected int IO_TIMEOUT = 5000; // 5 sec default...
 
 	/**
-	 * @deprecated for internal / legacy use only.
+	 * @Deprecated for internal / legacy use only.
 	 */
 	public static Transport getInstance(String configFileName) throws FileNotFoundException, IOException, GetInstanceException {
 		Properties props = new Properties();
