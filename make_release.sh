@@ -18,7 +18,7 @@ rsync -aPvci config.properties $releasedir
 rsync -aPvci config_Windows.properties $releasedir
 rsync -aPvci config_log4j2.xml $releasedir
 rsync -aPvci config_tse.txt $releasedir
-rsync -aPvci dll/ $releasedir
+#rsync -aPvci dll/ $releasedir
 rsync -aPvci --delete --exclude=".*" vorlagen $releasedir
 rsync -aPvci README.md $releasedir
 rsync -aPvci install-ubuntu.sh $releasedir
