@@ -10,6 +10,7 @@ import java.util.Properties;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.FileSystems;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -194,6 +195,7 @@ public class WeltladenTSE {
                     "Seriennummer(n) des/der Schlüssel(s): "+
                     serialNumber
                 );
+                // System.out.println(new String(Hex.encode(serialNumber)));
                 System.out.println(
                     "Öffentlicher Schlüssel: "+
                     tse.exportPublicKey(serialNumber) // (Rückgabe eines öffentlichen Schlüssels)
@@ -271,10 +273,10 @@ public class WeltladenTSE {
         boolean passed = false;
         String error = "";
         try {
-            System.out.println("BEFORE initializePinValues():");
+            System.out.println("\nBEFORE initializePinValues():");
             printStatusValues();
             tse.initializePinValues(adminPIN, adminPUK, timeAdminPIN, timeAdminPUK);
-            System.out.println("AFTER initializePinValues():");
+            System.out.println("\nAFTER initializePinValues():");
             printStatusValues();
             passed = true;
         } catch (ErrorTSECommandDataInvalid ex) {
@@ -324,12 +326,19 @@ public class WeltladenTSE {
                 FileAttribute<?> permissions = PosixFilePermissions.asFileAttribute(ownerOnly);
                 Files.createFile(pin_path, permissions);
             }
+        } catch (FileAlreadyExistsException ex) {
+            logger.warn("File '~/.Weltladenkasse_tse' storing the TSE timeAdminPIN already exists. Will be overwritten.");
+        } catch (IOException ex) {
+            logger.error("Could not create file '~/.Weltladenkasse_tse' storing the TSE timeAdminPIN");
+            logger.error("Exception: {}", ex);
+        }
+        try {
             // Save the timeAdminPIN as a property to that file
             Properties props = new Properties();
             props.setProperty("timeAdminPIN", new String(timeAdminPIN));
             props.store(new FileOutputStream(pin_path.toFile()), "TSE properties for Weltladenkasse");
         } catch (IOException ex) {
-            logger.error("Could not create file '~/.Weltladenkasse_tse' storing the TSE timeAdminPIN");
+            logger.error("Could not write TSE timeAdminPIN to file '~/.Weltladenkasse_tse'.");
             logger.error("Exception: {}", ex);
         }
     }
@@ -370,10 +379,10 @@ public class WeltladenTSE {
                 // Exit application upon this fatal error
                 System.exit(1);
             }
-            System.out.println("BEFORE initialize():");
+            System.out.println("\nBEFORE initialize():");
             printStatusValues();
             tse.initialize();
-            System.out.println("AFTER initialize():");
+            System.out.println("\nAFTER initialize():");
             printStatusValues();
             passed = true;
         } catch (ErrorSigningSystemOperationDataFailed ex) {
