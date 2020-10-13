@@ -39,7 +39,7 @@ import com.sun.nio.file.ExtendedOpenOption;
 /** exclude from build or remove this file for Java versions before 10 */
 public class MSCJava10Transport extends MSCTransport {
 
-	private static final int ALIGNMENT_SIZE = 8192;
+	private static final int ALIGNMENT_SIZE = 32768;
 
 	public MSCJava10Transport(Properties props) throws IOException {
 		super(props);
