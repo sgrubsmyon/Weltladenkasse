@@ -108,10 +108,16 @@ Download and put into the folder `lib` the following jars:
 
 For using TSE (German fiscalisation "Secure Element") from Bundesdruckerei/D-Trust/cryptovision:
 
-* jna-5.6.0.jar: https://github.com/java-native-access/jna#download
-* bcprov-jdk15on-166.jar: http://www.bouncycastle.org/latest_releases.html (only needed to compile cryptovision TSE test code)
-* `libse-msc-io_linux-x86-64.so`: https://tse-support.cryptovision.com/confluence/display/TDI/cryptovision+TSE+-+Download-Bereich
-    (download `SE-API-Java.zip`, required file is in `se-api-impl/dll/`, put it inside folder `lib/linux-x86-64/`)
+* jna-4.0.0.jar: (only when using MscJna TSE transport instead of MSCJava10Transport)
+    https://tse-support.cryptovision.com/confluence/display/TDI/cryptovision+TSE+-+Download-Bereich
+    (download `SE-API-Java.zip`, required file is in `se-api-test/lib/`)
+* `libse-msc-io_linux-x86-64.so`: (only when using MscJna TSE transport instead of MSCJava10Transport)
+    https://tse-support.cryptovision.com/confluence/display/TDI/cryptovision+TSE+-+Download-Bereich
+    (download `SE-API-Java.zip`, required file is in `se-api-impl/dll/`, put it inside folder `dll/linux-x86-64/`)
+* bcprov-jdk15on-1.62.jar: (only needed to compile cryptovision TSE test code)
+  either http://www.bouncycastle.org/latest_releases.html or
+  https://tse-support.cryptovision.com/confluence/display/TDI/cryptovision+TSE+-+Download-Bereich
+  (download `SE-API-Java.zip`, required file is in `se-api-test/lib/`)
 
 Unjar the hidapi-1.1.jar (with `jar -xvf hidapi-1.1.jar`) and copy the content
 of the `native/*` folders (files ending with `.so`, `.dll` or `.jnilib`) into
