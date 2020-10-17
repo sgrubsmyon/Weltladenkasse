@@ -185,7 +185,7 @@ public class WeltladenTSE {
             // In any case:
             logger.info("Updating TSE's time for the first time after booting up");
             initTimeVars(); // set the time sync interval counter for the first time after booting up
-            updateTime();
+            updateTimeWithoutChecking();
             // Re-check if time was actually set:
             if (tse.getLifeCycleState() == LCS.noTime) {
                 logger.fatal("TSE time update failed!");
@@ -658,7 +658,7 @@ public class WeltladenTSE {
         }
     }
 
-    private void updateTime() {
+    private void updateTimeWithoutChecking() {
         // Check if update of time is necessary (and only then do it):
         long currentUtcTime = System.currentTimeMillis() / 1000;
         if (currentUtcTime <= nextSyncTime) {
@@ -674,7 +674,7 @@ public class WeltladenTSE {
             authenticateAs("TimeAdmin", timeAdminPIN);
             tse.updateTime(currentUtcTime);
             logOutAs("TimeAdmin");
-            logger.info("... Done updating TSE's time");
+            logger.info("...done updating TSE's time");
             nextSyncTime = currentUtcTime + timeSyncInterval;
             System.out.println("\nAFTER updateTime():");
             printStatusValues();
@@ -728,6 +728,22 @@ public class WeltladenTSE {
             logOutAs("TimeAdmin");
             System.exit(1);
         }
+    }
+
+    private void updateTime() {
+        updateTimeWithoutChecking();
+        // Re-check if time was actually set:
+        if (tse.getLifeCycleState() == LCS.noTime) {
+            logger.fatal("TSE time update failed!");
+            JOptionPane.showMessageDialog(this.mainWindow,
+                "ACHTUNG: Die Aktualisierung der Zeit der TSE ist fehlgeschlagen!\n"+
+                "Ohne Zeitaktualisierung kann eine TSE nicht verwendet werden.\n"+
+                "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
+                "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
+                "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
+        }
+        logger.info("TSE time successfully updated!");
     }
 
     private byte[] getSerialNumber() {
