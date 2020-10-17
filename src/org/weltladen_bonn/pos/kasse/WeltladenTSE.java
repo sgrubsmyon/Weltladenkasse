@@ -48,6 +48,7 @@ public class WeltladenTSE {
     private static final Logger logger = LogManager.getLogger(Kundendisplay.class);
 
     private TSE tse = null;
+    private boolean tse_in_use = true;
     private MainWindow mainWindow = null;
     private Path pin_path = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".Weltladenkasse_tse");
 
@@ -65,6 +66,10 @@ public class WeltladenTSE {
         checkInitializationStatus();
     }
 
+    public boolean inUse() {
+        return tse_in_use;
+    }
+
     /**
      * Check if there is a TSE and if it needs to be initialized.
      */
@@ -77,10 +82,12 @@ public class WeltladenTSE {
             logger.warn("Exception: {}", ex);
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Es wird ohne TSE gearbeitet (weil keine Datei 'config_tse.txt' vorhanden ist)!!!\n"+
-                "Dies ist im Geschäftsbetrieb ILLEGAL und darf also nur für Testzwecke sein!!!\n"+
+                "Dies ist im Geschäftsbetrieb ILLEGAL und darf also nur für Testzwecke geschehen!!!\n"+
                 "Wurde aus Versehen der Testmodus gewählt?",
                 "Wirklich ohne TSE kassieren?", JOptionPane.WARNING_MESSAGE);
             logger.info("TSE object tse = {}", tse);
+            tse_in_use = false;
+            logger.info("tse_in_use = {}", tse_in_use);
         } catch (IOException ex) {
             logger.fatal("There is a TSE config file '{}', but it could not be read from it.", "config_tse.txt");
             logger.fatal("Exception: {}", ex);
@@ -140,7 +147,8 @@ public class WeltladenTSE {
                 }
             }
             if (tse.getLifeCycleState() == LCS.notInitialized) {
-                initializeTSE(adminPIN);
+                authenticateAs("Admin", adminPIN);
+                initializeTSE();
                 // Re-check if TSE was actually initialized:
                 if (tse.getLifeCycleState() == LCS.notInitialized) {
                     logger.fatal("TSE initialization failed!");
@@ -166,6 +174,7 @@ public class WeltladenTSE {
                     System.exit(1);
                 }
                 mapClientIDToKey();
+                logOutAs("Admin");
             } else {
                 // else: if TSE was already initialized: updateTime() (must be done at each boot)
                 initTimeVars(); // set the time sync interval counter for the first time
@@ -343,7 +352,7 @@ public class WeltladenTSE {
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die PINs und PUKs der TSE konnten nicht gesetzt werden!\n\n"+
-                "Fehler: "+error+"\n\n"+
+                "Fehler: "+error+".\n\n"+
                 "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
                 "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
                 "erneut versuchen.",
@@ -367,7 +376,7 @@ public class WeltladenTSE {
                 Files.createFile(pin_path, permissions);
             }
         } catch (FileAlreadyExistsException ex) {
-            logger.warn("File '~/.Weltladenkasse_tse' storing the TSE timeAdminPIN already exists. Will be overwritten.");
+            logger.warn("File '~/.Weltladenkasse_tse' storing the TSE timeAdminPIN already exists. It is now overwritten.");
         } catch (IOException ex) {
             logger.error("Could not create file '~/.Weltladenkasse_tse' storing the TSE timeAdminPIN");
             logger.error("Exception: {}", ex);
@@ -400,20 +409,20 @@ public class WeltladenTSE {
         }
     }
 
-    private void authenticateAsAdmin(byte[] adminPIN) {
-        if (null == adminPIN) {
-            adminPIN = showPINentryDialog("Admin", "PIN", 8);
+    private void authenticateAs(String user, byte[] pin) {
+        if (null == pin) {
+            pin = showPINentryDialog(user, "PIN", 8);
         }
         boolean passed = false;
         String error = "";
         try {
-            AuthenticateUserResult res = tse.authenticateUser("Admin", adminPIN);
+            AuthenticateUserResult res = tse.authenticateUser(user, pin);
             if (res.authenticationResult != AuthenticationResult.ok) {
-                error = "Admin authentication error: "+res.authenticationResult.toString();
+                error = "Authentication error for user "+user+": "+res.authenticationResult.toString();
                 logger.fatal("Fatal Error: {}", error);
                 logger.fatal("Exception: {}", ex);
                 JOptionPane.showMessageDialog(this.mainWindow,
-                    "ACHTUNG: Authentifizierungsfehler als Admin bei der TSE!\n\n"+
+                    "ACHTUNG: Authentifizierungsfehler als User "+user+" bei der TSE!\n\n"+
                     "authenticationResult: "+res.authenticationResult.toString()+"\n\n"+
                     "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
                     "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
@@ -422,35 +431,86 @@ public class WeltladenTSE {
                 // Exit application upon this fatal error
                 System.exit(1);
             }
-        } catch (ErrorSigningSystemOperationDataFailed) {
+        } catch (ErrorSigningSystemOperationDataFailed ex) {
             error = "Signing system operation data failed";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
-        } catch (ErrorSigningSystemOperationDataFailed) {
-            error = "Signing system operation data failed";
+        } catch (ErrorRetrieveLogMessageFailed ex) {
+            error = "Retrieve log message failed";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
-        } catch (ErrorSigningSystemOperationDataFailed) {
-            error = "Signing system operation data failed";
+       } catch (ErrorStorageFailure ex) {
+            error = "Storage failure";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
-        } catch (ErrorSigningSystemOperationDataFailed) {
-            error = "Signing system operation data failed";
+        } catch (ErrorSecureElementDisabled ex) {
+            error = "Secure element disabled";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
         } catch (SEException ex) {
-            error = "Unknown error during initializeTSE()";
+            error = "Unknown error during authenticateUser()";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
         }
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Es konnte sich nicht als Admin an der TSE angemeldet werden!\n\n"+
-                "Fehler: "+error+"\n\n"+
+                "ACHTUNG: Es konnte sich nicht als User "+user+" an der TSE angemeldet werden!\n\n"+
+                "Fehler: "+error+".\n\n"+
                 "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
                 "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
                 "erneut versuchen.",
                 "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
+            // Exit application upon this fatal error
+            System.exit(1);
+        }
+    }
+
+    private void logOutAs(String user) {
+        boolean passed = false;
+        String error = "";
+        try {
+            tse.logOut(user);
+        } catch (ErrorUserIdNotManaged ex) {
+            error = "User ID not managed";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorSigningSystemOperationDataFailed ex) {
+            error = "Signing system operation data failed";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorUserIdNotAuthenticated ex) {
+            error = "User ID not authenticated";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorUserNotAuthorized ex) {
+            error = "User not authorized";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorRetrieveLogMessageFailed ex) {
+            error = "Retrieve log message failed";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorStorageFailure ex) {
+            error = "Storage failure";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorSecureElementDisabled ex) {
+            error = "Secure element disabled";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        } catch (SEException ex) {
+            error = "Unknown error during logOut()";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
+        }
+        if (!passed) {
+            JOptionPane.showMessageDialog(this.mainWindow,
+                "ACHTUNG: Es konnte sich nicht als "+user+" von der TSE abgemeldet werden!\n\n"+
+                "Fehler: "+error+".\n\n"+
+                "Dies weist auf eine fehlerhafte TSE hin. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
+                "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
+                "erneut versuchen.",
+                "Fehlgeschlagene Abmeldung von der TSE", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error
             System.exit(1);
         }
@@ -483,14 +543,14 @@ public class WeltladenTSE {
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
         } catch (SEException ex) {
-            error = "Unknown error during initializeTSE()";
+            error = "Unknown error during initialize()";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
         }
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die TSE konnte nicht initialisiert werden!\n\n"+
-                "Fehler: "+error+"\n\n"+
+                "Fehler: "+error+".\n\n"+
                 "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
                 "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
                 "erneut versuchen.",
@@ -514,11 +574,15 @@ public class WeltladenTSE {
             error = "Secure Element disabled";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
+        } catch (SEException ex) {
+            error = "Unknown error during getTimeSyncInterval()";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception: {}", ex);
         }
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Das Zeitaktualisierungsintervall der TSE konnte nicht ausgelesen werden!\n\n"+
-                "Fehler: "+error+"\n\n"+
+                "Fehler: "+error+".\n\n"+
                 "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
                 "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
                 "erneut versuchen.",
@@ -538,13 +602,14 @@ public class WeltladenTSE {
         boolean passed = false;
         String error = "";
         try {
+            authenticateAs("TimeAdmin", timeAdminPIN);
             System.out.println("\nBEFORE updateTime():");
             printStatusValues();
             tse.updateTime(currentUtcTime);
             nextSyncTime = currentUtcTime + timeSyncInterval;
             System.out.println("\nAFTER updateTime():");
             printStatusValues();
-            tse.logOut("TimeAdmin");
+            logOutAs("TimeAdmin");
             passed = true;
         } catch (ErrorUpdateTimeFailed ex) {
             error = "Update time failed";
@@ -586,7 +651,7 @@ public class WeltladenTSE {
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die Zeit der TSE konnte nicht aktualisiert werden!\n\n"+
-                "Fehler: "+error+"\n\n"+
+                "Fehler: "+error+".\n\n"+
                 "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
                 "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
                 "erneut versuchen.",
@@ -604,24 +669,24 @@ public class WeltladenTSE {
             printStatusValues();
 
             byte[] mappings = tse.getERSMappings();
-            CastleHelper.asn1Dump(mappings, out);
+            CastleHelper.asn1Dump(mappings, System.out);
 
             /** Configure the TSE to use the ERS "WeltladenBonnKasse" with the given transaction key (serial number) */
             tse.mapERStoKey("WeltladenBonnKasse", serial);
 
             mappings = tse.getERSMappings();
-            CastleHelper.asn1Dump(mappings, out);
+            CastleHelper.asn1Dump(mappings, System.out);
 
             System.out.println("\nAFTER mapERStoKey():");
             printStatusValues();
 
             passed = true;
         } catch (ErrorSigningSystemOperationDataFailed ex) {
-            error = "Update time failed";
+            error = "Signing system operation data failed";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
         } catch (ErrorStoringInitDataFailed ex) {
-            error = "Update time failed";
+            error = "Storing init data failed";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
         } catch (ErrorRetrieveLogMessageFailed ex) {
@@ -641,7 +706,7 @@ public class WeltladenTSE {
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
         } catch (ErrorTimeNotSet ex) {
-            error = "Certificate expired";
+            error = "Time not set";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
         } catch (ErrorSecureElementDisabled ex) {
@@ -657,26 +722,26 @@ public class WeltladenTSE {
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
         } catch (ErrorNoSuchKey ex) {
-            error = "User not authenticated";
+            error = "No such key";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
         } catch (ErrorSECommunicationFailed ex) {
-            error = "User not authenticated";
+            error = "SE communication failed";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
         } catch (ErrorERSalreadyMapped ex) {
-            error = "User not authenticated";
+            error = "ERS already mapped";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
         } catch (SEException ex) {
-            error = "Unknown error during updateTime()";
+            error = "Unknown error during mapERStoKey()";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
         }
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die Zeit der TSE konnte nicht aktualisiert werden!\n\n"+
-                "Fehler: "+error+"\n\n"+
+                "Fehler: "+error+".\n\n"+
                 "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
                 "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
                 "erneut versuchen.",
