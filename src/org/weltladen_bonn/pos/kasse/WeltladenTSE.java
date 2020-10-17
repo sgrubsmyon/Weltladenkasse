@@ -43,8 +43,11 @@ import com.cryptovision.SEAPI.exceptions.ErrorTimeNotSet;
 import com.cryptovision.SEAPI.exceptions.ErrorNoSuchKey;
 import com.cryptovision.SEAPI.exceptions.ErrorERSalreadyMapped;
 
-// import org.bouncycastle.asn1.ASN1InputStream;
-// import org.bouncycastle.asn1.util.ASN1Dump;
+// For decoding/encoding output from the TSE:
+import org.bouncycastle.util.encoders.Hex;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.util.ASN1Dump;
+import java.io.ByteArrayInputStream;
 
 // Logging:
 import org.apache.logging.log4j.LogManager;
@@ -159,7 +162,6 @@ public class WeltladenTSE {
                     System.exit(1);
                 }
             }
-            
             if (tse.getLifeCycleState() == LCS.notInitialized) {
                 authenticateAs("Admin", adminPIN);
                 logged_in = true;
@@ -228,10 +230,59 @@ public class WeltladenTSE {
         return;
     }
 
+    private String encodeByteArrayAsHexString(byte[] data) {
+        return new String(Hex.encode(data));
+    }
+
+    // -------
+    // Let's do what Bouncy Castle does, but on our own (https://www.baeldung.com/java-byte-arrays-hex-strings):
+    // I have checked: it really gives the same output!!!
+    // |
+    // |
+    // |
+    public String byteToHex(byte num) {
+	    char[] hexDigits = new char[2];
+	    hexDigits[0] = Character.forDigit((num >> 4) & 0xF, 16);
+	    hexDigits[1] = Character.forDigit((num & 0xF), 16);
+	    return new String(hexDigits);
+	}
+
+    public String encodeHexString(byte[] byteArray) {
+	    StringBuffer hexStringBuffer = new StringBuffer();
+	    for (int i = 0; i < byteArray.length; i++) {
+	        hexStringBuffer.append(byteToHex(byteArray[i]));
+	    }
+	    return hexStringBuffer.toString();
+	}
+    // |
+    // |
+    // -------
+
+    private String decodeASN1ByteArray(byte[] data) {
+        String result = null;
+        try {
+            ASN1InputStream ais = new ASN1InputStream(new ByteArrayInputStream(data));
+            result = ASN1Dump.dumpAsString(ais.readObject(), true);
+            ais.close();
+        } catch (IOException ex) {
+            logger.error("Failed to decode byte array using ASN1InputStream");
+            logger.error("Exception: {}", ex);
+        }
+        return result;
+    }
+
     public void printStatusValues() {
         System.out.println(
             "Eindeutige D-Trust-ID: "+
             new String(tse.getUniqueId(), StandardCharsets.ISO_8859_1) // (Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE)
+        );
+        System.out.println(
+            "Eindeutige D-Trust-ID: "+
+            encodeByteArrayAsHexString(tse.getUniqueId()) // (Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE)
+        );
+        System.out.println(
+            "Eindeutige D-Trust-ID: "+
+            encodeHexString(tse.getUniqueId()) // (Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE)
         );
         try {
             LCS lcs = tse.getLifeCycleState(); // (Status-Abfrage des Lebenszyklus)
@@ -282,12 +333,20 @@ public class WeltladenTSE {
                     tse.getSignatureAlgorithm() // (Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten)
                 );
                 System.out.println(
+                    "Signatur-Algorithmus: "+
+                    decodeASN1ByteArray(tse.getSignatureAlgorithm()) // (Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten)
+                );
+                System.out.println(
                     "Signatur-Zähler der letzten Signatur: "+
                     tse.getSignatureCounter(serialNumber) // (Abfrage des Signatur-Zählers der letzten Signatur)
                 );
                 System.out.println(
                     "Zuordnungen von Kassen-IDs zu Schlüsseln: "+
                     new String(tse.getERSMappings(), StandardCharsets.ISO_8859_1) // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
+                );
+                System.out.println(
+                    "Zuordnungen von Kassen-IDs zu Schlüsseln: "+
+                    decodeASN1ByteArray(tse.getERSMappings()) // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
                 );
                 System.out.println(
                     "Maximale Clientzahl: "+
@@ -634,14 +693,14 @@ public class WeltladenTSE {
         boolean passed = false;
         String error = "";
         try {
-            authenticateAs("TimeAdmin", timeAdminPIN);
             System.out.println("\nBEFORE updateTime():");
             printStatusValues();
+            authenticateAs("TimeAdmin", timeAdminPIN);
             tse.updateTime(currentUtcTime);
+            logOutAs("TimeAdmin");
             nextSyncTime = currentUtcTime + timeSyncInterval;
             System.out.println("\nAFTER updateTime():");
             printStatusValues();
-            logOutAs("TimeAdmin");
             passed = true;
         } catch (ErrorUpdateTimeFailed ex) {
             error = "Update time failed";
@@ -726,19 +785,6 @@ public class WeltladenTSE {
         }
         return serialNumber;
     }
-
-    // private String decodeASN1ByteArray(byte[] data) {
-    //     String result = null;
-    //     try {
-    //         ASN1InputStream ais = new ASN1InputStream(new ByteArrayInputStream(data));
-    //         result = ASN1Dump.dumpAsString(ais.readObject(), true);
-    //         ais.close();
-    //     } catch (IOException ex) {
-    //         logger.error("Failed to decode byte array using ASN1InputStream");
-    //         logger.error("Exception: {}", ex);
-    //     }
-    //     return result;
-    // }
 
     private void mapClientIDToKey(byte[] serialNumber) {
         boolean passed = false;
