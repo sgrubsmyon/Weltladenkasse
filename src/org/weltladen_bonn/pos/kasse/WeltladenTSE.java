@@ -670,9 +670,11 @@ public class WeltladenTSE {
         try {
             System.out.println("\nBEFORE updateTime():");
             printStatusValues();
+            logger.info("Updating TSE's time...");
             authenticateAs("TimeAdmin", timeAdminPIN);
             tse.updateTime(currentUtcTime);
             logOutAs("TimeAdmin");
+            logger.info("... Done updating TSE's time");
             nextSyncTime = currentUtcTime + timeSyncInterval;
             System.out.println("\nAFTER updateTime():");
             printStatusValues();
