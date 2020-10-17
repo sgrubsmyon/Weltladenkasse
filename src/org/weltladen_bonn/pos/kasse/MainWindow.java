@@ -12,8 +12,6 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.WindowListener;
-import java.awt.event.WindowEvent;
 
 import javax.swing.*; // JFrame, JPanel, JButton, JLabel, ...
 import javax.swing.Timer; // ambiguity with java.util.Timer
@@ -21,7 +19,7 @@ import javax.swing.Timer; // ambiguity with java.util.Timer
 import org.weltladen_bonn.pos.MainWindowGrundlage;
 
 // Class holding the window of the application GUI:
-public class MainWindow extends MainWindowGrundlage implements ActionListener, WindowListener {
+public class MainWindow extends MainWindowGrundlage implements ActionListener {
     //***************************************************
     // Members
     //***************************************************
@@ -92,7 +90,7 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener, W
 
     @Override
     public void dispose() {
-        System.out.println("Closing HID Device!!!!!!!!!!!!!!");
+        // Do clean-up:
         if (display != null)
             display.closeDevice();
         // XXX TODO close connection to TSE (logOut)
@@ -128,36 +126,5 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener, W
         //        System.exit(0);
 	//    return;
 	//}
-    }
-
-        /**
-     * Each non abstract class that implements the WindowListener
-     * must have these methods.
-     *
-     * @param e the action event.
-     **/
-    public void windowClosed(WindowEvent e) {
-        // Do clean-up:
-        System.out.println("Closing HID Device again!!!!!!!!!!!!!!!!!!!!!!!");
-        display.closeDevice();
-        // XXX TODO close connection to TSE (logOut)
-    }
-
-    public void windowDeactivated(WindowEvent e) {
-    }
-
-    public void windowActivated(WindowEvent e) {
-    }
-
-    public void windowDeiconified(WindowEvent e) {
-    }
-
-    public void windowIconified(WindowEvent e) {
-    }
-    
-    public void windowClosing(WindowEvent e) {
-    }
-    
-    public void windowOpened(WindowEvent e) {
     }
 }
