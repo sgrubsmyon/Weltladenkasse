@@ -234,30 +234,6 @@ public class WeltladenTSE {
         return new String(Hex.encode(data));
     }
 
-    // -------
-    // Let's do what Bouncy Castle does, but on our own (https://www.baeldung.com/java-byte-arrays-hex-strings):
-    // I have checked: it really gives the same output!!!
-    // |
-    // |
-    // |
-    public String byteToHex(byte num) {
-	    char[] hexDigits = new char[2];
-	    hexDigits[0] = Character.forDigit((num >> 4) & 0xF, 16);
-	    hexDigits[1] = Character.forDigit((num & 0xF), 16);
-	    return new String(hexDigits);
-	}
-
-    public String encodeHexString(byte[] byteArray) {
-	    StringBuffer hexStringBuffer = new StringBuffer();
-	    for (int i = 0; i < byteArray.length; i++) {
-	        hexStringBuffer.append(byteToHex(byteArray[i]));
-	    }
-	    return hexStringBuffer.toString();
-	}
-    // |
-    // |
-    // -------
-
     private String decodeASN1ByteArray(byte[] data) {
         String result = null;
         try {
@@ -274,15 +250,7 @@ public class WeltladenTSE {
     public void printStatusValues() {
         System.out.println(
             "Eindeutige D-Trust-ID: "+
-            new String(tse.getUniqueId(), StandardCharsets.ISO_8859_1) // (Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE)
-        );
-        System.out.println(
-            "Eindeutige D-Trust-ID: "+
             encodeByteArrayAsHexString(tse.getUniqueId()) // (Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE)
-        );
-        System.out.println(
-            "Eindeutige D-Trust-ID: "+
-            encodeHexString(tse.getUniqueId()) // (Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE)
         );
         try {
             LCS lcs = tse.getLifeCycleState(); // (Status-Abfrage des Lebenszyklus)
@@ -379,6 +347,14 @@ public class WeltladenTSE {
                 System.out.println(
                     "Letzte Protokolldaten: "+
                     new String(tse.readLogMessage(), StandardCharsets.ISO_8859_1) // (Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes)
+                );
+                System.out.println(
+                    "Letzte Protokolldaten (Hex): "+
+                    encodeByteArrayAsHexString(tse.readLogMessage()) // (Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes)
+                );
+                System.out.println(
+                    "Letzte Protokolldaten (ASN.1): "+
+                    decodeASN1ByteArray(tse.readLogMessage()) // (Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes)
                 );
             }
         } catch (SEException ex) {
