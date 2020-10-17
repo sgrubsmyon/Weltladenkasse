@@ -93,7 +93,6 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
         // Do clean-up:
         if (display != null)
             display.closeDevice();
-        // XXX TODO close connection to TSE (logOut)
         super.dispose();
     }
 
