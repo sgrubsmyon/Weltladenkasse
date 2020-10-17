@@ -62,9 +62,9 @@ public class WeltladenTSE {
     private static final Logger logger = LogManager.getLogger(Kundendisplay.class);
 
     private TSE tse = null;
-    private boolean tse_in_use = true;
+    private boolean tseInUse = true;
     private MainWindow mainWindow = null;
-    private Path pin_path = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".Weltladenkasse_tse");
+    private Path pinPath = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".Weltladenkasse_tse");
 
     private static long nextSyncTime = 0;
     private static int timeSyncInterval = 0;
@@ -77,11 +77,11 @@ public class WeltladenTSE {
         this.mainWindow = mw;
         connectToTSE();
         printStatusValues();
-        // checkInitializationStatus();
+        checkInitializationStatus();
     }
 
     public boolean inUse() {
-        return tse_in_use;
+        return tseInUse;
     }
 
     /**
@@ -100,8 +100,8 @@ public class WeltladenTSE {
                 "Wurde aus Versehen der Testmodus gewählt?",
                 "Wirklich ohne TSE kassieren?", JOptionPane.WARNING_MESSAGE);
             logger.info("TSE object tse = {}", tse);
-            tse_in_use = false;
-            logger.info("tse_in_use = {}", tse_in_use);
+            tseInUse = false;
+            logger.info("tseInUse = {}", tseInUse);
         } catch (IOException ex) {
             logger.fatal("There is a TSE config file '{}', but it could not be read from it.", "config_tse.txt");
             logger.fatal("Exception: {}", ex);
@@ -136,10 +136,11 @@ public class WeltladenTSE {
     private void checkInitializationStatus() {
         boolean logged_in = false;
         try {
-            boolean[] pin_status = tse.getPinStatus();
-            boolean transport_state = pin_status[0];
+            boolean[] pinStatus = tse.getPinStatus();
+            boolean transportState = pinStatus[0];
             byte[] adminPIN = null;
-            if (transport_state) {
+            if (transportState) {
+                logger.info("TSE found, which is still in transport state!");
                 JOptionPane.showMessageDialog(this.mainWindow,
                     "ACHTUNG: Eine noch nicht initialisierte TSE wurde gefunden.\n"+
                     "Dies kommt vor, wenn eine neue TSE zum ersten mal eingesetzt wird.\n"+
@@ -148,9 +149,9 @@ public class WeltladenTSE {
                     "Uninitialisierte TSE gefunden", JOptionPane.INFORMATION_MESSAGE);
                 adminPIN = showPINPUKDialog();
                 // Re-check if PINs and PUKs were successfully set:
-                pin_status = tse.getPinStatus();
-                transport_state = pin_status[0];
-                if (transport_state) {
+                pinStatus = tse.getPinStatus();
+                transportState = pinStatus[0];
+                if (transportState) {
                     logger.fatal("TSE PIN and PUK setting failed! (TSE still in transport state after setting PINs and PUKs)");
                     JOptionPane.showMessageDialog(this.mainWindow,
                         "ACHTUNG: Das Setzen der PINs und PUKs der TSE ist fehlgeschlagen!\n"+
@@ -160,8 +161,10 @@ public class WeltladenTSE {
                         "Fehler beim Setzen der PINs/PUKs der TSE", JOptionPane.ERROR_MESSAGE);
                     System.exit(1);
                 }
+                logger.info("TSE's PIN and PUK values successfully set!");
             }
             if (tse.getLifeCycleState() == LCS.notInitialized) {
+                logger.info("TSE still uninitialized. Now initializing...");
                 authenticateAs("Admin", adminPIN);
                 logged_in = true;
                 initializeTSE();
@@ -177,8 +180,10 @@ public class WeltladenTSE {
                     logOutAs("Admin");
                     System.exit(1);
                 }
+                logger.info("TSE successfully initialized!");
             }
             // In any case:
+            logger.info("Updating TSE's time for the first time after booting up");
             initTimeVars(); // set the time sync interval counter for the first time after booting up
             updateTime();
             // Re-check if time was actually set:
@@ -195,6 +200,7 @@ public class WeltladenTSE {
                 }
                 System.exit(1);
             }
+            logger.info("TSE time successfully updated!");
             // XXX TODO
             // if not yet mapped client ID to key:
                 // if (!logged_in) {
@@ -426,11 +432,11 @@ public class WeltladenTSE {
             // Create a file in user's home directory that only she is allowed to read/write to (at least on Linux where file permissions exist)
             String os = System.getProperty("os.name").toLowerCase();
             if (os.contains("win")) {
-                Files.createFile(pin_path);
+                Files.createFile(pinPath);
             } else {
                 Set<PosixFilePermission> ownerOnly = PosixFilePermissions.fromString("rw-------");
                 FileAttribute<?> permissions = PosixFilePermissions.asFileAttribute(ownerOnly);
-                Files.createFile(pin_path, permissions);
+                Files.createFile(pinPath, permissions);
             }
         } catch (FileAlreadyExistsException ex) {
             logger.warn("File '~/.Weltladenkasse_tse' storing the TSE timeAdminPIN already exists. It is now overwritten.");
@@ -442,7 +448,7 @@ public class WeltladenTSE {
             // Save the timeAdminPIN as a property to that file
             Properties props = new Properties();
             props.setProperty("timeAdminPIN", new String(timeAdminPIN));
-            props.store(new FileOutputStream(pin_path.toFile()), "TSE properties for Weltladenkasse");
+            props.store(new FileOutputStream(pinPath.toFile()), "TSE properties for Weltladenkasse");
         } catch (IOException ex) {
             logger.error("Could not write TSE timeAdminPIN to file '~/.Weltladenkasse_tse'.");
             logger.error("Exception: {}", ex);
@@ -453,7 +459,7 @@ public class WeltladenTSE {
     private byte[] readTimeAdminPINFromFile() {
         try {
             Properties props = new Properties();
-            props.load(new FileInputStream(pin_path.toFile()));
+            props.load(new FileInputStream(pinPath.toFile()));
             return props.getProperty("timeAdminPIN").getBytes();
         } catch (FileNotFoundException ex) {
             logger.error("File '~/.Weltladenkasse_tse' for storing timeAdminPIN not found.");
@@ -487,6 +493,7 @@ public class WeltladenTSE {
                 // Exit application upon this fatal error
                 System.exit(1);
             }
+            passed = true;
         } catch (ErrorSigningSystemOperationDataFailed ex) {
             error = "Signing system operation data failed";
             logger.fatal("Fatal Error: {}", error);
@@ -526,6 +533,7 @@ public class WeltladenTSE {
         String error = "";
         try {
             tse.logOut(user);
+            passed = true;
         } catch (ErrorUserIdNotManaged ex) {
             error = "User ID not managed";
             logger.fatal("Fatal Error: {}", error);
@@ -623,6 +631,7 @@ public class WeltladenTSE {
         try {
             nextSyncTime = 0;
             timeSyncInterval = tse.getTimeSyncInterval();
+            passed = true;
         } catch (ErrorSeApiNotInitialized ex) {
             error = "SE API not initialized";
             logger.fatal("Fatal Error: {}", error);
