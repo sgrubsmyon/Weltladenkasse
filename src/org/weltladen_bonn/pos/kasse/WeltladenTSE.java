@@ -7,7 +7,6 @@ import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.Properties;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.FileSystems;
 import java.nio.file.FileAlreadyExistsException;
@@ -259,7 +258,7 @@ public class WeltladenTSE {
                 tse.getCertificationId() // (Abfrage der BSI-Zertifizierungsnummer, Beispiel: "BSI-K-TR-0374-2020")
             );
             System.out.println(
-                "Firmware-ID: "+
+                "Firmware-Version: "+
                 tse.getFirmwareId() // (Abfrage des Firmware Identifikations-Strings)
             );
             System.out.println(
@@ -284,24 +283,27 @@ public class WeltladenTSE {
                 byte[] data = tse.exportSerialNumbers(); // (Rückgabe aller Signaturschlüssel-Seriennummern, sowie deren Verwendung)
 		        byte[] serialNumber = Arrays.copyOfRange(data, 6, 6+32);
                 System.out.println(
-                    "Seriennummer(n) des/der Schlüssel(s): "+
-                    serialNumber
+                    "Seriennummer(n) des/der Schlüssel(s) (Hex): "+
+                    encodeByteArrayAsHexString(serialNumber)
                 );
-                // System.out.println(new String(Hex.encode(serialNumber)));
                 System.out.println(
-                    "Öffentlicher Schlüssel: "+
-                    tse.exportPublicKey(serialNumber) // (Rückgabe eines öffentlichen Schlüssels)
+                    "Öffentlicher Schlüssel (Hex): "+
+                    encodeByteArrayAsHexString(tse.exportPublicKey(serialNumber)) // (Rückgabe eines öffentlichen Schlüssels)
                 );
                 System.out.println(
                     "Ablaufdatum des Zertifikats: "+
                     tse.getCertificateExpirationDate(serialNumber) // (Abfrage des Ablaufdatums eines Zertifikats)
                 );
                 System.out.println(
-                    "Signatur-Algorithmus: "+
-                    tse.getSignatureAlgorithm() // (Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten)
+                    "Zeitformat: "+
+                    tse.getTimeSyncVariant() // (aus FirstBoot.java übernommen)
                 );
                 System.out.println(
-                    "Signatur-Algorithmus: "+
+                    "Signatur-Algorithmus (Hex): "+
+                    encodeByteArrayAsHexString(tse.getSignatureAlgorithm()) // (Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten)
+                );
+                System.out.println(
+                    "Signatur-Algorithmus (ASN.1): "+
                     decodeASN1ByteArray(tse.getSignatureAlgorithm()) // (Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten)
                 );
                 System.out.println(
@@ -309,11 +311,11 @@ public class WeltladenTSE {
                     tse.getSignatureCounter(serialNumber) // (Abfrage des Signatur-Zählers der letzten Signatur)
                 );
                 System.out.println(
-                    "Zuordnungen von Kassen-IDs zu Schlüsseln: "+
-                    new String(tse.getERSMappings(), StandardCharsets.ISO_8859_1) // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
+                    "Zuordnungen von Kassen-IDs zu Schlüsseln (Hex): "+
+                    encodeByteArrayAsHexString(tse.getERSMappings()) // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
                 );
                 System.out.println(
-                    "Zuordnungen von Kassen-IDs zu Schlüsseln: "+
+                    "Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1): "+
                     decodeASN1ByteArray(tse.getERSMappings()) // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
                 );
                 System.out.println(
@@ -339,18 +341,6 @@ public class WeltladenTSE {
                 System.out.println(
                     "Unterstützte Transaktionsaktualisierungsvarianten: "+
                     tse.getSupportedTransactionUpdateVariants() // (aus FirstBoot.java übernommen)
-                );
-                System.out.println(
-                    "Zeitformat: "+
-                    tse.getTimeSyncVariant() // (aus FirstBoot.java übernommen)
-                );
-                System.out.println(
-                    "Letzte Protokolldaten: "+
-                    new String(tse.readLogMessage(), StandardCharsets.ISO_8859_1) // (Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes)
-                );
-                System.out.println(
-                    "Letzte Protokolldaten (Hex): "+
-                    encodeByteArrayAsHexString(tse.readLogMessage()) // (Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes)
                 );
                 System.out.println(
                     "Letzte Protokolldaten (ASN.1): "+
