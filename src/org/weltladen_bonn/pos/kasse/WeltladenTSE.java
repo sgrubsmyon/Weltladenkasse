@@ -202,8 +202,7 @@ public class WeltladenTSE {
             }
             logger.info("TSE time successfully updated!");
             // If client ID not yet mapped to key:
-            // if (encodeByteArrayAsHexString(tse.getERSMappings()).equals("3000")) { // XXX is this the general value for unmapped?
-            if (new String(tse.getERSMappings()).equals("0")) { // XXX is this the general value for unmapped?
+            if (new String(tse.getERSMappings()).equals("0")) {
                 if (!loggedIn) {
                     authenticateAs("Admin", adminPIN);
                     loggedIn = true;
@@ -211,8 +210,7 @@ public class WeltladenTSE {
                 byte[] serialNumber = getSerialNumber();
                 mapClientIDToKey(serialNumber);
                 // Re-check if client ID is still unmapped to key:
-                // if (encodeByteArrayAsHexString(tse.getERSMappings()).equals("3000")) { // XXX is this the general value for unmapped?
-                if (new String(tse.getERSMappings()).equals("0")) { // XXX is this the general value for unmapped?
+                if (new String(tse.getERSMappings()).equals("0")) {
                     logger.fatal("Mapping of client ID to TSE key failed!");
                     JOptionPane.showMessageDialog(this.mainWindow,
                         "ACHTUNG: Die Aktualisierung der Zeit der TSE ist fehlgeschlagen!\n"+
