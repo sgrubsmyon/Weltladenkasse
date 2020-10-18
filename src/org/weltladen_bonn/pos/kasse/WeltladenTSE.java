@@ -134,7 +134,7 @@ public class WeltladenTSE {
     }
 
     private void checkInitializationStatus() {
-        boolean logged_in = false;
+        boolean loggedIn = false;
         try {
             boolean[] pinStatus = tse.getPinStatus();
             boolean transportState = pinStatus[0];
@@ -166,7 +166,7 @@ public class WeltladenTSE {
             if (tse.getLifeCycleState() == LCS.notInitialized) {
                 logger.info("TSE still uninitialized. Now initializing...");
                 authenticateAs("Admin", adminPIN);
-                logged_in = true;
+                loggedIn = true;
                 initializeTSE();
                 // Re-check if TSE was actually initialized:
                 if (tse.getLifeCycleState() == LCS.notInitialized) {
@@ -195,25 +195,37 @@ public class WeltladenTSE {
                     "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
                     "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
                     "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
-                if (logged_in) {
+                if (loggedIn) {
                     logOutAs("Admin");
                 }
                 System.exit(1);
             }
             logger.info("TSE time successfully updated!");
-            // XXX TODO
-            // if not yet mapped client ID to key:
-                // if (!logged_in) {
-                //     authenticateAs("Admin", adminPIN);
-                //     logged_in = true;
-                // }
-                // byte[] serialNumber = getSerialNumber();
-                // mapClientIDToKey(serialNumber);
-                // // Re-check client ID was actually mapped to key:
-                // // XXX TODO
-                // // if (tse.getLifeCycleState() == LCS.???) {
-                // // }
-            if (logged_in) {
+            // If client ID not yet mapped to key:
+            // if (encodeByteArrayAsHexString(tse.getERSMappings()).equals("3000")) { // XXX is this the general value for unmapped?
+            if (new String(tse.getERSMappings()).equals("0")) { // XXX is this the general value for unmapped?
+                if (!loggedIn) {
+                    authenticateAs("Admin", adminPIN);
+                    loggedIn = true;
+                }
+                byte[] serialNumber = getSerialNumber();
+                mapClientIDToKey(serialNumber);
+                // Re-check if client ID is still unmapped to key:
+                // if (encodeByteArrayAsHexString(tse.getERSMappings()).equals("3000")) { // XXX is this the general value for unmapped?
+                if (new String(tse.getERSMappings()).equals("0")) { // XXX is this the general value for unmapped?
+                    logger.fatal("Mapping of client ID to TSE key failed!");
+                    JOptionPane.showMessageDialog(this.mainWindow,
+                        "ACHTUNG: Die Aktualisierung der Zeit der TSE ist fehlgeschlagen!\n"+
+                        "Ohne Zeitaktualisierung kann eine TSE nicht verwendet werden.\n"+
+                        "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
+                        "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
+                        "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
+                    logOutAs("Admin");
+                    System.exit(1);
+                }
+                logger.info("client ID successfully mapped to TSE key!");
+            }
+            if (loggedIn) {
                 logOutAs("Admin");
             }
         } catch (SEException ex) {
@@ -227,7 +239,7 @@ public class WeltladenTSE {
             // Exit application upon this fatal error, because a TSE config file is present
             // (so it seems usage of TSE is desired), but maybe configuration is wrong or
             // TSE is not plugged in and no connection to TSE could be made.
-            if (logged_in) {
+            if (loggedIn) {
                 logOutAs("Admin");
             }
             System.exit(1);
@@ -315,6 +327,14 @@ public class WeltladenTSE {
                 System.out.println(
                     "Signatur-Zähler der letzten Signatur: "+
                     tse.getSignatureCounter(serialNumber) // (Abfrage des Signatur-Zählers der letzten Signatur)
+                );
+                System.out.println(
+                    "Zuordnungen von Kassen-IDs zu Schlüsseln (Raw): "+
+                    tse.getERSMappings() // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
+                );
+                System.out.println(
+                    "Zuordnungen von Kassen-IDs zu Schlüsseln (String): "+
+                    new String(tse.getERSMappings()) // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
                 );
                 System.out.println(
                     "Zuordnungen von Kassen-IDs zu Schlüsseln (Hex): "+
@@ -733,13 +753,31 @@ public class WeltladenTSE {
     private void updateTime() {
         updateTimeWithoutChecking();
         // Re-check if time was actually set:
-        if (tse.getLifeCycleState() == LCS.noTime) {
-            logger.fatal("TSE time update failed!");
+        try {
+            if (tse.getLifeCycleState() == LCS.noTime) {
+                logger.fatal("TSE time update failed!");
+                JOptionPane.showMessageDialog(this.mainWindow,
+                    "ACHTUNG: Die Aktualisierung der Zeit der TSE ist fehlgeschlagen!\n"+
+                    "Ohne Zeitaktualisierung kann eine TSE nicht verwendet werden.\n"+
+                    "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
+                    "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
+                    "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
+                System.exit(1);
+            }
+        } catch (ErrorSECommunicationFailed ex) {
+            logger.fatal("SE Communication failed!");
+            logger.fatal("Exception: {}", ex);
             JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Die Aktualisierung der Zeit der TSE ist fehlgeschlagen!\n"+
-                "Ohne Zeitaktualisierung kann eine TSE nicht verwendet werden.\n"+
-                "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
-                "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
+                "ACHTUNG: Die Kommunikation mit der TSE nach dem Setzen der Zeit ist fehlgeschlagen!\n"+
+                "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.",
+                "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
+        } catch (SEException ex) {
+            logger.fatal("SE Communication failed!");
+            logger.fatal("Exception: {}", ex);
+            JOptionPane.showMessageDialog(this.mainWindow,
+                "ACHTUNG: Unbekannter Fehler nach dem Setzen der Zeit der TSE!\n"+
+                "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.",
                 "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         }
@@ -785,19 +823,10 @@ public class WeltladenTSE {
         try {
             System.out.println("\nBEFORE mapERStoKey():");
             printStatusValues();
-
-            byte[] mappings = tse.getERSMappings();
-            // System.out.println(decodeASN1ByteArray(mappings));
-
             /** Configure the TSE to use the ERS "WeltladenBonnKasse" with the given transaction key (serial number) */
             tse.mapERStoKey("WeltladenBonnKasse", serialNumber);
-
-            mappings = tse.getERSMappings();
-            // System.out.println(decodeASN1ByteArray(mappings));
-
             System.out.println("\nAFTER mapERStoKey():");
             printStatusValues();
-
             passed = true;
         } catch (ErrorSigningSystemOperationDataFailed ex) {
             error = "Signing system operation data failed";
@@ -854,12 +883,12 @@ public class WeltladenTSE {
         }
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Die Zeit der TSE konnte nicht aktualisiert werden!\n\n"+
+                "ACHTUNG: Die ClientID konnte nicht dem TSE-Schlüssel zugeordnet werden!\n\n"+
                 "Fehler: "+error+".\n\n"+
                 "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
                 "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
                 "erneut versuchen.",
-                "Fehlgeschlagene Zeitaktualisierung der TSE", JOptionPane.ERROR_MESSAGE);
+                "Fehlgeschlagene Client-ID-Zuordnung der TSE", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error
             logOutAs("Admin");
             System.exit(1);
