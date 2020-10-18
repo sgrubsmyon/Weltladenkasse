@@ -13,5 +13,5 @@ timeout=20
 delay=0
 
 # size of direct IO read/write operations. 512 on most Windows platforms, 2048 on some Linux. Smaller is faster, increase on Exception. (default: 512)
-alignment=512
-#alignment=32768
+#alignment=512
+alignment=32768
