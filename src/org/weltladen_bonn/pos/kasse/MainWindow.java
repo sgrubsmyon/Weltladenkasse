@@ -18,11 +18,17 @@ import javax.swing.Timer; // ambiguity with java.util.Timer
 
 import org.weltladen_bonn.pos.MainWindowGrundlage;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 // Class holding the window of the application GUI:
 public class MainWindow extends MainWindowGrundlage implements ActionListener {
     //***************************************************
     // Members
     //***************************************************
+    private static final Logger logger = LogManager.getLogger(MainWindow.class);
+
     TabbedPane myTabbedPane;
 
     // class to talk to Kundendisplay
@@ -91,8 +97,14 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
     @Override
     public void dispose() {
         // Do clean-up:
-        if (display != null)
+        if (display != null) {
+            logger.debug("Closing connection to customer display");
             display.closeDevice();
+        }
+        if (tse.inUse()) {
+            logger.debug("Closing connection to TSE");
+            tse.disconnectFromTSE();
+        }
         super.dispose();
     }
 
