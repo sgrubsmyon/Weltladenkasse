@@ -1,9 +1,11 @@
 package org.weltladen_bonn.pos.kasse;
 
 import java.io.IOException;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.Properties;
@@ -25,6 +27,7 @@ import com.cryptovision.SEAPI.TSE;
 import com.cryptovision.SEAPI.TSE.LCS;
 import com.cryptovision.SEAPI.TSE.AuthenticateUserResult;
 import com.cryptovision.SEAPI.TSE.AuthenticationResult;
+import com.cryptovision.SEAPI.TSE.StartTransactionResult;
 import com.cryptovision.SEAPI.exceptions.SEException;
 import com.cryptovision.SEAPI.exceptions.ErrorTSECommandDataInvalid;
 import com.cryptovision.SEAPI.exceptions.ErrorSECommunicationFailed;
@@ -41,6 +44,10 @@ import com.cryptovision.SEAPI.exceptions.ErrorCertificateExpired;
 import com.cryptovision.SEAPI.exceptions.ErrorTimeNotSet;
 import com.cryptovision.SEAPI.exceptions.ErrorNoSuchKey;
 import com.cryptovision.SEAPI.exceptions.ErrorERSalreadyMapped;
+import com.cryptovision.SEAPI.exceptions.ErrorStartTransactionFailed;
+import com.cryptovision.SEAPI.exceptions.ErrorUpdateTransactionFailed;
+import com.cryptovision.SEAPI.exceptions.ErrorNoTransaction;
+import com.cryptovision.SEAPI.exceptions.ErrorFinishTransactionFailed;
 
 // For decoding/encoding output from the TSE:
 import org.bouncycastle.util.encoders.Hex;
@@ -78,6 +85,14 @@ public class WeltladenTSE {
         connectToTSE();
         printStatusValues();
         checkInitializationStatus();
+        System.out.println("\n\n*** WRITING FIRST TRANSACTION TO TSE ***");
+        System.out.println("\n --- Status before: \n");
+        printStatusValues();
+        writeTestTransaction();
+        System.out.println(" --- Status after: \n");
+        printStatusValues();
+        exportCertificateData();
+        exportTransactionData();
     }
 
     public boolean inUse() {
@@ -113,6 +128,7 @@ public class WeltladenTSE {
                 "Konfiguration der TSE nicht lesbar", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error, because a TSE config file is present
             // (so it seems usage of TSE is desired), but it could not be read from it.
+            disconnectFromTSE();
             System.exit(1);
         } catch (SEException ex) {
             logger.fatal("Unable to open connection to TSE, given configuration provided by '{}'.", "config_tse.txt");
@@ -128,9 +144,24 @@ public class WeltladenTSE {
             // Exit application upon this fatal error, because a TSE config file is present
             // (so it seems usage of TSE is desired), but maybe configuration is wrong or
             // TSE is not plugged in and no connection to TSE could be made.
+            disconnectFromTSE();
             System.exit(1);
         }
         return;
+    }
+
+    public void disconnectFromTSE() {
+        try {
+            if (tseInUse) {
+                tse.close();
+            }
+        } catch (IOException ex) {
+            logger.fatal("IOException upon closing connection to TSE");
+            logger.fatal("Exception: {}", ex);
+        } catch (SEException ex) {
+            logger.fatal("SEException upon closing connection to TSE");
+            logger.fatal("Exception: {}", ex);
+        }
     }
 
     private void checkInitializationStatus() {
@@ -159,6 +190,7 @@ public class WeltladenTSE {
                         "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
                         "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
                         "Fehler beim Setzen der PINs/PUKs der TSE", JOptionPane.ERROR_MESSAGE);
+                    disconnectFromTSE();
                     System.exit(1);
                 }
                 logger.info("TSE's PIN and PUK values successfully set!");
@@ -178,6 +210,7 @@ public class WeltladenTSE {
                         "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
                         "Fehler bei der Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
                     logOutAs("Admin");
+                    disconnectFromTSE();
                     System.exit(1);
                 }
                 logger.info("TSE successfully initialized!");
@@ -198,19 +231,26 @@ public class WeltladenTSE {
                 if (loggedIn) {
                     logOutAs("Admin");
                 }
+                disconnectFromTSE();
                 System.exit(1);
             }
             logger.info("TSE time successfully updated!");
             // If client ID not yet mapped to key:
-            if (new String(tse.getERSMappings()).equals("0")) {
+            if (encodeByteArrayAsHexString(tse.getERSMappings()).equals("3000")) { // XXX is this the general value for unmapped?
+                logger.debug("01 ERS Mappings equal 0");
                 if (!loggedIn) {
+                    logger.debug("02 Before authenticateAs");
                     authenticateAs("Admin", adminPIN);
+                    logger.debug("03 After authenticateAs");
                     loggedIn = true;
                 }
+                logger.debug("04 Before getSerialNumber");
                 byte[] serialNumber = getSerialNumber();
+                logger.debug("05 After getSerialNumber");
                 mapClientIDToKey(serialNumber);
+                logger.debug("06 After mapClientIDToKey");
                 // Re-check if client ID is still unmapped to key:
-                if (new String(tse.getERSMappings()).equals("0")) {
+                if (encodeByteArrayAsHexString(tse.getERSMappings()).equals("3000")) { // XXX is this the general value for unmapped?
                     logger.fatal("Mapping of client ID to TSE key failed!");
                     JOptionPane.showMessageDialog(this.mainWindow,
                         "ACHTUNG: Die Aktualisierung der Zeit der TSE ist fehlgeschlagen!\n"+
@@ -219,13 +259,17 @@ public class WeltladenTSE {
                         "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
                         "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
                     logOutAs("Admin");
+                    disconnectFromTSE();
                     System.exit(1);
                 }
                 logger.info("client ID successfully mapped to TSE key!");
             }
             if (loggedIn) {
+                logger.debug("07 Before logOutAs");
                 logOutAs("Admin");
+                logger.debug("08 After logOutAs");
             }
+            logger.debug("09 After everything");
         } catch (SEException ex) {
             logger.fatal("Unable to check initialization status of TSE");
             logger.fatal("Exception: {}", ex);
@@ -240,6 +284,7 @@ public class WeltladenTSE {
             if (loggedIn) {
                 logOutAs("Admin");
             }
+            disconnectFromTSE();
             System.exit(1);
         }
         return;
@@ -263,24 +308,20 @@ public class WeltladenTSE {
     }
 
     public void printStatusValues() {
-        System.out.println(
-            "Eindeutige D-Trust-ID: "+
-            encodeByteArrayAsHexString(tse.getUniqueId()) // (Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE)
-        );
+        // System.out.println(
+        //     "Eindeutige D-Trust-ID: "+
+        //     encodeByteArrayAsHexString(tse.getUniqueId()) // (Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE)
+        // );
         try {
             LCS lcs = tse.getLifeCycleState(); // (Status-Abfrage des Lebenszyklus)
-            System.out.println(
-                "BSI-Zertifizierungsnummer: "+
-                tse.getCertificationId() // (Abfrage der BSI-Zertifizierungsnummer, Beispiel: "BSI-K-TR-0374-2020")
-            );
-            System.out.println(
-                "Firmware-Version: "+
-                tse.getFirmwareId() // (Abfrage des Firmware Identifikations-Strings)
-            );
-            System.out.println(
-                "Lebenszyklus: "+
-                lcs
-            );
+            // System.out.println(
+            //     "Firmware-Version: "+
+            //     tse.getFirmwareId() // (Abfrage des Firmware Identifikations-Strings)
+            // );
+            // System.out.println(
+            //     "BSI-Zertifizierungsnummer: "+
+            //     tse.getCertificationId() // (Abfrage der BSI-Zertifizierungsnummer, Beispiel: "BSI-K-TR-0374-2020")
+            // );
             System.out.println(
                 "Gesamte Speichergröße: "+
                 tse.getTotalLogMemory() / 1024 / 1024 + // (Abfrage der Größe des gesamten Speichers für abgesicherte Anwendungs- und Protokolldaten)
@@ -295,81 +336,89 @@ public class WeltladenTSE {
                 "Verschleiß des Speichers: "+
                 tse.getWearIndicator() // (Verschleißabfrage für den Speicher der abgesicherte Anwendungs- und Protokolldaten)
             );
+            System.out.println(
+                "Lebenszyklus: "+
+                lcs
+            );
             if (lcs != LCS.notInitialized) {
                 byte[] data = tse.exportSerialNumbers(); // (Rückgabe aller Signaturschlüssel-Seriennummern, sowie deren Verwendung)
 		        byte[] serialNumber = Arrays.copyOfRange(data, 6, 6+32);
+                // System.out.println(
+                //     "Seriennummer(n) des/der Schlüssel(s) (Hex): "+
+                //     encodeByteArrayAsHexString(serialNumber)
+                // );
+                // System.out.println(
+                //     "Öffentlicher Schlüssel (Hex): "+
+                //     encodeByteArrayAsHexString(tse.exportPublicKey(serialNumber)) // (Rückgabe eines öffentlichen Schlüssels)
+                // );
+                // System.out.println(
+                //     "Ablaufdatum des Zertifikats: "+
+                //     tse.getCertificateExpirationDate(serialNumber) // (Abfrage des Ablaufdatums eines Zertifikats)
+                // );
+                // System.out.println(
+                //     "Zeitformat: "+
+                //     tse.getTimeSyncVariant() // (aus FirstBoot.java übernommen)
+                // );
+                // System.out.println(
+                //     "Signatur-Algorithmus (Hex): "+
+                //     encodeByteArrayAsHexString(tse.getSignatureAlgorithm()) // (Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten)
+                // );
+                // System.out.println(
+                //     "Signatur-Algorithmus (ASN.1): "+
+                //     decodeASN1ByteArray(tse.getSignatureAlgorithm()) // (Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten)
+                // );
                 System.out.println(
-                    "Seriennummer(n) des/der Schlüssel(s) (Hex): "+
-                    encodeByteArrayAsHexString(serialNumber)
-                );
-                System.out.println(
-                    "Öffentlicher Schlüssel (Hex): "+
-                    encodeByteArrayAsHexString(tse.exportPublicKey(serialNumber)) // (Rückgabe eines öffentlichen Schlüssels)
-                );
-                System.out.println(
-                    "Ablaufdatum des Zertifikats: "+
-                    tse.getCertificateExpirationDate(serialNumber) // (Abfrage des Ablaufdatums eines Zertifikats)
-                );
-                System.out.println(
-                    "Zeitformat: "+
-                    tse.getTimeSyncVariant() // (aus FirstBoot.java übernommen)
-                );
-                System.out.println(
-                    "Signatur-Algorithmus (Hex): "+
-                    encodeByteArrayAsHexString(tse.getSignatureAlgorithm()) // (Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten)
-                );
-                System.out.println(
-                    "Signatur-Algorithmus (ASN.1): "+
-                    decodeASN1ByteArray(tse.getSignatureAlgorithm()) // (Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten)
-                );
-                System.out.println(
-                    "Signatur-Zähler der letzten Signatur: "+
+                    "Signatur-Zähler: "+
                     tse.getSignatureCounter(serialNumber) // (Abfrage des Signatur-Zählers der letzten Signatur)
                 );
                 System.out.println(
-                    "Zuordnungen von Kassen-IDs zu Schlüsseln (Raw): "+
-                    tse.getERSMappings() // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
+                    "Transaktions-Zähler: "+
+                    tse.getTransactionCounter() // (Abfrage der Transaktionsnummer der letzten Transaktion)
                 );
+                // System.out.println(
+                //     "Zuordnungen von Kassen-IDs zu Schlüsseln (Raw): "+
+                //     tse.getERSMappings() // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
+                // );
                 System.out.println(
                     "Zuordnungen von Kassen-IDs zu Schlüsseln (String): "+
-                    new String(tse.getERSMappings()) // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
+                    new String(tse.getERSMappings()) + // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
+                    " " +
+                    new String(tse.getERSMappings()).equals("0")
                 );
                 System.out.println(
                     "Zuordnungen von Kassen-IDs zu Schlüsseln (Hex): "+
-                    encodeByteArrayAsHexString(tse.getERSMappings()) // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
+                    encodeByteArrayAsHexString(tse.getERSMappings()) + // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
+                    " " +
+                    encodeByteArrayAsHexString(tse.getERSMappings()).equals("3000")
                 );
                 System.out.println(
                     "Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1): "+
                     decodeASN1ByteArray(tse.getERSMappings()) // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
                 );
-                System.out.println(
-                    "Maximale Clientzahl: "+
-                    tse.getMaxNumberOfClients() // (Abfrage der maximal gleichzeitig unterstützten Kassen-Terminals)
-                );
-                System.out.println(
-                    "Aktuelle Clientzahl: "+
-                    tse.getCurrentNumberOfClients() // (Abfrage der derzeit in Benutzung befindlichen Kassen-Terminals)
-                );
-                System.out.println(
-                    "Maximale Zahl offener Transaktionen: "+
-                    tse.getMaxNumberOfTransactions() // (Abfrage der maximal gleichzeitig offenen Transaktionen)
-                );
-                System.out.println(
-                    "Aktuelle Zahl offener Transaktionen: "+
-                    tse.getCurrentNumberOfTransactions() // (Abfrage der Anzahl der derzeit offenen Transaktionen)
-                );
-                System.out.println(
-                    "Transaktionsnummer der letzten Transaktion: "+
-                    tse.getTransactionCounter() // (Abfrage der Transaktionsnummer der letzten Transaktion)
-                );
-                System.out.println(
-                    "Unterstützte Transaktionsaktualisierungsvarianten: "+
-                    tse.getSupportedTransactionUpdateVariants() // (aus FirstBoot.java übernommen)
-                );
-                System.out.println(
-                    "Letzte Protokolldaten (ASN.1): "+
-                    decodeASN1ByteArray(tse.readLogMessage()) // (Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes)
-                );
+                // System.out.println(
+                //     "Maximale Clientzahl: "+
+                //     tse.getMaxNumberOfClients() // (Abfrage der maximal gleichzeitig unterstützten Kassen-Terminals)
+                // );
+                // System.out.println(
+                //     "Aktuelle Clientzahl: "+
+                //     tse.getCurrentNumberOfClients() // (Abfrage der derzeit in Benutzung befindlichen Kassen-Terminals)
+                // );
+                // System.out.println(
+                //     "Maximale Zahl offener Transaktionen: "+
+                //     tse.getMaxNumberOfTransactions() // (Abfrage der maximal gleichzeitig offenen Transaktionen)
+                // );
+                // System.out.println(
+                //     "Aktuelle Zahl offener Transaktionen: "+
+                //     tse.getCurrentNumberOfTransactions() // (Abfrage der Anzahl der derzeit offenen Transaktionen)
+                // );
+                // System.out.println(
+                //     "Unterstützte Transaktionsaktualisierungsvarianten: "+
+                //     tse.getSupportedTransactionUpdateVariants() // (aus FirstBoot.java übernommen)
+                // );
+                // System.out.println(
+                //     "Letzte Protokolldaten (ASN.1): "+
+                //     decodeASN1ByteArray(tse.readLogMessage()) // (Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes)
+                // );
             }
         } catch (SEException ex) {
             logger.error("Error at reading of TSE status values");
@@ -439,6 +488,7 @@ public class WeltladenTSE {
                 "erneut versuchen.",
                 "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error
+            disconnectFromTSE();
             System.exit(1);
         } else {
             writeTimeAdminPINtoFile(timeAdminPIN);
@@ -509,6 +559,7 @@ public class WeltladenTSE {
                     "erneut versuchen.",
                     "Fehlgeschlagene Authentifizierung bei der TSE", JOptionPane.ERROR_MESSAGE);
                 // Exit application upon this fatal error
+                disconnectFromTSE();
                 System.exit(1);
             }
             passed = true;
@@ -542,6 +593,7 @@ public class WeltladenTSE {
                 "erneut versuchen.",
                 "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error
+            disconnectFromTSE();
             System.exit(1);
         }
     }
@@ -594,6 +646,7 @@ public class WeltladenTSE {
                 "erneut versuchen.",
                 "Fehlgeschlagene Abmeldung von der TSE", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error
+            disconnectFromTSE();
             System.exit(1);
         }
     }
@@ -639,6 +692,7 @@ public class WeltladenTSE {
                 "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error
             logOutAs("Admin");
+            disconnectFromTSE();
             System.exit(1);
         }
     }
@@ -672,6 +726,7 @@ public class WeltladenTSE {
                 "erneut versuchen.",
                 "Fehlgeschlagene Zeitaktualisierung der TSE", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error
+            disconnectFromTSE();
             System.exit(1);
         }
     }
@@ -744,6 +799,7 @@ public class WeltladenTSE {
                 "Fehlgeschlagene Zeitaktualisierung der TSE", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error
             logOutAs("TimeAdmin");
+            disconnectFromTSE();
             System.exit(1);
         }
     }
@@ -760,6 +816,7 @@ public class WeltladenTSE {
                     "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
                     "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
                     "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
+                disconnectFromTSE();
                 System.exit(1);
             }
         } catch (ErrorSECommunicationFailed ex) {
@@ -769,6 +826,7 @@ public class WeltladenTSE {
                 "ACHTUNG: Die Kommunikation mit der TSE nach dem Setzen der Zeit ist fehlgeschlagen!\n"+
                 "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.",
                 "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
+            disconnectFromTSE();
             System.exit(1);
         } catch (SEException ex) {
             logger.fatal("SE Communication failed!");
@@ -777,6 +835,7 @@ public class WeltladenTSE {
                 "ACHTUNG: Unbekannter Fehler nach dem Setzen der Zeit der TSE!\n"+
                 "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.",
                 "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
+            disconnectFromTSE();
             System.exit(1);
         }
         logger.info("TSE time successfully updated!");
@@ -810,6 +869,7 @@ public class WeltladenTSE {
                 "Fehlgeschlagene Seriennummerauslesung der TSE", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error
             logOutAs("Admin");
+            disconnectFromTSE();
             System.exit(1);
         }
         return serialNumber;
@@ -889,7 +949,129 @@ public class WeltladenTSE {
                 "Fehlgeschlagene Client-ID-Zuordnung der TSE", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error
             logOutAs("Admin");
+            disconnectFromTSE();
             System.exit(1);
+        }
+    }
+
+    private void writeTestTransaction() {
+        try {
+            long n = tse.getCurrentNumberOfClients();
+            logger.debug("Number of clients: {}", n);
+            n = tse.getCurrentNumberOfTransactions();
+            logger.debug("Number of transactions: {}", n);
+
+            /** Start a new transaction for the ERS (cash register) "WeltladenBonnKasse" */
+            StartTransactionResult result = tse.startTransaction("WeltladenBonnKasse", "processData".getBytes(), "whateverProcessType", "additionalData".getBytes());
+
+            /** again some status information */
+            n = tse.getCurrentNumberOfTransactions();
+            logger.debug("Number of transactions: {}", n);
+
+            /** Update the transaction */
+            tse.updateTransaction("WeltladenBonnKasse", result.transactionNumber, new byte[TSE.MAX_SIZE_TRANSPORT_LAYER-100], "anyProcessTypeString");
+
+            /** again some status information */
+            n = tse.getCurrentNumberOfTransactions();
+            logger.debug("Number of transactions: {}", n);
+
+            /** receive list of all pending transaction numbers */
+            long[] openTransactions = tse.getOpenTransactions();
+            logger.debug("Open transactions: {}", openTransactions);
+
+            /** Finish the transaction */
+            tse.finishTransaction("WeltladenBonnKasse", result.transactionNumber, "lastData".getBytes(), "maybeYetAnotherProcessType", null);
+
+            /** again some status information - should be 0 again*/
+            n = tse.getCurrentNumberOfTransactions();
+            logger.debug("Number of transactions: {}", n);
+        } catch (ErrorSeApiNotInitialized ex) {
+            logger.fatal("SE API not initialized");
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorSecureElementDisabled ex) {
+            logger.fatal("Secure Element disabled");
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorStartTransactionFailed ex) {
+            logger.fatal("Start transaction failed");
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorRetrieveLogMessageFailed ex) {
+            logger.fatal("Retrieve log message failed");
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorStorageFailure ex) {
+            logger.fatal("Storage failure");
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorTimeNotSet ex) {
+            logger.fatal("Time not set");
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorCertificateExpired ex) {
+            logger.fatal("Certificate expired");
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorUpdateTransactionFailed ex) {
+            logger.fatal("Update transaction failed");
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorNoTransaction ex) {
+            logger.fatal("No transaction");
+            logger.fatal("Exception: {}", ex);
+        } catch (ErrorFinishTransactionFailed ex) {
+            logger.fatal("Finish transaction failed");
+            logger.fatal("Exception: {}", ex);
+        } catch (SEException ex) {
+            logger.fatal("Unknown error during writeTestTransaction()");
+            logger.fatal("Exception: {}", ex);
+        }
+    }
+
+    private void exportCertificateData() {
+        /** export TSE certificate(s) */
+        try {
+            byte[] cert = tse.exportCertificates();
+            FileOutputStream fout = new FileOutputStream(new File("./certs.tar"));
+            fout.write(cert);
+            fout.close();
+        } catch (FileNotFoundException ex) {
+            logger.fatal("Exception: {}", ex);
+        } catch (IOException ex) {
+            logger.fatal("IO Error during exportCertificates()");
+            logger.fatal("Exception: {}", ex);
+        } catch (SEException ex) {
+            logger.fatal("SE Error during exportCertificates()");
+            logger.fatal("Exception: {}", ex);
+        }
+    }
+
+    private void exportTransactionData() {
+        /** Export transaction logs */
+        try {
+            File path = new File(".");
+
+            // alternative 1 - byte array result
+            FileOutputStream fout = new FileOutputStream(new File(path, "export1.tar"));
+            byte[] exportData = tse.exportData(null, null, null, null, null, null, null);
+            fout.write(exportData);
+            fout.close();
+
+            // alternative 2 - provide file name
+            tse.exportData(null, null, null, null, null, null, null, path.getAbsolutePath()+"/export2.tar");
+
+            // alternative 3 - provide stream
+            OutputStream stream = new FileOutputStream(new File(path, "export3.tar"));
+            tse.exportData(null, null, null, null, null, null, null, stream);
+            stream.close();
+
+            // alternative 4 - cv API
+            stream = new FileOutputStream(new File(path, "export4.tar"));
+            byte[] data = tse.exportSerialNumbers();
+            byte[] serial = Arrays.copyOfRange(data, 6, 6+32);
+            tse.exportMoreData(serial, (long) 0, null, stream);
+            stream.close();
+        } catch (FileNotFoundException ex) {
+            logger.fatal("Exception: {}", ex);
+        } catch (IOException ex) {
+            logger.fatal("IO Error during exportTransactionData()");
+            logger.fatal("Exception: {}", ex);
+        } catch (SEException ex) {
+            logger.fatal("SE Error during exportTransactionData()");
+            logger.fatal("Exception: {}", ex);
         }
     }
 
