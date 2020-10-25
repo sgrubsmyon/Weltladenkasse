@@ -91,7 +91,6 @@ public class WeltladenTSE {
         writeTestTransaction();
         System.out.println(" --- Status after: \n");
         printStatusValues();
-        exportCertificateData();
         exportTransactionData();
     }
 
@@ -1017,24 +1016,6 @@ public class WeltladenTSE {
             logger.fatal("Exception: {}", ex);
         } catch (SEException ex) {
             logger.fatal("Unknown error during writeTestTransaction()");
-            logger.fatal("Exception: {}", ex);
-        }
-    }
-
-    private void exportCertificateData() {
-        /** export TSE certificate(s) */
-        try {
-            byte[] cert = tse.exportCertificates();
-            FileOutputStream fout = new FileOutputStream(new File("./certs.tar"));
-            fout.write(cert);
-            fout.close();
-        } catch (FileNotFoundException ex) {
-            logger.fatal("Exception: {}", ex);
-        } catch (IOException ex) {
-            logger.fatal("IO Error during exportCertificates()");
-            logger.fatal("Exception: {}", ex);
-        } catch (SEException ex) {
-            logger.fatal("SE Error during exportCertificates()");
             logger.fatal("Exception: {}", ex);
         }
     }
