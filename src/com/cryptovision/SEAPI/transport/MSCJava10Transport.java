@@ -39,10 +39,13 @@ import com.sun.nio.file.ExtendedOpenOption;
 /** exclude from build or remove this file for Java versions before 10 */
 public class MSCJava10Transport extends MSCTransport {
 
-	private static final int ALIGNMENT_SIZE = 32768;
+	private final int ALIGNMENT_SIZE;
 
 	public MSCJava10Transport(Properties props) throws IOException {
 		super(props);
+
+		String alignment = props.getProperty("alignment");
+		ALIGNMENT_SIZE = alignment == null ? 512 : Integer.parseInt(alignment);
 
 		setSuspendMode(false);
 	}
@@ -50,10 +53,10 @@ public class MSCJava10Transport extends MSCTransport {
 	@Override
 	public void close() throws IOException {
 		setSuspendMode(true);
-		
+
 		super.close();
 	}
-	
+
 	private void setSuspendMode(boolean suspending) throws IOException {
 		ByteBuffer bb = bb(32+4+2);
 		bb.put(FILE_HEADER);
@@ -63,7 +66,7 @@ public class MSCJava10Transport extends MSCTransport {
 		((Buffer)bb).flip();
 
 		write(bb);
-		
+
 		bb.clear();
 		try {
 			receive(bb, 0, 100);
@@ -80,7 +83,18 @@ public class MSCJava10Transport extends MSCTransport {
 //		long start = System.currentTimeMillis();
 		FileChannel fc = FileChannel.open(io.toPath(), StandardOpenOption.WRITE, ExtendedOpenOption.DIRECT);
 		((Buffer)bb).limit(aligned(((Buffer)bb).limit()));
-		fc.write(bb);
+		try {
+			fc.write(bb);
+		} catch (IOException e) {
+			fc.close();
+			if(e.getMessage() == null || !e.getMessage().contains("is not a multiple of the block size"))
+				throw e;
+			int from = e.getMessage().lastIndexOf('(')+1;
+			int to = e.getMessage().lastIndexOf(')');
+			String sub = e.getMessage().substring(from, to);
+			System.err.println("try \"alignment="+sub+"\" in config.txt");
+			throw e;
+		}
 		fc.close();
 //		if(System.currentTimeMillis() - start > 1000)
 //			System.err.println("write");
