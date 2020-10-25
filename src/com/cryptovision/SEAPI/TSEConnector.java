@@ -51,8 +51,8 @@ import com.cryptovision.SEAPI.transport.Transport.Status;
  */
 public class TSEConnector extends TSE {
 
-	private static final byte[] VERSION = new byte[] { 2, 3, 1 };
-	private static final String VERSION_STRING = "cryptovision Java SE-API v2.3.1";
+	private static final byte[] VERSION = new byte[] { 2, 3, 2 };
+	private static final String VERSION_STRING = "cryptovision Java SE-API v2.3.2";
 	private static final long UINT32_MAX = (long) 0xFFFFFFFFL;
 
 	final Transport transport;
@@ -79,7 +79,7 @@ public class TSEConnector extends TSE {
 			TSE_VERSION = (String) result[0];
 			if(TSE_VERSION.contains("f44a9e") || TSE_VERSION.contains("aee640")
 			|| TSE_VERSION.contains("52376")
-			|| TSE_VERSION.contains("462076") || TSE_VERSION.contains("056817") || TSE_VERSION.contains("379178") 
+			|| TSE_VERSION.contains("462076") || TSE_VERSION.contains("056817") || TSE_VERSION.contains("379178")
 			|| TSE_VERSION.contains("430527") || TSE_VERSION.contains("966416") || TSE_VERSION.contains("021148") || TSE_VERSION.contains("932479"))
 				throw new GetInstanceException(VERSION_STRING + " should be used with certified TSE or latest Engineering Samples firmware only");
 			TSE_SERIAL = (byte[]) result[1];
@@ -214,7 +214,7 @@ public class TSEConnector extends TSE {
 			throw new ErrorTSECommandDataInvalid();
 		transport.send(Command.MapERStoKey, clientId, null);
 	}
-	
+
 	@Override
 	public StartTransactionResult startTransaction(String clientId, byte[] processData, String processType,
 			byte[] additionalData) throws SEException {
