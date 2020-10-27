@@ -83,15 +83,17 @@ public class WeltladenTSE {
     public WeltladenTSE(MainWindow mw) {
         this.mainWindow = mw;
         connectToTSE();
-        printStatusValues();
-        checkInitializationStatus();
-        System.out.println("\n\n*** WRITING FIRST TRANSACTION TO TSE ***");
-        System.out.println("\n --- Status before: \n");
-        printStatusValues();
-        writeTestTransaction();
-        System.out.println(" --- Status after: \n");
-        printStatusValues();
-        exportTransactionData();
+        if (tseInUse) {
+            printStatusValues();
+            checkInitializationStatus();
+            System.out.println("\n\n*** WRITING FIRST TRANSACTION TO TSE ***");
+            System.out.println("\n --- Status before: \n");
+            printStatusValues();
+            writeTestTransaction();
+            System.out.println(" --- Status after: \n");
+            printStatusValues();
+            exportTransactionData();
+        }
     }
 
     public boolean inUse() {
