@@ -1,5 +1,7 @@
 package org.weltladen_bonn.pos.kasse;
 
+import org.weltladen_bonn.pos.BaseClass;
+
 import java.io.IOException;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -7,8 +9,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
-import java.util.Set;
-import java.util.Properties;
 import java.nio.file.Files;
 import java.nio.file.FileSystems;
 import java.nio.file.FileAlreadyExistsException;
@@ -16,6 +16,10 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
+import java.util.Set;
+import java.util.Properties;
+import java.util.HashMap;
 
 // GUI stuff:
 import java.awt.BorderLayout;
@@ -68,6 +72,8 @@ import org.apache.logging.log4j.Logger;
 public class WeltladenTSE {
     private static final Logger logger = LogManager.getLogger(Kundendisplay.class);
 
+    private BaseClass bc;
+
     private TSE tse = null;
     private boolean tseInUse = true;
     private MainWindow mainWindow = null;
@@ -80,8 +86,9 @@ public class WeltladenTSE {
      *    The constructor.
      *
      */
-    public WeltladenTSE(MainWindow mw) {
+    public WeltladenTSE(MainWindow mw, BaseClass bc) {
         this.mainWindow = mw;
+        this.bc = bc;
         connectToTSE();
         if (tseInUse) {
             printStatusValues();
@@ -308,123 +315,102 @@ public class WeltladenTSE {
         return result;
     }
 
-    public void printStatusValues() {
-        // System.out.println(
-        //     "Eindeutige D-Trust-ID: "+
-        //     encodeByteArrayAsHexString(tse.getUniqueId()) // (Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE)
-        // );
+    public HashMap<String, String> retrieveTSEStatusValues() {
+        HashMap<String, String> values = new HashMap<String, String>();
+        // Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE
+        values.put("Eindeutige D-Trust-ID", encodeByteArrayAsHexString(tse.getUniqueId()));
         try {
-            LCS lcs = tse.getLifeCycleState(); // (Status-Abfrage des Lebenszyklus)
-            // System.out.println(
-            //     "Firmware-Version: "+
-            //     tse.getFirmwareId() // (Abfrage des Firmware Identifikations-Strings)
-            // );
-            // System.out.println(
-            //     "BSI-Zertifizierungsnummer: "+
-            //     tse.getCertificationId() // (Abfrage der BSI-Zertifizierungsnummer, Beispiel: "BSI-K-TR-0374-2020")
-            // );
-            System.out.println(
-                "Gesamte Speichergröße: "+
-                tse.getTotalLogMemory() / 1024 / 1024 + // (Abfrage der Größe des gesamten Speichers für abgesicherte Anwendungs- und Protokolldaten)
-                " MB"
-            );
-            System.out.println(
-                "Verfügbare Speichergröße: "+
-                tse.getAvailableLogMemory() / 1024 / 1024 + // (Abfrage der Größe des freien Speichers für abgesicherte Anwendungs- und Protokolldaten)
-                " MB"
-            );
-            System.out.println(
-                "Verschleiß des Speichers: "+
-                tse.getWearIndicator() // (Verschleißabfrage für den Speicher der abgesicherte Anwendungs- und Protokolldaten)
-            );
-            System.out.println(
-                "Lebenszyklus: "+
-                lcs
-            );
+            // Abfrage des Firmware Identifikations-Strings
+            values.put("Firmware-Version", tse.getFirmwareId());
+            // Abfrage der BSI-Zertifizierungsnummer, Beispiel: "BSI-K-TR-0374-2020"
+            values.put("BSI-Zertifizierungsnummer", tse.getCertificationId());
+            // Abfrage der Größe des gesamten Speichers für abgesicherte Anwendungs- und Protokolldaten
+            values.put("Gesamte Speichergröße", tse.getTotalLogMemory() / 1024 / 1024 + " MB");
+            // Abfrage der Größe des freien Speichers für abgesicherte Anwendungs- und Protokolldaten
+            values.put("Verfügbare Speichergröße", tse.getAvailableLogMemory() / 1024 / 1024 + " MB");
+            // Verschleißabfrage für den Speicher der abgesicherte Anwendungs- und Protokolldaten
+            values.put("Verschleiß des Speichers", String.valueOf(tse.getWearIndicator()));
+            // Status-Abfrage des Lebenszyklus
+            LCS lcs = tse.getLifeCycleState();
+            values.put("Lebenszyklus", lcs.toString());
             if (lcs != LCS.notInitialized) {
                 byte[] data = tse.exportSerialNumbers(); // (Rückgabe aller Signaturschlüssel-Seriennummern, sowie deren Verwendung)
 		        byte[] serialNumber = Arrays.copyOfRange(data, 6, 6+32);
-                // System.out.println(
-                //     "Seriennummer(n) des/der Schlüssel(s) (Hex): "+
-                //     encodeByteArrayAsHexString(serialNumber)
-                // );
-                // System.out.println(
-                //     "Öffentlicher Schlüssel (Hex): "+
-                //     encodeByteArrayAsHexString(tse.exportPublicKey(serialNumber)) // (Rückgabe eines öffentlichen Schlüssels)
-                // );
-                // System.out.println(
-                //     "Ablaufdatum des Zertifikats: "+
-                //     tse.getCertificateExpirationDate(serialNumber) // (Abfrage des Ablaufdatums eines Zertifikats)
-                // );
-                // System.out.println(
-                //     "Zeitformat: "+
-                //     tse.getTimeSyncVariant() // (aus FirstBoot.java übernommen)
-                // );
-                // System.out.println(
-                //     "Signatur-Algorithmus (Hex): "+
-                //     encodeByteArrayAsHexString(tse.getSignatureAlgorithm()) // (Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten)
-                // );
-                // System.out.println(
-                //     "Signatur-Algorithmus (ASN.1): "+
-                //     decodeASN1ByteArray(tse.getSignatureAlgorithm()) // (Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten)
-                // );
-                System.out.println(
-                    "Signatur-Zähler: "+
-                    tse.getSignatureCounter(serialNumber) // (Abfrage des Signatur-Zählers der letzten Signatur)
-                );
-                System.out.println(
-                    "Transaktions-Zähler: "+
-                    tse.getTransactionCounter() // (Abfrage der Transaktionsnummer der letzten Transaktion)
-                );
-                // System.out.println(
-                //     "Zuordnungen von Kassen-IDs zu Schlüsseln (Raw): "+
-                //     tse.getERSMappings() // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
-                // );
-                System.out.println(
-                    "Zuordnungen von Kassen-IDs zu Schlüsseln (String): "+
-                    new String(tse.getERSMappings()) + // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
-                    " " +
-                    new String(tse.getERSMappings()).equals("0")
-                );
-                System.out.println(
-                    "Zuordnungen von Kassen-IDs zu Schlüsseln (Hex): "+
-                    encodeByteArrayAsHexString(tse.getERSMappings()) + // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
-                    " " +
-                    encodeByteArrayAsHexString(tse.getERSMappings()).equals("3000")
-                );
-                System.out.println(
-                    "Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1): "+
-                    decodeASN1ByteArray(tse.getERSMappings()) // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
-                );
-                // System.out.println(
-                //     "Maximale Clientzahl: "+
-                //     tse.getMaxNumberOfClients() // (Abfrage der maximal gleichzeitig unterstützten Kassen-Terminals)
-                // );
-                // System.out.println(
-                //     "Aktuelle Clientzahl: "+
-                //     tse.getCurrentNumberOfClients() // (Abfrage der derzeit in Benutzung befindlichen Kassen-Terminals)
-                // );
-                // System.out.println(
-                //     "Maximale Zahl offener Transaktionen: "+
-                //     tse.getMaxNumberOfTransactions() // (Abfrage der maximal gleichzeitig offenen Transaktionen)
-                // );
-                // System.out.println(
-                //     "Aktuelle Zahl offener Transaktionen: "+
-                //     tse.getCurrentNumberOfTransactions() // (Abfrage der Anzahl der derzeit offenen Transaktionen)
-                // );
-                // System.out.println(
-                //     "Unterstützte Transaktionsaktualisierungsvarianten: "+
-                //     tse.getSupportedTransactionUpdateVariants() // (aus FirstBoot.java übernommen)
-                // );
-                // System.out.println(
-                //     "Letzte Protokolldaten (ASN.1): "+
-                //     decodeASN1ByteArray(tse.readLogMessage()) // (Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes)
-                // );
+                // Abfrage der Transaktionsnummer der letzten Transaktion
+                values.put("Transaktions-Zähler", String.valueOf(tse.getTransactionCounter()));
+                // Abfrage des Signatur-Zählers der letzten Signatur
+                values.put("Signatur-Zähler", String.valueOf(tse.getSignatureCounter(serialNumber)));
+                // Signaturschlüssel-Seriennummer
+                values.put("Seriennummer(n) des/der Schlüssel(s) (Hex)", encodeByteArrayAsHexString(serialNumber));
+                // Rückgabe eines öffentlichen Schlüssels
+                values.put("Öffentlicher Schlüssel (Hex)", encodeByteArrayAsHexString(tse.exportPublicKey(serialNumber)));
+                long expirationTimestamp = tse.getCertificateExpirationDate(serialNumber);
+                java.util.Date expirationDate = new java.util.Date(expirationTimestamp * 1000);
+                // Abfrage des Ablaufdatums eines Zertifikats
+                values.put("Ablaufdatum des Zertifikats", new SimpleDateFormat(bc.dateFormatJava).format(expirationDate));
+                // Abfrage des Ablaufdatums eines Zertifikats
+                values.put("Ablaufdatum des Zertifikats (Unixtime)", String.valueOf(expirationTimestamp));
+                // aus FirstBoot.java übernommen:
+                values.put("Zeitformat", tse.getTimeSyncVariant().toString());
+                // Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten
+                values.put("Signatur-Algorithmus (Hex)", encodeByteArrayAsHexString(tse.getSignatureAlgorithm()));
+                // Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten
+                values.put("Signatur-Algorithmus (ASN.1)", decodeASN1ByteArray(tse.getSignatureAlgorithm()));
+                // Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln
+                values.put("Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)", decodeASN1ByteArray(tse.getERSMappings()));
+                // Abfrage der maximal gleichzeitig unterstützten Kassen-Terminals
+                values.put("Maximale Anzahl Kassen-Terminals", String.valueOf(tse.getMaxNumberOfClients()));
+                // Abfrage der derzeit in Benutzung befindlichen Kassen-Terminals
+                values.put("Aktuelle Anzahl Kassen-Terminals", String.valueOf(tse.getCurrentNumberOfClients()));
+                // Abfrage der maximal gleichzeitig offenen Transaktionen
+                values.put("Maximale Zahl offener Transaktionen", String.valueOf(tse.getMaxNumberOfTransactions()));
+                // Abfrage der Anzahl der derzeit offenen Transaktionen
+                values.put("Aktuelle Zahl offener Transaktionen", String.valueOf(tse.getCurrentNumberOfTransactions()));
+                // aus FirstBoot.java übernommen
+                values.put("Unterstützte Transaktionsaktualisierungsvarianten", tse.getSupportedTransactionUpdateVariants().toString());
+                // Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes
+                values.put("Letzte Protokolldaten (ASN.1)", decodeASN1ByteArray(tse.readLogMessage()));
             }
         } catch (SEException ex) {
             logger.error("Error at reading of TSE status values");
             logger.error("Exception: {}", ex);
+        } finally {
+            return values;
         }
+    }
+
+    private void printStatusValues() {
+        HashMap<String, String> values = retrieveTSEStatusValues();
+        String[] interestingValues = {
+            // "Eindeutige D-Trust-ID", "Firmware-Version", "BSI-Zertifizierungsnummer",
+            "Gesamte Speichergröße", "Verfügbare Speichergröße", "Verschleiß des Speichers",
+            "Lebenszyklus", "Transaktions-Zähler", "Signatur-Zähler",
+            // "Seriennummer(n) des/der Schlüssel(s) (Hex)", "Öffentlicher Schlüssel (Hex)",
+            "Ablaufdatum des Zertifikats (Unixtime)", "Ablaufdatum des Zertifikats", "Signatur-Algorithmus (ASN.1)",
+            "Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)"
+        };
+        for (String s : interestingValues) {
+            System.out.println(s + ": " + values.get(s));
+        }
+        // if (values.get("Lebenszyklus") != "notInitialized") {
+        //     try {
+        //         System.out.println(
+        //             "Zuordnungen von Kassen-IDs zu Schlüsseln (String): "+
+        //             new String(tse.getERSMappings()) + // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
+        //             " " +
+        //             new String(tse.getERSMappings()).equals("0")
+        //         );
+        //         System.out.println(
+        //             "Zuordnungen von Kassen-IDs zu Schlüsseln (Hex): "+
+        //             encodeByteArrayAsHexString(tse.getERSMappings()) + // (Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln)
+        //             " " +
+        //             encodeByteArrayAsHexString(tse.getERSMappings()).equals("3000")
+        //         );
+        //     } catch (SEException ex) {
+        //         logger.error("Error at reading of TSE status values");
+        //         logger.error("Exception: {}", ex);
+        //     }
+        // }
     }
 
     private byte[] showPINPUKDialog() {

@@ -52,16 +52,16 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
         display = new Kundendisplay(bc);
         setDisplayBlankTimer();
 
-        tse = new WeltladenTSE(this);
+        tse = new WeltladenTSE(this, this.bc);
 
         if (dbconn.connectionWorks){
             myTabbedPane = new TabbedPane(this.pool, this);
             setContentPanel(myTabbedPane);
         }
-	//topPanel.setLayout(new FlowLayout());
-	//beendenButton.addActionListener(this);
-	//topPanel.add(beendenButton);
-	//holdAll.add(topPanel, BorderLayout.NORTH);
+        //topPanel.setLayout(new FlowLayout());
+        //beendenButton.addActionListener(this);
+        //topPanel.add(beendenButton);
+        //holdAll.add(topPanel, BorderLayout.NORTH);
     }
 
     public void setDisplayWelcomeTimer() {
