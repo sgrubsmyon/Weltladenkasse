@@ -93,7 +93,8 @@ public class WeltladenTSE {
         "Lebenszyklus",
         "Transaktions-Zähler",
         "Signatur-Zähler",
-        "Seriennummer(n) des/der Schlüssel(s) (Hex)",
+        "Seriennummer des 1. Schlüssels (Hex)",
+        "Seriennummern aller Schlüssel (ASN.1)",
         "Öffentlicher Schlüssel (Hex)",
         "Ablaufdatum des Zertifikats",
         "Ablaufdatum des Zertifikats (Unixtime)",
@@ -375,8 +376,8 @@ public class WeltladenTSE {
                 values.put("Lebenszyklus", lcs.toString());
             }
             if (lcs != LCS.notInitialized) {
-                byte[] data = tse.exportSerialNumbers(); // (Rückgabe aller Signaturschlüssel-Seriennummern, sowie deren Verwendung)
-		        byte[] serialNumber = Arrays.copyOfRange(data, 6, 6+32);
+                byte[] serialNumberData = tse.exportSerialNumbers(); // (Rückgabe aller Signaturschlüssel-Seriennummern, sowie deren Verwendung)
+		        byte[] serialNumber = Arrays.copyOfRange(serialNumberData, 6, 6+32);
                 if (interestingValues.size() == 0 || interestingValues.contains("Transaktions-Zähler")) {
                     // Abfrage der Transaktionsnummer der letzten Transaktion
                     values.put("Transaktions-Zähler", String.valueOf(tse.getTransactionCounter()));
@@ -385,9 +386,13 @@ public class WeltladenTSE {
                     // Abfrage des Signatur-Zählers der letzten Signatur
                     values.put("Signatur-Zähler", String.valueOf(tse.getSignatureCounter(serialNumber)));
                 }
-                if (interestingValues.size() == 0 || interestingValues.contains("Seriennummer(n) des/der Schlüssel(s) (Hex)")) {
+                if (interestingValues.size() == 0 || interestingValues.contains("Seriennummer des 1. Schlüssels (Hex)")) {
                     // Signaturschlüssel-Seriennummer
-                    values.put("Seriennummer(n) des/der Schlüssel(s) (Hex)", encodeByteArrayAsHexString(serialNumber));
+                    values.put("Seriennummer des 1. Schlüssels (Hex)", encodeByteArrayAsHexString(serialNumber));
+                }
+                if (interestingValues.size() == 0 || interestingValues.contains("Seriennummern aller Schlüssel (ASN.1)")) {
+                    // Alle Signaturschlüssel-Seriennummern
+                    values.put("Seriennummern aller Schlüssel (ASN.1)", decodeASN1ByteArray(serialNumberData));
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Öffentlicher Schlüssel (Hex)")) {
                     // Rückgabe eines öffentlichen Schlüssels
@@ -464,8 +469,8 @@ public class WeltladenTSE {
             // "Eindeutige D-Trust-ID", "Firmware-Version", "BSI-Zertifizierungsnummer",
             "Gesamte Speichergröße", "Verfügbare Speichergröße", "Verschleiß des Speichers",
             "Lebenszyklus", "Transaktions-Zähler", "Signatur-Zähler",
-            // "Seriennummer(n) des/der Schlüssel(s) (Hex)", "Öffentlicher Schlüssel (Hex)",
-            "Ablaufdatum des Zertifikats", "Signatur-Algorithmus (ASN.1)",
+            // "Seriennummer des 1. Schlüssels (Hex)", "Öffentlicher Schlüssel (Hex)",
+            // "Ablaufdatum des Zertifikats", "Signatur-Algorithmus (ASN.1)",
             "Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)"
         };
         Vector<String> interestingValues = new Vector<String>(Arrays.asList(interestingValuesArray));
