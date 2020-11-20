@@ -12,9 +12,10 @@ import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JLabel;
 import javax.swing.JButton;
-import javax.swing.JTextField;
+import javax.swing.JTextArea;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JDialog;
@@ -85,17 +86,26 @@ public class TSEStatus extends WindowContent {
         int row = 0;
         for (String k : tse.statusValueKeys) {
             JLabel key = new JLabel(k+":");
-            JTextField value = new JTextField(statusValues.get(k));
-            value.setColumns(60);
-            value.setEnabled(false);
-            value.setDisabledTextColor(Color.DARK_GRAY);
+            String valueText = statusValues.get(k);
+            // Determine how many rows are needed for display:
+            String[] valueTextSplit = valueText.split("\n");
+            int rows = valueTextSplit.length;
+            for (String s : valueTextSplit) {
+                if (s.length() > 100) rows++;
+            }
+            System.out.println(k+": "+rows+" "+valueText.length());
+            JTextArea value = new JTextArea(valueText, rows, 100);
+            value = makeLabelStyle(value);
+            value.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
+            // value.setFont(BaseClass.mediumFont);
             c.gridy = row; // new row
             c.gridx = 0; statusPanel.add(key, c); // first column
             c.gridx = 1; statusPanel.add(value, c); // second column
             row++;
         }
 
-        panel.add(statusPanel);
+        JScrollPane statusPanelScrollPane = new JScrollPane(statusPanel);
+        panel.add(statusPanelScrollPane);
 
         JPanel buttonPanel = new JPanel();
         updateButton = new JButton("Statuswerte aktualisieren");
