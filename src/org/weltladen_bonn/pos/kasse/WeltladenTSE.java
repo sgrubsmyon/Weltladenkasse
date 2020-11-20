@@ -83,6 +83,32 @@ public class WeltladenTSE {
     private static long nextSyncTime = 0;
     private static int timeSyncInterval = 0;
 
+    public static String[] statusValueKeys = {
+        "Eindeutige D-Trust-ID",
+        "BSI-Zertifizierungsnummer",
+        "Firmware-Version",
+        "Gesamte Speichergröße",
+        "Verfügbare Speichergröße",
+        "Verschleiß des Speichers",
+        "Lebenszyklus",
+        "Transaktions-Zähler",
+        "Signatur-Zähler",
+        "Seriennummer(n) des/der Schlüssel(s) (Hex)",
+        "Öffentlicher Schlüssel (Hex)",
+        "Ablaufdatum des Zertifikats",
+        "Ablaufdatum des Zertifikats (Unixtime)",
+        "Zeitformat",
+        "Signatur-Algorithmus (Hex)",
+        "Signatur-Algorithmus (ASN.1)",
+        "Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)",
+        "Maximale Anzahl Kassen-Terminals",
+        "Aktuelle Anzahl Kassen-Terminals",
+        "Maximale Zahl offener Transaktionen",
+        "Aktuelle Zahl offener Transaktionen",
+        "Unterstützte Transaktionsaktualisierungsvarianten",
+        "Letzte Protokolldaten (ASN.1)"
+    };
+
     /**
      *    The constructor.
      *
@@ -94,13 +120,13 @@ public class WeltladenTSE {
         if (tseInUse) {
             printStatusValues();
             checkInitializationStatus();
-            System.out.println("\n\n*** WRITING FIRST TRANSACTION TO TSE ***");
-            System.out.println("\n --- Status before: \n");
-            printStatusValues();
-            writeTestTransaction();
-            System.out.println("\n --- Status after: \n");
-            printStatusValues();
-            exportTransactionData();
+            // System.out.println("\n\n*** WRITING FIRST TRANSACTION TO TSE ***");
+            // System.out.println("\n --- Status before: \n");
+            // printStatusValues();
+            // writeTestTransaction();
+            // System.out.println("\n --- Status after: \n");
+            // printStatusValues();
+            // exportTransactionData();
         }
     }
 
@@ -323,13 +349,13 @@ public class WeltladenTSE {
             values.put("Eindeutige D-Trust-ID", encodeByteArrayAsHexString(tse.getUniqueId()));
         }
         try {
-            if (interestingValues.size() == 0 || interestingValues.contains("Firmware-Version")) {
-                // Abfrage des Firmware Identifikations-Strings
-                values.put("Firmware-Version", tse.getFirmwareId());
-            }
             if (interestingValues.size() == 0 || interestingValues.contains("BSI-Zertifizierungsnummer")) {
                 // Abfrage der BSI-Zertifizierungsnummer, Beispiel: "BSI-K-TR-0374-2020"
                 values.put("BSI-Zertifizierungsnummer", tse.getCertificationId());
+            }
+            if (interestingValues.size() == 0 || interestingValues.contains("Firmware-Version")) {
+                // Abfrage des Firmware Identifikations-Strings
+                values.put("Firmware-Version", tse.getFirmwareId());
             }
             if (interestingValues.size() == 0 || interestingValues.contains("Gesamte Speichergröße")) {
                 // Abfrage der Größe des gesamten Speichers für abgesicherte Anwendungs- und Protokolldaten
@@ -602,7 +628,7 @@ public class WeltladenTSE {
             error = "Retrieve log message failed";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
-       } catch (ErrorStorageFailure ex) {
+        } catch (ErrorStorageFailure ex) {
             error = "Storage failure";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception: {}", ex);
