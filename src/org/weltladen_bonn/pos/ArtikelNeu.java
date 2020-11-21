@@ -88,7 +88,7 @@ public class ArtikelNeu extends WindowContent
         setTableProperties(myTable);
 
         JScrollPane scrollPane = new JScrollPane(myTable);
-	scrollPane.setBorder(BorderFactory.createTitledBorder("Neue Artikel"));
+	    scrollPane.setBorder(BorderFactory.createTitledBorder("Neue Artikel"));
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         myTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
