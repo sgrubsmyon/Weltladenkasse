@@ -51,6 +51,11 @@ public class TSEStatus extends WindowContent {
     private WeltladenTSE tse;
     HashMap<String, String> statusValues;
 
+    private JPanel panel;
+    private JPanel statusPanelContainer;
+    private JPanel statusPanel;
+    private JScrollPane statusPanelScrollPane;
+
     /**
      *    The constructor.
      *       */
@@ -70,14 +75,26 @@ public class TSEStatus extends WindowContent {
         /**
          * TextField-Panel
          * */
-        JPanel panel = new JPanel();
+        panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
         // borders:
         int top = 10, left = 10, bottom = 10, right = 10;
         panel.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
 
-        JPanel statusPanel = new JPanel(new GridBagLayout());
+        statusPanelContainer = new JPanel();
+        statusPanelContainer.setLayout(new BoxLayout(statusPanelContainer, BoxLayout.Y_AXIS));
+        panel.add(statusPanelContainer);
+        showStatusPanel();
+        showButtonPanel();
+        
+        this.add(panel);
+
+        scrollPaneToTop();
+    }
+
+    private void showStatusPanel() {
+        statusPanel = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.WEST;
@@ -114,9 +131,14 @@ public class TSEStatus extends WindowContent {
             row++; // new row
         }
 
-        JScrollPane statusPanelScrollPane = new JScrollPane(statusPanel);
+        statusPanelScrollPane = new JScrollPane(statusPanel);
+        statusPanelScrollPane.setBorder(BorderFactory.createTitledBorder("Status-Werte der TSE"));
         statusPanelScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        panel.add(statusPanelScrollPane);
+        
+        statusPanelContainer.add(statusPanelScrollPane);
+    }
+
+    private void scrollPaneToTop() {
         // Scroll pane to top:
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -124,7 +146,9 @@ public class TSEStatus extends WindowContent {
                 statusPanel.scrollRectToVisible(new Rectangle(0,0,1,1)); // scroll to top, really, to the TOP!
             }
         });
+    }
 
+    private void showButtonPanel() {
         JPanel buttonPanel = new JPanel();
         updateButton = new JButton("Statuswerte aktualisieren");
         exportButton = new JButton("TSE-Log vollständig exportieren");
@@ -135,9 +159,8 @@ public class TSEStatus extends WindowContent {
         buttonPanel.add(updateButton);
         buttonPanel.add(exportButton);
         buttonPanel.add(exportPartButton);
+        
         panel.add(buttonPanel);
-
-        this.add(panel);
     }
 
     void initializeSaveChooser(String filename) {
@@ -189,7 +212,10 @@ public class TSEStatus extends WindowContent {
      **/
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == updateButton){
-            
+            updateStatusValues();
+            statusPanelContainer.remove(statusPanelScrollPane);
+            statusPanelContainer.revalidate();
+            showStatusPanel();
         }
         else if (e.getSource() == exportButton){
             
