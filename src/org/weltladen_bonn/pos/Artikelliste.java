@@ -763,7 +763,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         // does not work correctly when table is sorted and filter is used:
         /*
         artikelListPanel.remove(scrollPane);
-	artikelListPanel.revalidate();
+	    artikelListPanel.revalidate();
 
         applyFilter(filterStr, displayData, displayIndices);
 

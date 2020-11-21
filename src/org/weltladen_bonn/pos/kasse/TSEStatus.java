@@ -22,7 +22,9 @@ import javax.swing.JDialog;
 import javax.swing.JPasswordField;
 import javax.swing.BoxLayout;
 import javax.swing.BorderFactory;
+import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 // Logging:
@@ -77,7 +79,7 @@ public class TSEStatus extends WindowContent {
 
         JPanel statusPanel = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.VERTICAL;
+        c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.WEST;
         c.ipadx = 15;
         c.ipady = 10;
@@ -85,6 +87,14 @@ public class TSEStatus extends WindowContent {
         
         int row = 0;
         for (String k : tse.statusValueKeys) {
+            if (row > 0) {
+                // First a separator to separate from last item
+                c.gridy = row;
+                c.gridx = 0; c.gridwidth = 2; // fill entire row
+                statusPanel.add(new JSeparator(JSeparator.HORIZONTAL), c); // first column
+                c.gridwidth = 1; // back to normal
+                row++; // new row
+            }
             JLabel key = new JLabel(k+":");
             String valueText = statusValues.get(k);
             // Determine how many rows are needed for display:
@@ -98,14 +108,22 @@ public class TSEStatus extends WindowContent {
             value = makeLabelStyle(value);
             value.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
             // value.setFont(BaseClass.mediumFont);
-            c.gridy = row; // new row
+            c.gridy = row;
             c.gridx = 0; statusPanel.add(key, c); // first column
             c.gridx = 1; statusPanel.add(value, c); // second column
-            row++;
+            row++; // new row
         }
 
         JScrollPane statusPanelScrollPane = new JScrollPane(statusPanel);
+        statusPanelScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         panel.add(statusPanelScrollPane);
+        // Scroll pane to top:
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                statusPanel.scrollRectToVisible(new Rectangle(0,0,1,1)); // scroll to top, really, to the TOP!
+            }
+        });
 
         JPanel buttonPanel = new JPanel();
         updateButton = new JButton("Statuswerte aktualisieren");
