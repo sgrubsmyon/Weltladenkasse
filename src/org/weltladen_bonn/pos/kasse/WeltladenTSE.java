@@ -120,7 +120,6 @@ public class WeltladenTSE {
         this.bc = bc;
         connectToTSE();
         if (tseInUse) {
-            printStatusValues();
             checkInitializationStatus();
             // System.out.println("\n\n*** WRITING FIRST TRANSACTION TO TSE ***");
             // System.out.println("\n --- Status before: \n");
