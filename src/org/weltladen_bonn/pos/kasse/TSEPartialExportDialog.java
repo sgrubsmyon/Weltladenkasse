@@ -126,7 +126,7 @@ public class TSEPartialExportDialog extends DialogWindow implements DocumentList
             new IntegerDocumentFilter(null, null, "Unix-Timestamp", this)
         );
         ((AbstractDocument)sigCounterLastExcludedField.getDocument()).setDocumentFilter(
-            new IntegerDocumentFilter(1, null, "Signatur-Zähler", this)
+            new IntegerDocumentFilter(0, null, "Signatur-Zähler", this)
         );
         
         limitRecords = new JCheckBox("Exportdaten begrenzen");
