@@ -77,6 +77,7 @@ public class WeltladenTSE {
 
     private TSE tse = null;
     private boolean tseInUse = true;
+    private boolean loggedIn = false;
     private MainWindow mainWindow = null;
     private Path pinPath = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".Weltladenkasse_tse");
 
@@ -91,7 +92,7 @@ public class WeltladenTSE {
         "Verfügbare Speichergröße",
         "Verschleiß des Speichers",
         "Lebenszyklus",
-        "Transaktions-Zähler",
+        "Transaktionsnummer",
         "Signatur-Zähler",
         "Seriennummer des 1. Schlüssels (Hex)",
         "Seriennummern aller Schlüssel (ASN.1)",
@@ -187,21 +188,24 @@ public class WeltladenTSE {
     }
 
     public void disconnectFromTSE() {
-        try {
-            if (tseInUse) {
+        if (tseInUse) {
+            try {
                 tse.close();
+            } catch (IOException ex) {
+                logger.fatal("IOException upon closing connection to TSE");
+                logger.fatal("Exception: {}", ex);
+            } catch (SEException ex) {
+                logger.fatal("SEException upon closing connection to TSE");
+                logger.fatal("Exception: {}", ex);
+            } catch(Throwable ex) {
+                logger.fatal("Throwable caught in disconnectFromTSE");
+                logger.fatal("Exception: {}", ex);
             }
-        } catch (IOException ex) {
-            logger.fatal("IOException upon closing connection to TSE");
-            logger.fatal("Exception: {}", ex);
-        } catch (SEException ex) {
-            logger.fatal("SEException upon closing connection to TSE");
-            logger.fatal("Exception: {}", ex);
         }
     }
 
     private void checkInitializationStatus() {
-        boolean loggedIn = false;
+        loggedIn = false;
         try {
             boolean[] pinStatus = tse.getPinStatus();
             boolean transportState = pinStatus[0];
@@ -246,6 +250,7 @@ public class WeltladenTSE {
                         "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
                         "Fehler bei der Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
                     logOutAs("Admin");
+                    loggedIn = false;
                     disconnectFromTSE();
                     System.exit(1);
                 }
@@ -266,6 +271,7 @@ public class WeltladenTSE {
                     "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
                 if (loggedIn) {
                     logOutAs("Admin");
+                    loggedIn = false;
                 }
                 disconnectFromTSE();
                 System.exit(1);
@@ -295,6 +301,7 @@ public class WeltladenTSE {
                         "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
                         "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
                     logOutAs("Admin");
+                    loggedIn = false;
                     disconnectFromTSE();
                     System.exit(1);
                 }
@@ -303,6 +310,7 @@ public class WeltladenTSE {
             if (loggedIn) {
                 logger.debug("07 Before logOutAs");
                 logOutAs("Admin");
+                loggedIn = false;
                 logger.debug("08 After logOutAs");
             }
             logger.debug("09 After everything");
@@ -319,6 +327,7 @@ public class WeltladenTSE {
             // TSE is not plugged in and no connection to TSE could be made.
             if (loggedIn) {
                 logOutAs("Admin");
+                loggedIn = false;
             }
             disconnectFromTSE();
             System.exit(1);
@@ -376,18 +385,21 @@ public class WeltladenTSE {
                 values.put("Lebenszyklus", lcs.toString());
             }
             if (lcs != LCS.notInitialized) {
+                // Erklärung zu Seriennummern auf https://tse-support.cryptovision.com/confluence/display/TDI/TSE-Seriennummer:
+                // "Eine Seriennummer ist der SHA-256 Hashwert des öffentlichen Schlüssels, der zu dem Schlüsselpaar gehört,
+                //  dessen privater Schlüssel zum Signieren der Protokollmeldungen verwendet wird."
                 byte[] serialNumberData = tse.exportSerialNumbers(); // (Rückgabe aller Signaturschlüssel-Seriennummern, sowie deren Verwendung)
 		        byte[] serialNumber = Arrays.copyOfRange(serialNumberData, 6, 6+32);
-                if (interestingValues.size() == 0 || interestingValues.contains("Transaktions-Zähler")) {
-                    // Abfrage der Transaktionsnummer der letzten Transaktion
-                    values.put("Transaktions-Zähler", String.valueOf(tse.getTransactionCounter()));
+                if (interestingValues.size() == 0 || interestingValues.contains("Transaktionsnummer")) {
+                    // Abfrage der Transaktionsnummer der letzten Transaktio, XXX sollte auf Quittung gedruckt werden!n
+                    values.put("Transaktionsnummer", String.valueOf(tse.getTransactionCounter()));
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Signatur-Zähler")) {
-                    // Abfrage des Signatur-Zählers der letzten Signatur
+                    // Abfrage des Signatur-Zählers der letzten Signatur, XXX sollte auf Quittung gedruckt werden!
                     values.put("Signatur-Zähler", String.valueOf(tse.getSignatureCounter(serialNumber)));
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Seriennummer des 1. Schlüssels (Hex)")) {
-                    // Signaturschlüssel-Seriennummer
+                    // Erste und auch einzige Signaturschlüssel-Seriennummer, XXX sollte auf Quittung gedruckt werden!
                     values.put("Seriennummer des 1. Schlüssels (Hex)", encodeByteArrayAsHexString(serialNumber));
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Seriennummern aller Schlüssel (ASN.1)")) {
@@ -468,7 +480,7 @@ public class WeltladenTSE {
         String[] interestingValuesArray = {
             // "Eindeutige D-Trust-ID", "Firmware-Version", "BSI-Zertifizierungsnummer",
             "Gesamte Speichergröße", "Verfügbare Speichergröße", "Verschleiß des Speichers",
-            "Lebenszyklus", "Transaktions-Zähler", "Signatur-Zähler",
+            "Lebenszyklus", "Transaktionsnummer", "Signatur-Zähler",
             // "Seriennummer des 1. Schlüssels (Hex)", "Öffentlicher Schlüssel (Hex)",
             // "Ablaufdatum des Zertifikats", "Signatur-Algorithmus (ASN.1)",
             "Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)"
@@ -754,6 +766,7 @@ public class WeltladenTSE {
                 "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error
             logOutAs("Admin");
+            loggedIn = false;
             disconnectFromTSE();
             System.exit(1);
         }
@@ -803,16 +816,16 @@ public class WeltladenTSE {
         boolean passed = false;
         String error = "";
         try {
-            System.out.println("\nBEFORE updateTime():");
-            printStatusValues();
+            // System.out.println("\nBEFORE updateTime():");
+            // printStatusValues();
             logger.info("Updating TSE's time...");
             authenticateAs("TimeAdmin", timeAdminPIN);
             tse.updateTime(currentUtcTime);
             logOutAs("TimeAdmin");
             logger.info("...done updating TSE's time");
             nextSyncTime = currentUtcTime + timeSyncInterval;
-            System.out.println("\nAFTER updateTime():");
-            printStatusValues();
+            // System.out.println("\nAFTER updateTime():");
+            // printStatusValues();
             passed = true;
         } catch (ErrorUpdateTimeFailed ex) {
             error = "Update time failed";
@@ -930,7 +943,10 @@ public class WeltladenTSE {
                 "erneut versuchen.",
                 "Fehlgeschlagene Seriennummerauslesung der TSE", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error
-            logOutAs("Admin");
+            if (loggedIn) {
+                logOutAs("Admin");
+                loggedIn = false;
+            }
             disconnectFromTSE();
             System.exit(1);
         }
@@ -1011,6 +1027,7 @@ public class WeltladenTSE {
                 "Fehlgeschlagene Client-ID-Zuordnung der TSE", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error
             logOutAs("Admin");
+            loggedIn = false;
             disconnectFromTSE();
             System.exit(1);
         }
