@@ -19,7 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class TSEPINEntryDialog extends DialogWindow implements WindowListener, DocumentListener {
-    private static final Logger logger = LogManager.getLogger(TSEInitDialog.class);
+    private static final Logger logger = LogManager.getLogger(TSEPINEntryDialog.class);
 
     private WeltladenTSE tse = null;
 
