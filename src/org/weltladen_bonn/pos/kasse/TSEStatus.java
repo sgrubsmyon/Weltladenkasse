@@ -42,7 +42,7 @@ public class TSEStatus extends WindowContent {
     private JButton updateButton;
     private JButton exportButton;
     private JButton exportPartButton;
-    private FileExistsAwareFileChooser sqlSaveChooser;
+    private FileExistsAwareFileChooser logExportChooser;
     private JFileChooser sqlLoadChooser;
 
     private TabbedPaneGrundlage tabbedPane;
@@ -120,7 +120,6 @@ public class TSEStatus extends WindowContent {
             for (String s : valueTextSplit) {
                 if (s.length() > 100) rows++;
             }
-            System.out.println(k+": "+rows+" "+valueText.length());
             JTextArea value = new JTextArea(valueText, rows, 100);
             value = makeLabelStyle(value);
             value.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
@@ -163,43 +162,22 @@ public class TSEStatus extends WindowContent {
         panel.add(buttonPanel);
     }
 
-    void initializeSaveChooser(String filename) {
-        sqlSaveChooser = new FileExistsAwareFileChooser();
+    void initializeExportChooser(String filename) {
+        logExportChooser = new FileExistsAwareFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                "SQL Dokumente", "sql");
-        sqlSaveChooser.setFileFilter(filter);
-        sqlSaveChooser.setSelectedFile(new File(filename));
+                "TAR-Archive", "tar");
+        logExportChooser.setFileFilter(filter);
+        logExportChooser.setSelectedFile(new File(filename));
     }
 
-    void initializeLoadChooser() {
-        sqlLoadChooser = new JFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                "SQL Dokumente", "sql");
-        sqlLoadChooser.setFileFilter(filter);
-    }
-
-    String askForDumpFilename() {
-        int returnVal = sqlSaveChooser.showSaveDialog(this);
+    String askForExportFilename() {
+        int returnVal = logExportChooser.showSaveDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION){
-            File file = sqlSaveChooser.getSelectedFile();
-            logger.info("Selected dump file "+file.getAbsolutePath());
-            //return file.getName();
+            File file = logExportChooser.getSelectedFile();
+            logger.info("Selected TSE transaction log export file "+file.getAbsolutePath());
             return file.getAbsolutePath();
         } else {
             logger.info("Save command cancelled by user.");
-        }
-        return null;
-    }
-
-    String askForReadFilename() {
-        int returnVal = sqlLoadChooser.showOpenDialog(this);
-        if (returnVal == JFileChooser.APPROVE_OPTION){
-            File file = sqlLoadChooser.getSelectedFile();
-            logger.info("Selected read file "+file.getAbsolutePath());
-            //return file.getName();
-            return file.getAbsolutePath();
-        } else {
-            logger.info("Open command cancelled by user.");
         }
         return null;
     }
@@ -216,12 +194,48 @@ public class TSEStatus extends WindowContent {
             statusPanelContainer.remove(statusPanelScrollPane);
             statusPanelContainer.revalidate();
             showStatusPanel();
+            return;
         }
-        else if (e.getSource() == exportButton){
-            
-        }
-        else if (e.getSource() == exportPartButton){
-            
+        if (e.getSource() == exportButton || e.getSource() == exportPartButton){
+            initializeExportChooser("tse_export.tar");
+            String message = "";
+            String filename = "";
+            if (e.getSource() == exportButton) {
+                filename = askForExportFilename();
+                if (filename != null) {
+                    message = tse.exportFullTransactionData(filename);
+                }
+            } else if (e.getSource() == exportPartButton) {
+                JDialog dialog = new JDialog(this.mainWindow, "Wie sollen die Daten der TSE ausgewählt werden?", true);
+                TSEPartialExportDialog tseped = new TSEPartialExportDialog(this.mainWindow, dialog);
+                dialog.getContentPane().add(tseped, BorderLayout.CENTER);
+                dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                dialog.pack();
+                dialog.setLocationRelativeTo(null);
+                dialog.setVisible(true);
+                // tseped.getPIN();
+                boolean aborted = tseped.getAborted();
+                // filename = askForExportFilename();
+                // if (filename != null) {
+                //     message = tse.exportPartialTransactionDataByTXNumber(filename, (long)10, (long)15, null);
+                // }
+            }
+            if (message == "OK") {
+                logger.info("TSE export created successfully");
+                JOptionPane.showMessageDialog(this,
+                        "TSE-Export '"+filename+"' wurde erfolgreich angelegt.",
+                        "Info", JOptionPane.INFORMATION_MESSAGE);
+            } else if (message == "") {
+                // do nothing, operation was canceled by user.
+                logger.info("TSE export canceled by user");
+            } else {
+                logger.info("Could not create the TSE export");
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: TSE-Export '"+filename+"' konnte nicht erstellt werden.\n"+
+                        "Fehlermeldung: "+message,
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+            }
+            return;    
         }
     }
 }
