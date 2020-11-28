@@ -1189,53 +1189,6 @@ public class WeltladenTSE {
         }
     }
 
-    // private void exportTransactionData() {
-    //     /** Export transaction logs */
-    //     try {
-    //         File path = new File(".");
-
-    //         // alternative 1 - byte array result
-    //         FileOutputStream fout = new FileOutputStream(new File(path, "export1.tar"));
-    //         byte[] exportData = tse.exportData(null, null, null, null, null, null, null);
-    //         fout.write(exportData);
-    //         fout.close();
-
-    //         // alternative 2 - provide file name
-    //         tse.exportData(null, null, null, null, null, null, null, path.getAbsolutePath()+"/export2.tar");
-
-    //         // alternative 3 - provide stream
-    //         OutputStream stream = new FileOutputStream(new File(path, "export3.tar"));
-    //         tse.exportData(null, null, null, null, null, null, null, stream);
-    //         stream.close();
-
-    //         // alternative 4 - cv API
-    //         stream = new FileOutputStream(new File(path, "export4.tar"));
-    //         byte[] serial = getSerialNumber();
-    //         tse.exportMoreData(serial, (long) 0, null, stream);
-    //         stream.close();
-
-    //         // results of export alternatives 1, 2, 3, and 4 are identical
-            
-    //         // test of partial data export
-
-    //         // alternative 1 - exportData
-    //         tse.exportData(null, null, (long)10, (long)15, null, null, null, path.getAbsolutePath()+"/export5.tar");
-
-    //         // alternative 2 - exportMoreData
-    //         stream = new FileOutputStream(new File(path, "export6.tar"));
-    //         tse.exportMoreData(serial, (long)9, (long)5, stream);
-    //         stream.close();
-    //     } catch (FileNotFoundException ex) {
-    //         logger.fatal("Exception: {}", ex);
-    //     } catch (IOException ex) {
-    //         logger.fatal("IO Error during exportTransactionData()");
-    //         logger.fatal("Exception: {}", ex);
-    //     } catch (SEException ex) {
-    //         logger.fatal("SE Error during exportTransactionData()");
-    //         logger.fatal("Exception: {}", ex);
-    //     }
-    // }
-
     private String exportTransactionData(String filename, Long startTXNumber, Long endTXNumber, Long startDate, Long endDate, Long maxRecords) {
         /** Export transaction logs */
         try {
