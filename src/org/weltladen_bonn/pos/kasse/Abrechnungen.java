@@ -141,7 +141,7 @@ public abstract class Abrechnungen extends WindowContent {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return id;
@@ -192,7 +192,7 @@ public abstract class Abrechnungen extends WindowContent {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return values;
@@ -253,7 +253,7 @@ public abstract class Abrechnungen extends WindowContent {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return map;
@@ -344,7 +344,7 @@ public abstract class Abrechnungen extends WindowContent {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -356,7 +356,7 @@ public abstract class Abrechnungen extends WindowContent {
         try {
             formattedDate = sdfOut.format( sdfIn.parse(date) );
         } catch (ParseException ex) {
-            logger.error("ParseException: {}", ex);
+            logger.error("ParseException:", ex);
         }
         return formattedDate;
     }
@@ -367,7 +367,7 @@ public abstract class Abrechnungen extends WindowContent {
         try {
             d = sdfIn.parse(date);
         } catch (ParseException ex) {
-            logger.error("ParseException: {}", ex);
+            logger.error("ParseException:", ex);
         }
         return d;
     }
@@ -574,7 +574,7 @@ public abstract class Abrechnungen extends WindowContent {
             }
             sheet = SpreadSheet.createFromFile(infile).getSheet(0);
         } catch (IOException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             return null;
         }
 
@@ -616,7 +616,7 @@ public abstract class Abrechnungen extends WindowContent {
             // Save to file and open it.
             OOUtils.open(sheet.getSpreadSheet().saveAs(file));
         } catch (IOException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
         }
     }
 

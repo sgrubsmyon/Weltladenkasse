@@ -88,13 +88,13 @@ public class PreisschilderExport extends WindowContent {
             }
             template = new JavaScriptTemplate(infile);
         } catch (IOException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             return null;
         } catch (TemplateException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             return null;
         } catch (JDOMException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             return null;
         }
         return template;

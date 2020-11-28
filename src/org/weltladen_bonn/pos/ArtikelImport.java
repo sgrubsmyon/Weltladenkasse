@@ -227,7 +227,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -286,7 +286,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -703,7 +703,7 @@ public class ArtikelImport extends DialogWindow implements ArtikelNeuInterface, 
         try {
             sheet = SpreadSheet.createFromFile(file).getSheet(0);
         } catch (IOException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             return;

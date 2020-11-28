@@ -133,7 +133,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    stmt.close();
         connection.close();
 	} catch (SQLException ex) {
-	    logger.error("Exception: {}", ex);
+	    logger.error("Exception:", ex);
         showDBErrorDialog(ex.getMessage());
 	}
 	Calendar earlyCalendar = Calendar.getInstance();
@@ -284,7 +284,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    stmt.close();
         connection.close();
 	} catch (SQLException ex) {
-	    logger.error("Exception: {}", ex);
+	    logger.error("Exception:", ex);
         showDBErrorDialog(ex.getMessage());
 	}
     myTable = new AnyJComponentJTable(data, columnLabels) { // subclass the AnyJComponentJTable to set font properties and tool tip text
@@ -452,7 +452,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
                 pstmt.close();
                 connection.close();
             } catch (SQLException ex) {
-                logger.error("Exception: {}", ex);
+                logger.error("Exception:", ex);
                 showDBErrorDialog(ex.getMessage());
             }
         } else { // NO_OPTION
@@ -480,7 +480,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    pstmt.close();
         connection.close();
 	} catch (SQLException ex) {
-	    logger.error("Exception: {}", ex);
+	    logger.error("Exception:", ex);
         showDBErrorDialog(ex.getMessage());
 	}
         return vonAfterNow;
@@ -498,7 +498,7 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
 	    pstmt.close();
         connection.close();
 	} catch (SQLException ex) {
-	    logger.error("Exception: {}", ex);
+	    logger.error("Exception:", ex);
         showDBErrorDialog(ex.getMessage());
 	}
         return bisAfterNow;

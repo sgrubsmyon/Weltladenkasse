@@ -81,7 +81,7 @@ public class Quittung extends WindowContent {
             }
             sheet = SpreadSheet.createFromFile(infile).getSheet(0);
         } catch (IOException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             return null;
         }
         return sheet;
@@ -271,9 +271,9 @@ public class Quittung extends WindowContent {
                 tmpFile.deleteOnExit();
                 //tmpFile.delete();
             } catch (FileNotFoundException ex) {
-                logger.error("Exception: {}", ex);
+                logger.error("Exception:", ex);
             } catch (IOException ex) {
-                logger.error("Exception: {}", ex);
+                logger.error("Exception:", ex);
             }
         }
     }

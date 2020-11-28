@@ -208,7 +208,7 @@ class AbrechnungenTag extends Abrechnungen {
             }
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -328,7 +328,7 @@ class AbrechnungenTag extends Abrechnungen {
             }
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -414,7 +414,7 @@ class AbrechnungenTag extends Abrechnungen {
             
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -442,7 +442,7 @@ class AbrechnungenTag extends Abrechnungen {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return abrechnungBarBrutto;
@@ -842,7 +842,7 @@ class AbrechnungenTag extends Abrechnungen {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return date;
@@ -860,7 +860,7 @@ class AbrechnungenTag extends Abrechnungen {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return date;
@@ -926,7 +926,7 @@ class AbrechnungenTag extends Abrechnungen {
             }
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -998,7 +998,7 @@ class AbrechnungenTag extends Abrechnungen {
             deleteAbrechnungIfNeedBe("abrechnung_monat", "monat", "DATE_FORMAT(?, '%Y-%m-01')", zeitpunkt);
             deleteAbrechnungIfNeedBe("abrechnung_jahr", "jahr", "YEAR(?)", zeitpunkt);
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             JOptionPane.showMessageDialog(this,
                     "Fehler: Tagesabrechnung konnte nicht gespeichert werden.\n"+
                     "Keine Verbindung zum Datenbank-Server?\n"+
@@ -1021,7 +1021,7 @@ class AbrechnungenTag extends Abrechnungen {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return maxZaehlID;
@@ -1069,7 +1069,7 @@ class AbrechnungenTag extends Abrechnungen {
                         "Fehler", JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             JOptionPane.showMessageDialog(this,
                     "Fehler: Zählprotokoll konnte nicht gespeichert werden.\n"+
                     "Keine Verbindung zum Datenbank-Server?\n"+
@@ -1095,7 +1095,7 @@ class AbrechnungenTag extends Abrechnungen {
                         "Fehler", JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             JOptionPane.showMessageDialog(this,
                     "Fehler: Altes Zählprotokoll konnte nicht inaktiv gesetzt werden.\n"+
                     "Keine Verbindung zum Datenbank-Server?\n"+

@@ -507,14 +507,14 @@ public class Bestellen extends BestellungsGrundlage implements
             writer.write(fileStr);
         } catch (Exception ex) {
             logger.error("Error writing to file {}", file.getName());
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
         } finally {
             try {
                 // Close the writer regardless of what happens...
                 writer.close();
             } catch (Exception ex) {
                 logger.error("Error closing file {}", file.getName());
-                logger.error("Exception: {}", ex);
+                logger.error("Exception:", ex);
             }
         }
     }
@@ -572,7 +572,7 @@ public class Bestellen extends BestellungsGrundlage implements
         } catch (FileNotFoundException ex) {
             logger.info("No backup file found. No backed up order loaded.");
         } catch (IOException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
         }
     }
 
@@ -791,7 +791,7 @@ public class Bestellen extends BestellungsGrundlage implements
             }
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             JOptionPane.showMessageDialog(this,
                     "Fehler: Bestellung konnte nicht vollständig abgespeichert werden.\n"+
                     "Keine Verbindung zum Datenbank-Server?\n"+

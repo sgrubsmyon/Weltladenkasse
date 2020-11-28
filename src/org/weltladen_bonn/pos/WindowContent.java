@@ -1562,7 +1562,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return result;
@@ -1578,7 +1578,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return date;

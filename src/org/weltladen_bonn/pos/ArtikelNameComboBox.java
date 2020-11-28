@@ -91,7 +91,7 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             JOptionPane.showMessageDialog(this,
                 "Verbindung zum Datenbank-Server unterbrochen?\n"+
                 "Fehlermeldung: "+ex.getMessage(),

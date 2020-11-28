@@ -126,7 +126,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         this.originalData = new Vector< Vector<Object> >();

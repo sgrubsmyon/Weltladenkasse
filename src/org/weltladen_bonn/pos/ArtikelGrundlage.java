@@ -85,7 +85,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -111,7 +111,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -141,7 +141,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -163,7 +163,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -194,7 +194,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -229,7 +229,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -262,7 +262,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -284,7 +284,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -306,7 +306,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -328,7 +328,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -350,7 +350,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -374,7 +374,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -402,7 +402,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -457,7 +457,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -479,7 +479,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -502,7 +502,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());

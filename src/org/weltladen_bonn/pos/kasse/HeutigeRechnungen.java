@@ -90,7 +90,7 @@ public class HeutigeRechnungen extends Rechnungen {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         updateTable();
@@ -127,7 +127,7 @@ public class HeutigeRechnungen extends Rechnungen {
                 mainWindow.updateBottomPanel();
             }
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }

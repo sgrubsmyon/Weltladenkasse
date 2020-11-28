@@ -180,7 +180,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -217,7 +217,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -639,7 +639,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                 pstmt.close();
                 connection.close();
             } catch (SQLException ex) {
-                logger.error("Exception: {}", ex);
+                logger.error("Exception:", ex);
                 showDBErrorDialog(ex.getMessage());
             }
         } else { // NO_OPTION
@@ -716,7 +716,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                 pstmt.close();
                 connection.close();
             } catch (SQLException ex) {
-                logger.error("Exception: {}", ex);
+                logger.error("Exception:", ex);
                 showDBErrorDialog(ex.getMessage());
             }
         } else { // NO_OPTION
