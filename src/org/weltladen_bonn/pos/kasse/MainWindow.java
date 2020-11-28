@@ -46,15 +46,13 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
     /**
      *    The constructor.
      *       */
-    public MainWindow(){
+    public MainWindow() {
         super();
 
         display = new Kundendisplay(bc);
         setDisplayBlankTimer();
 
-        tse = new WeltladenTSE(this, this.bc);
-
-        if (dbconn.connectionWorks){
+        if (dbconn.connectionWorks) {
             myTabbedPane = new TabbedPane(this.pool, this);
             setContentPanel(myTabbedPane);
         }
@@ -62,6 +60,11 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
         //beendenButton.addActionListener(this);
         //topPanel.add(beendenButton);
         //holdAll.add(topPanel, BorderLayout.NORTH);
+    }
+
+    @Override
+    public void beforeInitiate() {
+        tse = new WeltladenTSE(this, this.bc);
     }
 
     public void setDisplayWelcomeTimer() {
@@ -128,7 +131,7 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
      *
      *    @param e the action event.
      **/
-    public void actionPerformed(ActionEvent e){
+    public void actionPerformed(ActionEvent e) {
 	//if (e.getSource() == beendenButton){
 	//    int answer = JOptionPane.showConfirmDialog(this,
 	//	    "Programm beenden?", "Beenden",
