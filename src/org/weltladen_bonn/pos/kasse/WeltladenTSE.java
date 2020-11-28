@@ -33,6 +33,8 @@ import com.cryptovision.SEAPI.TSE.LCS;
 import com.cryptovision.SEAPI.TSE.AuthenticateUserResult;
 import com.cryptovision.SEAPI.TSE.AuthenticationResult;
 import com.cryptovision.SEAPI.TSE.StartTransactionResult;
+import com.cryptovision.SEAPI.TSE.UpdateTransactionResult;
+import com.cryptovision.SEAPI.TSE.FinishTransactionResult;
 import com.cryptovision.SEAPI.exceptions.SEException;
 import com.cryptovision.SEAPI.exceptions.ErrorTSECommandDataInvalid;
 import com.cryptovision.SEAPI.exceptions.ErrorSECommunicationFailed;
@@ -53,6 +55,9 @@ import com.cryptovision.SEAPI.exceptions.ErrorStartTransactionFailed;
 import com.cryptovision.SEAPI.exceptions.ErrorUpdateTransactionFailed;
 import com.cryptovision.SEAPI.exceptions.ErrorNoTransaction;
 import com.cryptovision.SEAPI.exceptions.ErrorFinishTransactionFailed;
+import com.cryptovision.SEAPI.exceptions.ErrorIdNotFound;
+import com.cryptovision.SEAPI.exceptions.ErrorStreamWrite;
+import com.cryptovision.SEAPI.exceptions.ErrorUnexportedStoredData;
 
 // For decoding/encoding output from the TSE:
 import org.bouncycastle.util.encoders.Hex;
@@ -119,19 +124,21 @@ public class WeltladenTSE {
         this.mainWindow = mw;
         this.bc = bc;
         connectToTSE();
-        // disconnectFromTSEUntilItWorks(); // first disconnect because there are problems after reboot
-          // (when TSE obtains voltage again after power supply interruption, it needs to
-          //  be disconnected once with tse.close())
         tseStartUpWorkaroundLoop();
         if (tseInUse) {
             checkInitializationStatus();
             // System.out.println("\n\n*** WRITING FIRST TRANSACTION TO TSE ***");
             // System.out.println("\n --- Status before: \n");
             // printStatusValues();
-            // writeTestTransaction();
+            writeTestTransaction();
             // System.out.println("\n --- Status after: \n");
             // printStatusValues();
             // exportTransactionData();
+
+            // exportFullTransactionData("./export_full_before_delete.tar");
+            // exportPartialTransactionDataBySigCounter("./export_partial_test.tar", (long)0, (long)10);
+            // deletePartialTransactionDataBySigCounter((long)(0 + 10));
+            // exportFullTransactionData("./export_full_after_delete.tar");
         }
     }
 
@@ -196,26 +203,6 @@ public class WeltladenTSE {
             logger.fatal("Exception: {}", ex);
         }
     }
-
-    // public void disconnectFromTSEUntilItWorks() {
-    //     boolean closed = false;
-    //     while (!closed) {
-    //         try {
-    //             Thread.sleep(2000); // wait for 2 seconds
-    //             tse.close();
-    //             logger.info("It worked!!!");
-    //             closed = true;
-    //         } catch (IOException ex) {
-    //             logger.fatal("IOException upon closing connection to TSE");
-    //             logger.fatal("Exception: {}", ex);
-    //         } catch (SEException ex) {
-    //             logger.fatal("SEException upon closing connection to TSE");
-    //             logger.fatal("Exception: {}", ex);
-    //         } catch (InterruptedException ex) {
-    //             logger.error("Exception: {}", ex);
-    //         }
-    //     }
-    // }
 
     public void disconnectFromTSE() {
         if (tseInUse) {
@@ -1085,6 +1072,30 @@ public class WeltladenTSE {
         }
     }
 
+    private String byteArrayToByteString(byte[] byteArray) {
+        String res = "";
+        for (byte b : byteArray) {
+            res += b + " "; // XXX CONTINUE HERE: Maybe convert these bytes to characters
+        }
+        return res.substring(0, res.length() - 1); // omit last empty string
+    }
+
+    private String byteArrayToIntString(byte[] byteArray) {
+        String res = "";
+        for (byte b : byteArray) {
+            res += (int)b + " "; // XXX CONTINUE HERE: Maybe convert these bytes to characters
+        }
+        return res.substring(0, res.length() - 1); // omit last empty string
+    }
+
+    private String byteArrayToCharString(byte[] byteArray) {
+        String res = "";
+        for (byte b : byteArray) {
+            res += (char)b + " "; // XXX CONTINUE HERE: Maybe convert these bytes to characters
+        }
+        return res.substring(0, res.length() - 1); // omit last empty string
+    }
+
     private void writeTestTransaction() {
         try {
             long n = tse.getCurrentNumberOfClients();
@@ -1094,13 +1105,28 @@ public class WeltladenTSE {
 
             /** Start a new transaction for the ERS (cash register) "WeltladenBonnKasse" */
             StartTransactionResult result = tse.startTransaction("WeltladenBonnKasse", "processData".getBytes(), "whateverProcessType", "additionalData".getBytes());
+            logger.debug("Transaction: transactionNumber: {}", result.transactionNumber);
+            logger.debug("Transaction: logTime: {}", result.logTime);
+            logger.debug("Transaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(result.serialNumber));
+            logger.debug("Transaction: signatureCounter: {}", result.signatureCounter);
+            logger.debug("Transaction: signatureValue (Hex): {}", encodeByteArrayAsHexString(result.signatureValue));
+            logger.debug("Transaction: signatureValue (Bytes): {}", byteArrayToByteString(result.signatureValue));
+            logger.debug("Transaction: signatureValue (Ints): {}", byteArrayToIntString(result.signatureValue));
+            logger.debug("Transaction: signatureValue (Chars): {}", byteArrayToCharString(result.signatureValue));
 
             /** again some status information */
             n = tse.getCurrentNumberOfTransactions();
             logger.debug("Number of transactions: {}", n);
 
             /** Update the transaction */
-            tse.updateTransaction("WeltladenBonnKasse", result.transactionNumber, new byte[TSE.MAX_SIZE_TRANSPORT_LAYER-100], "anyProcessTypeString");
+            UpdateTransactionResult updRes = tse.updateTransaction("WeltladenBonnKasse", result.transactionNumber, new byte[TSE.MAX_SIZE_TRANSPORT_LAYER-100], "anyProcessTypeString");
+            logger.debug("Transaction: logTime: {}", updRes.logTime);
+            logger.debug("Transaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(updRes.serialNumber));
+            logger.debug("Transaction: signatureCounter: {}", updRes.signatureCounter);
+            logger.debug("Transaction: signatureValue (Hex): {}", encodeByteArrayAsHexString(updRes.signatureValue));
+            logger.debug("Transaction: signatureValue (Bytes): {}", byteArrayToByteString(updRes.signatureValue));
+            logger.debug("Transaction: signatureValue (Ints): {}", byteArrayToIntString(updRes.signatureValue));
+            logger.debug("Transaction: signatureValue (Chars): {}", byteArrayToCharString(updRes.signatureValue));
 
             /** again some status information */
             n = tse.getCurrentNumberOfTransactions();
@@ -1111,11 +1137,22 @@ public class WeltladenTSE {
             logger.debug("Open transactions: {}", openTransactions);
 
             /** Finish the transaction */
-            tse.finishTransaction("WeltladenBonnKasse", result.transactionNumber, "lastData".getBytes(), "maybeYetAnotherProcessType", null);
+            FinishTransactionResult finRes = tse.finishTransaction("WeltladenBonnKasse", result.transactionNumber, "lastData".getBytes(), "maybeYetAnotherProcessType", null);
+            logger.debug("Transaction: logTime: {}", finRes.logTime);
+            logger.debug("Transaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(finRes.serialNumber));
+            logger.debug("Transaction: signatureCounter: {}", finRes.signatureCounter);
+            logger.debug("Transaction: signatureValue (Hex): {}", encodeByteArrayAsHexString(finRes.signatureValue));
+            logger.debug("Transaction: signatureValue (Bytes): {}", byteArrayToByteString(finRes.signatureValue));
+            logger.debug("Transaction: signatureValue (Ints): {}", byteArrayToIntString(finRes.signatureValue));
+            logger.debug("Transaction: signatureValue (Chars): {}", byteArrayToCharString(finRes.signatureValue));
 
             /** again some status information - should be 0 again*/
             n = tse.getCurrentNumberOfTransactions();
             logger.debug("Number of transactions: {}", n);
+
+            /** should be empty */
+            openTransactions = tse.getOpenTransactions();
+            logger.debug("Open transactions: {}", openTransactions);
         } catch (ErrorSeApiNotInitialized ex) {
             logger.fatal("SE API not initialized");
             logger.fatal("Exception: {}", ex);
@@ -1152,39 +1189,175 @@ public class WeltladenTSE {
         }
     }
 
-    private void exportTransactionData() {
+    // private void exportTransactionData() {
+    //     /** Export transaction logs */
+    //     try {
+    //         File path = new File(".");
+
+    //         // alternative 1 - byte array result
+    //         FileOutputStream fout = new FileOutputStream(new File(path, "export1.tar"));
+    //         byte[] exportData = tse.exportData(null, null, null, null, null, null, null);
+    //         fout.write(exportData);
+    //         fout.close();
+
+    //         // alternative 2 - provide file name
+    //         tse.exportData(null, null, null, null, null, null, null, path.getAbsolutePath()+"/export2.tar");
+
+    //         // alternative 3 - provide stream
+    //         OutputStream stream = new FileOutputStream(new File(path, "export3.tar"));
+    //         tse.exportData(null, null, null, null, null, null, null, stream);
+    //         stream.close();
+
+    //         // alternative 4 - cv API
+    //         stream = new FileOutputStream(new File(path, "export4.tar"));
+    //         byte[] serial = getSerialNumber();
+    //         tse.exportMoreData(serial, (long) 0, null, stream);
+    //         stream.close();
+
+    //         // results of export alternatives 1, 2, 3, and 4 are identical
+            
+    //         // test of partial data export
+
+    //         // alternative 1 - exportData
+    //         tse.exportData(null, null, (long)10, (long)15, null, null, null, path.getAbsolutePath()+"/export5.tar");
+
+    //         // alternative 2 - exportMoreData
+    //         stream = new FileOutputStream(new File(path, "export6.tar"));
+    //         tse.exportMoreData(serial, (long)9, (long)5, stream);
+    //         stream.close();
+    //     } catch (FileNotFoundException ex) {
+    //         logger.fatal("Exception: {}", ex);
+    //     } catch (IOException ex) {
+    //         logger.fatal("IO Error during exportTransactionData()");
+    //         logger.fatal("Exception: {}", ex);
+    //     } catch (SEException ex) {
+    //         logger.fatal("SE Error during exportTransactionData()");
+    //         logger.fatal("Exception: {}", ex);
+    //     }
+    // }
+
+    private String exportTransactionData(String filename, Long startTXNumber, Long endTXNumber, Long startDate, Long endDate, Long maxRecords) {
         /** Export transaction logs */
         try {
-            File path = new File(".");
-
-            // alternative 1 - byte array result
-            FileOutputStream fout = new FileOutputStream(new File(path, "export1.tar"));
-            byte[] exportData = tse.exportData(null, null, null, null, null, null, null);
-            fout.write(exportData);
-            fout.close();
-
             // alternative 2 - provide file name
-            tse.exportData(null, null, null, null, null, null, null, path.getAbsolutePath()+"/export2.tar");
-
-            // alternative 3 - provide stream
-            OutputStream stream = new FileOutputStream(new File(path, "export3.tar"));
-            tse.exportData(null, null, null, null, null, null, null, stream);
-            stream.close();
-
-            // alternative 4 - cv API
-            stream = new FileOutputStream(new File(path, "export4.tar"));
-            byte[] data = tse.exportSerialNumbers();
-            byte[] serial = Arrays.copyOfRange(data, 6, 6+32);
-            tse.exportMoreData(serial, (long) 0, null, stream);
-            stream.close();
+            tse.exportData(null, null, startTXNumber, endTXNumber, startDate, endDate, maxRecords, filename);
+            return "OK";
         } catch (FileNotFoundException ex) {
+            logger.fatal("File not found exception during exportTransactionData()");            
             logger.fatal("Exception: {}", ex);
+            return "FileNotFoundException";
         } catch (IOException ex) {
-            logger.fatal("IO Error during exportTransactionData()");
+            logger.fatal("IO exception during exportTransactionData()");
             logger.fatal("Exception: {}", ex);
+            return "IOException";
         } catch (SEException ex) {
-            logger.fatal("SE Error during exportTransactionData()");
+            logger.fatal("SE exception during exportTransactionData()");
             logger.fatal("Exception: {}", ex);
+            return "SEException";
+        }
+    }
+
+    public String exportFullTransactionData(String filename) {
+        return exportTransactionData(filename, null, null, null, null, null);
+    }
+
+    public String exportPartialTransactionDataByTXNumber(String filename, Long startTXNumber, Long endTXNumber, Long maxRecords) {
+        return exportTransactionData(filename, startTXNumber, endTXNumber, null, null, maxRecords);
+    }
+
+    public String exportPartialTransactionDataByDate(String filename, Long startDate, Long endDate, Long maxRecords) {
+        return exportTransactionData(filename, null, null, startDate, endDate, maxRecords);
+    }
+
+    public String exportPartialTransactionDataBySigCounter(String filename, Long lastExcludedSignatureCounter, Long maxRecords) {
+        /** Export transaction logs */
+        try {
+            OutputStream stream = new FileOutputStream(new File(filename));
+            byte[] serial = getSerialNumber();
+            tse.exportMoreData(serial, lastExcludedSignatureCounter, maxRecords, stream);
+            stream.close();
+            return "OK";
+        } catch (FileNotFoundException ex) {
+            logger.fatal("File not found exception during exportPartialTransactionDataBySigCounter()");            
+            logger.fatal("Exception: {}", ex);
+            return "FileNotFoundException";
+        } catch (IOException ex) {
+            logger.fatal("IO exception during exportPartialTransactionDataBySigCounter()");
+            logger.fatal("Exception: {}", ex);
+            return "IOException";
+        } catch (SEException ex) {
+            logger.fatal("SE exception during exportPartialTransactionDataBySigCounter()");
+            logger.fatal("Exception: {}", ex);
+            return "SEException";
+        }
+    }
+
+    private String deletePartialTransactionDataBySigCounter(Long lastIncludedSignatureCounter) {
+        /** Delete some transaction logs */
+        try {
+            byte[] serial = getSerialNumber();
+            if (!loggedIn) {
+                authenticateAs("Admin", null, true);
+                loggedIn = true;
+            }
+            tse.deleteStoredDataUpTo(serial, lastIncludedSignatureCounter);
+            if (loggedIn) {
+                logOutAs("Admin");
+                loggedIn = false;
+            }
+            return "OK";
+        } catch (ErrorNoSuchKey ex) {
+            logger.fatal("No such key error during deletePartialTransactionDataBySigCounter()");
+            logger.fatal("Exception: {}", ex);
+            return "ErrorNoSuchKey";
+        } catch (ErrorIdNotFound ex) {
+            logger.fatal("ID not found error during deletePartialTransactionDataBySigCounter()");
+            logger.fatal("Exception: {}", ex);
+            return "ErrorIdNotFound";
+        } catch (ErrorStreamWrite ex) {
+            logger.fatal("Stream write error during deletePartialTransactionDataBySigCounter()");
+            logger.fatal("Exception: {}", ex);
+            return "ErrorStreamWrite";
+        } catch (SEException ex) {
+            logger.fatal("SE exception during deletePartialTransactionDataBySigCounter()");
+            logger.fatal("Exception: {}", ex);
+            return "SEException";
+        }
+    }
+
+    private String deleteFullTransactionData() {
+        /** Delete all transaction logs */
+        try {
+            if (!loggedIn) {
+                authenticateAs("Admin", null, true);
+                loggedIn = true;
+            }
+            tse.deleteStoredData();
+            if (loggedIn) {
+                logOutAs("Admin");
+                loggedIn = false;
+            }
+            return "OK";
+        } catch (ErrorUnexportedStoredData ex) {
+            logger.fatal("Error: There is still unexported stored data, so cannot deleteFullTransactionData()");
+            logger.fatal("Exception: {}", ex);
+            return "ErrorUnexportedStoredData";
+        } catch (ErrorSeApiNotInitialized ex) {
+            logger.fatal("SE API not initialized error during deleteFullTransactionData()");
+            logger.fatal("Exception: {}", ex);
+            return "ErrorSeApiNotInitialized";
+        } catch (ErrorUserNotAuthorized ex) {
+            logger.fatal("User not authorized error during deleteFullTransactionData()");
+            logger.fatal("Exception: {}", ex);
+            return "ErrorUserNotAuthorized";
+        } catch (ErrorUserNotAuthenticated ex) {
+            logger.fatal("User not authenticated error during deleteFullTransactionData()");
+            logger.fatal("Exception: {}", ex);
+            return "ErrorUserNotAuthenticated";
+        } catch (SEException ex) {
+            logger.fatal("SE exception during deleteFullTransactionData()");
+            logger.fatal("Exception: {}", ex);
+            return "SEException";
         }
     }
 
