@@ -62,10 +62,16 @@ public abstract class MainWindowGrundlage extends JFrame {
      *       */
     public MainWindowGrundlage() {
         bc = new BaseClass();
+        beforeInitiate();
         initiate();
     }
 
-    public void initiate(){
+    public void beforeInitiate() {
+        // empty in this abstract class, but can be used in subclass `MainWindow` to initiate something
+        // before asking for DB password in `initiate()` (e.g. to initiate TSE)
+    }
+
+    private void initiate() {
         this.dbconn = new DBConnection(bc);
         if (!this.dbconn.connectionWorks) return;
         this.pool = this.dbconn.pool;
@@ -80,7 +86,7 @@ public abstract class MainWindowGrundlage extends JFrame {
     }
 
 
-    public BigDecimal retrieveKassenstand(){
+    public BigDecimal retrieveKassenstand() {
         BigDecimal ks = new BigDecimal("0.00");
         try {
             // Grab connection from the pool
@@ -107,7 +113,7 @@ public abstract class MainWindowGrundlage extends JFrame {
     }
 
 
-    public Integer retrieveKassenstandId(){
+    public Integer retrieveKassenstandId() {
         Integer id = null;
         try {
             // Grab connection from the pool
@@ -134,12 +140,12 @@ public abstract class MainWindowGrundlage extends JFrame {
 
 
     // Setters & Getters:
-    public void setContentPanel(JPanel panel){
+    public void setContentPanel(JPanel panel) {
         this.contentPanel = panel;
         holdAll.add(this.contentPanel, BorderLayout.CENTER);
     }
 
-    public void changeContentPanel(JPanel panel){
+    public void changeContentPanel(JPanel panel) {
 //	this.contentPanel.removeAll();
         holdAll.remove(this.contentPanel);
         holdAll.revalidate();
@@ -147,7 +153,7 @@ public abstract class MainWindowGrundlage extends JFrame {
         holdAll.add(this.contentPanel, BorderLayout.CENTER);
     }
 
-    public void updateBottomPanel(){
+    public void updateBottomPanel() {
         holdAll.remove(this.bottomPanel);
         holdAll.revalidate();
         this.bottomPanel = new JPanel(); // The bottom panel which holds date and kassenstand bar.
