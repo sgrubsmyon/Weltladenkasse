@@ -46,30 +46,30 @@ public abstract class BestellungsGrundlage extends ArtikelGrundlage {
     }
 
     protected void setTableProperties(JTable table) {
-	// Spalteneigenschaften:
-	TableColumn pos = table.getColumn("Pos.");
-	pos.setCellRenderer(zentralAusrichter);
-	pos.setPreferredWidth(200);
-	TableColumn lieferant = table.getColumn("Lieferant");
-	lieferant.setCellRenderer(linksAusrichter);
-	lieferant.setPreferredWidth(500);
-	TableColumn artikelnr = table.getColumn("Artikel-Nr.");
-	artikelnr.setCellRenderer(linksAusrichter);
-	artikelnr.setPreferredWidth(500);
-	TableColumn artikelbez = table.getColumn("Artikel-Name");
-	artikelbez.setCellRenderer(linksAusrichter);
-	artikelbez.setPreferredWidth(1500);
-	TableColumn preis = table.getColumn("Einzelpreis");
-	preis.setCellRenderer(rechtsAusrichter);
-	preis.setPreferredWidth(300);
-	TableColumn vpe = table.getColumn("VPE");
-	vpe.setCellRenderer(rechtsAusrichter);
-	vpe.setPreferredWidth(200);
-	TableColumn stueckzahl = table.getColumn("Stückzahl");
-	stueckzahl.setCellRenderer(rechtsAusrichter);
-	stueckzahl.setPreferredWidth(200);
-	TableColumn beliebt = table.getColumn("Beliebtheit");
-	beliebt.setCellRenderer(zentralAusrichter);
-	beliebt.setPreferredWidth(200);
+		// Spalteneigenschaften:
+		TableColumn pos = table.getColumn("Pos.");
+		pos.setCellRenderer(zentralAusrichter);
+		pos.setPreferredWidth(200);
+		TableColumn lieferant = table.getColumn("Lieferant");
+		lieferant.setCellRenderer(linksAusrichter);
+		lieferant.setPreferredWidth(500);
+		TableColumn artikelnr = table.getColumn("Artikel-Nr.");
+		artikelnr.setCellRenderer(linksAusrichter);
+		artikelnr.setPreferredWidth(500);
+		TableColumn artikelbez = table.getColumn("Artikel-Name");
+		artikelbez.setCellRenderer(linksAusrichter);
+		artikelbez.setPreferredWidth(1500);
+		TableColumn preis = table.getColumn("Einzelpreis");
+		preis.setCellRenderer(rechtsAusrichter);
+		preis.setPreferredWidth(300);
+		TableColumn vpe = table.getColumn("VPE");
+		vpe.setCellRenderer(rechtsAusrichter);
+		vpe.setPreferredWidth(200);
+		TableColumn stueckzahl = table.getColumn("Stückzahl");
+		stueckzahl.setCellRenderer(rechtsAusrichter);
+		stueckzahl.setPreferredWidth(200);
+		TableColumn beliebt = table.getColumn("Beliebtheit");
+		beliebt.setCellRenderer(zentralAusrichter);
+		beliebt.setPreferredWidth(200);
     }
 }

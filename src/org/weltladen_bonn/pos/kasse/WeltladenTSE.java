@@ -119,6 +119,10 @@ public class WeltladenTSE {
         this.mainWindow = mw;
         this.bc = bc;
         connectToTSE();
+        // disconnectFromTSEUntilItWorks(); // first disconnect because there are problems after reboot
+          // (when TSE obtains voltage again after power supply interruption, it needs to
+          //  be disconnected once with tse.close())
+        tseStartUpWorkaroundLoop();
         if (tseInUse) {
             checkInitializationStatus();
             // System.out.println("\n\n*** WRITING FIRST TRANSACTION TO TSE ***");
@@ -142,6 +146,11 @@ public class WeltladenTSE {
         // Configure TSE:
         try {
             tse = TSE.getInstance("config_tse.txt");
+            // Probably has no effect and tseStartUpWorkaroundLoop() is way better:
+            // logger.info("Before tse.close()");
+            // tse.close(); // disconnect to fix communication issues
+            // logger.info("After tse.close()");
+            // tse = TSE.getInstance("config_tse.txt"); // re-connect to continue
         } catch (FileNotFoundException ex) {
             logger.warn("TSE config file not found under '{}'", "config_tse.txt");
             logger.warn("Exception: {}", ex);
@@ -182,9 +191,31 @@ public class WeltladenTSE {
             // TSE is not plugged in and no connection to TSE could be made.
             disconnectFromTSE();
             System.exit(1);
+        } catch(Throwable ex) {
+            logger.fatal("Throwable caught in connectToTSE");
+            logger.fatal("Exception: {}", ex);
         }
-        return;
     }
+
+    // public void disconnectFromTSEUntilItWorks() {
+    //     boolean closed = false;
+    //     while (!closed) {
+    //         try {
+    //             Thread.sleep(2000); // wait for 2 seconds
+    //             tse.close();
+    //             logger.info("It worked!!!");
+    //             closed = true;
+    //         } catch (IOException ex) {
+    //             logger.fatal("IOException upon closing connection to TSE");
+    //             logger.fatal("Exception: {}", ex);
+    //         } catch (SEException ex) {
+    //             logger.fatal("SEException upon closing connection to TSE");
+    //             logger.fatal("Exception: {}", ex);
+    //         } catch (InterruptedException ex) {
+    //             logger.error("Exception: {}", ex);
+    //         }
+    //     }
+    // }
 
     public void disconnectFromTSE() {
         if (tseInUse) {
@@ -199,6 +230,24 @@ public class WeltladenTSE {
             } catch(Throwable ex) {
                 logger.fatal("Throwable caught in disconnectFromTSE");
                 logger.fatal("Exception: {}", ex);
+            }
+        }
+    }
+    
+    private void tseStartUpWorkaroundLoop() {
+        byte[] timeAdminPIN = readTimeAdminPINFromFile();
+        boolean tseOperational = false;
+        while (!tseOperational) {
+            logger.info("Trying to authenticate as user 'TimeAdmin'...");
+            String message = authenticateAs("TimeAdmin", timeAdminPIN, false);
+            if (message == "OK") {
+                logOutAs("TimeAdmin");
+                tseOperational = true;
+                logger.info("Success!!! Now we can continue normally...");
+            } else {
+                logger.info("Failed. Trying again...");
+                // Because connection to TSE was closed, we need to re-open it:
+                connectToTSE();
             }
         }
     }
@@ -236,7 +285,7 @@ public class WeltladenTSE {
             }
             if (tse.getLifeCycleState() == LCS.notInitialized) {
                 logger.info("TSE still uninitialized. Now initializing...");
-                authenticateAs("Admin", adminPIN);
+                authenticateAs("Admin", adminPIN, true);
                 loggedIn = true;
                 initializeTSE();
                 // Re-check if TSE was actually initialized:
@@ -281,7 +330,7 @@ public class WeltladenTSE {
                 logger.debug("01 ERS Mappings equal 0");
                 if (!loggedIn) {
                     logger.debug("02 Before authenticateAs");
-                    authenticateAs("Admin", adminPIN);
+                    authenticateAs("Admin", adminPIN, true);
                     logger.debug("03 After authenticateAs");
                     loggedIn = true;
                 }
@@ -613,17 +662,17 @@ public class WeltladenTSE {
         }
     }
 
-    private void authenticateAs(String user, byte[] pin) {
+    private String authenticateAs(String user, byte[] pin, boolean exitOnFatal) {
         if (null == pin) {
             pin = showPINentryDialog(user, "PIN", 8);
         }
         boolean passed = false;
-        String error = "";
+        String message = "OK";
         try {
             AuthenticateUserResult res = tse.authenticateUser(user, pin);
             if (res.authenticationResult != AuthenticationResult.ok) {
-                error = "Authentication error for user "+user+": "+res.authenticationResult.toString();
-                logger.fatal("Fatal Error: {}", error);
+                message = "Authentication error for user "+user+": "+res.authenticationResult.toString();
+                logger.fatal("Fatal Error: {}", message);
                 JOptionPane.showMessageDialog(this.mainWindow,
                     "ACHTUNG: Authentifizierungsfehler als User "+user+" bei der TSE!\n\n"+
                     "authenticationResult: "+res.authenticationResult.toString()+"\n\n"+
@@ -637,38 +686,42 @@ public class WeltladenTSE {
             }
             passed = true;
         } catch (ErrorSigningSystemOperationDataFailed ex) {
-            error = "Signing system operation data failed";
-            logger.fatal("Fatal Error: {}", error);
+            message = "Signing system operation data failed";
+            logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception: {}", ex);
         } catch (ErrorRetrieveLogMessageFailed ex) {
-            error = "Retrieve log message failed";
-            logger.fatal("Fatal Error: {}", error);
+            message = "Retrieve log message failed";
+            logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception: {}", ex);
         } catch (ErrorStorageFailure ex) {
-            error = "Storage failure";
-            logger.fatal("Fatal Error: {}", error);
+            message = "Storage failure";
+            logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception: {}", ex);
         } catch (ErrorSecureElementDisabled ex) {
-            error = "Secure element disabled";
-            logger.fatal("Fatal Error: {}", error);
+            message = "Secure element disabled";
+            logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception: {}", ex);
         } catch (SEException ex) {
-            error = "Unknown error during authenticateUser()";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            message = "Unknown error during authenticateUser()";
+            logger.fatal("Fatal Error: {}", message);
+            logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Es konnte sich nicht als User "+user+" an der TSE angemeldet werden!\n\n"+
-                "Fehler: "+error+".\n\n"+
-                "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
-                "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
-                "erneut versuchen.",
-                "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
-            // Exit application upon this fatal error
+            logger.info("Closing connection to TSE after this fatal error.");
             disconnectFromTSE();
-            System.exit(1);
+            if (exitOnFatal) {
+                JOptionPane.showMessageDialog(this.mainWindow,
+                    "ACHTUNG: Es konnte sich nicht als User "+user+" an der TSE angemeldet werden!\n\n"+
+                    "Fehler: "+message+".\n\n"+
+                    "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
+                    "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
+                    "erneut versuchen.",
+                    "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
+                // Exit application upon this fatal error
+                System.exit(1);
+            }
         }
+        return message ;
     }
 
     private void logOutAs(String user) {
@@ -818,7 +871,7 @@ public class WeltladenTSE {
             // System.out.println("\nBEFORE updateTime():");
             // printStatusValues();
             logger.info("Updating TSE's time...");
-            authenticateAs("TimeAdmin", timeAdminPIN);
+            authenticateAs("TimeAdmin", timeAdminPIN, true);
             tse.updateTime(currentUtcTime);
             logOutAs("TimeAdmin");
             logger.info("...done updating TSE's time");
