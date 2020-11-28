@@ -72,7 +72,7 @@ public class AbrechnungenMonat extends Abrechnungen {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         if (result == null){
@@ -98,7 +98,7 @@ public class AbrechnungenMonat extends Abrechnungen {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return result;
@@ -128,7 +128,7 @@ public class AbrechnungenMonat extends Abrechnungen {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return abrechnung;
@@ -183,7 +183,7 @@ public class AbrechnungenMonat extends Abrechnungen {
             }
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -264,7 +264,7 @@ public class AbrechnungenMonat extends Abrechnungen {
                 mwstSet.add(mwst_satz);
             }
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -284,7 +284,7 @@ public class AbrechnungenMonat extends Abrechnungen {
             cal.setTime(sdfIn.parse(date));
             cal.set(Calendar.DAY_OF_MONTH, 15);
         } catch (ParseException ex) {
-            logger.error("ParseException: {}", ex);
+            logger.error("ParseException:", ex);
         }
         return cal.getTime();
     }

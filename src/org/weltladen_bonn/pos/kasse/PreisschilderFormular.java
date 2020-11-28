@@ -614,7 +614,7 @@ public class PreisschilderFormular extends ArtikelGrundlage implements ArticleSe
         } catch (FileNotFoundException ex) {
             logger.error("CSV list file for price tags not found.");
         } catch (IOException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
         }
     }
 

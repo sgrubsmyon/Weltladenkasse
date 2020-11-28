@@ -149,7 +149,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    stmt.close();
         connection.close();
 	} catch (SQLException ex) {
-	    logger.error("Exception: {}", ex);
+	    logger.error("Exception:", ex);
         showDBErrorDialog(ex.getMessage());
 	}
 	myTable = new AnyJComponentJTable(this.data, overviewLabels);
@@ -308,7 +308,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return detailData;

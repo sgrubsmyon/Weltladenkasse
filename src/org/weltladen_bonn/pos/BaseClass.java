@@ -207,7 +207,7 @@ public class BaseClass {
             this.exportDirBestellung = props.getProperty("exportDirBestellung");
             this.alwaysPrintReceipt = Boolean.valueOf(props.getProperty("alwaysPrintReceipt"));
         } catch (Exception ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             JOptionPane.showMessageDialog(null, "Fehler in der Konfigurationsdatei config.properties.\n"+
                     "Es werden die Standardwerte benutzt.", "Fehler",
                     JOptionPane.ERROR_MESSAGE);

@@ -1097,7 +1097,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
 
@@ -1278,7 +1278,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return pfandArtikelID;
@@ -1299,7 +1299,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return hasPfand;
@@ -1320,7 +1320,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return maxRechNr;
@@ -1340,7 +1340,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return date;
@@ -1407,7 +1407,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return rechnungsNr;
@@ -1442,7 +1442,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 mainWindow.updateBottomPanel();
             }
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -1686,7 +1686,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
               Thread.sleep(5000); // wait for 5 seconds
               printQuittung(rechnungsNr);
             } catch (InterruptedException ex) {
-              logger.error("Exception: {}", ex);
+              logger.error("Exception:", ex);
             }
         }
         clearAll();

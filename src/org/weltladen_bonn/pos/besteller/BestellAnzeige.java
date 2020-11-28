@@ -147,7 +147,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         Calendar calendar = Calendar.getInstance();
@@ -454,7 +454,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -515,7 +515,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         orderDetailDisplayData = new Vector< Vector<Object> >(orderDetailData);
@@ -570,7 +570,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return exportData;
@@ -647,7 +647,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return exportData;
@@ -692,12 +692,12 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 }
                 connection.commit();
             } catch (SQLException ex) {
-                logger.error("Exception: {}", ex);
+                logger.error("Exception:", ex);
                 try {
                     connection.rollback();
                 } catch (SQLException ex2) {
                     logger.error("Rollback failed!");
-                    logger.error("Exception: {}", ex2);
+                    logger.error("Exception:", ex2);
                     showDBErrorDialog("Rollback failed! Exception: "+ex2.getMessage());
                 }
             } finally {
@@ -706,7 +706,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                         pstmt.close();
                     }
                 } catch (SQLException ex) {
-                    logger.error("Exception: {}", ex);
+                    logger.error("Exception:", ex);
                     showDBErrorDialog(ex.getMessage());
                 }
                 try {
@@ -714,14 +714,14 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                     
                 } catch (SQLException ex) {
                     logger.error("Couldn't set auto-commit to true again after manual transaction.");
-                    logger.error("Exception: {}", ex);
+                    logger.error("Exception:", ex);
                     showDBErrorDialog("Couldn't set auto-commit to true again after manual transaction. Exception: "+ex.getMessage());
                 }
                 try {
                     connection.close();
                 } catch (SQLException ex) {
                     logger.error("Couldn't close the connection.");
-                    logger.error("Exception: {}", ex);
+                    logger.error("Exception:", ex);
                     showDBErrorDialog("Couldn't close the connection. Exception: "+ex.getMessage());
                 }
             }
@@ -750,7 +750,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             Date date = new SimpleDateFormat(bc.dateFormatJava).parse(oldDate);
             newDate = new SimpleDateFormat("dd.MM.yyyy").format(date);;
         } catch (java.text.ParseException ex) {
-            logger.error("ParseException: {}", ex);
+            logger.error("ParseException:", ex);
         }
 
         // Load the template file
@@ -767,7 +767,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             }
             sheet = SpreadSheet.createFromFile(infile).getSheet(0);
         } catch (IOException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             return;
         }
 
@@ -790,9 +790,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             // Save to file and open it.
             OOUtils.open(sheet.getSpreadSheet().saveAs(file));
         } catch (FileNotFoundException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
         } catch (IOException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
         }
     }
 
@@ -816,7 +816,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             }
             sheet = SpreadSheet.createFromFile(infile).getSheet(0);
         } catch (IOException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             return;
         }
 
@@ -837,9 +837,9 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             // Save to file and open it.
             OOUtils.open(sheet.getSpreadSheet().saveAs(file));
         } catch (FileNotFoundException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
         } catch (IOException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
         }
     }
 

@@ -93,7 +93,7 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         Calendar calendar = Calendar.getInstance();

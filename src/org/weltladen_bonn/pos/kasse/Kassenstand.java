@@ -134,7 +134,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         Calendar calendar = Calendar.getInstance();
@@ -231,7 +231,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         myTable = new AnyJComponentJTable(data, columnLabels);

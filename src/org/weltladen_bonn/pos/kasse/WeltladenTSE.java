@@ -160,7 +160,7 @@ public class WeltladenTSE {
             // tse = TSE.getInstance("config_tse.txt"); // re-connect to continue
         } catch (FileNotFoundException ex) {
             logger.warn("TSE config file not found under '{}'", "config_tse.txt");
-            logger.warn("Exception: {}", ex);
+            logger.warn("Exception:", ex);
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Es wird ohne TSE gearbeitet (weil keine Datei 'config_tse.txt' vorhanden ist)!!!\n"+
                 "Dies ist im Geschäftsbetrieb ILLEGAL und darf also nur für Testzwecke geschehen!!!\n"+
@@ -171,7 +171,7 @@ public class WeltladenTSE {
             logger.info("tseInUse = {}", tseInUse);
         } catch (IOException ex) {
             logger.fatal("There is a TSE config file '{}', but it could not be read from it.", "config_tse.txt");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die Datei 'config_tse.txt' konnte nicht eingelesen werden!\n"+
                 "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
@@ -184,7 +184,7 @@ public class WeltladenTSE {
             System.exit(1);
         } catch (SEException ex) {
             logger.fatal("Unable to open connection to TSE, given configuration provided by '{}'.", "config_tse.txt");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Es konnte keine Verbindung zur TSE aufgebaut werden!\n"+
                 "Entweder die TSE (eine SD-Karte, die rechts am Laptop in einem Schlitz steckt)\n"+
@@ -200,7 +200,7 @@ public class WeltladenTSE {
             System.exit(1);
         } catch(Throwable ex) {
             logger.fatal("Throwable caught in connectToTSE");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         }
     }
 
@@ -210,13 +210,13 @@ public class WeltladenTSE {
                 tse.close();
             } catch (IOException ex) {
                 logger.fatal("IOException upon closing connection to TSE");
-                logger.fatal("Exception: {}", ex);
+                logger.fatal("Exception:", ex);
             } catch (SEException ex) {
                 logger.fatal("SEException upon closing connection to TSE");
-                logger.fatal("Exception: {}", ex);
+                logger.fatal("Exception:", ex);
             } catch(Throwable ex) {
                 logger.fatal("Throwable caught in disconnectFromTSE");
-                logger.fatal("Exception: {}", ex);
+                logger.fatal("Exception:", ex);
             }
         }
     }
@@ -351,7 +351,7 @@ public class WeltladenTSE {
             logger.debug("09 After everything");
         } catch (SEException ex) {
             logger.fatal("Unable to check initialization status of TSE");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Es konnte nicht geprüft werden, ob die TSE bereits initialisiert ist!\n"+
                 "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
@@ -382,7 +382,7 @@ public class WeltladenTSE {
             ais.close();
         } catch (IOException ex) {
             logger.error("Failed to decode byte array using ASN1InputStream");
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
         }
         return result;
     }
@@ -501,7 +501,7 @@ public class WeltladenTSE {
             }
         } catch (SEException ex) {
             logger.error("Error at reading of TSE status values");
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
         } finally {
             return values;
         }
@@ -570,23 +570,23 @@ public class WeltladenTSE {
         } catch (ErrorTSECommandDataInvalid ex) {
             error = "Data given to TSE's initializePinValues() invalid";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorSECommunicationFailed ex) {
             error = "SE communication failed";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorSigningSystemOperationDataFailed ex) {
             error = "Signing system operation data failed";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorStorageFailure ex) {
             error = "Storage failure";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (SEException ex) {
             error = "Unknown error during initializePinValues()";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         }
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
@@ -619,7 +619,7 @@ public class WeltladenTSE {
             logger.warn("File '~/.Weltladenkasse_tse' storing the TSE timeAdminPIN already exists. It is now overwritten.");
         } catch (IOException ex) {
             logger.error("Could not create file '~/.Weltladenkasse_tse' storing the TSE timeAdminPIN");
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
         }
         try {
             // Save the timeAdminPIN as a property to that file
@@ -628,7 +628,7 @@ public class WeltladenTSE {
             props.store(new FileOutputStream(pinPath.toFile()), "TSE properties for Weltladenkasse");
         } catch (IOException ex) {
             logger.error("Could not write TSE timeAdminPIN to file '~/.Weltladenkasse_tse'.");
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
         }
     }
 
@@ -640,11 +640,11 @@ public class WeltladenTSE {
             return props.getProperty("timeAdminPIN").getBytes();
         } catch (FileNotFoundException ex) {
             logger.error("File '~/.Weltladenkasse_tse' for storing timeAdminPIN not found.");
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             return showPINentryDialog("TimeAdmin", "PIN", 8);
         } catch (IOException ex) {
             logger.error("Could not read timeAdminPIN from file '~/.Weltladenkasse_tse'");
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             return showPINentryDialog("TimeAdmin", "PIN", 8);
         }
     }
@@ -675,19 +675,19 @@ public class WeltladenTSE {
         } catch (ErrorSigningSystemOperationDataFailed ex) {
             message = "Signing system operation data failed";
             logger.fatal("Fatal Error: {}", message);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorRetrieveLogMessageFailed ex) {
             message = "Retrieve log message failed";
             logger.fatal("Fatal Error: {}", message);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorStorageFailure ex) {
             message = "Storage failure";
             logger.fatal("Fatal Error: {}", message);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorSecureElementDisabled ex) {
             message = "Secure element disabled";
             logger.fatal("Fatal Error: {}", message);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (SEException ex) {
             message = "Unknown error during authenticateUser()";
             logger.fatal("Fatal Error: {}", message);
@@ -708,7 +708,7 @@ public class WeltladenTSE {
                 System.exit(1);
             }
         }
-        return message ;
+        return message;
     }
 
     private void logOutAs(String user) {
@@ -720,35 +720,35 @@ public class WeltladenTSE {
         } catch (ErrorUserIdNotManaged ex) {
             error = "User ID not managed";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorSigningSystemOperationDataFailed ex) {
             error = "Signing system operation data failed";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorUserNotAuthenticated ex) {
             error = "User ID not authenticated";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorUserNotAuthorized ex) {
             error = "User not authorized";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorRetrieveLogMessageFailed ex) {
             error = "Retrieve log message failed";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorStorageFailure ex) {
             error = "Storage failure";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorSecureElementDisabled ex) {
             error = "Secure element disabled";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (SEException ex) {
             error = "Unknown error during logOut()";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         }
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
@@ -777,23 +777,23 @@ public class WeltladenTSE {
         } catch (ErrorSigningSystemOperationDataFailed ex) {
             error = "Signing system operation data failed";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorRetrieveLogMessageFailed ex) {
             error = "Retrieve log message failed";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorStorageFailure ex) {
             error = "Storage failure";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorSecureElementDisabled ex) {
             error = "Secure Element disabled";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (SEException ex) {
             error = "Unknown error during initialize()";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         }
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
@@ -821,15 +821,15 @@ public class WeltladenTSE {
         } catch (ErrorSeApiNotInitialized ex) {
             error = "SE API not initialized";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorSecureElementDisabled ex) {
             error = "Secure Element disabled";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (SEException ex) {
             error = "Unknown error during getTimeSyncInterval()";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         }
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
@@ -869,39 +869,39 @@ public class WeltladenTSE {
         } catch (ErrorUpdateTimeFailed ex) {
             error = "Update time failed";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorRetrieveLogMessageFailed ex) {
             error = "Retrieve log message failed";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorStorageFailure ex) {
             error = "Storage failure";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorSeApiNotInitialized ex) {
             error = "SE API not initialized";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorCertificateExpired ex) {
             error = "Certificate expired";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorSecureElementDisabled ex) {
             error = "Secure Element disabled";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorUserNotAuthorized ex) {
             error = "User not authorized";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorUserNotAuthenticated ex) {
             error = "User not authenticated";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (SEException ex) {
             error = "Unknown error during updateTime()";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         }
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
@@ -935,7 +935,7 @@ public class WeltladenTSE {
             }
         } catch (ErrorSECommunicationFailed ex) {
             logger.fatal("SE Communication failed!");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die Kommunikation mit der TSE nach dem Setzen der Zeit ist fehlgeschlagen!\n"+
                 "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.",
@@ -944,7 +944,7 @@ public class WeltladenTSE {
             System.exit(1);
         } catch (SEException ex) {
             logger.fatal("SE Communication failed!");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Unbekannter Fehler nach dem Setzen der Zeit der TSE!\n"+
                 "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.",
@@ -967,11 +967,11 @@ public class WeltladenTSE {
         } catch (ErrorSeApiNotInitialized ex) {
             error = "SE API not initialized";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (SEException ex) {
             error = "Unknown error during exportSerialNumbers()";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         }
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
@@ -1006,55 +1006,55 @@ public class WeltladenTSE {
         } catch (ErrorSigningSystemOperationDataFailed ex) {
             error = "Signing system operation data failed";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorRetrieveLogMessageFailed ex) {
             error = "Retrieve log message failed";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorStorageFailure ex) {
             error = "Storage failure";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorSeApiNotInitialized ex) {
             error = "SE API not initialized";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorCertificateExpired ex) {
             error = "Certificate expired";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorTimeNotSet ex) {
             error = "Time not set";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorSecureElementDisabled ex) {
             error = "Secure Element disabled";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorUserNotAuthorized ex) {
             error = "User not authorized";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorUserNotAuthenticated ex) {
             error = "User not authenticated";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorNoSuchKey ex) {
             error = "No such key";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorSECommunicationFailed ex) {
             error = "SE communication failed";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorERSalreadyMapped ex) {
             error = "ERS already mapped";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (SEException ex) {
             error = "Unknown error during mapERStoKey()";
             logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         }
         if (!passed) {
             JOptionPane.showMessageDialog(this.mainWindow,
@@ -1155,37 +1155,37 @@ public class WeltladenTSE {
             logger.debug("Open transactions: {}", openTransactions);
         } catch (ErrorSeApiNotInitialized ex) {
             logger.fatal("SE API not initialized");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorSecureElementDisabled ex) {
             logger.fatal("Secure Element disabled");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorStartTransactionFailed ex) {
             logger.fatal("Start transaction failed");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorRetrieveLogMessageFailed ex) {
             logger.fatal("Retrieve log message failed");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorStorageFailure ex) {
             logger.fatal("Storage failure");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorTimeNotSet ex) {
             logger.fatal("Time not set");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorCertificateExpired ex) {
             logger.fatal("Certificate expired");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorUpdateTransactionFailed ex) {
             logger.fatal("Update transaction failed");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorNoTransaction ex) {
             logger.fatal("No transaction");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (ErrorFinishTransactionFailed ex) {
             logger.fatal("Finish transaction failed");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         } catch (SEException ex) {
             logger.fatal("Unknown error during writeTestTransaction()");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
         }
     }
 
@@ -1197,15 +1197,15 @@ public class WeltladenTSE {
             return "OK";
         } catch (FileNotFoundException ex) {
             logger.fatal("File not found exception during exportTransactionData()");            
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             return "FileNotFoundException";
         } catch (IOException ex) {
             logger.fatal("IO exception during exportTransactionData()");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             return "IOException";
         } catch (SEException ex) {
             logger.fatal("SE exception during exportTransactionData()");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             return "SEException";
         }
     }
@@ -1232,15 +1232,15 @@ public class WeltladenTSE {
             return "OK";
         } catch (FileNotFoundException ex) {
             logger.fatal("File not found exception during exportPartialTransactionDataBySigCounter()");            
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             return "FileNotFoundException";
         } catch (IOException ex) {
             logger.fatal("IO exception during exportPartialTransactionDataBySigCounter()");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             return "IOException";
         } catch (SEException ex) {
             logger.fatal("SE exception during exportPartialTransactionDataBySigCounter()");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             return "SEException";
         }
     }
@@ -1261,19 +1261,19 @@ public class WeltladenTSE {
             return "OK";
         } catch (ErrorNoSuchKey ex) {
             logger.fatal("No such key error during deletePartialTransactionDataBySigCounter()");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             return "ErrorNoSuchKey";
         } catch (ErrorIdNotFound ex) {
             logger.fatal("ID not found error during deletePartialTransactionDataBySigCounter()");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             return "ErrorIdNotFound";
         } catch (ErrorStreamWrite ex) {
             logger.fatal("Stream write error during deletePartialTransactionDataBySigCounter()");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             return "ErrorStreamWrite";
         } catch (SEException ex) {
             logger.fatal("SE exception during deletePartialTransactionDataBySigCounter()");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             return "SEException";
         }
     }
@@ -1293,23 +1293,23 @@ public class WeltladenTSE {
             return "OK";
         } catch (ErrorUnexportedStoredData ex) {
             logger.fatal("Error: There is still unexported stored data, so cannot deleteFullTransactionData()");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             return "ErrorUnexportedStoredData";
         } catch (ErrorSeApiNotInitialized ex) {
             logger.fatal("SE API not initialized error during deleteFullTransactionData()");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             return "ErrorSeApiNotInitialized";
         } catch (ErrorUserNotAuthorized ex) {
             logger.fatal("User not authorized error during deleteFullTransactionData()");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             return "ErrorUserNotAuthorized";
         } catch (ErrorUserNotAuthenticated ex) {
             logger.fatal("User not authenticated error during deleteFullTransactionData()");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             return "ErrorUserNotAuthenticated";
         } catch (SEException ex) {
             logger.fatal("SE exception during deleteFullTransactionData()");
-            logger.fatal("Exception: {}", ex);
+            logger.fatal("Exception:", ex);
             return "SEException";
         }
     }

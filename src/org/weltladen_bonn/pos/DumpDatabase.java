@@ -216,7 +216,7 @@ public class DumpDatabase extends WindowContent {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         String[] yw = {year, week};
