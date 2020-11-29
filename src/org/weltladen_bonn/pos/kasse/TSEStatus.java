@@ -213,12 +213,23 @@ public class TSEStatus extends WindowContent {
                 dialog.pack();
                 dialog.setLocationRelativeTo(null);
                 dialog.setVisible(true);
-                // tseped.getPIN();
                 boolean aborted = tseped.getAborted();
-                // filename = askForExportFilename();
-                // if (filename != null) {
-                //     message = tse.exportPartialTransactionDataByTXNumber(filename, (long)10, (long)15, null);
-                // }
+                if (!aborted) {
+                    logger.info("{}", tseped.txNumberMode());
+                    logger.info("{}", tseped.getTxNumberStart());
+                    logger.info("{}", tseped.getTxNumberEnd());
+                    logger.info("{}", tseped.dateMode());
+                    logger.info("{}", tseped.getDateStart());
+                    logger.info("{}", tseped.getDateEnd());
+                    logger.info("{}", tseped.sigCounterMode());
+                    logger.info("{}", tseped.getSigCounterLastExcluded());
+                    logger.info("{}", tseped.maxRecordsMode());
+                    logger.info("{}", tseped.getMaxNumRecords());
+                    // filename = askForExportFilename();
+                    // if (filename != null) {
+                    //     message = tse.exportPartialTransactionDataByTXNumber(filename, (long)10, (long)15, null);
+                    // }
+                }
             }
             if (message == "OK") {
                 logger.info("TSE export created successfully");
