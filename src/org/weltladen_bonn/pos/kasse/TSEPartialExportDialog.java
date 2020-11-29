@@ -214,6 +214,46 @@ public class TSEPartialExportDialog extends DialogWindow implements DocumentList
         return aborted;
     }
 
+    public boolean txNumberMode() {
+        return txNumberStartField.isEnabled();
+    }
+
+    public boolean dateMode() {
+        return dateStartField.isEnabled();
+    }
+
+    public boolean sigCounterMode() {
+        return sigCounterLastExcludedField.isEnabled();
+    }
+
+    public boolean maxRecordsMode() {
+        return maxNumRecordsField.isEnabled();
+    }
+
+    public Long getTxNumberStart() {
+        return Long.parseLong(txNumberStartField.getText());
+    }
+
+    public Long getTxNumberEnd() {
+        return Long.parseLong(txNumberEndField.getText());
+    }
+
+    public Long getDateStart() {
+        return Long.parseLong(dateStartField.getText());
+    }
+
+    public Long getDateEnd() {
+        return Long.parseLong(dateEndField.getText());
+    }
+
+    public Long getSigCounterLastExcluded() {
+        return Long.parseLong(sigCounterLastExcludedField.getText());
+    }
+
+    public Long getMaxNumRecords() {
+        return Long.parseLong(maxNumRecordsField.getText());
+    }
+
     /**
      * Each non abstract class that implements the ActionListener
      * must have this method.

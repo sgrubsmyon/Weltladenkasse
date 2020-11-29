@@ -63,7 +63,7 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
     }
 
     @Override
-    public void beforeInitiate() {
+    protected void beforeInitiate() {
         tse = new WeltladenTSE(this, this.bc);
     }
 
