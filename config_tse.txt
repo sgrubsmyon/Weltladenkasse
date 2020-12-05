@@ -2,8 +2,8 @@
 # transport=MscJna
 # path=F:/
 # path=/media/user/cv TSE
-transport=MSCJava10
-#transport=MscJna
+#transport=MSCJava10
+transport=MscJna
 path=/run/media/mvoge/5D48-0A27
 
 # TSE communication timeout, seconds (default: 5)
