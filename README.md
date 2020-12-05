@@ -106,22 +106,28 @@ Download and put into the folder `lib` the following jars:
 * hidapi-1.1.jar: https://code.google.com/p/javahidapi/
 * log4j-api-2.13.3.jar and log4j-core-2.13.3.jar (extracted from apache-log4j-2.13.3-bin.tar.gz): https://logging.apache.org/log4j/2.x/download.html
 
+Unjar the hidapi-1.1.jar (with `jar -xvf hidapi-1.1.jar`) and copy the content
+of the `native/*` folders (files ending with `.so`, `.dll` or `.jnilib`) into
+folder `resources/natives`.
+
 For using TSE (German fiscalisation "Secure Element") from Bundesdruckerei/D-Trust/cryptovision:
 
 * jna-4.0.0.jar: (only when using MscJna TSE transport instead of MSCJava10Transport)
     https://tse-support.cryptovision.com/confluence/display/TDI/cryptovision+TSE+-+Download-Bereich
-    (download `SE-API-Java.zip`, required file is in `se-api-test/lib/`)
+    (download `SE-API-Java.zip`, required file is in `se-api-test/lib/`).
 * `libse-msc-io_linux-x86-64.so`: (only when using MscJna TSE transport instead of MSCJava10Transport)
     https://tse-support.cryptovision.com/confluence/display/TDI/cryptovision+TSE+-+Download-Bereich
-    (download `SE-API-Java.zip`, required file is in `se-api-impl/dll/`, put it inside folder `dll/linux-x86-64/`)
-* bcprov-jdk15on-1.62.jar: (only needed to compile cryptovision TSE test code)
-  either http://www.bouncycastle.org/latest_releases.html or
-  https://tse-support.cryptovision.com/confluence/display/TDI/cryptovision+TSE+-+Download-Bereich
-  (download `SE-API-Java.zip`, required file is in `se-api-test/lib/`)
-
-Unjar the hidapi-1.1.jar (with `jar -xvf hidapi-1.1.jar`) and copy the content
-of the `native/*` folders (files ending with `.so`, `.dll` or `.jnilib`) into
-folder `resources/natives`.
+    Download `SE-API-Java.zip`, required file is in `se-api-impl/dll/`, put it inside a folder `linux-x86-64`
+    and create a jar file `libse-msc-io_linux-x86-64.jar`
+    (`jar cvf libse-msc-io_linux-x86-64.jar linux-x86-64`)
+    that you put into folder `lib`.
+* bcprov-jdk15on-1.62.jar:
+    either http://www.bouncycastle.org/latest_releases.html or
+    https://tse-support.cryptovision.com/confluence/display/TDI/cryptovision+TSE+-+Download-Bereich
+    (download `SE-API-Java.zip`, required file is in `se-api-test/lib/`).
+    To prevent invalid signature problems, you need to unjar the file
+    (`jar xvf bcprov-jdk15on-1.62.jar`), delete all META-INF/*.SF and META-INF/*.DSA files
+    and recreate jar (`jar cvf bcprov-jdk15on-1.62_deleted_sf_dsa.jar *`).
 
 ## Optionally: Install receipt printer
 
