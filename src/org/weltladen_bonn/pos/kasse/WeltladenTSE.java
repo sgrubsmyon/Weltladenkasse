@@ -1,6 +1,7 @@
 package org.weltladen_bonn.pos.kasse;
 
 import org.weltladen_bonn.pos.BaseClass;
+import org.weltladen_bonn.pos.LongOperationIndicatorDialog;
 
 import java.io.IOException;
 import java.io.File;
@@ -24,8 +25,13 @@ import java.util.Vector;
 
 // GUI stuff:
 import java.awt.BorderLayout;
-import javax.swing.JDialog;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 import javax.swing.JOptionPane;
+import javax.swing.JDialog;
+import javax.swing.JPanel;
+import javax.swing.JLabel;
+import javax.swing.JButton;
 
 // TSE: (BSI, use implementation by Bundesdruckerei/D-Trust/cryptovision)
 import com.cryptovision.SEAPI.TSE;
@@ -99,7 +105,7 @@ public class WeltladenTSE {
         "Lebenszyklus",
         "Transaktionsnummer",
         "Signatur-Zähler",
-        "Seriennummer des 1. Schlüssels (Hex)",
+        "Seriennummer der TSE (1. Schlüssel, Hex)",
         "Seriennummern aller Schlüssel (ASN.1)",
         "Öffentlicher Schlüssel (Hex)",
         "Ablaufdatum des Zertifikats",
@@ -124,8 +130,12 @@ public class WeltladenTSE {
         this.mainWindow = mw;
         this.bc = bc;
         connectToTSE();
-        tseStartUpWorkaroundLoop();
         if (tseInUse) {
+            LongOperationIndicatorDialog dialog = new LongOperationIndicatorDialog(
+                new JLabel("TSE wird initialisiert..."),
+                null
+            );
+
             checkInitializationStatus();
             // System.out.println("\n\n*** WRITING FIRST TRANSACTION TO TSE ***");
             // System.out.println("\n --- Status before: \n");
@@ -139,6 +149,8 @@ public class WeltladenTSE {
             // exportPartialTransactionDataBySigCounter("./export_partial_test.tar", (long)0, (long)10);
             // deletePartialTransactionDataBySigCounter((long)(0 + 10));
             // exportFullTransactionData("./export_full_after_delete.tar");
+
+            dialog.dispose();
         }
     }
 
@@ -220,17 +232,37 @@ public class WeltladenTSE {
             }
         }
     }
-    
+
+    private LongOperationIndicatorDialog installLongOperationIndicatorDialogWithCancelButton() {
+        JPanel buttonPanel = new JPanel();
+        JButton cancelButton = new JButton("Abbrechen");
+        cancelButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                logger.info("User canceled the start-up workaround loop");
+                disconnectFromTSE();
+                System.exit(0);
+            }
+        });
+        buttonPanel.add(cancelButton);
+        LongOperationIndicatorDialog dialog = new LongOperationIndicatorDialog(
+            new JLabel("Versuche, Verbindung zur TSE aufzubauen (kann ca. 30-60 Sekunden dauern)..."),
+            buttonPanel
+        );
+        return dialog;
+    }
+
     private void tseStartUpWorkaroundLoop() {
         byte[] timeAdminPIN = readTimeAdminPINFromFile();
+        LongOperationIndicatorDialog dialog = installLongOperationIndicatorDialogWithCancelButton();
         boolean tseOperational = false;
         while (!tseOperational) {
             logger.info("Trying to authenticate as user 'TimeAdmin'...");
             String message = authenticateAs("TimeAdmin", timeAdminPIN, false);
             if (message == "OK") {
+                logger.info("Success!!! Now we can continue normally...");
+                dialog.dispose();
                 logOutAs("TimeAdmin");
                 tseOperational = true;
-                logger.info("Success!!! Now we can continue normally...");
             } else {
                 logger.info("Failed. Trying again...");
                 // Because connection to TSE was closed, we need to re-open it:
@@ -293,6 +325,7 @@ public class WeltladenTSE {
             }
             // In any case:
             logger.info("Updating TSE's time for the first time after booting up");
+            tseStartUpWorkaroundLoop();
             initTimeVars(); // set the time sync interval counter for the first time after booting up
             updateTimeWithoutChecking();
             // Re-check if time was actually set:
@@ -433,9 +466,9 @@ public class WeltladenTSE {
                     // Abfrage des Signatur-Zählers der letzten Signatur, XXX sollte auf Quittung gedruckt werden!
                     values.put("Signatur-Zähler", String.valueOf(tse.getSignatureCounter(serialNumber)));
                 }
-                if (interestingValues.size() == 0 || interestingValues.contains("Seriennummer des 1. Schlüssels (Hex)")) {
+                if (interestingValues.size() == 0 || interestingValues.contains("Seriennummer der TSE (1. Schlüssel, Hex)")) {
                     // Erste und auch einzige Signaturschlüssel-Seriennummer, XXX sollte auf Quittung gedruckt werden!
-                    values.put("Seriennummer des 1. Schlüssels (Hex)", encodeByteArrayAsHexString(serialNumber));
+                    values.put("Seriennummer der TSE (1. Schlüssel, Hex)", encodeByteArrayAsHexString(serialNumber));
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Seriennummern aller Schlüssel (ASN.1)")) {
                     // Alle Signaturschlüssel-Seriennummern
@@ -516,7 +549,7 @@ public class WeltladenTSE {
             // "Eindeutige D-Trust-ID", "Firmware-Version", "BSI-Zertifizierungsnummer",
             "Gesamte Speichergröße", "Verfügbare Speichergröße", "Verschleiß des Speichers",
             "Lebenszyklus", "Transaktionsnummer", "Signatur-Zähler",
-            // "Seriennummer des 1. Schlüssels (Hex)", "Öffentlicher Schlüssel (Hex)",
+            // "Seriennummer der TSE (1. Schlüssel, Hex)", "Öffentlicher Schlüssel (Hex)",
             // "Ablaufdatum des Zertifikats", "Signatur-Algorithmus (ASN.1)",
             "Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)"
         };
@@ -560,48 +593,57 @@ public class WeltladenTSE {
     public void setPINandPUK(byte[] adminPIN, byte[] adminPUK, byte[] timeAdminPIN, byte[] timeAdminPUK) {
         boolean passed = false;
         String error = "";
-        try {
-            System.out.println("\nBEFORE initializePinValues():");
-            printStatusValues();
-            tse.initializePinValues(adminPIN, adminPUK, timeAdminPIN, timeAdminPUK);
-            System.out.println("\nAFTER initializePinValues():");
-            printStatusValues();
-            passed = true;
-        } catch (ErrorTSECommandDataInvalid ex) {
-            error = "Data given to TSE's initializePinValues() invalid";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorSECommunicationFailed ex) {
-            error = "SE communication failed";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorSigningSystemOperationDataFailed ex) {
-            error = "Signing system operation data failed";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorStorageFailure ex) {
-            error = "Storage failure";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception:", ex);
-        } catch (SEException ex) {
-            error = "Unknown error during initializePinValues()";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception:", ex);
+        System.out.println("\nBEFORE initializePinValues():");
+        printStatusValues();
+        LongOperationIndicatorDialog dialog = installLongOperationIndicatorDialogWithCancelButton();
+        boolean tseOperational = false;
+        while (!tseOperational) {
+            logger.info("Trying to set PIN and PUK...");
+            try {
+                tse.initializePinValues(adminPIN, adminPUK, timeAdminPIN, timeAdminPUK);
+                logger.info("Success!!! Now we can continue normally...");
+                dialog.dispose();
+                passed = true;
+                tseOperational = true;
+            } catch (ErrorTSECommandDataInvalid ex) {
+                error = "Data given to TSE's initializePinValues() invalid";
+                logger.fatal("Fatal Error: {}", error);
+                logger.fatal("Exception:", ex);
+            } catch (ErrorSECommunicationFailed ex) {
+                error = "SE communication failed";
+                logger.fatal("Fatal Error: {}", error);
+                logger.fatal("Exception:", ex);
+            } catch (ErrorSigningSystemOperationDataFailed ex) {
+                error = "Signing system operation data failed";
+                logger.fatal("Fatal Error: {}", error);
+                logger.fatal("Exception:", ex);
+            } catch (ErrorStorageFailure ex) {
+                error = "Storage failure";
+                logger.fatal("Fatal Error: {}", error);
+                logger.fatal("Exception:", ex);
+            } catch (SEException ex) {
+                error = "Unknown error during initializePinValues()";
+                logger.fatal("Fatal Error: {}", error);
+                logger.fatal("Exception:", ex);
+            }
+            if (!passed) {
+                // JOptionPane.showMessageDialog(this.mainWindow,
+                //     "ACHTUNG: Die PINs und PUKs der TSE konnten nicht gesetzt werden!\n\n"+
+                //     "Fehler: "+error+".\n\n"+
+                //     "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
+                //     "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
+                //     "erneut versuchen.",
+                //     "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
+                // Exit application upon this fatal error
+                logger.info("Failed. Trying again...");
+                disconnectFromTSE();
+                connectToTSE();
+            } else {
+                writeTimeAdminPINtoFile(timeAdminPIN);
+            }
         }
-        if (!passed) {
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Die PINs und PUKs der TSE konnten nicht gesetzt werden!\n\n"+
-                "Fehler: "+error+".\n\n"+
-                "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
-                "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
-                "erneut versuchen.",
-                "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
-            // Exit application upon this fatal error
-            disconnectFromTSE();
-            System.exit(1);
-        } else {
-            writeTimeAdminPINtoFile(timeAdminPIN);
-        }
+        System.out.println("\nAFTER initializePinValues():");
+        printStatusValues();
     }
 
     public void writeTimeAdminPINtoFile(byte[] timeAdminPIN) {
