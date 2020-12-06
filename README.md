@@ -115,11 +115,17 @@ For using TSE (German fiscalisation "Secure Element") from Bundesdruckerei/D-Tru
 * jna-4.0.0.jar: (only when using MscJna TSE transport instead of MSCJava10Transport)
     https://tse-support.cryptovision.com/confluence/display/TDI/cryptovision+TSE+-+Download-Bereich
     (download `SE-API-Java.zip`, required file is in `se-api-test/lib/`).
-* `libse-msc-io_linux-x86-64.so`: (only when using MscJna TSE transport instead of MSCJava10Transport)
+* `libse-msc-io_linux-x86-64.so`: (only when using MscJna TSE transport on Linux instead of MSCJava10Transport)
     https://tse-support.cryptovision.com/confluence/display/TDI/cryptovision+TSE+-+Download-Bereich
     Download `SE-API-Java.zip`, required file is in `se-api-impl/dll/`, put it inside a folder `linux-x86-64`
     and create a jar file `libse-msc-io_linux-x86-64.jar`
     (`jar cvf libse-msc-io_linux-x86-64.jar linux-x86-64`)
+    that you put into folder `lib`.
+* `se-msc-io_win32-x86-64.dll`: (only when using MscJna TSE transport on Windows instead of MSCJava10Transport)
+    https://tse-support.cryptovision.com/confluence/display/TDI/cryptovision+TSE+-+Download-Bereich
+    Download `SE-API-Java.zip`, required file is in `se-api-impl/dll/`, put it inside a folder `win32-x86-64`
+    and create a jar file `se-msc-io_win32-x86-64.jar`
+    (`jar cvf se-msc-io_win32-x86-64.jar win32-x86-64`)
     that you put into folder `lib`.
 * bcprov-jdk15on-1.62.jar:
     either http://www.bouncycastle.org/latest_releases.html or
