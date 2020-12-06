@@ -51,8 +51,8 @@ import com.cryptovision.SEAPI.transport.Transport.Status;
  */
 public class TSEConnector extends TSE {
 
-	private static final byte[] VERSION = new byte[] { 2, 3, 2 };
-	private static final String VERSION_STRING = "cryptovision Java SE-API v2.3.2";
+	private static final byte[] VERSION = new byte[] { 2, 3, 3 };
+	private static final String VERSION_STRING = "cryptovision Java SE-API v2.3.3";
 	private static final long UINT32_MAX = (long) 0xFFFFFFFFL;
 
 	final Transport transport;
@@ -338,7 +338,19 @@ public class TSEConnector extends TSE {
 	@Override
 	public byte[] getERSMappings() throws SEException {
 		Object[] data = transport.send(Command.GetERSMappings );
-		return (byte[]) data[0];
+		byte[] mappings = (byte[]) data[0];
+		if(mappings.length == 2 + 1 + 0x7F && mappings[1] == 0x7F) {
+			mappings[1] = 0x30;
+			mappings[2] = 0x7F;
+			return Arrays.copyOfRange(mappings, 1, mappings.length);
+		} else if(mappings.length == 3 + 1 + 0xFF && mappings[2] == (byte) 0xFF) {
+			mappings[1] = 0x30;
+			mappings[2] = (byte) 0x81;
+			mappings[3] = (byte) 0xFF;
+			return Arrays.copyOfRange(mappings, 1, mappings.length);
+		}
+
+		return mappings;
 	}
 
 	@Override
