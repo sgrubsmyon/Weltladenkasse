@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.Properties;
 import java.util.HashMap;
 import java.util.Vector;
+import java.util.Base64;
 
 // GUI stuff:
 import java.awt.BorderLayout;
@@ -1138,6 +1139,11 @@ public class WeltladenTSE {
         return res.substring(0, res.length() - 1); // omit last empty string
     }
 
+    private String byteArrayToBase64String(byte[] byteArray) {
+        byte[] encoded = Base64.getEncoder().encode(byteArray);
+        return new String(encoded);
+    }
+
     private void writeTestTransaction() {
         try {
             long n = tse.getCurrentNumberOfClients();
@@ -1155,6 +1161,7 @@ public class WeltladenTSE {
             logger.debug("Transaction: signatureValue (Bytes): {}", byteArrayToByteString(result.signatureValue));
             logger.debug("Transaction: signatureValue (Ints): {}", byteArrayToIntString(result.signatureValue));
             logger.debug("Transaction: signatureValue (Chars): {}", byteArrayToCharString(result.signatureValue));
+            logger.debug("Transaction: signatureValue (Base64): {}", byteArrayToBase64String(result.signatureValue));
 
             /** again some status information */
             n = tse.getCurrentNumberOfTransactions();
@@ -1169,6 +1176,7 @@ public class WeltladenTSE {
             logger.debug("Transaction: signatureValue (Bytes): {}", byteArrayToByteString(updRes.signatureValue));
             logger.debug("Transaction: signatureValue (Ints): {}", byteArrayToIntString(updRes.signatureValue));
             logger.debug("Transaction: signatureValue (Chars): {}", byteArrayToCharString(updRes.signatureValue));
+            logger.debug("Transaction: signatureValue (Base64): {}", byteArrayToBase64String(updRes.signatureValue));
 
             /** again some status information */
             n = tse.getCurrentNumberOfTransactions();
@@ -1187,6 +1195,7 @@ public class WeltladenTSE {
             logger.debug("Transaction: signatureValue (Bytes): {}", byteArrayToByteString(finRes.signatureValue));
             logger.debug("Transaction: signatureValue (Ints): {}", byteArrayToIntString(finRes.signatureValue));
             logger.debug("Transaction: signatureValue (Chars): {}", byteArrayToCharString(finRes.signatureValue));
+            logger.debug("Transaction: signatureValue (Base64): {}", byteArrayToBase64String(finRes.signatureValue));
 
             /** again some status information - should be 0 again*/
             n = tse.getCurrentNumberOfTransactions();
