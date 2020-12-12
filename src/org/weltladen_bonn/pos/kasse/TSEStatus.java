@@ -215,20 +215,23 @@ public class TSEStatus extends WindowContent {
                 dialog.setVisible(true);
                 boolean aborted = tseped.getAborted();
                 if (!aborted) {
-                    logger.info("{}", tseped.txNumberMode());
-                    logger.info("{}", tseped.getTxNumberStart());
-                    logger.info("{}", tseped.getTxNumberEnd());
-                    logger.info("{}", tseped.dateMode());
-                    logger.info("{}", tseped.getDateStart());
-                    logger.info("{}", tseped.getDateEnd());
-                    logger.info("{}", tseped.sigCounterMode());
-                    logger.info("{}", tseped.getSigCounterLastExcluded());
-                    logger.info("{}", tseped.maxRecordsMode());
-                    logger.info("{}", tseped.getMaxNumRecords());
-                    // filename = askForExportFilename();
-                    // if (filename != null) {
-                    //     message = tse.exportPartialTransactionDataByTXNumber(filename, (long)10, (long)15, null);
-                    // }
+                    filename = askForExportFilename();
+                    if (filename != null) {
+                        Long maxRecords = tseped.maxRecordsMode() ? tseped.getMaxNumRecords() : null;
+                        if (tseped.txNumberMode()) {
+                            logger.info("Exporting partial transaction data by TX number, from TX {} to TX {}, limited by {} TXs",
+                                tseped.getTxNumberStart(), tseped.getTxNumberEnd(), maxRecords);
+                            message = tse.exportPartialTransactionDataByTXNumber(filename, tseped.getTxNumberStart(), tseped.getTxNumberEnd(), maxRecords);
+                        } else if (tseped.dateMode()) {
+                            logger.info("Exporting partial transaction data by Unix date, from {} to {}, limited by {} TXs",
+                                tseped.getDateStart(), tseped.getDateEnd(), maxRecords);
+                            message = tse.exportPartialTransactionDataByDate(filename, tseped.getDateStart(), tseped.getDateEnd(), maxRecords);
+                        } else if (tseped.sigCounterMode()) {
+                            logger.info("Exporting partial transaction data by Sig counter, excluding everything up to {}, limited by {} TXs",
+                                tseped.getSigCounterLastExcluded(), maxRecords);
+                            message = tse.exportPartialTransactionDataBySigCounter(filename, tseped.getSigCounterLastExcluded(), maxRecords);
+                        }
+                    }
                 }
             }
             if (message == "OK") {
@@ -239,6 +242,17 @@ public class TSEStatus extends WindowContent {
             } else if (message == "") {
                 // do nothing, operation was canceled by user.
                 logger.info("TSE export canceled by user");
+            } else if (message == "ErrorTooManyRecords") {
+                // inform the user:
+                JOptionPane.showMessageDialog(this,
+                        "Fehler: Maximale Anzahl Einträge ist zu klein.\n"+
+                        "TSE-Export '"+filename+"' konnte nicht erstellt werden.\n"+
+                        "Hinweis: Falls nicht nach dem Signatur-Zähler gefiltert wird,\n"+
+                        "muss die maximale Anzahl Einträge groß genug sein, um alle\n"+
+                        "exportierten Transaktionen umfassen zu können. Man kann es also\n"+
+                        "auch gleich weglassen.\n"+
+                        "Fehlermeldung: "+message,
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
             } else {
                 logger.info("Could not create the TSE export");
                 JOptionPane.showMessageDialog(this,

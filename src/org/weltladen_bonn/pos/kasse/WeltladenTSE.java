@@ -65,6 +65,7 @@ import com.cryptovision.SEAPI.exceptions.ErrorFinishTransactionFailed;
 import com.cryptovision.SEAPI.exceptions.ErrorIdNotFound;
 import com.cryptovision.SEAPI.exceptions.ErrorStreamWrite;
 import com.cryptovision.SEAPI.exceptions.ErrorUnexportedStoredData;
+import com.cryptovision.SEAPI.exceptions.ErrorTooManyRecords;
 
 // For decoding/encoding output from the TSE:
 import org.bouncycastle.util.encoders.Hex;
@@ -141,7 +142,9 @@ public class WeltladenTSE {
             // System.out.println("\n\n*** WRITING FIRST TRANSACTION TO TSE ***");
             // System.out.println("\n --- Status before: \n");
             // printStatusValues();
-            writeTestTransaction();
+            // for (int i = 0; i < 50; i++) {
+            //     writeTestTransaction();
+            // }
             // System.out.println("\n --- Status after: \n");
             // printStatusValues();
             // exportTransactionData();
@@ -150,6 +153,20 @@ public class WeltladenTSE {
             // exportPartialTransactionDataBySigCounter("./export_partial_test.tar", (long)0, (long)10);
             // deletePartialTransactionDataBySigCounter((long)(0 + 10));
             // exportFullTransactionData("./export_full_after_delete.tar");
+
+            // // Test partial deletion:
+            // exportPartialTransactionDataBySigCounter("/tmp/tse_export_31_40.tar", (long)30, (long)10);
+            // deletePartialTransactionDataBySigCounter((long)45); // error: unexported data
+            // exportPartialTransactionDataBySigCounter("/tmp/tse_export_31_40_2.tar", (long)0, (long)10);
+            // exportPartialTransactionDataBySigCounter("/tmp/tse_export_41_50.tar", (long)40, (long)10);
+            // deletePartialTransactionDataBySigCounter((long)40);
+            // deletePartialTransactionDataBySigCounter((long)40); // error: id not found
+            // deletePartialTransactionDataBySigCounter((long)41);
+            // deletePartialTransactionDataBySigCounter((long)50);
+            // deletePartialTransactionDataBySigCounter((long)60); // error: unexported data
+            // exportPartialTransactionDataBySigCounter("/tmp/tse_export_51_60.tar", (long)0, (long)10);
+            // exportPartialTransactionDataBySigCounter("/tmp/tse_export_51_60_2.tar", (long)50, (long)10);
+            // deletePartialTransactionDataBySigCounter((long)60);
 
             dialog.dispose();
         }
@@ -1154,33 +1171,25 @@ public class WeltladenTSE {
             /** Start a new transaction for the ERS (cash register) "WeltladenBonnKasse" */
             StartTransactionResult result = tse.startTransaction("WeltladenBonnKasse", "processData".getBytes(), "whateverProcessType", "additionalData".getBytes());
             logger.debug("Transaction: transactionNumber: {}", result.transactionNumber);
-            logger.debug("Transaction: logTime: {}", result.logTime);
-            logger.debug("Transaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(result.serialNumber));
             logger.debug("Transaction: signatureCounter: {}", result.signatureCounter);
-            logger.debug("Transaction: signatureValue (Hex): {}", encodeByteArrayAsHexString(result.signatureValue));
-            logger.debug("Transaction: signatureValue (Bytes): {}", byteArrayToByteString(result.signatureValue));
-            logger.debug("Transaction: signatureValue (Ints): {}", byteArrayToIntString(result.signatureValue));
-            logger.debug("Transaction: signatureValue (Chars): {}", byteArrayToCharString(result.signatureValue));
+            logger.debug("Transaction: logTime: {}", result.logTime);
+            // logger.debug("Transaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(result.serialNumber));
             logger.debug("Transaction: signatureValue (Base64): {}", byteArrayToBase64String(result.signatureValue));
 
             /** again some status information */
             n = tse.getCurrentNumberOfTransactions();
-            logger.debug("Number of transactions: {}", n);
+            logger.debug("Number of open transactions: {}", n);
 
             /** Update the transaction */
             UpdateTransactionResult updRes = tse.updateTransaction("WeltladenBonnKasse", result.transactionNumber, new byte[TSE.MAX_SIZE_TRANSPORT_LAYER-100], "anyProcessTypeString");
-            logger.debug("Transaction: logTime: {}", updRes.logTime);
-            logger.debug("Transaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(updRes.serialNumber));
             logger.debug("Transaction: signatureCounter: {}", updRes.signatureCounter);
-            logger.debug("Transaction: signatureValue (Hex): {}", encodeByteArrayAsHexString(updRes.signatureValue));
-            logger.debug("Transaction: signatureValue (Bytes): {}", byteArrayToByteString(updRes.signatureValue));
-            logger.debug("Transaction: signatureValue (Ints): {}", byteArrayToIntString(updRes.signatureValue));
-            logger.debug("Transaction: signatureValue (Chars): {}", byteArrayToCharString(updRes.signatureValue));
+            logger.debug("Transaction: logTime: {}", updRes.logTime);
+            // logger.debug("Transaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(updRes.serialNumber));
             logger.debug("Transaction: signatureValue (Base64): {}", byteArrayToBase64String(updRes.signatureValue));
 
             /** again some status information */
             n = tse.getCurrentNumberOfTransactions();
-            logger.debug("Number of transactions: {}", n);
+            logger.debug("Number of open transactions: {}", n);
 
             /** receive list of all pending transaction numbers */
             long[] openTransactions = tse.getOpenTransactions();
@@ -1188,18 +1197,14 @@ public class WeltladenTSE {
 
             /** Finish the transaction */
             FinishTransactionResult finRes = tse.finishTransaction("WeltladenBonnKasse", result.transactionNumber, "lastData".getBytes(), "maybeYetAnotherProcessType", null);
-            logger.debug("Transaction: logTime: {}", finRes.logTime);
-            logger.debug("Transaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(finRes.serialNumber));
             logger.debug("Transaction: signatureCounter: {}", finRes.signatureCounter);
-            logger.debug("Transaction: signatureValue (Hex): {}", encodeByteArrayAsHexString(finRes.signatureValue));
-            logger.debug("Transaction: signatureValue (Bytes): {}", byteArrayToByteString(finRes.signatureValue));
-            logger.debug("Transaction: signatureValue (Ints): {}", byteArrayToIntString(finRes.signatureValue));
-            logger.debug("Transaction: signatureValue (Chars): {}", byteArrayToCharString(finRes.signatureValue));
+            logger.debug("Transaction: logTime: {}", finRes.logTime);
+            // logger.debug("Transaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(finRes.serialNumber));
             logger.debug("Transaction: signatureValue (Base64): {}", byteArrayToBase64String(finRes.signatureValue));
 
             /** again some status information - should be 0 again*/
             n = tse.getCurrentNumberOfTransactions();
-            logger.debug("Number of transactions: {}", n);
+            logger.debug("Number of open transactions: {}", n);
 
             /** should be empty */
             openTransactions = tse.getOpenTransactions();
@@ -1254,6 +1259,10 @@ public class WeltladenTSE {
             logger.fatal("IO exception during exportTransactionData()");
             logger.fatal("Exception:", ex);
             return "IOException";
+        } catch (ErrorTooManyRecords ex) {
+            logger.error("Error: Too many records during exportTransactionData(). Maximum number of records is too small.");
+            logger.error("Exception:", ex);
+            return "ErrorTooManyRecords";
         } catch (SEException ex) {
             logger.fatal("SE exception during exportTransactionData()");
             logger.fatal("Exception:", ex);

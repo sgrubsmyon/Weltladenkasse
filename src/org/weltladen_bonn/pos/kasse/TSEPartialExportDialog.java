@@ -129,7 +129,7 @@ public class TSEPartialExportDialog extends DialogWindow implements DocumentList
             new IntegerDocumentFilter(0, null, "Signatur-Zähler", this)
         );
         
-        limitRecords = new JCheckBox("Exportdaten begrenzen");
+        limitRecords = new JCheckBox("Exportdaten begrenzen (nur sinnvoll mit Signatur-Zähler)");
         limitRecords.addActionListener(this);
         maxNumRecordsField = setUpTextField();
         ((AbstractDocument)maxNumRecordsField.getDocument()).setDocumentFilter(
@@ -161,8 +161,13 @@ public class TSEPartialExportDialog extends DialogWindow implements DocumentList
         c.gridx = 2; middlePanel.add(dateButton, c);
         c.gridx = 4; middlePanel.add(sigButton, c);
         c.gridwidth = 1;
-        // *** Labels and Text Fields:
+        // *** Explanatory text:
         c.gridy = 1;
+        c.gridwidth = 4;
+        c.gridx = 0; middlePanel.add(new JLabel("Ein Feld leer lassen, um alles vorher/nachher zu exportieren."), c);
+        c.gridwidth = 1;
+        // *** Labels and Text Fields:
+        c.gridy = 2;
         c.gridx = 0; middlePanel.add(new JLabel("Erste Nummer:"), c);
         c.gridx = 1; middlePanel.add(txNumberStartField, c);
         c.gridx = 2; middlePanel.add(new JLabel("Erstes Datum:"), c);
@@ -170,18 +175,18 @@ public class TSEPartialExportDialog extends DialogWindow implements DocumentList
         c.gridx = 4; middlePanel.add(new JLabel("Letzter nicht enthaltener Zähler:"), c);
         c.gridx = 5; middlePanel.add(sigCounterLastExcludedField, c);
         // next row:
-        c.gridy = 2;
+        c.gridy = 3;
         c.gridx = 0; middlePanel.add(new JLabel("Letzte Nummer:"), c);
         c.gridx = 1; middlePanel.add(txNumberEndField, c);
         c.gridx = 2; middlePanel.add(new JLabel("Letztes Datum:"), c);
         c.gridx = 3; middlePanel.add(dateEndField, c);
         // next row:
-        c.gridy = 3;
+        c.gridy = 4;
         c.gridwidth = 6;
         c.gridx = 0; middlePanel.add(limitRecords, c);
         c.gridwidth = 1;
         // next row:
-        c.gridy = 4;
+        c.gridy = 5;
         c.gridx = 0; middlePanel.add(new JLabel("Maximale Anzahl Einträge"), c);
         c.gridx = 1; middlePanel.add(maxNumRecordsField, c);
 
@@ -231,27 +236,33 @@ public class TSEPartialExportDialog extends DialogWindow implements DocumentList
     }
 
     public Long getTxNumberStart() {
-        return Long.parseLong(txNumberStartField.getText());
+        String s = txNumberStartField.getText();
+        return s.length() > 0 ? Long.parseLong(s) : null;
     }
 
     public Long getTxNumberEnd() {
-        return Long.parseLong(txNumberEndField.getText());
+        String s = txNumberEndField.getText();
+        return s.length() > 0 ? Long.parseLong(s) : null;
     }
 
     public Long getDateStart() {
-        return Long.parseLong(dateStartField.getText());
+        String s = dateStartField.getText();
+        return s.length() > 0 ? Long.parseLong(s) : null;
     }
 
     public Long getDateEnd() {
-        return Long.parseLong(dateEndField.getText());
+        String s = dateEndField.getText();
+        return s.length() > 0 ? Long.parseLong(s) : null;
     }
 
     public Long getSigCounterLastExcluded() {
-        return Long.parseLong(sigCounterLastExcludedField.getText());
+        String s = sigCounterLastExcludedField.getText();
+        return s.length() > 0 ? Long.parseLong(s) : null;
     }
 
     public Long getMaxNumRecords() {
-        return Long.parseLong(maxNumRecordsField.getText());
+        String s = maxNumRecordsField.getText();
+        return s.length() > 0 ? Long.parseLong(s) : null;
     }
 
     /**
@@ -293,19 +304,8 @@ public class TSEPartialExportDialog extends DialogWindow implements DocumentList
             maxNumRecordsField.setEnabled(limitRecords.isSelected());
         }
         if (e.getSource() == okButton) {
-            // int answer = JOptionPane.showConfirmDialog(this,
-            //     "Sicher, dass die "+role+" "+numbertype+" stimmt?",
-            //     "Fortfahren?",
-            //     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-            // if (answer == JOptionPane.YES_OPTION) {
-            //     this.aborted = false;
-            //     if (role == "TimeAdmin" && numbertype == "PIN") {
-            //         byte[] timeAdminPIN = pinField.getText().getBytes();
-            //         tse.writeTimeAdminPINtoFile(timeAdminPIN);
-            //     }
             aborted = false;
             this.window.dispose();
-            // }
             return;
         }
         if (e.getSource() == cancelButton) {
@@ -319,7 +319,7 @@ public class TSEPartialExportDialog extends DialogWindow implements DocumentList
     private void updateOKButton() {
         if (txNumberStartField.isEnabled()) {
             if (
-                txNumberStartField.getDocument().getLength() > 0 &&
+                txNumberStartField.getDocument().getLength() > 0 ||
                 txNumberEndField.getDocument().getLength() > 0
             ) {
                 okButton.setEnabled(true);
@@ -328,7 +328,7 @@ public class TSEPartialExportDialog extends DialogWindow implements DocumentList
             }
         } else if (dateStartField.isEnabled()) {
             if (
-                dateStartField.getDocument().getLength() > 0 &&
+                dateStartField.getDocument().getLength() > 0 ||
                 dateEndField.getDocument().getLength() > 0
             ) {
                 okButton.setEnabled(true);
