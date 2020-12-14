@@ -71,6 +71,9 @@ import com.cryptovision.SEAPI.exceptions.ErrorTooManyRecords;
 import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.util.ASN1Dump;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.bsi.BSIObjectIdentifiers;
 import java.io.ByteArrayInputStream;
 
 // Logging:
@@ -113,8 +116,11 @@ public class WeltladenTSE {
         "Ablaufdatum des Zertifikats",
         "Ablaufdatum des Zertifikats (Unixtime)",
         "Zeitformat",
-        "Signatur-Algorithmus (Hex)",
+        "Signatur-Algorithmus",
         "Signatur-Algorithmus (ASN.1)",
+        "TSE_OID des Signatur-Algorithmus", // 0.4.0.127.0.7.1.1.4.1.3 stands for ecdsa-plain-SHA256 (https://github.com/bcgit/bc-java/blob/master/core/src/main/java/org/bouncycastle/asn1/bsi/BSIObjectIdentifiers.java, http://www.bouncycastle.org/docs/docs1.5on/org/bouncycastle/asn1/bsi/BSIObjectIdentifiers.html#ecdsa_plain_SHA256)
+        "BSI_OID des ecdsa-plain-SHA256 Algorithmus",
+        "TSE_OID == BSI_OID('ecdsa-plain-SHA256')",
         "Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)",
         "Maximale Anzahl Kassen-Terminals",
         "Aktuelle Anzahl Kassen-Terminals",
@@ -426,7 +432,7 @@ public class WeltladenTSE {
     }
 
     private String decodeASN1ByteArray(byte[] data) {
-        String result = null;
+        String result = "null";
         try {
             ASN1InputStream ais = new ASN1InputStream(new ByteArrayInputStream(data));
             result = ASN1Dump.dumpAsString(ais.readObject(), true);
@@ -436,6 +442,40 @@ public class WeltladenTSE {
             logger.error("Exception:", ex);
         }
         return result;
+    }
+
+    private String decodeASN1ByteArrayObjectIdentifier(byte[] data) {
+        String result = "null";
+        try {
+            ASN1Primitive oid = ASN1ObjectIdentifier.fromByteArray(data);
+            result = oid.toString();
+        } catch (IOException ex) {
+            logger.error("Failed to decode byte array using ASN1ObjectIdentifier.fromByteArray()");
+            logger.error("Exception:", ex);
+        } catch (Exception ex) {
+            logger.error("Failed to decode byte array using ASN1ObjectIdentifier.fromByteArray()");
+            logger.error("Exception:", ex);
+        }
+        return result;
+    }
+
+    private boolean sigAlgEqualsECDSAPlainSHA256() {
+        boolean result = false;
+        try {
+            result = decodeASN1ByteArrayObjectIdentifier(tse.getSignatureAlgorithm()).equals("["+BSIObjectIdentifiers.ecdsa_plain_SHA256.getId()+"]");
+        } catch (SEException ex) {
+            logger.error("Error at getting TSE signature algorithm");
+            logger.error("Exception:", ex);
+        }
+        return result;
+    }
+
+    public String getSignatureAlgorithm() {
+        if (sigAlgEqualsECDSAPlainSHA256()) {
+            return "ecdsa-plain-SHA256";
+        } else {
+            return "";
+        }
     }
 
     public HashMap<String, String> retrieveTSEStatusValues(Vector<String> interestingValues) {
@@ -513,13 +553,25 @@ public class WeltladenTSE {
                     // aus FirstBoot.java übernommen:
                     values.put("Zeitformat", tse.getTimeSyncVariant().toString());
                 }
-                if (interestingValues.size() == 0 || interestingValues.contains("Signatur-Algorithmus (Hex)")) {
+                if (interestingValues.size() == 0 || interestingValues.contains("Signatur-Algorithmus")) {
                     // Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten
-                    values.put("Signatur-Algorithmus (Hex)", encodeByteArrayAsHexString(tse.getSignatureAlgorithm()));
+                    values.put("Signatur-Algorithmus", getSignatureAlgorithm());
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Signatur-Algorithmus (ASN.1)")) {
                     // Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten
                     values.put("Signatur-Algorithmus (ASN.1)", decodeASN1ByteArray(tse.getSignatureAlgorithm()));
+                }
+                if (interestingValues.size() == 0 || interestingValues.contains("TSE_OID des Signatur-Algorithmus")) {
+                    // Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten
+                    values.put("TSE_OID des Signatur-Algorithmus", decodeASN1ByteArrayObjectIdentifier(tse.getSignatureAlgorithm()));
+                }
+                if (interestingValues.size() == 0 || interestingValues.contains("BSI_OID des ecdsa-plain-SHA256 Algorithmus")) {
+                    // Ausgabe der OID des BSI-Signatur-Algorithmus 'ecdsa-plain-SHA256'
+                    values.put("BSI_OID des ecdsa-plain-SHA256 Algorithmus", "["+BSIObjectIdentifiers.ecdsa_plain_SHA256.getId()+"]");
+                }
+                if (interestingValues.size() == 0 || interestingValues.contains("TSE_OID == BSI_OID('ecdsa-plain-SHA256')")) {
+                    // Vergleich des abgefragten Signatur-Algorithmus mit 'ecdsa-plain-SHA256'
+                    values.put("TSE_OID == BSI_OID('ecdsa-plain-SHA256')", Boolean.toString(sigAlgEqualsECDSAPlainSHA256()));
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)")) {
                     // Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln
@@ -1135,7 +1187,7 @@ public class WeltladenTSE {
     private String byteArrayToByteString(byte[] byteArray) {
         String res = "";
         for (byte b : byteArray) {
-            res += b + " "; // XXX CONTINUE HERE: Maybe convert these bytes to characters
+            res += b + " ";
         }
         return res.substring(0, res.length() - 1); // omit last empty string
     }
@@ -1143,7 +1195,7 @@ public class WeltladenTSE {
     private String byteArrayToIntString(byte[] byteArray) {
         String res = "";
         for (byte b : byteArray) {
-            res += (int)b + " "; // XXX CONTINUE HERE: Maybe convert these bytes to characters
+            res += (int)b + " ";
         }
         return res.substring(0, res.length() - 1); // omit last empty string
     }
@@ -1151,7 +1203,7 @@ public class WeltladenTSE {
     private String byteArrayToCharString(byte[] byteArray) {
         String res = "";
         for (byte b : byteArray) {
-            res += (char)b + " "; // XXX CONTINUE HERE: Maybe convert these bytes to characters
+            res += (char)b + " ";
         }
         return res.substring(0, res.length() - 1); // omit last empty string
     }
