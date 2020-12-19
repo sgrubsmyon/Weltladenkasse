@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileInputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -23,6 +25,9 @@ import java.util.Properties;
 import java.util.HashMap;
 import java.util.Vector;
 import java.util.Base64;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.util.Collections;
 
 // GUI stuff:
 import java.awt.BorderLayout;
@@ -1357,7 +1362,29 @@ public class WeltladenTSE {
         }
     }
 
-    private String deletePartialTransactionDataBySigCounter(Long lastIncludedSignatureCounter) {
+    public Long discoverHighestExportedSigCounterFromExport(String filename) {
+        Long highestSig = (long)-1;
+        try {
+            Process p = Runtime.getRuntime().exec("tar -tf "+filename);
+            BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            highestSig = (long)0;
+            String s = null;
+            while ((s = stdInput.readLine()) != null) {
+                Matcher matcher = Pattern.compile("Sig-([0-9]+)").matcher(s);
+                if (matcher.find()) {
+                    String match = matcher.group(1);
+                    Long sig = Long.parseLong(match);
+                    if (sig > highestSig) highestSig = sig;
+                }
+            }
+        } catch (IOException ex) {
+            logger.error("Discovering the last exported sig counter from export did not work.");
+            logger.error("Exception:", ex);
+        }
+        return highestSig;
+    }
+
+    public String deletePartialTransactionDataBySigCounter(Long lastIncludedSignatureCounter) {
         /** Delete some transaction logs */
         try {
             byte[] serial = getSerialNumber();
