@@ -42,6 +42,7 @@ public class TSEStatus extends WindowContent {
     private JButton updateButton;
     private JButton exportButton;
     private JButton exportPartButton;
+    private JButton exportAndDeleteButton;
     private FileExistsAwareFileChooser logExportChooser;
     private JFileChooser sqlLoadChooser;
 
@@ -148,18 +149,24 @@ public class TSEStatus extends WindowContent {
     }
 
     private void showButtonPanel() {
-        JPanel buttonPanel = new JPanel();
+        JPanel buttonPanel1 = new JPanel();
+        JPanel buttonPanel2 = new JPanel();
+
         updateButton = new JButton("Statuswerte aktualisieren");
         exportButton = new JButton("TSE-Log vollständig exportieren");
         exportPartButton = new JButton("TSE-Log teilweise exportieren");
+        exportAndDeleteButton = new JButton("TSE-Log exportieren und löschen");
         updateButton.addActionListener(this);
         exportButton.addActionListener(this);
         exportPartButton.addActionListener(this);
-        buttonPanel.add(updateButton);
-        buttonPanel.add(exportButton);
-        buttonPanel.add(exportPartButton);
+        exportAndDeleteButton.addActionListener(this);
+        buttonPanel1.add(updateButton);
+        buttonPanel1.add(exportButton);
+        buttonPanel2.add(exportPartButton);
+        buttonPanel2.add(exportAndDeleteButton);
         
-        panel.add(buttonPanel);
+        panel.add(buttonPanel1);
+        panel.add(buttonPanel2);
     }
 
     void initializeExportChooser(String filename) {
@@ -196,10 +203,11 @@ public class TSEStatus extends WindowContent {
             showStatusPanel();
             return;
         }
-        if (e.getSource() == exportButton || e.getSource() == exportPartButton){
+        if (e.getSource() == exportButton || e.getSource() == exportPartButton || e.getSource() == exportAndDeleteButton){
             initializeExportChooser("tse_export.tar");
             String message = "";
             String filename = "";
+            Long highestExportedSig = (long)-1;
             if (e.getSource() == exportButton) {
                 filename = askForExportFilename();
                 if (filename != null) {
@@ -219,17 +227,50 @@ public class TSEStatus extends WindowContent {
                     if (filename != null) {
                         Long maxRecords = tseped.maxRecordsMode() ? tseped.getMaxNumRecords() : null;
                         if (tseped.txNumberMode()) {
-                            logger.info("Exporting partial transaction data by TX number, from TX {} to TX {}, limited by {} TXs",
+                            logger.info("Exporting partial transaction data by TX number, from TX {} to TX {}, limited by {} signatures",
                                 tseped.getTxNumberStart(), tseped.getTxNumberEnd(), maxRecords);
                             message = tse.exportPartialTransactionDataByTXNumber(filename, tseped.getTxNumberStart(), tseped.getTxNumberEnd(), maxRecords);
                         } else if (tseped.dateMode()) {
-                            logger.info("Exporting partial transaction data by Unix date, from {} to {}, limited by {} TXs",
+                            logger.info("Exporting partial transaction data by Unix date, from {} to {}, limited by {} signatures",
                                 tseped.getDateStart(), tseped.getDateEnd(), maxRecords);
                             message = tse.exportPartialTransactionDataByDate(filename, tseped.getDateStart(), tseped.getDateEnd(), maxRecords);
                         } else if (tseped.sigCounterMode()) {
-                            logger.info("Exporting partial transaction data by Sig counter, excluding everything up to {}, limited by {} TXs",
+                            logger.info("Exporting partial transaction data by Sig counter, excluding everything up to {}, limited by {} signatures",
                                 tseped.getSigCounterLastExcluded(), maxRecords);
                             message = tse.exportPartialTransactionDataBySigCounter(filename, tseped.getSigCounterLastExcluded(), maxRecords);
+                        }
+                    }
+                }
+            } else if (e.getSource() == exportAndDeleteButton) {
+                JDialog dialog = new JDialog(this.mainWindow, "Wie viel soll von der TSE exportiert und gelöscht werden?", true);
+                TSEPartialExportWithDeleteDialog tseped = new TSEPartialExportWithDeleteDialog(this.mainWindow, dialog);
+                dialog.getContentPane().add(tseped, BorderLayout.CENTER);
+                dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                dialog.pack();
+                dialog.setLocationRelativeTo(null);
+                dialog.setVisible(true);
+                boolean aborted = tseped.getAborted();
+                if (!aborted) {
+                    filename = askForExportFilename();
+                    if (filename != null) {
+                        Long numRecords = tseped.getNumberRecords();
+                        logger.info("Exporting partial transaction data by Sig counter, excluding everything up to {}, limited by {} signatures",
+                            0, numRecords);
+                        message = tse.exportPartialTransactionDataBySigCounter(filename, (long)0, numRecords);
+                        if (message == "OK") {
+                            highestExportedSig = tse.discoverHighestExportedSigCounterFromExport(filename);
+                            logger.info("Highest exported Sig counter was found to be: {}", highestExportedSig);
+                            if (highestExportedSig <= 0) {
+                                logger.fatal("It seems there was an error in discoverHighestExportedSigCounterFromExport()");
+                                JOptionPane.showMessageDialog(this,
+                                    "Fehler: Die höchste exportierte Signatur konnte nicht ermittelt werden.\n"+
+                                    "Eventuell ist beim Export etwas schief gelaufen.\n"+
+                                    "Daher werden jetzt auch keine Daten von der TSE gelöscht.",
+                                    "Fehler", JOptionPane.ERROR_MESSAGE);
+                            } else {
+                                logger.info("Now deleting all signatures up to {} from the TSE.", highestExportedSig);
+                                message = tse.deletePartialTransactionDataBySigCounter(highestExportedSig);
+                            }
                         }
                     }
                 }
@@ -237,22 +278,27 @@ public class TSEStatus extends WindowContent {
             if (message == "OK") {
                 logger.info("TSE export created successfully");
                 JOptionPane.showMessageDialog(this,
-                        "TSE-Export '"+filename+"' wurde erfolgreich angelegt.",
+                    "TSE-Export '"+filename+"' wurde erfolgreich angelegt.",
+                    "Info", JOptionPane.INFORMATION_MESSAGE);
+                if (e.getSource() == exportAndDeleteButton) {
+                    JOptionPane.showMessageDialog(this,
+                        "Alle Signaturen bis "+highestExportedSig+" wurden von der TSE gelöscht.",
                         "Info", JOptionPane.INFORMATION_MESSAGE);
+                }
             } else if (message == "") {
                 // do nothing, operation was canceled by user.
                 logger.info("TSE export canceled by user");
             } else if (message == "ErrorTooManyRecords") {
                 // inform the user:
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: Maximale Anzahl Einträge ist zu klein.\n"+
-                        "TSE-Export '"+filename+"' konnte nicht erstellt werden.\n"+
-                        "Hinweis: Falls nicht nach dem Signatur-Zähler gefiltert wird,\n"+
-                        "muss die maximale Anzahl Einträge groß genug sein, um alle\n"+
-                        "exportierten Transaktionen umfassen zu können. Man kann es also\n"+
-                        "auch gleich weglassen.\n"+
-                        "Fehlermeldung: "+message,
-                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                    "Fehler: Maximale Anzahl Signaturen ist zu klein.\n"+
+                    "TSE-Export '"+filename+"' konnte nicht erstellt werden.\n"+
+                    "Hinweis: Falls nicht nach dem Signatur-Zähler gefiltert wird,\n"+
+                    "muss die maximale Anzahl Signaturen groß genug sein, um alle\n"+
+                    "exportierten Transaktionen umfassen zu können. Man kann es also\n"+
+                    "auch gleich weglassen.\n"+
+                    "Fehlermeldung: "+message,
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
             } else {
                 logger.info("Could not create the TSE export");
                 JOptionPane.showMessageDialog(this,

@@ -66,7 +66,7 @@ public class TSEPartialExportDialog extends DialogWindow implements DocumentList
         allPanel.add(headerPanel, BorderLayout.NORTH);
     }
 
-    private JTextField setUpTextField() {
+    private JTextField setupTextField() {
         JTextField field = new JTextField("");
         field.setColumns(10);
         field.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -108,11 +108,11 @@ public class TSEPartialExportDialog extends DialogWindow implements DocumentList
         group.add(dateButton);
         group.add(sigButton);
 
-        txNumberStartField = setUpTextField();
-        txNumberEndField = setUpTextField();
-        dateStartField = setUpTextField();
-        dateEndField = setUpTextField();
-        sigCounterLastExcludedField = setUpTextField();
+        txNumberStartField = setupTextField();
+        txNumberEndField = setupTextField();
+        dateStartField = setupTextField();
+        dateEndField = setupTextField();
+        sigCounterLastExcludedField = setupTextField();
         ((AbstractDocument)txNumberStartField.getDocument()).setDocumentFilter(
             new IntegerDocumentFilter(1, null, "Transaktionsnummer", this)
         );
@@ -131,9 +131,9 @@ public class TSEPartialExportDialog extends DialogWindow implements DocumentList
         
         limitRecords = new JCheckBox("Exportdaten begrenzen (nur sinnvoll mit Signatur-Zähler)");
         limitRecords.addActionListener(this);
-        maxNumRecordsField = setUpTextField();
+        maxNumRecordsField = setupTextField();
         ((AbstractDocument)maxNumRecordsField.getDocument()).setDocumentFilter(
-            new IntegerDocumentFilter(1, null, "Einträge", this)
+            new IntegerDocumentFilter(1, null, "Signaturen", this)
         );
 
         // default setup:
@@ -187,7 +187,7 @@ public class TSEPartialExportDialog extends DialogWindow implements DocumentList
         c.gridwidth = 1;
         // next row:
         c.gridy = 5;
-        c.gridx = 0; middlePanel.add(new JLabel("Maximale Anzahl Einträge"), c);
+        c.gridx = 0; middlePanel.add(new JLabel("Maximale Anzahl Signaturen"), c);
         c.gridx = 1; middlePanel.add(maxNumRecordsField, c);
 
         allPanel.add(middlePanel, BorderLayout.CENTER);
