@@ -154,7 +154,7 @@ public class WeltladenTSE {
             // System.out.println("\n --- Status before: \n");
             // printStatusValues();
             // for (int i = 0; i < 50; i++) {
-            //     writeTestTransaction();
+            writeTestTransaction();
             // }
             // System.out.println("\n --- Status after: \n");
             // printStatusValues();
@@ -1227,11 +1227,11 @@ public class WeltladenTSE {
 
             /** Start a new transaction for the ERS (cash register) "WeltladenBonnKasse" */
             StartTransactionResult result = tse.startTransaction("WeltladenBonnKasse", "processData".getBytes(), "whateverProcessType", "additionalData".getBytes());
-            logger.debug("Transaction: transactionNumber: {}", result.transactionNumber);
-            logger.debug("Transaction: signatureCounter: {}", result.signatureCounter);
-            logger.debug("Transaction: logTime: {}", result.logTime);
-            // logger.debug("Transaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(result.serialNumber));
-            logger.debug("Transaction: signatureValue (Base64): {}", byteArrayToBase64String(result.signatureValue));
+            logger.debug("StartTransaction: transactionNumber: {}", result.transactionNumber);
+            logger.debug("StartTransaction: signatureCounter: {}", result.signatureCounter);
+            logger.debug("StartTransaction: logTime: {}", result.logTime);
+            // logger.debug("StartTransaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(result.serialNumber));
+            logger.debug("StartTransaction: signatureValue (Base64): {}", byteArrayToBase64String(result.signatureValue));
 
             /** again some status information */
             n = tse.getCurrentNumberOfTransactions();
@@ -1239,10 +1239,10 @@ public class WeltladenTSE {
 
             /** Update the transaction */
             UpdateTransactionResult updRes = tse.updateTransaction("WeltladenBonnKasse", result.transactionNumber, new byte[TSE.MAX_SIZE_TRANSPORT_LAYER-100], "anyProcessTypeString");
-            logger.debug("Transaction: signatureCounter: {}", updRes.signatureCounter);
-            logger.debug("Transaction: logTime: {}", updRes.logTime);
-            // logger.debug("Transaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(updRes.serialNumber));
-            logger.debug("Transaction: signatureValue (Base64): {}", byteArrayToBase64String(updRes.signatureValue));
+            logger.debug("UpdateTransaction: signatureCounter: {}", updRes.signatureCounter);
+            logger.debug("UpdateTransaction: logTime: {}", updRes.logTime);
+            // logger.debug("UpdateTransaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(updRes.serialNumber));
+            logger.debug("UpdateTransaction: signatureValue (Base64): {}", byteArrayToBase64String(updRes.signatureValue));
 
             /** again some status information */
             n = tse.getCurrentNumberOfTransactions();
@@ -1254,10 +1254,10 @@ public class WeltladenTSE {
 
             /** Finish the transaction */
             FinishTransactionResult finRes = tse.finishTransaction("WeltladenBonnKasse", result.transactionNumber, "lastData".getBytes(), "maybeYetAnotherProcessType", null);
-            logger.debug("Transaction: signatureCounter: {}", finRes.signatureCounter);
-            logger.debug("Transaction: logTime: {}", finRes.logTime);
-            // logger.debug("Transaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(finRes.serialNumber));
-            logger.debug("Transaction: signatureValue (Base64): {}", byteArrayToBase64String(finRes.signatureValue));
+            logger.debug("FinishTransaction: signatureCounter: {}", finRes.signatureCounter);
+            logger.debug("FinishTransaction: logTime: {}", finRes.logTime);
+            // logger.debug("FinishTransaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(finRes.serialNumber));
+            logger.debug("FinishTransaction: signatureValue (Base64): {}", byteArrayToBase64String(finRes.signatureValue));
 
             /** again some status information - should be 0 again*/
             n = tse.getCurrentNumberOfTransactions();
@@ -1266,6 +1266,27 @@ public class WeltladenTSE {
             /** should be empty */
             openTransactions = tse.getOpenTransactions();
             logger.debug("Open transactions: {}", openTransactions);
+
+            byte[] tx = getTransaction(result.transactionNumber);
+
+            System.out.println();
+            System.out.println("::: Base64 :::");
+            System.out.println(byteArrayToBase64String(tx));
+            System.out.println();
+            System.out.println("::: ASN1 :::");
+            System.out.println(decodeASN1ByteArray(tx));
+            System.out.println();
+            System.out.println("::: Hex :::");
+            System.out.println(encodeByteArrayAsHexString(tx));
+
+            try {
+                FileOutputStream fout = new FileOutputStream(new File("/tmp/tse_export1.tar"));
+                fout.write(tx);
+                fout.close();
+            } catch (Exception ex) {
+                logger.error(ex);
+            }
+            exportPartialTransactionDataByTXNumber("/tmp/tse_export2.tar", result.transactionNumber, result.transactionNumber, null);
         } catch (ErrorSeApiNotInitialized ex) {
             logger.fatal("SE API not initialized");
             logger.fatal("Exception:", ex);
@@ -1300,6 +1321,20 @@ public class WeltladenTSE {
             logger.fatal("Unknown error during writeTestTransaction()");
             logger.fatal("Exception:", ex);
         }
+    }
+
+    private byte[] getTransaction(Long txNumber) {
+        try {
+            byte[] exportData = tse.exportData(null, txNumber, null, null, null, null, null);
+            return exportData;
+        } catch (IOException ex) {
+            logger.fatal("IO exception during exportTransactionData()");
+            logger.fatal("Exception:", ex);
+        } catch (SEException ex) {
+            logger.fatal("SE exception during exportTransactionData()");
+            logger.fatal("Exception:", ex);
+        }
+        return null;
     }
 
     private String exportTransactionData(String filename, Long startTXNumber, Long endTXNumber, Long startDate, Long endDate, Long maxRecords) {
