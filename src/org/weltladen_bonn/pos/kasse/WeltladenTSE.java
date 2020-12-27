@@ -101,6 +101,7 @@ public class WeltladenTSE {
     private boolean loggedIn = false;
     private MainWindow mainWindow = null;
     private Path pinPath = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".Weltladenkasse_tse");
+    private String dateFormatDSFinVK = "yyyy-MM-dd'T'HH:mm:ss'.000Z'"; // YYYY-MM-DDThh:mm:ss.fffZ, see https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html
 
     private static long nextSyncTime = 0;
     private static int timeSyncInterval = 0;
@@ -496,6 +497,16 @@ public class WeltladenTSE {
         }
     }
 
+    public String unixTimeToCalTime(long unixTime) {
+        java.util.Date date = new java.util.Date(unixTime * 1000);
+        return new SimpleDateFormat(dateFormatDSFinVK).format(date);
+    }
+
+    public String unixTimeToCalTime(long unixTime, String dateFormat) {
+        java.util.Date date = new java.util.Date(unixTime * 1000);
+        return new SimpleDateFormat(dateFormat).format(date);
+    }
+
     public HashMap<String, String> retrieveTSEStatusValues(Vector<String> interestingValues) {
         HashMap<String, String> values = new HashMap<String, String>();
         if (interestingValues.size() == 0 || interestingValues.contains("Eindeutige D-Trust-ID")) {
@@ -565,10 +576,9 @@ public class WeltladenTSE {
                 if (interestingValues.size() == 0 || interestingValues.contains("Ablaufdatum des Zertifikats") ||
                     interestingValues.contains("Ablaufdatum des Zertifikats (Unix-Time)")) {
                     long expirationTimestamp = tse.getCertificateExpirationDate(serialNumber);
-                    java.util.Date expirationDate = new java.util.Date(expirationTimestamp * 1000);
                     if (interestingValues.size() == 0 || interestingValues.contains("Ablaufdatum des Zertifikats")) {
                         // Abfrage des Ablaufdatums eines Zertifikats
-                        values.put("Ablaufdatum des Zertifikats", new SimpleDateFormat(bc.dateFormatJava).format(expirationDate));
+                        values.put("Ablaufdatum des Zertifikats", unixTimeToCalTime(expirationTimestamp, bc.dateFormatJava));
                     }
                     if (interestingValues.size() == 0 || interestingValues.contains("Ablaufdatum des Zertifikats (Unix-Time)")) {
                         // Abfrage des Ablaufdatums eines Zertifikats
@@ -1242,7 +1252,8 @@ public class WeltladenTSE {
             StartTransactionResult result = tse.startTransaction("WeltladenBonnKasse", "processData".getBytes(), "whateverProcessType", "additionalData".getBytes());
             logger.debug("StartTransaction: transactionNumber: {}", result.transactionNumber);
             logger.debug("StartTransaction: signatureCounter: {}", result.signatureCounter);
-            logger.debug("StartTransaction: logTime: {}", result.logTime);
+            logger.debug("StartTransaction: logTime (unix): {}", result.logTime);
+            logger.debug("StartTransaction: logTime (cal): {}", unixTimeToCalTime(result.logTime));
             // logger.debug("StartTransaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(result.serialNumber));
             logger.debug("StartTransaction: signatureValue (Base64): {}", byteArrayToBase64String(result.signatureValue));
 
@@ -1250,16 +1261,16 @@ public class WeltladenTSE {
             n = tse.getCurrentNumberOfTransactions();
             logger.debug("Number of open transactions: {}", n);
 
-            /** Update the transaction */
-            UpdateTransactionResult updRes = tse.updateTransaction("WeltladenBonnKasse", result.transactionNumber, new byte[TSE.MAX_SIZE_TRANSPORT_LAYER-100], "anyProcessTypeString");
-            logger.debug("UpdateTransaction: signatureCounter: {}", updRes.signatureCounter);
-            logger.debug("UpdateTransaction: logTime: {}", updRes.logTime);
-            // logger.debug("UpdateTransaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(updRes.serialNumber));
-            logger.debug("UpdateTransaction: signatureValue (Base64): {}", byteArrayToBase64String(updRes.signatureValue));
+            // /** Update the transaction */
+            // UpdateTransactionResult updRes = tse.updateTransaction("WeltladenBonnKasse", result.transactionNumber, new byte[TSE.MAX_SIZE_TRANSPORT_LAYER-100], "anyProcessTypeString");
+            // logger.debug("UpdateTransaction: signatureCounter: {}", updRes.signatureCounter);
+            // logger.debug("UpdateTransaction: logTime: {}", updRes.logTime);
+            // // logger.debug("UpdateTransaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(updRes.serialNumber));
+            // logger.debug("UpdateTransaction: signatureValue (Base64): {}", byteArrayToBase64String(updRes.signatureValue));
 
-            /** again some status information */
-            n = tse.getCurrentNumberOfTransactions();
-            logger.debug("Number of open transactions: {}", n);
+            // /** again some status information */
+            // n = tse.getCurrentNumberOfTransactions();
+            // logger.debug("Number of open transactions: {}", n);
 
             /** receive list of all pending transaction numbers */
             long[] openTransactions = tse.getOpenTransactions();
@@ -1268,7 +1279,9 @@ public class WeltladenTSE {
             /** Finish the transaction */
             FinishTransactionResult finRes = tse.finishTransaction("WeltladenBonnKasse", result.transactionNumber, "lastData".getBytes(), "maybeYetAnotherProcessType", null);
             logger.debug("FinishTransaction: signatureCounter: {}", finRes.signatureCounter);
-            logger.debug("FinishTransaction: logTime: {}", finRes.logTime);
+            logger.debug("FinishTransaction: logTime (unix): {}", finRes.logTime);
+            logger.debug("FinishTransaction: logTime (cal): {}", unixTimeToCalTime(finRes.logTime));
+            logger.debug("FinishTransaction: logTime (cal): {}", unixTimeToCalTime(finRes.logTime, bc.dateFormatJava));
             // logger.debug("FinishTransaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(finRes.serialNumber));
             logger.debug("FinishTransaction: signatureValue (Base64): {}", byteArrayToBase64String(finRes.signatureValue));
 
