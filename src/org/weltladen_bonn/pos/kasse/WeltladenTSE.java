@@ -115,11 +115,13 @@ public class WeltladenTSE {
         "Lebenszyklus",
         "Transaktionsnummer",
         "Signatur-Zähler",
-        "Seriennummer der TSE (1. Schlüssel, Hex)",
+        "Seriennummer der TSE (Hex)",
+        "Seriennummer der TSE (Base64)",
         "Seriennummern aller Schlüssel (ASN.1)",
         "Öffentlicher Schlüssel (Hex)",
+        "Öffentlicher Schlüssel (Base64)",
         "Ablaufdatum des Zertifikats",
-        "Ablaufdatum des Zertifikats (Unixtime)",
+        "Ablaufdatum des Zertifikats (Unix-Time)",
         "Zeitformat",
         "Signatur-Algorithmus",
         "Signatur-Algorithmus (ASN.1)",
@@ -533,16 +535,20 @@ public class WeltladenTSE {
                 byte[] serialNumberData = tse.exportSerialNumbers(); // (Rückgabe aller Signaturschlüssel-Seriennummern, sowie deren Verwendung)
 		        byte[] serialNumber = Arrays.copyOfRange(serialNumberData, 6, 6+32);
                 if (interestingValues.size() == 0 || interestingValues.contains("Transaktionsnummer")) {
-                    // Abfrage der Transaktionsnummer der letzten Transaktio, XXX sollte auf Quittung gedruckt werden!n
+                    // Abfrage der Transaktionsnummer der letzten Transaktion, XXX sollte auf Quittung gedruckt werden!n
                     values.put("Transaktionsnummer", String.valueOf(tse.getTransactionCounter()));
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Signatur-Zähler")) {
                     // Abfrage des Signatur-Zählers der letzten Signatur, XXX sollte auf Quittung gedruckt werden!
                     values.put("Signatur-Zähler", String.valueOf(tse.getSignatureCounter(serialNumber)));
                 }
-                if (interestingValues.size() == 0 || interestingValues.contains("Seriennummer der TSE (1. Schlüssel, Hex)")) {
+                if (interestingValues.size() == 0 || interestingValues.contains("Seriennummer der TSE (Hex)")) {
                     // Erste und auch einzige Signaturschlüssel-Seriennummer, XXX sollte auf Quittung gedruckt werden!
-                    values.put("Seriennummer der TSE (1. Schlüssel, Hex)", encodeByteArrayAsHexString(serialNumber));
+                    values.put("Seriennummer der TSE (Hex)", encodeByteArrayAsHexString(serialNumber));
+                }
+                if (interestingValues.size() == 0 || interestingValues.contains("Seriennummer der TSE (Base64)")) {
+                    // Erste und auch einzige Signaturschlüssel-Seriennummer, XXX sollte auf Quittung gedruckt werden!
+                    values.put("Seriennummer der TSE (Base64)", byteArrayToBase64String(serialNumber));
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Seriennummern aller Schlüssel (ASN.1)")) {
                     // Alle Signaturschlüssel-Seriennummern
@@ -552,17 +558,21 @@ public class WeltladenTSE {
                     // Rückgabe eines öffentlichen Schlüssels
                     values.put("Öffentlicher Schlüssel (Hex)", encodeByteArrayAsHexString(tse.exportPublicKey(serialNumber)));
                 }
+                if (interestingValues.size() == 0 || interestingValues.contains("Öffentlicher Schlüssel (Base64)")) {
+                    // Rückgabe eines öffentlichen Schlüssels
+                    values.put("Öffentlicher Schlüssel (Base64)", byteArrayToBase64String(tse.exportPublicKey(serialNumber)));
+                }
                 if (interestingValues.size() == 0 || interestingValues.contains("Ablaufdatum des Zertifikats") ||
-                    interestingValues.contains("Ablaufdatum des Zertifikats (Unixtime)")) {
+                    interestingValues.contains("Ablaufdatum des Zertifikats (Unix-Time)")) {
                     long expirationTimestamp = tse.getCertificateExpirationDate(serialNumber);
                     java.util.Date expirationDate = new java.util.Date(expirationTimestamp * 1000);
                     if (interestingValues.size() == 0 || interestingValues.contains("Ablaufdatum des Zertifikats")) {
                         // Abfrage des Ablaufdatums eines Zertifikats
                         values.put("Ablaufdatum des Zertifikats", new SimpleDateFormat(bc.dateFormatJava).format(expirationDate));
                     }
-                    if (interestingValues.size() == 0 || interestingValues.contains("Ablaufdatum des Zertifikats (Unixtime)")) {
+                    if (interestingValues.size() == 0 || interestingValues.contains("Ablaufdatum des Zertifikats (Unix-Time)")) {
                         // Abfrage des Ablaufdatums eines Zertifikats
-                        values.put("Ablaufdatum des Zertifikats (Unixtime)", String.valueOf(expirationTimestamp));
+                        values.put("Ablaufdatum des Zertifikats (Unix-Time)", String.valueOf(expirationTimestamp));
                     }
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Zeitformat")) {
@@ -627,7 +637,7 @@ public class WeltladenTSE {
             // "Eindeutige D-Trust-ID", "Firmware-Version", "BSI-Zertifizierungsnummer",
             "Gesamte Speichergröße", "Verfügbare Speichergröße", "Verschleiß des Speichers",
             "Lebenszyklus", "Transaktionsnummer", "Signatur-Zähler",
-            // "Seriennummer der TSE (1. Schlüssel, Hex)", "Öffentlicher Schlüssel (Hex)",
+            // "Seriennummer der TSE (Hex)", "Öffentlicher Schlüssel (Hex)",
             // "Ablaufdatum des Zertifikats", "Signatur-Algorithmus (ASN.1)",
             "Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)"
         };
