@@ -124,8 +124,6 @@ public class WeltladenTSE {
         "Signatur-Algorithmus",
         "Signatur-Algorithmus (ASN.1)",
         "TSE_OID des Signatur-Algorithmus", // 0.4.0.127.0.7.1.1.4.1.3 stands for ecdsa-plain-SHA256 (https://github.com/bcgit/bc-java/blob/master/core/src/main/java/org/bouncycastle/asn1/bsi/BSIObjectIdentifiers.java, http://www.bouncycastle.org/docs/docs1.5on/org/bouncycastle/asn1/bsi/BSIObjectIdentifiers.html#ecdsa_plain_SHA256)
-        "BSI_OID des ecdsa-plain-SHA256 Algorithmus",
-        "TSE_OID == BSI_OID('ecdsa-plain-SHA256')",
         "Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)",
         "Maximale Anzahl Kassen-Terminals",
         "Aktuelle Anzahl Kassen-Terminals",
@@ -464,22 +462,35 @@ public class WeltladenTSE {
         return result;
     }
 
-    private boolean sigAlgEqualsECDSAPlainSHA256() {
-        boolean result = false;
+    public String getSignatureAlgorithm() {
+        String oid = "";
         try {
-            result = decodeASN1ByteArrayObjectIdentifier(tse.getSignatureAlgorithm()).equals("["+BSIObjectIdentifiers.ecdsa_plain_SHA256.getId()+"]");
+            oid = decodeASN1ByteArrayObjectIdentifier(tse.getSignatureAlgorithm());
         } catch (SEException ex) {
             logger.error("Error at getting TSE signature algorithm");
             logger.error("Exception:", ex);
         }
-        return result;
-    }
-
-    public String getSignatureAlgorithm() {
-        if (sigAlgEqualsECDSAPlainSHA256()) {
-            return "ecdsa-plain-SHA256";
+        if (oid.equals("["+BSIObjectIdentifiers.ecdsa_plain_SHA256.getId()+"]")) {
+            return "ecdsa-plain-SHA256"; // used in cryptovision TSEs by default, see https://tse-support.cryptovision.com/confluence/pages/viewpage.action?pageId=10190881
+        } else if (oid.equals("["+BSIObjectIdentifiers.ecdsa_plain_SHA1.getId()+"]")) {
+            return "ecdsa-plain-SHA1";
+        } else if (oid.equals("["+BSIObjectIdentifiers.ecdsa_plain_SHA224.getId()+"]")) {
+            return "ecdsa-plain-SHA224";
+        } else if (oid.equals("["+BSIObjectIdentifiers.ecdsa_plain_SHA384.getId()+"]")) {
+            return "ecdsa-plain-SHA384";
+        } else if (oid.equals("["+BSIObjectIdentifiers.ecdsa_plain_SHA512.getId()+"]")) {
+            return "ecdsa-plain-SHA512";
+        } else if (oid.equals("["+BSIObjectIdentifiers.ecdsa_plain_RIPEMD160.getId()+"]")) {
+            return "ecdsa-plain-RIPEMD160";
+        // More algorithms defined here: https://tse-support.cryptovision.com/confluence/pages/viewpage.action?pageId=10190881
+        } else if (oid.equals("[0.4.0.127.0.7.3.7.1.1]")) {
+            return "id-SE-API-transaction-log";
+        } else if (oid.equals("[0.4.0.127.0.7.3.7.1.2]")) {
+            return "id-SE-API-system-log";
+        } else if (oid.equals("[0.4.0.127.0.7.3.7.1.3]")) {
+            return "id-SE-API-SE-audit-log";
         } else {
-            return "";
+            return "unknown";
         }
     }
 
@@ -569,14 +580,6 @@ public class WeltladenTSE {
                 if (interestingValues.size() == 0 || interestingValues.contains("TSE_OID des Signatur-Algorithmus")) {
                     // Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten
                     values.put("TSE_OID des Signatur-Algorithmus", decodeASN1ByteArrayObjectIdentifier(tse.getSignatureAlgorithm()));
-                }
-                if (interestingValues.size() == 0 || interestingValues.contains("BSI_OID des ecdsa-plain-SHA256 Algorithmus")) {
-                    // Ausgabe der OID des BSI-Signatur-Algorithmus 'ecdsa-plain-SHA256'
-                    values.put("BSI_OID des ecdsa-plain-SHA256 Algorithmus", "["+BSIObjectIdentifiers.ecdsa_plain_SHA256.getId()+"]");
-                }
-                if (interestingValues.size() == 0 || interestingValues.contains("TSE_OID == BSI_OID('ecdsa-plain-SHA256')")) {
-                    // Vergleich des abgefragten Signatur-Algorithmus mit 'ecdsa-plain-SHA256'
-                    values.put("TSE_OID == BSI_OID('ecdsa-plain-SHA256')", Boolean.toString(sigAlgEqualsECDSAPlainSHA256()));
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)")) {
                     // Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln
