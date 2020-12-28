@@ -1237,8 +1237,7 @@ public class WeltladenTSE {
     }
 
     private String byteArrayToBase64String(byte[] byteArray) {
-        byte[] encoded = Base64.getEncoder().encode(byteArray);
-        return new String(encoded);
+        return Base64.getEncoder().encodeToString(byteArray);
     }
 
     private void writeTestTransaction() {
