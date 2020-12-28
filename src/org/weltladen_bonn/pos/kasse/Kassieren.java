@@ -1674,7 +1674,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
             insertIntoKassenstand(rechnungsNr);
             if (bc.alwaysPrintReceipt) {
-              printQuittung(rechnungsNr);
+                printQuittung(rechnungsNr);
             }
         } else { // EC-Zahlung
             rechnungsNr = insertIntoVerkauf(true, null);
@@ -1682,11 +1682,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 return rechnungsNr;
             }
             try {
-              printQuittung(rechnungsNr);
-              Thread.sleep(5000); // wait for 5 seconds
-              printQuittung(rechnungsNr);
+                printQuittung(rechnungsNr);
+                Thread.sleep(5000); // wait for 5 seconds
+                printQuittung(rechnungsNr);
             } catch (InterruptedException ex) {
-              logger.error("Exception:", ex);
+                logger.error("Exception:", ex);
             }
         }
         clearAll();
