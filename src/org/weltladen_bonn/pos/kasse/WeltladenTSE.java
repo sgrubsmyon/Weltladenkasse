@@ -376,7 +376,7 @@ public class WeltladenTSE {
             }
             logger.info("TSE time successfully updated!");
             // If client ID not yet mapped to key:
-            if (encodeByteArrayAsHexString(tse.getERSMappings()).equals("3000")) { // XXX is this the general value for unmapped?
+            if (byteArrayToHexString(tse.getERSMappings()).equals("3000")) { // XXX is this the general value for unmapped?
                 logger.debug("01 ERS Mappings equal 0");
                 if (!loggedIn) {
                     logger.debug("02 Before authenticateAs");
@@ -390,7 +390,7 @@ public class WeltladenTSE {
                 mapClientIDToKey(serialNumber);
                 logger.debug("06 After mapClientIDToKey");
                 // Re-check if client ID is still unmapped to key:
-                if (encodeByteArrayAsHexString(tse.getERSMappings()).equals("3000")) { // XXX is this the general value for unmapped?
+                if (byteArrayToHexString(tse.getERSMappings()).equals("3000")) { // XXX is this the general value for unmapped?
                     logger.fatal("Mapping of client ID to TSE key failed!");
                     JOptionPane.showMessageDialog(this.mainWindow,
                         "ACHTUNG: Die Aktualisierung der Zeit der TSE ist fehlgeschlagen!\n"+
@@ -433,11 +433,39 @@ public class WeltladenTSE {
         return;
     }
 
-    private String encodeByteArrayAsHexString(byte[] data) {
+    private String byteArrayToByteString(byte[] byteArray) {
+        String res = "";
+        for (byte b : byteArray) {
+            res += b + " ";
+        }
+        return res.substring(0, res.length() - 1); // omit last empty string
+    }
+
+    private String byteArrayToIntString(byte[] byteArray) {
+        String res = "";
+        for (byte b : byteArray) {
+            res += (int)b + " ";
+        }
+        return res.substring(0, res.length() - 1); // omit last empty string
+    }
+
+    private String byteArrayToCharString(byte[] byteArray) {
+        String res = "";
+        for (byte b : byteArray) {
+            res += (char)b + " ";
+        }
+        return res.substring(0, res.length() - 1); // omit last empty string
+    }
+
+    private String byteArrayToHexString(byte[] data) {
         return new String(Hex.encode(data));
     }
 
-    private String decodeASN1ByteArray(byte[] data) {
+    private String byteArrayToBase64String(byte[] byteArray) {
+        return Base64.getEncoder().encodeToString(byteArray);
+    }
+
+    private String byteArrayToASN1String(byte[] data) {
         String result = "null";
         try {
             ASN1InputStream ais = new ASN1InputStream(new ByteArrayInputStream(data));
@@ -450,7 +478,7 @@ public class WeltladenTSE {
         return result;
     }
 
-    private String decodeASN1ByteArrayObjectIdentifier(byte[] data) {
+    private String byteArrayToASN1ObjectIdentifierString(byte[] data) {
         String result = "null";
         try {
             ASN1Primitive oid = ASN1ObjectIdentifier.fromByteArray(data);
@@ -468,7 +496,7 @@ public class WeltladenTSE {
     public String getSignatureAlgorithm() {
         String oid = "";
         try {
-            oid = decodeASN1ByteArrayObjectIdentifier(tse.getSignatureAlgorithm());
+            oid = byteArrayToASN1ObjectIdentifierString(tse.getSignatureAlgorithm());
         } catch (SEException ex) {
             logger.error("Error at getting TSE signature algorithm");
             logger.error("Exception:", ex);
@@ -511,7 +539,7 @@ public class WeltladenTSE {
         HashMap<String, String> values = new HashMap<String, String>();
         if (interestingValues.size() == 0 || interestingValues.contains("Eindeutige D-Trust-ID")) {
             // Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE
-            values.put("Eindeutige D-Trust-ID", encodeByteArrayAsHexString(tse.getUniqueId()));
+            values.put("Eindeutige D-Trust-ID", byteArrayToHexString(tse.getUniqueId()));
         }
         try {
             if (interestingValues.size() == 0 || interestingValues.contains("BSI-Zertifizierungsnummer")) {
@@ -555,7 +583,7 @@ public class WeltladenTSE {
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Seriennummer der TSE (Hex)")) {
                     // Erste und auch einzige Signaturschlüssel-Seriennummer, XXX sollte auf Quittung gedruckt werden!
-                    values.put("Seriennummer der TSE (Hex)", encodeByteArrayAsHexString(serialNumber));
+                    values.put("Seriennummer der TSE (Hex)", byteArrayToHexString(serialNumber));
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Seriennummer der TSE (Base64)")) {
                     // Erste und auch einzige Signaturschlüssel-Seriennummer, XXX sollte auf Quittung gedruckt werden!
@@ -563,11 +591,11 @@ public class WeltladenTSE {
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Seriennummern aller Schlüssel (ASN.1)")) {
                     // Alle Signaturschlüssel-Seriennummern
-                    values.put("Seriennummern aller Schlüssel (ASN.1)", decodeASN1ByteArray(serialNumberData));
+                    values.put("Seriennummern aller Schlüssel (ASN.1)", byteArrayToASN1String(serialNumberData));
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Öffentlicher Schlüssel (Hex)")) {
                     // Rückgabe eines öffentlichen Schlüssels
-                    values.put("Öffentlicher Schlüssel (Hex)", encodeByteArrayAsHexString(tse.exportPublicKey(serialNumber)));
+                    values.put("Öffentlicher Schlüssel (Hex)", byteArrayToHexString(tse.exportPublicKey(serialNumber)));
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Öffentlicher Schlüssel (Base64)")) {
                     // Rückgabe eines öffentlichen Schlüssels
@@ -595,15 +623,15 @@ public class WeltladenTSE {
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Signatur-Algorithmus (ASN.1)")) {
                     // Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten
-                    values.put("Signatur-Algorithmus (ASN.1)", decodeASN1ByteArray(tse.getSignatureAlgorithm()));
+                    values.put("Signatur-Algorithmus (ASN.1)", byteArrayToASN1String(tse.getSignatureAlgorithm()));
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("TSE_OID des Signatur-Algorithmus")) {
                     // Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten
-                    values.put("TSE_OID des Signatur-Algorithmus", decodeASN1ByteArrayObjectIdentifier(tse.getSignatureAlgorithm()));
+                    values.put("TSE_OID des Signatur-Algorithmus", byteArrayToASN1ObjectIdentifierString(tse.getSignatureAlgorithm()));
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)")) {
                     // Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln
-                    values.put("Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)", decodeASN1ByteArray(tse.getERSMappings()));
+                    values.put("Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)", byteArrayToASN1String(tse.getERSMappings()));
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Maximale Anzahl Kassen-Terminals")) {
                     // Abfrage der maximal gleichzeitig unterstützten Kassen-Terminals
@@ -627,7 +655,7 @@ public class WeltladenTSE {
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Letzte Protokolldaten (ASN.1)")) {
                     // Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes
-                    values.put("Letzte Protokolldaten (ASN.1)", decodeASN1ByteArray(tse.readLogMessage()));
+                    values.put("Letzte Protokolldaten (ASN.1)", byteArrayToASN1String(tse.readLogMessage()));
                 }
             }
         } catch (SEException ex) {
@@ -1212,34 +1240,6 @@ public class WeltladenTSE {
         }
     }
 
-    private String byteArrayToByteString(byte[] byteArray) {
-        String res = "";
-        for (byte b : byteArray) {
-            res += b + " ";
-        }
-        return res.substring(0, res.length() - 1); // omit last empty string
-    }
-
-    private String byteArrayToIntString(byte[] byteArray) {
-        String res = "";
-        for (byte b : byteArray) {
-            res += (int)b + " ";
-        }
-        return res.substring(0, res.length() - 1); // omit last empty string
-    }
-
-    private String byteArrayToCharString(byte[] byteArray) {
-        String res = "";
-        for (byte b : byteArray) {
-            res += (char)b + " ";
-        }
-        return res.substring(0, res.length() - 1); // omit last empty string
-    }
-
-    private String byteArrayToBase64String(byte[] byteArray) {
-        return Base64.getEncoder().encodeToString(byteArray);
-    }
-
     private void writeTestTransaction() {
         try {
             long n = tse.getCurrentNumberOfClients();
@@ -1253,8 +1253,9 @@ public class WeltladenTSE {
             logger.debug("StartTransaction: signatureCounter: {}", result.signatureCounter);
             logger.debug("StartTransaction: logTime (unix): {}", result.logTime);
             logger.debug("StartTransaction: logTime (cal): {}", unixTimeToCalTime(result.logTime));
-            // logger.debug("StartTransaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(result.serialNumber));
+            // logger.debug("StartTransaction: serialNumber (Hex): {}", byteArrayToHexString(result.serialNumber));
             logger.debug("StartTransaction: signatureValue (Base64): {}", byteArrayToBase64String(result.signatureValue));
+            logger.debug("StartTransaction: signatureValue (Hex): {}", byteArrayToHexString(result.signatureValue));
 
             /** again some status information */
             n = tse.getCurrentNumberOfTransactions();
@@ -1264,7 +1265,7 @@ public class WeltladenTSE {
             // UpdateTransactionResult updRes = tse.updateTransaction("WeltladenBonnKasse", result.transactionNumber, new byte[TSE.MAX_SIZE_TRANSPORT_LAYER-100], "anyProcessTypeString");
             // logger.debug("UpdateTransaction: signatureCounter: {}", updRes.signatureCounter);
             // logger.debug("UpdateTransaction: logTime: {}", updRes.logTime);
-            // // logger.debug("UpdateTransaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(updRes.serialNumber));
+            // // logger.debug("UpdateTransaction: serialNumber (Hex): {}", byteArrayToHexString(updRes.serialNumber));
             // logger.debug("UpdateTransaction: signatureValue (Base64): {}", byteArrayToBase64String(updRes.signatureValue));
 
             // /** again some status information */
@@ -1281,10 +1282,11 @@ public class WeltladenTSE {
             logger.debug("FinishTransaction: logTime (unix): {}", finRes.logTime);
             logger.debug("FinishTransaction: logTime (cal): {}", unixTimeToCalTime(finRes.logTime));
             logger.debug("FinishTransaction: logTime (cal): {}", unixTimeToCalTime(finRes.logTime, bc.dateFormatJava));
-            // logger.debug("FinishTransaction: serialNumber (Hex): {}", encodeByteArrayAsHexString(finRes.serialNumber));
+            // logger.debug("FinishTransaction: serialNumber (Hex): {}", byteArrayToHexString(finRes.serialNumber));
             logger.debug("FinishTransaction: signatureValue (Base64): {}", byteArrayToBase64String(finRes.signatureValue));
+            logger.debug("FinishTransaction: signatureValue (Hex): {}", byteArrayToHexString(finRes.signatureValue));
 
-            /** again some status information - should be 0 again*/
+            /** again some status information - should be 0 again */
             n = tse.getCurrentNumberOfTransactions();
             logger.debug("Number of open transactions: {}", n);
 
