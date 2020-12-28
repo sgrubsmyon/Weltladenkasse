@@ -101,7 +101,7 @@ public class WeltladenTSE {
     private boolean loggedIn = false;
     private MainWindow mainWindow = null;
     private Path pinPath = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".Weltladenkasse_tse");
-    private String dateFormatDSFinVK = "yyyy-MM-dd'T'HH:mm:ss'.000Z'"; // YYYY-MM-DDThh:mm:ss.fffZ, see https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html
+    private String dateFormatDSFinVK = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"; // YYYY-MM-DDThh:mm:ss.fffZ, see https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html
 
     private static long nextSyncTime = 0;
     private static int timeSyncInterval = 0;
