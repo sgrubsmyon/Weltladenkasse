@@ -19,7 +19,9 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.Properties;
 import java.util.HashMap;
@@ -27,7 +29,6 @@ import java.util.Vector;
 import java.util.Base64;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import java.util.Collections;
 
 // GUI stuff:
 import java.awt.BorderLayout;
@@ -1295,25 +1296,34 @@ public class WeltladenTSE {
             logger.debug("Open transactions: {}", openTransactions);
 
             byte[] tx = getTransaction(result.transactionNumber);
+            ArrayList<TSETarFile> tarList = TSEUntar.untar(tx);
+            for (TSETarFile file : tarList) {
+                System.out.println("\n");
+                System.out.println("\n");
+                System.out.println("\n");
+                System.out.println(file.name + ":");
+                System.out.println(file.time + ":");
+                System.out.println("\n");
+                System.out.println(byteArrayToASN1String(file.value));
+            }
 
-            System.out.println();
-            System.out.println("::: Base64 :::");
-            System.out.println(byteArrayToBase64String(tx));
-            System.out.println();
-            System.out.println("::: ASN1 :::");
-            System.out.println(decodeASN1ByteArray(tx));
-            System.out.println();
-            System.out.println("::: Hex :::");
-            System.out.println(encodeByteArrayAsHexString(tx));
+            // System.out.println();
+            // System.out.println("::: Base64 :::");
+            // System.out.println(byteArrayToBase64String(tx));
+            // System.out.println();
+            // System.out.println("::: ASN1 :::");
+            // System.out.println(byteArrayToASN1String(tx));
+            // System.out.println();
+            // System.out.println("::: Hex :::");
+            // System.out.println(byteArrayToHexString(tx));
 
             try {
-                FileOutputStream fout = new FileOutputStream(new File("/tmp/tse_export1.tar"));
+                FileOutputStream fout = new FileOutputStream(new File("/tmp/tse_export.tar"));
                 fout.write(tx);
                 fout.close();
             } catch (Exception ex) {
                 logger.error(ex);
             }
-            exportPartialTransactionDataByTXNumber("/tmp/tse_export2.tar", result.transactionNumber, result.transactionNumber, null);
         } catch (ErrorSeApiNotInitialized ex) {
             logger.fatal("SE API not initialized");
             logger.fatal("Exception:", ex);
