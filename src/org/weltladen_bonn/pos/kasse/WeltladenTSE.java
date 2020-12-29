@@ -158,7 +158,7 @@ public class WeltladenTSE {
             // System.out.println("\n --- Status before: \n");
             // printStatusValues();
             // for (int i = 0; i < 50; i++) {
-            writeTestTransaction();
+            // writeTestTransaction();
             // }
             // System.out.println("\n --- Status after: \n");
             // printStatusValues();
@@ -1312,34 +1312,8 @@ public class WeltladenTSE {
             logger.debug("Open transactions: {}", openTransactions);
 
             byte[] tx = getTransaction(result.transactionNumber);
-            ArrayList<TSETarFile> tarList = TSEUntar.untar(tx);
-            for (TSETarFile file : tarList) {
-                System.out.println("\n");
-                System.out.println("\n");
-                System.out.println("\n");
-                System.out.println(file.name + ":");
-                System.out.println(file.time + ":");
-                System.out.println("\n");
-                System.out.println(byteArrayToASN1String(file.value));
-            }
-
-            // System.out.println();
-            // System.out.println("::: Base64 :::");
-            // System.out.println(byteArrayToBase64String(tx));
-            // System.out.println();
-            // System.out.println("::: ASN1 :::");
-            // System.out.println(byteArrayToASN1String(tx));
-            // System.out.println();
-            // System.out.println("::: Hex :::");
-            // System.out.println(byteArrayToHexString(tx));
-
-            try {
-                FileOutputStream fout = new FileOutputStream(new File("/tmp/tse_export.tar"));
-                fout.write(tx);
-                fout.close();
-            } catch (Exception ex) {
-                logger.error(ex);
-            }
+            System.out.println(TSEUntar.extractStartTransactionAsASN1(tx));
+            System.out.println(TSEUntar.extractFinishTransactionAsASN1(tx));
         } catch (ErrorSeApiNotInitialized ex) {
             logger.fatal("SE API not initialized");
             logger.fatal("Exception:", ex);
