@@ -1183,8 +1183,8 @@ public class WeltladenTSE {
         try {
             System.out.println("\nBEFORE mapERStoKey():");
             printStatusValues();
-            /** Configure the TSE to use the ERS "WeltladenBonnKasse" with the given transaction key (serial number) */
-            tse.mapERStoKey("WeltladenBonnKasse", serialNumber);
+            /** Configure the TSE to use the ERS bc.z_kasse_id with the given transaction key (serial number) */
+            tse.mapERStoKey(bc.z_kasse_id, serialNumber);
             System.out.println("\nAFTER mapERStoKey():");
             printStatusValues();
             passed = true;
@@ -1264,8 +1264,8 @@ public class WeltladenTSE {
             n = tse.getCurrentNumberOfTransactions();
             logger.debug("Number of transactions: {}", n);
 
-            /** Start a new transaction for the ERS (cash register) "WeltladenBonnKasse" */
-            StartTransactionResult result = tse.startTransaction("WeltladenBonnKasse", "processData".getBytes(), "whateverProcessType", "additionalData".getBytes());
+            /** Start a new transaction for the ERS (cash register) */
+            StartTransactionResult result = tse.startTransaction(bc.z_kasse_id, "processData".getBytes(), "whateverProcessType", "additionalData".getBytes());
             logger.debug("StartTransaction: transactionNumber: {}", result.transactionNumber);
             logger.debug("StartTransaction: signatureCounter: {}", result.signatureCounter);
             logger.debug("StartTransaction: logTime (unix): {}", result.logTime);
@@ -1279,7 +1279,7 @@ public class WeltladenTSE {
             logger.debug("Number of open transactions: {}", n);
 
             // /** Update the transaction */
-            // UpdateTransactionResult updRes = tse.updateTransaction("WeltladenBonnKasse", result.transactionNumber, new byte[TSE.MAX_SIZE_TRANSPORT_LAYER-100], "anyProcessTypeString");
+            // UpdateTransactionResult updRes = tse.updateTransaction(bc.z_kasse_id, result.transactionNumber, new byte[TSE.MAX_SIZE_TRANSPORT_LAYER-100], "anyProcessTypeString");
             // logger.debug("UpdateTransaction: signatureCounter: {}", updRes.signatureCounter);
             // logger.debug("UpdateTransaction: logTime: {}", updRes.logTime);
             // // logger.debug("UpdateTransaction: serialNumber (Hex): {}", byteArrayToHexString(updRes.serialNumber));
@@ -1294,7 +1294,7 @@ public class WeltladenTSE {
             logger.debug("Open transactions: {}", openTransactions);
 
             /** Finish the transaction */
-            FinishTransactionResult finRes = tse.finishTransaction("WeltladenBonnKasse", result.transactionNumber, "lastData".getBytes(), "maybeYetAnotherProcessType", null);
+            FinishTransactionResult finRes = tse.finishTransaction(bc.z_kasse_id, result.transactionNumber, "lastData".getBytes(), "maybeYetAnotherProcessType", null);
             logger.debug("FinishTransaction: signatureCounter: {}", finRes.signatureCounter);
             logger.debug("FinishTransaction: logTime (unix): {}", finRes.logTime);
             logger.debug("FinishTransaction: logTime (cal): {}", unixTimeToCalTime(finRes.logTime));
@@ -1514,5 +1514,66 @@ public class WeltladenTSE {
             return "SEException";
         }
     }
+
+    /** Start a new transaction on the TSE */
+    public StartTransactionResult startTransaction() {
+        StartTransactionResult result = null;
+        String error = "";
+        boolean passed = false;
+        try {
+            /* Zitat DSFinV-K v2.2 (Anhang I, S. 115): (https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html)
+                "Für alle Vorgangstypen gilt, dass processType und processData für die StartTransaction-Operation immer leer sind."
+                "StartTransaction wird unmittelbar mit Beginn eines Vorgangs an der Kasse aufgerufen."
+                "Die UpdateTransaction-Operation wird beim processType Kassenbeleg nicht verwendet, da die processData sich erst
+                bei FinishTransaction ändern."
+            */
+            result = tse.startTransaction(bc.z_kasse_id, "".getBytes(), "", "".getBytes());
+            passed = true;
+        } catch (ErrorStartTransactionFailed ex) {
+            error = "Start transaction failed";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
+        } catch (ErrorRetrieveLogMessageFailed ex) {
+            error = "Retrieve log message failed";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
+        } catch (ErrorStorageFailure ex) {
+            error = "Storage failure";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
+        } catch (ErrorSeApiNotInitialized ex) {
+            error = "SE API not initialized";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
+        } catch (ErrorTimeNotSet ex) {
+            error = "Time not set";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
+        } catch (ErrorCertificateExpired ex) {
+            error = "Certificate expired";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
+        } catch (ErrorSecureElementDisabled ex) {
+            error = "Secure Element disabled";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
+        } catch (SEException ex) {
+            error = "Unknown error during startTransaction()";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
+        }
+        if (!passed) {
+            JOptionPane.showMessageDialog(this.mainWindow,
+                "ACHTUNG: Es konnte keine TSE-Transaktion gestartet werden!\n\n"+
+                "Fehler: "+error+".\n\n"+
+                "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
+                "Bitte Fehler beheben und erneut versuchen.",
+                "Fehlgeschlagener Transaktionsstart der TSE", JOptionPane.ERROR_MESSAGE);
+            // Exit application upon this fatal error
+            disconnectFromTSE();
+            System.exit(1);
+        }
+        return result;
+    };
 
 }

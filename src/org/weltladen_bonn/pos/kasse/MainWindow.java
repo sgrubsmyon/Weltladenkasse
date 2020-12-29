@@ -35,7 +35,7 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
     private Kundendisplay display;
 
     // class to talk to TSE
-    private WeltladenTSE tse;
+    protected WeltladenTSE tse;
 
     private JButton beendenButton = new JButton("Beenden");
 

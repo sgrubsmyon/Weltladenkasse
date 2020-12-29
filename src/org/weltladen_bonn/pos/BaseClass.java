@@ -43,6 +43,9 @@ public class BaseClass {
     public String exportDirBestellung;
     public Boolean alwaysPrintReceipt;
 
+    // TSE and DSFinV-K setup:
+    public String z_kasse_id; // is used as clientID when talking to TSE
+
     public final String fileSep = System.getProperty("file.separator");
     public final String lineSep = System.getProperty("line.separator");
     public final int smallintMax = 32767;
@@ -206,6 +209,8 @@ public class BaseClass {
             this.exportDirAbrechnungJahr = props.getProperty("exportDirAbrechnungJahr");
             this.exportDirBestellung = props.getProperty("exportDirBestellung");
             this.alwaysPrintReceipt = Boolean.valueOf(props.getProperty("alwaysPrintReceipt"));
+            
+            this.z_kasse_id = props.getProperty("Z_KASSE_ID");
         } catch (Exception ex) {
             logger.error("Exception:", ex);
             JOptionPane.showMessageDialog(null, "Fehler in der Konfigurationsdatei config.properties.\n"+
@@ -233,6 +238,8 @@ public class BaseClass {
             this.exportDirAbrechnungJahr = "'Dokumente/Kasse/Jahresabrechnungen'";
             this.exportDirBestellung = "'Dokumente/Bestellungen/Bestellungen FHZ 'yyyy";
             this.alwaysPrintReceipt = true;
+
+            this.z_kasse_id = "WeltladenBonnKasse-01";
         }
         this.mysqlHost = removeQuotes(this.mysqlHost);
         this.printerName = removeQuotes(this.printerName);
