@@ -102,7 +102,7 @@ public class WeltladenTSE {
     private boolean loggedIn = false;
     private MainWindow mainWindow = null;
     private Path pinPath = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".Weltladenkasse_tse");
-    private String dateFormatDSFinVK = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"; // YYYY-MM-DDThh:mm:ss.fffZ, see https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html
+    public static String dateFormatDSFinVK = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"; // YYYY-MM-DDThh:mm:ss.fffZ, see https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html
 
     private static long nextSyncTime = 0;
     private static int timeSyncInterval = 0;
@@ -434,7 +434,7 @@ public class WeltladenTSE {
         return;
     }
 
-    private String byteArrayToByteString(byte[] byteArray) {
+    public static String byteArrayToByteString(byte[] byteArray) {
         String res = "";
         for (byte b : byteArray) {
             res += b + " ";
@@ -442,7 +442,7 @@ public class WeltladenTSE {
         return res.substring(0, res.length() - 1); // omit last empty string
     }
 
-    private String byteArrayToIntString(byte[] byteArray) {
+    public static String byteArrayToIntString(byte[] byteArray) {
         String res = "";
         for (byte b : byteArray) {
             res += (int)b + " ";
@@ -450,7 +450,7 @@ public class WeltladenTSE {
         return res.substring(0, res.length() - 1); // omit last empty string
     }
 
-    private String byteArrayToCharString(byte[] byteArray) {
+    public static String byteArrayToCharString(byte[] byteArray) {
         String res = "";
         for (byte b : byteArray) {
             res += (char)b + " ";
@@ -458,15 +458,19 @@ public class WeltladenTSE {
         return res.substring(0, res.length() - 1); // omit last empty string
     }
 
-    private String byteArrayToHexString(byte[] data) {
+    public static String byteArrayToHexString(byte[] data) {
         return new String(Hex.encode(data));
     }
 
-    private String byteArrayToBase64String(byte[] byteArray) {
+    public static byte[] hexStringToByteArray(String data) {
+        return Hex.decode(data);
+    }
+
+    public static String byteArrayToBase64String(byte[] byteArray) {
         return Base64.getEncoder().encodeToString(byteArray);
     }
 
-    private String byteArrayToASN1String(byte[] data) {
+    public static String byteArrayToASN1String(byte[] data) {
         String result = "null";
         try {
             ASN1InputStream ais = new ASN1InputStream(new ByteArrayInputStream(data));
@@ -479,7 +483,7 @@ public class WeltladenTSE {
         return result;
     }
 
-    private String byteArrayToASN1ObjectIdentifierString(byte[] data) {
+    public static String byteArrayToASN1ObjectIdentifierString(byte[] data) {
         String result = "null";
         try {
             ASN1Primitive oid = ASN1ObjectIdentifier.fromByteArray(data);
@@ -492,6 +496,16 @@ public class WeltladenTSE {
             logger.error("Exception:", ex);
         }
         return result;
+    }
+
+    public static String unixTimeToCalTime(long unixTime) {
+        java.util.Date date = new java.util.Date(unixTime * 1000);
+        return new SimpleDateFormat(dateFormatDSFinVK).format(date);
+    }
+
+    public static String unixTimeToCalTime(long unixTime, String dateFormat) {
+        java.util.Date date = new java.util.Date(unixTime * 1000);
+        return new SimpleDateFormat(dateFormat).format(date);
     }
 
     public String getSignatureAlgorithm() {
@@ -524,16 +538,6 @@ public class WeltladenTSE {
         } else {
             return "unknown";
         }
-    }
-
-    public String unixTimeToCalTime(long unixTime) {
-        java.util.Date date = new java.util.Date(unixTime * 1000);
-        return new SimpleDateFormat(dateFormatDSFinVK).format(date);
-    }
-
-    public String unixTimeToCalTime(long unixTime, String dateFormat) {
-        java.util.Date date = new java.util.Date(unixTime * 1000);
-        return new SimpleDateFormat(dateFormat).format(date);
     }
 
     public HashMap<String, String> retrieveTSEStatusValues(Vector<String> interestingValues) {
