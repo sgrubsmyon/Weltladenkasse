@@ -134,6 +134,8 @@ public class WeltladenTSE {
         "Maximale Zahl offener Transaktionen",
         "Aktuelle Zahl offener Transaktionen",
         "Unterstützte Transaktionsaktualisierungsvarianten",
+        "TSE-Zertifikat (Hex)",
+        "TSE-Zertifikat (Base64)",
         "Letzte Protokolldaten (ASN.1)"
     };
 
@@ -657,6 +659,16 @@ public class WeltladenTSE {
                 if (interestingValues.size() == 0 || interestingValues.contains("Unterstützte Transaktionsaktualisierungsvarianten")) {
                     // aus FirstBoot.java übernommen
                     values.put("Unterstützte Transaktionsaktualisierungsvarianten", tse.getSupportedTransactionUpdateVariants().toString());
+                }
+                if (interestingValues.size() == 0 || interestingValues.contains("TSE-Zertifikat (Hex)") ||
+                    interestingValues.contains("TSE-Zertifikat (Base64)")) {
+                    byte[] certificate = TSEUntar.exportCertificate(tse, serialNumber);
+                    if (interestingValues.size() == 0 || interestingValues.contains("TSE-Zertifikat (Hex)")) {
+                        values.put("TSE-Zertifikat (Hex)", byteArrayToHexString(certificate));
+                    }
+                    if (interestingValues.size() == 0 || interestingValues.contains("TSE-Zertifikat (Base64)")) {
+                        values.put("TSE-Zertifikat (Base64)", byteArrayToBase64String(certificate));
+                    }
                 }
                 if (interestingValues.size() == 0 || interestingValues.contains("Letzte Protokolldaten (ASN.1)")) {
                     // Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes
