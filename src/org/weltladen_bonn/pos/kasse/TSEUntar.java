@@ -41,17 +41,6 @@ public class TSEUntar {
     public static ArrayList<TSETarFile> exportCertificatesAsList(TSE tse) throws SEException {
         return untar(tse.exportCertificates());
     }
-
-    public static byte[] hexToBytes(String hex)
-    {
-        hex = hex.replaceAll("[^A-Fa-f0-9]", "");
-        if (1 == hex.length() % 2)
-            hex = "0" + hex;
-        byte[] bytes = new byte[hex.length() / 2];
-        for (int i = 0; i < bytes.length; i++)
-            bytes[i] = (byte)((Character.digit(hex.charAt(i*2), 16) << 4) + Character.digit(hex.charAt(i*2+1), 16));
-        return bytes;
-    }
  
     public static byte[] exportCertificate(TSE tse, byte[] serialNumberKey) throws SEException {
         int len = 2 * serialNumberKey.length;
@@ -59,11 +48,9 @@ public class TSEUntar {
         TSETarFile file;
         for (int i = 0; i < tarList.size(); i++) {
             file = tarList.get(i);
-            System.out.println("hexToBytes:" + hexToBytes(file.name.substring(0, len)));
-            System.out.println("hexStringToByteArray:" + WeltladenTSE.hexStringToByteArray(file.name.substring(0, len)));
             if (
                 len < file.name.length() &&
-                Arrays.equals(serialNumberKey, hexToBytes(file.name.substring(0, len)))
+                Arrays.equals(serialNumberKey, WeltladenTSE.hexStringToByteArray(file.name.substring(0, len)))
             ) return file.value;
         }
         throw new com.cryptovision.SEAPI.exceptions.ErrorTSECommandDataInvalid();
