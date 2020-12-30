@@ -21,10 +21,6 @@ import javax.swing.event.*;
 // DateTime from date4j (http://www.date4j.net/javadoc/index.html)
 import hirondelle.date4j.DateTime;
 
-// cryptovision TSE:
-import com.cryptovision.SEAPI.TSE.StartTransactionResult;
-import com.cryptovision.SEAPI.TSE.FinishTransactionResult;
-
 import org.weltladen_bonn.pos.*;
 import org.weltladen_bonn.pos.BaseClass.BigLabel;
 import org.weltladen_bonn.pos.BaseClass.BigButton;
@@ -33,10 +29,10 @@ import org.weltladen_bonn.pos.BaseClass.BigButton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Main class of the cashier POS software
+ */
 public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, DocumentListener {
-    /**
-     * Main class of the cashier POS software
-     */
     private static final Logger logger = LogManager.getLogger(Kassieren.class);
 
     private static final long serialVersionUID = 1L;
@@ -54,8 +50,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     private int selectedArticleID;
     private int selectedStueck;
-
-    private TSETransaction tseTx = new TSETransaction();
 
     protected ArticleSelectPanelKassieren asPanel;
     private JButton sonstigesButton;
@@ -1564,33 +1558,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (selectedArticleID == gutscheinArtikelID) {
             type = "gutschein";
         }
-        tseTx = startTSETransaction();
-        // Need to use "AVBelegabbruch" when last item is removed or when software is closed
-        logger.info("New transaction:");
-        logger.info("TX number: {}", tseTx.txNumber);
-        logger.info("TX start time: {}", tseTx.startTime);
+        mw.tse.startTransaction();
         hinzufuegen(stueck, "default", type);
-    }
-
-    /*******
-     * TSE *
-     *******/
-
-    private class TSETransaction {
-        public Long txNumber = null; // of the StartTransaction operation
-        public Long startTime = null; // of the StartTransaction operation
-        public Long endTime = null; // of the FinishTransaction operation
-        public Long sigCounter = null; // of the FinishTransaction operation
-        public String processData = null; // of the FinishTransaction operation
-        public String signatureBase64 = null; // of the FinishTransaction operation
-    }
-
-    private TSETransaction startTSETransaction() {
-        TSETransaction tx = new TSETransaction();
-		StartTransactionResult result = mw.tse.startTransaction();
-        tx.txNumber = result.transactionNumber;
-        tx.startTime = result.logTime;
-        return tx;
     }
 
     private void leergutHinzufuegen() {
