@@ -19,16 +19,16 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.Set;
 import java.util.Properties;
 import java.util.HashMap;
 import java.util.Vector;
+import java.util.Comparator;
 import java.util.Base64;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
 // GUI stuff:
 import java.awt.BorderLayout;
@@ -1603,16 +1603,9 @@ public class WeltladenTSE {
         }
     };
 
-    /** Cancel the started TSE transaction, i.e. payment never happens */
-    public void cancelTransaction() {
-        String error = "";
-        boolean passed = false;
+    private String sendFinishTransaction(String processData) {
+        String message = "";
         try {
-            /* Zitat DSFinV-K v2.2 (Anhang A, S. 45): (https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html)
-                "Der Vorgangstyp „AVBelegabbruch“ kennzeichnet alle Vorgänge, die nach Transaktionsbeginn abgebrochen werden.
-                 Eine tatsächliche Bezahlung darf im Zusammenhang mit diesem Vorgangstyp nicht erfolgen."
-             */
-            String processData = "AVBelegabbruch^0.00_0.00_0.00_0.00_0.00^";
             if (tx.txNumber != null) {
                 FinishTransactionResult result = tse.finishTransaction(bc.z_kasse_id, tx.txNumber, processData.getBytes(), "Kassenbeleg-V1", null);
                 tx.endTimeUnix = result.logTime;
@@ -1632,51 +1625,158 @@ public class WeltladenTSE {
             }
             // Make room for next transaction:
             tx = new TSETransaction();
-            passed = true;
+            message = "OK";
         } catch (ErrorFinishTransactionFailed ex) {
-            error = "Start transaction failed";
-            logger.fatal("Fatal Error: {}", error);
+            message = "Start transaction failed";
+            logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         } catch (ErrorNoTransaction ex) {
-            error = "No transaction (transaction number wrong)";
-            logger.fatal("Fatal Error: {}", error);
+            message = "No transaction (transaction number wrong)";
+            logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         } catch (ErrorRetrieveLogMessageFailed ex) {
-            error = "Retrieve log message failed";
-            logger.fatal("Fatal Error: {}", error);
+            message = "Retrieve log message failed";
+            logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         } catch (ErrorStorageFailure ex) {
-            error = "Storage failure";
-            logger.fatal("Fatal Error: {}", error);
+            message = "Storage failure";
+            logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         } catch (ErrorSeApiNotInitialized ex) {
-            error = "SE API not initialized";
-            logger.fatal("Fatal Error: {}", error);
+            message = "SE API not initialized";
+            logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         } catch (ErrorTimeNotSet ex) {
-            error = "Time not set";
-            logger.fatal("Fatal Error: {}", error);
+            message = "Time not set";
+            logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         } catch (ErrorCertificateExpired ex) {
-            error = "Certificate expired";
-            logger.fatal("Fatal Error: {}", error);
+            message = "Certificate expired";
+            logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         } catch (ErrorSecureElementDisabled ex) {
-            error = "Secure Element disabled";
-            logger.fatal("Fatal Error: {}", error);
+            message = "Secure Element disabled";
+            logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         } catch (SEException ex) {
-            error = "Unknown error during startTransaction()";
-            logger.fatal("Fatal Error: {}", error);
+            message = "Unknown error during startTransaction()";
+            logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         }
-        if (!passed) {
+        return message;
+    }
+    
+    /** Cancel the started TSE transaction, i.e. payment never happens */
+    public void cancelTransaction() {
+        /* Zitat DSFinV-K v2.2 (Anhang A, S. 45): (https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html)
+            "Der Vorgangstyp „AVBelegabbruch“ kennzeichnet alle Vorgänge, die nach Transaktionsbeginn abgebrochen werden.
+             Eine tatsächliche Bezahlung darf im Zusammenhang mit diesem Vorgangstyp nicht erfolgen."
+        */
+        String processData = "AVBelegabbruch^0.00_0.00_0.00_0.00_0.00^";
+        String message = sendFinishTransaction(processData);
+        if (message != "OK") {
             JOptionPane.showMessageDialog(this.mw,
                 "ACHTUNG: Die TSE-Transaktion konnte nicht abgebrochen werden!\n\n"+
-                "Fehler: "+error+".\n\n"+
+                "Fehler: "+message+".\n\n"+
                 "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
                 "Bitte Fehler beheben und erneut versuchen.",
                 "Fehlgeschlagener Transaktionsabbruch der TSE", JOptionPane.ERROR_MESSAGE);
+            // Exit application upon this fatal error
+            disconnectFromTSE();
+            System.exit(1);
+        }
+    }
+
+    private String renderProcessData(BigDecimal steuer_allgemein, BigDecimal steuer_ermaessigt,
+                                     BigDecimal steuer_durchschnitt_nr3, BigDecimal steuer_durchschnitt_nr1,
+                                     BigDecimal steuer_null, /* Für Steuersätze, siehe DSFinV-K v2.2 (Anhang I, S. 110) */
+                                     Vector<Vector<String>> zahlungen) { /* Für Zahlungen, siehe DSFinV-K v2.2 (Anhang I, S. 110f)
+                                         Format hier: pro Zahlung 1. String Bar|Unbar, 2. String Betrag, 3. String (optional) Währungscode */
+        /* Process the VAT values: */
+
+        steuer_allgemein = steuer_allgemein == null ? new BigDecimal("0.00") : steuer_allgemein;
+        steuer_ermaessigt = steuer_ermaessigt == null ? new BigDecimal("0.00") : steuer_ermaessigt;
+        steuer_durchschnitt_nr3 = steuer_durchschnitt_nr3 == null ? new BigDecimal("0.00") : steuer_durchschnitt_nr3;
+        steuer_durchschnitt_nr1 = steuer_durchschnitt_nr1 == null ? new BigDecimal("0.00") : steuer_durchschnitt_nr1;
+        steuer_null = steuer_null == null ? new BigDecimal("0.00") : steuer_null;
+        String processData = "Beleg^";
+        // processData += String.format("%s_%s_%s_%s_%s^",
+        //     bc.priceFormatterIntern(steuer_allgemein), bc.priceFormatterIntern(steuer_ermaessigt),
+        //     bc.priceFormatterIntern(steuer_durchschnitt_nr3), bc.priceFormatterIntern(steuer_durchschnitt_nr1),
+        //     bc.priceFormatterIntern(steuer_null));
+        processData += String.format("%.2f_%.2f_%.2f_%.2f_%.2f^", steuer_allgemein, steuer_ermaessigt,
+            steuer_durchschnitt_nr3, steuer_durchschnitt_nr1, steuer_null);
+
+        /* Process the payment values: */
+
+        // Need to sort payments for correct order as defined in DSFinV-K, p. 110f
+        zahlungen.sort(new Comparator<Vector<String>>() {
+            public int compare(Vector<String> one, Vector<String> two) {
+                // Bar first:
+                if (!one.get(0).equals(two.get(0))) return one.get(0).equals("Bar") ? -1 : 1;
+                // Within Bar and Unbar, sort alphabetically by currency codes if provided
+                if (one.size() == 3 && two.size() == 3) return one.get(2).compareTo(two.get(2));
+                // No currency code provided, so size of 2 instead of 3, comes first
+                return one.size() - two.size();
+            }
+        });
+
+        int i = 0;
+        for (Vector<String> zahlung : zahlungen) {
+            if (i > 0) processData += "_";
+            processData += String.format("%.2f:%s", new BigDecimal(zahlung.get(1)), zahlung.get(0));
+            if (zahlung.size() > 2) processData += String.format(":%s", zahlung.get(2));
+            i += 1;
+        }
+        return processData;
+
+        /* Test:
+            /* Example from DSFinV-K (p. 111):
+                Should return: Beleg^75.33_7.99_0.00_0.00_0.00^10.00:Bar_5.00:Bar:CHF_5.00:Bar:USD_64.30:Unbar
+                Result:        Beleg^75.33_7.99_0.00_0.00_0.00^10.00:Bar_5.00:Bar:CHF_5.00:Bar:USD_64.30:Unbar
+            * /
+            Vector<Vector<String>> v = new Vector<Vector<String>>(2);
+            Vector<String> z1 = new Vector<String>();
+            z1.add("Bar"); z1.add("5.00"); z1.add("CHF");
+            Vector<String> z2 = new Vector<String>();
+            z2.add("Bar"); z2.add("5.00"); z2.add("USD");
+            Vector<String> z3 = new Vector<String>();
+            z3.add("Bar"); z3.add("10.00");
+            Vector<String> z4 = new Vector<String>();
+            z4.add("Unbar"); z4.add("64.30");
+            v.add(z4);
+            v.add(z2);
+            v.add(z1);
+            v.add(z3);
+            System.out.println(renderProcessData(new BigDecimal("75.33"), new BigDecimal("7.99"), null, null, null, v));
+        */
+    }
+
+     /** Finish the TSE transaction by entering payment details */
+    public void finishTransaction(BigDecimal steuer_allgemein, // (19% MwSt)
+                                  BigDecimal steuer_ermaessigt, // (7% MwSt)
+                                  BigDecimal steuer_durchschnitt_nr3, BigDecimal steuer_durchschnitt_nr1, // Häh???
+                                  BigDecimal steuer_null, // (0% MwSt) /* Für Steuersätze, siehe DSFinV-K v2.2 (Anhang I, S. 110) */
+                                  Vector<Vector<String>> zahlungen) { /* Für Zahlungen, siehe DSFinV-K v2.2 (Anhang I, S. 110f)
+                                    Format hier: pro Zahlung 1. String Bar|Unbar, 2. String Betrag, 3. String (optional) Währungscode */
+        /* Zitat DSFinV-K v2.2 (Anhang A, S. 42): (https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html)
+            "Der Vorgangstyp „Beleg“ umfasst alle Vorgänge, die über die Kasse abgeschlossen werden.
+             Der Vorgangstyp umfasst neben der Rechnung (§ 14 UStG) auch Gutschriften und Korrekturrechnungen.
+             Beim Vorgangstyp „Beleg“ sind alle Zahlarten möglich.
+             Der Vorgangstyp „Beleg“ ist immer dann zu wählen, wenn eine Änderung der Vermögenszusammensetzung
+             des Betriebes aus dem Vorgang resultiert."
+        */
+        String processData = renderProcessData(steuer_allgemein, steuer_ermaessigt,
+                                                steuer_durchschnitt_nr3, steuer_durchschnitt_nr1,
+                                                steuer_null, zahlungen);
+        String message = sendFinishTransaction(processData);
+        if (message != "OK") {
+            JOptionPane.showMessageDialog(this.mw,
+                "ACHTUNG: Die TSE-Transaktion konnte nicht abgeschlossen werden!\n\n"+
+                "Fehler: "+message+".\n\n"+
+                "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
+                "Bitte Fehler beheben und erneut versuchen.",
+                "Fehlgeschlagener Transaktionsabschluss der TSE", JOptionPane.ERROR_MESSAGE);
             // Exit application upon this fatal error
             disconnectFromTSE();
             System.exit(1);
