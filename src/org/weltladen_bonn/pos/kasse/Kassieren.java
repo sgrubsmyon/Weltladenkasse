@@ -46,6 +46,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     private MainWindow mw;
     private Kundendisplay display;
+    private WeltladenTSE tse;
     private TabbedPane tabbedPane;
 
     private int selectedArticleID;
@@ -107,9 +108,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (mw instanceof MainWindow) {
             this.mw = (MainWindow) mw;
             display = this.mw.getDisplay();
+            tse = this.mw.getTSE();
         } else {
             this.mw = null;
             display = null;
+            tse = null;
         }
         this.tabbedPane = tp;
 
@@ -1558,7 +1561,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (selectedArticleID == gutscheinArtikelID) {
             type = "gutschein";
         }
-        mw.tse.startTransaction();
+        tse.startTransaction();
         hinzufuegen(stueck, "default", type);
     }
 
