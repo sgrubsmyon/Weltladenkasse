@@ -1497,28 +1497,21 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
-    private void hinzufuegen(Integer stueck, String color, String type) {
-        Artikel a = getArticle(selectedArticleID);
-        String artikelNummer = a.getNummer();
-        selectedStueck = stueck;
-        String artikelPreis = bc.priceFormatterIntern(preisField.getText());
-        BigDecimal gesPreis = new BigDecimal(artikelPreis).multiply(new BigDecimal(stueck));
-        String gesPreisString = bc.priceFormatterIntern(gesPreis);
-        String kurzname = getShortName(a);
-        String artikelMwSt = getVAT(selectedArticleID);
-        Boolean sortiment = a.getSortiment();
-        if (color.equals("default")) {
-            color = sortiment ? "default" : "gray";
+    private void hinzufuegen(int artID, String kurzname, String artikelNummer, String type, String color,
+                             String artikelMwSt, Integer stueck, String artikelPreis, BigDecimal gesPreis) {
+        if (data.size() == 0) {
+            // First item is added, this is a new TSE transaction
+            tse.startTransaction();
         }
-
+        
         Integer lastPos = getLastPosition();
         KassierArtikel ka = new KassierArtikel(bc);
         ka.setPosition(lastPos + 1);
-        ka.setArtikelID(selectedArticleID);
+        ka.setArtikelID(artID);
         ka.setRabattID(null);
         ka.setName(kurzname);
-        ka.setColor(color);
         ka.setType(type);
+        ka.setColor(color);
         ka.setMwst(new BigDecimal(artikelMwSt));
         ka.setStueckzahl(stueck);
         ka.setEinzelpreis(new BigDecimal(artikelPreis));
@@ -1529,6 +1522,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         removeButtons.add(new JButton("-"));
         removeButtons.lastElement().addActionListener(this);
 
+        String gesPreisString = bc.priceFormatterIntern(gesPreis);
         gesPreisString = bc.decimalMark(gesPreisString) + ' ' + bc.currencySymbol;
         artikelPreis = bc.decimalMark(artikelPreis) + ' ' + bc.currencySymbol;
 
@@ -1543,79 +1537,62 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         row.add(removeButtons.lastElement());
         data.add(row);
 
-        checkForRabatt();
-        checkForPfand();
+        if (type != "leergut") {
+            checkForRabatt();
+            checkForPfand();
+        }
         updateAll();
         updateDisplay(kurzname, stueck, artikelPreis);
     }
 
-    private void artikelHinzufuegen() {
-        Integer stueck = (Integer) anzahlSpinner.getValue();
+    private void artikelHinzufuegen(Integer stueck, String type, String color) {
+        selectedStueck = stueck;
+        Artikel a = getArticle(selectedArticleID);
+        String artikelNummer = a.getNummer();
+        String artikelPreis = bc.priceFormatterIntern(preisField.getText());
+        BigDecimal gesPreis = new BigDecimal(artikelPreis).multiply(new BigDecimal(stueck));
+        String kurzname = getShortName(a);
+        String artikelMwSt = getVAT(selectedArticleID);
+        hinzufuegen(selectedArticleID, kurzname, artikelNummer, type, color,
+                    artikelMwSt, stueck, artikelPreis, gesPreis);
+    }
+
+    private void artikelNormalHinzufuegen() {
         if (asPanel.artikelBox.getItemCount() != 1 || asPanel.nummerBox.getItemCount() != 1) {
             logger.error("Error: article not selected unambiguously.");
             JOptionPane.showMessageDialog(this, "Fehler: Artikel nicht eindeutig ausgewählt.", "Fehler",
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
+        Integer stueck = (Integer) anzahlSpinner.getValue();
         String type = "artikel";
         if (selectedArticleID == gutscheinArtikelID) {
             type = "gutschein";
         }
-        tse.startTransaction();
-        hinzufuegen(stueck, "default", type);
+        Artikel a = getArticle(selectedArticleID);
+        Boolean sortiment = a.getSortiment();
+        String color = sortiment ? "default" : "gray";
+        artikelHinzufuegen(stueck, type, color);
+    }
+
+    private void artikelRueckgabeHinzufuegen() {
+        Integer stueck = -(Integer) anzahlSpinner.getValue();
+        artikelHinzufuegen(stueck, "rueckgabe", "green");
     }
 
     private void leergutHinzufuegen() {
         int pfandArtikelID = queryPfandArtikelID(selectedArticleID);
         // gab es Pfand? Wenn ja, fuege Zeile in Tabelle:
         if (pfandArtikelID > 0) {
-            BigDecimal pfand = new BigDecimal(getSalePrice(pfandArtikelID));
-            String pfandName = getArticleName(pfandArtikelID)[0];
             Integer stueck = -(Integer) anzahlSpinner.getValue();
             selectedStueck = stueck;
-            BigDecimal gesamtPfand = pfand.multiply(new BigDecimal(stueck));
+            String pfand = getSalePrice(pfandArtikelID);
+            String pfandName = getArticleName(pfandArtikelID)[0];
+            BigDecimal gesamtPfand = new BigDecimal(pfand).multiply(new BigDecimal(stueck));
             String pfandMwSt = getVAT(selectedArticleID);
-
-            Integer lastPos = getLastPosition();
-            KassierArtikel ka = new KassierArtikel(bc);
-            ka.setPosition(lastPos + 1);
-            ka.setArtikelID(pfandArtikelID);
-            ka.setRabattID(null);
-            ka.setName(pfandName);
-            ka.setColor("green");
-            ka.setType("leergut");
-            ka.setMwst(new BigDecimal(pfandMwSt));
-            ka.setStueckzahl(stueck);
-            ka.setEinzelpreis(pfand);
-            ka.setGesPreis(gesamtPfand);
-            kassierArtikel.add(ka);
-
-            mwsts.add(new BigDecimal(pfandMwSt));
-            removeButtons.add(new JButton("-"));
-            removeButtons.lastElement().addActionListener(this);
-
-            String gesPfandString = bc.priceFormatter(gesamtPfand) + ' ' + bc.currencySymbol;
-            String pfandString = bc.priceFormatter(pfand) + ' ' + bc.currencySymbol;
-
-            Vector<Object> row = new Vector<Object>();
-            row.add(ka.getPosition()); // pos
-            row.add(pfandName);
-            row.add("LEERGUT");
-            row.add(stueck.toString());
-            row.add(pfandString);
-            row.add(gesPfandString);
-            row.add(bc.vatFormatter(pfandMwSt));
-            row.add(removeButtons.lastElement());
-            data.add(row);
-
-            updateAll();
-            updateDisplay(pfandName, stueck, pfandString);
+            hinzufuegen(pfandArtikelID, pfandName, "LEERGUT", "leergut", "green", pfandMwSt,
+                        stueck, pfand, gesamtPfand);
         }
-    }
-
-    private void rueckgabeHinzufuegen() {
-        Integer stueck = -(Integer) anzahlSpinner.getValue();
-        hinzufuegen(stueck, "green", "rueckgabe");
     }
 
     private void zwischensumme() {
@@ -1665,7 +1642,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         selectedArticleID = gutscheinArtikelID; // internal Gutschein artikel_id
         preisField.setText(gutscheinField.getText());
         anzahlSpinner.setValue(1);
-        rueckgabeHinzufuegen();
+        artikelRueckgabeHinzufuegen();
         zwischensumme();
     }
 
@@ -2015,7 +1992,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
         if (e.getSource() == hinzufuegenButton) {
             removeRabattAufRechnung();
-            artikelHinzufuegen();
+            artikelNormalHinzufuegen();
             return;
         }
         if (e.getSource() == leergutButton) {
@@ -2025,7 +2002,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
         if (e.getSource() == rueckgabeButton) {
             removeRabattAufRechnung();
-            rueckgabeHinzufuegen();
+            artikelRueckgabeHinzufuegen();
             return;
         }
         if (e.getSource() == zwischensummeButton) {
