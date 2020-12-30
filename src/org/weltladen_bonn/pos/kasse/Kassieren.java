@@ -1691,6 +1691,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (mw != null) {
             mw.setDisplayBlankTimer();
         }
+        // Cancel TSE transaction that was on-going:
+        tse.cancelTransaction();
     }
 
     private void artikelRabattierenRelativ(BigDecimal rabattRelativ) {
