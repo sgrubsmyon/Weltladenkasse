@@ -241,8 +241,8 @@ public class Quittung extends WindowContent {
     public void printReceipt() {
         // Create a list from the set of mwst values
         mwstList = new Vector<BigDecimal>(mwstsAndTheirValues.size());
-        for (int i = 0; i < mwstsAndTheirValues.size(); i++) {
-            mwstList.add(mwstsAndTheirValues.values().get(i).get(0));
+        for ( Vector<BigDecimal> mwstValues : mwstsAndTheirValues.values() ) {
+            mwstList.add(mwstValues.get(0)); // first item is "Steuersatz"
         }
         artikelIndex = 0;
         while (artikelIndex < kassierArtikel.size()) {

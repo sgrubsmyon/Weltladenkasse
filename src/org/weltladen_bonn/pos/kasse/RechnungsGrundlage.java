@@ -193,8 +193,8 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
             if ( mwsts.contains(vat.getValue()) ){
                 Vector<BigDecimal> values = new Vector<BigDecimal>();
                 BigDecimal steuersatz = vat.getValue();
-                BigDecimal brutto = calculateTotalVATUmsatz(vat);
-                BigDecimal steuer = calculateTotalVATAmount(vat);
+                BigDecimal brutto = calculateTotalVATUmsatz(vat.getValue());
+                BigDecimal steuer = calculateTotalVATAmount(vat.getValue());
                 BigDecimal netto = new BigDecimal(
                     bc.priceFormatterIntern(brutto.subtract(steuer))
                 );
