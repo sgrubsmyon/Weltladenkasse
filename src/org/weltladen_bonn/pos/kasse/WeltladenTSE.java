@@ -1553,9 +1553,9 @@ public class WeltladenTSE {
             tx.startTimeUnix = result.logTime;
             tx.startTimeString = unixTimeToCalTime(result.logTime);
             logger.debug("Number of open transactions: {}", tse.getCurrentNumberOfTransactions());
-            logger.info("New transaction:");
-            logger.info("TX number: {}", tx.txNumber);
-            logger.info("TX start time: {}", tx.startTimeString);
+            logger.debug("New transaction:");
+            logger.debug("TX number: {}", tx.txNumber);
+            logger.debug("TX start time: {}", tx.startTimeString);
             passed = true;
         } catch (ErrorStartTransactionFailed ex) {
             error = "Start transaction failed";
@@ -1619,10 +1619,13 @@ public class WeltladenTSE {
             tx.sigCounter = result.signatureCounter;
             tx.processData = processData;
             tx.signatureBase64 = byteArrayToBase64String(result.signatureValue);
-            logger.info("TX end time: {}", tx.endTimeString);
-            logger.info("TX sig counter: {}", tx.sigCounter);
-            logger.info("TX processData: {}", tx.processData);
-            logger.info("TX signature: {}", tx.signatureBase64);
+            logger.debug("Cancelling transaction:");
+            logger.debug("TX number: {}", tx.txNumber);
+            logger.debug("TX start time: {}", tx.startTimeString);
+            logger.debug("TX end time: {}", tx.endTimeString);
+            logger.debug("TX sig counter: {}", tx.sigCounter);
+            logger.debug("TX processData: {}", tx.processData);
+            logger.debug("TX signature: {}", tx.signatureBase64);
             logger.debug("Number of open transactions: {}", tse.getCurrentNumberOfTransactions());
             /* TODO store transaction in the DB */
             // Make room for next transaction:

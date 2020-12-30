@@ -1499,7 +1499,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     private void hinzufuegen(int artID, String kurzname, String artikelNummer, String type, String color,
                              String artikelMwSt, Integer stueck, String artikelPreis, BigDecimal gesPreis) {
-        if (data.size() == 0) {
+        if (kassierArtikel.size() == 0) {
             // First item is added, this is a new TSE transaction
             tse.startTransaction();
         }
@@ -2158,6 +2158,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             updateAll();
             if (display != null && display.deviceWorks()) {
                 display.clearScreen();
+            }
+            if (kassierArtikel.size() == 0) {
+                // Last item was removed, cancel the TSE transaction
+                tse.cancelTransaction();
             }
             return;
         }
