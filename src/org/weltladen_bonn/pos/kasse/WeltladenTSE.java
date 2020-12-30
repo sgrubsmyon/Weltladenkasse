@@ -1613,7 +1613,7 @@ public class WeltladenTSE {
                 tx.sigCounter = result.signatureCounter;
                 tx.processData = processData;
                 tx.signatureBase64 = byteArrayToBase64String(result.signatureValue);
-                logger.debug("Cancelling transaction:");
+                logger.debug("Finishing transaction:");
                 logger.debug("TX number: {}", tx.txNumber);
                 logger.debug("TX start time: {}", tx.startTimeString);
                 logger.debug("TX end time: {}", tx.endTimeString);
