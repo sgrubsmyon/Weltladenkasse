@@ -1393,7 +1393,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
             for (int i = 0; i < kassierArtikel.size(); i++) {
                 pstmt = connection.prepareStatement("INSERT INTO verkauf_details SET rechnungs_nr = ?, position = ?, "
-                        + "artikel_id = ?, rabatt_id = ?, stueckzahl = ?, " + "ges_preis = ?, mwst_satz = ?");
+                        + "artikel_id = ?, rabatt_id = ?, stueckzahl = ?, ges_preis = ?, mwst_satz = ?");
                 pstmtSetInteger(pstmt, 1, rechnungsNr);
                 pstmtSetInteger(pstmt, 2, kassierArtikel.get(i).getPosition());
                 pstmtSetInteger(pstmt, 3, kassierArtikel.get(i).getArtikelID());
@@ -1405,7 +1405,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 pstmt.close();
                 if (result == 0) {
                     JOptionPane.showMessageDialog(this, "Fehler: Artikel mit ID " + kassierArtikel.get(i).getArtikelID()
-                            + " konnte " + "nicht abgespeichert werden.", "Fehler", JOptionPane.ERROR_MESSAGE);
+                            + " konnte nicht abgespeichert werden.", "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
             connection.close();
@@ -1647,6 +1647,24 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     }
 
     private int neuerKunde() {
+        // Send data to TSE:
+        Vector<String> zahlung = new Vector<String>();
+        zahlung.add(kundeGibtField.isEditable() ? "Bar" : "Unbar");
+        zahlung.add( bc.priceFormatterIntern(calculateTotalPrice()) );
+        // Omit currency code because it's always in EUR
+        Vector<Vector<String>> zahlungen = new Vector<Vector<String>>();
+        zahlungen.add(zahlung);
+        LinkedHashMap<Integer, Vector<BigDecimal>> mwstsAndTheirValues = getMwstsAndTheirValues();
+        /* Zitat DSFinV-K: (S. 109) "Für jeden Steuersatz werden hier die Bruttoumsätze je Steuersatz [...] aufgelistet." */
+        // Bruttoumsatz = 4. Element in mwstsAndTheirValues (get(3))
+        tse.finishTransaction(
+            mwstsAndTheirValues.get(3) != null ? mwstsAndTheirValues.get(3).get(3) : null, // steuer_allgemein = mwst_id: 3 = 19% MwSt
+            mwstsAndTheirValues.get(2) != null ? mwstsAndTheirValues.get(2).get(3) : null, // steuer_ermaessigt = mwst_id: 2 = 7% MwSt
+            null, null, // Häh???
+            mwstsAndTheirValues.get(1) != null ? mwstsAndTheirValues.get(1).get(3) : null, // steuer_null = mwst_id: 1 = 0% MwSt
+            zahlungen
+        );
+
         int rechnungsNr = -1;
         if (kundeGibtField.isEditable()) { // if Barzahlung
             rechnungsNr = insertIntoVerkauf(false, new BigDecimal(getKundeGibt()));
