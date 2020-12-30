@@ -67,16 +67,16 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     //////////////////////////////////
     // DB query functions:
     //////////////////////////////////
-    protected Vector<BigDecimal> retrieveVATs() {
-        Vector<BigDecimal> vats = new Vector<BigDecimal>();
+    protected LinkedHashMap<Integer, BigDecimal> retrieveVATs() {
+        LinkedHashMap<Integer, BigDecimal> vats = new LinkedHashMap<Integer, BigDecimal>();
         try {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT mwst_satz FROM mwst ORDER BY mwst_id"
-                    );
+                "SELECT mwst_id, mwst_satz FROM mwst ORDER BY mwst_id"
+            );
 	        while (rs.next()) {
-                vats.add(rs.getBigDecimal(1));
+                vats.put(rs.getInt(1), rs.getBigDecimal(2));
             }
             rs.close();
             stmt.close();
@@ -134,10 +134,10 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         totalPricePanel.add(totalPriceField);
 
         totalPricePanel.add(new JLabel("   inkl.: "));
-        Vector<BigDecimal> vats = retrieveVATs();
+        LinkedHashMap<Integer, BigDecimal> vats = retrieveVATs();
         this.vatMap = new HashMap< BigDecimal, Vector<BigDecimal> >();
-        for ( BigDecimal vat : vats ){
-            if (vat.signum() != 0){
+        for ( BigDecimal vat : vats.values() ){
+            // if (vat.signum() != 0){ // need to calculate 0% also for correct booking (DSFinV-K)
                 BigDecimal vatAmount = calculateTotalVATAmount(vat);
                 BigDecimal vatBrutto = calculateTotalVATUmsatz(vat);
                 BigDecimal vatNetto = vatBrutto.subtract(vatAmount);
@@ -154,7 +154,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
                 removeDefaultKeyBindings(vatField);
                 vatField.setHorizontalAlignment(JTextField.RIGHT);
                 totalPricePanel.add(vatField);
-            }
+            // }
         }
         return totalPricePanel;
     }
@@ -183,24 +183,26 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     }
 
 
-    protected LinkedHashMap< BigDecimal, Vector<BigDecimal> > getMwstsAndTheirValues() {
-        Vector<BigDecimal> vats = retrieveVATs();
+    protected LinkedHashMap< Integer, Vector<BigDecimal> > getMwstsAndTheirValues() {
+        LinkedHashMap<Integer, BigDecimal> vats = retrieveVATs();
         // LinkedHashMap preserves insertion order
-        LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
-            new LinkedHashMap< BigDecimal, Vector<BigDecimal> >();
-        for ( BigDecimal vat : vats ){
-            //if (vat.signum() != 0){
-            if ( mwsts.contains(vat) ){
+        LinkedHashMap< Integer, Vector<BigDecimal> > mwstsAndTheirValues =
+            new LinkedHashMap< Integer, Vector<BigDecimal> >();
+        for ( Map.Entry<Integer, BigDecimal​> vat : vats.entrySet() ){
+            //if (vat.getValue().signum() != 0){ // need to calculate 0% also for correct booking (DSFinV-K)
+            if ( mwsts.contains(vat.getValue()) ){
                 Vector<BigDecimal> values = new Vector<BigDecimal>();
+                BigDecimal steuersatz = vat.getValue();
                 BigDecimal brutto = calculateTotalVATUmsatz(vat);
                 BigDecimal steuer = calculateTotalVATAmount(vat);
                 BigDecimal netto = new BigDecimal(
-                        bc.priceFormatterIntern(brutto.subtract(steuer))
-                        );
+                    bc.priceFormatterIntern(brutto.subtract(steuer))
+                );
+                values.add(steuersatz); // Steuersatz
                 values.add(netto); // Netto
                 values.add(steuer); // Steuer
                 values.add(brutto); // Umsatz
-                mwstsAndTheirValues.put(vat, values);
+                mwstsAndTheirValues.put(vat.getKey(), values);
             }
             //}
         }

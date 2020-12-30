@@ -1930,7 +1930,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     }
 
     void printQuittung(Integer rechnungsNr) {
-        LinkedHashMap<BigDecimal, Vector<BigDecimal>> mwstsAndTheirValues = getMwstsAndTheirValues();
+        LinkedHashMap<Integer, Vector<BigDecimal>> mwstsAndTheirValues = getMwstsAndTheirValues();
         BigDecimal totalPrice = new BigDecimal(getTotalPrice());
         BigDecimal kundeGibt = null, rueckgeld = null;
         if (kundeGibtField.getDocument().getLength() > 0) {

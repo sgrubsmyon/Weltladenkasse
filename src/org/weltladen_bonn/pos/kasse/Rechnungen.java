@@ -455,7 +455,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             return;
         }
         if (e.getSource() == quittungsButton){
-                LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues =
+                LinkedHashMap< Integer, Vector<BigDecimal> > mwstsAndTheirValues =
                     getMwstsAndTheirValues();
                 BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
                 BigDecimal rueckgeld = null;
