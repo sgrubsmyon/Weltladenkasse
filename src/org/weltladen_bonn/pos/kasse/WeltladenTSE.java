@@ -1535,6 +1535,10 @@ public class WeltladenTSE {
     public void startTransaction() {
         String error = "";
         boolean passed = false;
+        /* Cancel a potentially unfinished transaction: */
+        if (tx.txNumber != null) {
+            cancelTransaction();
+        }
         try {
             /* Zitat DSFinV-K v2.2 (Anhang I, S. 115): (https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html)
                 "Für alle Vorgangstypen gilt, dass processType und processData für die StartTransaction-Operation immer leer sind."
@@ -1604,6 +1608,10 @@ public class WeltladenTSE {
         String error = "";
         boolean passed = false;
         try {
+            /* Zitat DSFinV-K v2.2 (Anhang A, S. 45): (https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html)
+                "Der Vorgangstyp „AVBelegabbruch“ kennzeichnet alle Vorgänge, die nach Transaktionsbeginn abgebrochen werden.
+                 Eine tatsächliche Bezahlung darf im Zusammenhang mit diesem Vorgangstyp nicht erfolgen."
+             */
             String processData = "AVBelegabbruch^0.00_0.00_0.00_0.00_0.00^";
             FinishTransactionResult result = tse.finishTransaction(bc.z_kasse_id, tx.txNumber, processData.getBytes(), "Kassenbeleg-V1", null);
             tx.endTimeUnix = result.logTime;
@@ -1616,9 +1624,16 @@ public class WeltladenTSE {
             logger.info("TX processData: {}", tx.processData);
             logger.info("TX signature: {}", tx.signatureBase64);
             logger.debug("Number of open transactions: {}", tse.getCurrentNumberOfTransactions());
+            /* TODO store transaction in the DB */
+            // Make room for next transaction:
+            tx = new TSETransaction();
             passed = true;
-        } catch (ErrorStartTransactionFailed ex) {
+        } catch (ErrorFinishTransactionFailed ex) {
             error = "Start transaction failed";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
+        } catch (ErrorNoTransaction ex) {
+            error = "No transaction (transaction number wrong)";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         } catch (ErrorRetrieveLogMessageFailed ex) {
