@@ -1613,21 +1613,23 @@ public class WeltladenTSE {
                  Eine tatsächliche Bezahlung darf im Zusammenhang mit diesem Vorgangstyp nicht erfolgen."
              */
             String processData = "AVBelegabbruch^0.00_0.00_0.00_0.00_0.00^";
-            FinishTransactionResult result = tse.finishTransaction(bc.z_kasse_id, tx.txNumber, processData.getBytes(), "Kassenbeleg-V1", null);
-            tx.endTimeUnix = result.logTime;
-            tx.endTimeString = unixTimeToCalTime(result.logTime);
-            tx.sigCounter = result.signatureCounter;
-            tx.processData = processData;
-            tx.signatureBase64 = byteArrayToBase64String(result.signatureValue);
-            logger.debug("Cancelling transaction:");
-            logger.debug("TX number: {}", tx.txNumber);
-            logger.debug("TX start time: {}", tx.startTimeString);
-            logger.debug("TX end time: {}", tx.endTimeString);
-            logger.debug("TX sig counter: {}", tx.sigCounter);
-            logger.debug("TX processData: {}", tx.processData);
-            logger.debug("TX signature: {}", tx.signatureBase64);
-            logger.debug("Number of open transactions: {}", tse.getCurrentNumberOfTransactions());
-            /* TODO store transaction in the DB */
+            if (tx.txNumber != null) {
+                FinishTransactionResult result = tse.finishTransaction(bc.z_kasse_id, tx.txNumber, processData.getBytes(), "Kassenbeleg-V1", null);
+                tx.endTimeUnix = result.logTime;
+                tx.endTimeString = unixTimeToCalTime(result.logTime);
+                tx.sigCounter = result.signatureCounter;
+                tx.processData = processData;
+                tx.signatureBase64 = byteArrayToBase64String(result.signatureValue);
+                logger.debug("Cancelling transaction:");
+                logger.debug("TX number: {}", tx.txNumber);
+                logger.debug("TX start time: {}", tx.startTimeString);
+                logger.debug("TX end time: {}", tx.endTimeString);
+                logger.debug("TX sig counter: {}", tx.sigCounter);
+                logger.debug("TX processData: {}", tx.processData);
+                logger.debug("TX signature: {}", tx.signatureBase64);
+                logger.debug("Number of open transactions: {}", tse.getCurrentNumberOfTransactions());
+                /* TODO store transaction in the DB */
+            }
             // Make room for next transaction:
             tx = new TSETransaction();
             passed = true;
