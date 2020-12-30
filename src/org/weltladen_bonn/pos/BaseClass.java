@@ -359,8 +359,8 @@ public class BaseClass {
             return "";
         try {
             BigDecimal price = new BigDecimal(
-                    priceStr.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.')
-                    );
+                priceStr.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.')
+            );
             return priceFormatterIntern(price);
         } catch (NumberFormatException nfe) {
             return "";

@@ -39,7 +39,7 @@ public class Quittung extends WindowContent {
     private DateTime datetime;
     private Integer rechnungsNr;
     private Vector<KassierArtikel> kassierArtikel;
-    private LinkedHashMap< BigDecimal, Vector<BigDecimal> > mwstsAndTheirValues;
+    private LinkedHashMap< Integer, Vector<BigDecimal> > mwstsAndTheirValues;
     private String zahlungsModus;
     private BigDecimal totalPrice;
     private BigDecimal kundeGibt;
@@ -55,7 +55,7 @@ public class Quittung extends WindowContent {
     public Quittung(MariaDbPoolDataSource pool, MainWindowGrundlage mw,
             DateTime dt, Integer rechnungsNr,
             Vector<KassierArtikel> ka,
-            LinkedHashMap< BigDecimal, Vector<BigDecimal> > matv,
+            LinkedHashMap< Integer, Vector<BigDecimal> > matv,
             String zm, BigDecimal tp, BigDecimal kgb, BigDecimal rg) {
 	    super(pool, mw);
         this.datetime = dt;
@@ -157,10 +157,12 @@ public class Quittung extends WindowContent {
             sheet.setValueAt("Umsatz", 3, row);
             row++;
             Integer mwstIndex = 1;
-            for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : mwstsAndTheirValues.entrySet() ){
-                sheet.setValueAt(bc.vatFormatter(entry.getKey()), 0, row);
+            for ( Vector<BigDecimal> mwstValues : mwstsAndTheirValues.values() ){
+                BigDecimal steuersatz = mwstValues.get(0);
+                sheet.setValueAt(bc.vatFormatter(steuersatz), 0, row);
                 int col = 1;
-                for ( BigDecimal val : entry.getValue() ){
+                for (int i = 1; i < mwstValues.size(); i++) { // omit first value (Steuersatz)
+                    BigDecimal val = mwstValues.get(i);
                     sheet.setValueAt(val, col, row);
                     col++;
                 }
@@ -238,7 +240,10 @@ public class Quittung extends WindowContent {
 
     public void printReceipt() {
         // Create a list from the set of mwst values
-        mwstList = new Vector<BigDecimal>(mwstsAndTheirValues.keySet());
+        mwstList = new Vector<BigDecimal>(mwstsAndTheirValues.size());
+        for (int i = 0; i < mwstsAndTheirValues.size(); i++) {
+            mwstList.add(mwstsAndTheirValues.values().get(i).get(0));
+        }
         artikelIndex = 0;
         while (artikelIndex < kassierArtikel.size()) {
             // Create a new sheet from the template file
