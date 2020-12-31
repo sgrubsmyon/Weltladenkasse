@@ -379,6 +379,9 @@ public abstract class Abrechnungen extends WindowContent {
     void fillHeaderColumn() {
         // fill header column
         columnLabels.add("");
+        data.add(new Vector<>()); data.lastElement().add("Laufende Nr. (Z_NR)");
+        colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+        fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
         data.add(new Vector<>()); data.lastElement().add("Gesamt Brutto");
         colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
         fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
@@ -404,23 +407,27 @@ public abstract class Abrechnungen extends WindowContent {
         fontStyles.add(new Vector<>()); fontStyles.lastElement().add("normal");
     }
 
-    int fillDataArrayColumnWithData(String date, Vector<BigDecimal> totals, HashMap<BigDecimal, Vector<BigDecimal>> vats, Color color) {
+    int fillDataArrayColumnWithData(String date, Integer z_nr, Vector<BigDecimal> totals, HashMap<BigDecimal, Vector<BigDecimal>> vats, Color color) {
         String formattedDate = formatDate(date, this.dateOutFormat);
         columnLabels.add(formattedDate);
-        // add Gesamt Brutto
-        data.get(0).add( bc.priceFormatter( totals.get(0) )+" "+bc.currencySymbol );
+        // add Laufende Nr.
+        data.get(0).add(z_nr);
         colors.get(0).add(color);
         fontStyles.get(0).add("normal");
-        // add Gesamt Bar Brutto
-        data.get(1).add( bc.priceFormatter( totals.get(1) )+" "+bc.currencySymbol );
+        // add Gesamt Brutto
+        data.get(1).add( bc.priceFormatter( totals.get(0) )+" "+bc.currencySymbol );
         colors.get(1).add(color);
         fontStyles.get(1).add("normal");
-        // add Gesamt EC Brutto
-        data.get(2).add( bc.priceFormatter( totals.get(2) )+" "+bc.currencySymbol );
+        // add Gesamt Bar Brutto
+        data.get(2).add( bc.priceFormatter( totals.get(1) )+" "+bc.currencySymbol );
         colors.get(2).add(color);
         fontStyles.get(2).add("normal");
+        // add Gesamt EC Brutto
+        data.get(3).add( bc.priceFormatter( totals.get(2) )+" "+bc.currencySymbol );
+        colors.get(3).add(color);
+        fontStyles.get(3).add("normal");
         // add VATs
-        int rowIndex = 3;
+        int rowIndex = 4;
         for (BigDecimal mwst : mwstSet){
             for (int i=0; i<3; i++){
                 if (vats != null && vats.containsKey(mwst)){
@@ -438,7 +445,7 @@ public abstract class Abrechnungen extends WindowContent {
     }
 
     int fillIncompleteDataColumn() {
-        int rowIndex = fillDataArrayColumnWithData(incompleteAbrechnungsDate, incompleteAbrechnungsTotals, incompleteAbrechnungsVATs, Color.RED);
+        int rowIndex = fillDataArrayColumnWithData(incompleteAbrechnungsDate, null, incompleteAbrechnungsTotals, incompleteAbrechnungsVATs, Color.RED);
         data.get(rowIndex).add(""); // instead of exportButton
         colors.get(rowIndex).add(Color.BLACK);
         fontStyles.get(rowIndex).add("normal");
@@ -448,9 +455,10 @@ public abstract class Abrechnungen extends WindowContent {
 
     int fillDataArrayColumn(int colIndex) {
         String date = abrechnungsDates.get(colIndex);
+        Integer z_nr = abrechnungsIDs.get(colIndex);
         Vector<BigDecimal> totals = abrechnungsTotals.get(colIndex);
         HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(colIndex); // map with values for each mwst
-        int rowIndex = fillDataArrayColumnWithData(date, totals, vats, Color.BLACK);
+        int rowIndex = fillDataArrayColumnWithData(date, z_nr, totals, vats, Color.BLACK);
         rowIndex = addExportButton(rowIndex);
         return rowIndex;
     }
