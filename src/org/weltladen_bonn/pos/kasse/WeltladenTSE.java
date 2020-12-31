@@ -97,7 +97,7 @@ public class WeltladenTSE {
 
     private BaseClass bc;
 
-    public class TSETransaction {
+    private class TSETransaction {
         public Long txNumber = null; // of the StartTransaction operation
         public Long startTimeUnix = null; // of the StartTransaction operation
         public String startTimeString = null; // of the StartTransaction operation
@@ -109,12 +109,12 @@ public class WeltladenTSE {
     }
 
     private TSE tse = null;
-    protected TSETransaction tx = new TSETransaction();
+    private TSETransaction tx = new TSETransaction();
     private boolean tseInUse = true;
     private boolean loggedIn = false;
     private MainWindow mw = null;
     private Path pinPath = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".Weltladenkasse_tse");
-    public static String dateFormatDSFinVK = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"; // YYYY-MM-DDThh:mm:ss.fffZ, see https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html
+    public static String dateFormatDSFinVK = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"; // YYYY-MM-DDThh:mm:ss.fffZ, see https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html
 
     private static long nextSyncTime = 0;
     private static int timeSyncInterval = 0;
