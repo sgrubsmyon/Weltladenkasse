@@ -1,0 +1,85 @@
+--------------------
+-- abrechnung_tag --
+--------------------
+
+-- create temporary abrechnung_tag copy:
+CREATE TABLE abrechnung_tag_copy (
+    id INTEGER(10) UNSIGNED NOT NULL,
+    zeitpunkt DATETIME NOT NULL,
+    zeitpunkt_real DATETIME NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
+    bar_brutto DECIMAL(13,2) NOT NULL,
+    kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    PRIMARY KEY (id, mwst_satz),
+    FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO abrechnung_tag_copy SELECT * FROM abrechnung_tag;
+
+-- also need zaehlprotokoll copy because of FK constraint:
+CREATE TABLE zaehlprotokoll_copy (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    abrechnung_tag_id INTEGER(10) UNSIGNED NOT NULL,
+    zeitpunkt DATETIME NOT NULL,
+    kommentar TEXT NOT NULL,
+    aktiv BOOLEAN NOT NULL DEFAULT TRUE,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id) REFERENCES abrechnung_tag_copy(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO zaehlprotokoll_copy SELECT * FROM zaehlprotokoll;
+CREATE TABLE zaehlprotokoll_details_copy (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    zaehlprotokoll_id INTEGER(10) UNSIGNED NOT NULL,
+    anzahl SMALLINT(5) UNSIGNED NOT NULL,
+    einheit DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (zaehlprotokoll_id) REFERENCES zaehlprotokoll_copy(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO zaehlprotokoll_details_copy SELECT * FROM zaehlprotokoll_details;
+
+-- Create abrechnung_tag in new format:
+DROP TABLE zaehlprotokoll_details, zaehlprotokoll, abrechnung_tag;
+CREATE TABLE abrechnung_tag (
+    id INTEGER(10) UNSIGNED NOT NULL,
+    zeitpunkt DATETIME NOT NULL,
+    zeitpunkt_real DATETIME NOT NULL,
+    kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    rechnungs_nr_von INTEGER(10) UNSIGNED NOT NULL,
+    rechnungs_nr_bis INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id),
+    FOREIGN KEY (rechnungs_nr_von) REFERENCES verkauf(rechnungs_nr),
+    FOREIGN KEY (rechnungs_nr_bis) REFERENCES verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE abrechnung_tag_mwst (
+    id INTEGER(10) UNSIGNED NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
+    bar_brutto DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id, mwst_satz),
+    FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE zaehlprotokoll (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    abrechnung_tag_id INTEGER(10) UNSIGNED NOT NULL,
+    zeitpunkt DATETIME NOT NULL,
+    kommentar TEXT NOT NULL,
+    aktiv BOOLEAN NOT NULL DEFAULT TRUE,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE zaehlprotokoll_details (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    zaehlprotokoll_id INTEGER(10) UNSIGNED NOT NULL,
+    anzahl SMALLINT(5) UNSIGNED NOT NULL,
+    einheit DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (zaehlprotokoll_id) REFERENCES zaehlprotokoll(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Fill the new table:
+-- SELECT DISTINCT id, zeitpunkt, zeitpunkt_real, kassenstand_id, (SELECT MIN(rechnungs_nr) FROM verkauf WHERE verkaufsdatum > (SELECT DISTINCT zeitpunkt FROM abrechnung_tag_copy WHERE id = at.id - 1) AND verkaufsdatum <= zeitpunkt) AS rechnungs_nr_von, (SELECT MAX(rechnungs_nr) FROM verkauf WHERE verkaufsdatum > (SELECT DISTINCT zeitpunkt FROM abrechnung_tag_copy WHERE id = at.id - 1) AND verkaufsdatum <= zeitpunkt) AS rechnungs_nr_bis FROM abrechnung_tag_copy AS at LIMIT 5;
+INSERT INTO abrechnung_tag SELECT DISTINCT id, zeitpunkt, zeitpunkt_real, kassenstand_id, (SELECT MIN(rechnungs_nr) FROM verkauf WHERE verkaufsdatum > (SELECT DISTINCT zeitpunkt FROM abrechnung_tag_copy WHERE id = at.id - 1) AND verkaufsdatum <= zeitpunkt) AS rechnungs_nr_von, (SELECT MAX(rechnungs_nr) FROM verkauf WHERE verkaufsdatum > (SELECT DISTINCT zeitpunkt FROM abrechnung_tag_copy WHERE id = at.id - 1) AND verkaufsdatum <= zeitpunkt) AS rechnungs_nr_bis FROM abrechnung_tag_copy AS at;
+SELECT id, mwst_satz, mwst_netto, mwst_betrag, bar_brutto FROM abrechnung_tag_copy LIMIT 5;
