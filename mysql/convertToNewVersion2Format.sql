@@ -39,7 +39,9 @@ CREATE TABLE zaehlprotokoll_details_copy (
 INSERT INTO zaehlprotokoll_details_copy SELECT * FROM zaehlprotokoll_details;
 
 -- Create abrechnung_tag in new format:
-DROP TABLE zaehlprotokoll_details, zaehlprotokoll, abrechnung_tag;
+DROP TABLE zaehlprotokoll_details;
+DROP TABLE zaehlprotokoll;
+DROP TABLE abrechnung_tag;
 CREATE TABLE abrechnung_tag (
     id INTEGER(10) UNSIGNED NOT NULL,
     zeitpunkt DATETIME NOT NULL,
@@ -58,8 +60,7 @@ CREATE TABLE abrechnung_tag_mwst (
     mwst_netto DECIMAL(13,2) NOT NULL,
     mwst_betrag DECIMAL(13,2) NOT NULL,
     bar_brutto DECIMAL(13,2) NOT NULL,
-    PRIMARY KEY (id, mwst_satz),
-    FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id)
+    PRIMARY KEY (id, mwst_satz)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE zaehlprotokoll (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -79,7 +80,24 @@ CREATE TABLE zaehlprotokoll_details (
     FOREIGN KEY (zaehlprotokoll_id) REFERENCES zaehlprotokoll(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- Fill the new table:
+-- Fill the new tables:
 -- SELECT DISTINCT id, zeitpunkt, zeitpunkt_real, kassenstand_id, (SELECT MIN(rechnungs_nr) FROM verkauf WHERE verkaufsdatum > (SELECT DISTINCT zeitpunkt FROM abrechnung_tag_copy WHERE id = at.id - 1) AND verkaufsdatum <= zeitpunkt) AS rechnungs_nr_von, (SELECT MAX(rechnungs_nr) FROM verkauf WHERE verkaufsdatum > (SELECT DISTINCT zeitpunkt FROM abrechnung_tag_copy WHERE id = at.id - 1) AND verkaufsdatum <= zeitpunkt) AS rechnungs_nr_bis FROM abrechnung_tag_copy AS at LIMIT 5;
-INSERT INTO abrechnung_tag SELECT DISTINCT id, zeitpunkt, zeitpunkt_real, kassenstand_id, (SELECT MIN(rechnungs_nr) FROM verkauf WHERE verkaufsdatum > (SELECT DISTINCT zeitpunkt FROM abrechnung_tag_copy WHERE id = at.id - 1) AND verkaufsdatum <= zeitpunkt) AS rechnungs_nr_von, (SELECT MAX(rechnungs_nr) FROM verkauf WHERE verkaufsdatum > (SELECT DISTINCT zeitpunkt FROM abrechnung_tag_copy WHERE id = at.id - 1) AND verkaufsdatum <= zeitpunkt) AS rechnungs_nr_bis FROM abrechnung_tag_copy AS at;
-SELECT id, mwst_satz, mwst_netto, mwst_betrag, bar_brutto FROM abrechnung_tag_copy LIMIT 5;
+INSERT INTO abrechnung_tag
+    SELECT DISTINCT id, zeitpunkt, zeitpunkt_real, kassenstand_id,
+        (SELECT MIN(rechnungs_nr) FROM verkauf WHERE
+            verkaufsdatum > IFNULL((SELECT DISTINCT zeitpunkt_real FROM abrechnung_tag_copy WHERE id = at.id - 1), '0001-01-01') AND
+            verkaufsdatum <= zeitpunkt_real) AS rechnungs_nr_von,
+        (SELECT MAX(rechnungs_nr) FROM verkauf WHERE
+            verkaufsdatum > IFNULL((SELECT DISTINCT zeitpunkt_real FROM abrechnung_tag_copy WHERE id = at.id - 1), '0001-01-01') AND
+            verkaufsdatum <= zeitpunkt_real) AS rechnungs_nr_bis
+    FROM abrechnung_tag_copy AS at;
+-- SELECT id, mwst_satz, mwst_netto, mwst_betrag, bar_brutto FROM abrechnung_tag_copy LIMIT 5;
+INSERT INTO abrechnung_tag_mwst
+    SELECT id, mwst_satz, mwst_netto, mwst_betrag, bar_brutto FROM abrechnung_tag_copy;
+INSERT INTO zaehlprotokoll SELECT * FROM zaehlprotokoll_copy;
+INSERT INTO zaehlprotokoll_details SELECT * FROM zaehlprotokoll_details_copy;
+
+-- Delete the temporary tables:
+DROP TABLE zaehlprotokoll_details_copy;
+DROP TABLE zaehlprotokoll_copy;
+DROP TABLE abrechnung_tag_copy;
