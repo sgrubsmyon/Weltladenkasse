@@ -132,15 +132,36 @@ CREATE TABLE kassenstand (
     FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- CREATE TABLE abrechnung_tag (
+--     id INTEGER(10) UNSIGNED NOT NULL,
+--     zeitpunkt DATETIME NOT NULL,
+--     zeitpunkt_real DATETIME NOT NULL,
+--     mwst_satz DECIMAL(6,5) NOT NULL,
+--     mwst_netto DECIMAL(13,2) NOT NULL,
+--     mwst_betrag DECIMAL(13,2) NOT NULL,
+--     bar_brutto DECIMAL(13,2) NOT NULL,
+--     kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
+--     PRIMARY KEY (id, mwst_satz),
+--     FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_tag (
     id INTEGER(10) UNSIGNED NOT NULL,
     zeitpunkt DATETIME NOT NULL,
     zeitpunkt_real DATETIME NOT NULL,
+    kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    rechnungs_nr_von INTEGER(10) UNSIGNED NOT NULL,
+    rechnungs_nr_bis INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id),
+    FOREIGN KEY (rechnungs_nr_von) REFERENCES verkauf(rechnungs_nr),
+    FOREIGN KEY (rechnungs_nr_bis) REFERENCES verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE abrechnung_tag_mwst (
+    id INTEGER(10) UNSIGNED NOT NULL,
     mwst_satz DECIMAL(6,5) NOT NULL,
     mwst_netto DECIMAL(13,2) NOT NULL,
     mwst_betrag DECIMAL(13,2) NOT NULL,
     bar_brutto DECIMAL(13,2) NOT NULL,
-    kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
     PRIMARY KEY (id, mwst_satz),
     FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -161,18 +182,54 @@ CREATE TABLE zaehlprotokoll_details (
     PRIMARY KEY (id),
     FOREIGN KEY (zaehlprotokoll_id) REFERENCES zaehlprotokoll(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- CREATE TABLE abrechnung_monat (
+--     id INTEGER(10) UNSIGNED NOT NULL,
+--     monat DATE NOT NULL,
+--     mwst_satz DECIMAL(6,5) NOT NULL,
+--     mwst_netto DECIMAL(13,2) NOT NULL,
+--     mwst_betrag DECIMAL(13,2) NOT NULL,
+--     bar_brutto DECIMAL(13,2) NOT NULL,
+--     PRIMARY KEY (id, mwst_satz)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_monat (
     id INTEGER(10) UNSIGNED NOT NULL,
     monat DATE NOT NULL,
+    abrechnung_tag_id_von INTEGER(10) UNSIGNED NOT NULL,
+    abrechnung_tag_id_bis INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES abrechnung_tag(id),
+    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE abrechnung_monat_mwst (
+    id INTEGER(10) UNSIGNED NOT NULL,
     mwst_satz DECIMAL(6,5) NOT NULL,
     mwst_netto DECIMAL(13,2) NOT NULL,
     mwst_betrag DECIMAL(13,2) NOT NULL,
     bar_brutto DECIMAL(13,2) NOT NULL,
     PRIMARY KEY (id, mwst_satz)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- CREATE TABLE abrechnung_jahr (
+--     id INTEGER(10) UNSIGNED NOT NULL,
+--     jahr YEAR NOT NULL,
+--     mwst_satz DECIMAL(6,5) NOT NULL,
+--     mwst_netto DECIMAL(13,2) NOT NULL,
+--     mwst_betrag DECIMAL(13,2) NOT NULL,
+--     bar_brutto DECIMAL(13,2) NOT NULL,
+--     PRIMARY KEY (id, mwst_satz)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_jahr (
     id INTEGER(10) UNSIGNED NOT NULL,
     jahr YEAR NOT NULL,
+    abrechnung_monat_id_von INTEGER(10) UNSIGNED NOT NULL,
+    abrechnung_monat_id_bis INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_monat_id_von) REFERENCES abrechnung_monat(id),
+    FOREIGN KEY (abrechnung_monat_id_bis) REFERENCES abrechnung_monat(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE abrechnung_jahr_mwst (
+    id INTEGER(10) UNSIGNED NOT NULL,
     mwst_satz DECIMAL(6,5) NOT NULL,
     mwst_netto DECIMAL(13,2) NOT NULL,
     mwst_betrag DECIMAL(13,2) NOT NULL,
