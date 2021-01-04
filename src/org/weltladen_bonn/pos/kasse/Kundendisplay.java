@@ -123,7 +123,7 @@ public class Kundendisplay {
             } else {
               logger.info("No devices found.");
             }
-        } catch (IOException e) {
+        } catch (IOException|NullPointerException e) {
             System.err.println(e.getMessage());
             e.printStackTrace();
             System.err.println("There seems to be an error with the HID device. Consider unplugging and replugging.");
