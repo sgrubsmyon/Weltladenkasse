@@ -104,13 +104,13 @@ class AbrechnungenTag extends Abrechnungen {
     private PreparedStatement prepareStmtStornos(Connection connection, Integer abrechnung_tag_id) throws SQLException {
         // Summe über Stornos:
         PreparedStatement pstmt = connection.prepareStatement(
-                // SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) WHERE storniert = TRUE AND verkaufsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 17 LIMIT 1), '0001-01-01') AND verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 18 LIMIT 1), '9999-01-01') GROUP BY mwst_satz;
+                // SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) WHERE storniert = TRUE AND rechnungs_nr >= IFNULL((SELECT rechnungs_nr_von FROM abrechnung_tag WHERE id = 18), 0) AND rechnungs_nr <= IFNULL((SELECT rechnungs_nr_bis FROM abrechnung_tag WHERE id = 18), 4294967295) GROUP BY mwst_satz;
                 "SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) " +
-                        "FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) " +
-                        "WHERE storniert = TRUE AND " +
-                        "verkaufsdatum >= IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '0001-01-01') AND " +
-                        "verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '9999-01-01') " +
-                        "GROUP BY mwst_satz"
+                "FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) " +
+                "WHERE storniert = TRUE AND " +
+                "rechnungs_nr >= IFNULL((SELECT rechnungs_nr_von FROM abrechnung_tag WHERE id = ?), 0) AND " +
+                "rechnungs_nr <= IFNULL((SELECT rechnungs_nr_bis FROM abrechnung_tag WHERE id = ?), 4294967295) " + // this is highest value for unsigned int
+                "GROUP BY mwst_satz"
         );
         pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
         pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
@@ -120,17 +120,17 @@ class AbrechnungenTag extends Abrechnungen {
     private PreparedStatement prepareStmtRetouren(Connection connection, Integer abrechnung_tag_id) throws SQLException {
         // Summe über Retouren:
         PreparedStatement pstmt = connection.prepareStatement(
-                // SELECT mwst_satz, SUM(ges_preis) FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) INNER JOIN artikel USING (artikel_id) WHERE storniert = FALSE AND verkaufsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 0 LIMIT 1), '0001-01-01') AND verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 9999999999999 LIMIT 1), '9999-01-01') AND stueckzahl < 0 AND produktgruppen_id >= 9 GROUP BY mwst_satz;
+                // SELECT mwst_satz, SUM(ges_preis) FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) INNER JOIN artikel USING (artikel_id) WHERE storniert = FALSE AND rechnungs_nr >= IFNULL((SELECT rechnungs_nr_von FROM abrechnung_tag WHERE id = 0), 0) AND rechnungs_nr <= IFNULL((SELECT rechnungs_nr_bis FROM abrechnung_tag WHERE id = 9999999999999), 4294967295) AND stueckzahl < 0 AND produktgruppen_id >= 9 GROUP BY mwst_satz;
                 "SELECT mwst_satz, SUM(ges_preis) " +
-                        "FROM verkauf_details " +
-                        "INNER JOIN verkauf USING (rechnungs_nr) " +
-                        "LEFT JOIN artikel USING (artikel_id) " + // left join needed because Rabattaktionen do not have an artikel_id
-                        "WHERE storniert = FALSE AND " +
-                        "verkaufsdatum >= IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '0001-01-01') AND " +
-                        "verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '9999-01-01') AND " +
-                        "stueckzahl < 0 AND ( produktgruppen_id NOT IN (1, 6, 7, 8) OR produktgruppen_id IS NULL ) " + // exclude internal articles, Gutschein, and Pfand
-                        // produktgruppen_id is null for Rabattaktionen
-                        "GROUP BY mwst_satz"
+                "FROM verkauf_details " +
+                "INNER JOIN verkauf USING (rechnungs_nr) " +
+                "LEFT JOIN artikel USING (artikel_id) " + // left join needed because Rabattaktionen do not have an artikel_id
+                "WHERE storniert = FALSE AND " +
+                "rechnungs_nr >= IFNULL((SELECT rechnungs_nr_von FROM abrechnung_tag WHERE id = ?), 0) AND " +
+                "rechnungs_nr <= IFNULL((SELECT rechnungs_nr_bis FROM abrechnung_tag WHERE id = ?), 4294967295) AND " +
+                "stueckzahl < 0 AND ( produktgruppen_id NOT IN (1, 6, 7, 8) OR produktgruppen_id IS NULL ) " + // exclude internal articles, Gutschein, and Pfand
+                // produktgruppen_id is null for Rabattaktionen
+                "GROUP BY mwst_satz"
         );
         pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
         pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
@@ -140,16 +140,16 @@ class AbrechnungenTag extends Abrechnungen {
     private PreparedStatement prepareStmtEntnahmen(Connection connection, Integer abrechnung_tag_id) throws SQLException {
         // Summe über Entnahmen:
         PreparedStatement pstmt = connection.prepareStatement(
-                // SELECT SUM(entnahme_betrag) FROM (SELECT kassenstand_id AS kid, neuer_kassenstand - (SELECT neuer_kassenstand FROM kassenstand WHERE kassenstand_id = kid-1) AS entnahme_betrag FROM kassenstand WHERE buchungsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 0 LIMIT 1), '0001-01-01') AND buchungsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 9999999999999 LIMIT 1), '9999-01-01') AND entnahme = TRUE) AS entnahme_table;
+                // SELECT SUM(entnahme_betrag) FROM (SELECT kassenstand_id AS kid, neuer_kassenstand - (SELECT neuer_kassenstand FROM kassenstand WHERE kassenstand_id = kid-1) AS entnahme_betrag FROM kassenstand WHERE kassenstand_id > IFNULL((SELECT kassenstand_id FROM abrechnung_tag WHERE id = 0), 0) AND kassenstand_id < IFNULL((SELECT kassenstand_id FROM abrechnung_tag WHERE id = 9999999999999), 4294967295) AND entnahme = TRUE) AS entnahme_table;
                 "SELECT SUM(entnahme_betrag) " +
-                        "FROM (" +
-                        "SELECT kassenstand_id AS kid, " +
-                        "neuer_kassenstand - (SELECT neuer_kassenstand FROM kassenstand WHERE kassenstand_id = kid-1) AS entnahme_betrag " +
-                        "FROM kassenstand WHERE " +
-                        "buchungsdatum >= IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '0001-01-01') AND " +
-                        "buchungsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '9999-01-01') AND " +
-                        "entnahme = TRUE" +
-                        ") AS entnahme_table"
+                "FROM (" +
+                "SELECT kassenstand_id AS kid, " +
+                "neuer_kassenstand - (SELECT neuer_kassenstand FROM kassenstand WHERE kassenstand_id = kid-1) AS entnahme_betrag " +
+                "FROM kassenstand WHERE " +
+                "kassenstand_id > IFNULL((SELECT kassenstand_id FROM abrechnung_tag WHERE id = ?), 0) AND " +
+                "kassenstand_id < IFNULL((SELECT kassenstand_id FROM abrechnung_tag WHERE id = ?), 4294967295) AND " +
+                "entnahme = TRUE" +
+                ") AS entnahme_table"
         );
         pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
         pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
@@ -227,9 +227,9 @@ class AbrechnungenTag extends Abrechnungen {
             for (Integer id : abrechnungsIDs) {
                 PreparedStatement pstmt = connection.prepareStatement(
                         "SELECT id, zeitpunkt, kommentar, aktiv " +
-                                "FROM zaehlprotokoll " +
-                                "WHERE abrechnung_tag_id = ? " +
-                                "ORDER BY id DESC"
+                        "FROM zaehlprotokoll " +
+                        "WHERE abrechnung_tag_id = ? " +
+                        "ORDER BY id DESC"
                 );
                 pstmtSetInteger(pstmt, 1, id);
                 ResultSet rs = pstmt.executeQuery();
@@ -243,8 +243,8 @@ class AbrechnungenTag extends Abrechnungen {
                     //
                     PreparedStatement pstmt2 = connection.prepareStatement(
                             "SELECT SUM(anzahl*einheit) " +
-                                    "FROM zaehlprotokoll_details " +
-                                    "WHERE zaehlprotokoll_id = ?"
+                            "FROM zaehlprotokoll_details " +
+                            "WHERE zaehlprotokoll_id = ?"
                     );
                     pstmtSetInteger(pstmt2, 1, rs.getInt(1));
                     ResultSet rs2 = pstmt2.executeQuery();
@@ -256,9 +256,9 @@ class AbrechnungenTag extends Abrechnungen {
                     //
                     pstmt2 = connection.prepareStatement(
                             "SELECT einheit, anzahl " +
-                                    "FROM zaehlprotokoll_details " +
-                                    "WHERE zaehlprotokoll_id = ? " +
-                                    "ORDER BY einheit"
+                            "FROM zaehlprotokoll_details " +
+                            "WHERE zaehlprotokoll_id = ? " +
+                            "ORDER BY einheit"
                     );
                     pstmtSetInteger(pstmt2, 1, rs.getInt(1));
                     rs2 = pstmt2.executeQuery();
@@ -271,10 +271,10 @@ class AbrechnungenTag extends Abrechnungen {
                 rs.close();
                 //
                 pstmt = connection.prepareStatement(
+                        // SELECT neuer_kassenstand FROM kassenstand INNER JOIN abrechnung_tag USING (kassenstand_id) WHERE abrechnung_tag.id = 324;
                         "SELECT neuer_kassenstand " +
-                                "FROM kassenstand INNER JOIN abrechnung_tag USING (kassenstand_id) " +
-                                "WHERE abrechnung_tag.id = ? " +
-                                "LIMIT 1"
+                        "FROM kassenstand INNER JOIN abrechnung_tag USING (kassenstand_id) " +
+                        "WHERE abrechnung_tag.id = ?"
                 );
                 pstmtSetInteger(pstmt, 1, id);
                 rs = pstmt.executeQuery();
@@ -291,14 +291,15 @@ class AbrechnungenTag extends Abrechnungen {
                     }
                     differenzen.add(diff);
                 }
-                //
+                // Select the first 'neuer_kassenstand' from a Tagesabschluss after the Tagesabschluss period
                 pstmt = connection.prepareStatement(
+                        // SELECT neuer_kassenstand FROM kassenstand WHERE kassenstand_id > (SELECT kassenstand_id FROM abrechnung_tag WHERE id = 324) AND manuell = TRUE AND entnahme = FALSE AND kommentar = 'Tagesabschluss' ORDER BY kassenstand_id LIMIT 1;
                         "SELECT neuer_kassenstand "+
-                                "FROM kassenstand "+
-                                "WHERE kassenstand_id > "+
-                                "(SELECT DISTINCT kassenstand_id FROM abrechnung_tag WHERE id = ?) "+
-                                "AND manuell = TRUE AND entnahme = FALSE AND kommentar = 'Tagesabschluss' "+
-                                "ORDER BY kassenstand_id LIMIT 1"
+                        "FROM kassenstand "+
+                        "WHERE kassenstand_id > "+
+                        "(SELECT kassenstand_id FROM abrechnung_tag WHERE id = ?) "+
+                        "AND manuell = TRUE AND entnahme = FALSE AND kommentar = 'Tagesabschluss' "+
+                        "ORDER BY kassenstand_id LIMIT 1"
                 );
                 pstmtSetInteger(pstmt, 1, id);
                 rs = pstmt.executeQuery();
@@ -425,10 +426,11 @@ class AbrechnungenTag extends Abrechnungen {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
+                // SELECT mwst_satz, SUM(ges_preis) AS bar_brutto FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) WHERE storniert = FALSE AND rechnungs_nr > IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) AND ec_zahlung = FALSE GROUP BY mwst_satz;
                     "SELECT mwst_satz, SUM(ges_preis) AS bar_brutto " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01') AND ec_zahlung = FALSE " +
+                    "WHERE storniert = FALSE AND rechnungs_nr > " +
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) AND ec_zahlung = FALSE " +
                     "GROUP BY mwst_satz"
                     );
             while (rs.next()) {
@@ -829,35 +831,53 @@ class AbrechnungenTag extends Abrechnungen {
 
 // ----------------------------------------------------------------------------
 
-
-    private String queryEarliestVerkauf() {
-        String date = "";
+    private Integer queryEarliestVerkauf() {
+        Integer nr = null;
         try {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT MIN(verkaufsdatum) "+
-                    "FROM verkauf WHERE storniert = FALSE AND verkaufsdatum > "+
-                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag),'0001-01-01')");
-            rs.next(); date = rs.getString(1); rs.close();
+            ResultSet rs = stmt.executeQuery("SELECT MIN(rechnungs_nr) "+
+                    "FROM verkauf WHERE storniert = FALSE AND rechnungs_nr > "+
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0)");
+            rs.next(); nr = rs.getInt(1); rs.close();
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
             logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
-        return date;
+        return nr;
     }
 
-    private String queryLatestVerkauf() {
-        String date = "";
+    private Integer queryLatestVerkauf() {
+        Integer nr = "";
         try {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT MAX(verkaufsdatum) "+
-                    "FROM verkauf WHERE storniert = FALSE AND verkaufsdatum > "+
-                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01')");
-            rs.next(); date = rs.getString(1); rs.close();
+            ResultSet rs = stmt.executeQuery("SELECT MAX(rechnungs_nr) "+
+                    "FROM verkauf WHERE storniert = FALSE AND rechnungs_nr > "+
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0)");
+            rs.next(); nr = rs.getInt(1); rs.close();
             stmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return nr;
+    }
+
+    private String queryVerkaufDate(Integer rechnungs_nr) {
+        String date = "";
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT verkaufsdatum FROM verkauf WHERE rechnungs_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, rechnungs_nr);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); date = rs.getString(1); rs.close();
+            pstmt.close();
             connection.close();
         } catch (SQLException ex) {
             logger.error("Exception:", ex);
@@ -935,9 +955,10 @@ class AbrechnungenTag extends Abrechnungen {
         /** create new abrechnung (and save in DB) from time of last abrechnung until now */
         Integer id = null;
         try {
-            id = id();
-            String firstDate = queryEarliestVerkauf();
-            String lastDate = queryLatestVerkauf();
+            Integer firstNr = queryEarliestVerkauf();
+            Integer lastNr = queryLatestVerkauf();
+            String firstDate = queryVerkaufDate(firstNr);
+            String lastDate = queryVerkaufDate(lastNr);
             String nowDate = now();
             String zeitpunkt = decideOnZeitpunkt(firstDate, lastDate, nowDate);
             logger.info("Selected Zeitpunkt: "+zeitpunkt);
@@ -947,6 +968,33 @@ class AbrechnungenTag extends Abrechnungen {
             }
             // get ID of current kassenstand (highest ID due to auto-increment)
             Integer kassenstand_id = mainWindow.retrieveKassenstandId();
+
+            // Make an entry in the abrechnung_tag table:
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO abrechnung_tag SET "+
+                "zeitpunkt = ?, "+
+                "zeitpunkt_real = ?, "+
+                "kassenstand_id = ?" +
+                "rechnungs_nr_von = ?" +
+                "rechnungs_nr_bis = ?"
+            );
+            pstmt.setString(1, zeitpunkt);
+            pstmt.setString(2, nowDate);
+            pstmtSetInteger(pstmt, 3, kassenstand_id);
+            pstmtSetInteger(pstmt, 4, firstNr);
+            pstmtSetInteger(pstmt, 5, lastNr);
+            int result = pstmt.executeUpdate();
+            pstmt.close();
+            if (result == 0) {
+                JOptionPane.showMessageDialog(this,
+                    "Fehler: Tagesabrechnung konnte nicht gespeichert werden.",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
+            } else {
+                id = id();
+            }
+
+            // Make entries in the abrechnung_tag_mwst table:
             // get netto values grouped by mwst:
             HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
             // get totals (bar brutto) grouped by mwst:
@@ -962,38 +1010,31 @@ class AbrechnungenTag extends Abrechnungen {
                 if ( abrechnungBarBrutto.containsKey(mwst_satz) ){
                     bar_brutto = abrechnungBarBrutto.get(mwst_satz);
                 }
-                //System.out.println("INSERT INTO abrechnung_tag: id: "+id+
+                //System.out.println("INSERT INTO abrechnung_tag_mwst: id: "+id+
                 //        "  "+mwst_satz+"  "+mwst_netto+"  "+mwst_betrag+
                 //        "   "+bar_brutto);
-                Connection connection = this.pool.getConnection();
-                PreparedStatement pstmt = connection.prepareStatement(
-                        "INSERT INTO abrechnung_tag SET id = ?, "+
-                                "zeitpunkt = ?, "+
-                                "zeitpunkt_real = ?, "+
-                                "mwst_satz = ?, "+
-                                "mwst_netto = ?, "+
-                                "mwst_betrag = ?, "+
-                                "bar_brutto = ?, "+
-                                "kassenstand_id = ?"
+                pstmt = connection.prepareStatement(
+                    "INSERT INTO abrechnung_tag_mwst SET id = ?, "+
+                    "mwst_satz = ?, "+
+                    "mwst_netto = ?, "+
+                    "mwst_betrag = ?, "+
+                    "bar_brutto = ?"
                 );
                 pstmtSetInteger(pstmt, 1, id);
-                pstmt.setString(2, zeitpunkt);
-                pstmt.setString(3, nowDate);
-                pstmt.setBigDecimal(4, mwst_satz);
-                pstmt.setBigDecimal(5, mwst_netto);
-                pstmt.setBigDecimal(6, mwst_betrag);
-                pstmt.setBigDecimal(7, bar_brutto);
-                pstmtSetInteger(pstmt, 8, kassenstand_id);
+                pstmt.setBigDecimal(2, mwst_satz);
+                pstmt.setBigDecimal(3, mwst_netto);
+                pstmt.setBigDecimal(4, mwst_betrag);
+                pstmt.setBigDecimal(5, bar_brutto);
                 int result = pstmt.executeUpdate();
                 pstmt.close();
-                connection.close();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Tagesabrechnung konnte nicht gespeichert werden.",
-                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                        "Fehler: MwSt-Betrag der Tagesabrechnung konnte nicht gespeichert werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
                     id = null;
                 }
             }
+            connection.close();
             // NEED TO REDO Monats/Jahresabrechnung if needed (check if zeitpunkt lies in old month/year)!!!
             deleteAbrechnungIfNeedBe("abrechnung_monat", "monat", "DATE_FORMAT(?, '%Y-%m-01')", zeitpunkt);
             deleteAbrechnungIfNeedBe("abrechnung_jahr", "jahr", "YEAR(?)", zeitpunkt);
@@ -1032,8 +1073,8 @@ class AbrechnungenTag extends Abrechnungen {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
                     "INSERT INTO zaehlprotokoll SET abrechnung_tag_id = ?, "+
-                            "zeitpunkt = ?, "+
-                            "kommentar = ?"
+                    "zeitpunkt = ?, "+
+                    "kommentar = ?"
             );
             pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
             pstmt.setString(2, now());
@@ -1083,7 +1124,7 @@ class AbrechnungenTag extends Abrechnungen {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
                     "UPDATE zaehlprotokoll SET aktiv = FALSE "+
-                            "WHERE abrechnung_tag_id = ? AND aktiv = TRUE"
+                    "WHERE abrechnung_tag_id = ? AND aktiv = TRUE"
             );
             pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
             int result = pstmt.executeUpdate();

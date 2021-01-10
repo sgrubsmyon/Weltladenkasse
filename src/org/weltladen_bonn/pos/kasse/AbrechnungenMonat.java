@@ -109,7 +109,8 @@ public class AbrechnungenMonat extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM abrechnung_tag "+
+                    "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM abrechnung_tag_mwst "+
+                    "INNER JOIN abrechnung_tag USING (id) "+
                     "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 MONTH) GROUP BY mwst_satz"
                     );
             pstmt.setString(1, month);
@@ -138,7 +139,6 @@ public class AbrechnungenMonat extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             for (String month : months){
-                Integer id = id();
                 logger.info("new month: "+month);
                 PreparedStatement pstmt = connection.prepareStatement(
                         "SELECT ? < DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')"
@@ -155,28 +155,27 @@ public class AbrechnungenMonat extends Abrechnungen {
                         logger.info("mwst_satz: "+mwst_satz);
                         logger.info("betraege "+betraege);
                         pstmt = connection.prepareStatement(
-                                "INSERT INTO abrechnung_monat SET id = ?, monat = ?, "+
+                                "INSERT INTO abrechnung_monat SET "+
+                                "monat = ?, "+
                                 "mwst_satz = ?, "+
                                 "mwst_netto = ?, "+
                                 "mwst_betrag = ?, "+
                                 "bar_brutto = ?"
                                 );
-                        pstmt.setInt(1, id);
-                        pstmt.setString(2, month);
-                        pstmt.setBigDecimal(3, mwst_satz);
-                        pstmt.setBigDecimal(4, betraege.get(1));
-                        pstmt.setBigDecimal(5, betraege.get(2));
-                        pstmt.setBigDecimal(6, betraege.get(3));
+                        pstmt.setString(1, month);
+                        pstmt.setBigDecimal(2, mwst_satz);
+                        pstmt.setBigDecimal(3, betraege.get(1));
+                        pstmt.setBigDecimal(4, betraege.get(2));
+                        pstmt.setBigDecimal(5, betraege.get(3));
                         int result = pstmt.executeUpdate();
                         pstmt.close();
                         if (result != 0){
-                            // do nothing
-                        }
-                        else {
+                            Integer id = id();
+                        } else {
                             JOptionPane.showMessageDialog(this,
-                                    "Fehler: Monatsabrechnung für Monat "+month.substring(0,7)+", "+
-                                    "MwSt.-Satz "+mwst_satz+" konnte nicht gespeichert werden.",
-                                    "Fehler", JOptionPane.ERROR_MESSAGE);
+                                "Fehler: Monatsabrechnung für Monat "+month.substring(0,7)+", "+
+                                "MwSt.-Satz "+mwst_satz+" konnte nicht gespeichert werden.",
+                                "Fehler", JOptionPane.ERROR_MESSAGE);
                         }
                     }
                 }
@@ -200,8 +199,9 @@ public class AbrechnungenMonat extends Abrechnungen {
 
             // totals (sum over mwsts)
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT SUM(mwst_netto + mwst_betrag), SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) FROM abrechnung_tag " +
+                    "SELECT SUM(mwst_netto + mwst_betrag), SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) FROM abrechnung_tag_mwst " +
                        //   ^^^ Gesamt Brutto              ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
+                    "INNER JOIN abrechnung_tag USING (id) "+
                     "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 MONTH)"
                     );
             pstmt.setString(1, cur_month);

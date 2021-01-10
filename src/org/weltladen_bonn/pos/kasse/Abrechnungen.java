@@ -130,13 +130,13 @@ public abstract class Abrechnungen extends WindowContent {
     }
 
     Integer id() {
-        Integer id = -1;
+        Integer id = null;
         try {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT IFNULL("+
-                    "(SELECT MAX(id) FROM "+abrechnungsTableName+"), "+
-                    "0)");
+            ResultSet rs = stmt.executeQuery(
+                "SELECT MAX(id) FROM "+abrechnungsTableName
+            );
             rs.next(); id = rs.getInt(1)+1; rs.close();
             stmt.close();
             connection.close();
@@ -164,8 +164,8 @@ public abstract class Abrechnungen extends WindowContent {
             ResultSet rs = stmt.executeQuery(
                     "SELECT SUM(ges_preis) AS ges_brutto " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag),'0001-01-01') "
+                    "WHERE storniert = FALSE AND rechnungs_nr > " +
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) "
                     );
             rs.next();
                 BigDecimal tagesGesamtBrutto =
@@ -175,8 +175,8 @@ public abstract class Abrechnungen extends WindowContent {
             rs = stmt.executeQuery(
                     "SELECT SUM(ges_preis) AS ges_bar_brutto " +
                     "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag),'0001-01-01') AND ec_zahlung = FALSE "
+                    "WHERE storniert = FALSE AND rechnungs_nr > " +
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) AND ec_zahlung = FALSE "
                     );
             rs.next();
                 BigDecimal tagesGesamtBarBrutto =
@@ -212,23 +212,23 @@ public abstract class Abrechnungen extends WindowContent {
                     //"SELECT mwst_satz, SUM( ROUND(ges_preis / (1.+mwst_satz), 2) ) AS mwst_netto, " +
                     //"SUM( ROUND(ges_preis / (1. + mwst_satz) * mwst_satz, 2) ) AS mwst_betrag " +
                     //"FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    //"WHERE storniert = FALSE AND verkaufsdatum > " +
-                    //"IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') " +
+                    //"WHERE storniert = FALSE AND rechnungs_nr > " +
+                    //"IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) " +
                     //"GROUP BY mwst_satz"
                 // NEW: ROUND OF SUM
                     //"SELECT mwst_satz, SUM( ges_preis / (1.+mwst_satz) ) AS mwst_netto, " +
                     //"SUM( ges_preis / (1. + mwst_satz) * mwst_satz ) AS mwst_betrag " +
                     //"FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    //"WHERE storniert = FALSE AND verkaufsdatum > " +
-                    //"IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') " +
+                    //"WHERE storniert = FALSE AND rechnungs_nr > " +
+                    //"IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) " +
                     //"GROUP BY mwst_satz"
                 // NEWER: Da für jede Rechnung einzeln summiert (und dann gerundet) werden müsste,
                 // ist es einfacher (und auch sicherer), die gerundete MwSt.-Information separat für jede
                 // Rechnung zu speichern (in Tabelle `verkauf_mwst`) und nur noch darüber zu summieren
                     "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag) "+
                     "FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) "+
-                    "WHERE storniert = FALSE AND verkaufsdatum > "+
-                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01') " +
+                    "WHERE storniert = FALSE AND rechnungs_nr > " +
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) " +
                     "GROUP BY mwst_satz"
                     );
             while (rs.next()) {
@@ -287,9 +287,11 @@ public abstract class Abrechnungen extends WindowContent {
                     "SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) "+
                     // ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
                     "FROM "+abrechnungsTableName+" "+
+                    "INNER JOIN "+abrechnungsTableName+"_mwst "+
+                    "USING (id) "+
                     "WHERE TRUE "+
                     filterStr +
-                    "GROUP BY id, "+timeName+" ORDER BY id DESC "+
+                    "GROUP BY id ORDER BY id DESC "+
                     "LIMIT " + offset + "," + noOfColumns;
             ResultSet rs = stmt.executeQuery(query);
             while (rs.next()) {
@@ -310,7 +312,9 @@ public abstract class Abrechnungen extends WindowContent {
             for (String date : abrechnungsDates){
                 PreparedStatement pstmt = connection.prepareStatement(
                         "SELECT mwst_satz, mwst_netto, mwst_betrag " +
-                        "FROM "+abrechnungsTableName+" " +
+                        "FROM "+abrechnungsTableName+" "+
+                        "INNER JOIN "+abrechnungsTableName+"_mwst "+
+                        "USING (id) "+
                         "WHERE "+timeName+" = ? " +
                         filterStr +
                         "ORDER BY mwst_satz "

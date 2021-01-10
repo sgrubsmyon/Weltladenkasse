@@ -109,7 +109,8 @@ public class AbrechnungenJahr extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM abrechnung_tag "+
+                    "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM abrechnung_tag_mwst "+
+                    "INNER JOIN abrechnung_tag USING (id) "+
                     "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 YEAR) GROUP BY mwst_satz"
                     );
             pstmt.setString(1, year);
@@ -138,7 +139,6 @@ public class AbrechnungenJahr extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             for (String year : years){
-                Integer id = id();
                 logger.info("new year: "+year);
                 PreparedStatement pstmt = connection.prepareStatement(
                         "SELECT ? < DATE_FORMAT(CURRENT_DATE, '%Y-01-01')"
@@ -155,28 +155,27 @@ public class AbrechnungenJahr extends Abrechnungen {
                         logger.info("mwst_satz: "+mwst_satz);
                         logger.info("betraege "+betraege);
                         pstmt = connection.prepareStatement(
-                                "INSERT INTO abrechnung_jahr SET id = ?, jahr = ?, "+
+                                "INSERT INTO abrechnung_jahr SET "+
+                                "jahr = ?, "+
                                 "mwst_satz = ?, "+
                                 "mwst_netto = ?, "+
                                 "mwst_betrag = ?, "+
                                 "bar_brutto = ?"
                                 );
-                        pstmt.setInt(1, id);
-                        pstmt.setString(2, year.substring(0,4));
-                        pstmt.setBigDecimal(3, mwst_satz);
-                        pstmt.setBigDecimal(4, betraege.get(1));
-                        pstmt.setBigDecimal(5, betraege.get(2));
-                        pstmt.setBigDecimal(6, betraege.get(3));
+                        pstmt.setString(1, year.substring(0,4));
+                        pstmt.setBigDecimal(2, mwst_satz);
+                        pstmt.setBigDecimal(3, betraege.get(1));
+                        pstmt.setBigDecimal(4, betraege.get(2));
+                        pstmt.setBigDecimal(5, betraege.get(3));
                         int result = pstmt.executeUpdate();
                         pstmt.close();
                         if (result != 0){
-                            // do nothing
-                        }
-                        else {
+                            Integer id = id();
+                        } else {
                             JOptionPane.showMessageDialog(this,
-                                    "Fehler: Jahresabrechnung für Jahr "+year.substring(0,4)+", "+
-                                    "MwSt.-Satz "+mwst_satz+" konnte nicht gespeichert werden.",
-                                    "Fehler", JOptionPane.ERROR_MESSAGE);
+                                "Fehler: Jahresabrechnung für Jahr "+year.substring(0,4)+", "+
+                                "MwSt.-Satz "+mwst_satz+" konnte nicht gespeichert werden.",
+                                "Fehler", JOptionPane.ERROR_MESSAGE);
                         }
                     }
                 }
@@ -200,8 +199,9 @@ public class AbrechnungenJahr extends Abrechnungen {
 
             // totals (sum over mwsts)
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT SUM(mwst_netto + mwst_betrag), SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) FROM abrechnung_tag " +
+                    "SELECT SUM(mwst_netto + mwst_betrag), SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) FROM abrechnung_tag_mwst " +
                        //   ^^^ Gesamt Brutto              ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
+                    "INNER JOIN abrechnung_tag USING (id) "+
                     "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 YEAR)"
                     );
             pstmt.setString(1, cur_year);
