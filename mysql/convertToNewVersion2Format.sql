@@ -43,7 +43,7 @@ DROP TABLE zaehlprotokoll_details;
 DROP TABLE zaehlprotokoll;
 DROP TABLE abrechnung_tag;
 CREATE TABLE abrechnung_tag (
-    id INTEGER(10) UNSIGNED NOT NULL,
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     zeitpunkt DATETIME NOT NULL,
     zeitpunkt_real DATETIME NOT NULL,
     kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,

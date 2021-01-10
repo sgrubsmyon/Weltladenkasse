@@ -145,7 +145,7 @@ CREATE TABLE kassenstand (
 --     FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id)
 -- ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_tag (
-    id INTEGER(10) UNSIGNED NOT NULL,
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     zeitpunkt DATETIME NOT NULL,
     zeitpunkt_real DATETIME NOT NULL,
     kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
@@ -193,7 +193,7 @@ CREATE TABLE zaehlprotokoll_details (
 --     PRIMARY KEY (id, mwst_satz)
 -- ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_monat (
-    id INTEGER(10) UNSIGNED NOT NULL,
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     monat DATE NOT NULL,
     abrechnung_tag_id_von INTEGER(10) UNSIGNED NOT NULL,
     abrechnung_tag_id_bis INTEGER(10) UNSIGNED NOT NULL,
@@ -220,7 +220,7 @@ CREATE TABLE abrechnung_monat_mwst (
 --     PRIMARY KEY (id, mwst_satz)
 -- ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_jahr (
-    id INTEGER(10) UNSIGNED NOT NULL,
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     jahr YEAR NOT NULL,
     abrechnung_monat_id_von INTEGER(10) UNSIGNED NOT NULL,
     abrechnung_monat_id_bis INTEGER(10) UNSIGNED NOT NULL,
