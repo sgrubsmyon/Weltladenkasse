@@ -41,8 +41,8 @@ public class HeutigeRechnungen extends Rechnungen {
      *    The constructor.
      *       */
     public HeutigeRechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw, RechnungenTabbedPane tp){
-	    super(pool, mw, "WHERE verkauf.verkaufsdatum > " +
-                "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag),'0001-01-01') AND "+
+	    super(pool, mw, "WHERE verkauf.rechnungs_nr > " +
+                "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) AND "+
                 "verkauf.storniert = FALSE ", "Heutige Rechnungen");
         tabbedPane = tp;
 	    showTable();
