@@ -1029,7 +1029,7 @@ class AbrechnungenTag extends Abrechnungen {
                 pstmt.close();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
-                        "Fehler: MwSt-Betrag der Tagesabrechnung konnte nicht gespeichert werden.",
+                        "Fehler: MwSt.-Betrag zum MwSt.-Satz '"+mwst_satz+"' der Tagesabrechnung konnte nicht gespeichert werden.",
                         "Fehler", JOptionPane.ERROR_MESSAGE);
                     id = null;
                 }
