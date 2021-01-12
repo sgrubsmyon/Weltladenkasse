@@ -117,11 +117,11 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    rs.close();
 	    rs = stmt.executeQuery(
 		    "SELECT vd.rechnungs_nr, SUM(vd.ges_preis) AS rechnungs_betrag, "+
-                    "verkauf.ec_zahlung, verkauf.kunde_gibt, " +
+            "verkauf.ec_zahlung, verkauf.kunde_gibt, " +
 		    "DATE_FORMAT(verkauf.verkaufsdatum, '"+bc.dateFormatSQL+"'), " +
 		    "verkauf.verkaufsdatum " +
 		    "FROM verkauf_details AS vd " +
-                    "INNER JOIN verkauf USING (rechnungs_nr) " +
+            "INNER JOIN verkauf USING (rechnungs_nr) " +
 		    filterStr +
 		    "GROUP BY vd.rechnungs_nr " +
 		    "ORDER BY vd.rechnungs_nr DESC " +
@@ -213,16 +213,16 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT vd.position, a.kurzname, a.artikel_name, ra.aktionsname, " +
-                    "a.artikel_nr, a.sortiment, " +
-                    "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, " +
-                    "(p.toplevel_id IS NULL AND p.sub_id = 1 AND a.artikel_id = 2) AS rechnung_rabatt, " +
-                    "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
-                    "vd.stueckzahl, vd.ges_preis, vd.mwst_satz " +
-                    "FROM verkauf_details AS vd LEFT JOIN artikel AS a USING (artikel_id) " +
-                    "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
-                    "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
-                    "WHERE vd.rechnungs_nr = ?"
+                "SELECT vd.position, a.kurzname, a.artikel_name, ra.aktionsname, " +
+                "a.artikel_nr, a.sortiment, " +
+                "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, " +
+                "(p.toplevel_id IS NULL AND p.sub_id = 1 AND a.artikel_id = 2) AS rechnung_rabatt, " +
+                "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
+                "vd.stueckzahl, vd.ges_preis, vd.mwst_satz " +
+                "FROM verkauf_details AS vd LEFT JOIN artikel AS a USING (artikel_id) " +
+                "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
+                "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
+                "WHERE vd.rechnungs_nr = ?"
             );
             pstmtSetInteger(pstmt, 1, Integer.parseInt(this.data.get(detailRow).get(1).toString()));
             ResultSet rs = pstmt.executeQuery();
