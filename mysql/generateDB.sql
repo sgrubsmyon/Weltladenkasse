@@ -222,11 +222,11 @@ CREATE TABLE abrechnung_monat_mwst (
 CREATE TABLE abrechnung_jahr (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     jahr YEAR NOT NULL,
-    abrechnung_monat_id_von INTEGER(10) UNSIGNED NOT NULL,
-    abrechnung_monat_id_bis INTEGER(10) UNSIGNED NOT NULL,
+    abrechnung_tag_id_von INTEGER(10) UNSIGNED NOT NULL,
+    abrechnung_tag_id_bis INTEGER(10) UNSIGNED NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (abrechnung_monat_id_von) REFERENCES abrechnung_monat(id),
-    FOREIGN KEY (abrechnung_monat_id_bis) REFERENCES abrechnung_monat(id)
+    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES abrechnung_tag(id),
+    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES abrechnung_tag(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_jahr_mwst (
     id INTEGER(10) UNSIGNED NOT NULL,
