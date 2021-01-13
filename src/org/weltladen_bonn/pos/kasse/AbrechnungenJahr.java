@@ -104,17 +104,41 @@ public class AbrechnungenJahr extends Abrechnungen {
         return result;
     }
 
-    HashMap<BigDecimal, Vector<BigDecimal>> queryJahresAbrechnung(String year) {
+    Vector<Integer> queryJahresAbrechnungRange(String year) {
+        Vector<Integer> range = new Vector<Integer>();
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT MIN(id), MAX(id) FROM abrechnung_tag "+
+                "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 YEAR)"
+            );
+            pstmt.setString(1, year);
+            pstmt.setString(2, year);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            range.add(rs.getInt(1));
+            range.add(rs.getInt(2));
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return range;
+    }
+
+    HashMap<BigDecimal, Vector<BigDecimal>> queryJahresAbrechnung(int minID, int maxID) {
         HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
                     "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM abrechnung_tag_mwst "+
                     "INNER JOIN abrechnung_tag USING (id) "+
-                    "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 YEAR) GROUP BY mwst_satz"
+                    "WHERE id >= ? AND id <= ? GROUP BY mwst_satz"
                     );
-            pstmt.setString(1, year);
-            pstmt.setString(2, year);
+            pstmt.setInt(1, minID);
+            pstmt.setInt(2, maxID);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()){
                 BigDecimal mwst_satz = rs.getBigDecimal(1);
@@ -141,41 +165,62 @@ public class AbrechnungenJahr extends Abrechnungen {
             for (String year : years){
                 logger.info("new year: "+year);
                 PreparedStatement pstmt = connection.prepareStatement(
-                        "SELECT ? < DATE_FORMAT(CURRENT_DATE, '%Y-01-01')"
-                        );
+                    "SELECT ? < DATE_FORMAT(CURRENT_DATE, '%Y-01-01')"
+                );
                 pstmt.setString(1, year);
                 ResultSet rs = pstmt.executeQuery();
                 rs.next(); boolean doIt = rs.getBoolean(1); rs.close();
                 pstmt.close();
                 if (doIt){
-                    HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryJahresAbrechnung(year);
-                    for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : sachen.entrySet() ){
-                        BigDecimal mwst_satz = entry.getKey();
-                        Vector<BigDecimal> betraege = entry.getValue();
-                        logger.info("mwst_satz: "+mwst_satz);
-                        logger.info("betraege "+betraege);
-                        pstmt = connection.prepareStatement(
-                                "INSERT INTO abrechnung_jahr SET "+
-                                "jahr = ?, "+
+                    Integer id = null;
+
+                    Vector<Integer> range = queryJahresAbrechnungRange(year);
+                    pstmt = connection.prepareStatement(
+                        "INSERT INTO abrechnung_jahr SET "+
+                        "jahr = ?, "+
+                        "abrechnung_tag_id_von = ?, "+
+                        "abrechnung_tag_id_bis = ?"
+                    );
+                    pstmt.setString(1, year.substring(0,4));
+                    pstmt.setInt(2, range.get(0));
+                    pstmt.setInt(3, range.get(1));
+                    int result = pstmt.executeUpdate();
+                    pstmt.close();
+                    if (result == 0){
+                        JOptionPane.showMessageDialog(this,
+                            "Fehler: Jahresabrechnung für Jahr "+year.substring(0,4)+", "+
+                            "konnte nicht gespeichert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                    } else {
+                        id = id();
+
+                        HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryJahresAbrechnung(range.get(0), range.get(1));
+                        for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : sachen.entrySet() ){
+                            BigDecimal mwst_satz = entry.getKey();
+                            Vector<BigDecimal> betraege = entry.getValue();
+                            logger.info("mwst_satz: "+mwst_satz);
+                            logger.info("betraege "+betraege);
+                            pstmt = connection.prepareStatement(
+                                "INSERT INTO abrechnung_jahr_mwst SET "+
+                                "id = ?, "+
                                 "mwst_satz = ?, "+
                                 "mwst_netto = ?, "+
                                 "mwst_betrag = ?, "+
                                 "bar_brutto = ?"
-                                );
-                        pstmt.setString(1, year.substring(0,4));
-                        pstmt.setBigDecimal(2, mwst_satz);
-                        pstmt.setBigDecimal(3, betraege.get(1));
-                        pstmt.setBigDecimal(4, betraege.get(2));
-                        pstmt.setBigDecimal(5, betraege.get(3));
-                        int result = pstmt.executeUpdate();
-                        pstmt.close();
-                        if (result != 0){
-                            Integer id = id();
-                        } else {
-                            JOptionPane.showMessageDialog(this,
-                                "Fehler: Jahresabrechnung für Jahr "+year.substring(0,4)+", "+
-                                "MwSt.-Satz "+mwst_satz+" konnte nicht gespeichert werden.",
-                                "Fehler", JOptionPane.ERROR_MESSAGE);
+                            );
+                            pstmt.setInt(1, id);
+                            pstmt.setBigDecimal(2, mwst_satz);
+                            pstmt.setBigDecimal(3, betraege.get(1));
+                            pstmt.setBigDecimal(4, betraege.get(2));
+                            pstmt.setBigDecimal(5, betraege.get(3));
+                            int result = pstmt.executeUpdate();
+                            pstmt.close();
+                            if (result == 0){
+                                JOptionPane.showMessageDialog(this,
+                                    "Fehler: MwSt.-Betrag der Jahresabrechnung für Jahr "+year.substring(0,4)+", "+
+                                    "MwSt.-Satz '"+mwst_satz+"', konnte nicht gespeichert werden.",
+                                    "Fehler", JOptionPane.ERROR_MESSAGE);
+                            }
                         }
                     }
                 }
@@ -228,7 +273,8 @@ public class AbrechnungenJahr extends Abrechnungen {
             incompleteAbrechnungsVATs = new HashMap<BigDecimal, Vector<BigDecimal>>();
 
             // grouped by mwst
-            HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryJahresAbrechnung(cur_year);
+            Vector<Integer> range = queryJahresAbrechnungRange(cur_year);
+            HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryJahresAbrechnung(range.get(0), range.get(1));
             for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : sachen.entrySet() ){
                 BigDecimal mwst_satz = entry.getKey();
                 Vector<BigDecimal> betraege = entry.getValue();

@@ -273,7 +273,8 @@ public class AbrechnungenMonat extends Abrechnungen {
             incompleteAbrechnungsVATs = new HashMap<BigDecimal, Vector<BigDecimal>>();
 
             // grouped by mwst
-            HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryMonatsAbrechnung(cur_month);
+            Vector<Integer> range = queryMonatsAbrechnungRange(cur_month);
+            HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryMonatsAbrechnung(range.get(0), range.get(1));
             for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : sachen.entrySet() ){
                 BigDecimal mwst_satz = entry.getKey();
                 Vector<BigDecimal> betraege = entry.getValue();
