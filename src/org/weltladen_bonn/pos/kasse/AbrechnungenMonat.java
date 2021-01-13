@@ -202,7 +202,7 @@ public class AbrechnungenMonat extends Abrechnungen {
                             logger.info("betraege "+betraege);
                             pstmt = connection.prepareStatement(
                                 "INSERT INTO abrechnung_monat_mwst SET "+
-                                "id = ?, "
+                                "id = ?, "+
                                 "mwst_satz = ?, "+
                                 "mwst_netto = ?, "+
                                 "mwst_betrag = ?, "+
@@ -213,7 +213,7 @@ public class AbrechnungenMonat extends Abrechnungen {
                             pstmt.setBigDecimal(3, betraege.get(1));
                             pstmt.setBigDecimal(4, betraege.get(2));
                             pstmt.setBigDecimal(5, betraege.get(3));
-                            int result = pstmt.executeUpdate();
+                            result = pstmt.executeUpdate();
                             pstmt.close();
                             if (result == 0){
                                 JOptionPane.showMessageDialog(this,

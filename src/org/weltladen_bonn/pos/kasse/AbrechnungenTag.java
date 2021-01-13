@@ -850,7 +850,7 @@ class AbrechnungenTag extends Abrechnungen {
     }
 
     private Integer queryLatestVerkauf() {
-        Integer nr = "";
+        Integer nr = null;
         try {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
@@ -1044,7 +1044,7 @@ class AbrechnungenTag extends Abrechnungen {
                 pstmt.setBigDecimal(3, mwst_netto);
                 pstmt.setBigDecimal(4, mwst_betrag);
                 pstmt.setBigDecimal(5, bar_brutto);
-                int result = pstmt.executeUpdate();
+                result = pstmt.executeUpdate();
                 pstmt.close();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
