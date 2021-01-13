@@ -922,26 +922,45 @@ class AbrechnungenTag extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT COUNT(*) FROM "+abrechnungsName+" "+
-                    "WHERE "+timeName+" = "+zeitpunktParsing
-                    );
+                "SELECT id FROM "+abrechnungsName+" "+
+                "WHERE "+timeName+" = "+zeitpunktParsing
+            );
             pstmt.setString(1, zeitpunkt);
             ResultSet rs = pstmt.executeQuery();
-            rs.next(); int count = rs.getInt(1); rs.close();
+            Vector<Integer> ids = new Vector<Integer>();
+            while (rs.next()) {
+                ids.add(rs.getInt(1));
+            }
+            rs.close();
             pstmt.close();
-            if (count > 0){
+            for (int id : ids) {
                 pstmt = connection.prepareStatement(
-                        "DELETE FROM "+abrechnungsName+" "+
-                        "WHERE "+timeName+" = "+zeitpunktParsing
-                        );
-                pstmt.setString(1, zeitpunkt);
+                    "DELETE FROM "+abrechnungsName+"_mwst "+
+                    "WHERE id = ?"
+                );
+                pstmt.setInt(1, id);
                 int result = pstmt.executeUpdate();
                 pstmt.close();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Alte Abrechnung konnte nicht aus Tabelle "+
-                            "'"+abrechnungsName+"' gelöscht werden.",
-                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                        "Fehler: MwSt.-Beträge von alter Abrechnung zu "+timeName+" '"+zeitpunkt+"' "+
+                        "konnten nicht aus Tabelle "+
+                        "'"+abrechnungsName+"_mwst' gelöscht werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+                pstmt = connection.prepareStatement(
+                    "DELETE FROM "+abrechnungsName+" "+
+                    "WHERE id = ?"
+                );
+                pstmt.setInt(1, id);
+                result = pstmt.executeUpdate();
+                pstmt.close();
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                        "Fehler: Alte Abrechnung zu "+timeName+" '"+zeitpunkt+"' "+
+                        "konnte nicht aus Tabelle "+
+                        "'"+abrechnungsName+"' gelöscht werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
             connection.close();
