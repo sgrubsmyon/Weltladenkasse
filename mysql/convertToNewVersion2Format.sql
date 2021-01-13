@@ -101,3 +101,7 @@ INSERT INTO zaehlprotokoll_details SELECT * FROM zaehlprotokoll_details_copy;
 DROP TABLE zaehlprotokoll_details_copy;
 DROP TABLE zaehlprotokoll_copy;
 DROP TABLE abrechnung_tag_copy;
+
+-- Grant default user access right to new table:
+GRANT INSERT ON kasse.abrechnung_tag_mwst TO 'mitarbeiter'@'localhost';
+
