@@ -994,8 +994,8 @@ class AbrechnungenTag extends Abrechnungen {
                 "INSERT INTO abrechnung_tag SET "+
                 "zeitpunkt = ?, "+
                 "zeitpunkt_real = ?, "+
-                "kassenstand_id = ?" +
-                "rechnungs_nr_von = ?" +
+                "kassenstand_id = ?, " +
+                "rechnungs_nr_von = ?, " +
                 "rechnungs_nr_bis = ?"
             );
             pstmt.setString(1, zeitpunkt);
@@ -1013,46 +1013,44 @@ class AbrechnungenTag extends Abrechnungen {
                 id = id();
             }
 
-            // Make entries in the abrechnung_tag_mwst table:
-            // get netto values grouped by mwst:
-            HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
-            // get totals (bar brutto) grouped by mwst:
-            HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = queryIncompleteAbrechnung_BarBruttoVATs();
-            //System.out.println("mwst_satz  mwst_netto  mwst_betrag  bar_brutto");
-            //System.out.println("----------------------------------------------");
-            for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : abrechnungNettoBetrag.entrySet() ){
-                BigDecimal mwst_satz = entry.getKey();
-                Vector<BigDecimal> values = entry.getValue();
-                BigDecimal mwst_netto = values.get(1);
-                BigDecimal mwst_betrag = values.get(2);
-                BigDecimal bar_brutto = new BigDecimal("0.00");
-                if ( abrechnungBarBrutto.containsKey(mwst_satz) ){
-                    bar_brutto = abrechnungBarBrutto.get(mwst_satz);
-                }
-                //System.out.println("INSERT INTO abrechnung_tag_mwst: id: "+id+
-                //        "  "+mwst_satz+"  "+mwst_netto+"  "+mwst_betrag+
-                //        "   "+bar_brutto);
-                pstmt = connection.prepareStatement(
-                    "INSERT INTO abrechnung_tag_mwst SET id = ?, "+
-                    "mwst_satz = ?, "+
-                    "mwst_netto = ?, "+
-                    "mwst_betrag = ?, "+
-                    "bar_brutto = ?"
-                );
-                pstmtSetInteger(pstmt, 1, id);
-                pstmt.setBigDecimal(2, mwst_satz);
-                pstmt.setBigDecimal(3, mwst_netto);
-                pstmt.setBigDecimal(4, mwst_betrag);
-                pstmt.setBigDecimal(5, bar_brutto);
-                result = pstmt.executeUpdate();
-                pstmt.close();
-                if (result == 0){
-                    JOptionPane.showMessageDialog(this,
-                        "Fehler: MwSt.-Betrag zum MwSt.-Satz '"+mwst_satz+"' der Tagesabrechnung konnte nicht gespeichert werden.",
-                        "Fehler", JOptionPane.ERROR_MESSAGE);
-                    id = null;
+                // Make entries in the abrechnung_tag_mwst table:
+                // get netto values grouped by mwst:
+                HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
+                // get totals (bar brutto) grouped by mwst:
+                HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = queryIncompleteAbrechnung_BarBruttoVATs();
+                for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : abrechnungNettoBetrag.entrySet() ){
+                    BigDecimal mwst_satz = entry.getKey();
+                    Vector<BigDecimal> values = entry.getValue();
+                    BigDecimal mwst_netto = values.get(1);
+                    BigDecimal mwst_betrag = values.get(2);
+                    BigDecimal bar_brutto = new BigDecimal("0.00");
+                    if ( abrechnungBarBrutto.containsKey(mwst_satz) ){
+                        bar_brutto = abrechnungBarBrutto.get(mwst_satz);
+                    }
+                    pstmt = connection.prepareStatement(
+                        "INSERT INTO abrechnung_tag_mwst SET "+
+                        "id = ?, "+
+                        "mwst_satz = ?, "+
+                        "mwst_netto = ?, "+
+                        "mwst_betrag = ?, "+
+                        "bar_brutto = ?"
+                    );
+                    pstmtSetInteger(pstmt, 1, id);
+                    pstmt.setBigDecimal(2, mwst_satz);
+                    pstmt.setBigDecimal(3, mwst_netto);
+                    pstmt.setBigDecimal(4, mwst_betrag);
+                    pstmt.setBigDecimal(5, bar_brutto);
+                    result = pstmt.executeUpdate();
+                    pstmt.close();
+                    if (result == 0){
+                        JOptionPane.showMessageDialog(this,
+                            "Fehler: MwSt.-Betrag zum MwSt.-Satz '"+mwst_satz+"' der Tagesabrechnung konnte nicht gespeichert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                        id = null;
+                    }
                 }
             }
+
             connection.close();
             // NEED TO REDO Monats/Jahresabrechnung if needed (check if zeitpunkt lies in old month/year)!!!
             deleteAbrechnungIfNeedBe("abrechnung_monat", "monat", "DATE_FORMAT(?, '%Y-%m-01')", zeitpunkt);
