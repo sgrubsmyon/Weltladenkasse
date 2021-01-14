@@ -376,7 +376,7 @@ class AbrechnungenTag extends Abrechnungen {
         incompleteAbrechnungsRetouren = new HashMap<>();
         try {
             Connection connection = this.pool.getConnection();
-            Integer id = id(); // ID of new, yet to come, abrechnung
+            Integer id = id() + 1; // ID of new, yet to come, abrechnung
             
             // Summe über Stornos:
             PreparedStatement pstmt = prepareStmtStornos(connection, id);
@@ -988,6 +988,12 @@ class AbrechnungenTag extends Abrechnungen {
             // get ID of current kassenstand (highest ID due to auto-increment)
             Integer kassenstand_id = mainWindow.retrieveKassenstandId();
 
+            // Need to do this before inserting new Tagesabrechnung:
+            // get netto values grouped by mwst:
+            HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
+            // get totals (bar brutto) grouped by mwst:
+            HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = queryIncompleteAbrechnung_BarBruttoVATs();
+
             // Make an entry in the abrechnung_tag table:
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
@@ -1011,13 +1017,8 @@ class AbrechnungenTag extends Abrechnungen {
                     "Fehler", JOptionPane.ERROR_MESSAGE);
             } else {
                 id = id();
-            }
 
                 // Make entries in the abrechnung_tag_mwst table:
-                // get netto values grouped by mwst:
-                HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
-                // get totals (bar brutto) grouped by mwst:
-                HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = queryIncompleteAbrechnung_BarBruttoVATs();
                 for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : abrechnungNettoBetrag.entrySet() ){
                     BigDecimal mwst_satz = entry.getKey();
                     Vector<BigDecimal> values = entry.getValue();
