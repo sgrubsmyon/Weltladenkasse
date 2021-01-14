@@ -86,10 +86,12 @@ INSERT INTO abrechnung_tag
     SELECT DISTINCT id, zeitpunkt, zeitpunkt_real, kassenstand_id,
         (SELECT MIN(rechnungs_nr) FROM verkauf WHERE
             verkaufsdatum > IFNULL((SELECT DISTINCT zeitpunkt_real FROM abrechnung_tag_copy WHERE id = at.id - 1), '0001-01-01') AND
-            verkaufsdatum <= zeitpunkt_real) AS rechnungs_nr_von,
+            verkaufsdatum <= zeitpunkt_real
+        ) AS rechnungs_nr_von,
         (SELECT MAX(rechnungs_nr) FROM verkauf WHERE
             verkaufsdatum > IFNULL((SELECT DISTINCT zeitpunkt_real FROM abrechnung_tag_copy WHERE id = at.id - 1), '0001-01-01') AND
-            verkaufsdatum <= zeitpunkt_real) AS rechnungs_nr_bis
+            verkaufsdatum <= zeitpunkt_real
+        ) AS rechnungs_nr_bis
     FROM abrechnung_tag_copy AS at;
 -- SELECT id, mwst_satz, mwst_netto, mwst_betrag, bar_brutto FROM abrechnung_tag_copy LIMIT 5;
 INSERT INTO abrechnung_tag_mwst
@@ -102,6 +104,121 @@ DROP TABLE zaehlprotokoll_details_copy;
 DROP TABLE zaehlprotokoll_copy;
 DROP TABLE abrechnung_tag_copy;
 
--- Grant default user access right to new table:
+-- Grant default user access right to new MwSt. table: (need to do as root user)
 GRANT INSERT ON kasse.abrechnung_tag_mwst TO 'mitarbeiter'@'localhost';
 
+----------------------
+-- abrechnung_monat --
+----------------------
+
+-- create temporary abrechnung_monat copy:
+CREATE TABLE abrechnung_monat_copy (
+    id INTEGER(10) UNSIGNED NOT NULL,
+    monat DATE NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
+    bar_brutto DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id, mwst_satz)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO abrechnung_monat_copy SELECT * FROM abrechnung_monat;
+
+-- Create abrechnung_monat in new format:
+DROP TABLE abrechnung_monat;
+CREATE TABLE abrechnung_monat (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    monat DATE NOT NULL,
+    abrechnung_tag_id_von INTEGER(10) UNSIGNED NOT NULL,
+    abrechnung_tag_id_bis INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES abrechnung_tag(id),
+    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE abrechnung_monat_mwst (
+    id INTEGER(10) UNSIGNED NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
+    bar_brutto DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id, mwst_satz)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Fill the new tables:
+-- SELECT DISTINCT id, monat, (SELECT MIN(id) FROM abrechnung_tag WHERE zeitpunkt >= monat AND zeitpunkt < (monat + INTERVAL 1 MONTH)) AS abrechnung_tag_id_von, (SELECT MAX(id) FROM abrechnung_tag WHERE zeitpunkt >= monat AND zeitpunkt < (monat + INTERVAL 1 MONTH)) AS abrechnung_tag_id_bis FROM abrechnung_monat_copy LIMIT 10;
+INSERT INTO abrechnung_monat
+    SELECT DISTINCT id, monat,
+        (SELECT MIN(id) FROM abrechnung_tag WHERE
+            zeitpunkt >= monat AND zeitpunkt < (monat + INTERVAL 1 MONTH)
+        ) AS abrechnung_tag_id_von,
+        (SELECT MAX(id) FROM abrechnung_tag WHERE
+            zeitpunkt >= monat AND zeitpunkt < (monat + INTERVAL 1 MONTH)
+        ) AS abrechnung_tag_id_bis
+    FROM abrechnung_monat_copy;
+-- SELECT id, mwst_satz, mwst_netto, mwst_betrag, bar_brutto FROM abrechnung_monat_copy LIMIT 20;
+INSERT INTO abrechnung_monat_mwst
+    SELECT id, mwst_satz, mwst_netto, mwst_betrag, bar_brutto FROM abrechnung_monat_copy;
+
+-- Delete the temporary table:
+DROP TABLE abrechnung_monat_copy;
+
+-- Grant default user access right to new MwSt. table: (need to do as root user)
+GRANT INSERT, DELETE ON kasse.abrechnung_monat_mwst TO 'mitarbeiter'@'localhost';
+
+---------------------
+-- abrechnung_jahr --
+---------------------
+
+-- create temporary abrechnung_jahr copy:
+CREATE TABLE abrechnung_jahr_copy (
+    id INTEGER(10) UNSIGNED NOT NULL,
+    jahr YEAR NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
+    bar_brutto DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id, mwst_satz)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO abrechnung_jahr_copy SELECT * FROM abrechnung_jahr;
+
+-- Create abrechnung_jahr in new format:
+DROP TABLE abrechnung_jahr;
+CREATE TABLE abrechnung_jahr (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    jahr YEAR NOT NULL,
+    abrechnung_tag_id_von INTEGER(10) UNSIGNED NOT NULL,
+    abrechnung_tag_id_bis INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES abrechnung_tag(id),
+    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE abrechnung_jahr_mwst (
+    id INTEGER(10) UNSIGNED NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
+    bar_brutto DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id, mwst_satz)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Fill the new tables:
+-- SELECT DISTINCT id, jahr, (SELECT MIN(id) FROM abrechnung_tag WHERE zeitpunkt >= DATE_FORMAT(jahr, '%Y-01-01') AND zeitpunkt < (DATE_FORMAT(jahr, '%Y-01-01') + INTERVAL 1 YEAR)) AS abrechnung_tag_id_von, (SELECT MAX(id) FROM abrechnung_tag WHERE zeitpunkt >= DATE_FORMAT(jahr, '%Y-01-01') AND zeitpunkt < (DATE_FORMAT(jahr, '%Y-01-01') + INTERVAL 1 YEAR)) AS abrechnung_tag_id_bis FROM abrechnung_jahr_copy;
+INSERT INTO abrechnung_jahr
+    SELECT DISTINCT id, jahr,
+        (SELECT MIN(id) FROM abrechnung_tag WHERE
+            zeitpunkt >= DATE_FORMAT(jahr, '%Y-01-01') AND
+            zeitpunkt < (DATE_FORMAT(jahr, '%Y-01-01') + INTERVAL 1 YEAR)
+        ) AS abrechnung_tag_id_von,
+        (SELECT MAX(id) FROM abrechnung_tag WHERE
+            zeitpunkt >= DATE_FORMAT(jahr, '%Y-01-01') AND
+            zeitpunkt < (DATE_FORMAT(jahr, '%Y-01-01') + INTERVAL 1 YEAR)
+        ) AS abrechnung_tag_id_bis
+    FROM abrechnung_jahr_copy;
+-- SELECT id, mwst_satz, mwst_netto, mwst_betrag, bar_brutto FROM abrechnung_jahr_copy;
+INSERT INTO abrechnung_jahr_mwst
+    SELECT id, mwst_satz, mwst_netto, mwst_betrag, bar_brutto FROM abrechnung_jahr_copy;
+
+-- Delete the temporary table:
+DROP TABLE abrechnung_jahr_copy;
+
+-- Grant default user access right to new MwSt. table: (need to do as root user)
+GRANT INSERT, DELETE ON kasse.abrechnung_jahr_mwst TO 'mitarbeiter'@'localhost';
