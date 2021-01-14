@@ -1,3 +1,10 @@
+-- Execute command:
+--    sudo mysql --local-infile -u root < mysql/convertToNewVersion2Format.sql
+-- or:
+--    mysql --local-infile -h localhost -u root -p < mysql/convertToNewVersion2Format.sql
+
+USE kasse;
+
 --------------------
 -- abrechnung_tag --
 --------------------
