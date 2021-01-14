@@ -137,7 +137,7 @@ public abstract class Abrechnungen extends WindowContent {
             ResultSet rs = stmt.executeQuery(
                 "SELECT MAX(id) FROM "+abrechnungsTableName
             );
-            rs.next(); id = rs.getInt(1)+1; rs.close();
+            rs.next(); id = rs.getInt(1); rs.close();
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
