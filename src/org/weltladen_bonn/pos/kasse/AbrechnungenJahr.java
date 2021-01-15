@@ -66,8 +66,8 @@ public class AbrechnungenJahr extends Abrechnungen {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT MAX(jahr) FROM abrechnung_jahr"
-                    );
+                "SELECT MAX(jahr) FROM abrechnung_jahr"
+            );
             rs.next(); result = rs.getString(1); rs.close();
             stmt.close();
             connection.close();
@@ -76,9 +76,9 @@ public class AbrechnungenJahr extends Abrechnungen {
             showDBErrorDialog(ex.getMessage());
         }
         if (result == null){
-            result = "0001"; // set date very far back, every possible date should be after this one (hopefully)
+            result = "0001-01-01"; // set date very far back, every possible date should be after this one (hopefully)
         }
-        return result+"-01-01";
+        return result; // +"-01-01" adding this is somehow not needed, but I need it on the mysql cmd line, ???
     }
 
     Vector<String> returnAllNewYears(String maxDate) { // all years to be put into the db (abrechnung_jahr table)
@@ -86,9 +86,9 @@ public class AbrechnungenJahr extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT DISTINCT DATE_FORMAT(monat, '%Y-01-01') FROM abrechnung_monat "+
-                    "WHERE monat >= (? + INTERVAL 1 YEAR)"
-                    );
+                "SELECT DISTINCT DATE_FORMAT(zeitpunkt, '%Y-01-01') FROM abrechnung_tag "+ // Select the distinct years of all Tagesabrechnungen after the last Jahresabrechnung
+                "WHERE zeitpunkt >= (? + INTERVAL 1 YEAR)"
+            );
             pstmt.setString(1, maxDate);
             ResultSet rs = pstmt.executeQuery();
             while(rs.next()){
@@ -318,8 +318,8 @@ public class AbrechnungenJahr extends Abrechnungen {
     void queryAbrechnungenSpecial() {
         String maxDate = returnMaxAbechnungDate();
         Vector<String> years = returnAllNewYears(maxDate);
-        logger.debug("max date is: "+maxDate);
-        logger.debug("new years are: "+years);
+        logger.debug("maxDate in AbrechnungJahr: {}", maxDate);
+        logger.debug("new years are: {}", years);
         insertNewYears(years);
     }
 
