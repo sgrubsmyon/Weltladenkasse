@@ -86,7 +86,7 @@ public class AbrechnungenMonat extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                "SELECT DISTINCT DATE_FORMAT(zeitpunkt, '%Y-%m-01') FROM abrechnung_tag "+
+                "SELECT DISTINCT DATE_FORMAT(zeitpunkt, '%Y-%m-01') FROM abrechnung_tag "+ // Select the distinct months of all Tagesabrechnungen after the last Monatsabrechnung
                 "WHERE zeitpunkt >= (? + INTERVAL 1 MONTH)"
             );
             pstmt.setString(1, maxDate);
@@ -318,8 +318,8 @@ public class AbrechnungenMonat extends Abrechnungen {
     void queryAbrechnungenSpecial() {
         String maxDate = returnMaxAbrechnungDate();
         Vector<String> months = returnAllNewMonths(maxDate);
-        logger.debug("max date is: "+maxDate);
-        logger.debug("new months are: "+months);
+        logger.debug("maxDate in AbrechnungMonat: {}", maxDate);
+        logger.debug("new months are: {}", months);
         insertNewMonths(months);
     }
 
