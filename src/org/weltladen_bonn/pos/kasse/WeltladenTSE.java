@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.FileSystems;
 import java.nio.file.FileAlreadyExistsException;
@@ -29,6 +30,7 @@ import java.util.Base64;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
+// import java.math.BigInteger;
 
 // GUI stuff:
 import java.awt.BorderLayout;
@@ -93,7 +95,7 @@ import org.apache.logging.log4j.Logger;
  * a different vendor as well (e.g. EPSON).
  */
 public class WeltladenTSE {
-    private static final Logger logger = LogManager.getLogger(Kundendisplay.class);
+    private static final Logger logger = LogManager.getLogger(WeltladenTSE.class);
 
     private BaseClass bc;
 
@@ -120,7 +122,8 @@ public class WeltladenTSE {
     private static int timeSyncInterval = 0;
 
     public static String[] statusValueKeys = {
-        "Eindeutige D-Trust-ID",
+        "Eindeutige D-Trust-ID (Int)",
+        "Eindeutige D-Trust-ID (Hex)",
         "BSI-Zertifizierungsnummer",
         "Firmware-Version",
         "Gesamte Speichergröße",
@@ -164,7 +167,8 @@ public class WeltladenTSE {
                 new JLabel("TSE wird initialisiert..."),
                 null
             );
-
+            
+            printAllStatusValues();
             checkInitializationStatus();
             // System.out.println("\n\n*** WRITING FIRST TRANSACTION TO TSE ***");
             // System.out.println("\n --- Status before: \n");
@@ -453,19 +457,44 @@ public class WeltladenTSE {
     }
 
     public static String byteArrayToByteString(byte[] byteArray) {
-        String res = "";
+        String res = "[";
         for (byte b : byteArray) {
-            res += b + " ";
+            res += b + ", ";
         }
-        return res.substring(0, res.length() - 1); // omit last empty string
+        res = res.substring(0, res.length() - 2); // omit last separator
+        res += "]";
+        return res;
     }
 
     public static String byteArrayToIntString(byte[] byteArray) {
-        String res = "";
+        String res = "[";
         for (byte b : byteArray) {
             res += (int)b + " ";
         }
-        return res.substring(0, res.length() - 1); // omit last empty string
+        res = res.substring(0, res.length() - 2); // omit last separator
+        res += "]";
+        return res;
+    }
+
+    // https://stackoverflow.com/questions/7619058/convert-a-byte-array-to-integer-in-java-and-vice-versa
+    public static String byteArrayToSingleIntString(byte[] byteArray) {
+        ByteBuffer wrapped = ByteBuffer.wrap(byteArray); // big-endian by default
+        // logger.debug("byteArray bytes: {}", byteArrayToByteString(byteArray));
+        // logger.debug("byteArray length: {}", byteArray.length);
+        // logger.debug("first 4 bytes: {}", wrapped.getInt(0));
+        // logger.debug("second 4 bytes: {}", wrapped.getInt(4));
+        // logger.debug("third 4 bytes: {}", wrapped.getInt(8));
+        // logger.debug("fourth 4 bytes: {}", wrapped.getInt(12));
+        // logger.debug("first 8 bytes: {}", wrapped.getLong(0));
+        // logger.debug("second 8 bytes: {}", wrapped.getLong(8));
+        // logger.debug("Hex converted to BigInteger: {}", new BigInteger(byteArrayToHexString(byteArray), 16));
+        String res = "";
+        int pos = 0;
+        while (pos < byteArray.length) {
+            res += wrapped.getLong(pos); // read 8 bytes from the byte array
+            pos += 8;
+        }
+        return res;
     }
 
     public static String byteArrayToCharString(byte[] byteArray) {
@@ -560,9 +589,13 @@ public class WeltladenTSE {
 
     public HashMap<String, String> retrieveTSEStatusValues(Vector<String> interestingValues) {
         HashMap<String, String> values = new HashMap<String, String>();
-        if (interestingValues.size() == 0 || interestingValues.contains("Eindeutige D-Trust-ID")) {
+        if (interestingValues.size() == 0 || interestingValues.contains("Eindeutige D-Trust-ID (Int)")) {
             // Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE
-            values.put("Eindeutige D-Trust-ID", byteArrayToHexString(tse.getUniqueId()));
+            values.put("Eindeutige D-Trust-ID (Int)", byteArrayToSingleIntString(tse.getUniqueId()));
+        }
+        if (interestingValues.size() == 0 || interestingValues.contains("Eindeutige D-Trust-ID (Hex)")) {
+            // Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE
+            values.put("Eindeutige D-Trust-ID (Hex)", byteArrayToHexString(tse.getUniqueId()));
         }
         try {
             if (interestingValues.size() == 0 || interestingValues.contains("BSI-Zertifizierungsnummer")) {
@@ -705,7 +738,7 @@ public class WeltladenTSE {
 
     private void printStatusValues() {
         String[] interestingValuesArray = {
-            // "Eindeutige D-Trust-ID", "Firmware-Version", "BSI-Zertifizierungsnummer",
+            // "Eindeutige D-Trust-ID (Int)", "Firmware-Version", "BSI-Zertifizierungsnummer",
             "Gesamte Speichergröße", "Verfügbare Speichergröße", "Verschleiß des Speichers",
             "Lebenszyklus", "Transaktionsnummer", "Signatur-Zähler",
             // "Seriennummer der TSE (Hex)", "Öffentlicher Schlüssel (Hex)",
@@ -721,9 +754,8 @@ public class WeltladenTSE {
 
      private void printAllStatusValues() {
         HashMap<String, String> values = retrieveTSEStatusValues();
-        Set<String> interestingValues = values.keySet();
-        for (String s : interestingValues) {
-            System.out.println(s + ": " + values.get(s));
+        for (String k : statusValueKeys) {
+            System.out.println(k + ": " + values.get(k));
         }
     }
 
