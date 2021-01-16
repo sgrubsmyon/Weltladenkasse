@@ -21,3 +21,49 @@ exportDirAbrechnungMonat = 'Dokumente/Kasse/Monatsabrechnungen/'yyyy
 exportDirAbrechnungJahr = 'Dokumente/Kasse/Jahresabrechnungen'
 exportDirBestellung = 'Dokumente/Bestellungen/Bestellungen FHZ 'yyyy
 alwaysPrintReceipt = true
+
+###################################################################
+# Statische Kassendaten, die für TSE und DSFinV-K benötigt werden #
+###################################################################
+
+# Erklärungen im PDF unter https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html 
+# Siehe auch https://tse-support.cryptovision.com/confluence/display/TDI/clientId+oder+Seriennummer+des+Aufzeichnungssystems
+
+##################
+# Schlüsselfelder
+##################
+
+# Identifikationsnummer (ID) der Master-Kasse (Software) mit eigener TSE. Es
+# wird die Identifikationsnummer erwartet, die ab dem 01.01.2020 der
+# Finanzverwaltung gemäß § 146a Abs. 4 AO zu melden ist:
+# (wird bei Kommunikation mit der TSE als "clientID" verwendet)
+
+Z_KASSE_ID = WeltladenBonnKasse-01
+
+##################
+# Stamm_Abschluss
+##################
+
+TAXONOMIE_VERSION = 2.2
+NAME = Weltladen Bonn e.V.
+STRASSE = Maxstraße 36
+PLZ = 53111
+ORT = Bonn
+LAND = DEU
+STNR = 205/5775/1014
+USTID = 
+
+# Markenbezeichnung der eingesetzten Kassen-Software: (https://github.com/sgrubsmyon/Weltladenkasse)
+KASSE_SW_BRAND = Weltladenkasse
+
+# Version der eingesetzten Kassen-Software:
+KASSE_SW_VERSION = v2.0.0
+
+# Seriennummer der eingesetzten Kassen-Hardware: (Laptop?)
+KASSE_SERIENNR = XXXXXXXX
+
+# Marke der eingesetzten Kassen-Hardware: (Laptop?)
+KASSE_BRAND = Lenovo
+
+# Modell der eingesetzten Kassen-Hardware: (Laptop?)
+KASSE_MODELL = Thinkpad XXXX
