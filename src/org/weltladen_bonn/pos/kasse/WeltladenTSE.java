@@ -84,6 +84,14 @@ import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.bsi.BSIObjectIdentifiers;
 import java.io.ByteArrayInputStream;
 
+// MySQL Connector/J stuff:
+import java.sql.SQLException;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
+
 // Logging:
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -96,10 +104,15 @@ import org.apache.logging.log4j.Logger;
  */
 public class WeltladenTSE {
     private static final Logger logger = LogManager.getLogger(WeltladenTSE.class);
+    
+    private String defaultProcessType = "Kassenbeleg-V1";
 
+    private MainWindow mw;
     private BaseClass bc;
+    private MariaDbPoolDataSource pool; // pool of connections to MySQL database
 
     private class TSETransaction {
+        public Integer rechnungsNr = null; // for connecting TSE data to SQL table 'verkauf' data
         public Long txNumber = null; // of the StartTransaction operation
         public Long startTimeUnix = null; // of the StartTransaction operation
         public String startTimeString = null; // of the StartTransaction operation
@@ -114,7 +127,6 @@ public class WeltladenTSE {
     private TSETransaction tx = new TSETransaction();
     private boolean tseInUse = true;
     private boolean loggedIn = false;
-    private MainWindow mw = null;
     private Path pinPath = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".Weltladenkasse_tse");
     public static String dateFormatDSFinVK = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"; // YYYY-MM-DDThh:mm:ss.fffZ, see https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html
 
@@ -157,9 +169,10 @@ public class WeltladenTSE {
      *    The constructor.
      *
      */
-    public WeltladenTSE(MainWindow mw, BaseClass bc) {
+    public WeltladenTSE(MainWindow mw, BaseClass bc, MariaDbPoolDataSource pool) {
         this.mw = mw;
         this.bc = bc;
+        this.pool = pool;
         connectToTSE();
         if (tseInUse) {
             LongOperationIndicatorDialog dialog = new LongOperationIndicatorDialog(
@@ -1354,9 +1367,9 @@ public class WeltladenTSE {
             openTransactions = tse.getOpenTransactions();
             logger.debug("Open transactions: {}", openTransactions);
 
-            byte[] tx = getTransaction(result.transactionNumber);
-            System.out.println(TSEUntar.extractStartTransactionAsASN1(tx));
-            System.out.println(TSEUntar.extractFinishTransactionAsASN1(tx));
+            byte[] transx = getTransaction(result.transactionNumber);
+            System.out.println(TSEUntar.extractStartTransactionAsASN1(transx));
+            System.out.println(TSEUntar.extractFinishTransactionAsASN1(transx));
         } catch (ErrorSeApiNotInitialized ex) {
             logger.fatal("SE API not initialized");
             logger.fatal("Exception:", ex);
@@ -1630,11 +1643,13 @@ public class WeltladenTSE {
         }
     };
 
-    private String sendFinishTransaction(String processData) {
+    private String sendFinishTransaction(String processData, Integer rechnungsNr) {
         String message = "";
         try {
             if (tx.txNumber != null) {
-                FinishTransactionResult result = tse.finishTransaction(bc.z_kasse_id, tx.txNumber, processData.getBytes(), "Kassenbeleg-V1", null);
+                String processType = defaultProcessType;
+                FinishTransactionResult result = tse.finishTransaction(bc.z_kasse_id, tx.txNumber, processData.getBytes(), processType, null);
+                tx.rechnungsNr = rechnungsNr;
                 tx.endTimeUnix = result.logTime;
                 tx.endTimeString = unixTimeToCalTime(result.logTime);
                 tx.sigCounter = result.signatureCounter;
@@ -1648,7 +1663,7 @@ public class WeltladenTSE {
                 logger.debug("TX processData: {}", tx.processData);
                 logger.debug("TX signature: {}", tx.signatureBase64);
                 logger.debug("Number of open transactions: {}", tse.getCurrentNumberOfTransactions());
-                /* TODO store transaction in the DB */
+                storeTransactionInDB();
             }
             // Make room for next transaction:
             tx = new TSETransaction();
@@ -1700,7 +1715,7 @@ public class WeltladenTSE {
              Eine tatsächliche Bezahlung darf im Zusammenhang mit diesem Vorgangstyp nicht erfolgen."
         */
         String processData = "AVBelegabbruch^0.00_0.00_0.00_0.00_0.00^";
-        String message = sendFinishTransaction(processData);
+        String message = sendFinishTransaction(processData, null);
         if (message != "OK") {
             JOptionPane.showMessageDialog(this.mw,
                 "ACHTUNG: Die TSE-Transaktion konnte nicht abgebrochen werden!\n\n"+
@@ -1780,7 +1795,8 @@ public class WeltladenTSE {
     }
 
      /** Finish the TSE transaction by entering payment details */
-    public void finishTransaction(BigDecimal steuer_allgemein, // (19% MwSt)
+    public void finishTransaction(int rechnungsNr,
+                                  BigDecimal steuer_allgemein, // (19% MwSt)
                                   BigDecimal steuer_ermaessigt, // (7% MwSt)
                                   BigDecimal steuer_durchschnitt_nr3, BigDecimal steuer_durchschnitt_nr1, // Häh???
                                   BigDecimal steuer_null, // (0% MwSt) /* Für Steuersätze, siehe DSFinV-K v2.2 (Anhang I, S. 110) */
@@ -1796,7 +1812,7 @@ public class WeltladenTSE {
         String processData = renderProcessData(steuer_allgemein, steuer_ermaessigt,
                                                steuer_durchschnitt_nr3, steuer_durchschnitt_nr1,
                                                steuer_null, zahlungen);
-        String message = sendFinishTransaction(processData);
+        String message = sendFinishTransaction(processData, rechnungsNr);
         if (message != "OK") {
             JOptionPane.showMessageDialog(this.mw,
                 "ACHTUNG: Die TSE-Transaktion konnte nicht abgeschlossen werden!\n\n"+
@@ -1808,6 +1824,10 @@ public class WeltladenTSE {
             disconnectFromTSE();
             System.exit(1);
         }
+    }
+
+    private void storeTransactionInDB() {
+        // store tx in the DB using this.pool
     }
 
 }

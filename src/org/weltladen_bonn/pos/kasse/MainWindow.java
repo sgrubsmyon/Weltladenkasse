@@ -64,7 +64,7 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
 
     @Override
     protected void beforeInitiate() {
-        tse = new WeltladenTSE(this, this.bc);
+        tse = new WeltladenTSE(this, this.bc, this.pool);
     }
 
     public void setDisplayWelcomeTimer() {
