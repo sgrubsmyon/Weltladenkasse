@@ -255,4 +255,31 @@ CREATE TABLE bestellung_details (
     FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE tse_transaction (
+    transaction_number INTEGER(10) UNSIGNED NOT NULL,
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL,
+    transaction_start CHAR(29) DEFAULT NULL,
+    transaction_end CHAR(29) DEFAULT NULL,
+    process_type VARCHAR(30) DEFAULT NULL,
+    signature_counter INTEGER(10) UNSIGNED DEFAULT NULL,
+    signatur VARCHAR(512) DEFAULT NULL,
+    tse_error VARCHAR(200) DEFAULT NULL,
+    process_data VARCHAR(60) DEFAULT NULL,
+    PRIMARY KEY (transaction_number),
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- tx start and end times are prepared in format '2021-01-17T19:13:45.000+01:00' in Java,
+--     so they have a fixed length of 29 chars
+-- process_type will probably only ever need 14 chars (e.g. initially Kassenbeleg-V1, then Kassenbeleg-V2, ...)
+--     but in the specs, it has (up to) 30 characters, so better make sure it works
+-- Example signatur in Base64:
+--     XLBGMLidNi+vICwIAPO4B/PyDgSna+5EluXgchQOdNvNYfxcdJS/32mnmars0BxM+Dwk4W3kYaCavU7IEmPnIQ==
+-- so 88 chars, but let's stick to specs where it says up to 512 chars
+-- Example process_data with absurdly large amounts:
+--         Beleg^2190.00_1795.00_0.00_0.00_0.00^3985.00:Unbar
+--         AVBelegabbruch^0.00_0.00_0.00_0.00_0.00^
+--     Just to make sure, let's assume each tax class has a sum with 4 digits:
+--         Beleg^9999.00_9999.00_9999.00_9999.00_9999.00^49995.00:Unbar
+--     Even this extreme case would fit into a 60 chars long field
+
 SOURCE grants.sql;

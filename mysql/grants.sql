@@ -20,3 +20,4 @@ GRANT INSERT, DELETE ON kasse.abrechnung_jahr TO 'mitarbeiter'@'localhost';
 GRANT INSERT, DELETE ON kasse.abrechnung_jahr_mwst TO 'mitarbeiter'@'localhost';
 GRANT INSERT, UPDATE, DELETE ON kasse.bestellung TO 'mitarbeiter'@'localhost';
 GRANT INSERT, UPDATE, DELETE ON kasse.bestellung_details TO 'mitarbeiter'@'localhost';
+GRANT INSERT ON kasse.tse_transaction TO 'mitarbeiter'@'localhost';
