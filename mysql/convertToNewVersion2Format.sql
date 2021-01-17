@@ -236,7 +236,7 @@ GRANT INSERT, DELETE ON kasse.abrechnung_jahr_mwst TO 'mitarbeiter'@'localhost';
 
 CREATE TABLE tse_transaction (
     transaction_number INTEGER(10) UNSIGNED NOT NULL,
-    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL,
+    rechnungs_nr INTEGER(10) UNSIGNED DEFAULT NULL,
     transaction_start CHAR(29) DEFAULT NULL,
     transaction_end CHAR(29) DEFAULT NULL,
     process_type VARCHAR(30) DEFAULT NULL,
