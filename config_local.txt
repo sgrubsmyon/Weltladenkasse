@@ -40,9 +40,9 @@ alwaysPrintReceipt = true
 
 Z_KASSE_ID = WeltladenBonnKasse-01
 
-##################
-# Stamm_Abschluss
-##################
+#########################################
+# Stamm_Abschluss (cashpointclosing.csv)
+#########################################
 
 TAXONOMIE_VERSION = 2.2
 NAME = Weltladen Bonn e.V.
@@ -52,6 +52,16 @@ ORT = Bonn
 LAND = DEU
 STNR = 205/5775/1014
 USTID = 
+
+######################
+# Stamm_TSE (tse.csv)
+######################
+
+# Die TSE_ID muss nur innerhalb eines Betriebs eindeutig sein.
+# Bitte ändern, sobald die TSE ausgetauscht, bzw. eine neue TSE
+# eingesetzt wird.
+TSE_ID = 1
+TSE_PD_ENCODING = UTF-8
 
 # Markenbezeichnung der eingesetzten Kassen-Software: (https://github.com/sgrubsmyon/Weltladenkasse)
 KASSE_SW_BRAND = Weltladenkasse
