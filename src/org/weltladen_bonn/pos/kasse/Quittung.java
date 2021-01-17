@@ -218,7 +218,7 @@ public class Quittung extends WindowContent {
         /** Simple method: printing with openoffice command line tool 'soffice' */
         String program = constructProgramPath(bc.sofficePath, "soffice");
         String[] executeCmd = new String[] {program, "--headless",
-            "-pt", bc.printerName, filename};
+            "--pt", bc.printerName, filename};
         String log = "Print command: ";
         for (String s : executeCmd){
             log += s+" ";
