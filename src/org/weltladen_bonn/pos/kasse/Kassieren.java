@@ -1358,7 +1358,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 DateTime now = new DateTime(now());
                 if (now.lt(latestVerkauf)) {
                     JOptionPane.showMessageDialog(this, "Fehler: Rechnung kann nicht gespeichert werden, da das aktuelle Datum vor dem der letzten Rechnung liegt.\n"+
-                            "Bitte das Datum im Computer korrigieren.", "Fehler",
+                            "Bitte das Datum im Kassenserver korrigieren.", "Fehler",
                             JOptionPane.ERROR_MESSAGE);
                     return rechnungsNr;
                 }
@@ -1655,9 +1655,23 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         Vector<Vector<String>> zahlungen = new Vector<Vector<String>>();
         zahlungen.add(zahlung);
         LinkedHashMap<Integer, Vector<BigDecimal>> mwstsAndTheirValues = getMwstsAndTheirValues();
+
+        int rechnungsNr = -1;
+        boolean ec = true;
+        BigDecimal kundeGibt = null;
+        if (kundeGibtField.isEditable()) { // if Barzahlung
+            ec = false;
+            kundeGibt = new BigDecimal(getKundeGibt());
+        }
+        rechnungsNr = insertIntoVerkauf(ec, kundeGibt);
+        if (rechnungsNr < 0){
+            return rechnungsNr;
+        }
+        
         /* Zitat DSFinV-K: (S. 109) "Für jeden Steuersatz werden hier die Bruttoumsätze je Steuersatz [...] aufgelistet." */
         // Bruttoumsatz = 4. Element in mwstsAndTheirValues (get(3))
         tse.finishTransaction(
+            rechnungsNr,
             mwstsAndTheirValues.get(3) != null ? mwstsAndTheirValues.get(3).get(3) : null, // steuer_allgemein = mwst_id: 3 = 19% MwSt
             mwstsAndTheirValues.get(2) != null ? mwstsAndTheirValues.get(2).get(3) : null, // steuer_ermaessigt = mwst_id: 2 = 7% MwSt
             null, null, // Häh???
@@ -1665,24 +1679,15 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             zahlungen
         );
 
-        int rechnungsNr = -1;
-        if (kundeGibtField.isEditable()) { // if Barzahlung
-            rechnungsNr = insertIntoVerkauf(false, new BigDecimal(getKundeGibt()));
-            if (rechnungsNr < 0){
-                return rechnungsNr;
-            }
+        if (ec == false) { // if Barzahlung
             insertIntoKassenstand(rechnungsNr);
             if (bc.alwaysPrintReceipt) {
                 printQuittung(rechnungsNr);
             }
         } else { // EC-Zahlung
-            rechnungsNr = insertIntoVerkauf(true, null);
-            if (rechnungsNr < 0){
-                return rechnungsNr;
-            }
             try {
                 printQuittung(rechnungsNr);
-                Thread.sleep(5000); // wait for 5 seconds
+                // Thread.sleep(5000); // wait for 5 seconds, no, printer is too slow anyway and this blocks UI unnecessarily
                 printQuittung(rechnungsNr);
             } catch (InterruptedException ex) {
                 logger.error("Exception:", ex);

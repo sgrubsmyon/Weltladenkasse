@@ -262,7 +262,7 @@ CREATE TABLE tse_transaction (
     transaction_end CHAR(29) DEFAULT NULL,
     process_type VARCHAR(30) DEFAULT NULL,
     signature_counter INTEGER(10) UNSIGNED DEFAULT NULL,
-    signatur VARCHAR(512) DEFAULT NULL,
+    signature_base64 VARCHAR(512) DEFAULT NULL,
     tse_error VARCHAR(200) DEFAULT NULL,
     process_data VARCHAR(60) DEFAULT NULL,
     PRIMARY KEY (transaction_number),
