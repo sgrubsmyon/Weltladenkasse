@@ -122,7 +122,6 @@ public class WeltladenTSE {
     private static int timeSyncInterval = 0;
 
     public static String[] statusValueKeys = {
-        "Eindeutige D-Trust-ID (Int)",
         "Eindeutige D-Trust-ID (Hex)",
         "BSI-Zertifizierungsnummer",
         "Firmware-Version",
@@ -589,10 +588,6 @@ public class WeltladenTSE {
 
     public HashMap<String, String> retrieveTSEStatusValues(Vector<String> interestingValues) {
         HashMap<String, String> values = new HashMap<String, String>();
-        if (interestingValues.size() == 0 || interestingValues.contains("Eindeutige D-Trust-ID (Int)")) {
-            // Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE
-            values.put("Eindeutige D-Trust-ID (Int)", byteArrayToSingleIntString(tse.getUniqueId()));
-        }
         if (interestingValues.size() == 0 || interestingValues.contains("Eindeutige D-Trust-ID (Hex)")) {
             // Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE
             values.put("Eindeutige D-Trust-ID (Hex)", byteArrayToHexString(tse.getUniqueId()));
@@ -738,7 +733,7 @@ public class WeltladenTSE {
 
     private void printStatusValues() {
         String[] interestingValuesArray = {
-            // "Eindeutige D-Trust-ID (Int)", "Firmware-Version", "BSI-Zertifizierungsnummer",
+            // "Eindeutige D-Trust-ID (Hex)", "Firmware-Version", "BSI-Zertifizierungsnummer",
             "Gesamte Speichergröße", "Verfügbare Speichergröße", "Verschleiß des Speichers",
             "Lebenszyklus", "Transaktionsnummer", "Signatur-Zähler",
             // "Seriennummer der TSE (Hex)", "Öffentlicher Schlüssel (Hex)",
