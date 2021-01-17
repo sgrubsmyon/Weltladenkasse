@@ -1794,8 +1794,8 @@ public class WeltladenTSE {
              des Betriebes aus dem Vorgang resultiert."
         */
         String processData = renderProcessData(steuer_allgemein, steuer_ermaessigt,
-                                                steuer_durchschnitt_nr3, steuer_durchschnitt_nr1,
-                                                steuer_null, zahlungen);
+                                               steuer_durchschnitt_nr3, steuer_durchschnitt_nr1,
+                                               steuer_null, zahlungen);
         String message = sendFinishTransaction(processData);
         if (message != "OK") {
             JOptionPane.showMessageDialog(this.mw,

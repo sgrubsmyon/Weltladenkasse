@@ -229,3 +229,22 @@ DROP TABLE abrechnung_jahr_copy;
 
 -- Grant default user access right to new MwSt. table: (need to do as root user)
 GRANT INSERT, DELETE ON kasse.abrechnung_jahr_mwst TO 'mitarbeiter'@'localhost';
+
+---------------------
+-- tse_transaction --
+---------------------
+
+CREATE TABLE tse_transaction (
+    transaction_number INTEGER(10) UNSIGNED NOT NULL,
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL,
+    transaction_start CHAR(29) DEFAULT NULL,
+    transaction_end CHAR(29) DEFAULT NULL,
+    process_type VARCHAR(30) DEFAULT NULL,
+    signature_counter INTEGER(10) UNSIGNED DEFAULT NULL,
+    signatur VARCHAR(512) DEFAULT NULL,
+    tse_error VARCHAR(200) DEFAULT NULL,
+    process_data VARCHAR(60) DEFAULT NULL,
+    PRIMARY KEY (transaction_number),
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+GRANT INSERT ON kasse.tse_transaction TO 'mitarbeiter'@'localhost';
