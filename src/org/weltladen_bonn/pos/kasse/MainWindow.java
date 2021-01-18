@@ -49,6 +49,9 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
     public MainWindow() {
         super();
 
+        // Initiate TSE (after connecting to DB)
+        tse = new WeltladenTSE(this.pool, this);
+
         display = new Kundendisplay(bc);
         setDisplayBlankTimer();
 
@@ -60,11 +63,6 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
         //beendenButton.addActionListener(this);
         //topPanel.add(beendenButton);
         //holdAll.add(topPanel, BorderLayout.NORTH);
-    }
-
-    @Override
-    protected void beforeInitiate() {
-        tse = new WeltladenTSE(this, this.bc, this.pool);
     }
 
     public void setDisplayWelcomeTimer() {

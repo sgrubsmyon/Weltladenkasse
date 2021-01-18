@@ -1,6 +1,6 @@
 package org.weltladen_bonn.pos.kasse;
 
-import org.weltladen_bonn.pos.BaseClass;
+import org.weltladen_bonn.pos.WindowContent;
 import org.weltladen_bonn.pos.LongOperationIndicatorDialog;
 
 import java.io.IOException;
@@ -102,25 +102,23 @@ import org.apache.logging.log4j.Logger;
  * a device from cryptovision/D-Trust/Bundesdruckerei, but it could be
  * a different vendor as well (e.g. EPSON).
  */
-public class WeltladenTSE {
+public class WeltladenTSE extends WindowContent {
     private static final Logger logger = LogManager.getLogger(WeltladenTSE.class);
     
     private String defaultProcessType = "Kassenbeleg-V1";
 
-    private MainWindow mw;
-    private BaseClass bc;
-    private MariaDbPoolDataSource pool; // pool of connections to MySQL database
-
     private class TSETransaction {
-        public Integer rechnungsNr = null; // for connecting TSE data to SQL table 'verkauf' data
+        public Integer rechnungsNr = null; // for connecting TSE data to SQL table 'verkauf'
         public Long txNumber = null; // of the StartTransaction operation
         public Long startTimeUnix = null; // of the StartTransaction operation
         public String startTimeString = null; // of the StartTransaction operation
         public Long endTimeUnix = null; // of the FinishTransaction operation
         public String endTimeString = null; // of the FinishTransaction operation
-        public Long sigCounter = null; // of the FinishTransaction operation
+        public String processType = null; // of the FinishTransaction operation
         public String processData = null; // of the FinishTransaction operation
+        public Long sigCounter = null; // of the FinishTransaction operation
         public String signatureBase64 = null; // of the FinishTransaction operation
+        public String tseError = null; // error message in case of error
     }
 
     private TSE tse = null;
@@ -169,10 +167,8 @@ public class WeltladenTSE {
      *    The constructor.
      *
      */
-    public WeltladenTSE(MainWindow mw, BaseClass bc, MariaDbPoolDataSource pool) {
-        this.mw = mw;
-        this.bc = bc;
-        this.pool = pool;
+    public WeltladenTSE(MariaDbPoolDataSource pool, MainWindow mw) {
+        super(pool, mw);
         connectToTSE();
         if (tseInUse) {
             LongOperationIndicatorDialog dialog = new LongOperationIndicatorDialog(
@@ -234,7 +230,7 @@ public class WeltladenTSE {
         } catch (FileNotFoundException ex) {
             logger.warn("TSE config file not found under '{}'", "config_tse.txt");
             logger.warn("Exception:", ex);
-            JOptionPane.showMessageDialog(this.mw,
+            JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Es wird ohne TSE gearbeitet (weil keine Datei 'config_tse.txt' vorhanden ist)!!!\n"+
                 "Dies ist im Geschäftsbetrieb ILLEGAL und darf also nur für Testzwecke geschehen!!!\n"+
                 "Wurde aus Versehen der Testmodus gewählt?",
@@ -245,7 +241,7 @@ public class WeltladenTSE {
         } catch (IOException ex) {
             logger.fatal("There is a TSE config file '{}', but it could not be read from it.", "config_tse.txt");
             logger.fatal("Exception:", ex);
-            JOptionPane.showMessageDialog(this.mw,
+            JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die Datei 'config_tse.txt' konnte nicht eingelesen werden!\n"+
                 "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
                 "wird die Kassensoftware jetzt beendet. Bitte Fehler in der Datei beheben und\n"+
@@ -258,7 +254,7 @@ public class WeltladenTSE {
         } catch (SEException ex) {
             logger.fatal("Unable to open connection to TSE, given configuration provided by '{}'.", "config_tse.txt");
             logger.fatal("Exception:", ex);
-            JOptionPane.showMessageDialog(this.mw,
+            JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Es konnte keine Verbindung zur TSE aufgebaut werden!\n"+
                 "Entweder die TSE (eine SD-Karte, die rechts am Laptop in einem Schlitz steckt)\n"+
                 "sitzt nicht richtig drin oder die Konfiguration in der Datei 'config_tse.txt'\n"+
@@ -344,7 +340,7 @@ public class WeltladenTSE {
             byte[] adminPIN = null;
             if (transportState) {
                 logger.info("TSE found, which is still in transport state!");
-                JOptionPane.showMessageDialog(this.mw,
+                JOptionPane.showMessageDialog(this.mainWindow,
                     "ACHTUNG: Eine noch nicht initialisierte TSE wurde gefunden.\n"+
                     "Dies kommt vor, wenn eine neue TSE zum ersten mal eingesetzt wird.\n"+
                     "Es können jetzt die PINs und PUKs gesetzt werden, um die TSE zu initialisieren.\n"+
@@ -356,7 +352,7 @@ public class WeltladenTSE {
                 transportState = pinStatus[0];
                 if (transportState) {
                     logger.fatal("TSE PIN and PUK setting failed! (TSE still in transport state after setting PINs and PUKs)");
-                    JOptionPane.showMessageDialog(this.mw,
+                    JOptionPane.showMessageDialog(this.mainWindow,
                         "ACHTUNG: Das Setzen der PINs und PUKs der TSE ist fehlgeschlagen!\n"+
                         "Ohne Setzen der PINs/PUKs kann eine neue TSE nicht verwendet werden.\n"+
                         "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
@@ -375,7 +371,7 @@ public class WeltladenTSE {
                 // Re-check if TSE was actually initialized:
                 if (tse.getLifeCycleState() == LCS.notInitialized) {
                     logger.fatal("TSE initialization failed!");
-                    JOptionPane.showMessageDialog(this.mw,
+                    JOptionPane.showMessageDialog(this.mainWindow,
                         "ACHTUNG: Die Initialisierung der TSE ist fehlgeschlagen!\n"+
                         "Ohne Initialisierung kann eine neue TSE nicht verwendet werden.\n"+
                         "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
@@ -396,7 +392,7 @@ public class WeltladenTSE {
             // Re-check if time was actually set:
             if (tse.getLifeCycleState() == LCS.noTime) {
                 logger.fatal("TSE time update failed!");
-                JOptionPane.showMessageDialog(this.mw,
+                JOptionPane.showMessageDialog(this.mainWindow,
                     "ACHTUNG: Die Aktualisierung der Zeit der TSE ist fehlgeschlagen!\n"+
                     "Ohne Zeitaktualisierung kann eine TSE nicht verwendet werden.\n"+
                     "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
@@ -427,7 +423,7 @@ public class WeltladenTSE {
                 // Re-check if client ID is still unmapped to key:
                 if (byteArrayToHexString(tse.getERSMappings()).equals("3000")) { // XXX is this the general value for unmapped?
                     logger.fatal("Mapping of client ID to TSE key failed!");
-                    JOptionPane.showMessageDialog(this.mw,
+                    JOptionPane.showMessageDialog(this.mainWindow,
                         "ACHTUNG: Die Aktualisierung der Zeit der TSE ist fehlgeschlagen!\n"+
                         "Ohne Zeitaktualisierung kann eine TSE nicht verwendet werden.\n"+
                         "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
@@ -450,7 +446,7 @@ public class WeltladenTSE {
         } catch (SEException ex) {
             logger.fatal("Unable to check initialization status of TSE");
             logger.fatal("Exception:", ex);
-            JOptionPane.showMessageDialog(this.mw,
+            JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Es konnte nicht geprüft werden, ob die TSE bereits initialisiert ist!\n"+
                 "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
                 "Bitte Fehler beheben und erneut versuchen.",
@@ -768,8 +764,8 @@ public class WeltladenTSE {
     }
 
     private byte[] showPINPUKDialog() {
-        JDialog dialog = new JDialog(this.mw, "Bitte PINs und PUKs der TSE eingeben", true);
-        TSEInitDialog tseid = new TSEInitDialog(this.mw, dialog, this);
+        JDialog dialog = new JDialog(this.mainWindow, "Bitte PINs und PUKs der TSE eingeben", true);
+        TSEInitDialog tseid = new TSEInitDialog(this.mainWindow, dialog, this);
         dialog.getContentPane().add(tseid, BorderLayout.CENTER);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.pack();
@@ -779,8 +775,8 @@ public class WeltladenTSE {
     }
 
     private byte[] showPINentryDialog(String role, String numbertype, int places) {
-        JDialog dialog = new JDialog(this.mw, "Bitte "+role+" "+numbertype+" der TSE eingeben", true);
-        TSEPINEntryDialog tseped = new TSEPINEntryDialog(this.mw, dialog, this, role, numbertype, places);
+        JDialog dialog = new JDialog(this.mainWindow, "Bitte "+role+" "+numbertype+" der TSE eingeben", true);
+        TSEPINEntryDialog tseped = new TSEPINEntryDialog(this.mainWindow, dialog, this, role, numbertype, places);
         dialog.getContentPane().add(tseped, BorderLayout.CENTER);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.pack();
@@ -826,7 +822,7 @@ public class WeltladenTSE {
                 logger.fatal("Exception:", ex);
             }
             if (!passed) {
-                // JOptionPane.showMessageDialog(this.mw,
+                // JOptionPane.showMessageDialog(this.mainWindow,
                 //     "ACHTUNG: Die PINs und PUKs der TSE konnten nicht gesetzt werden!\n\n"+
                 //     "Fehler: "+error+".\n\n"+
                 //     "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
@@ -901,7 +897,7 @@ public class WeltladenTSE {
             if (res.authenticationResult != AuthenticationResult.ok) {
                 message = "Authentication error for user "+user+": "+res.authenticationResult.toString();
                 logger.fatal("Fatal Error: {}", message);
-                JOptionPane.showMessageDialog(this.mw,
+                JOptionPane.showMessageDialog(this.mainWindow,
                     "ACHTUNG: Authentifizierungsfehler als User "+user+" bei der TSE!\n\n"+
                     "authenticationResult: "+res.authenticationResult.toString()+"\n\n"+
                     "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
@@ -938,7 +934,7 @@ public class WeltladenTSE {
             logger.info("Closing connection to TSE after this fatal error.");
             disconnectFromTSE();
             if (exitOnFatal) {
-                JOptionPane.showMessageDialog(this.mw,
+                JOptionPane.showMessageDialog(this.mainWindow,
                     "ACHTUNG: Es konnte sich nicht als User "+user+" an der TSE angemeldet werden!\n\n"+
                     "Fehler: "+message+".\n\n"+
                     "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
@@ -992,7 +988,7 @@ public class WeltladenTSE {
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            JOptionPane.showMessageDialog(this.mw,
+            JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Es konnte sich nicht als "+user+" von der TSE abgemeldet werden!\n\n"+
                 "Fehler: "+error+".\n\n"+
                 "Dies weist auf eine fehlerhafte TSE hin. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
@@ -1037,7 +1033,7 @@ public class WeltladenTSE {
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            JOptionPane.showMessageDialog(this.mw,
+            JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die TSE konnte nicht initialisiert werden!\n\n"+
                 "Fehler: "+error+".\n\n"+
                 "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
@@ -1073,7 +1069,7 @@ public class WeltladenTSE {
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            JOptionPane.showMessageDialog(this.mw,
+            JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Das Zeitaktualisierungsintervall der TSE konnte nicht ausgelesen werden!\n\n"+
                 "Fehler: "+error+".\n\n"+
                 "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
@@ -1145,7 +1141,7 @@ public class WeltladenTSE {
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            JOptionPane.showMessageDialog(this.mw,
+            JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die Zeit der TSE konnte nicht aktualisiert werden!\n\n"+
                 "Fehler: "+error+".\n\n"+
                 "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
@@ -1165,7 +1161,7 @@ public class WeltladenTSE {
         try {
             if (tse.getLifeCycleState() == LCS.noTime) {
                 logger.fatal("TSE time update failed!");
-                JOptionPane.showMessageDialog(this.mw,
+                JOptionPane.showMessageDialog(this.mainWindow,
                     "ACHTUNG: Die Aktualisierung der Zeit der TSE ist fehlgeschlagen!\n"+
                     "Ohne Zeitaktualisierung kann eine TSE nicht verwendet werden.\n"+
                     "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
@@ -1177,7 +1173,7 @@ public class WeltladenTSE {
         } catch (ErrorSECommunicationFailed ex) {
             logger.fatal("SE Communication failed!");
             logger.fatal("Exception:", ex);
-            JOptionPane.showMessageDialog(this.mw,
+            JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die Kommunikation mit der TSE nach dem Setzen der Zeit ist fehlgeschlagen!\n"+
                 "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.",
                 "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
@@ -1186,7 +1182,7 @@ public class WeltladenTSE {
         } catch (SEException ex) {
             logger.fatal("SE Communication failed!");
             logger.fatal("Exception:", ex);
-            JOptionPane.showMessageDialog(this.mw,
+            JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Unbekannter Fehler nach dem Setzen der Zeit der TSE!\n"+
                 "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.",
                 "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
@@ -1215,7 +1211,7 @@ public class WeltladenTSE {
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            JOptionPane.showMessageDialog(this.mw,
+            JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die Seriennummer des TSE-Schlüssels konnte nicht ausgelesen werden!\n\n"+
                 "Fehler: "+error+".\n\n"+
                 "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
@@ -1298,7 +1294,7 @@ public class WeltladenTSE {
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            JOptionPane.showMessageDialog(this.mw,
+            JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die ClientID konnte nicht dem TSE-Schlüssel zugeordnet werden!\n\n"+
                 "Fehler: "+error+".\n\n"+
                 "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
@@ -1631,7 +1627,7 @@ public class WeltladenTSE {
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            JOptionPane.showMessageDialog(this.mw,
+            JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Es konnte keine TSE-Transaktion gestartet werden!\n\n"+
                 "Fehler: "+error+".\n\n"+
                 "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
@@ -1652,16 +1648,19 @@ public class WeltladenTSE {
                 tx.rechnungsNr = rechnungsNr;
                 tx.endTimeUnix = result.logTime;
                 tx.endTimeString = unixTimeToCalTime(result.logTime);
-                tx.sigCounter = result.signatureCounter;
+                tx.processType = processType;
                 tx.processData = processData;
+                tx.sigCounter = result.signatureCounter;
                 tx.signatureBase64 = byteArrayToBase64String(result.signatureValue);
                 logger.debug("Finishing transaction:");
+                logger.debug("Rechnungsnummer: {}", tx.rechnungsNr);
                 logger.debug("TX number: {}", tx.txNumber);
                 logger.debug("TX start time: {}", tx.startTimeString);
                 logger.debug("TX end time: {}", tx.endTimeString);
-                logger.debug("TX sig counter: {}", tx.sigCounter);
+                logger.debug("TX processType: {}", tx.processType);
                 logger.debug("TX processData: {}", tx.processData);
-                logger.debug("TX signature: {}", tx.signatureBase64);
+                logger.debug("TX sig counter: {}", tx.sigCounter);
+                logger.debug("TX signature base64: {}", tx.signatureBase64);
                 logger.debug("Number of open transactions: {}", tse.getCurrentNumberOfTransactions());
                 storeTransactionInDB();
             }
@@ -1705,6 +1704,12 @@ public class WeltladenTSE {
             logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         }
+        if (message != "OK") {
+            tx.tseError = message;
+            storeTransactionInDB();
+            // Make room for next transaction:
+            tx = new TSETransaction();
+        }
         return message;
     }
     
@@ -1717,7 +1722,7 @@ public class WeltladenTSE {
         String processData = "AVBelegabbruch^0.00_0.00_0.00_0.00_0.00^";
         String message = sendFinishTransaction(processData, null);
         if (message != "OK") {
-            JOptionPane.showMessageDialog(this.mw,
+            JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die TSE-Transaktion konnte nicht abgebrochen werden!\n\n"+
                 "Fehler: "+message+".\n\n"+
                 "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
@@ -1814,7 +1819,7 @@ public class WeltladenTSE {
                                                steuer_null, zahlungen);
         String message = sendFinishTransaction(processData, rechnungsNr);
         if (message != "OK") {
-            JOptionPane.showMessageDialog(this.mw,
+            JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die TSE-Transaktion konnte nicht abgeschlossen werden!\n\n"+
                 "Fehler: "+message+".\n\n"+
                 "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
@@ -1828,6 +1833,61 @@ public class WeltladenTSE {
 
     private void storeTransactionInDB() {
         // store tx in the DB using this.pool
+        String message = "";
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO tse_transaction SET "+
+                "transaction_number = ?, "+
+                "rechnungs_nr = ?, "+
+                "transaction_start = ?, "+
+                "transaction_end = ?, "+
+                "process_type = ?, "+
+                "signature_counter = ?, "+
+                "signature_base64 = ?, "+
+                "tse_error = ?, "+
+                "process_data = ?"
+            );
+            pstmtSetInteger(pstmt, 1, tx.txNumber == null ? null : Math.toIntExact(tx.txNumber));
+            pstmtSetInteger(pstmt, 2, tx.rechnungsNr);
+            pstmt.setString(3, tx.startTimeString);
+            pstmt.setString(4, tx.endTimeString);
+            pstmt.setString(5, tx.processType);
+            pstmtSetInteger(pstmt, 6, tx.sigCounter == null ? null : Math.toIntExact(tx.sigCounter));
+            pstmt.setString(7, tx.signatureBase64);
+            pstmt.setString(8, tx.tseError);
+            pstmt.setString(9, tx.processData);
+            int result = pstmt.executeUpdate();
+            if (result == 0){
+                message = "executeUpdate() returned 0";
+            }
+            pstmt.close();
+            connection.close();
+            message = "OK";
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            message = ex.getMessage();
+        } catch (ArithmeticException ex) {
+            logger.error("Exception:", ex);
+            message = "One of txNumber or sigCounter is too large to store as integer in DB!!!\n"+
+                ex.getMessage();
+        }
+        if (message != "OK") {
+            JOptionPane.showMessageDialog(this.mainWindow,
+                "ACHTUNG: Die TSE-Transaktion konnte nicht in der Datenbank gespeichert werden.\n"+
+                "Verbindung zum Datenbank-Server unterbrochen?\n"+
+                "Fehlermeldung: "+message,
+                "Fehler beim Speichern der TSE-Transaktion in der DB", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     *    * Each non abstract class that implements the ActionListener
+     *      must have this method.
+     *
+     *    @param e the action event.
+     **/
+    public void actionPerformed(ActionEvent e) {
     }
 
 }
