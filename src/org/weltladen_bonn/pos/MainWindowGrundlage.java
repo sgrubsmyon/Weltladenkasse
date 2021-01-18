@@ -62,13 +62,7 @@ public abstract class MainWindowGrundlage extends JFrame {
      *       */
     public MainWindowGrundlage() {
         bc = new BaseClass();
-        beforeInitiate();
         initiate();
-    }
-
-    protected void beforeInitiate() {
-        // empty in this abstract class, but can be used in subclass `MainWindow` to initiate something
-        // before asking for DB password in `initiate()` (e.g. to initiate TSE)
     }
 
     private void initiate() {

@@ -52,13 +52,16 @@ public class OptionTabbedPane extends TabbedPaneGrundlage {
         Lieferantliste myLieferant = new Lieferantliste(this.pool, this.mainWindow);
         Produktgruppenliste myProduktgruppe = new Produktgruppenliste(this.pool, this.mainWindow);
         DumpDatabase myDump = new DumpDatabase(this.pool, this.mainWindow, this);
-        TSEStatus myTSE = new TSEStatus(this.pool, (MainWindow)this.mainWindow, this);
         tabbedPane.addTab("Artikelliste", null, myArtikellisteC, "Artikel bearbeiten/hinzufügen");
         tabbedPane.addTab("Rabatt", null, myRabattaktionen, "Rabattaktionen bearbeiten/hinzufügen");
         tabbedPane.addTab("Lieferanten", null, myLieferant, "Lieferanten bearbeiten/hinzufügen");
         tabbedPane.addTab("Produktgruppen", null, myProduktgruppe, "Produktgruppen bearbeiten/hinzufügen");
         tabbedPane.addTab("DB Import/Export", null, myDump, "Datenbank exportieren/importieren");
-        tabbedPane.addTab("TSE", null, myTSE, "Status der TSE abfragen und TSE-Daten exportieren");
+        WeltladenTSE tse = ((MainWindow)mainWindow).getTSE();
+        if (tse.inUse()) {
+            TSEStatus myTSE = new TSEStatus(this.pool, (MainWindow)this.mainWindow, this);
+            tabbedPane.addTab("TSE", null, myTSE, "Status der TSE abfragen und TSE-Daten exportieren");
+        }
 
         this.add(tabbedPane, BorderLayout.CENTER);
     }

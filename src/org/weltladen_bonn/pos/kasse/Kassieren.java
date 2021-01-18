@@ -1499,7 +1499,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     private void hinzufuegen(int artID, String kurzname, String artikelNummer, String type, String color,
                              String artikelMwSt, Integer stueck, String artikelPreis, BigDecimal gesPreis) {
-        if (kassierArtikel.size() == 0) {
+        if (tse.inUse() && kassierArtikel.size() == 0) {
             // First item is added, this is a new TSE transaction
             tse.startTransaction();
         }
@@ -1670,14 +1670,16 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         
         /* Zitat DSFinV-K: (S. 109) "Für jeden Steuersatz werden hier die Bruttoumsätze je Steuersatz [...] aufgelistet." */
         // Bruttoumsatz = 4. Element in mwstsAndTheirValues (get(3))
-        tse.finishTransaction(
-            rechnungsNr,
-            mwstsAndTheirValues.get(3) != null ? mwstsAndTheirValues.get(3).get(3) : null, // steuer_allgemein = mwst_id: 3 = 19% MwSt
-            mwstsAndTheirValues.get(2) != null ? mwstsAndTheirValues.get(2).get(3) : null, // steuer_ermaessigt = mwst_id: 2 = 7% MwSt
-            null, null, // Häh???
-            mwstsAndTheirValues.get(1) != null ? mwstsAndTheirValues.get(1).get(3) : null, // steuer_null = mwst_id: 1 = 0% MwSt
-            zahlungen
-        );
+        if (tse.inUse()) {
+            tse.finishTransaction(
+                rechnungsNr,
+                mwstsAndTheirValues.get(3) != null ? mwstsAndTheirValues.get(3).get(3) : null, // steuer_allgemein = mwst_id: 3 = 19% MwSt
+                mwstsAndTheirValues.get(2) != null ? mwstsAndTheirValues.get(2).get(3) : null, // steuer_ermaessigt = mwst_id: 2 = 7% MwSt
+                null, null, // Häh???
+                mwstsAndTheirValues.get(1) != null ? mwstsAndTheirValues.get(1).get(3) : null, // steuer_null = mwst_id: 1 = 0% MwSt
+                zahlungen
+            );
+        }
 
         if (ec == false) { // if Barzahlung
             insertIntoKassenstand(rechnungsNr);
@@ -1685,13 +1687,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 printQuittung(rechnungsNr);
             }
         } else { // EC-Zahlung
-            try {
-                printQuittung(rechnungsNr);
-                // Thread.sleep(5000); // wait for 5 seconds, no, printer is too slow anyway and this blocks UI unnecessarily
-                printQuittung(rechnungsNr);
-            } catch (InterruptedException ex) {
-                logger.error("Exception:", ex);
-            }
+            printQuittung(rechnungsNr);
+            // Thread.sleep(5000); // wait for 5 seconds, no, printer is too slow anyway and this blocks UI unnecessarily
+            printQuittung(rechnungsNr);
         }
         clearAll();
         updateAll();
@@ -1714,8 +1712,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (mw != null) {
             mw.setDisplayBlankTimer();
         }
-        // Cancel TSE transaction that was on-going:
-        tse.cancelTransaction();
+        if (tse.inUse()) {
+            // Cancel TSE transaction that was on-going:
+            tse.cancelTransaction();
+        }
     }
 
     private void artikelRabattierenRelativ(BigDecimal rabattRelativ) {
@@ -2184,7 +2184,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             if (display != null && display.deviceWorks()) {
                 display.clearScreen();
             }
-            if (kassierArtikel.size() == 0) {
+            if (tse.inUse() && kassierArtikel.size() == 0) {
                 // Last item was removed, cancel the TSE transaction
                 tse.cancelTransaction();
             }

@@ -110,8 +110,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     /**
      *    The constructor.
      *       */
-    public BestellAnzeige(MariaDbPoolDataSource pool, MainWindowGrundlage mw, TabbedPane tp)
-    {
+    public BestellAnzeige(MariaDbPoolDataSource pool, MainWindowGrundlage mw, TabbedPane tp) {
 	    super(pool, mw);
         tabbedPane = tp;
         selBestellNrUndTyp = new Vector<Object>();
