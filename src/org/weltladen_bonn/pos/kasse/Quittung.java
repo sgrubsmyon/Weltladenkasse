@@ -108,22 +108,28 @@ public class Quittung extends WindowContent {
         }
     }
 
+    private String saveSpaceInMenge(String menge) {
+        menge = menge.replaceAll(" ", "");
+        return menge.replaceAll("St\\.", "St");
+    }
+
     private int insertItems(Sheet sheet) {
         int row = rowOffset; // start here in ods document
         for (int i=artikelIndex; i<kassierArtikel.size(); i++){
-            if (kassierArtikel.get(i).getStueckzahl() > 1){
-                sheet.setValueAt(kassierArtikel.get(i).getStueckzahl().toString()+" x", 1, row);
-                sheet.setValueAt(kassierArtikel.get(i).getEinzelPreis(), 2, row);
-                row++;
-            }
-            sheet.setValueAt(kassierArtikel.get(i).getName(), 0, row);
+            sheet.setValueAt(kassierArtikel.get(i).getName(), 0, row); // name on full row
+            row++; // price infos on next row:
+            // if (kassierArtikel.get(i).getStueckzahl() > 1){
+            sheet.setValueAt(saveSpaceInMenge(kassierArtikel.get(i).getMenge()), 0, row);
+            sheet.setValueAt(kassierArtikel.get(i).getStueckzahl().toString()+" x", 1, row);
+            sheet.setValueAt(kassierArtikel.get(i).getEinzelPreis(), 2, row);
+            // }
             sheet.setValueAt(kassierArtikel.get(i).getGesPreis(), 3, row);
             Integer mwstIndex = mwstList.indexOf(kassierArtikel.get(i).getMwst())+1;
             sheet.setValueAt(mwstIndex, 4, row);
             row++;
             artikelIndex = i+1; // index of next item
             // if list becomes too long: print this sheet and create new sheet
-            if (row > 199+rowOffset){
+            if (row > 200+rowOffset){
                 break;
             }
         }
@@ -134,27 +140,29 @@ public class Quittung extends WindowContent {
         // if this is not the last page:
         if (artikelIndex < kassierArtikel.size()){
             // Delete footer
-            sheet.removeRow(215+rowOffset);
+            sheet.removeRow(202+rowOffset);
         } else {
             // Fill footer
             if ( zahlungsModus.equals("bar") ){
-                sheet.setValueAt("Bar", 0, 215+rowOffset);
+                sheet.setValueAt("Bar", 0, 202+rowOffset);
                 if (kundeGibt != null && rueckgeld != null){
-                    sheet.setValueAt("Kunde gibt", 0, 216+rowOffset);
-                    sheet.setValueAt("Rückgeld", 0, 217+rowOffset);
-                    sheet.setValueAt(kundeGibt, 3, 216+rowOffset);
-                    sheet.setValueAt(rueckgeld, 3, 217+rowOffset);
+                    sheet.setValueAt("Kunde gibt", 0, 203+rowOffset);
+                    sheet.setValueAt("Rückgeld", 0, 204+rowOffset);
+                    sheet.setValueAt(kundeGibt, 3, 203+rowOffset);
+                    sheet.setValueAt(rueckgeld, 3, 204+rowOffset);
                 }
             } else if ( zahlungsModus.equals("ec") ){
-                sheet.setValueAt("EC", 0, 215+rowOffset);
+                sheet.setValueAt("EC", 0, 202+rowOffset);
             }
-            sheet.setValueAt(totalPrice, 2, 215+rowOffset);
+            sheet.setValueAt(totalPrice, 2, 202+rowOffset);
             // fill mwst values
-            int row = 213+rowOffset-mwstList.size(); // now at header of mwst values
-            sheet.setValueAt("MwSt.", 0, row);
+            int row = 206+rowOffset; // now at header of mwst values
+            sheet.setValueAt("Enthaltene MwSt.:", 0, row);
+            row++;
+            sheet.setValueAt("Satz", 0, row);
             sheet.setValueAt("Netto", 1, row);
             sheet.setValueAt("Steuer", 2, row);
-            sheet.setValueAt("Umsatz", 3, row);
+            sheet.setValueAt("Brutto", 3, row);
             row++;
             Integer mwstIndex = 1;
             for ( Vector<BigDecimal> mwstValues : mwstsAndTheirValues.values() ){
@@ -169,6 +177,10 @@ public class Quittung extends WindowContent {
                 sheet.setValueAt(mwstIndex, col, row);
                 row++;
                 mwstIndex++;
+            }
+            if ( zahlungsModus.equals("ec") ){
+                // Delete rows holding "Kunde gibt" and "Rückgeld" in case of Bar (in case of EC empty)
+                sheet.removeRows(203+rowOffset, 205+rowOffset); // last row is exclusive
             }
         }
     }
@@ -254,8 +266,8 @@ public class Quittung extends WindowContent {
 
             // Insert items
             int startRemRow = insertItems(sheet);
-            int endRemRow = 213+rowOffset-mwstList.size()-1; // two rows above header of mwst values (one row of
-                                                            // empty space)
+            int endRemRow = 201+rowOffset; // delete normally up to row 208
+            
             editFooter(sheet);
 
             // Remove all empty rows between item list and footer
