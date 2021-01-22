@@ -1719,7 +1719,7 @@ public class WeltladenTSE extends WindowContent {
             "Der Vorgangstyp „AVBelegabbruch“ kennzeichnet alle Vorgänge, die nach Transaktionsbeginn abgebrochen werden.
              Eine tatsächliche Bezahlung darf im Zusammenhang mit diesem Vorgangstyp nicht erfolgen."
         */
-        String processData = "AVBelegabbruch^0.00_0.00_0.00_0.00_0.00^";
+        String processData = "AVBelegabbruch^0.00_0.00_0.00_0.00_0.00^"; // siehe hierzu auch: https://support.gastro-mis.de/support/solutions/articles/36000246958-avbelegabbruch
         String message = sendFinishTransaction(processData, null);
         if (message != "OK") {
             JOptionPane.showMessageDialog(this.mainWindow,

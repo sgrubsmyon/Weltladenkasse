@@ -407,22 +407,26 @@ public abstract class ArtikelGrundlage extends WindowContent {
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
         }
-        return calculatePricePerKg(menge_bd, einheit, preis_bd);
+        String menge = formatMengeForOutput(menge_bd, einheit);
+        String preis = bc.priceFormatter(preis_bd)+" "+bc.currencySymbol;
+        String kg_preis = calculatePricePerKg(preis_bd, menge_bd);
+        return new String[]{menge, preis, kg_preis};
     }
 
     protected String[] getMengePriceAndPricePerKg(Artikel a) {
-        return calculatePricePerKg(a.getMenge(), a.getEinheit(),
-                new BigDecimal(a.getVKP()));
+        BigDecimal menge_bd = a.getMenge();
+        String einheit = a.getEinheit();
+        BigDecimal preis_bd = new BigDecimal(a.getVKP());
+        String menge = formatMengeForOutput(menge_bd, einheit);
+        String preis = bc.priceFormatter(preis_bd)+" "+bc.currencySymbol;
+        String kg_preis = calculatePricePerKg(preis_bd, menge_bd);
+        return new String[]{menge, preis, kg_preis};
     }
 
-    private String[] calculatePricePerKg(BigDecimal menge_bd, String einheit, BigDecimal preis_bd) {
+    protected String formatMengeForOutput(BigDecimal menge_bd, String einheit) {
         String menge = "";
-        String preis = bc.priceFormatter(preis_bd)+" "+bc.currencySymbol;
-        String kg_preis = "";
         try {
             if (menge_bd.signum() > 0){
-                BigDecimal preis_pro_kg = preis_bd.divide(menge_bd, 10, RoundingMode.HALF_UP);
-                kg_preis = bc.priceFormatter(preis_pro_kg)+" "+bc.currencySymbol;
                 if ( einheit.equals("kg") || einheit.equals("l") ){
                     if ( menge_bd.compareTo(bc.one) < 0 ){ // if menge < 1 kg or 1 l
                         menge_bd = menge_bd.multiply(bc.thousand);
@@ -435,10 +439,22 @@ public abstract class ArtikelGrundlage extends WindowContent {
                 menge = (bc.unifyDecimal(menge_bd)+" "+einheit).trim();
             }
         } catch (NullPointerException ex) {
-            logger.warn("Either menge_bd {} or einheit {} is null for this article.", menge_bd, einheit);
-            // System.out.println("Either menge_bd ("+menge_bd+") or einheit ("+einheit+") is null for this article.");
+            logger.warn("Either menge_bd ({}) or einheit ({}) is null for this article.", menge_bd, einheit);
         }
-        return new String[]{menge, preis, kg_preis};
+        return menge;
+    }
+
+    protected String calculatePricePerKg(BigDecimal preis_bd, BigDecimal menge_bd) {
+        String kg_preis = "";
+        try {
+            if (menge_bd.signum() > 0){
+                BigDecimal preis_pro_kg = preis_bd.divide(menge_bd, 10, RoundingMode.HALF_UP);
+                kg_preis = bc.priceFormatter(preis_pro_kg)+" "+bc.currencySymbol;
+            }
+        } catch (NullPointerException ex) {
+            logger.warn("Either menge_bd ({}) or preis_bd ({}) is null for this article.", menge_bd, preis_bd);
+        }
+        return kg_preis;
     }
 
     public String getVPE(int artikelID) {

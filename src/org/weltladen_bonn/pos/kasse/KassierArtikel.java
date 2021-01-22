@@ -19,6 +19,7 @@ public class KassierArtikel {
     private String artikel_name;
     private String color;
     private String type;
+    private String menge;
     private Integer stueckzahl;
     private BigDecimal einzelpreis;
     private BigDecimal ges_preis;
@@ -32,6 +33,7 @@ public class KassierArtikel {
         this.artikel_name = "";
         this.color = "default";
         this.type = "artikel";
+        this.menge = "";
         this.stueckzahl = 1;
         this.einzelpreis = new BigDecimal("0.00");
         this.ges_preis = new BigDecimal("0.00");
@@ -40,8 +42,8 @@ public class KassierArtikel {
 
     public KassierArtikel(BaseClass bc, Integer position, Integer artikel_id,
             Integer rabatt_id, String artikel_name, String color, String type,
-            Integer stueckzahl, BigDecimal einzelpreis, BigDecimal ges_preis,
-            BigDecimal mwst_satz) {
+            String menge, Integer stueckzahl, BigDecimal einzelpreis,
+            BigDecimal ges_preis, BigDecimal mwst_satz) {
         this.bc = bc;
         setPosition(position);
         setArtikelID(artikel_id);
@@ -49,6 +51,10 @@ public class KassierArtikel {
         setName(artikel_name);
         setColor(color);
         setType(type);
+        setMenge(menge);
+        setStueckzahl(stueckzahl);
+        setEinzelpreis(einzelpreis);
+        setGesPreis(ges_preis);
         setMwst(mwst_satz);
     }
 
@@ -92,6 +98,8 @@ public class KassierArtikel {
             return getColor();
         if ( objName.equals("type") )
             return getType();
+        if ( objName.equals("menge") )
+            return getMenge();
         if ( objName.equals("stueckzahl") )
             return getStueckzahl();
         if ( objName.equals("einzelpreis") )
@@ -125,6 +133,10 @@ public class KassierArtikel {
 
     public String getType() {
         return type;
+    }
+
+    public String getMenge() {
+        return menge;
     }
 
     public Integer getStueckzahl() {
@@ -178,6 +190,13 @@ public class KassierArtikel {
             this.type = "artikel";
         else
             this.type = type;
+    }
+
+    public void setMenge(String menge) {
+        if (menge == null)
+            this.menge = "";
+        else
+            this.menge = menge;
     }
 
     public void setStueckzahl(Integer stueckzahl) {
