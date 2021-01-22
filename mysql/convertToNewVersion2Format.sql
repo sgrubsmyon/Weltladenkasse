@@ -5,6 +5,13 @@
 
 USE kasse;
 
+----------
+-- mwst --
+----------
+
+INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (4,0.05500);
+INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (5,0.10700);
+
 --------------------
 -- abrechnung_tag --
 --------------------

@@ -1734,11 +1734,19 @@ public class WeltladenTSE extends WindowContent {
         }
     }
 
-    private String renderProcessData(BigDecimal steuer_allgemein, BigDecimal steuer_ermaessigt,
+    private String renderProcessData(BigDecimal steuer_allgemein, BigDecimal steuer_ermaessigt, /* Für Steuersätze, siehe DSFinV-K v2.2 (Anhang I, S. 110, S. 25) */
                                      BigDecimal steuer_durchschnitt_nr3, BigDecimal steuer_durchschnitt_nr1,
-                                     BigDecimal steuer_null, /* Für Steuersätze, siehe DSFinV-K v2.2 (Anhang I, S. 110) */
+                                     BigDecimal steuer_null,
                                      Vector<Vector<String>> zahlungen) { /* Für Zahlungen, siehe DSFinV-K v2.2 (Anhang I, S. 110f)
                                          Format hier: pro Zahlung 1. String Bar|Unbar, 2. String Betrag, 3. String (optional) Währungscode */
+        /* Zitat DSFinV-K v2.2 (Anhang A, S. 42): (https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html)
+            "Der Vorgangstyp „Beleg“ umfasst alle Vorgänge, die über die Kasse abgeschlossen werden.
+             Der Vorgangstyp umfasst neben der Rechnung (§ 14 UStG) auch Gutschriften und Korrekturrechnungen.
+             Beim Vorgangstyp „Beleg“ sind alle Zahlarten möglich.
+             Der Vorgangstyp „Beleg“ ist immer dann zu wählen, wenn eine Änderung der Vermögenszusammensetzung
+             des Betriebes aus dem Vorgang resultiert."
+        */
+        
         /* Process the VAT values: */
 
         steuer_allgemein = steuer_allgemein == null ? new BigDecimal("0.00") : steuer_allgemein;
@@ -1801,19 +1809,14 @@ public class WeltladenTSE extends WindowContent {
 
      /** Finish the TSE transaction by entering payment details */
     public void finishTransaction(int rechnungsNr,
+                                  /* Für Steuersätze, siehe DSFinV-K v2.2 (Anhang I, S. 110, S. 25) */
                                   BigDecimal steuer_allgemein, // (19% MwSt)
                                   BigDecimal steuer_ermaessigt, // (7% MwSt)
-                                  BigDecimal steuer_durchschnitt_nr3, BigDecimal steuer_durchschnitt_nr1, // Häh???
-                                  BigDecimal steuer_null, // (0% MwSt) /* Für Steuersätze, siehe DSFinV-K v2.2 (Anhang I, S. 110) */
+                                  BigDecimal steuer_durchschnitt_nr3, // (10,7%) Durchschnittsatz (§ 24 Abs. 1 Nr. 3 UStG)
+                                  BigDecimal steuer_durchschnitt_nr1, // (5,5%) Durchschnittsatz (§ 24 Abs. 1 Nr. 1 UStG)
+                                  BigDecimal steuer_null, // (0% MwSt)
                                   Vector<Vector<String>> zahlungen) { /* Für Zahlungen, siehe DSFinV-K v2.2 (Anhang I, S. 110f)
                                     Format hier: pro Zahlung 1. String Bar|Unbar, 2. String Betrag, 3. String (optional) Währungscode */
-        /* Zitat DSFinV-K v2.2 (Anhang A, S. 42): (https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html)
-            "Der Vorgangstyp „Beleg“ umfasst alle Vorgänge, die über die Kasse abgeschlossen werden.
-             Der Vorgangstyp umfasst neben der Rechnung (§ 14 UStG) auch Gutschriften und Korrekturrechnungen.
-             Beim Vorgangstyp „Beleg“ sind alle Zahlarten möglich.
-             Der Vorgangstyp „Beleg“ ist immer dann zu wählen, wenn eine Änderung der Vermögenszusammensetzung
-             des Betriebes aus dem Vorgang resultiert."
-        */
         String processData = renderProcessData(steuer_allgemein, steuer_ermaessigt,
                                                steuer_durchschnitt_nr3, steuer_durchschnitt_nr1,
                                                steuer_null, zahlungen);
