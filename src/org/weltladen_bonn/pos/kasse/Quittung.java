@@ -140,23 +140,23 @@ public class Quittung extends WindowContent {
         // if this is not the last page:
         if (artikelIndex < kassierArtikel.size()){
             // Delete footer
-            sheet.removeRow(202+rowOffset);
+            sheet.removeRow(201+rowOffset);
         } else {
             // Fill footer
             if ( zahlungsModus.equals("bar") ){
-                sheet.setValueAt("Bar", 0, 202+rowOffset);
+                sheet.setValueAt("Bar", 0, 201+rowOffset);
                 if (kundeGibt != null && rueckgeld != null){
-                    sheet.setValueAt("Kunde gibt", 0, 203+rowOffset);
-                    sheet.setValueAt("Rückgeld", 0, 204+rowOffset);
-                    sheet.setValueAt(kundeGibt, 3, 203+rowOffset);
-                    sheet.setValueAt(rueckgeld, 3, 204+rowOffset);
+                    sheet.setValueAt("Kunde gibt", 0, 202+rowOffset);
+                    sheet.setValueAt("Rückgeld", 0, 203+rowOffset);
+                    sheet.setValueAt(kundeGibt, 3, 202+rowOffset);
+                    sheet.setValueAt(rueckgeld, 3, 203+rowOffset);
                 }
             } else if ( zahlungsModus.equals("ec") ){
-                sheet.setValueAt("EC", 0, 202+rowOffset);
+                sheet.setValueAt("EC", 0, 201+rowOffset);
             }
-            sheet.setValueAt(totalPrice, 2, 202+rowOffset);
+            sheet.setValueAt(totalPrice, 2, 201+rowOffset);
             // fill mwst values
-            int row = 206+rowOffset; // now at header of mwst values
+            int row = 205+rowOffset; // now at header of mwst values
             sheet.setValueAt("Enthaltene MwSt.:", 0, row);
             row++;
             sheet.setValueAt("Satz", 0, row);
@@ -180,7 +180,7 @@ public class Quittung extends WindowContent {
             }
             if ( zahlungsModus.equals("ec") ){
                 // Delete rows holding "Kunde gibt" and "Rückgeld" in case of Bar (in case of EC empty)
-                sheet.removeRows(203+rowOffset, 205+rowOffset); // last row is exclusive
+                sheet.removeRows(202+rowOffset, 204+rowOffset); // last row is exclusive
             }
         }
     }
@@ -266,7 +266,7 @@ public class Quittung extends WindowContent {
 
             // Insert items
             int startRemRow = insertItems(sheet);
-            int endRemRow = 201+rowOffset; // delete normally up to row 208
+            int endRemRow = 200+rowOffset; // delete normally up to row 207
             
             editFooter(sheet);
 
