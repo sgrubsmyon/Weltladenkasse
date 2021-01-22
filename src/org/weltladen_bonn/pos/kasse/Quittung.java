@@ -134,11 +134,13 @@ public class Quittung extends WindowContent {
         return row; // first empty row
     }
 
-    private void editFooter(Sheet sheet) {
+    private Integer editFooter(Sheet sheet) {
+        Integer row = 0;
         // if this is not the last page:
         if (artikelIndex < kassierArtikel.size()){
             // Delete footer
             sheet.removeRow(201+rowOffset);
+            row = null;
         } else {
             // Fill footer
             if ( zahlungsModus.equals("bar") ){
@@ -154,7 +156,7 @@ public class Quittung extends WindowContent {
             }
             sheet.setValueAt(totalPrice, 2, 201+rowOffset);
             // fill mwst values
-            int row = 205+rowOffset; // now at header of mwst values
+            row = 205+rowOffset; // now at header of mwst values
             sheet.setValueAt("Enthaltene MwSt.:", 0, row);
             row++;
             sheet.setValueAt("Satz", 0, row);
@@ -179,8 +181,14 @@ public class Quittung extends WindowContent {
             if ( zahlungsModus.equals("ec") ){
                 // Delete rows holding "Kunde gibt" and "Rückgeld" in case of Bar (in case of EC empty)
                 sheet.removeRows(202+rowOffset, 204+rowOffset); // last row is exclusive
+                row -= 2;
             }
         }
+        return row; // first empty row
+    }
+
+    private void insertTSEValues(Sheet sheet, int continueAtRow) {
+        // XXX CONTINUE HERE
     }
 
     void printQuittungFromJava(File tmpFile) {
@@ -266,7 +274,11 @@ public class Quittung extends WindowContent {
             int startRemRow = insertItems(sheet);
             int endRemRow = 200+rowOffset; // delete normally up to row 207
             
-            editFooter(sheet);
+            Integer continueAtRow = editFooter(sheet);
+
+            if (continueAtRow != null) { // if this is the last file written in case of multiple files
+                insertTSEValues(sheet, continueAtRow);
+            }
 
             // Remove all empty rows between item list and footer
             sheet.removeRows(startRemRow, endRemRow); // last row is exclusive
