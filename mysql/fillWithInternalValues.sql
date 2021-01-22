@@ -11,6 +11,8 @@ LOCK TABLES `mwst` WRITE;
 INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (1,0.00000);
 INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (2,0.07000);
 INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (3,0.19000);
+INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (4,0.05500);
+INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (5,0.10700);
 /*!40000 ALTER TABLE `mwst` ENABLE KEYS */;
 UNLOCK TABLES;
 

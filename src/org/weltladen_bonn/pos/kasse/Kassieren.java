@@ -1675,7 +1675,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 rechnungsNr,
                 mwstsAndTheirValues.get(3) != null ? mwstsAndTheirValues.get(3).get(3) : null, // steuer_allgemein = mwst_id: 3 = 19% MwSt
                 mwstsAndTheirValues.get(2) != null ? mwstsAndTheirValues.get(2).get(3) : null, // steuer_ermaessigt = mwst_id: 2 = 7% MwSt
-                null, null, // Häh???
+                mwstsAndTheirValues.get(5) != null ? mwstsAndTheirValues.get(5).get(3) : null, // steuer_durchschnitt_nr3 = mwst_id: 5 = 10,7% MwSt
+                mwstsAndTheirValues.get(4) != null ? mwstsAndTheirValues.get(4).get(3) : null, // steuer_durchschnitt_nr1 = mwst_id: 4 = 5,5% MwSt
                 mwstsAndTheirValues.get(1) != null ? mwstsAndTheirValues.get(1).get(3) : null, // steuer_null = mwst_id: 1 = 0% MwSt
                 zahlungen
             );
