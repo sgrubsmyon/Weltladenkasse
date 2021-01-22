@@ -118,18 +118,16 @@ public class Quittung extends WindowContent {
         for (int i=artikelIndex; i<kassierArtikel.size(); i++){
             sheet.setValueAt(kassierArtikel.get(i).getName(), 0, row); // name on full row
             row++; // price infos on next row:
-            // if (kassierArtikel.get(i).getStueckzahl() > 1){
             sheet.setValueAt(saveSpaceInMenge(kassierArtikel.get(i).getMenge()), 0, row);
             sheet.setValueAt(kassierArtikel.get(i).getStueckzahl().toString()+" x", 1, row);
             sheet.setValueAt(kassierArtikel.get(i).getEinzelPreis(), 2, row);
-            // }
             sheet.setValueAt(kassierArtikel.get(i).getGesPreis(), 3, row);
             Integer mwstIndex = mwstList.indexOf(kassierArtikel.get(i).getMwst())+1;
             sheet.setValueAt(mwstIndex, 4, row);
             row++;
             artikelIndex = i+1; // index of next item
             // if list becomes too long: print this sheet and create new sheet
-            if (row > 200+rowOffset){
+            if (row >= 200+rowOffset){
                 break;
             }
         }
