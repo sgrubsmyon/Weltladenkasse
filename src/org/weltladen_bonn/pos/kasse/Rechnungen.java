@@ -214,7 +214,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
                 "SELECT vd.position, a.kurzname, a.artikel_name, ra.aktionsname, " +
-                "a.artikel_nr, a.sortiment, " +
+                "a.artikel_nr, a.sortiment, a.menge, a.einheit, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 1 AND a.artikel_id = 2) AS rechnung_rabatt, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
@@ -234,16 +234,19 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 String aktionsname = rs.getString(4);
                 String artikelnummer = rs.getString(5);
                 boolean sortiment = rs.getBoolean(6);
-                boolean manuRabatt = rs.getBoolean(7);
-                boolean rechnungRabatt = rs.getBoolean(8);
-                boolean pfand = rs.getBoolean(9);
-                String stueck = rs.getString(10);
+                BigDecimal menge_bd = rs.getBigDecimal(7);
+                String einheit = rs.getString(8);
+                String menge = formatMengeForOutput(menge_bd, einheit);
+                boolean manuRabatt = rs.getBoolean(9);
+                boolean rechnungRabatt = rs.getBoolean(10);
+                boolean pfand = rs.getBoolean(11);
+                String stueck = rs.getString(12);
                 BigDecimal stueckDec = new BigDecimal(0);
                 if (stueck != null)
                     stueckDec = new BigDecimal(stueck);
-                String gesPreis = rs.getString(11);
+                String gesPreis = rs.getString(13);
                 BigDecimal gesPreisDec = new BigDecimal(gesPreis);
-                BigDecimal mwst = new BigDecimal(rs.getString(12));
+                BigDecimal mwst = new BigDecimal(rs.getString(14));
                 String einzelPreis = "";
                 if (stueck != null){
                     einzelPreis = bc.priceFormatter(
@@ -289,19 +292,20 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 ka.setName(name);
                 ka.setColor(color);
                 ka.setType(null);
-                ka.setMwst(mwst);
+                ka.setMenge(menge);
                 ka.setStueckzahl(stueckDec.intValue());
                 ka.setEinzelpreis(new BigDecimal( bc.priceFormatterIntern(einzelPreis) ));
                 ka.setGesPreis(gesPreisDec);
+                ka.setMwst(mwst);
                 kassierArtikel.add(ka);
 
                 mwsts.add(mwst);
 
                 Vector<Object> row = new Vector<Object>();
-                            // add units
-                            row.add(pos);
-                            row.add(name); row.add(artikelnummer); row.add(stueck);
-                            row.add(einzelPreis); row.add(gesPreis); row.add(bc.vatFormatter(mwst));
+                // add units
+                row.add(pos);
+                row.add(name); row.add(artikelnummer); row.add(stueck);
+                row.add(einzelPreis); row.add(gesPreis); row.add(bc.vatFormatter(mwst));
                 detailData.add(row);
             }
             rs.close();
@@ -317,51 +321,51 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 
     protected void showDetailTable(int detailRow, String detailTitleStr) {
         // clear everything:
-	this.remove(allPanel);
-	this.revalidate();
-        kassierArtikel.clear();
-        mwsts.clear();
+        this.remove(allPanel);
+        this.revalidate();
+            kassierArtikel.clear();
+            mwsts.clear();
 
-	allPanel = new JPanel(new BorderLayout());
-	allPanel.setBorder(BorderFactory.createTitledBorder(detailTitleStr));
-        headerPanel = new JPanel();
-	headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.PAGE_AXIS));
+        allPanel = new JPanel(new BorderLayout());
+        allPanel.setBorder(BorderFactory.createTitledBorder(detailTitleStr));
+            headerPanel = new JPanel();
+        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.PAGE_AXIS));
 
-	// First row: Show total of invoice
-	Vector<Object> coolRow = this.data.get(detailRow);
-	coolRow.set(0, "");
-	//coolRow.set(coolRow.size()-1, "");
-	Vector<Vector<Object>> overviewData = new Vector<Vector<Object>>(1);
-	overviewData.add(coolRow);
-        zahlungsModus = coolRow.get(3).toString().toLowerCase();
-        try {
-            kundeGibt = new BigDecimal( bc.priceFormatterIntern(coolRow.get(4).toString()) );
-        } catch (NumberFormatException ex) {
-            kundeGibt = null;
-        }
-	datum = this.dates.get(detailRow);
-	rechnungsNr = Integer.parseInt(coolRow.get(1).toString());
-
-        AnyJComponentJTable overviewTable = new AnyJComponentJTable(overviewData, overviewLabels){
-			private static final long serialVersionUID = 1L;
-
-			public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-                Component c = super.prepareRenderer(renderer, row, column);
-                // add custom rendering here
-                c.setForeground(Color.black); // keep it black
-                return c;
+        // First row: Show total of invoice
+        Vector<Object> coolRow = this.data.get(detailRow);
+        coolRow.set(0, "");
+        //coolRow.set(coolRow.size()-1, "");
+        Vector<Vector<Object>> overviewData = new Vector<Vector<Object>>(1);
+        overviewData.add(coolRow);
+            zahlungsModus = coolRow.get(3).toString().toLowerCase();
+            try {
+                kundeGibt = new BigDecimal( bc.priceFormatterIntern(coolRow.get(4).toString()) );
+            } catch (NumberFormatException ex) {
+                kundeGibt = null;
             }
-        };
-	backButton.addActionListener(this);
-	overviewTable.setValueAt( backButton, 0, 0 );
-	overviewTable.setValueAt( myTable.getValueAt(detailRow,overviewLabels.size()-1), 0, overviewLabels.size()-1 );
-	setOverviewTableProperties(overviewTable);
+        datum = this.dates.get(detailRow);
+        rechnungsNr = Integer.parseInt(coolRow.get(1).toString());
 
-	headerPanel.add(overviewTable.getTableHeader());
-	headerPanel.add(overviewTable);
-	JTextField header = new JTextField("Details dieser Rechnung:", 25);
-	header.setEditable(false);
-	headerPanel.add(header);
+            AnyJComponentJTable overviewTable = new AnyJComponentJTable(overviewData, overviewLabels){
+                private static final long serialVersionUID = 1L;
+
+                public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                    Component c = super.prepareRenderer(renderer, row, column);
+                    // add custom rendering here
+                    c.setForeground(Color.black); // keep it black
+                    return c;
+                }
+            };
+        backButton.addActionListener(this);
+        overviewTable.setValueAt( backButton, 0, 0 );
+        overviewTable.setValueAt( myTable.getValueAt(detailRow,overviewLabels.size()-1), 0, overviewLabels.size()-1 );
+        setOverviewTableProperties(overviewTable);
+
+        headerPanel.add(overviewTable.getTableHeader());
+        headerPanel.add(overviewTable);
+        JTextField header = new JTextField("Details dieser Rechnung:", 25);
+        header.setEditable(false);
+        headerPanel.add(header);
 
         allPanel.add(headerPanel, BorderLayout.NORTH);
 
@@ -370,15 +374,15 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         for (KassierArtikel a : kassierArtikel) {
             colors.add(a.getColor());
         }
-	ArticleSelectTable detailTable = new ArticleSelectTable(detailData, columnLabels, colors);
-	setTableProperties(detailTable);
-	JScrollPane detailScrollPane = new JScrollPane(detailTable);
+        ArticleSelectTable detailTable = new ArticleSelectTable(detailData, columnLabels, colors);
+        setTableProperties(detailTable);
+        JScrollPane detailScrollPane = new JScrollPane(detailTable);
 
-	allPanel.add(detailScrollPane, BorderLayout.CENTER);
+        allPanel.add(detailScrollPane, BorderLayout.CENTER);
 
-	//JTextField footer = new JTextField(artikelZahl+" Artikel", 25);
-	//footer.setEditable(false);
-	//allPanel.add(footer);
+        //JTextField footer = new JTextField(artikelZahl+" Artikel", 25);
+        //footer.setEditable(false);
+        //allPanel.add(footer);
 
         JPanel footerPanel = new JPanel();
         footerPanel.setLayout(new BorderLayout());
@@ -396,9 +400,9 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 rightPanel.add(quittungsButton);
             footerPanel.add(rightPanel, BorderLayout.EAST);
 
-	allPanel.add(footerPanel, BorderLayout.SOUTH);
+        allPanel.add(footerPanel, BorderLayout.SOUTH);
 
-	this.add(allPanel, BorderLayout.CENTER);
+        this.add(allPanel, BorderLayout.CENTER);
     }
 
     protected void setOverviewTableProperties(AnyJComponentJTable table){
@@ -466,7 +470,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 if (!datum.equals(""))
                     datet = new DateTime(datum);
                 else
-                    datet = DateTime.now(TimeZone.getDefault());
+                    datet = new DateTime(now());
                 Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
                         datet, rechnungsNr, kassierArtikel,
                         mwstsAndTheirValues, zahlungsModus,

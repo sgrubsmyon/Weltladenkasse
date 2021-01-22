@@ -1205,10 +1205,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         ka.setName(einrueckung + aktionsname);
         ka.setColor("red");
         ka.setType("rabatt");
-        ka.setMwst(artikelMwSt);
+        ka.setMenge("");
         ka.setStueckzahl(stueck.intValue());
         ka.setEinzelpreis(reduktion);
         ka.setGesPreis(reduktion);
+        ka.setMwst(artikelMwSt);
         kassierArtikel.add(ka);
 
         mwsts.add(artikelMwSt);
@@ -1243,10 +1244,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             ka.setName(einrueckung + pfandName);
             ka.setColor("blue");
             ka.setType("pfand");
-            ka.setMwst(pfandMwSt);
+            ka.setMenge("");
             ka.setStueckzahl(stueck.intValue());
             ka.setEinzelpreis(new BigDecimal(bc.priceFormatterIntern(pfand)));
             ka.setGesPreis(new BigDecimal(bc.priceFormatterIntern(gesamtPfand)));
+            ka.setMwst(pfandMwSt);
             kassierArtikel.add(ka);
 
             mwsts.add(pfandMwSt);
@@ -1497,8 +1499,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
-    private void hinzufuegen(int artID, String kurzname, String artikelNummer, String type, String color,
-                             String artikelMwSt, Integer stueck, String artikelPreis, BigDecimal gesPreis) {
+    private void hinzufuegen(int artID, String kurzname, String artikelNummer, String color, String type, String menge,
+                             Integer stueck, String artikelPreis, BigDecimal gesPreis, String artikelMwSt) {
         if (tse.inUse() && kassierArtikel.size() == 0) {
             // First item is added, this is a new TSE transaction
             tse.startTransaction();
@@ -1510,12 +1512,13 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         ka.setArtikelID(artID);
         ka.setRabattID(null);
         ka.setName(kurzname);
-        ka.setType(type);
         ka.setColor(color);
-        ka.setMwst(new BigDecimal(artikelMwSt));
+        ka.setType(type);
+        ka.setMenge(menge);
         ka.setStueckzahl(stueck);
         ka.setEinzelpreis(new BigDecimal(artikelPreis));
         ka.setGesPreis(gesPreis);
+        ka.setMwst(new BigDecimal(artikelMwSt));
         kassierArtikel.add(ka);
 
         mwsts.add(new BigDecimal(artikelMwSt));
@@ -1549,12 +1552,13 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         selectedStueck = stueck;
         Artikel a = getArticle(selectedArticleID);
         String artikelNummer = a.getNummer();
+        String menge = formatMengeForOutput(a.getMenge(), a.getEinheit());
         String artikelPreis = bc.priceFormatterIntern(preisField.getText());
         BigDecimal gesPreis = new BigDecimal(artikelPreis).multiply(new BigDecimal(stueck));
         String kurzname = getShortName(a);
         String artikelMwSt = getVAT(selectedArticleID);
-        hinzufuegen(selectedArticleID, kurzname, artikelNummer, type, color,
-                    artikelMwSt, stueck, artikelPreis, gesPreis);
+        hinzufuegen(selectedArticleID, kurzname, artikelNummer, color, type, menge,
+                    stueck, artikelPreis, gesPreis, artikelMwSt);
     }
 
     private void artikelNormalHinzufuegen() {
@@ -1590,8 +1594,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             String pfandName = getArticleName(pfandArtikelID)[0];
             BigDecimal gesamtPfand = new BigDecimal(pfand).multiply(new BigDecimal(stueck));
             String pfandMwSt = getVAT(selectedArticleID);
-            hinzufuegen(pfandArtikelID, pfandName, "LEERGUT", "leergut", "green", pfandMwSt,
-                        stueck, pfand, gesamtPfand);
+            hinzufuegen(pfandArtikelID, pfandName, "LEERGUT", "green", "leergut", "",
+                        stueck, pfand, gesamtPfand, pfandMwSt);
         }
     }
 
@@ -1742,10 +1746,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         ka.setName(einrueckung + rabattName);
         ka.setColor("red");
         ka.setType("rabatt");
-        ka.setMwst(artikelMwSt);
+        ka.setMenge("");
         ka.setStueckzahl(selectedStueck);
         ka.setEinzelpreis(einzelReduktion);
         ka.setGesPreis(gesReduktion);
+        ka.setMwst(artikelMwSt);
         kassierArtikel.add(i + 1, ka);
 
         mwsts.add(artikelMwSt);
@@ -1784,10 +1789,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         ka.setName(einrueckung + rabattName);
         ka.setColor("red");
         ka.setType("rabatt");
-        ka.setMwst(artikelMwSt);
+        ka.setMenge("");
         ka.setStueckzahl(selectedStueck);
         ka.setEinzelpreis(einzelReduktion);
         ka.setGesPreis(gesReduktion);
+        ka.setMwst(artikelMwSt);
         kassierArtikel.add(i + 1, ka);
 
         mwsts.add(artikelMwSt);
@@ -1871,10 +1877,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             ka.setName(rabattName);
             ka.setColor("red");
             ka.setType("rabattrechnung");
-            ka.setMwst(mwst);
+            ka.setMenge("");
             ka.setStueckzahl(1);
             ka.setEinzelpreis(reduktion);
             ka.setGesPreis(reduktion);
+            ka.setMwst(mwst);
             kassierArtikel.add(ka);
 
             mwsts.add(mwst);
@@ -1965,9 +1972,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             rechnungsNr = maxRechnungsNr() + 1;
         }
         Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
-                DateTime.now(TimeZone.getDefault()), rechnungsNr,
-                kassierArtikel, mwstsAndTheirValues, zahlungsModus, totalPrice,
-                kundeGibt, rueckgeld);
+            new DateTime(now()), rechnungsNr,
+            kassierArtikel, mwstsAndTheirValues, zahlungsModus, totalPrice,
+            kundeGibt, rueckgeld);
         myQuittung.printReceipt();
     }
 
