@@ -210,6 +210,7 @@ public class BaseClass {
             this.exportDirBestellung = props.getProperty("exportDirBestellung");
             this.alwaysPrintReceipt = Boolean.valueOf(props.getProperty("alwaysPrintReceipt"));
             
+            // TSE and DSFinV-K setup:
             this.z_kasse_id = props.getProperty("Z_KASSE_ID");
         } catch (Exception ex) {
             logger.error("Exception:", ex);
@@ -228,7 +229,7 @@ public class BaseClass {
             this.displayBlankInterval = 300000;
             this.dateFormatSQL = "%d.%m.%Y, %H:%i Uhr";
             this.dateFormatJava = "dd.MM.yyyy, HH:mm 'Uhr'";
-            this.dateFormatDate4j = "DD.MM.YYYY, hh:mm |Uhr|";
+            this.dateFormatDate4j = "DD.MM.YYYY, hh:mm:ss |Uhr|";
             this.delimiter = ";"; // for CSV export/import
             this.rowsPerPage = 32;
             this.sollMuenzKassenstand = new BigDecimal("50.00");
@@ -239,6 +240,7 @@ public class BaseClass {
             this.exportDirBestellung = "'Dokumente/Bestellungen/Bestellungen FHZ 'yyyy";
             this.alwaysPrintReceipt = true;
 
+            // TSE and DSFinV-K setup:
             this.z_kasse_id = "WeltladenBonnKasse-01";
         }
         this.mysqlHost = removeQuotes(this.mysqlHost);
