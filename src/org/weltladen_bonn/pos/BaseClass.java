@@ -41,7 +41,6 @@ public class BaseClass {
     public String exportDirAbrechnungMonat;
     public String exportDirAbrechnungJahr;
     public String exportDirBestellung;
-    public Boolean alwaysPrintReceipt;
 
     // TSE and DSFinV-K setup:
     public String z_kasse_id; // is used as clientID when talking to TSE
@@ -208,7 +207,6 @@ public class BaseClass {
             this.exportDirAbrechnungMonat = props.getProperty("exportDirAbrechnungMonat");
             this.exportDirAbrechnungJahr = props.getProperty("exportDirAbrechnungJahr");
             this.exportDirBestellung = props.getProperty("exportDirBestellung");
-            this.alwaysPrintReceipt = Boolean.valueOf(props.getProperty("alwaysPrintReceipt"));
             
             // TSE and DSFinV-K setup:
             this.z_kasse_id = props.getProperty("Z_KASSE_ID");
@@ -238,7 +236,6 @@ public class BaseClass {
             this.exportDirAbrechnungMonat = "'Dokumente/Kasse/Monatsabrechnungen/'yyyy";
             this.exportDirAbrechnungJahr = "'Dokumente/Kasse/Jahresabrechnungen'";
             this.exportDirBestellung = "'Dokumente/Bestellungen/Bestellungen FHZ 'yyyy";
-            this.alwaysPrintReceipt = true;
 
             // TSE and DSFinV-K setup:
             this.z_kasse_id = "WeltladenBonnKasse-01";

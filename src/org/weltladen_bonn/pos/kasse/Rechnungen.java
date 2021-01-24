@@ -36,6 +36,7 @@ import javax.swing.table.*;
 import hirondelle.date4j.DateTime;
 
 import org.weltladen_bonn.pos.*;
+import org.weltladen_bonn.pos.kasse.WeltladenTSE.TSETransaction;
 
 // Logging:
 import org.apache.logging.log4j.LogManager;
@@ -74,6 +75,9 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     protected String rechnungsZahl;
     protected int rechnungsZahlInt;
 
+    private MainWindow mw;
+    private WeltladenTSE tse;
+
     // Methoden:
 
     /**
@@ -82,6 +86,13 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     public Rechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw, String fs, String ts)
     {
 	    super(pool, mw);
+        if (mw instanceof MainWindow) {
+            this.mw = (MainWindow) mw;
+            tse = this.mw.getTSE();
+        } else {
+            this.mw = null;
+            tse = null;
+        }
         filterStr = fs;
         titleStr = ts;
 
@@ -472,10 +483,11 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                     datet = new DateTime(datum);
                 else
                     datet = new DateTime(now());
+                TSETransaction tx = tse.getTransaction(rechnungsNr);
                 Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
                         datet, rechnungsNr, kassierArtikel,
                         mwstValues, zahlungsModus,
-                        totalPrice, kundeGibt, rueckgeld);
+                        totalPrice, kundeGibt, rueckgeld, tx);
                 myQuittung.printReceipt();
             return;
         }

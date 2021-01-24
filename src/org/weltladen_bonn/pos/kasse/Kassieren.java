@@ -24,6 +24,7 @@ import hirondelle.date4j.DateTime;
 import org.weltladen_bonn.pos.*;
 import org.weltladen_bonn.pos.BaseClass.BigLabel;
 import org.weltladen_bonn.pos.BaseClass.BigButton;
+import org.weltladen_bonn.pos.kasse.WeltladenTSE.TSETransaction;
 
 // Logging:
 import org.apache.logging.log4j.LogManager;
@@ -78,7 +79,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private JButton gutscheinButton;
     private JLabel zahlungsLabel;
     private JButton neuerKundeButton;
-    private JButton quittungsButton;
     private JButton individuellRabattRelativButton;
     private JButton individuellRabattAbsolutButton;
     private JButton abweichenderPreisButton;
@@ -571,17 +571,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         neuerKundeButton.addActionListener(this);
         centerPanel.add(neuerKundeButton);
         fertigButtonPanel.add(centerPanel, BorderLayout.CENTER);
-        // right
-        JPanel rightPanel = new JPanel();
-        rightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
-        quittungsButton = new BaseClass.BigButton("Quittung");
-        quittungsButton.setBackground(Color.DARK_GRAY);
-        quittungsButton.setForeground(Color.WHITE);
-        quittungsButton.setMnemonic(KeyEvent.VK_Q);
-        quittungsButton.setEnabled(false);
-        quittungsButton.addActionListener(this);
-        rightPanel.add(quittungsButton);
-        fertigButtonPanel.add(rightPanel, BorderLayout.EAST);
         neuerKundePanel.add(fertigButtonPanel);
         bezahlPanel.add(neuerKundePanel);
 
@@ -1630,7 +1619,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         gutscheinField.setEditable(true);
         // neuerKundeButton.setEnabled(false);
         neuerKundeButton.setEnabled(true);
-        quittungsButton.setEnabled(true);
         kundeGibtField.requestFocus();
     }
 
@@ -1642,7 +1630,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         passendButton.setEnabled(false);
         gutscheinField.setEditable(true);
         neuerKundeButton.setEnabled(true);
-        quittungsButton.setEnabled(false);
         neuerKundeButton.requestFocus();
     }
 
@@ -1703,8 +1690,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         
         /* Zitat DSFinV-K: (S. 109) "Für jeden Steuersatz werden hier die Bruttoumsätze je Steuersatz [...] aufgelistet." */
         // Bruttoumsatz = 4. Element in mwstIDsAndValues (get(3))
+        TSETransaction tx = null;
         if (tse.inUse()) {
-            tse.finishTransaction(
+            tx = tse.finishTransaction(
                 rechnungsNr,
                 mwstIDsAndValues.get(3) != null ? mwstIDsAndValues.get(3).get(3) : null, // steuer_allgemein = mwst_id: 3 = 19% MwSt
                 mwstIDsAndValues.get(2) != null ? mwstIDsAndValues.get(2).get(3) : null, // steuer_ermaessigt = mwst_id: 2 = 7% MwSt
@@ -1713,17 +1701,22 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 mwstIDsAndValues.get(1) != null ? mwstIDsAndValues.get(1).get(3) : null, // steuer_null = mwst_id: 1 = 0% MwSt
                 zahlungen
             );
+            logger.debug("TSE TX number: {}", tx.txNumber);
+            logger.debug("TSE TX start time: {}", tx.startTimeString);
+            logger.debug("TSE TX end time: {}", tx.endTimeString);
+            logger.debug("TSE TX processType: {}", tx.processType);
+            logger.debug("TSE TX processData: {}", tx.processData);
+            logger.debug("TSE TX sig counter: {}", tx.sigCounter);
+            logger.debug("TSE TX signature base64: {}", tx.signatureBase64);
         }
 
         if (ec == false) { // if Barzahlung
             insertIntoKassenstand(rechnungsNr);
-            if (bc.alwaysPrintReceipt) {
-                printQuittung(rechnungsNr);
-            }
+            printQuittung(rechnungsNr, tx); // always print receipt, it's not optional anymore
         } else { // EC-Zahlung
-            printQuittung(rechnungsNr);
+            printQuittung(rechnungsNr, tx);
             // Thread.sleep(5000); // wait for 5 seconds, no, printer is too slow anyway and this blocks UI unnecessarily
-            printQuittung(rechnungsNr);
+            printQuittung(rechnungsNr, tx);
         }
         clearAll();
         updateAll();
@@ -1989,7 +1982,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         this.selectedArticleID = selectedArticleID;
     }
 
-    void printQuittung(Integer rechnungsNr) {
+    void printQuittung(Integer rechnungsNr, TSETransaction tx) {
         TreeMap<BigDecimal, Vector<BigDecimal>> mwstValues = calculateMwStValuesInRechnung();
         BigDecimal totalPrice = new BigDecimal(getTotalPrice());
         BigDecimal kundeGibt = null, rueckgeld = null;
@@ -2003,7 +1996,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
             new DateTime(now()), rechnungsNr, kassierArtikel,
             mwstValues, zahlungsModus, totalPrice,
-            kundeGibt, rueckgeld);
+            kundeGibt, rueckgeld, tx);
         myQuittung.printReceipt();
     }
 
@@ -2103,16 +2096,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             if (answer == JOptionPane.YES_OPTION) {
                 stornieren();
             }
-            return;
-        }
-        if (e.getSource() == quittungsButton) {
-            if (zahlungsModus.equals("bar")) {
-                boolean ok = checkKundeGibtField();
-                if (!ok) {
-                    return;
-                }
-            }
-            printQuittung(null);
             return;
         }
         if (e.getSource() == neuerKundeButton) {

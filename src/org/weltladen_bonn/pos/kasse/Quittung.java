@@ -32,6 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import org.weltladen_bonn.pos.*;
+import org.weltladen_bonn.pos.kasse.WeltladenTSE.TSETransaction;
 
 public class Quittung extends WindowContent {
     private static final Logger logger = LogManager.getLogger(Quittung.class);
@@ -44,6 +45,7 @@ public class Quittung extends WindowContent {
     private BigDecimal totalPrice;
     private BigDecimal kundeGibt;
     private BigDecimal rueckgeld;
+    private TSETransaction tx;
 
     private int artikelIndex = 0;
     private int rowOffset = 7;
@@ -56,7 +58,8 @@ public class Quittung extends WindowContent {
             DateTime dt, Integer rechnungsNr,
             Vector<KassierArtikel> ka,
             TreeMap< BigDecimal, Vector<BigDecimal> > mv,
-            String zm, BigDecimal tp, BigDecimal kgb, BigDecimal rg) {
+            String zm, BigDecimal tp, BigDecimal kgb, BigDecimal rg,
+            TSETransaction transaction) {
 	    super(pool, mw);
         this.datetime = dt;
         this.rechnungsNr = rechnungsNr;
@@ -65,6 +68,7 @@ public class Quittung extends WindowContent {
         this.zahlungsModus = zm;
         this.totalPrice = tp;
         this.kundeGibt = kgb; this.rueckgeld = rg;
+        this.tx = transaction;
     }
 
     private Sheet createSheetFromTemplate() {
