@@ -107,7 +107,7 @@ public class WeltladenTSE extends WindowContent {
     
     private String defaultProcessType = "Kassenbeleg-V1";
 
-    private class TSETransaction {
+    protected class TSETransaction {
         public Integer rechnungsNr = null; // for connecting TSE data to SQL table 'verkauf'
         public Long txNumber = null; // of the StartTransaction operation
         public Long startTimeUnix = null; // of the StartTransaction operation
@@ -1662,10 +1662,7 @@ public class WeltladenTSE extends WindowContent {
                 logger.debug("TX sig counter: {}", tx.sigCounter);
                 logger.debug("TX signature base64: {}", tx.signatureBase64);
                 logger.debug("Number of open transactions: {}", tse.getCurrentNumberOfTransactions());
-                storeTransactionInDB();
             }
-            // Make room for next transaction:
-            tx = new TSETransaction();
             message = "OK";
         } catch (ErrorFinishTransactionFailed ex) {
             message = "Start transaction failed";
@@ -1714,13 +1711,17 @@ public class WeltladenTSE extends WindowContent {
     }
     
     /** Cancel the started TSE transaction, i.e. payment never happens */
-    public void cancelTransaction() {
+    public TSETransaction cancelTransaction() {
         /* Zitat DSFinV-K v2.2 (Anhang A, S. 45): (https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html)
             "Der Vorgangstyp „AVBelegabbruch“ kennzeichnet alle Vorgänge, die nach Transaktionsbeginn abgebrochen werden.
              Eine tatsächliche Bezahlung darf im Zusammenhang mit diesem Vorgangstyp nicht erfolgen."
         */
         String processData = "AVBelegabbruch^0.00_0.00_0.00_0.00_0.00^"; // siehe hierzu auch: https://support.gastro-mis.de/support/solutions/articles/36000246958-avbelegabbruch
         String message = sendFinishTransaction(processData, null);
+        storeTransactionInDB();
+        TSETransaction res_tx = tx;
+        // Make room for next transaction:
+        tx = new TSETransaction();
         if (message != "OK") {
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die TSE-Transaktion konnte nicht abgebrochen werden!\n\n"+
@@ -1732,6 +1733,7 @@ public class WeltladenTSE extends WindowContent {
             disconnectFromTSE();
             System.exit(1);
         }
+        return res_tx;
     }
 
     private String renderProcessData(BigDecimal steuer_allgemein, BigDecimal steuer_ermaessigt, /* Für Steuersätze, siehe DSFinV-K v2.2 (Anhang I, S. 110, S. 25) */
@@ -1808,7 +1810,7 @@ public class WeltladenTSE extends WindowContent {
     }
 
      /** Finish the TSE transaction by entering payment details */
-    public void finishTransaction(int rechnungsNr,
+    public TSETransaction finishTransaction(int rechnungsNr,
                                   /* Für Steuersätze, siehe DSFinV-K v2.2 (Anhang I, S. 110, S. 25) */
                                   BigDecimal steuer_allgemein, // (19% MwSt)
                                   BigDecimal steuer_ermaessigt, // (7% MwSt)
@@ -1821,6 +1823,10 @@ public class WeltladenTSE extends WindowContent {
                                                steuer_durchschnitt_nr3, steuer_durchschnitt_nr1,
                                                steuer_null, zahlungen);
         String message = sendFinishTransaction(processData, rechnungsNr);
+        storeTransactionInDB();
+        TSETransaction res_tx = tx;
+        // Make room for next transaction:
+        tx = new TSETransaction();
         if (message != "OK") {
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die TSE-Transaktion konnte nicht abgeschlossen werden!\n\n"+
@@ -1832,6 +1838,7 @@ public class WeltladenTSE extends WindowContent {
             disconnectFromTSE();
             System.exit(1);
         }
+        return res_tx;
     }
 
     private void storeTransactionInDB() {
@@ -1882,6 +1889,35 @@ public class WeltladenTSE extends WindowContent {
                 "Fehlermeldung: "+message,
                 "Fehler beim Speichern der TSE-Transaktion in der DB", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    public TSETransaction getTransaction(int rechnungsNr) {
+        TSETransaction tx = null;
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT "+
+                "transaction_number, transaction_start, transaction_end, "+
+                "process_type, signature_counter, signature_base64, tse_error, "+
+                "process_data "+
+                "FROM tse_transaction WHERE rechnungs_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, rechnungsNr);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                tx = new TSETransaction();
+                tx.txNumber = (long)rs.getInt(1);
+                tx.startTimeString = rs.getString(2);
+                tx.endTimeString = rs.getString(3);
+                // XXX COTNINUE HERE ...
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+        }
+        return tx;
     }
 
     /**
