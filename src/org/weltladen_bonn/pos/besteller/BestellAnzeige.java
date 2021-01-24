@@ -617,10 +617,10 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 BigDecimal total_netto = null;
                 if (ekpreis_set != null) {
                     ekpreis = ekpreis_set.divide(setgroesseDecimal, 2, RoundingMode.HALF_UP);
-                    single_mwst_betrag = new BigDecimal( bc.priceFormatterIntern(calculateVAT(ekpreis, mwst)) );
+                    single_mwst_betrag = calculateVAT(ekpreis, mwst);
                     single_netto = ekpreis.subtract(single_mwst_betrag);
                     total_brutto = ekpreis.multiply(stueckDecimal);
-                    //total_mwst_betrag = new BigDecimal( bc.priceFormatterIntern(calculateVAT(total_brutto, mwst)) );
+                    //total_mwst_betrag = calculateVAT(total_brutto, mwst);
                     //total_netto = total_brutto.subtract(total_mwst_betrag);
                     total_mwst_betrag = single_mwst_betrag.multiply(stueckDecimal);
                     total_netto = single_netto.multiply(stueckDecimal);

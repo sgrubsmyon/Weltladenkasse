@@ -37,7 +37,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     protected String datum;
     protected Integer rechnungsNr;
     protected Vector<String> columnLabels;
-    protected HashMap< BigDecimal, Vector<BigDecimal> > vatMap;
+    protected TreeMap< BigDecimal, Vector<BigDecimal> > vatMap;
 
     // Die Ausrichter:
     protected final String einrueckung = "      ";
@@ -68,6 +68,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     // DB query functions:
     //////////////////////////////////
     protected LinkedHashMap<Integer, BigDecimal> retrieveVATs() {
+        // LinkedHashMap preserves insertion order
         LinkedHashMap<Integer, BigDecimal> vats = new LinkedHashMap<Integer, BigDecimal>();
         try {
             Connection connection = this.pool.getConnection();
@@ -99,31 +100,40 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         return bc.priceFormatter(totalPrice);
     }
 
-    protected BigDecimal calculateTotalVATUmsatz(BigDecimal vat) {
-        /** Returns the total amount (brutto prices) that VAT tax is included
-         *  in for entire Rechnung (MwSt.-Umsatz). */
-        BigDecimal priceForVAT = new BigDecimal(0);
+    protected TreeMap< BigDecimal, Vector<BigDecimal> > calculateMwStValuesInRechnung() { // TreeMap is sorted according to the natural ordering of its keys
+        // Calculate the VAT values for all the VAT percentages included in the
+        //   currently displayed Rechnung, but only for these, not for all VATs
+        //   that currently exist
+        TreeMap< BigDecimal, Vector<BigDecimal> > mwstValues =
+            new TreeMap< BigDecimal, Vector<BigDecimal> >();
         for (int i=0; i<kassierArtikel.size(); i++){
-            BigDecimal mwst = kassierArtikel.get(i).getMwst();
-            if ( mwst.equals(vat) ){
-                BigDecimal preis = kassierArtikel.get(i).getGesPreis();
-                priceForVAT = priceForVAT.add(preis);
+            BigDecimal steuersatz = kassierArtikel.get(i).getMwst();
+            BigDecimal brutto = kassierArtikel.get(i).getGesPreis();
+            BigDecimal steuer = calculateVAT(brutto, steuersatz);
+            BigDecimal netto = brutto.subtract(steuer);
+            Vector<BigDecimal> values;
+            if (mwstValues.containsKey(steuersatz)) {
+                values = mwstValues.get(steuersatz);
+            } else {
+                values = new Vector<BigDecimal>();
+                values.add(new BigDecimal(0));
+                values.add(new BigDecimal(0));
+                values.add(new BigDecimal(0));
             }
+            values.set(0, values.get(0).add(netto));
+            values.set(1, values.get(1).add(steuer));
+            values.set(2, values.get(2).add(brutto)); // = Umsatz
+            mwstValues.put(steuersatz, values);
         }
-        return priceForVAT;
+        return mwstValues;
     }
 
-    protected BigDecimal calculateTotalVATAmount(BigDecimal vat) {
-        /** Returns the total amount of VAT tax that is included in Rechnung
-         *  (MwSt.-Betrag). */
-        BigDecimal priceForVAT = calculateTotalVATUmsatz(vat);
-        BigDecimal totalVAT = new BigDecimal( bc.priceFormatterIntern(calculateVAT(priceForVAT, vat)) );
-        return totalVAT;
-    }
-
-    protected JPanel createTotalPricePanel() {
+    protected JPanel createBottomPanel() {
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        
         JPanel totalPricePanel = new JPanel();
         totalPricePanel.setLayout(new FlowLayout());
+        totalPricePanel.add(Box.createRigidArea(new Dimension(20,0)));
         JLabel totalPriceLabel = new JLabel("Gesamtpreis: ");
         totalPricePanel.add(totalPriceLabel);
         totalPriceField = new JTextField(calculateTotalPrice()+" "+bc.currencySymbol);
@@ -132,83 +142,66 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         removeDefaultKeyBindings(totalPriceField);
         totalPriceField.setHorizontalAlignment(JTextField.RIGHT);
         totalPricePanel.add(totalPriceField);
+        bottomPanel.add(totalPricePanel, BorderLayout.WEST);
+        
+        JPanel vatPanel = new JPanel();
+        vatPanel.setLayout(new FlowLayout());
 
-        totalPricePanel.add(new JLabel("   inkl.: "));
-        LinkedHashMap<Integer, BigDecimal> vats = retrieveVATs();
-        this.vatMap = new HashMap< BigDecimal, Vector<BigDecimal> >();
-        for ( BigDecimal vat : vats.values() ){
-            // if (vat.signum() != 0){ // need to calculate 0% also for correct booking (DSFinV-K)
-                BigDecimal vatAmount = calculateTotalVATAmount(vat);
-                BigDecimal vatBrutto = calculateTotalVATUmsatz(vat);
-                BigDecimal vatNetto = vatBrutto.subtract(vatAmount);
-                if (vatBrutto.signum() != 0){ // exclude 0 amounts
-                    Vector<BigDecimal> vatVec = new Vector<BigDecimal>();
-                    vatVec.add(vatNetto); vatVec.add(vatAmount);
-                    this.vatMap.put(vat, vatVec);
-                }
-                String vatPercent = bc.vatFormatter(vat);
-                totalPricePanel.add(new JLabel("   "+vatPercent+" MwSt.: "));
-                JTextField vatField = new JTextField(bc.priceFormatter(vatAmount)+" "+bc.currencySymbol);
-                vatField.setEditable(false);
-                vatField.setColumns(7);
-                removeDefaultKeyBindings(vatField);
-                vatField.setHorizontalAlignment(JTextField.RIGHT);
-                totalPricePanel.add(vatField);
-            // }
+        vatPanel.add(new JLabel("   inkl.: "));
+        vatMap = calculateMwStValuesInRechnung();
+        Set<BigDecimal> vats = vatMap.keySet();
+        // Sorting not needed when using TreeSet for vatMap:
+        // logger.info("unsorted key set: {}", vats);
+        // ArrayList<BigDecimal> vatsList = new ArrayList<BigDecimal>(vats); // convert set to list in order to sort
+        // Collections.sort(vatsList);
+        // logger.info("sorted key list: {}", vatsList);
+        for ( BigDecimal vat : vats ){
+            Vector<BigDecimal> values;
+            if (vatMap.containsKey(vat)) {
+                values = vatMap.get(vat);
+            } else {
+                values = new Vector<BigDecimal>();
+                values.add(new BigDecimal(0));
+                values.add(new BigDecimal(0));
+                values.add(new BigDecimal(0));
+            }
+            BigDecimal steuer = values.get(1);
+            String vatPercent = bc.vatFormatter(vat);
+            vatPanel.add(new JLabel("   "+vatPercent+" MwSt.: "));
+            JTextField vatField = new JTextField(bc.priceFormatter(steuer)+" "+bc.currencySymbol);
+            vatField.setEditable(false);
+            vatField.setColumns(7);
+            removeDefaultKeyBindings(vatField);
+            vatField.setHorizontalAlignment(JTextField.RIGHT);
+            vatPanel.add(vatField);
         }
-        return totalPricePanel;
+        bottomPanel.add(vatPanel, BorderLayout.CENTER);
+
+        return bottomPanel;
     }
 
     protected void setTableProperties(ArticleSelectTable table) {
-	// Spalteneigenschaften:
-//	table.getColumnModel().getColumn(0).setPreferredWidth(10);
-	TableColumn pos = table.getColumn("Pos.");
-	pos.setCellRenderer(zentralAusrichter);
-	pos.setPreferredWidth(5);
-	TableColumn artikelbez = table.getColumn("Artikel-Name");
-	artikelbez.setCellRenderer(linksAusrichter);
-	artikelbez.setPreferredWidth(150);
-	TableColumn artikelnr = table.getColumn("Artikel-Nr.");
-	artikelnr.setCellRenderer(rechtsAusrichter);
-	artikelnr.setPreferredWidth(50);
-	TableColumn stueckzahl = table.getColumn("Stückzahl");
-	stueckzahl.setCellRenderer(rechtsAusrichter);
-	TableColumn preis = table.getColumn("Einzelpreis");
-	preis.setCellRenderer(rechtsAusrichter);
-	TableColumn gespreis = table.getColumn("Gesamtpreis");
-	gespreis.setCellRenderer(rechtsAusrichter);
-	TableColumn mwst = table.getColumn("MwSt.");
-	mwst.setCellRenderer(rechtsAusrichter);
-	mwst.setPreferredWidth(5);
+        // Spalteneigenschaften:
+        //	table.getColumnModel().getColumn(0).setPreferredWidth(10);
+        TableColumn pos = table.getColumn("Pos.");
+        pos.setCellRenderer(zentralAusrichter);
+        pos.setPreferredWidth(5);
+        TableColumn artikelbez = table.getColumn("Artikel-Name");
+        artikelbez.setCellRenderer(linksAusrichter);
+        artikelbez.setPreferredWidth(150);
+        TableColumn artikelnr = table.getColumn("Artikel-Nr.");
+        artikelnr.setCellRenderer(rechtsAusrichter);
+        artikelnr.setPreferredWidth(50);
+        TableColumn stueckzahl = table.getColumn("Stückzahl");
+        stueckzahl.setCellRenderer(rechtsAusrichter);
+        TableColumn preis = table.getColumn("Einzelpreis");
+        preis.setCellRenderer(rechtsAusrichter);
+        TableColumn gespreis = table.getColumn("Gesamtpreis");
+        gespreis.setCellRenderer(rechtsAusrichter);
+        TableColumn mwst = table.getColumn("MwSt.");
+        mwst.setCellRenderer(rechtsAusrichter);
+        mwst.setPreferredWidth(5);
     }
-
-
-    protected LinkedHashMap< Integer, Vector<BigDecimal> > getMwstsAndTheirValues() {
-        LinkedHashMap<Integer, BigDecimal> vats = retrieveVATs();
-        // LinkedHashMap preserves insertion order
-        LinkedHashMap< Integer, Vector<BigDecimal> > mwstsAndTheirValues =
-            new LinkedHashMap< Integer, Vector<BigDecimal> >();
-        for ( Map.Entry<Integer, BigDecimal​> vat : vats.entrySet() ){
-            //if (vat.getValue().signum() != 0){ // need to calculate 0% also for correct booking (DSFinV-K)
-            if ( mwsts.contains(vat.getValue()) ){
-                Vector<BigDecimal> values = new Vector<BigDecimal>();
-                BigDecimal steuersatz = vat.getValue();
-                BigDecimal brutto = calculateTotalVATUmsatz(vat.getValue());
-                BigDecimal steuer = calculateTotalVATAmount(vat.getValue());
-                BigDecimal netto = new BigDecimal(
-                    bc.priceFormatterIntern(brutto.subtract(steuer))
-                );
-                values.add(steuersatz); // Steuersatz
-                values.add(netto); // Netto
-                values.add(steuer); // Steuer
-                values.add(brutto); // Umsatz
-                mwstsAndTheirValues.put(vat.getKey(), values);
-            }
-            //}
-        }
-        return mwstsAndTheirValues;
-    }
-
 
     protected String getTotalPrice() {
         return bc.priceFormatterIntern( totalPriceField.getText() );
