@@ -915,7 +915,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         scrollPane = new JScrollPane(myTable);
         articleListPanel.add(scrollPane, BorderLayout.CENTER);
 
-        JPanel totalPricePanel = createTotalPricePanel();
+        JPanel bottomPanel = createBottomPanel();
+        JPanel zwischensummePanel = new JPanel();
+        zwischensummePanel.setLayout(new FlowLayout());
         zwischensummeButton = new BaseClass.BigButton("ZWS");
         zwischensummeButton.setBackground(Color.RED.darker());
         zwischensummeButton.setForeground(Color.WHITE);
@@ -923,8 +925,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         zwischensummeButton.addActionListener(this);
         if (data.size() == 0)
             zwischensummeButton.setEnabled(false);
-        totalPricePanel.add(zwischensummeButton);
-        articleListPanel.add(totalPricePanel, BorderLayout.SOUTH);
+        zwischensummePanel.add(zwischensummeButton);
+        zwischensummePanel.add(Box.createRigidArea(new Dimension(20,0)));
+        bottomPanel.add(zwischensummePanel, BorderLayout.EAST);
+        articleListPanel.add(bottomPanel, BorderLayout.SOUTH);
 
         allPanel.add(articleListPanel, BorderLayout.CENTER);
     }
@@ -1650,6 +1654,31 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         zwischensumme();
     }
 
+    /* Don't use this method for historical Rechnung, only current in Kassieren (problem when MwSt values change) */
+    private HashMap<Integer, Vector<BigDecimal>> getAllCurrentMwstValuesByID() {
+        LinkedHashMap<Integer, BigDecimal> vats = retrieveVATs();
+        HashMap<Integer, Vector<BigDecimal>> mwstIDsAndValues = new HashMap< Integer, Vector<BigDecimal> >();
+        TreeMap<BigDecimal, Vector<BigDecimal>> mwstValues = calculateMwStValuesInRechnung();
+        for ( Map.Entry<Integer, BigDecimal​> vat : vats.entrySet() ){
+            BigDecimal steuersatz = vat.getValue();
+            //if (steuersatz.signum() != 0){ // need to calculate 0% also for correct booking (DSFinV-K)
+            if ( mwstValues.containsKey(steuersatz) ){
+                Vector<BigDecimal> values = mwstValues.get(steuersatz);
+                BigDecimal netto = values.get(0);
+                BigDecimal steuer = values.get(1);
+                BigDecimal brutto = values.get(2);
+                values.add(steuersatz);
+                values.add(netto);
+                values.add(steuer);
+                values.add(brutto); // = Umsatz
+                mwstIDsAndValues.put(vat.getKey(), values);
+            }
+            //}
+        }
+        logger.debug("mwst IDs and values: {}", mwstIDsAndValues);
+        return mwstIDsAndValues;
+    }
+
     private int neuerKunde() {
         // Send data to TSE:
         Vector<String> zahlung = new Vector<String>();
@@ -1658,7 +1687,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         // Omit currency code because it's always in EUR
         Vector<Vector<String>> zahlungen = new Vector<Vector<String>>();
         zahlungen.add(zahlung);
-        LinkedHashMap<Integer, Vector<BigDecimal>> mwstsAndTheirValues = getMwstsAndTheirValues();
+        HashMap<Integer, Vector<BigDecimal>> mwstIDsAndValues = getAllCurrentMwstValuesByID();
 
         int rechnungsNr = -1;
         boolean ec = true;
@@ -1673,15 +1702,15 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
         
         /* Zitat DSFinV-K: (S. 109) "Für jeden Steuersatz werden hier die Bruttoumsätze je Steuersatz [...] aufgelistet." */
-        // Bruttoumsatz = 4. Element in mwstsAndTheirValues (get(3))
+        // Bruttoumsatz = 4. Element in mwstIDsAndValues (get(3))
         if (tse.inUse()) {
             tse.finishTransaction(
                 rechnungsNr,
-                mwstsAndTheirValues.get(3) != null ? mwstsAndTheirValues.get(3).get(3) : null, // steuer_allgemein = mwst_id: 3 = 19% MwSt
-                mwstsAndTheirValues.get(2) != null ? mwstsAndTheirValues.get(2).get(3) : null, // steuer_ermaessigt = mwst_id: 2 = 7% MwSt
-                mwstsAndTheirValues.get(5) != null ? mwstsAndTheirValues.get(5).get(3) : null, // steuer_durchschnitt_nr3 = mwst_id: 5 = 10,7% MwSt
-                mwstsAndTheirValues.get(4) != null ? mwstsAndTheirValues.get(4).get(3) : null, // steuer_durchschnitt_nr1 = mwst_id: 4 = 5,5% MwSt
-                mwstsAndTheirValues.get(1) != null ? mwstsAndTheirValues.get(1).get(3) : null, // steuer_null = mwst_id: 1 = 0% MwSt
+                mwstIDsAndValues.get(3) != null ? mwstIDsAndValues.get(3).get(3) : null, // steuer_allgemein = mwst_id: 3 = 19% MwSt
+                mwstIDsAndValues.get(2) != null ? mwstIDsAndValues.get(2).get(3) : null, // steuer_ermaessigt = mwst_id: 2 = 7% MwSt
+                mwstIDsAndValues.get(5) != null ? mwstIDsAndValues.get(5).get(3) : null, // steuer_durchschnitt_nr3 = mwst_id: 5 = 10,7% MwSt
+                mwstIDsAndValues.get(4) != null ? mwstIDsAndValues.get(4).get(3) : null, // steuer_durchschnitt_nr1 = mwst_id: 4 = 5,5% MwSt
+                mwstIDsAndValues.get(1) != null ? mwstIDsAndValues.get(1).get(3) : null, // steuer_null = mwst_id: 1 = 0% MwSt
                 zahlungen
             );
         }
@@ -1961,7 +1990,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     }
 
     void printQuittung(Integer rechnungsNr) {
-        LinkedHashMap<Integer, Vector<BigDecimal>> mwstsAndTheirValues = getMwstsAndTheirValues();
+        TreeMap<BigDecimal, Vector<BigDecimal>> mwstValues = calculateMwStValuesInRechnung();
         BigDecimal totalPrice = new BigDecimal(getTotalPrice());
         BigDecimal kundeGibt = null, rueckgeld = null;
         if (kundeGibtField.getDocument().getLength() > 0) {
@@ -1972,8 +2001,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             rechnungsNr = maxRechnungsNr() + 1;
         }
         Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
-            new DateTime(now()), rechnungsNr,
-            kassierArtikel, mwstsAndTheirValues, zahlungsModus, totalPrice,
+            new DateTime(now()), rechnungsNr, kassierArtikel,
+            mwstValues, zahlungsModus, totalPrice,
             kundeGibt, rueckgeld);
         myQuittung.printReceipt();
     }

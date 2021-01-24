@@ -288,7 +288,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
          *      one.subtract( one.divide(one.add(mwst), 10, RoundingMode.HALF_UP) )
          *      );
          */
-        return totalPrice.divide(bc.one.add(mwst), 10, RoundingMode.HALF_UP).multiply(mwst);
+        BigDecimal vat = totalPrice.divide(bc.one.add(mwst), 10, RoundingMode.HALF_UP).multiply(mwst);
+        return new BigDecimal(bc.priceFormatterIntern(vat)); // this line is for rounding to 2 decimal places after separator
     }
 
     private BigDecimal calculateEKP(BigDecimal empfVKPreis, BigDecimal ekRabatt) {

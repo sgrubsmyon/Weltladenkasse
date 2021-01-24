@@ -386,19 +386,21 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 
         JPanel footerPanel = new JPanel();
         footerPanel.setLayout(new BorderLayout());
-            // center
-            JPanel centerPanel = new JPanel();
-                JPanel totalPricePanel = createTotalPricePanel();
-                centerPanel.add(totalPricePanel);
-            footerPanel.add(centerPanel, BorderLayout.CENTER);
-            // right
-            JPanel rightPanel = new JPanel();
-            rightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
-                quittungsButton = new JButton("Quittung");
-                quittungsButton.setMnemonic(KeyEvent.VK_Q);
-                quittungsButton.addActionListener(this);
-                rightPanel.add(quittungsButton);
-            footerPanel.add(rightPanel, BorderLayout.EAST);
+        
+        // center
+        JPanel centerPanel = new JPanel();
+        JPanel bottomPanel = createBottomPanel();
+        centerPanel.add(bottomPanel);
+        footerPanel.add(centerPanel, BorderLayout.CENTER);
+        
+        // right
+        JPanel rightPanel = new JPanel();
+        rightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
+        quittungsButton = new JButton("Quittung");
+        quittungsButton.setMnemonic(KeyEvent.VK_Q);
+        quittungsButton.addActionListener(this);
+        rightPanel.add(quittungsButton);
+        footerPanel.add(rightPanel, BorderLayout.EAST);
 
         allPanel.add(footerPanel, BorderLayout.SOUTH);
 
@@ -459,8 +461,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             return;
         }
         if (e.getSource() == quittungsButton){
-                LinkedHashMap< Integer, Vector<BigDecimal> > mwstsAndTheirValues =
-                    getMwstsAndTheirValues();
+                TreeMap<BigDecimal, Vector<BigDecimal>> mwstValues = calculateMwStValuesInRechnung();
                 BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
                 BigDecimal rueckgeld = null;
                 if (kundeGibt != null){
@@ -473,7 +474,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                     datet = new DateTime(now());
                 Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
                         datet, rechnungsNr, kassierArtikel,
-                        mwstsAndTheirValues, zahlungsModus,
+                        mwstValues, zahlungsModus,
                         totalPrice, kundeGibt, rueckgeld);
                 myQuittung.printReceipt();
             return;

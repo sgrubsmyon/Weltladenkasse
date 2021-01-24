@@ -39,7 +39,7 @@ public class Quittung extends WindowContent {
     private DateTime datetime;
     private Integer rechnungsNr;
     private Vector<KassierArtikel> kassierArtikel;
-    private LinkedHashMap< Integer, Vector<BigDecimal> > mwstsAndTheirValues;
+    private TreeMap< BigDecimal, Vector<BigDecimal> > mwstValues;
     private String zahlungsModus;
     private BigDecimal totalPrice;
     private BigDecimal kundeGibt;
@@ -55,13 +55,13 @@ public class Quittung extends WindowContent {
     public Quittung(MariaDbPoolDataSource pool, MainWindowGrundlage mw,
             DateTime dt, Integer rechnungsNr,
             Vector<KassierArtikel> ka,
-            LinkedHashMap< Integer, Vector<BigDecimal> > matv,
+            TreeMap< BigDecimal, Vector<BigDecimal> > mv,
             String zm, BigDecimal tp, BigDecimal kgb, BigDecimal rg) {
 	    super(pool, mw);
         this.datetime = dt;
         this.rechnungsNr = rechnungsNr;
         this.kassierArtikel = ka;
-        this.mwstsAndTheirValues = matv;
+        this.mwstValues = mv;
         this.zahlungsModus = zm;
         this.totalPrice = tp;
         this.kundeGibt = kgb; this.rueckgeld = rg;
@@ -119,10 +119,10 @@ public class Quittung extends WindowContent {
             sheet.setValueAt(kassierArtikel.get(i).getName(), 0, row); // name on full row
             row++; // price infos on next row:
             sheet.setValueAt(saveSpaceInMenge(kassierArtikel.get(i).getMenge()), 0, row);
-            sheet.setValueAt(kassierArtikel.get(i).getStueckzahl().toString()+" x", 1, row);
+            sheet.setValueAt(kassierArtikel.get(i).getStueckzahl().toString() + " x", 1, row);
             sheet.setValueAt(kassierArtikel.get(i).getEinzelPreis(), 2, row);
             sheet.setValueAt(kassierArtikel.get(i).getGesPreis(), 3, row);
-            Integer mwstIndex = mwstList.indexOf(kassierArtikel.get(i).getMwst())+1;
+            Integer mwstIndex = mwstList.indexOf(kassierArtikel.get(i).getMwst()) + 1;
             sheet.setValueAt(mwstIndex, 4, row);
             row++;
             artikelIndex = i+1; // index of next item
@@ -165,12 +165,13 @@ public class Quittung extends WindowContent {
             sheet.setValueAt("Brutto", 3, row);
             row++;
             Integer mwstIndex = 1;
-            for ( Vector<BigDecimal> mwstValues : mwstsAndTheirValues.values() ){
-                BigDecimal steuersatz = mwstValues.get(0);
+            for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : mwstValues.entrySet()) {
+                BigDecimal steuersatz = entry.getKey();
+                Vector<BigDecimal> values = entry.getValue();
                 sheet.setValueAt(bc.vatFormatter(steuersatz), 0, row);
                 int col = 1;
-                for (int i = 1; i < mwstValues.size(); i++) { // omit first value (Steuersatz)
-                    BigDecimal val = mwstValues.get(i);
+                for (int i = 0; i < values.size(); i++) {
+                    BigDecimal val = values.get(i);
                     sheet.setValueAt(val, col, row);
                     col++;
                 }
@@ -258,9 +259,9 @@ public class Quittung extends WindowContent {
 
     public void printReceipt() {
         // Create a list from the set of mwst values
-        mwstList = new Vector<BigDecimal>(mwstsAndTheirValues.size());
-        for ( Vector<BigDecimal> mwstValues : mwstsAndTheirValues.values() ) {
-            mwstList.add(mwstValues.get(0)); // first item is "Steuersatz"
+        mwstList = new Vector<BigDecimal>(mwstValues.size());
+        for ( BigDecimal vat : mwstValues.keySet() ) {
+            mwstList.add(vat);
         }
         artikelIndex = 0;
         while (artikelIndex < kassierArtikel.size()) {
