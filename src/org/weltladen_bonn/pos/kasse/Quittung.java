@@ -201,7 +201,29 @@ public class Quittung extends WindowContent {
     }
 
     private void insertTSEValues(Sheet sheet, int continueAtRow) {
-        // XXX CONTINUE HERE
+        int row = continueAtRow + 1; // leave one row empty for spacing
+        sheet.setValueAt("--- TSE ---", 0, row);
+        row++;
+        if (tx == null) {
+            sheet.setValueAt("ACHTUNG: TSE-Daten nicht verfügbar", 0, row);
+        } else {
+            sheet.setValueAt("Transaktionsnummer:", 0, row);
+            row++;
+            sheet.setValueAt(tx.txNumber, 4, row);
+            row++;
+            sheet.setValueAt("Start:", 0, row);
+            row++;
+            sheet.setValueAt(tx.startTimeString, 4, row);
+            row++;
+            sheet.setValueAt("Ende:", 0, row);
+            row++;
+            sheet.setValueAt(tx.endTimeString, 4, row);
+            row++;
+            sheet.setValueAt("Seriennummer:", 0, row);
+            row++;
+            // XXX Need to get serial number from TSE
+            // sheet.setValueAt(XXX, 4, row);
+        }
     }
 
     void printQuittungFromJava(File tmpFile) {
