@@ -1811,14 +1811,14 @@ public class WeltladenTSE extends WindowContent {
 
      /** Finish the TSE transaction by entering payment details */
     public TSETransaction finishTransaction(int rechnungsNr,
-                                  /* Für Steuersätze, siehe DSFinV-K v2.2 (Anhang I, S. 110, S. 25) */
-                                  BigDecimal steuer_allgemein, // (19% MwSt)
-                                  BigDecimal steuer_ermaessigt, // (7% MwSt)
-                                  BigDecimal steuer_durchschnitt_nr3, // (10,7%) Durchschnittsatz (§ 24 Abs. 1 Nr. 3 UStG)
-                                  BigDecimal steuer_durchschnitt_nr1, // (5,5%) Durchschnittsatz (§ 24 Abs. 1 Nr. 1 UStG)
-                                  BigDecimal steuer_null, // (0% MwSt)
-                                  Vector<Vector<String>> zahlungen) { /* Für Zahlungen, siehe DSFinV-K v2.2 (Anhang I, S. 110f)
-                                    Format hier: pro Zahlung 1. String Bar|Unbar, 2. String Betrag, 3. String (optional) Währungscode */
+                                            /* Für Steuersätze, siehe DSFinV-K v2.2 (Anhang I, S. 110, S. 25) */
+                                            BigDecimal steuer_allgemein, // (19% MwSt)
+                                            BigDecimal steuer_ermaessigt, // (7% MwSt)
+                                            BigDecimal steuer_durchschnitt_nr3, // (10,7%) Durchschnittsatz (§ 24 Abs. 1 Nr. 3 UStG)
+                                            BigDecimal steuer_durchschnitt_nr1, // (5,5%) Durchschnittsatz (§ 24 Abs. 1 Nr. 1 UStG)
+                                            BigDecimal steuer_null, // (0% MwSt)
+                                            Vector<Vector<String>> zahlungen) { /* Für Zahlungen, siehe DSFinV-K v2.2 (Anhang I, S. 110f)
+                                                Format hier: pro Zahlung 1. String Bar|Unbar, 2. String Betrag, 3. String (optional) Währungscode */
         String processData = renderProcessData(steuer_allgemein, steuer_ermaessigt,
                                                steuer_durchschnitt_nr3, steuer_durchschnitt_nr1,
                                                steuer_null, zahlungen);
@@ -1891,8 +1891,8 @@ public class WeltladenTSE extends WindowContent {
         }
     }
 
-    public TSETransaction getTransaction(int rechnungsNr) {
-        TSETransaction tx = null;
+    public TSETransaction getTransactionByRechNr(int rechnungsNr) {
+        TSETransaction transaction = null;
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
@@ -1905,11 +1905,16 @@ public class WeltladenTSE extends WindowContent {
             pstmtSetInteger(pstmt, 1, rechnungsNr);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                tx = new TSETransaction();
-                tx.txNumber = (long)rs.getInt(1);
-                tx.startTimeString = rs.getString(2);
-                tx.endTimeString = rs.getString(3);
-                // XXX COTNINUE HERE ...
+                transaction = new TSETransaction();
+                transaction.rechnungsNr = rechnungsNr;
+                transaction.txNumber = (long)rs.getInt(1);
+                transaction.startTimeString = rs.getString(2);
+                transaction.endTimeString = rs.getString(3);
+                transaction.processType = rs.getString(4);
+                transaction.sigCounter = (long)rs.getInt(5);
+                transaction.signatureBase64 = rs.getString(6);
+                transaction.tseError = rs.getString(7);
+                transaction.processData = rs.getString(8);
             }
             rs.close();
             pstmt.close();
@@ -1917,7 +1922,41 @@ public class WeltladenTSE extends WindowContent {
         } catch (SQLException ex) {
             logger.error("Exception:", ex);
         }
-        return tx;
+        return transaction;
+    }
+
+    public TSETransaction getTransactionByTxNumber(int txNumber) {
+        TSETransaction transaction = null;
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT "+
+                "rechnungs_nr, transaction_start, transaction_end, "+
+                "process_type, signature_counter, signature_base64, tse_error, "+
+                "process_data "+
+                "FROM tse_transaction WHERE transaction_number = ?"
+            );
+            pstmtSetInteger(pstmt, 1, txNumber);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                transaction = new TSETransaction();
+                transaction.rechnungsNr = rs.getInt(1);
+                transaction.txNumber = (long)txNumber;
+                transaction.startTimeString = rs.getString(2);
+                transaction.endTimeString = rs.getString(3);
+                transaction.processType = rs.getString(4);
+                transaction.sigCounter = (long)rs.getInt(5);
+                transaction.signatureBase64 = rs.getString(6);
+                transaction.tseError = rs.getString(7);
+                transaction.processData = rs.getString(8);
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+        }
+        return transaction;
     }
 
     /**

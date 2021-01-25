@@ -69,6 +69,14 @@ public class Quittung extends WindowContent {
         this.totalPrice = tp;
         this.kundeGibt = kgb; this.rueckgeld = rg;
         this.tx = transaction;
+
+        logger.debug("TSE TX number: {}", tx.txNumber);
+        logger.debug("TSE TX start time: {}", tx.startTimeString);
+        logger.debug("TSE TX end time: {}", tx.endTimeString);
+        logger.debug("TSE TX processType: {}", tx.processType);
+        logger.debug("TSE TX processData: {}", tx.processData);
+        logger.debug("TSE TX sig counter: {}", tx.sigCounter);
+        logger.debug("TSE TX signature base64: {}", tx.signatureBase64);
     }
 
     private Sheet createSheetFromTemplate() {

@@ -483,7 +483,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                     datet = new DateTime(datum);
                 else
                     datet = new DateTime(now());
-                TSETransaction tx = tse.getTransaction(rechnungsNr);
+                TSETransaction tx = tse.getTransactionByRechNr(rechnungsNr);
                 Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
                         datet, rechnungsNr, kassierArtikel,
                         mwstValues, zahlungsModus,
