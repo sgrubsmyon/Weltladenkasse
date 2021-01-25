@@ -1359,8 +1359,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 }
             }
             Connection connection = this.pool.getConnection();
-            PreparedStatement pstmt = connection
-                    .prepareStatement("INSERT INTO verkauf SET verkaufsdatum = NOW(), ec_zahlung = ?, kunde_gibt = ?");
+            PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO verkauf SET verkaufsdatum = NOW(), ec_zahlung = ?, kunde_gibt = ?"
+            );
             pstmtSetBoolean(pstmt, 1, ec);
             pstmt.setBigDecimal(2, kundeGibt);
             int result = pstmt.executeUpdate();
@@ -1651,18 +1652,15 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             //if (steuersatz.signum() != 0){ // need to calculate 0% also for correct booking (DSFinV-K)
             if ( mwstValues.containsKey(steuersatz) ){
                 Vector<BigDecimal> values = mwstValues.get(steuersatz);
-                BigDecimal netto = values.get(0);
-                BigDecimal steuer = values.get(1);
-                BigDecimal brutto = values.get(2);
-                values.add(steuersatz);
-                values.add(netto);
-                values.add(steuer);
-                values.add(brutto); // = Umsatz
-                mwstIDsAndValues.put(vat.getKey(), values);
+                Vector<BigDecimal> v = new Vector<BigDecimal>();
+                v.add(steuersatz);
+                v.add(values.get(0));
+                v.add(values.get(1));
+                v.add(values.get(2)); // = Umsatz
+                mwstIDsAndValues.put(vat.getKey(), v);
             }
             //}
         }
-        logger.debug("mwst IDs and values: {}", mwstIDsAndValues);
         return mwstIDsAndValues;
     }
 
@@ -1701,13 +1699,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 mwstIDsAndValues.get(1) != null ? mwstIDsAndValues.get(1).get(3) : null, // steuer_null = mwst_id: 1 = 0% MwSt
                 zahlungen
             );
-            logger.debug("TSE TX number: {}", tx.txNumber);
-            logger.debug("TSE TX start time: {}", tx.startTimeString);
-            logger.debug("TSE TX end time: {}", tx.endTimeString);
-            logger.debug("TSE TX processType: {}", tx.processType);
-            logger.debug("TSE TX processData: {}", tx.processData);
-            logger.debug("TSE TX sig counter: {}", tx.sigCounter);
-            logger.debug("TSE TX signature base64: {}", tx.signatureBase64);
         }
 
         if (ec == false) { // if Barzahlung
