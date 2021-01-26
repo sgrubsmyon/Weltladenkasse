@@ -120,7 +120,10 @@ public class TSEStatus extends WindowContent {
             String[] valueTextSplit = valueText.split("\n");
             int rows = valueTextSplit.length;
             for (String s : valueTextSplit) {
-                if (s.length() > 100) rows++;
+                // add extra rows for long lines: (longer than 100 chars)
+                for (int i = 0; i < s.length() / 100; i++) {
+                    rows++;
+                }
             }
             JTextArea value = new JTextArea(valueText, rows, 100);
             value = makeLabelStyle(value);
