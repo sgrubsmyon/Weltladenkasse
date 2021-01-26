@@ -69,7 +69,8 @@ public class TSEStatus extends WindowContent {
     }
 
     private void updateStatusValues() {
-        statusValues = tse.retrieveTSEStatusValues();
+        tse.updateTSEStatusValues();
+        statusValues = tse.getTSEStatusValues();
     }
 
     private void showPanel() {
@@ -104,7 +105,7 @@ public class TSEStatus extends WindowContent {
         c.insets = new Insets(3, 0, 3, 3);
         
         int row = 0;
-        for (String k : tse.statusValueKeys) {
+        for (String k : statusValues.keySet()) {
             if (row > 0) {
                 // First a separator to separate from last item
                 c.gridy = row;
