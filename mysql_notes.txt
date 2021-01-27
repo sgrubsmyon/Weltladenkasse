@@ -264,6 +264,14 @@ then run script again
 and enter '10.8.0.' (for VPN)
 
 
+----------------------------
+
+Change user password:
+
+$ mysql -h localhost -u root -p
+> ALTER USER 'userName'@'localhost' IDENTIFIED BY 'New-Password-Here';
+
+----------------------------
 
 
 Change MwSt:
