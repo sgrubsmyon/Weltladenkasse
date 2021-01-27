@@ -5,16 +5,16 @@
 
 USE kasse;
 
-----------
+-- --------
 -- mwst --
-----------
+-- --------
 
 INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (4,0.05500);
 INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (5,0.10700);
 
---------------------
+-- ------------------
 -- abrechnung_tag --
---------------------
+-- ------------------
 
 -- create temporary abrechnung_tag copy:
 CREATE TABLE abrechnung_tag_copy (
@@ -121,9 +121,9 @@ DROP TABLE abrechnung_tag_copy;
 -- Grant default user access right to new MwSt. table: (need to do as root user)
 GRANT INSERT ON kasse.abrechnung_tag_mwst TO 'mitarbeiter'@'localhost';
 
-----------------------
+-- --------------------
 -- abrechnung_monat --
-----------------------
+-- --------------------
 
 -- create temporary abrechnung_monat copy:
 CREATE TABLE abrechnung_monat_copy (
@@ -178,9 +178,9 @@ DROP TABLE abrechnung_monat_copy;
 -- Grant default user access right to new MwSt. table: (need to do as root user)
 GRANT INSERT, DELETE ON kasse.abrechnung_monat_mwst TO 'mitarbeiter'@'localhost';
 
----------------------
+-- -------------------
 -- abrechnung_jahr --
----------------------
+-- -------------------
 
 -- create temporary abrechnung_jahr copy:
 CREATE TABLE abrechnung_jahr_copy (
@@ -237,9 +237,9 @@ DROP TABLE abrechnung_jahr_copy;
 -- Grant default user access right to new MwSt. table: (need to do as root user)
 GRANT INSERT, DELETE ON kasse.abrechnung_jahr_mwst TO 'mitarbeiter'@'localhost';
 
----------------------
+-- -------------------
 -- tse_transaction --
----------------------
+-- -------------------
 
 CREATE TABLE tse_transaction (
     transaction_number INTEGER(10) UNSIGNED NOT NULL,
