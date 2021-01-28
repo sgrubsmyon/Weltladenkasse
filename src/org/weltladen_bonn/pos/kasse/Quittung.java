@@ -6,6 +6,8 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 import java.io.*;
 import java.lang.Process; // for executing system commands
 import java.lang.Runtime; // for executing system commands
+import java.text.SimpleDateFormat; // for parsing and formatting dates
+import java.text.ParseException;
 
 // GUI stuff:
 import javax.swing.*; // JFrame, JPanel, JTable, JButton etc.
@@ -37,6 +39,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import org.weltladen_bonn.pos.*;
+import org.weltladen_bonn.pos.kasse.WeltladenTSE;
 import org.weltladen_bonn.pos.kasse.WeltladenTSE.TSETransaction;
 
 public class Quittung extends WindowContent {
@@ -225,22 +228,32 @@ public class Quittung extends WindowContent {
         if (tx == null) {
             sheet.setValueAt("ACHTUNG: TSE-Daten nicht verfügbar", 0, row);
         } else {
-            sheet.setValueAt("Transaktionsnummer:", 0, row);
-            row++;
+            sheet.setValueAt("Transaktionsnr:", 0, row);
             sheet.setValueAt(tx.txNumber, 4, row);
             row++;
             sheet.setValueAt("Start:", 0, row);
-            row++;
-            sheet.setValueAt(tx.startTimeString, 4, row);
+            String dateString = "???";
+            try {
+                Date date = new SimpleDateFormat(WeltladenTSE.dateFormatDSFinVK).parse(tx.startTimeString);
+                dateString = new SimpleDateFormat(WeltladenTSE.dateFormatQuittung).format(date);
+            } catch (ParseException ex) {
+                logger.error("{}", ex);
+            }
+            sheet.setValueAt(dateString, 4, row);
             row++;
             sheet.setValueAt("Ende:", 0, row);
+            dateString = "???";
+            try {
+                Date date = new SimpleDateFormat(WeltladenTSE.dateFormatDSFinVK).parse(tx.endTimeString);
+                dateString = new SimpleDateFormat(WeltladenTSE.dateFormatQuittung).format(date);
+            } catch (ParseException ex) {
+                logger.error("{}", ex);
+            }
+            sheet.setValueAt(dateString, 4, row);
             row++;
-            sheet.setValueAt(tx.endTimeString, 4, row);
+            sheet.setValueAt("Kassen-Seriennummer (clientID):", 0, row);
             row++;
-            sheet.setValueAt("Seriennummer:", 0, row);
-            row++;
-            // XXX Need to get serial number from TSE
-            // sheet.setValueAt(XXX, 4, row);
+            sheet.setValueAt(bc.z_kasse_id, 4, row);
         }
     }
 
