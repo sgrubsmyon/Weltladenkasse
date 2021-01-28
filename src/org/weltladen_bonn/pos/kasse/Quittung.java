@@ -27,6 +27,11 @@ import org.jopendocument.dom.OOUtils;
 import org.jopendocument.model.OpenDocument;
 import org.jopendocument.print.ODTPrinter;
 
+// EPSON ESC/POS printing:
+import javax.print.PrintService;
+import com.github.anastaciocintra.output.PrinterOutputStream;
+import com.github.anastaciocintra.escpos.EscPos;
+
 // Logging:
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,6 +74,19 @@ public class Quittung extends WindowContent {
         this.totalPrice = tp;
         this.kundeGibt = kgb; this.rueckgeld = rg;
         this.tx = transaction;
+
+        // First test of ESC/POS printing
+        try {
+            PrintService printService = PrinterOutputStream.getPrintServiceByName(bc.printerName);
+            PrinterOutputStream printerOutputStream = new PrinterOutputStream(printService);
+            EscPos escpos = new EscPos(printerOutputStream);
+            escpos.writeLF("Hello World!");
+            escpos.feed(5);
+            escpos.cut(EscPos.CutMode.FULL);
+            escpos.close();
+        } catch (IOException ex) {
+            logger.error("{}", ex);
+        }
 
         logger.debug("TSE TX number: {}", tx.txNumber);
         logger.debug("TSE TX start time: {}", tx.startTimeString);
