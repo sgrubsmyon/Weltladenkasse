@@ -37,7 +37,8 @@ exportDirBestellung = 'Dokumente/Bestellungen/Bestellungen FHZ 'yyyy
 # Finanzverwaltung gemäß § 146a Abs. 4 AO zu melden ist:
 # (wird bei Kommunikation mit der TSE als "clientID" verwendet)
 
-Z_KASSE_ID = WeltladenBonnKasse-01
+# WLBONN converted to ASCII code numbers: (https://www.madeintext.com/text-to-ascii/)
+Z_KASSE_ID = 877666797878-01
 
 #########################################
 # Stamm_Abschluss (cashpointclosing.csv)
