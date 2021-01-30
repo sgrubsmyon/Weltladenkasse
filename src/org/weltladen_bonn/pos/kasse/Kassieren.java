@@ -1689,6 +1689,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         /* Zitat DSFinV-K: (S. 109) "Für jeden Steuersatz werden hier die Bruttoumsätze je Steuersatz [...] aufgelistet." */
         // Bruttoumsatz = 4. Element in mwstIDsAndValues (get(3))
         TSETransaction tx = null;
+        LinkedHashMap<String, String> tseStatusValues = null;
         if (tse.inUse()) {
             tx = tse.finishTransaction(
                 rechnungsNr,
@@ -1699,15 +1700,16 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 mwstIDsAndValues.get(1) != null ? mwstIDsAndValues.get(1).get(3) : null, // steuer_null = mwst_id: 1 = 0% MwSt
                 zahlungen
             );
+            tseStatusValues = tse.getTSEStatusValues();
         }
 
         if (ec == false) { // if Barzahlung
             insertIntoKassenstand(rechnungsNr);
-            printQuittung(rechnungsNr, tx); // always print receipt, it's not optional anymore
+            printQuittung(rechnungsNr, tx, tseStatusValues); // always print receipt, it's not optional anymore
         } else { // EC-Zahlung
-            printQuittung(rechnungsNr, tx);
+            printQuittung(rechnungsNr, tx, tseStatusValues);
             // Thread.sleep(5000); // wait for 5 seconds, no, printer is too slow anyway and this blocks UI unnecessarily
-            printQuittung(rechnungsNr, tx);
+            printQuittung(rechnungsNr, tx, tseStatusValues);
         }
         clearAll();
         updateAll();
@@ -1973,7 +1975,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         this.selectedArticleID = selectedArticleID;
     }
 
-    void printQuittung(Integer rechnungsNr, TSETransaction tx) {
+    void printQuittung(Integer rechnungsNr, TSETransaction tx, LinkedHashMap<String, String> tseStatusValues) {
         TreeMap<BigDecimal, Vector<BigDecimal>> mwstValues = calculateMwStValuesInRechnung();
         BigDecimal totalPrice = new BigDecimal(getTotalPrice());
         BigDecimal kundeGibt = null, rueckgeld = null;
@@ -1987,7 +1989,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
             new DateTime(now()), rechnungsNr, kassierArtikel,
             mwstValues, zahlungsModus, totalPrice,
-            kundeGibt, rueckgeld, tx);
+            kundeGibt, rueckgeld, tx, tseStatusValues);
         myQuittung.printReceipt();
     }
 

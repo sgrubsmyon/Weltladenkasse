@@ -54,6 +54,7 @@ public class Quittung extends WindowContent {
     private BigDecimal kundeGibt;
     private BigDecimal rueckgeld;
     private TSETransaction tx;
+    private LinkedHashMap<String, String> tseStatusValues;
 
     private int artikelIndex = 0;
     private int rowOffset = 7;
@@ -67,7 +68,8 @@ public class Quittung extends WindowContent {
             Vector<KassierArtikel> ka,
             TreeMap< BigDecimal, Vector<BigDecimal> > mv,
             String zm, BigDecimal tp, BigDecimal kgb, BigDecimal rg,
-            TSETransaction transaction) {
+            TSETransaction transaction,
+            LinkedHashMap<String, String> tseStatusValues) {
 	    super(pool, mw);
         this.datetime = dt;
         this.rechnungsNr = rechnungsNr;
@@ -77,6 +79,7 @@ public class Quittung extends WindowContent {
         this.totalPrice = tp;
         this.kundeGibt = kgb; this.rueckgeld = rg;
         this.tx = transaction;
+        this.tseStatusValues = tseStatusValues;
 
         // First test of ESC/POS printing
         try {
@@ -251,9 +254,15 @@ public class Quittung extends WindowContent {
             }
             sheet.setValueAt(dateString, 4, row);
             row++;
-            sheet.setValueAt("Kassen-Seriennummer (clientID):", 0, row);
+            sheet.setValueAt("Kassen-Seriennr (clientID):", 0, row);
             row++;
             sheet.setValueAt(bc.z_kasse_id, 4, row);
+            if (tseStatusValues != null) {
+                row++;
+                sheet.setValueAt("TSE-Seriennummer:", 0, row);
+                // sheet.setValueAt(tseStatusValues.get("Seriennummer der TSE (Hex)"), 4, row);
+                sheet.setValueAt("4a3f03a2de\nc81878b432548668f603d14f7b7f90\nd230e30c87c1a705dce1c890", 4, row);
+            }
         }
     }
 
