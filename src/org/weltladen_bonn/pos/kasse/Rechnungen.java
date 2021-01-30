@@ -484,10 +484,14 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 else
                     datet = new DateTime(now());
                 TSETransaction tx = tse.getTransactionByRechNr(rechnungsNr);
+                LinkedHashMap<String, String> tseStatusValues = null;
+                if (tse.inUse()) {
+                    tseStatusValues = tse.getTSEStatusValues();
+                }
                 Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
                         datet, rechnungsNr, kassierArtikel,
                         mwstValues, zahlungsModus,
-                        totalPrice, kundeGibt, rueckgeld, tx);
+                        totalPrice, kundeGibt, rueckgeld, tx, tseStatusValues);
                 myQuittung.printReceipt();
             return;
         }
