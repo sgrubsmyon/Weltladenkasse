@@ -78,9 +78,11 @@ import com.cryptovision.SEAPI.exceptions.ErrorTooManyRecords;
 // For decoding/encoding output from the TSE:
 import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.util.ASN1Dump;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.util.ASN1Dump;
 import org.bouncycastle.asn1.bsi.BSIObjectIdentifiers;
 import java.io.ByteArrayInputStream;
 
@@ -147,8 +149,9 @@ public class WeltladenTSE extends WindowContent {
                 null
             );
             
+            updateTSEStatusValues(); // so that status values can be printed from inside checkInitializationStatus()
             checkInitializationStatus();
-            updateTSEStatusValues();
+            updateTSEStatusValues(); // might have changes inside checkInitializationStatus()
             printAllStatusValues();
             // System.out.println("\n\n*** WRITING FIRST TRANSACTION TO TSE ***");
             // System.out.println("\n --- Status before: \n");
@@ -378,11 +381,19 @@ public class WeltladenTSE extends WindowContent {
                 System.exit(1);
             }
             logger.info("TSE time successfully updated!");
-            // If client ID not yet mapped to key:
-            if (byteArrayToHexString(tse.getERSMappings()).equals("3000")) { // XXX is this the general value for unmapped?
-                logger.debug("01 ERS Mappings equal 0");
+            // If currently configured client ID (Z_KASSE_ID) is not yet mapped to key:
+            Vector<String> clientIDs = decodeClientIDsFromERSMappings(tse.getERSMappings());
+            logger.debug("Mapped clientIDs: {}", clientIDs);
+            if (!clientIDs.contains(bc.z_kasse_id)) {
+                logger.debug("01 ERS Mappings do not contain configured Z_KASSE_ID '{}', need to insert mapping!", bc.z_kasse_id);
                 if (!loggedIn) {
                     logger.debug("02 Before authenticateAs");
+                    JOptionPane.showMessageDialog(this.mainWindow,
+                        "Noch keine Zuordnung der Kassen-ID (Z_KASSE_ID in config.properties)\n"+
+                        "zum Schlüssel der TSE vorhanden!\n"+
+                        "Bitte jetzt das TSE-Admin-Passwort eingeben, damit die Zuordnung\n"+
+                        "angelegt werden kann.",
+                        "Fehlende Zuordnung in der TSE", JOptionPane.INFORMATION_MESSAGE);
                     authenticateAs("Admin", adminPIN, true);
                     logger.debug("03 After authenticateAs");
                     loggedIn = true;
@@ -392,15 +403,18 @@ public class WeltladenTSE extends WindowContent {
                 logger.debug("05 After getSerialNumber");
                 mapClientIDToKey(serialNumber);
                 logger.debug("06 After mapClientIDToKey");
+                clientIDs = decodeClientIDsFromERSMappings(tse.getERSMappings());
+                logger.debug("Mapped clientIDs now: {}", clientIDs);
                 // Re-check if client ID is still unmapped to key:
-                if (byteArrayToHexString(tse.getERSMappings()).equals("3000")) { // XXX is this the general value for unmapped?
+                if (!clientIDs.contains(bc.z_kasse_id)) {
                     logger.fatal("Mapping of client ID to TSE key failed!");
                     JOptionPane.showMessageDialog(this.mainWindow,
-                        "ACHTUNG: Die Aktualisierung der Zeit der TSE ist fehlgeschlagen!\n"+
-                        "Ohne Zeitaktualisierung kann eine TSE nicht verwendet werden.\n"+
+                        "ACHTUNG: Die Zuordnung der Kassen-ID (Z_KASSE_ID in config.properties)\n"+
+                        "zum Schlüssel der TSE ist fehlgeschlagen!\n"+
+                        "Ohne Kassen-ID-Zuordnung kann eine TSE nicht verwendet werden.\n"+
                         "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
                         "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
-                        "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
+                        "Fehler beim Anlegen einer Zuordnung in der TSE", JOptionPane.ERROR_MESSAGE);
                     logOutAs("Admin");
                     loggedIn = false;
                     disconnectFromTSE();
@@ -480,9 +494,9 @@ public class WeltladenTSE extends WindowContent {
     public static String byteArrayToCharString(byte[] byteArray) {
         String res = "";
         for (byte b : byteArray) {
-            res += (char)b + " ";
+            res += (char)b;
         }
-        return res.substring(0, res.length() - 1); // omit last empty string
+        return res.substring(0, res.length());
     }
 
     public static String byteArrayToHexString(byte[] data) {
@@ -521,6 +535,19 @@ public class WeltladenTSE extends WindowContent {
         } catch (Exception ex) {
             logger.error("Failed to decode byte array using ASN1ObjectIdentifier.fromByteArray()");
             logger.error("Exception:", ex);
+        }
+        return result;
+    }
+
+    public static Vector<String> decodeClientIDsFromERSMappings(byte[] data) {
+        Vector<String> result = new Vector<String>();
+        ASN1Sequence mappings = ASN1Sequence.getInstance(data);
+        for (int i = 0; i < mappings.size(); i++) {
+            ASN1Sequence mapping = ASN1Sequence.getInstance(mappings.getObjectAt(i));
+            // clientID is always the first element:
+            ASN1OctetString octstr = ASN1OctetString.getInstance(mapping.getObjectAt(0));
+            String clientID = byteArrayToCharString(octstr.getOctets());
+            result.add(clientID);
         }
         return result;
     }
@@ -591,13 +618,13 @@ public class WeltladenTSE extends WindowContent {
                 //  dessen privater Schlüssel zum Signieren der Protokollmeldungen verwendet wird."
                 byte[] serialNumberData = tse.exportSerialNumbers(); // (Rückgabe aller Signaturschlüssel-Seriennummern, sowie deren Verwendung)
 		        byte[] serialNumber = Arrays.copyOfRange(serialNumberData, 6, 6+32);
-                // Abfrage der Transaktionsnummer der letzten Transaktion, XXX sollte auf Quittung gedruckt werden!n
+                // Abfrage der Transaktionsnummer der letzten Transaktion
                 statusValues.put("Transaktionsnummer", String.valueOf(tse.getTransactionCounter()));
-                // Abfrage des Signatur-Zählers der letzten Signatur, XXX sollte auf Quittung gedruckt werden!
+                // Abfrage des Signatur-Zählers der letzten Signatur
                 statusValues.put("Signatur-Zähler", String.valueOf(tse.getSignatureCounter(serialNumber)));
-                // Erste und auch einzige Signaturschlüssel-Seriennummer, XXX sollte auf Quittung gedruckt werden!
+                // Erste und auch einzige Signaturschlüssel-Seriennummer
                 statusValues.put("Seriennummer der TSE (Hex)", byteArrayToHexString(serialNumber));
-                // Erste und auch einzige Signaturschlüssel-Seriennummer, XXX sollte auf Quittung gedruckt werden!
+                // Erste und auch einzige Signaturschlüssel-Seriennummer
                 statusValues.put("Seriennummer der TSE (Base64)", byteArrayToBase64String(serialNumber));
                 // Alle Signaturschlüssel-Seriennummern
                 statusValues.put("Seriennummern aller Schlüssel (ASN.1)", byteArrayToASN1String(serialNumberData));
