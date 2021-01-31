@@ -224,6 +224,23 @@ public class Quittung extends WindowContent {
         return row; // first empty row
     }
 
+    private int spreadTextOverSeveralRows(Sheet sheet, String text, int col, int startRow, int firstBreakAfterChar, int charsPerRow) {
+        int row = startRow;
+        int pos = 0;
+        int textLength = text.length();
+        String putText = text.substring(pos, firstBreakAfterChar > textLength ? textLength : firstBreakAfterChar);
+        sheet.setValueAt(putText, col, row);
+        pos = firstBreakAfterChar;
+        row++;
+        while (textLength > pos) {
+            putText = text.substring(pos, pos + charsPerRow > textLength ? textLength : pos + charsPerRow);
+            sheet.setValueAt(putText, col, row);
+            pos = pos + charsPerRow;
+            row++;
+        }
+        return row;
+    }
+
     private void insertTSEValues(Sheet sheet, int continueAtRow) {
         int row = continueAtRow + 1; // leave one row empty for spacing
         sheet.setValueAt("--- TSE ---", 0, row);
@@ -260,8 +277,10 @@ public class Quittung extends WindowContent {
             if (tseStatusValues != null) {
                 row++;
                 sheet.setValueAt("TSE-Seriennummer:", 0, row);
-                // sheet.setValueAt(tseStatusValues.get("Seriennummer der TSE (Hex)"), 4, row);
-                sheet.setValueAt("4a3f03a2de\nc81878b432548668f603d14f7b7f90\nd230e30c87c1a705dce1c890", 4, row);
+                row = spreadTextOverSeveralRows(
+                    sheet, tseStatusValues.get("Seriennummer der TSE (Hex)"),
+                    4, row, 10, 30
+                );
             }
         }
     }
