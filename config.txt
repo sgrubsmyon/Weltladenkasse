@@ -3,6 +3,7 @@ mysqlHost = mangopi
 mysqlPath =
 sofficePath =
 printerName = quittungsdrucker
+printerDeviceFile = /dev/ttyUSB0
 displayManufacturer = Wincor Nixdorf
 displayModel = Display BA63/USB
 displayWidth = 20
