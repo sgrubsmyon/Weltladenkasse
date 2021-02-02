@@ -25,6 +25,7 @@ public class BaseClass {
     public String mysqlPath; /** path where mysql and mysqldump lie around */
     public String sofficePath; /** path where soffice lies around */
     public String printerName; /** name of receipt printer as set in CUPS */
+    public String printerDeviceFile; /** name of receipt printer as set in CUPS */
     public String displayManufacturer; /** manufacturer of customer display */
     public String displayModel; /** model name of customer display */
     public Integer displayWidth; /** number of chars on one row */
@@ -191,6 +192,7 @@ public class BaseClass {
             this.mysqlPath = props.getProperty("mysqlPath");
             this.sofficePath = props.getProperty("sofficePath");
             this.printerName = props.getProperty("printerName");
+            this.printerDeviceFile = props.getProperty("printerDeviceFile");
             this.displayManufacturer = props.getProperty("displayManufacturer");
             this.displayModel = props.getProperty("displayModel");
             this.displayWidth = Integer.parseInt(props.getProperty("displayWidth"));
@@ -220,6 +222,7 @@ public class BaseClass {
             this.mysqlPath = "";
             this.sofficePath = "";
             this.printerName = "quittungsdrucker";
+            this.printerDeviceFile = "/dev/ttyUSB0";
             this.displayManufacturer = "Wincor Nixdorf";
             this.displayModel = "BA63/USB";
             this.displayWidth = 20;
@@ -238,7 +241,7 @@ public class BaseClass {
             this.exportDirBestellung = "'Dokumente/Bestellungen/Bestellungen FHZ 'yyyy";
 
             // TSE and DSFinV-K setup:
-            this.z_kasse_id = "WeltladenBonnKasse-01";
+            this.z_kasse_id = "877666797878-01";
         }
         this.mysqlHost = removeQuotes(this.mysqlHost);
         this.printerName = removeQuotes(this.printerName);
