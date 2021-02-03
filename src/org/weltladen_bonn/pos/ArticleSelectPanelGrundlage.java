@@ -135,11 +135,12 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
 
     private void setupKeyboardShortcuts() {
         // keyboard shortcuts:
-        KeyStroke barcodeShortcut1 = KeyStroke.getKeyStroke(KeyEvent.VK_F2, 0);
+        KeyStroke barcodeShortcut1 = KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0);
         KeyStroke barcodeShortcut2 = KeyStroke.getKeyStroke("ctrl B");
-        KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0);
-        KeyStroke artikelNummerShortcut1 = KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0);
+        KeyStroke artikelNameShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0);
         KeyStroke artikelNummerShortcut2 = KeyStroke.getKeyStroke("ctrl N");
+        KeyStroke artikelNummerShortcut1 = KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0);
+        KeyStroke artikelNummerShortcut2 = KeyStroke.getKeyStroke("ctrl M");
 
         this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barcodeShortcut1, "barcode");
         this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(barcodeShortcut2, "barcode");
