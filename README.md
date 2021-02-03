@@ -179,6 +179,8 @@ terminal with display plugged in.
 
 ## Optionally: Configure barcode scanner
 
+### Honeywell
+
 * Configure scanner prefix as "ctrl-c/alt-c" (to gain barcode box focus for every
 scan) according to "Honeywell MetroSelect Single-Line Scanner Configuration
 Guide":
@@ -191,6 +193,28 @@ Guide":
     6. Scan barcode "Enter/Exit Configuration Mode" on page 1-1
 
 Set beeper options with codes on page 7-4 (p. 36).
+
+### Datalogic QuickScan
+
+* First enable transmission of control characters, according to p. 66:
+    1. Scan START bar code on p. 67
+    2. Scan "Enable Function Key Mapping" bar code on p. 67
+    3. Scan END bar code on p. 67
+* Configure scanner prefix as "F3" (to gain barcode box focus for every
+scan) according to "manuals/scanner/qs6500-manual.pdf" (p. 77):
+    1. Scan the START bar code (p. 78)
+    2. Scan the SET PREFIX bar code (p. 78)
+    3. "F2" is hex code 18 (see p. 322), scan "1" and "8" bar codes from p. 313
+    4. Scan the SET bar code to accept the digits scanned (p. 78)
+    5. Scan the END bar code to exit Programming Mode (p. 78)
+* Configure scanner suffix as "ENTER" (to submit query after every
+scan) according to "manuals/scanner/qs6500-manual.pdf" (p. 77):
+    1. Scan the START bar code (p. 78)
+    2. Scan the SET SUFFIX bar code (p. 78)
+    3. "ENTER" is hex code 0C (see p. 321), scan "0" and "C" bar codes from p. 313
+    4. Scan the SET bar code to accept the digits scanned (p. 78)
+    5. Scan the END bar code to exit Programming Mode (p. 78)
+
 
 
 ## Optionally: Python scripts
