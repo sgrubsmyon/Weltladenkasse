@@ -63,6 +63,7 @@ CREATE TABLE abrechnung_tag (
     kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
     rechnungs_nr_von INTEGER(10) UNSIGNED NOT NULL,
     rechnungs_nr_bis INTEGER(10) UNSIGNED NOT NULL,
+    last_tse_sig_counter INTEGER(10) DEFAULT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id),
     FOREIGN KEY (rechnungs_nr_von) REFERENCES verkauf(rechnungs_nr),
@@ -95,7 +96,7 @@ CREATE TABLE zaehlprotokoll_details (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Fill the new tables:
--- SELECT DISTINCT id, zeitpunkt, zeitpunkt_real, kassenstand_id, (SELECT MIN(rechnungs_nr) FROM verkauf WHERE verkaufsdatum > (SELECT DISTINCT zeitpunkt FROM abrechnung_tag_copy WHERE id = at.id - 1) AND verkaufsdatum <= zeitpunkt) AS rechnungs_nr_von, (SELECT MAX(rechnungs_nr) FROM verkauf WHERE verkaufsdatum > (SELECT DISTINCT zeitpunkt FROM abrechnung_tag_copy WHERE id = at.id - 1) AND verkaufsdatum <= zeitpunkt) AS rechnungs_nr_bis FROM abrechnung_tag_copy AS at LIMIT 5;
+-- SELECT DISTINCT id, zeitpunkt, zeitpunkt_real, kassenstand_id, (SELECT MIN(rechnungs_nr) FROM verkauf WHERE verkaufsdatum > (SELECT DISTINCT zeitpunkt FROM abrechnung_tag_copy WHERE id = at.id - 1) AND verkaufsdatum <= zeitpunkt) AS rechnungs_nr_von, (SELECT MAX(rechnungs_nr) FROM verkauf WHERE verkaufsdatum > (SELECT DISTINCT zeitpunkt FROM abrechnung_tag_copy WHERE id = at.id - 1) AND verkaufsdatum <= zeitpunkt) AS rechnungs_nr_bis, NULL AS last_tse_sig_counter FROM abrechnung_tag_copy AS at LIMIT 5;
 INSERT INTO abrechnung_tag
     SELECT DISTINCT id, zeitpunkt, zeitpunkt_real, kassenstand_id,
         (SELECT MIN(rechnungs_nr) FROM verkauf WHERE
@@ -105,7 +106,8 @@ INSERT INTO abrechnung_tag
         (SELECT MAX(rechnungs_nr) FROM verkauf WHERE
             verkaufsdatum > IFNULL((SELECT DISTINCT zeitpunkt_real FROM abrechnung_tag_copy WHERE id = at.id - 1), '0001-01-01') AND
             verkaufsdatum <= zeitpunkt_real
-        ) AS rechnungs_nr_bis
+        ) AS rechnungs_nr_bis,
+        NULL AS last_tse_sig_counter
     FROM abrechnung_tag_copy AS at;
 -- SELECT id, mwst_satz, mwst_netto, mwst_betrag, bar_brutto FROM abrechnung_tag_copy LIMIT 5;
 INSERT INTO abrechnung_tag_mwst
