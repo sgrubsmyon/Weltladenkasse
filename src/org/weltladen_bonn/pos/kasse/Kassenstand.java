@@ -145,7 +145,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
         calendar.set(Calendar.DAY_OF_MONTH, day);
         earliestDate = calendar.getTime();
 
-        Date now = new Date(); // current date
+        Date now = nowDate(); // current date
         if ( year == 0 ){
             oneDayBeforeEarliestDate = now;
             earliestDate = now;

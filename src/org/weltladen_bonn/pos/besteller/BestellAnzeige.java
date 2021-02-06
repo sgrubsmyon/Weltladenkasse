@@ -155,7 +155,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         calendar.set(Calendar.DAY_OF_MONTH, day);
         earliestDate = calendar.getTime();
 
-        Date now = new Date(); // current date
+        Date now = nowDate(); // current date
         if (year == 0) {
             earliestDate = now;
         }
@@ -747,7 +747,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         try {
             // reformat the date to be without hour:
             Date date = new SimpleDateFormat(bc.dateFormatJava).parse(oldDate);
-            newDate = new SimpleDateFormat("dd.MM.yyyy").format(date);;
+            newDate = new SimpleDateFormat("dd.MM.yyyy").format(date);
         } catch (java.text.ParseException ex) {
             logger.error("ParseException:", ex);
         }
@@ -941,7 +941,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 	}
         if (e.getSource() == exportButton){
             SimpleDateFormat sdfOut = new SimpleDateFormat(bc.exportDirBestellung);
-            String formattedDate = sdfOut.format(new Date());
+            String formattedDate = sdfOut.format(nowDate());
             File exportDir = new File(System.getProperty("user.home") + bc.fileSep + formattedDate);
             boolean ok = true;
             if (!exportDir.exists()) {

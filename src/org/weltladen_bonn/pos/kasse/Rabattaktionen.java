@@ -110,50 +110,50 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
     }
 
     private void queryEarliestAndLatestRabattaktion() {
-	int earlyDay = 0; int earlyMonth = 0; int earlyYear = 0;
-	int lateDay = 0; int lateMonth = 0; int lateYear = 0;
-	try {
-        Connection connection = this.pool.getConnection();
-	    // Create statement for MySQL database
-	    Statement stmt = connection.createStatement();
-	    // Run MySQL command
-	    ResultSet rs = stmt.executeQuery(
-		    "SELECT DAY(MIN(von)), MONTH(MIN(von)), YEAR(MIN(von)), " +
-                    "DAY(MAX(bis)), MONTH(MAX(bis)), YEAR(MAX(bis)) FROM rabattaktion"
-		    );
-	    // Now do something with the ResultSet ...
-	    rs.next();
-	    earlyDay = rs.getInt(1);
-	    earlyMonth = rs.getInt(2);
-	    earlyYear = rs.getInt(3);
-	    lateDay = rs.getInt(4);
-	    lateMonth = rs.getInt(5);
-	    lateYear = rs.getInt(6);
-	    rs.close();
-	    stmt.close();
-        connection.close();
-	} catch (SQLException ex) {
-	    logger.error("Exception:", ex);
-        showDBErrorDialog(ex.getMessage());
-	}
-	Calendar earlyCalendar = Calendar.getInstance();
-	earlyCalendar.set(Calendar.YEAR, earlyYear);
-	earlyCalendar.set(Calendar.MONTH, earlyMonth-1);
-	earlyCalendar.set(Calendar.DAY_OF_MONTH, earlyDay-1); // for strange reasons, we need day-1
-	oneDayBeforeEarliestDate = earlyCalendar.getTime();
-	earlyCalendar.set(Calendar.DAY_OF_MONTH, earlyDay);
-	earliestDate = earlyCalendar.getTime();
+        int earlyDay = 0; int earlyMonth = 0; int earlyYear = 0;
+        int lateDay = 0; int lateMonth = 0; int lateYear = 0;
+        try {
+            Connection connection = this.pool.getConnection();
+            // Create statement for MySQL database
+            Statement stmt = connection.createStatement();
+            // Run MySQL command
+            ResultSet rs = stmt.executeQuery(
+                "SELECT DAY(MIN(von)), MONTH(MIN(von)), YEAR(MIN(von)), " +
+                        "DAY(MAX(bis)), MONTH(MAX(bis)), YEAR(MAX(bis)) FROM rabattaktion"
+                );
+            // Now do something with the ResultSet ...
+            rs.next();
+            earlyDay = rs.getInt(1);
+            earlyMonth = rs.getInt(2);
+            earlyYear = rs.getInt(3);
+            lateDay = rs.getInt(4);
+            lateMonth = rs.getInt(5);
+            lateYear = rs.getInt(6);
+            rs.close();
+            stmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        Calendar earlyCalendar = Calendar.getInstance();
+        earlyCalendar.set(Calendar.YEAR, earlyYear);
+        earlyCalendar.set(Calendar.MONTH, earlyMonth-1);
+        earlyCalendar.set(Calendar.DAY_OF_MONTH, earlyDay-1); // for strange reasons, we need day-1
+        oneDayBeforeEarliestDate = earlyCalendar.getTime();
+        earlyCalendar.set(Calendar.DAY_OF_MONTH, earlyDay);
+        earliestDate = earlyCalendar.getTime();
 
-        Date now = new Date(); // current date
+        Date now = nowDate(); // current date
         if ( earlyYear == 0 ){
             oneDayBeforeEarliestDate = now;
             earliestDate = now;
         }
-	Calendar lateCalendar = Calendar.getInstance();
-	lateCalendar.set(Calendar.YEAR, lateYear);
-	lateCalendar.set(Calendar.MONTH, lateMonth-1);
-	lateCalendar.set(Calendar.DAY_OF_MONTH, lateDay);
-	latestDate = lateCalendar.getTime();
+        Calendar lateCalendar = Calendar.getInstance();
+        lateCalendar.set(Calendar.YEAR, lateYear);
+        lateCalendar.set(Calendar.MONTH, lateMonth-1);
+        lateCalendar.set(Calendar.DAY_OF_MONTH, lateDay);
+        latestDate = lateCalendar.getTime();
         if ( lateYear == 0 ){
             latestDate = now;
         }
@@ -593,10 +593,10 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
             return;
 	}
 	else if (e.getSource() == heuteButton){
-            Date now = new Date(); // refresh the now-time
-            startDateModel.setValue(now);
-            endDateModel.setValue(now);
-            changeViewDates(now, now);
+        Date now = nowDate(); // refresh the now-time
+        startDateModel.setValue(now);
+        endDateModel.setValue(now);
+        changeViewDates(now, now);
 	    return;
 	}
 	else if (e.getSource() == resetButton){
