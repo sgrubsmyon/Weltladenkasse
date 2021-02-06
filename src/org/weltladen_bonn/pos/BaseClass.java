@@ -215,123 +215,123 @@ public class BaseClass {
                 JOptionPane.ERROR_MESSAGE);
         }
         try { this.currencySymbol = props.getProperty("currencySymbol"); } catch (Exception ex) {
-            parseErrorMessage(ex, "currencySymbol", this.currencySymbol)
+            parseErrorMessage(ex, "currencySymbol", this.currencySymbol);
         }
         try { this.mysqlHost = props.getProperty("mysqlHost"); } catch (Exception ex) {
-            parseErrorMessage(ex, "mysqlHost", this.mysqlHost)
+            parseErrorMessage(ex, "mysqlHost", this.mysqlHost);
         }
         try { this.mysqlPath = props.getProperty("mysqlPath"); } catch (Exception ex) {
-            parseErrorMessage(ex, "mysqlPath", this.mysqlPath)
+            parseErrorMessage(ex, "mysqlPath", this.mysqlPath);
         }
         try { this.sofficePath = props.getProperty("sofficePath"); } catch (Exception ex) {
-            parseErrorMessage(ex, "sofficePath", this.sofficePath)
+            parseErrorMessage(ex, "sofficePath", this.sofficePath);
         }
         try { this.printerName = props.getProperty("printerName"); } catch (Exception ex) {
-            parseErrorMessage(ex, "printerName", this.printerName)
+            parseErrorMessage(ex, "printerName", this.printerName);
         }
         try { this.printerDeviceFile = props.getProperty("printerDeviceFile"); } catch (Exception ex) {
-            parseErrorMessage(ex, "printerDeviceFile", this.printerDeviceFile)
+            parseErrorMessage(ex, "printerDeviceFile", this.printerDeviceFile);
         }
         try { this.displayManufacturer = props.getProperty("displayManufacturer"); } catch (Exception ex) {
-            parseErrorMessage(ex, "displayManufacturer", this.displayManufacturer)
+            parseErrorMessage(ex, "displayManufacturer", this.displayManufacturer);
         }
         try { this.displayModel = props.getProperty("displayModel"); } catch (Exception ex) {
-            parseErrorMessage(ex, "displayModel", this.displayModel)
+            parseErrorMessage(ex, "displayModel", this.displayModel);
         }
         try { this.displayWidth = Integer.parseInt(props.getProperty("displayWidth")); } catch (Exception ex) {
-            parseErrorMessage(ex, "displayWidth", this.displayWidth)
+            parseErrorMessage(ex, "displayWidth", this.displayWidth);
         }
         try { this.displayShowWelcomeInterval = Integer.parseInt(props.getProperty("displayShowWelcomeInterval")); } catch (Exception ex) {
-            parseErrorMessage(ex, "displayShowWelcomeInterval", this.displayShowWelcomeInterval)
+            parseErrorMessage(ex, "displayShowWelcomeInterval", this.displayShowWelcomeInterval);
         }
         try { this.displayBlankInterval = Integer.parseInt(props.getProperty("displayBlankInterval")); } catch (Exception ex) {
-            parseErrorMessage(ex, "displayBlankInterval", this.displayBlankInterval)
+            parseErrorMessage(ex, "displayBlankInterval", this.displayBlankInterval);
         }
         try { this.dateFormatSQL = props.getProperty("dateFormatSQL"); } catch (Exception ex) {
-            parseErrorMessage(ex, "dateFormatSQL", this.dateFormatSQL)
+            parseErrorMessage(ex, "dateFormatSQL", this.dateFormatSQL);
         }
         try { this.dateFormatJava = props.getProperty("dateFormatJava"); } catch (Exception ex) {
-            parseErrorMessage(ex, "dateFormatJava", this.dateFormatJava)
+            parseErrorMessage(ex, "dateFormatJava", this.dateFormatJava);
         }
         try { this.dateFormatDate4j = props.getProperty("dateFormatDate4j"); } catch (Exception ex) {
-            parseErrorMessage(ex, "dateFormatDate4j", this.dateFormatDate4j)
+            parseErrorMessage(ex, "dateFormatDate4j", this.dateFormatDate4j);
         }
         try { this.delimiter = props.getProperty("delimiter"); } catch (Exception ex) { // for CSV export/import
-        parseErrorMessage(ex, "delimiter", this.delimiter)
+        parseErrorMessage(ex, "delimiter", this.delimiter);
         }
         try { this.rowsPerPage = Integer.parseInt(props.getProperty("rowsPerPage")); } catch (Exception ex) {
-            parseErrorMessage(ex, "rowsPerPage", this.rowsPerPage)
+            parseErrorMessage(ex, "rowsPerPage", this.rowsPerPage);
         }
         try { this.sollMuenzKassenstand = new BigDecimal(props.getProperty("sollMuenzKassenstand")); } catch (Exception ex) {
-            parseErrorMessage(ex, "sollMuenzKassenstand", this.sollMuenzKassenstand)
+            parseErrorMessage(ex, "sollMuenzKassenstand", this.sollMuenzKassenstand);
         }
         try { this.sollScheinKassenstand = new BigDecimal(props.getProperty("sollScheinKassenstand")); } catch (Exception ex) {
-            parseErrorMessage(ex, "sollScheinKassenstand", this.sollScheinKassenstand)
+            parseErrorMessage(ex, "sollScheinKassenstand", this.sollScheinKassenstand);
         }
         try { this.exportDirAbrechnungTag = props.getProperty("exportDirAbrechnungTag"); } catch (Exception ex) {
-            parseErrorMessage(ex, "exportDirAbrechnungTag", this.exportDirAbrechnungTag)
+            parseErrorMessage(ex, "exportDirAbrechnungTag", this.exportDirAbrechnungTag);
         }
         try { this.exportDirAbrechnungMonat = props.getProperty("exportDirAbrechnungMonat"); } catch (Exception ex) {
-            parseErrorMessage(ex, "exportDirAbrechnungMonat", this.exportDirAbrechnungMonat)
+            parseErrorMessage(ex, "exportDirAbrechnungMonat", this.exportDirAbrechnungMonat);
         }
         try { this.exportDirAbrechnungJahr = props.getProperty("exportDirAbrechnungJahr"); } catch (Exception ex) {
-            parseErrorMessage(ex, "exportDirAbrechnungJahr", this.exportDirAbrechnungJahr)
+            parseErrorMessage(ex, "exportDirAbrechnungJahr", this.exportDirAbrechnungJahr);
         }
         try { this.exportDirBestellung = props.getProperty("exportDirBestellung"); } catch (Exception ex) {
-            parseErrorMessage(ex, "exportDirBestellung", this.exportDirBestellung)
+            parseErrorMessage(ex, "exportDirBestellung", this.exportDirBestellung);
         }
         
         // TSE and DSFinV-K setup:
         try { this.finDatDir = props.getProperty("finDatDir"); } catch (Exception ex) {
-            parseErrorMessage(ex, "finDatDir", this.finDatDir)
+            parseErrorMessage(ex, "finDatDir", this.finDatDir);
         }
         try { this.Z_KASSE_ID = props.getProperty("Z_KASSE_ID"); } catch (Exception ex) {
-            parseErrorMessage(ex, "Z_KASSE_ID", this.Z_KASSE_ID)
+            parseErrorMessage(ex, "Z_KASSE_ID", this.Z_KASSE_ID);
         }
         try { this.TAXONOMIE_VERSION = props.getProperty("TAXONOMIE_VERSION"); } catch (Exception ex) {
-            parseErrorMessage(ex, "TAXONOMIE_VERSION", this.TAXONOMIE_VERSION)
+            parseErrorMessage(ex, "TAXONOMIE_VERSION", this.TAXONOMIE_VERSION);
         }
         try { this.NAME = props.getProperty("NAME"); } catch (Exception ex) {
-            parseErrorMessage(ex, "NAME", this.NAME)
+            parseErrorMessage(ex, "NAME", this.NAME);
         }
         try { this.STRASSE = props.getProperty("STRASSE"); } catch (Exception ex) {
-            parseErrorMessage(ex, "STRASSE", this.STRASSE)
+            parseErrorMessage(ex, "STRASSE", this.STRASSE);
         }
         try { this.PLZ = props.getProperty("PLZ"); } catch (Exception ex) {
-            parseErrorMessage(ex, "PLZ", this.PLZ)
+            parseErrorMessage(ex, "PLZ", this.PLZ);
         }
         try { this.ORT = props.getProperty("ORT"); } catch (Exception ex) {
-            parseErrorMessage(ex, "ORT", this.ORT)
+            parseErrorMessage(ex, "ORT", this.ORT);
         }
         try { this.LAND = props.getProperty("LAND"); } catch (Exception ex) {
-            parseErrorMessage(ex, "LAND", this.LAND)
+            parseErrorMessage(ex, "LAND", this.LAND);
         }
         try { this.STNR = props.getProperty("STNR"); } catch (Exception ex) {
-            parseErrorMessage(ex, "STNR", this.STNR)
+            parseErrorMessage(ex, "STNR", this.STNR);
         }
         try { this.USTID = props.getProperty("USTID"); } catch (Exception ex) {
-            parseErrorMessage(ex, "USTID", this.USTID)
+            parseErrorMessage(ex, "USTID", this.USTID);
         }
         try { this.TSE_ID = props.getProperty("TSE_ID"); } catch (Exception ex) {
-            parseErrorMessage(ex, "TSE_ID", this.TSE_ID)
+            parseErrorMessage(ex, "TSE_ID", this.TSE_ID);
         }
         try { this.TSE_PD_ENCODING = props.getProperty("TSE_PD_ENCODING"); } catch (Exception ex) {
-            parseErrorMessage(ex, "TSE_PD_ENCODING", this.TSE_PD_ENCODING)
+            parseErrorMessage(ex, "TSE_PD_ENCODING", this.TSE_PD_ENCODING);
         }
         try { this.KASSE_SW_BRAND = props.getProperty("KASSE_SW_BRAND"); } catch (Exception ex) {
-            parseErrorMessage(ex, "KASSE_SW_BRAND", this.KASSE_SW_BRAND)
+            parseErrorMessage(ex, "KASSE_SW_BRAND", this.KASSE_SW_BRAND);
         }
         try { this.KASSE_SW_VERSION = props.getProperty("KASSE_SW_VERSION"); } catch (Exception ex) {
-            parseErrorMessage(ex, "KASSE_SW_VERSION", this.KASSE_SW_VERSION)
+            parseErrorMessage(ex, "KASSE_SW_VERSION", this.KASSE_SW_VERSION);
         }
         try { this.KASSE_SERIENNR = props.getProperty("KASSE_SERIENNR"); } catch (Exception ex) {
-            parseErrorMessage(ex, "KASSE_SERIENNR", this.KASSE_SERIENNR)
+            parseErrorMessage(ex, "KASSE_SERIENNR", this.KASSE_SERIENNR);
         }
         try { this.KASSE_BRAND = props.getProperty("KASSE_BRAND"); } catch (Exception ex) {
-            parseErrorMessage(ex, "KASSE_BRAND", this.KASSE_BRAND)
+            parseErrorMessage(ex, "KASSE_BRAND", this.KASSE_BRAND);
         }
         try { this.KASSE_MODELL = props.getProperty("KASSE_MODELL"); } catch (Exception ex) {
-            parseErrorMessage(ex, "KASSE_MODELL", this.KASSE_MODELL)
+            parseErrorMessage(ex, "KASSE_MODELL", this.KASSE_MODELL);
         }
        
         this.mysqlHost = removeQuotes(this.mysqlHost);
