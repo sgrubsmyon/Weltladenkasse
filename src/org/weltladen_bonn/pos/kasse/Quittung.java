@@ -93,8 +93,8 @@ public class Quittung extends WindowContent {
         logger.debug("TSE TX sig counter: {}", tx.sigCounter);
         logger.debug("TSE TX signature base64: {}", tx.signatureBase64);
 
-        // printQuittungWithEscPos();
-        writeQuittungToDeviceFile();
+        printQuittungWithEscPos();
+        // writeQuittungToDeviceFile();
     }
 
     private Sheet createSheetFromTemplate() {
@@ -267,7 +267,7 @@ public class Quittung extends WindowContent {
             row++;
             sheet.setValueAt("Kassen-Seriennr (clientID):", 0, row);
             row++;
-            sheet.setValueAt(bc.z_kasse_id, 4, row);
+            sheet.setValueAt(bc.Z_KASSE_ID, 4, row);
             if (tseStatusValues != null) {
                 row++;
                 sheet.setValueAt("TSE-Seriennummer:", 0, row);
@@ -372,52 +372,63 @@ public class Quittung extends WindowContent {
             // escpos.setPrinterCharacterTable(19);
             // escpos.setCharsetName("cp858");
 
-            // PrintModeStyle does not allow to set text smaller than this:
-            PrintModeStyle normal = new PrintModeStyle().setFontSize(false, false).setFontName(FontName.Font_B);
-            PrintModeStyle bold = new PrintModeStyle().setFontSize(false, false).setFontName(FontName.Font_B).setBold(true); // .setJustification(EscPosConst.Justification.Right);
+            // Use PrintModeStyle with Font_B (default of TM-U220), which is the slightly smaller small font:
+            PrintModeStyle normal = new PrintModeStyle().setFontName(FontName.Font_B);
+            PrintModeStyle bold = new PrintModeStyle().setFontName(FontName.Font_B).setBold(true);
+            PrintModeStyle larger = new PrintModeStyle().setFontName(FontName.Font_A_Default);
+            PrintModeStyle boldlarger = new PrintModeStyle().setFontName(FontName.Font_A_Default).setBold(true);
             // escpos.writeLF(normal,"hello normal PrintModeStyle");
             // escpos.writeLF(rightBold,"Right bold");
             // escpos.feed(5).cut(EscPos.CutMode.FULL);
             // escpos.close();
 
-            // This is maximum width printer can handle (25 chars with 8 empty spaces in front to get text onto paper)
-            escpos.writeLF(bold,   "              WELTLADEN BONN     ");
-            escpos.writeLF(normal, "        Maxstrasse 36, 53111 Bonn");
-            escpos.writeLF(normal, "         Telefon: 0228 / 69 70 52");
-            escpos.writeLF(normal, "          www.weltladen-bonn.org ");
-            escpos.writeLF(normal, "       --------------------------");
-            escpos.writeLF(normal, "          20.01.2021, 18:44 Uhr  ");
-            escpos.writeLF(normal, "       Rechnungsnummer:     34149");
-            escpos.writeLF(normal, "       --------------------------");
-            escpos.writeLF(bold,   "       Bezeichnung  Betrag Euro M");
-            escpos.writeLF(normal, "       --------------------------");
-            escpos.writeLF(normal, "       Pfand 0,15 Euro    -0,15 2");
-            escpos.writeLF(normal, "       Orangensaft 1 l     2,90 2");
-            escpos.writeLF(normal, "          Pfand 0,15 Euro  0,15 2");
-            escpos.writeLF(normal, "       Schoko Crispies     2,70 1");
-            escpos.writeLF(normal, "       Rooibos Good Friend 5,00 1");
-            escpos.writeLF(normal, "       Mascobado Weisse Sc 2,00 1");
-            escpos.writeLF(normal, "       Hom Mali Jasminreis 5,50 1");
-            escpos.writeLF(normal, "       Rabatt auf Rechnun -0,29 2");
-            escpos.writeLF(normal, "       Rabatt auf Rechnun -1,52 1");
-            escpos.writeLF(normal, "       --------------------------");
-            escpos.writeLF(normal, "       MwSt Netto Steuer Umsatz  ");
-            escpos.writeLF(normal, "       7%   12,79   0,89  13,68 1");
-            escpos.writeLF(normal, "       19%   2,19   0,42   2,61 2");
+            // This is maximum width printer can handle (31 chars with 9 empty spaces in front to get text onto paper)
+            escpos.writeLF(bold,         "                  WELTLADEN BONN        ");
+            escpos.writeLF(normal,       "             Maxstraße 36, 53111 Bonn   ");
+            escpos.writeLF(normal,       "             Telefon: 0228 / 69 70 52   ");
+            escpos.writeLF(normal,       "              www.weltladen-bonn.org    ");
+            escpos.writeLF(normal,       "         -------------------------------");
+            escpos.writeLF(normal,       "              20.01.2021, 18:44 Uhr     ");
+            escpos.writeLF(normal,       "         Rechnungsnümmer:          34149");
+            escpos.writeLF(normal,       "         -------------------------------");
+            escpos.writeLF(bold,         "         Bezeichnung          Betrag € M");
+            escpos.writeLF(normal,       "         -------------------------------");
+            escpos.writeLF(normal,       "         Pfand 0,15 Euro                ");
+            escpos.writeLF(normal,       "                   -1 x   0,15   -0,15 2");
+            escpos.writeLF(normal,       "         Örangensaft 1 l                ");
+            escpos.writeLF(normal,       "              1l    1 x   2,90    2,90 2");
+            escpos.writeLF(normal,       "            Pfand 0,15 Euro             ");
+            escpos.writeLF(normal,       "                    1 x   0,15    0,15 2");
+            escpos.writeLF(normal,       "         Schoko Crispies                ");
+            escpos.writeLF(normal,       "            100g    1 x   2,70    2,70 1");
+            escpos.writeLF(normal,       "         Rooibos Good Friends, mit Zimt ");
+            escpos.writeLF(normal,       "            100g    1 x   5,00    5,00 1");
+            escpos.writeLF(normal,       "         Mascobado Weiße Schokolade     ");
+            escpos.writeLF(normal,       "            100g    1 x   2,00    2,00 1");
+            escpos.writeLF(normal,       "         Hom Mali Jasminreis            ");
+            escpos.writeLF(normal,       "             1kg    1 x   5,50    5,50 1");
+            escpos.writeLF(normal,       "         Rabatt auf Rechnung            ");
+            escpos.writeLF(normal,       "                                 -0,29 2");
+            escpos.writeLF(normal,       "         Rabatt auf Rechnung            ");
+            escpos.writeLF(normal,       "                                 -1,52 1");
+            escpos.writeLF(normal,       "         -------------------------------");
+            escpos.writeLF(normal,       "         MwSt.   Netto  Steuer  Umsatz  ");
+            escpos.writeLF(normal,       "         7%      12,79    0,89   13,68 1");
+            escpos.writeLF(normal,       "         19%      2,19    0,42    2,61 2");
             escpos.feed(1);
-            escpos.writeLF(bold,   "       BAR             16,29 Euro");
-            escpos.writeLF(bold,   "       Kunde gibt      17,09 Euro");
-            escpos.writeLF(bold,   "       Rueckgeld        0,80 Euro");
+            escpos.writeLF(boldlarger,   "         BAR              16,29 €");
+            escpos.writeLF(boldlarger,   "         Kunde gibt       17,09 €");
+            escpos.writeLF(boldlarger,   "         Rueckgeld         0,80 €");
             escpos.feed(1);
-            escpos.writeLF(normal, "       --- TSE ---				 ");
-            escpos.writeLF(normal, "       Transaktionsnr:         88");
-            escpos.writeLF(normal, "       St:2021-02-01T00:12:00.000");
-            escpos.writeLF(normal, "       En:2021-02-01T00:12:09.000");
-            escpos.writeLF(normal, "       Kassen-Seriennr (clientID)");
-            escpos.writeLF(normal, "                  877666797878-01");
-            escpos.writeLF(normal, "       TSE-Seriennr: 4a3f03a2dec8");
-            escpos.writeLF(normal, "       1878b432548668f603d14f7b7f");
-            escpos.writeLF(normal, "       90d230e30c87c1a705dce1c890");
+            escpos.writeLF(normal,       "         --- TSE ---                    ");
+            escpos.writeLF(normal,       "         Transaktionsnr:              88");
+            escpos.writeLF(normal,       "         Start:  2021-01-20T18:43:00.000");
+            escpos.writeLF(normal,       "         Ende:   2021-01-20T18:44:09.000");
+            escpos.writeLF(normal,       "         Kassen-Seriennr (clientID):    ");
+            escpos.writeLF(normal,       "                         877666797878-01");
+            escpos.writeLF(normal,       "         TSE-Seriennr:  4a3f03a2dec81878");
+            escpos.writeLF(normal,       "                b432548668f603d14f7b7f90");
+            escpos.writeLF(normal,       "                d230e30c87c1a705dce1c890");
             escpos.feed(6).cut(EscPos.CutMode.FULL);
             escpos.close();
 
@@ -533,7 +544,7 @@ public class Quittung extends WindowContent {
             quittungStr += "         Kunde gibt         17,09 Euro  " + bc.lineSep;
             quittungStr += "         Rueckgeld           0,80 Euro  " + bc.lineSep;
             quittungStr += "                                        " + bc.lineSep;
-            quittungStr += "         --- TSE ---				    " + bc.lineSep;
+            quittungStr += "         --- TSE ---                    " + bc.lineSep;
             quittungStr += "         Transaktionsnr:              88" + bc.lineSep;
             quittungStr += "         Start:  2021-01-20T18:43:00.000" + bc.lineSep;
             quittungStr += "         Ende:   2021-01-20T18:44:09.000" + bc.lineSep;
@@ -552,6 +563,8 @@ public class Quittung extends WindowContent {
 
             BufferedWriter writer = null;
             try {
+                // Use this for German umlauts:
+                // file.write("#$@°\\è^ùàòèì\n".getBytes("Cp858"));
                 writer = new BufferedWriter(new FileWriter(bc.printerDeviceFile));
                 writer.write(quittungStr);
             } catch (Exception ex) {
