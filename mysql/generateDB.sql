@@ -151,6 +151,7 @@ CREATE TABLE abrechnung_tag (
     kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
     rechnungs_nr_von INTEGER(10) UNSIGNED NOT NULL,
     rechnungs_nr_bis INTEGER(10) UNSIGNED NOT NULL,
+    last_tse_sig_counter INTEGER(10) DEFAULT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id),
     FOREIGN KEY (rechnungs_nr_von) REFERENCES verkauf(rechnungs_nr),
