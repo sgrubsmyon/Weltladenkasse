@@ -46,8 +46,7 @@ import javax.swing.border.*;
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 public class JCalendarPopup extends JPanel
-    implements MouseListener
-{
+    implements MouseListener {
 	private static final long serialVersionUID = 1L;
 
 	/**

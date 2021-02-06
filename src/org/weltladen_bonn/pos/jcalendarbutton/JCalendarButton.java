@@ -36,8 +36,7 @@ import javax.swing.JButton;
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 public class JCalendarButton extends JButton
-    implements PropertyChangeListener, ActionListener
-{
+    implements PropertyChangeListener, ActionListener {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -78,8 +77,8 @@ public class JCalendarButton extends JButton
         
         this.addActionListener(this);
 
-	// default to today's date
-	Date currentDate = new Date();
+        // default to today's date
+        Date currentDate = new Date();
         this.init(null, currentDate, null);
     }
     /**

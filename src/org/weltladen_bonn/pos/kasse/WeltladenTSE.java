@@ -384,8 +384,8 @@ public class WeltladenTSE extends WindowContent {
             // If currently configured client ID (Z_KASSE_ID) is not yet mapped to key:
             Vector<String> clientIDs = decodeClientIDsFromERSMappings(tse.getERSMappings());
             logger.debug("Mapped clientIDs: {}", clientIDs);
-            if (!clientIDs.contains(bc.z_kasse_id)) {
-                logger.debug("01 ERS Mappings do not contain configured Z_KASSE_ID '{}', need to insert mapping!", bc.z_kasse_id);
+            if (!clientIDs.contains(bc.Z_KASSE_ID)) {
+                logger.debug("01 ERS Mappings do not contain configured Z_KASSE_ID '{}', need to insert mapping!", bc.Z_KASSE_ID);
                 if (!loggedIn) {
                     logger.debug("02 Before authenticateAs");
                     JOptionPane.showMessageDialog(this.mainWindow,
@@ -406,7 +406,7 @@ public class WeltladenTSE extends WindowContent {
                 clientIDs = decodeClientIDsFromERSMappings(tse.getERSMappings());
                 logger.debug("Mapped clientIDs now: {}", clientIDs);
                 // Re-check if client ID is still unmapped to key:
-                if (!clientIDs.contains(bc.z_kasse_id)) {
+                if (!clientIDs.contains(bc.Z_KASSE_ID)) {
                     logger.fatal("Mapping of client ID to TSE key failed!");
                     JOptionPane.showMessageDialog(this.mainWindow,
                         "ACHTUNG: Die Zuordnung der Kassen-ID (Z_KASSE_ID in config.properties)\n"+
@@ -1177,8 +1177,8 @@ public class WeltladenTSE extends WindowContent {
         try {
             System.out.println("\nBEFORE mapERStoKey():");
             printStatusValues();
-            /** Configure the TSE to use the ERS bc.z_kasse_id with the given transaction key (serial number) */
-            tse.mapERStoKey(bc.z_kasse_id, serialNumber);
+            /** Configure the TSE to use the ERS bc.Z_KASSE_ID with the given transaction key (serial number) */
+            tse.mapERStoKey(bc.Z_KASSE_ID, serialNumber);
             System.out.println("\nAFTER mapERStoKey():");
             printStatusValues();
             passed = true;
@@ -1259,7 +1259,7 @@ public class WeltladenTSE extends WindowContent {
             logger.debug("Number of transactions: {}", n);
 
             /** Start a new transaction for the ERS (cash register) */
-            StartTransactionResult result = tse.startTransaction(bc.z_kasse_id, "processData".getBytes(), "whateverProcessType", "additionalData".getBytes());
+            StartTransactionResult result = tse.startTransaction(bc.Z_KASSE_ID, "processData".getBytes(), "whateverProcessType", "additionalData".getBytes());
             logger.debug("StartTransaction: transactionNumber: {}", result.transactionNumber);
             logger.debug("StartTransaction: signatureCounter: {}", result.signatureCounter);
             logger.debug("StartTransaction: logTime (unix): {}", result.logTime);
@@ -1273,7 +1273,7 @@ public class WeltladenTSE extends WindowContent {
             logger.debug("Number of open transactions: {}", n);
 
             // /** Update the transaction */
-            // UpdateTransactionResult updRes = tse.updateTransaction(bc.z_kasse_id, result.transactionNumber, new byte[TSE.MAX_SIZE_TRANSPORT_LAYER-100], "anyProcessTypeString");
+            // UpdateTransactionResult updRes = tse.updateTransaction(bc.Z_KASSE_ID, result.transactionNumber, new byte[TSE.MAX_SIZE_TRANSPORT_LAYER-100], "anyProcessTypeString");
             // logger.debug("UpdateTransaction: signatureCounter: {}", updRes.signatureCounter);
             // logger.debug("UpdateTransaction: logTime: {}", updRes.logTime);
             // // logger.debug("UpdateTransaction: serialNumber (Hex): {}", byteArrayToHexString(updRes.serialNumber));
@@ -1288,7 +1288,7 @@ public class WeltladenTSE extends WindowContent {
             logger.debug("Open transactions: {}", openTransactions);
 
             /** Finish the transaction */
-            FinishTransactionResult finRes = tse.finishTransaction(bc.z_kasse_id, result.transactionNumber, "lastData".getBytes(), "maybeYetAnotherProcessType", null);
+            FinishTransactionResult finRes = tse.finishTransaction(bc.Z_KASSE_ID, result.transactionNumber, "lastData".getBytes(), "maybeYetAnotherProcessType", null);
             logger.debug("FinishTransaction: signatureCounter: {}", finRes.signatureCounter);
             logger.debug("FinishTransaction: logTime (unix): {}", finRes.logTime);
             logger.debug("FinishTransaction: logTime (cal): {}", unixTimeToCalTime(finRes.logTime));
@@ -1525,7 +1525,7 @@ public class WeltladenTSE extends WindowContent {
                 bei FinishTransaction ändern."
             */
             tx = new TSETransaction();
-            StartTransactionResult result = tse.startTransaction(bc.z_kasse_id, null, null, null);
+            StartTransactionResult result = tse.startTransaction(bc.Z_KASSE_ID, null, null, null);
             long n = tse.getCurrentNumberOfTransactions();
             tx.txNumber = result.transactionNumber;
             tx.startTimeUnix = result.logTime;
@@ -1586,7 +1586,7 @@ public class WeltladenTSE extends WindowContent {
         try {
             if (tx.txNumber != null) {
                 String processType = defaultProcessType;
-                FinishTransactionResult result = tse.finishTransaction(bc.z_kasse_id, tx.txNumber, processData.getBytes(), processType, null);
+                FinishTransactionResult result = tse.finishTransaction(bc.Z_KASSE_ID, tx.txNumber, processData.getBytes(), processType, null);
                 tx.rechnungsNr = rechnungsNr;
                 tx.endTimeUnix = result.logTime;
                 tx.endTimeString = unixTimeToCalTime(result.logTime);

@@ -5,6 +5,8 @@ import java.io.*; // for InputStream
 import java.util.*; // for Vector, Collections
 import java.util.Date; // because Date alone ambiguous due to java.sql.Date
 import java.math.*; // for monetary value representation and arithmetic with correct rounding
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 // MySQL Connector/J stuff:
 import java.sql.*;
@@ -1581,6 +1583,16 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
+        }
+        return date;
+    }
+
+    protected Date nowDate() {
+        Date date = new Date();
+        try {
+            date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(now());
+        } catch (ParseException ex) {
+            logger.error("Could not parse NOW() date from MySQL DB. Exception:", ex);
         }
         return date;
     }
