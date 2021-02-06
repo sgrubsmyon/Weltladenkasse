@@ -204,9 +204,9 @@ public class BaseClass {
     private void loadConfigFile() {
         // load config file:
         String filename = "config.properties";
+        Properties props = new Properties();
         try {
             InputStream fis = new FileInputStream(filename);
-            Properties props = new Properties();
             props.load(fis);
         } catch (Exception ex) {
             logger.error("Exception:", ex);
