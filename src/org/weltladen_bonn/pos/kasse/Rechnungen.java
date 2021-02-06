@@ -75,7 +75,6 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     protected String rechnungsZahl;
     protected int rechnungsZahlInt;
 
-    private MainWindow mw;
     private WeltladenTSE tse;
 
     // Methoden:
@@ -87,10 +86,9 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     {
 	    super(pool, mw);
         if (mw instanceof MainWindow) {
-            this.mw = (MainWindow) mw;
-            tse = this.mw.getTSE();
+            MainWindow mainw = (MainWindow) mw;
+            tse = mainw.getTSE();
         } else {
-            this.mw = null;
             tse = null;
         }
         filterStr = fs;
@@ -492,7 +490,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                         datet, rechnungsNr, kassierArtikel,
                         mwstValues, zahlungsModus,
                         totalPrice, kundeGibt, rueckgeld, tx, tseStatusValues);
-                myQuittung.printReceipt();
+                // myQuittung.printReceipt();
             return;
         }
     }

@@ -1344,6 +1344,22 @@ public class WeltladenTSE extends WindowContent {
         }
     }
 
+    public Integer getSignatureCounter() {
+        Integer sigCount = null;
+        try {
+            byte[] serial = getSerialNumber();
+            long sigCountLong = tse.getSignatureCounter(serial);
+            sigCount = Math.toIntExact(sigCountLong);
+        } catch (SEException ex) {
+            logger.fatal("SE exception during getSignatureCounter()");
+            logger.fatal("Exception:", ex);
+        } catch (ArithmeticException ex) {
+            logger.error("Current signatureCounter is too large to store as integer in DB!!!");
+            logger.error("Exception:", ex);
+        }
+        return sigCount;
+    }
+
     private byte[] getTransaction(Long txNumber) {
         try {
             byte[] exportData = tse.exportData(null, txNumber, null, null, null, null, null);
