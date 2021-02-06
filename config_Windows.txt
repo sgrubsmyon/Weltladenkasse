@@ -28,6 +28,9 @@ exportDirBestellung = 'Dokumente\\Bestellungen\\Bestellungen FHZ 'yyyy
 # Erklärungen im PDF unter https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html 
 # Siehe auch https://tse-support.cryptovision.com/confluence/display/TDI/clientId+oder+Seriennummer+des+Aufzeichnungssystems
 
+# Finanzdatenverzeichnis für den Export der TSE und DSFinV-K-Daten:
+finDatDir = .Weltladenkasse_Finanzdaten
+
 ##################
 # Schlüsselfelder
 ##################

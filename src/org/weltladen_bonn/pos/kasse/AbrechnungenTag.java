@@ -3,6 +3,11 @@ package org.weltladen_bonn.pos.kasse;
 // Basic Java stuff:
 import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
+import java.text.SimpleDateFormat;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -65,6 +70,8 @@ class AbrechnungenTag extends Abrechnungen {
 
     private Boolean kassenstandWasChanged = false;
 
+    private WeltladenTSE tse;
+
     // Methoden:
     /**
      *    The constructor.
@@ -72,6 +79,12 @@ class AbrechnungenTag extends Abrechnungen {
     AbrechnungenTag(MariaDbPoolDataSource pool, MainWindowGrundlage mw, AbrechnungenTabbedPane atp, TabbedPane tp, Integer exportIndex){
         super(pool, mw, "", "Tagesabrechnung", "yyyy-MM-dd HH:mm:ss", "dd.MM. HH:mm (E)",
                 "zeitpunkt", "abrechnung_tag");
+        if (mw instanceof MainWindow) {
+            MainWindow mainw = (MainWindow) mw;
+            tse = mainw.getTSE();
+        } else {
+            tse = null;
+        }
         this.setExportDirFormat(bc.exportDirAbrechnungTag);
         this.abrechTabbedPane = atp;
         this.tabbedPane = tp;
@@ -970,6 +983,51 @@ class AbrechnungenTag extends Abrechnungen {
         }
     }
 
+    private Integer previousLastSigCounter() {
+        Integer previousLastSigCounter = null;
+        try {
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT IFNULL(MAX(last_tse_sig_counter), 0) FROM abrechnung_tag");
+            rs.next();
+            previousLastSigCounter = rs.getInt(1);
+            rs.close();
+            stmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return previousLastSigCounter;
+    }
+
+    private Integer exportTSELog() {
+        Integer lastSigCounter = tse.getSignatureCounter(); // this is the last sig counter that will be included in the export;
+        if (tse.inUse()) {
+            Date date = nowDate();
+            String year = new SimpleDateFormat("yyyy").format(date);
+            String dateStr = new SimpleDateFormat("yyyy-MM-dd").format(date);
+            String exportDir = System.getProperty("user.home")+bc.fileSep+bc.finDatDir+bc.fileSep+year;
+            String exportFilename = exportDir+bc.fileSep+"tse_export_"+dateStr+"_"+lastSigCounter+".tar";
+            logger.info("exportFilename: {}", exportFilename);
+            Path path = Paths.get(exportDir);
+            if (!Files.exists(path)) {
+                // Create directory recursively:
+                try {
+                    Files.createDirectories(path);
+                } catch (IOException ex) {
+                    logger.error("Exception: {}", ex);
+                }
+            }
+            logger.info("previousLastSigCounter: {}", previousLastSigCounter());
+            String message = tse.exportPartialTransactionDataBySigCounter(exportFilename, (long)previousLastSigCounter(), null);
+            if (message != "OK") {
+                lastSigCounter = null;
+            }
+        }
+        return lastSigCounter;
+    }
+
     private Integer insertTagesAbrechnung() {
         /** create new abrechnung (and save in DB) from time of last abrechnung until now */
         Integer id = null;
@@ -987,6 +1045,7 @@ class AbrechnungenTag extends Abrechnungen {
             }
             // get ID of current kassenstand (highest ID due to auto-increment)
             Integer kassenstand_id = mainWindow.retrieveKassenstandId();
+            Integer lastSigCounter = exportTSELog();
 
             // Need to do this before inserting new Tagesabrechnung:
             // get netto values grouped by mwst:
@@ -1002,13 +1061,15 @@ class AbrechnungenTag extends Abrechnungen {
                 "zeitpunkt_real = ?, "+
                 "kassenstand_id = ?, " +
                 "rechnungs_nr_von = ?, " +
-                "rechnungs_nr_bis = ?"
+                "rechnungs_nr_bis = ?, " +
+                "last_tse_sig_counter = ?"
             );
             pstmt.setString(1, zeitpunkt);
             pstmt.setString(2, nowDate);
             pstmtSetInteger(pstmt, 3, kassenstand_id);
             pstmtSetInteger(pstmt, 4, firstNr);
             pstmtSetInteger(pstmt, 5, lastNr);
+            pstmtSetInteger(pstmt, 6, lastSigCounter);
             int result = pstmt.executeUpdate();
             pstmt.close();
             if (result == 0) {
