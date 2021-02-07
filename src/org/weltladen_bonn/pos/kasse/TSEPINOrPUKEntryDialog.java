@@ -18,14 +18,14 @@ import javax.swing.event.DocumentEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class TSEPINEntryDialog extends DialogWindow implements WindowListener, DocumentListener {
-    private static final Logger logger = LogManager.getLogger(TSEPINEntryDialog.class);
+public class TSEPINOrPUKEntryDialog extends DialogWindow implements WindowListener, DocumentListener {
+    private static final Logger logger = LogManager.getLogger(TSEPINOrPUKEntryDialog.class);
 
     private WeltladenTSE tse = null;
 
     private JTextField pinField;
     private String role;
-    private String numbertype;
+    private String numbertype; // either PIN or PUK
     private int places;
 
     private JButton okButton;
@@ -33,7 +33,7 @@ public class TSEPINEntryDialog extends DialogWindow implements WindowListener, D
     private boolean aborted = true;
 
     // Methoden:
-    public TSEPINEntryDialog(MainWindowGrundlage mw, JDialog dia, WeltladenTSE _tse, String r, String nt, int p) {
+    public TSEPINOrPUKEntryDialog(MainWindowGrundlage mw, JDialog dia, WeltladenTSE _tse, String r, String nt, int p) {
         super(null, mw, dia);
         this.tse = _tse;
         this.role = r;
@@ -59,13 +59,12 @@ public class TSEPINEntryDialog extends DialogWindow implements WindowListener, D
         int top = 5, left = 5, bottom = 5, right = 5;
         headerPanel.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
 
-        JTextArea erklaerText = new JTextArea(2, 30);
+        JTextArea erklaerText = new JTextArea(4, 40);
         if (role == "TimeAdmin" && numbertype == "PIN") {
             erklaerText.append(
-                "Die TimeAdmin PIN der TSE konnte nicht geladen werden.\n"+
-                "Bitte jetzt eingeben.\n"+
-                "Es wird dann (erneut) versucht, die PIN dauerhaft\n"+
-                "zu speichern.");
+                "Die TimeAdmin PIN der TSE konnte nicht korrekt geladen werden.\n"+
+                "Bitte jetzt erneut eingeben.\n"+
+                "Es wird dann (erneut) versucht, die PIN dauerhaft zu speichern.");
         } else {
             erklaerText.append("Bitte die "+role+" "+numbertype+" der TSE eingeben.");
         }
@@ -132,7 +131,7 @@ public class TSEPINEntryDialog extends DialogWindow implements WindowListener, D
         return 0;
     }
 
-    public byte[] getPIN() {
+    public byte[] getPINOrPUK() {
         return pinField.getText().getBytes();
     }
 
@@ -173,7 +172,7 @@ public class TSEPINEntryDialog extends DialogWindow implements WindowListener, D
      **/
     public void windowClosed(WindowEvent e) {
         if (this.aborted) {
-            logger.fatal("TSE PIN entry was canceled by user!");
+            logger.fatal("TSE PIN/PUK entry was canceled by user!");
             JOptionPane.showMessageDialog(this.window,
                 "ACHTUNG: Die "+numbertype+"-Eingabe der TSE wurde abgebrochen!\n"+
                 "Ohne "+numbertype+" kann die TSE nicht verwendet werden.\n"+
@@ -211,7 +210,7 @@ public class TSEPINEntryDialog extends DialogWindow implements WindowListener, D
      **/
     @Override
     public void insertUpdate(DocumentEvent documentEvent) {
-        if (pinField.getDocument().getLength() == 8) {
+        if (pinField.getDocument().getLength() == places) {
             okButton.setEnabled(true);
         } else {
             okButton.setEnabled(false);
