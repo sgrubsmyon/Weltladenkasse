@@ -46,6 +46,7 @@ import javax.swing.JButton;
 import com.cryptovision.SEAPI.TSE;
 import com.cryptovision.SEAPI.TSE.LCS;
 import com.cryptovision.SEAPI.TSE.AuthenticateUserResult;
+import com.cryptovision.SEAPI.TSE.UnblockUserResult;
 import com.cryptovision.SEAPI.TSE.AuthenticationResult;
 import com.cryptovision.SEAPI.TSE.StartTransactionResult;
 import com.cryptovision.SEAPI.TSE.UpdateTransactionResult;
@@ -716,15 +717,15 @@ public class WeltladenTSE extends WindowContent {
         return tseid.getAdminPIN();
     }
 
-    private byte[] showPINentryDialog(String role, String numbertype, int places) {
+    private byte[] showPINOrPUKentryDialog(String role, String numbertype, int places) {
         JDialog dialog = new JDialog(this.mainWindow, "Bitte "+role+" "+numbertype+" der TSE eingeben", true);
-        TSEPINEntryDialog tseped = new TSEPINEntryDialog(this.mainWindow, dialog, this, role, numbertype, places);
+        TSEPINOrPUKEntryDialog tseped = new TSEPINOrPUKEntryDialog(this.mainWindow, dialog, this, role, numbertype, places);
         dialog.getContentPane().add(tseped, BorderLayout.CENTER);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.pack();
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
-        return tseped.getPIN();
+        return tseped.getPINOrPUK();
     }
 
     public void setPINandPUK(byte[] adminPIN, byte[] adminPUK, byte[] timeAdminPIN, byte[] timeAdminPUK) {
@@ -820,27 +821,62 @@ public class WeltladenTSE extends WindowContent {
         } catch (FileNotFoundException ex) {
             logger.error("File '~/.Weltladenkasse_tse' for storing timeAdminPIN not found.");
             logger.error("Exception:", ex);
-            return showPINentryDialog("TimeAdmin", "PIN", 8);
+            return showPINOrPUKentryDialog("TimeAdmin", "PIN", 8);
         } catch (IOException ex) {
             logger.error("Could not read timeAdminPIN from file '~/.Weltladenkasse_tse'");
             logger.error("Exception:", ex);
-            return showPINentryDialog("TimeAdmin", "PIN", 8);
+            return showPINOrPUKentryDialog("TimeAdmin", "PIN", 8);
         }
     }
 
     private String authenticateAs(String user, byte[] pin, boolean exitOnFatal) {
         if (null == pin) {
-            pin = showPINentryDialog(user, "PIN", 8);
+            pin = showPINOrPUKentryDialog(user, "PIN", 8);
         }
         boolean passed = false;
         String message = "OK";
         try {
             AuthenticateUserResult res = tse.authenticateUser(user, pin);
-            if (res.authenticationResult != AuthenticationResult.ok) {
+            if (res.authenticationResult == AuthenticationResult.failed) {
+                // show PIN dialog to let user try again
+                message = "PIN for user "+user+" was wrong! Asking user to try again.";
+                logger.error("Error: {}", message);
+                JOptionPane.showMessageDialog(this.mainWindow,
+                    "Es wurde eine falsche PIN für TSE-User '"+user+"' verwendet!\n\n"+
+                    "ACHTUNG: Nach der dritten Falscheingabe wird die PIN gesperrt!\n\n"+
+                    "Bitte jetzt die PIN erneut eingeben.\n"+
+                    "Wenn die PIN nicht bekannt ist, bitte jemanden danach fragen.",
+                    "Falsche PIN für TSE-User '"+user+"'", JOptionPane.ERROR_MESSAGE);
+                pin = showPINOrPUKentryDialog(user, "PIN", 8);
+                if (pin.length == 8) {
+                    message = authenticateAs(user, pin, exitOnFatal);
+                    return message;
+                }
+            } else if (res.authenticationResult == AuthenticationResult.pinIsBlocked) {
+                // show PUK dialog to unblock user
+                message = "PIN for user "+user+" is blocked! Trying to unblockUser() via PUK.";
+                logger.error("Error: {}", message);
+                JOptionPane.showMessageDialog(this.mainWindow,
+                    "ACHTUNG: Der TSE-User '"+user+"' wurde durch dreimalige Falscheingabe der PIN gesperrt!\n\n"+
+                    "Bitte jetzt die PUK eingeben, um zu entsperren.\n"+
+                    "Wenn die PUK nicht bekannt ist, bitte jemanden danach fragen.",
+                    "TSE-User '"+user+"' gesperrt", JOptionPane.ERROR_MESSAGE);
+                byte[] puk = showPINOrPUKentryDialog(user, "PUK", 10);
+                JOptionPane.showMessageDialog(this.mainWindow,
+                    "Bitte neue zukünftige PIN für User '"+user+"' eingeben.",
+                    "TSE-User '"+user+"' bekommt eine neue PIN!", JOptionPane.INFORMATION_MESSAGE);
+                pin = showPINOrPUKentryDialog(user, "PIN", 8);
+                if (pin.length == 8) {
+                    UnblockUserResult ures = tse.unblockUser(user, puk, pin);
+                    logger.debug("UnblockUserResult: {}", ures.authenticationResult);
+                    message = authenticateAs(user, pin, exitOnFatal);
+                    return message;
+                }
+            } else if (res.authenticationResult != AuthenticationResult.ok) {
                 message = "Authentication error for user "+user+": "+res.authenticationResult.toString();
                 logger.fatal("Fatal Error: {}", message);
                 JOptionPane.showMessageDialog(this.mainWindow,
-                    "ACHTUNG: Authentifizierungsfehler als User "+user+" bei der TSE!\n\n"+
+                    "ACHTUNG: Authentifizierungsfehler als User '"+user+"' bei der TSE!\n\n"+
                     "authenticationResult: "+res.authenticationResult.toString()+"\n\n"+
                     "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
                     "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
