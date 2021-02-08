@@ -264,7 +264,7 @@ CREATE TABLE tse_transaction (
     process_type VARCHAR(30) DEFAULT NULL,
     signature_counter INTEGER(10) UNSIGNED DEFAULT NULL,
     signature_base64 VARCHAR(512) DEFAULT NULL,
-    tse_error VARCHAR(200) DEFAULT NULL,
+    tse_error TINYTEXT DEFAULT NULL,
     process_data VARCHAR(60) DEFAULT NULL,
     PRIMARY KEY (transaction_number),
     FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
