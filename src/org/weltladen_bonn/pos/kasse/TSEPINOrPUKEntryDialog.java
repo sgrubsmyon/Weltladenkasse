@@ -4,6 +4,7 @@ import org.weltladen_bonn.pos.BaseClass;
 import org.weltladen_bonn.pos.DialogWindow;
 import org.weltladen_bonn.pos.MainWindowGrundlage;
 import org.weltladen_bonn.pos.BaseClass.BigLabel;
+import org.weltladen_bonn.pos.kasse.WeltladenTSE.TSEStatus;
 
 import javax.swing.*;
 import java.awt.*;
@@ -173,13 +174,9 @@ public class TSEPINOrPUKEntryDialog extends DialogWindow implements WindowListen
     public void windowClosed(WindowEvent e) {
         if (this.aborted) {
             logger.fatal("TSE PIN/PUK entry was canceled by user!");
-            JOptionPane.showMessageDialog(this.window,
-                "ACHTUNG: Die "+numbertype+"-Eingabe der TSE wurde abgebrochen!\n"+
-                "Ohne "+numbertype+" kann die TSE nicht verwendet werden.\n"+
-                "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
-                "Bitte beim nächsten mal die "+numbertype+" eingeben.",
-                "Abbruch der "+numbertype+"-Eingabe der TSE", JOptionPane.ERROR_MESSAGE);
-            System.exit(1);
+            tse.setStatus(TSEStatus.failed);
+            tse.setFailReason("Die "+numbertype+"-Eingabe der TSE wurde abgebrochen. Bitte beim nächsten mal die "+numbertype+" eingeben.");
+            tse.showTSEFailWarning();
         }
     }
 

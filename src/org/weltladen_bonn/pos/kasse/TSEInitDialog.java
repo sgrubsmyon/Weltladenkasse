@@ -4,6 +4,7 @@ import org.weltladen_bonn.pos.BaseClass;
 import org.weltladen_bonn.pos.DialogWindow;
 import org.weltladen_bonn.pos.MainWindowGrundlage;
 import org.weltladen_bonn.pos.BaseClass.BigLabel;
+import org.weltladen_bonn.pos.kasse.WeltladenTSE.TSEStatus;
 
 import javax.swing.*;
 import java.awt.*;
@@ -195,13 +196,9 @@ public class TSEInitDialog extends DialogWindow implements WindowListener, Docum
     public void windowClosed(WindowEvent e) {
         if (this.aborted) {
             logger.fatal("TSE initialization was canceled by user!");
-            JOptionPane.showMessageDialog(this.window,
-                "ACHTUNG: Die Initialisierung der TSE wurde abgebrochen!\n"+
-                "Ohne Initialisierung kann eine neue TSE nicht verwendet werden.\n"+
-                "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
-                "Bitte beim nächsten Start der Kassensoftware die TSE initialisieren.",
-                "Abbruch der Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
-            System.exit(1);
+            tse.setStatus(TSEStatus.failed);
+            tse.setFailReason("Die Initialisierung der TSE wurde abgebrochen. Bitte beim nächsten Start der Kassensoftware die TSE initialisieren.");
+            tse.showTSEFailWarning();
         }
     }
 

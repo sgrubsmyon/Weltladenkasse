@@ -124,10 +124,20 @@ public class WeltladenTSE extends WindowContent {
         public String tseError = null; // error message in case of error
     }
 
+    /**
+    * Possible TSE status modes
+    */
+    public enum TSEStatus {
+        inUse,    // normal operation
+        failed,   // TSE is not operational due to some error written into String `failReason`
+        training; // if software is used for training purposes only (no real transactions are made)
+    };
+
     private TSE tse = null;
     private TSETransaction tx = new TSETransaction();
-    private boolean tseInUse = true;
     private boolean loggedIn = false;
+    private TSEStatus status = TSEStatus.inUse;
+    private String failReason = null;
     private Path pinPath = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".Weltladenkasse_tse");
     public static String dateFormatDSFinVK = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"; // YYYY-MM-DDThh:mm:ss.fffZ, see https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html
     public static String dateFormatQuittung = "yyyy-MM-dd'T'HH:mm:ss.SSS"; // shorter, but also ISO 8601, so that it fits on one line of the Quittung
@@ -144,7 +154,7 @@ public class WeltladenTSE extends WindowContent {
     public WeltladenTSE(MariaDbPoolDataSource pool, MainWindow mw) {
         super(pool, mw);
         connectToTSE();
-        if (tseInUse) {
+        if (inUse()) {
             LongOperationIndicatorDialog dialog = new LongOperationIndicatorDialog(
                 new JLabel("TSE wird initialisiert..."),
                 null
@@ -188,7 +198,33 @@ public class WeltladenTSE extends WindowContent {
     }
 
     public boolean inUse() {
-        return tseInUse;
+        return this.status != TSEStatus.failed;
+    }
+
+    public TSEStatus getStatus() {
+        return this.status;
+    }
+
+    public void setStatus(TSEStatus status) {
+        this.status = status;
+    }
+
+    public String getFailReason() {
+        return this.failReason;
+    }
+
+    public void setFailReason(String failReason) {
+        this.failReason = failReason;
+    }
+
+    public void showTSEFailWarning() {
+        JOptionPane.showMessageDialog(this.mainWindow,
+            "ACHTUNG: Die TSE funktioniert nicht!!!\n"+
+            "Grund:   '"+failReason+"'\n"+
+            "Bitte schließe jetzt das Kassenprogramm, versuche den Fehler zu beheben, und starte es dann erneut.\n"+
+            "Falls der Fehler nicht verschwindet, darf nur ausnahmsweise diese Warnung ignoriert und ohne TSE kassiert werden!\n"+
+            "Bitte dann sofort den/die Administrator*in informieren, damit das Problem so schnell wie möglich behoben wird!!!",
+            "Wirklich ohne TSE kassieren?", JOptionPane.WARNING_MESSAGE);
     }
 
     /**
@@ -206,51 +242,35 @@ public class WeltladenTSE extends WindowContent {
         } catch (FileNotFoundException ex) {
             logger.warn("TSE config file not found under '{}'", "config_tse.txt");
             logger.warn("Exception:", ex);
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Es wird ohne TSE gearbeitet (weil keine Datei 'config_tse.txt' vorhanden ist)!!!\n"+
-                "Dies ist im Geschäftsbetrieb ILLEGAL und darf also nur für Testzwecke geschehen!!!\n"+
-                "Wurde aus Versehen der Testmodus gewählt?",
-                "Wirklich ohne TSE kassieren?", JOptionPane.WARNING_MESSAGE);
-            logger.info("TSE object tse = {}", tse);
-            tseInUse = false;
-            logger.info("tseInUse = {}", tseInUse);
+            status = TSEStatus.failed;
+            failReason = "Datei 'config_tse.txt' konnte nicht gefunden werden";
         } catch (IOException ex) {
             logger.fatal("There is a TSE config file '{}', but it could not be read from it.", "config_tse.txt");
             logger.fatal("Exception:", ex);
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Die Datei 'config_tse.txt' konnte nicht eingelesen werden!\n"+
-                "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
-                "wird die Kassensoftware jetzt beendet. Bitte Fehler in der Datei beheben und\n"+
-                "erneut versuchen.",
-                "Konfiguration der TSE nicht lesbar", JOptionPane.ERROR_MESSAGE);
-            // Exit application upon this fatal error, because a TSE config file is present
-            // (so it seems usage of TSE is desired), but it could not be read from it.
-            disconnectFromTSE();
-            System.exit(1);
+            status = TSEStatus.failed;
+            failReason = "Datei 'config_tse.txt' konnte nicht eingelesen werden";
         } catch (SEException ex) {
             logger.fatal("Unable to open connection to TSE, given configuration provided by '{}'.", "config_tse.txt");
             logger.fatal("Exception:", ex);
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Es konnte keine Verbindung zur TSE aufgebaut werden!\n"+
-                "Entweder die TSE (eine SD-Karte, die rechts am Laptop in einem Schlitz steckt)\n"+
-                "sitzt nicht richtig drin oder die Konfiguration in der Datei 'config_tse.txt'\n"+
-                "ist falsch.\n"+
-                "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
-                "Bitte Fehler beheben und erneut versuchen.",
-                "Verbindung zur TSE nicht möglich", JOptionPane.ERROR_MESSAGE);
-            // Exit application upon this fatal error, because a TSE config file is present
-            // (so it seems usage of TSE is desired), but maybe configuration is wrong or
-            // TSE is not plugged in and no connection to TSE could be made.
-            disconnectFromTSE();
-            System.exit(1);
-        } catch(Throwable ex) {
+            status = TSEStatus.failed;
+            failReason = "Es konnte keine Verbindung zur TSE aufgebaut werden. Entweder die TSE (eine SD-Karte, die "+
+                         "in einem Schlitz des Kassen-PCs steckt)\n   sitzt nicht richtig drin oder die Konfiguration in "+
+                         "der Datei 'config_tse.txt' ist falsch.";
+        } catch (Throwable ex) {
             logger.fatal("Throwable caught in connectToTSE");
             logger.fatal("Exception:", ex);
+            status = TSEStatus.failed;
+            failReason = ex.getMessage();
+        }
+        if (status == TSEStatus.failed) {
+            logger.info("TSE object tse = {}", tse);
+            logger.info("TSE status = {}", status);
+            showTSEFailWarning();
         }
     }
 
     public void disconnectFromTSE() {
-        if (tseInUse) {
+        if (inUse()) {
             try {
                 /* Cancel a potentially unfinished transaction: */
                 if (tx.txNumber != null) {
