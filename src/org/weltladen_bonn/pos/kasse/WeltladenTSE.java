@@ -234,14 +234,9 @@ public class WeltladenTSE extends WindowContent {
         // Configure TSE:
         try {
             tse = TSE.getInstance("config_tse.txt");
-            // Probably has no effect and tseStartUpWorkaroundLoop() is way better:
-            // logger.info("Before tse.close()");
-            // tse.close(); // disconnect to fix communication issues
-            // logger.info("After tse.close()");
-            // tse = TSE.getInstance("config_tse.txt"); // re-connect to continue
         } catch (FileNotFoundException ex) {
-            logger.warn("TSE config file not found under '{}'", "config_tse.txt");
-            logger.warn("Exception:", ex);
+            logger.fatal("TSE config file not found under '{}'", "config_tse.txt");
+            logger.fatal("Exception:", ex);
             status = TSEStatus.failed;
             failReason = "Datei 'config_tse.txt' konnte nicht gefunden werden";
         } catch (IOException ex) {
@@ -348,14 +343,10 @@ public class WeltladenTSE extends WindowContent {
                 transportState = pinStatus[0];
                 if (transportState) {
                     logger.fatal("TSE PIN and PUK setting failed! (TSE still in transport state after setting PINs and PUKs)");
-                    JOptionPane.showMessageDialog(this.mainWindow,
-                        "ACHTUNG: Das Setzen der PINs und PUKs der TSE ist fehlgeschlagen!\n"+
-                        "Ohne Setzen der PINs/PUKs kann eine neue TSE nicht verwendet werden.\n"+
-                        "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
-                        "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
-                        "Fehler beim Setzen der PINs/PUKs der TSE", JOptionPane.ERROR_MESSAGE);
-                    disconnectFromTSE();
-                    System.exit(1);
+                    status = TSEStatus.failed;
+                    failReason = "Das Setzen der PINs und PUKs der TSE ist fehlgeschlagen.\n"+
+                                 "   Bitte beim nächsten Start der Kassensoftware erneut probieren.";
+                    return;
                 }
                 logger.info("TSE's PIN and PUK values successfully set!");
             }
@@ -367,16 +358,12 @@ public class WeltladenTSE extends WindowContent {
                 // Re-check if TSE was actually initialized:
                 if (tse.getLifeCycleState() == LCS.notInitialized) {
                     logger.fatal("TSE initialization failed!");
-                    JOptionPane.showMessageDialog(this.mainWindow,
-                        "ACHTUNG: Die Initialisierung der TSE ist fehlgeschlagen!\n"+
-                        "Ohne Initialisierung kann eine neue TSE nicht verwendet werden.\n"+
-                        "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
-                        "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
-                        "Fehler bei der Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
+                    status = TSEStatus.failed;
+                    failReason = "Die Initialisierung der TSE ist fehlgeschlagen.\n"+
+                                 "   Bitte beim nächsten Start der Kassensoftware erneut probieren.";
                     logOutAs("Admin");
                     loggedIn = false;
-                    disconnectFromTSE();
-                    System.exit(1);
+                    return;
                 }
                 logger.info("TSE successfully initialized!");
             }
@@ -388,18 +375,14 @@ public class WeltladenTSE extends WindowContent {
             // Re-check if time was actually set:
             if (tse.getLifeCycleState() == LCS.noTime) {
                 logger.fatal("TSE time update failed!");
-                JOptionPane.showMessageDialog(this.mainWindow,
-                    "ACHTUNG: Die Aktualisierung der Zeit der TSE ist fehlgeschlagen!\n"+
-                    "Ohne Zeitaktualisierung kann eine TSE nicht verwendet werden.\n"+
-                    "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
-                    "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
-                    "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
+                status = TSEStatus.failed;
+                failReason = "Die Aktualisierung der Zeit der TSE ist fehlgeschlagen.\n"+
+                             "   Bitte beim nächsten Start der Kassensoftware erneut probieren.";
                 if (loggedIn) {
                     logOutAs("Admin");
                     loggedIn = false;
                 }
-                disconnectFromTSE();
-                System.exit(1);
+                return;
             }
             logger.info("TSE time successfully updated!");
             // If currently configured client ID (Z_KASSE_ID) is not yet mapped to key:
@@ -429,17 +412,12 @@ public class WeltladenTSE extends WindowContent {
                 // Re-check if client ID is still unmapped to key:
                 if (!clientIDs.contains(bc.Z_KASSE_ID)) {
                     logger.fatal("Mapping of client ID to TSE key failed!");
-                    JOptionPane.showMessageDialog(this.mainWindow,
-                        "ACHTUNG: Die Zuordnung der Kassen-ID (Z_KASSE_ID in config.properties)\n"+
-                        "zum Schlüssel der TSE ist fehlgeschlagen!\n"+
-                        "Ohne Kassen-ID-Zuordnung kann eine TSE nicht verwendet werden.\n"+
-                        "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
-                        "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
-                        "Fehler beim Anlegen einer Zuordnung in der TSE", JOptionPane.ERROR_MESSAGE);
+                    status = TSEStatus.failed;
+                    failReason = "Die Zuordnung der Kassen-ID (Z_KASSE_ID in config.properties) zum Schlüssel der TSE ist fehlgeschlagen.\n"+
+                                 "   Bitte beim nächsten Start der Kassensoftware erneut probieren.";
                     logOutAs("Admin");
                     loggedIn = false;
-                    disconnectFromTSE();
-                    System.exit(1);
+                    return;
                 }
                 logger.info("client ID successfully mapped to TSE key!");
             }
@@ -453,20 +431,15 @@ public class WeltladenTSE extends WindowContent {
         } catch (SEException ex) {
             logger.fatal("Unable to check initialization status of TSE");
             logger.fatal("Exception:", ex);
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Es konnte nicht geprüft werden, ob die TSE bereits initialisiert ist!\n"+
-                "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
-                "Bitte Fehler beheben und erneut versuchen.",
-                "Prüfung der TSE-Initialisierung fehlgeschlagen", JOptionPane.ERROR_MESSAGE);
-            // Exit application upon this fatal error, because a TSE config file is present
-            // (so it seems usage of TSE is desired), but maybe configuration is wrong or
-            // TSE is not plugged in and no connection to TSE could be made.
+            status = TSEStatus.failed;
+            failReason = "Es konnte nicht geprüft werden, ob die TSE bereits initialisiert ist.\n"+
+                         "   Fehler: "+ex.getMessage()+"\n"+
+                         "   Bitte Fehler beheben und erneut versuchen.";
             if (loggedIn) {
                 logOutAs("Admin");
                 loggedIn = false;
             }
-            disconnectFromTSE();
-            System.exit(1);
+            return;
         }
         return;
     }
@@ -617,77 +590,79 @@ public class WeltladenTSE extends WindowContent {
 
     public void updateTSEStatusValues() {
         statusValues = new LinkedHashMap<String, String>();
-        // Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE
-        statusValues.put("Eindeutige D-Trust-ID (Hex)", byteArrayToHexString(tse.getUniqueId()));
-        try {
-            // Abfrage der BSI-Zertifizierungsnummer, Beispiel: "BSI-K-TR-0374-2020"
-            statusValues.put("BSI-Zertifizierungsnummer", tse.getCertificationId());
-            // Abfrage des Firmware Identifikations-Strings
-            statusValues.put("Firmware-Version", tse.getFirmwareId());
-            // Abfrage der Größe des gesamten Speichers für abgesicherte Anwendungs- und Protokolldaten
-            statusValues.put("Gesamte Speichergröße", tse.getTotalLogMemory() / 1024 / 1024 + " MB");
-            // Abfrage der Größe des freien Speichers für abgesicherte Anwendungs- und Protokolldaten
-            statusValues.put("Verfügbare Speichergröße", tse.getAvailableLogMemory() / 1024 / 1024 + " MB");
-            // Verschleißabfrage für den Speicher der abgesicherte Anwendungs- und Protokolldaten
-            statusValues.put("Verschleiß des Speichers", String.valueOf(tse.getWearIndicator()));
-            // Status-Abfrage des Lebenszyklus
-            LCS lcs = tse.getLifeCycleState();
-            statusValues.put("Lebenszyklus", lcs.toString());
-            if (lcs != LCS.notInitialized) {
-                // Erklärung zu Seriennummern auf https://tse-support.cryptovision.com/confluence/display/TDI/TSE-Seriennummer:
-                // "Eine Seriennummer ist der SHA-256 Hashwert des öffentlichen Schlüssels, der zu dem Schlüsselpaar gehört,
-                //  dessen privater Schlüssel zum Signieren der Protokollmeldungen verwendet wird."
-                byte[] serialNumberData = tse.exportSerialNumbers(); // (Rückgabe aller Signaturschlüssel-Seriennummern, sowie deren Verwendung)
-		        byte[] serialNumber = Arrays.copyOfRange(serialNumberData, 6, 6+32);
-                // Abfrage der Transaktionsnummer der letzten Transaktion
-                statusValues.put("Transaktionsnummer", String.valueOf(tse.getTransactionCounter()));
-                // Abfrage des Signatur-Zählers der letzten Signatur
-                statusValues.put("Signatur-Zähler", String.valueOf(tse.getSignatureCounter(serialNumber)));
-                // Erste und auch einzige Signaturschlüssel-Seriennummer
-                statusValues.put("Seriennummer der TSE (Hex)", byteArrayToHexString(serialNumber));
-                // Erste und auch einzige Signaturschlüssel-Seriennummer
-                statusValues.put("Seriennummer der TSE (Base64)", byteArrayToBase64String(serialNumber));
-                // Alle Signaturschlüssel-Seriennummern
-                statusValues.put("Seriennummern aller Schlüssel (ASN.1)", byteArrayToASN1String(serialNumberData));
-                // Rückgabe eines öffentlichen Schlüssels
-                statusValues.put("Öffentlicher Schlüssel (Hex)", byteArrayToHexString(tse.exportPublicKey(serialNumber)));
-                // Rückgabe eines öffentlichen Schlüssels
-                statusValues.put("Öffentlicher Schlüssel (Base64)", byteArrayToBase64String(tse.exportPublicKey(serialNumber)));
-                long expirationTimestamp = tse.getCertificateExpirationDate(serialNumber);
-                // Abfrage des Ablaufdatums eines Zertifikats
-                statusValues.put("Ablaufdatum des Zertifikats", unixTimeToCalTime(expirationTimestamp, bc.dateFormatJava));
-                // Abfrage des Ablaufdatums eines Zertifikats
-                statusValues.put("Ablaufdatum des Zertifikats (Unix-Time)", String.valueOf(expirationTimestamp));
-                // aus FirstBoot.java übernommen:
-                statusValues.put("Zeitformat", tse.getTimeSyncVariant().toString());
-                // Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten
-                statusValues.put("Signatur-Algorithmus", getSignatureAlgorithm());
-                // Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten
-                statusValues.put("Signatur-Algorithmus (ASN.1)", byteArrayToASN1String(tse.getSignatureAlgorithm()));
-                // Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten
-                // 0.4.0.127.0.7.1.1.4.1.3 stands for ecdsa-plain-SHA256 (https://github.com/bcgit/bc-java/blob/master/core/src/main/java/org/bouncycastle/asn1/bsi/BSIObjectIdentifiers.java, http://www.bouncycastle.org/docs/docs1.5on/org/bouncycastle/asn1/bsi/BSIObjectIdentifiers.html#ecdsa_plain_SHA256)
-                statusValues.put("TSE_OID des Signatur-Algorithmus", byteArrayToASN1ObjectIdentifierString(tse.getSignatureAlgorithm()));
-                // Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln
-                statusValues.put("Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)", byteArrayToASN1String(tse.getERSMappings()));
-                // Abfrage der maximal gleichzeitig unterstützten Kassen-Terminals
-                statusValues.put("Maximale Anzahl Kassen-Terminals", String.valueOf(tse.getMaxNumberOfClients()));
-                // Abfrage der derzeit in Benutzung befindlichen Kassen-Terminals
-                statusValues.put("Aktuelle Anzahl Kassen-Terminals", String.valueOf(tse.getCurrentNumberOfClients()));
-                // Abfrage der maximal gleichzeitig offenen Transaktionen
-                statusValues.put("Maximale Zahl offener Transaktionen", String.valueOf(tse.getMaxNumberOfTransactions()));
-                // Abfrage der Anzahl der derzeit offenen Transaktionen
-                statusValues.put("Aktuelle Zahl offener Transaktionen", String.valueOf(tse.getCurrentNumberOfTransactions()));
-                // aus FirstBoot.java übernommen
-                statusValues.put("Unterstützte Transaktionsaktualisierungsvarianten", tse.getSupportedTransactionUpdateVariants().toString());
-                byte[] certificate = TSEUntar.exportCertificate(tse, serialNumber);
-                statusValues.put("TSE-Zertifikat (Hex)", byteArrayToHexString(certificate));
-                statusValues.put("TSE-Zertifikat (Base64)", byteArrayToBase64String(certificate));
-                // Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes
-                statusValues.put("Letzte Protokolldaten (ASN.1)", byteArrayToASN1String(tse.readLogMessage()));
+        if (inUse()) {
+            // Abfrage der eindeutigen Identifikation einer jeden D-Trust TSE
+            statusValues.put("Eindeutige D-Trust-ID (Hex)", byteArrayToHexString(tse.getUniqueId()));
+            try {
+                // Abfrage der BSI-Zertifizierungsnummer, Beispiel: "BSI-K-TR-0374-2020"
+                statusValues.put("BSI-Zertifizierungsnummer", tse.getCertificationId());
+                // Abfrage des Firmware Identifikations-Strings
+                statusValues.put("Firmware-Version", tse.getFirmwareId());
+                // Abfrage der Größe des gesamten Speichers für abgesicherte Anwendungs- und Protokolldaten
+                statusValues.put("Gesamte Speichergröße", tse.getTotalLogMemory() / 1024 / 1024 + " MB");
+                // Abfrage der Größe des freien Speichers für abgesicherte Anwendungs- und Protokolldaten
+                statusValues.put("Verfügbare Speichergröße", tse.getAvailableLogMemory() / 1024 / 1024 + " MB");
+                // Verschleißabfrage für den Speicher der abgesicherte Anwendungs- und Protokolldaten
+                statusValues.put("Verschleiß des Speichers", String.valueOf(tse.getWearIndicator()));
+                // Status-Abfrage des Lebenszyklus
+                LCS lcs = tse.getLifeCycleState();
+                statusValues.put("Lebenszyklus", lcs.toString());
+                if (lcs != LCS.notInitialized) {
+                    // Erklärung zu Seriennummern auf https://tse-support.cryptovision.com/confluence/display/TDI/TSE-Seriennummer:
+                    // "Eine Seriennummer ist der SHA-256 Hashwert des öffentlichen Schlüssels, der zu dem Schlüsselpaar gehört,
+                    //  dessen privater Schlüssel zum Signieren der Protokollmeldungen verwendet wird."
+                    byte[] serialNumberData = tse.exportSerialNumbers(); // (Rückgabe aller Signaturschlüssel-Seriennummern, sowie deren Verwendung)
+                    byte[] serialNumber = Arrays.copyOfRange(serialNumberData, 6, 6+32);
+                    // Abfrage der Transaktionsnummer der letzten Transaktion
+                    statusValues.put("Transaktionsnummer", String.valueOf(tse.getTransactionCounter()));
+                    // Abfrage des Signatur-Zählers der letzten Signatur
+                    statusValues.put("Signatur-Zähler", String.valueOf(tse.getSignatureCounter(serialNumber)));
+                    // Erste und auch einzige Signaturschlüssel-Seriennummer
+                    statusValues.put("Seriennummer der TSE (Hex)", byteArrayToHexString(serialNumber));
+                    // Erste und auch einzige Signaturschlüssel-Seriennummer
+                    statusValues.put("Seriennummer der TSE (Base64)", byteArrayToBase64String(serialNumber));
+                    // Alle Signaturschlüssel-Seriennummern
+                    statusValues.put("Seriennummern aller Schlüssel (ASN.1)", byteArrayToASN1String(serialNumberData));
+                    // Rückgabe eines öffentlichen Schlüssels
+                    statusValues.put("Öffentlicher Schlüssel (Hex)", byteArrayToHexString(tse.exportPublicKey(serialNumber)));
+                    // Rückgabe eines öffentlichen Schlüssels
+                    statusValues.put("Öffentlicher Schlüssel (Base64)", byteArrayToBase64String(tse.exportPublicKey(serialNumber)));
+                    long expirationTimestamp = tse.getCertificateExpirationDate(serialNumber);
+                    // Abfrage des Ablaufdatums eines Zertifikats
+                    statusValues.put("Ablaufdatum des Zertifikats", unixTimeToCalTime(expirationTimestamp, bc.dateFormatJava));
+                    // Abfrage des Ablaufdatums eines Zertifikats
+                    statusValues.put("Ablaufdatum des Zertifikats (Unix-Time)", String.valueOf(expirationTimestamp));
+                    // aus FirstBoot.java übernommen:
+                    statusValues.put("Zeitformat", tse.getTimeSyncVariant().toString());
+                    // Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten
+                    statusValues.put("Signatur-Algorithmus", getSignatureAlgorithm());
+                    // Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten
+                    statusValues.put("Signatur-Algorithmus (ASN.1)", byteArrayToASN1String(tse.getSignatureAlgorithm()));
+                    // Abfrage des Signatur-Algorithmus zur Absicherung von Anwendungs- und Protokolldaten
+                    // 0.4.0.127.0.7.1.1.4.1.3 stands for ecdsa-plain-SHA256 (https://github.com/bcgit/bc-java/blob/master/core/src/main/java/org/bouncycastle/asn1/bsi/BSIObjectIdentifiers.java, http://www.bouncycastle.org/docs/docs1.5on/org/bouncycastle/asn1/bsi/BSIObjectIdentifiers.html#ecdsa_plain_SHA256)
+                    statusValues.put("TSE_OID des Signatur-Algorithmus", byteArrayToASN1ObjectIdentifierString(tse.getSignatureAlgorithm()));
+                    // Abfrage aller Zuordnungen von Identifikationsnummern zu Signaturschlüsseln
+                    statusValues.put("Zuordnungen von Kassen-IDs zu Schlüsseln (ASN.1)", byteArrayToASN1String(tse.getERSMappings()));
+                    // Abfrage der maximal gleichzeitig unterstützten Kassen-Terminals
+                    statusValues.put("Maximale Anzahl Kassen-Terminals", String.valueOf(tse.getMaxNumberOfClients()));
+                    // Abfrage der derzeit in Benutzung befindlichen Kassen-Terminals
+                    statusValues.put("Aktuelle Anzahl Kassen-Terminals", String.valueOf(tse.getCurrentNumberOfClients()));
+                    // Abfrage der maximal gleichzeitig offenen Transaktionen
+                    statusValues.put("Maximale Zahl offener Transaktionen", String.valueOf(tse.getMaxNumberOfTransactions()));
+                    // Abfrage der Anzahl der derzeit offenen Transaktionen
+                    statusValues.put("Aktuelle Zahl offener Transaktionen", String.valueOf(tse.getCurrentNumberOfTransactions()));
+                    // aus FirstBoot.java übernommen
+                    statusValues.put("Unterstützte Transaktionsaktualisierungsvarianten", tse.getSupportedTransactionUpdateVariants().toString());
+                    byte[] certificate = TSEUntar.exportCertificate(tse, serialNumber);
+                    statusValues.put("TSE-Zertifikat (Hex)", byteArrayToHexString(certificate));
+                    statusValues.put("TSE-Zertifikat (Base64)", byteArrayToBase64String(certificate));
+                    // Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes
+                    statusValues.put("Letzte Protokolldaten (ASN.1)", byteArrayToASN1String(tse.readLogMessage()));
+                }
+            } catch (SEException ex) {
+                logger.error("Error at reading of TSE status values");
+                logger.error("Exception:", ex);
             }
-        } catch (SEException ex) {
-            logger.error("Error at reading of TSE status values");
-            logger.error("Exception:", ex);
         }
     }
 
