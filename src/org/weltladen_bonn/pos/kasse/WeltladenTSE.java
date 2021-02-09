@@ -346,6 +346,7 @@ public class WeltladenTSE extends WindowContent {
                     status = TSEStatus.failed;
                     failReason = "Das Setzen der PINs und PUKs der TSE ist fehlgeschlagen.\n"+
                                  "   Bitte beim nächsten Start der Kassensoftware erneut probieren.";
+                    showTSEFailWarning();
                     return;
                 }
                 logger.info("TSE's PIN and PUK values successfully set!");
@@ -361,6 +362,7 @@ public class WeltladenTSE extends WindowContent {
                     status = TSEStatus.failed;
                     failReason = "Die Initialisierung der TSE ist fehlgeschlagen.\n"+
                                  "   Bitte beim nächsten Start der Kassensoftware erneut probieren.";
+                    showTSEFailWarning();
                     logOutAs("Admin");
                     loggedIn = false;
                     return;
@@ -378,6 +380,7 @@ public class WeltladenTSE extends WindowContent {
                 status = TSEStatus.failed;
                 failReason = "Die Aktualisierung der Zeit der TSE ist fehlgeschlagen.\n"+
                              "   Bitte beim nächsten Start der Kassensoftware erneut probieren.";
+                showTSEFailWarning();
                 if (loggedIn) {
                     logOutAs("Admin");
                     loggedIn = false;
@@ -415,6 +418,7 @@ public class WeltladenTSE extends WindowContent {
                     status = TSEStatus.failed;
                     failReason = "Die Zuordnung der Kassen-ID (Z_KASSE_ID in config.properties) zum Schlüssel der TSE ist fehlgeschlagen.\n"+
                                  "   Bitte beim nächsten Start der Kassensoftware erneut probieren.";
+                    showTSEFailWarning();
                     logOutAs("Admin");
                     loggedIn = false;
                     return;
@@ -435,11 +439,11 @@ public class WeltladenTSE extends WindowContent {
             failReason = "Es konnte nicht geprüft werden, ob die TSE bereits initialisiert ist.\n"+
                          "   Fehler: "+ex.getMessage()+"\n"+
                          "   Bitte Fehler beheben und erneut versuchen.";
+            showTSEFailWarning();
             if (loggedIn) {
                 logOutAs("Admin");
                 loggedIn = false;
             }
-            return;
         }
         return;
     }
@@ -724,7 +728,6 @@ public class WeltladenTSE extends WindowContent {
     }
 
     public void setPINandPUK(byte[] adminPIN, byte[] adminPUK, byte[] timeAdminPIN, byte[] timeAdminPUK) {
-        boolean passed = false;
         String error = "";
         System.out.println("\nBEFORE initializePinValues():");
         printStatusValues();
@@ -736,7 +739,6 @@ public class WeltladenTSE extends WindowContent {
                 tse.initializePinValues(adminPIN, adminPUK, timeAdminPIN, timeAdminPUK);
                 logger.info("Success!!! Now we can continue normally...");
                 dialog.dispose();
-                passed = true;
                 tseOperational = true;
             } catch (ErrorTSECommandDataInvalid ex) {
                 error = "Data given to TSE's initializePinValues() invalid";
@@ -755,19 +757,11 @@ public class WeltladenTSE extends WindowContent {
                 logger.fatal("Fatal Error: {}", error);
                 logger.fatal("Exception:", ex);
             } catch (SEException ex) {
-                error = "Unknown error during initializePinValues()";
+                error = "Unknown error during initializePinValues(): "+ex.getMessage();
                 logger.fatal("Fatal Error: {}", error);
                 logger.fatal("Exception:", ex);
             }
-            if (!passed) {
-                // JOptionPane.showMessageDialog(this.mainWindow,
-                //     "ACHTUNG: Die PINs und PUKs der TSE konnten nicht gesetzt werden!\n\n"+
-                //     "Fehler: "+error+".\n\n"+
-                //     "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
-                //     "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
-                //     "erneut versuchen.",
-                //     "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
-                // Exit application upon this fatal error
+            if (!tseOperational) {
                 logger.info("Failed. Trying again...");
                 disconnectFromTSE();
                 connectToTSE();
@@ -870,16 +864,10 @@ public class WeltladenTSE extends WindowContent {
             } else if (res.authenticationResult != AuthenticationResult.ok) {
                 message = "Authentication error for user "+user+": "+res.authenticationResult.toString();
                 logger.fatal("Fatal Error: {}", message);
-                JOptionPane.showMessageDialog(this.mainWindow,
-                    "ACHTUNG: Authentifizierungsfehler als User '"+user+"' bei der TSE!\n\n"+
-                    "authenticationResult: "+res.authenticationResult.toString()+"\n\n"+
-                    "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
-                    "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
-                    "erneut versuchen.",
-                    "Fehlgeschlagene Authentifizierung bei der TSE", JOptionPane.ERROR_MESSAGE);
-                // Exit application upon this fatal error
-                disconnectFromTSE();
-                System.exit(1);
+                status = TSEStatus.failed;
+                failReason = "Authentifizierungsfehler als User '"+user+"' bei der TSE.\n"+
+                    "   authenticationResult: "+res.authenticationResult.toString()+".";
+                showTSEFailWarning();
             }
             passed = true;
         } catch (ErrorSigningSystemOperationDataFailed ex) {
@@ -899,24 +887,15 @@ public class WeltladenTSE extends WindowContent {
             logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         } catch (SEException ex) {
-            message = "Unknown error during authenticateUser()";
+            message = "Unknown error during authenticateUser(): "+ex.getMessage();
             logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            logger.info("Closing connection to TSE after this fatal error.");
-            disconnectFromTSE();
-            if (exitOnFatal) {
-                JOptionPane.showMessageDialog(this.mainWindow,
-                    "ACHTUNG: Es konnte sich nicht als User "+user+" an der TSE angemeldet werden!\n\n"+
-                    "Fehler: "+message+".\n\n"+
-                    "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
-                    "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
-                    "erneut versuchen.",
-                    "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
-                // Exit application upon this fatal error
-                System.exit(1);
-            }
+            status = TSEStatus.failed;
+            failReason = "Es konnte sich nicht als User "+user+" an der TSE angemeldet werden.\n"+
+                "   Fehler: "+message+".";
+            showTSEFailWarning();
         }
         return message;
     }
@@ -956,21 +935,15 @@ public class WeltladenTSE extends WindowContent {
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         } catch (SEException ex) {
-            error = "Unknown error during logOut()";
+            error = "Unknown error during logOut(): "+ex.getMessage();
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Es konnte sich nicht als "+user+" von der TSE abgemeldet werden!\n\n"+
-                "Fehler: "+error+".\n\n"+
-                "Dies weist auf eine fehlerhafte TSE hin. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
-                "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
-                "erneut versuchen.",
-                "Fehlgeschlagene Abmeldung von der TSE", JOptionPane.ERROR_MESSAGE);
-            // Exit application upon this fatal error
-            disconnectFromTSE();
-            System.exit(1);
+            status = TSEStatus.failed;
+            failReason = "Es konnte sich nicht als "+user+" von der TSE abgemeldet werden.\n"+
+                "   Fehler: "+error+".";
+            showTSEFailWarning();
         }
     }
 
@@ -1001,23 +974,17 @@ public class WeltladenTSE extends WindowContent {
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         } catch (SEException ex) {
-            error = "Unknown error during initialize()";
+            error = "Unknown error during initialize(): "+ex.getMessage();
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Die TSE konnte nicht initialisiert werden!\n\n"+
-                "Fehler: "+error+".\n\n"+
-                "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
-                "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
-                "erneut versuchen.",
-                "Fehlgeschlagene Initialisierung der TSE", JOptionPane.ERROR_MESSAGE);
-            // Exit application upon this fatal error
+            status = TSEStatus.failed;
+            failReason = "Die TSE konnte nicht initialisiert werden.\n"+
+                "   Fehler: "+error+".";
+            showTSEFailWarning();
             logOutAs("Admin");
             loggedIn = false;
-            disconnectFromTSE();
-            System.exit(1);
         }
     }
 
@@ -1037,21 +1004,15 @@ public class WeltladenTSE extends WindowContent {
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         } catch (SEException ex) {
-            error = "Unknown error during getTimeSyncInterval()";
+            error = "Unknown error during getTimeSyncInterval(): "+ex.getMessage();
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Das Zeitaktualisierungsintervall der TSE konnte nicht ausgelesen werden!\n\n"+
-                "Fehler: "+error+".\n\n"+
-                "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
-                "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
-                "erneut versuchen.",
-                "Fehlgeschlagene Zeitaktualisierung der TSE", JOptionPane.ERROR_MESSAGE);
-            // Exit application upon this fatal error
-            disconnectFromTSE();
-            System.exit(1);
+            status = TSEStatus.failed;
+            failReason = "Das Zeitaktualisierungsintervall der TSE konnte nicht ausgelesen werden.\n"+
+                "   Fehler: "+error+".";
+            showTSEFailWarning();
         }
     }
 
@@ -1109,22 +1070,16 @@ public class WeltladenTSE extends WindowContent {
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         } catch (SEException ex) {
-            error = "Unknown error during updateTime()";
+            error = "Unknown error during updateTime(): "+ex.getMessage();
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Die Zeit der TSE konnte nicht aktualisiert werden!\n\n"+
-                "Fehler: "+error+".\n\n"+
-                "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
-                "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
-                "erneut versuchen.",
-                "Fehlgeschlagene Zeitaktualisierung der TSE", JOptionPane.ERROR_MESSAGE);
-            // Exit application upon this fatal error
+            status = TSEStatus.failed;
+            failReason = "Die Zeit der TSE konnte nicht aktualisiert werden.\n"+
+                "   Fehler: "+error+".";
+            showTSEFailWarning();
             logOutAs("TimeAdmin");
-            disconnectFromTSE();
-            System.exit(1);
         }
     }
 
@@ -1134,33 +1089,24 @@ public class WeltladenTSE extends WindowContent {
         try {
             if (tse.getLifeCycleState() == LCS.noTime) {
                 logger.fatal("TSE time update failed!");
-                JOptionPane.showMessageDialog(this.mainWindow,
-                    "ACHTUNG: Die Aktualisierung der Zeit der TSE ist fehlgeschlagen!\n"+
-                    "Ohne Zeitaktualisierung kann eine TSE nicht verwendet werden.\n"+
-                    "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
-                    "Bitte beim nächsten Start der Kassensoftware erneut probieren.",
-                    "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
-                disconnectFromTSE();
-                System.exit(1);
+                status = TSEStatus.failed;
+                failReason = "Die Aktualisierung der Zeit der TSE ist fehlgeschlagen";
+                showTSEFailWarning();
             }
         } catch (ErrorSECommunicationFailed ex) {
             logger.fatal("SE Communication failed!");
             logger.fatal("Exception:", ex);
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Die Kommunikation mit der TSE nach dem Setzen der Zeit ist fehlgeschlagen!\n"+
-                "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.",
-                "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
-            disconnectFromTSE();
-            System.exit(1);
+            status = TSEStatus.failed;
+            failReason = "Die Kommunikation mit der TSE nach dem Setzen der Zeit ist fehlgeschlagen.\n"+
+                "   Fehler: "+ex.getMessage()+".";
+            showTSEFailWarning();
         } catch (SEException ex) {
             logger.fatal("SE Communication failed!");
             logger.fatal("Exception:", ex);
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Unbekannter Fehler nach dem Setzen der Zeit der TSE!\n"+
-                "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.",
-                "Fehler beim Setzen der Zeit der TSE", JOptionPane.ERROR_MESSAGE);
-            disconnectFromTSE();
-            System.exit(1);
+            status = TSEStatus.failed;
+            failReason = "Unbekannter Fehler nach dem Setzen der Zeit der TSE.\n"+
+                "   Fehler: "+ex.getMessage()+".";
+            showTSEFailWarning();
         }
         logger.info("TSE time successfully updated!");
     }
@@ -1175,29 +1121,23 @@ public class WeltladenTSE extends WindowContent {
             serialNumber = Arrays.copyOfRange(data, 6, 6+32);
             passed = true;
         } catch (ErrorSeApiNotInitialized ex) {
-            error = "SE API not initialized";
+            error = "SE API not initialized: "+ex.getMessage();
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         } catch (SEException ex) {
-            error = "Unknown error during exportSerialNumbers()";
+            error = "Unknown error during exportSerialNumbers(): "+ex.getMessage();
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Die Seriennummer des TSE-Schlüssels konnte nicht ausgelesen werden!\n\n"+
-                "Fehler: "+error+".\n\n"+
-                "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
-                "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
-                "erneut versuchen.",
-                "Fehlgeschlagene Seriennummerauslesung der TSE", JOptionPane.ERROR_MESSAGE);
-            // Exit application upon this fatal error
+            status = TSEStatus.failed;
+            failReason = "Die Seriennummer des TSE-Schlüssels konnte nicht ausgelesen werden.\n"+
+                "   Fehler: "+error+".";
+            showTSEFailWarning();
             if (loggedIn) {
                 logOutAs("Admin");
                 loggedIn = false;
             }
-            disconnectFromTSE();
-            System.exit(1);
         }
         return serialNumber;
     }
@@ -1262,23 +1202,17 @@ public class WeltladenTSE extends WindowContent {
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         } catch (SEException ex) {
-            error = "Unknown error during mapERStoKey()";
+            error = "Unknown error during mapERStoKey(): "+ex.getMessage();
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Die ClientID konnte nicht dem TSE-Schlüssel zugeordnet werden!\n\n"+
-                "Fehler: "+error+".\n\n"+
-                "Die TSE kann daher nicht verwendet werden. Da der Betrieb ohne TSE ILLEGAL ist,\n"+
-                "wird die Kassensoftware jetzt beendet. Bitte Fehler beheben und\n"+
-                "erneut versuchen.",
-                "Fehlgeschlagene Client-ID-Zuordnung der TSE", JOptionPane.ERROR_MESSAGE);
-            // Exit application upon this fatal error
+            status = TSEStatus.failed;
+            failReason = "Die ClientID konnte nicht dem TSE-Schlüssel zugeordnet werden.\n"+
+                "   Fehler: "+error+".";
+            showTSEFailWarning();
             logOutAs("Admin");
             loggedIn = false;
-            disconnectFromTSE();
-            System.exit(1);
         }
     }
 
@@ -1370,7 +1304,7 @@ public class WeltladenTSE extends WindowContent {
             logger.fatal("Finish transaction failed");
             logger.fatal("Exception:", ex);
         } catch (SEException ex) {
-            logger.fatal("Unknown error during writeTestTransaction()");
+            logger.fatal("Unknown error during writeTestTransaction(): "+ex.getMessage());
             logger.fatal("Exception:", ex);
         }
     }
@@ -1611,20 +1545,15 @@ public class WeltladenTSE extends WindowContent {
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         } catch (SEException ex) {
-            error = "Unknown error during startTransaction()";
+            error = "Unknown error during startTransaction(): "+ex.getMessage();
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Es konnte keine TSE-Transaktion gestartet werden!\n\n"+
-                "Fehler: "+error+".\n\n"+
-                "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
-                "Bitte Fehler beheben und erneut versuchen.",
-                "Fehlgeschlagener Transaktionsstart der TSE", JOptionPane.ERROR_MESSAGE);
-            // Exit application upon this fatal error
-            disconnectFromTSE();
-            System.exit(1);
+            status = TSEStatus.failed;
+            failReason = "Es konnte keine TSE-Transaktion gestartet werden.\n"+
+                "   Fehler: "+error+".";
+            showTSEFailWarning();
         }
     };
 
@@ -1686,7 +1615,7 @@ public class WeltladenTSE extends WindowContent {
             logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         } catch (SEException ex) {
-            message = "Unknown error during startTransaction()";
+            message = "Unknown error during startTransaction(): "+ex.getMessage();
             logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         }
@@ -1712,15 +1641,10 @@ public class WeltladenTSE extends WindowContent {
         // Make room for next transaction:
         tx = new TSETransaction();
         if (message != "OK") {
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Die TSE-Transaktion konnte nicht abgebrochen werden!\n\n"+
-                "Fehler: "+message+".\n\n"+
-                "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
-                "Bitte Fehler beheben und erneut versuchen.",
-                "Fehlgeschlagener Transaktionsabbruch der TSE", JOptionPane.ERROR_MESSAGE);
-            // Exit application upon this fatal error
-            disconnectFromTSE();
-            System.exit(1);
+            status = TSEStatus.failed;
+            failReason = "Die TSE-Transaktion konnte nicht abgebrochen werden.\n"+
+                "   Fehler: "+message+".";
+            showTSEFailWarning();
         }
         return res_tx;
     }
@@ -1817,15 +1741,10 @@ public class WeltladenTSE extends WindowContent {
         // Make room for next transaction:
         tx = new TSETransaction();
         if (message != "OK") {
-            JOptionPane.showMessageDialog(this.mainWindow,
-                "ACHTUNG: Die TSE-Transaktion konnte nicht abgeschlossen werden!\n\n"+
-                "Fehler: "+message+".\n\n"+
-                "Da der Betrieb ohne TSE ILLEGAL ist, wird die Kassensoftware jetzt beendet.\n"+
-                "Bitte Fehler beheben und erneut versuchen.",
-                "Fehlgeschlagener Transaktionsabschluss der TSE", JOptionPane.ERROR_MESSAGE);
-            // Exit application upon this fatal error
-            disconnectFromTSE();
-            System.exit(1);
+            status = TSEStatus.failed;
+            failReason = "Die TSE-Transaktion konnte nicht abgeschlossen werden.\n"+
+                "   Fehler: "+message+".";
+            showTSEFailWarning();
         }
         return res_tx;
     }
