@@ -265,12 +265,12 @@ public class WeltladenTSE extends WindowContent {
     }
 
     public void disconnectFromTSE() {
-        if (inUse()) {
+        /* Cancel a potentially unfinished transaction: */
+        if (tx.txNumber != null) {
+            cancelTransaction();
+        }
+        if (tse != null) {
             try {
-                /* Cancel a potentially unfinished transaction: */
-                if (tx.txNumber != null) {
-                    cancelTransaction();
-                }
                 tse.close();
             } catch (IOException ex) {
                 logger.fatal("IOException upon closing connection to TSE");
@@ -550,14 +550,22 @@ public class WeltladenTSE extends WindowContent {
         return result;
     }
 
+    private static String dateToCalTime(java.util.Date date) {
+        return new SimpleDateFormat(dateFormatDSFinVK).format(date);
+    }
+
+    private static String dateToCalTime(java.util.Date date, String dateFormat) {
+        return new SimpleDateFormat(dateFormat).format(date);
+    }
+
     public static String unixTimeToCalTime(long unixTime) {
         java.util.Date date = new java.util.Date(unixTime * 1000);
-        return new SimpleDateFormat(dateFormatDSFinVK).format(date);
+        return dateToCalTime(date);
     }
 
     public static String unixTimeToCalTime(long unixTime, String dateFormat) {
         java.util.Date date = new java.util.Date(unixTime * 1000);
-        return new SimpleDateFormat(dateFormat).format(date);
+        return dateToCalTime(date, dateFormat);
     }
 
     public String getSignatureAlgorithm() {
@@ -1498,6 +1506,14 @@ public class WeltladenTSE extends WindowContent {
         if (tx.txNumber != null) {
             cancelTransaction();
         }
+        if (status == TSEStatus.failed) { // same as !inUse()
+            // TSE has failed. Instead of TSE, Kasse has to determine start and end times
+            //    of transaction for Kassenbeleg (s. AEAO zu § 146a, Nr. 7, p. 16)
+            tx = new TSETransaction();
+            tx.startTimeString = dateToCalTime(nowDate());
+            logger.debug("!!! TSE FAILED !!! TX start time determined by Kasse: {}", tx.startTimeString);
+            return;
+        }
         try {
             /* Zitat DSFinV-K v2.2 (Anhang I, S. 115): (https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html)
                 "Für alle Vorgangstypen gilt, dass processType und processData für die StartTransaction-Operation immer leer sind."
@@ -1507,7 +1523,6 @@ public class WeltladenTSE extends WindowContent {
             */
             tx = new TSETransaction();
             StartTransactionResult result = tse.startTransaction(bc.Z_KASSE_ID, null, null, null);
-            long n = tse.getCurrentNumberOfTransactions();
             tx.txNumber = result.transactionNumber;
             tx.startTimeUnix = result.logTime;
             tx.startTimeString = unixTimeToCalTime(result.logTime);
@@ -1559,15 +1574,27 @@ public class WeltladenTSE extends WindowContent {
 
     private String sendFinishTransaction(String processData, Integer rechnungsNr) {
         String message = "";
+        tx.rechnungsNr = rechnungsNr;
+        tx.processType = defaultProcessType;
+        tx.processData = processData;
+        if (status == TSEStatus.failed) { // same as !inUse()
+            // TSE has failed. Instead of TSE, Kasse has to determine start and end times
+            //    of transaction for Kassenbeleg (s. AEAO zu § 146a, Nr. 7, p. 16)
+            tx.endTimeString = dateToCalTime(nowDate());
+            tx.tseError = failReason;
+            logger.debug("Finishing transaction:");
+            logger.debug("Rechnungsnummer: {}", tx.rechnungsNr);
+            logger.debug("!!! TSE FAILED !!! TX start time determined by Kasse: {}", tx.startTimeString);
+            logger.debug("!!! TSE FAILED !!! TX end time determined by Kasse: {}", tx.endTimeString);
+            logger.debug("!!! TSE FAILED !!! TX processType: {}", tx.processType);
+            logger.debug("!!! TSE FAILED !!! TX processData: {}", tx.processData);
+            return "OK";
+        }
         try {
             if (tx.txNumber != null) {
-                String processType = defaultProcessType;
-                FinishTransactionResult result = tse.finishTransaction(bc.Z_KASSE_ID, tx.txNumber, processData.getBytes(), processType, null);
-                tx.rechnungsNr = rechnungsNr;
+                FinishTransactionResult result = tse.finishTransaction(bc.Z_KASSE_ID, tx.txNumber, processData.getBytes(), tx.processType, null);
                 tx.endTimeUnix = result.logTime;
                 tx.endTimeString = unixTimeToCalTime(result.logTime);
-                tx.processType = processType;
-                tx.processData = processData;
                 tx.sigCounter = result.signatureCounter;
                 tx.signatureBase64 = byteArrayToBase64String(result.signatureValue);
                 logger.debug("Finishing transaction:");

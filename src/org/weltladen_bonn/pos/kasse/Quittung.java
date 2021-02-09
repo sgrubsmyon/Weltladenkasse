@@ -237,14 +237,20 @@ public class Quittung extends WindowContent {
 
     private void insertTSEValues(Sheet sheet, int continueAtRow) {
         int row = continueAtRow + 1; // leave one row empty for spacing
-        sheet.setValueAt("--- TSE ---", 0, row);
+        if (tseStatusValues != null) { // means TSE has failed
+            sheet.setValueAt("--- TSE ---", 0, row);
+        } else {
+            sheet.setValueAt("--- TSE ausgefallen!!! ---", 0, row);
+        }
         row++;
         if (tx == null) {
-            sheet.setValueAt("ACHTUNG: TSE-Daten nicht verfügbar", 0, row);
+            sheet.setValueAt("TSE-Daten nicht verfügbar", 0, row);
         } else {
-            sheet.setValueAt("Transaktionsnr:", 0, row);
-            sheet.setValueAt(tx.txNumber, 4, row);
-            row++;
+            if (tx.txNumber != null) {
+                sheet.setValueAt("Transaktionsnr.:", 0, row);
+                sheet.setValueAt(tx.txNumber, 4, row);
+                row++;
+            }
             sheet.setValueAt("Start:", 0, row);
             String dateString = "???";
             try {
@@ -265,12 +271,12 @@ public class Quittung extends WindowContent {
             }
             sheet.setValueAt(dateString, 4, row);
             row++;
-            sheet.setValueAt("Kassen-Seriennr (clientID):", 0, row);
+            sheet.setValueAt("Kassen-Seriennr. (clientID):", 0, row);
             row++;
             sheet.setValueAt(bc.Z_KASSE_ID, 4, row);
             if (tseStatusValues != null) {
                 row++;
-                sheet.setValueAt("TSE-Seriennummer:", 0, row);
+                sheet.setValueAt("TSE-Seriennr.:", 0, row);
                 row = spreadTextOverSeveralRows(
                     sheet, tseStatusValues.get("Seriennummer der TSE (Hex)"),
                     4, row, 10, 30

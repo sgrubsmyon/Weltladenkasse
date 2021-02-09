@@ -1495,7 +1495,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     private void hinzufuegen(int artID, String kurzname, String artikelNummer, String color, String type, String menge,
                              Integer stueck, String artikelPreis, BigDecimal gesPreis, String artikelMwSt) {
-        if (tse.inUse() && kassierArtikel.size() == 0) {
+        if (kassierArtikel.size() == 0) {
             // First item is added, this is a new TSE transaction
             tse.startTransaction();
         }
@@ -1690,16 +1690,17 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         // Bruttoumsatz = 4. Element in mwstIDsAndValues (get(3))
         TSETransaction tx = null;
         LinkedHashMap<String, String> tseStatusValues = null;
-        if (tse.inUse()) {
-            tx = tse.finishTransaction(
-                rechnungsNr,
-                mwstIDsAndValues.get(3) != null ? mwstIDsAndValues.get(3).get(3) : null, // steuer_allgemein = mwst_id: 3 = 19% MwSt
-                mwstIDsAndValues.get(2) != null ? mwstIDsAndValues.get(2).get(3) : null, // steuer_ermaessigt = mwst_id: 2 = 7% MwSt
-                mwstIDsAndValues.get(5) != null ? mwstIDsAndValues.get(5).get(3) : null, // steuer_durchschnitt_nr3 = mwst_id: 5 = 10,7% MwSt
-                mwstIDsAndValues.get(4) != null ? mwstIDsAndValues.get(4).get(3) : null, // steuer_durchschnitt_nr1 = mwst_id: 4 = 5,5% MwSt
-                mwstIDsAndValues.get(1) != null ? mwstIDsAndValues.get(1).get(3) : null, // steuer_null = mwst_id: 1 = 0% MwSt
-                zahlungen
-            );
+        // always finish the transaction, also when TSE is not in use (has failed), in which case end date is determined by Kasse
+        tx = tse.finishTransaction(
+            rechnungsNr,
+            mwstIDsAndValues.get(3) != null ? mwstIDsAndValues.get(3).get(3) : null, // steuer_allgemein = mwst_id: 3 = 19% MwSt
+            mwstIDsAndValues.get(2) != null ? mwstIDsAndValues.get(2).get(3) : null, // steuer_ermaessigt = mwst_id: 2 = 7% MwSt
+            mwstIDsAndValues.get(5) != null ? mwstIDsAndValues.get(5).get(3) : null, // steuer_durchschnitt_nr3 = mwst_id: 5 = 10,7% MwSt
+            mwstIDsAndValues.get(4) != null ? mwstIDsAndValues.get(4).get(3) : null, // steuer_durchschnitt_nr1 = mwst_id: 4 = 5,5% MwSt
+            mwstIDsAndValues.get(1) != null ? mwstIDsAndValues.get(1).get(3) : null, // steuer_null = mwst_id: 1 = 0% MwSt
+            zahlungen
+        );
+        if (tse.inUse()) { // only if TSE is operational, tseStatusValues is not null
             tseStatusValues = tse.getTSEStatusValues();
         }
 
@@ -1732,10 +1733,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (mw != null) {
             mw.setDisplayBlankTimer();
         }
-        if (tse.inUse()) {
-            // Cancel TSE transaction that was on-going:
-            tse.cancelTransaction();
-        }
+        // Cancel TSE transaction that was on-going:
+        tse.cancelTransaction();
     }
 
     private void artikelRabattierenRelativ(BigDecimal rabattRelativ) {
@@ -2197,7 +2196,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             if (display != null && display.deviceWorks()) {
                 display.clearScreen();
             }
-            if (tse.inUse() && kassierArtikel.size() == 0) {
+            if (kassierArtikel.size() == 0) {
                 // Last item was removed, cancel the TSE transaction
                 tse.cancelTransaction();
             }

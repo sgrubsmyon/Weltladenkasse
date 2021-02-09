@@ -257,7 +257,8 @@ CREATE TABLE bestellung_details (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE tse_transaction (
-    transaction_number INTEGER(10) UNSIGNED NOT NULL,
+    transaction_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    transaction_number INTEGER(10) UNSIGNED DEFAULT NULL,
     rechnungs_nr INTEGER(10) UNSIGNED DEFAULT NULL,
     transaction_start CHAR(29) DEFAULT NULL,
     transaction_end CHAR(29) DEFAULT NULL,
@@ -266,7 +267,8 @@ CREATE TABLE tse_transaction (
     signature_base64 VARCHAR(512) DEFAULT NULL,
     tse_error TINYTEXT DEFAULT NULL,
     process_data VARCHAR(60) DEFAULT NULL,
-    PRIMARY KEY (transaction_number),
+    PRIMARY KEY (transaction_id),
+    -- If planning to use method `getTransactionByTxNumber()`, can also create index on column `transaction_number`
     FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 -- tx start and end times are prepared in format '2021-01-17T19:13:45.000+01:00' in Java,

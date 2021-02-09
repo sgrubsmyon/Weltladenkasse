@@ -102,10 +102,8 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
             logger.debug("Closing connection to customer display");
             display.closeDevice();
         }
-        if (tse.inUse()) {
-            logger.debug("Closing connection to TSE");
-            tse.disconnectFromTSE();
-        }
+        logger.debug("Closing connection to TSE");
+        tse.disconnectFromTSE();
         super.dispose();
     }
 
