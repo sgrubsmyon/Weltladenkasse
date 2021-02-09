@@ -826,7 +826,7 @@ public class WeltladenTSE extends WindowContent {
         }
     }
 
-    private String authenticateAs(String user, byte[] pin, boolean exitOnFatal) {
+    private String authenticateAs(String user, byte[] pin, boolean failOnFatal) {
         if (null == pin) {
             pin = showPINOrPUKentryDialog(user, "PIN", 8);
         }
@@ -846,7 +846,7 @@ public class WeltladenTSE extends WindowContent {
                     "Falsche PIN für TSE-User '"+user+"'", JOptionPane.ERROR_MESSAGE);
                 pin = showPINOrPUKentryDialog(user, "PIN", 8);
                 if (pin.length == 8) {
-                    message = authenticateAs(user, pin, exitOnFatal);
+                    message = authenticateAs(user, pin, failOnFatal);
                     return message;
                 }
             } else if (res.authenticationResult == AuthenticationResult.pinIsBlocked) {
@@ -866,7 +866,7 @@ public class WeltladenTSE extends WindowContent {
                 if (pin.length == 8) {
                     UnblockUserResult ures = tse.unblockUser(user, puk, pin);
                     logger.debug("UnblockUserResult: {}", ures.authenticationResult);
-                    message = authenticateAs(user, pin, exitOnFatal);
+                    message = authenticateAs(user, pin, failOnFatal);
                     return message;
                 }
             } else if (res.authenticationResult != AuthenticationResult.ok) {
@@ -900,10 +900,12 @@ public class WeltladenTSE extends WindowContent {
             logger.fatal("Exception:", ex);
         }
         if (!passed) {
-            status = TSEStatus.failed;
-            failReason = "Es konnte sich nicht als User "+user+" an der TSE angemeldet werden.\n"+
-                "   Fehler: "+message+".";
-            showTSEFailWarning();
+            if (failOnFatal) {
+                status = TSEStatus.failed;
+                failReason = "Es konnte sich nicht als User "+user+" an der TSE angemeldet werden.\n"+
+                    "   Fehler: "+message+".";
+                showTSEFailWarning();
+            }
         }
         return message;
     }
