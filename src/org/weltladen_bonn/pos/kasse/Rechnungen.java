@@ -490,7 +490,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                         datet, rechnungsNr, kassierArtikel,
                         mwstValues, zahlungsModus,
                         totalPrice, kundeGibt, rueckgeld, tx, tseStatusValues);
-                // myQuittung.printReceipt();
+                myQuittung.printReceipt();
             return;
         }
     }
