@@ -1619,7 +1619,7 @@ public class WeltladenTSE extends WindowContent {
             logger.debug("!!! TSE FAILED !!! TX end time determined by Kasse: {}", tx.endTimeString);
             logger.debug("!!! TSE FAILED !!! TX processType: {}", tx.processType);
             logger.debug("!!! TSE FAILED !!! TX processData: {}", tx.processData);
-            return "OK";
+            return "OK"; // this is "normal" when TSE has failed, so return "OK", tx.tseError has already been set
         }
         try {
             if (tx.txNumber != null) {
@@ -1679,10 +1679,8 @@ public class WeltladenTSE extends WindowContent {
         }
         if (message != "OK") {
             tx.tseError = message;
-            storeTransactionInDB();
-            // Make room for next transaction:
-            tx = new TSETransaction();
         }
+        storeTransactionInDB();
         return message;
     }
     
@@ -1694,15 +1692,21 @@ public class WeltladenTSE extends WindowContent {
         */
         String processData = "AVBelegabbruch^0.00_0.00_0.00_0.00_0.00^"; // siehe hierzu auch: https://support.gastro-mis.de/support/solutions/articles/36000246958-avbelegabbruch
         String message = sendFinishTransaction(processData, null);
-        storeTransactionInDB();
         TSETransaction res_tx = tx;
         // Make room for next transaction:
         tx = new TSETransaction();
         if (message != "OK") {
-            status = TSEStatus.failed;
-            failReason = "Die TSE-Transaktion konnte nicht abgebrochen werden.\n"+
-                "   Fehler: "+message+".";
-            showTSEFailWarning();
+            // Setting status to failed would mean giving up. But the error might be only transient. But at least inform user.
+            // status = TSEStatus.failed;
+            // failReason = "Die TSE-Transaktion konnte nicht abgebrochen werden.\n"+
+            //     "   Fehler: "+message+".";
+            // showTSEFailWarning();
+            JOptionPane.showMessageDialog(this.mainWindow,
+                "ACHTUNG: Die TSE-Transaktion konnte nicht abgebrochen werden!!!\n"+
+                "Grund:   '"+message+"'\n"+
+                "Bitte versuche, den Fehler zu beheben.\n"+
+                "Falls du nicht weiter weißt, informiere den/die Administrator*in.",
+                "TSE-Transaktion konnte nicht abgebrochen werden", JOptionPane.WARNING_MESSAGE);
         }
         return res_tx;
     }
@@ -1794,15 +1798,21 @@ public class WeltladenTSE extends WindowContent {
                                                steuer_durchschnitt_nr3, steuer_durchschnitt_nr1,
                                                steuer_null, zahlungen);
         String message = sendFinishTransaction(processData, rechnungsNr);
-        storeTransactionInDB();
         TSETransaction res_tx = tx;
         // Make room for next transaction:
         tx = new TSETransaction();
         if (message != "OK") {
-            status = TSEStatus.failed;
-            failReason = "Die TSE-Transaktion konnte nicht abgeschlossen werden.\n"+
-                "   Fehler: "+message+".";
-            showTSEFailWarning();
+            // Setting status to failed would mean giving up. But the error might be only transient. But at least inform user.
+            // status = TSEStatus.failed;
+            // failReason = "Die TSE-Transaktion konnte nicht abgeschlossen werden.\n"+
+            //     "   Fehler: "+message+".";
+            // showTSEFailWarning();
+            JOptionPane.showMessageDialog(this.mainWindow,
+                "ACHTUNG: Die TSE-Transaktion konnte nicht abgeschlossen werden!!!\n"+
+                "Grund:   '"+message+"'\n"+
+                "Bitte versuche, den Fehler zu beheben.\n"+
+                "Falls du nicht weiter weißt, informiere den/die Administrator*in.",
+                "TSE-Transaktion konnte nicht abgeschlossen werden", JOptionPane.WARNING_MESSAGE);
         }
         return res_tx;
     }
