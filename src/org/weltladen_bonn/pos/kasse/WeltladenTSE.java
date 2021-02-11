@@ -52,6 +52,7 @@ import com.cryptovision.SEAPI.TSE.StartTransactionResult;
 import com.cryptovision.SEAPI.TSE.UpdateTransactionResult;
 import com.cryptovision.SEAPI.TSE.FinishTransactionResult;
 import com.cryptovision.SEAPI.exceptions.SEException;
+import com.cryptovision.SEAPI.exceptions.GetInstanceException;
 import com.cryptovision.SEAPI.exceptions.ErrorTSECommandDataInvalid;
 import com.cryptovision.SEAPI.exceptions.ErrorSECommunicationFailed;
 import com.cryptovision.SEAPI.exceptions.ErrorSigningSystemOperationDataFailed;
@@ -75,6 +76,10 @@ import com.cryptovision.SEAPI.exceptions.ErrorIdNotFound;
 import com.cryptovision.SEAPI.exceptions.ErrorStreamWrite;
 import com.cryptovision.SEAPI.exceptions.ErrorUnexportedStoredData;
 import com.cryptovision.SEAPI.exceptions.ErrorTooManyRecords;
+
+// TSE errors that happen at start-up after TSE has lost voltage: (it's normal and goes away after a few tries)
+import com.cryptovision.SEAPI.exceptions.ErrorTSECommunicationError;
+import com.cryptovision.SEAPI.exceptions.ErrorNoStartup;
 
 // For decoding/encoding output from the TSE:
 import org.bouncycastle.util.encoders.Hex;
@@ -234,6 +239,17 @@ public class WeltladenTSE extends WindowContent {
         // Configure TSE:
         try {
             tse = TSE.getInstance("config_tse.txt");
+        } catch (ErrorTSECommunicationError ex) {
+            logger.error("TSE communication error during connectToTSE(), which can happen after TSE losing voltage");
+            logger.error("Exception:", ex);
+        } catch (GetInstanceException ex) {
+            logger.fatal("Unable to open connection to TSE, probably wrong path in '{}' or device not available", "config_tse.txt");
+            logger.fatal("Exception:", ex);
+            logger.fatal("Exception message:", ex.getMessage());
+            status = TSEStatus.failed;
+            failReason = "Es konnte keine Verbindung zur TSE aufgebaut werden. Entweder die TSE (eine SD-Karte, die "+
+                         "in einem Schlitz des Kassen-PCs steckt)\n   sitzt nicht richtig drin oder die Konfiguration "+
+                         "(etwa der Pfad) in der Datei 'config_tse.txt' ist falsch.";
         } catch (FileNotFoundException ex) {
             logger.fatal("TSE config file not found under '{}'", "config_tse.txt");
             logger.fatal("Exception:", ex);
@@ -245,14 +261,13 @@ public class WeltladenTSE extends WindowContent {
             status = TSEStatus.failed;
             failReason = "Datei 'config_tse.txt' konnte nicht eingelesen werden";
         } catch (SEException ex) {
-            logger.fatal("Unable to open connection to TSE, given configuration provided by '{}'.", "config_tse.txt");
+            logger.fatal("Unknown TSE error during connectToTSE()", "config_tse.txt");
             logger.fatal("Exception:", ex);
             status = TSEStatus.failed;
-            failReason = "Es konnte keine Verbindung zur TSE aufgebaut werden. Entweder die TSE (eine SD-Karte, die "+
-                         "in einem Schlitz des Kassen-PCs steckt)\n   sitzt nicht richtig drin oder die Konfiguration in "+
-                         "der Datei 'config_tse.txt' ist falsch.";
+            failReason = "Es konnte keine Verbindung zur TSE aufgebaut werden. Unbekannter Fehler: "+
+                         ex.getMessage();
         } catch (Throwable ex) {
-            logger.fatal("Throwable caught in connectToTSE");
+            logger.fatal("Throwable caught in connectToTSE()");
             logger.fatal("Exception:", ex);
             status = TSEStatus.failed;
             failReason = ex.getMessage();
@@ -272,6 +287,12 @@ public class WeltladenTSE extends WindowContent {
         if (tse != null) {
             try {
                 tse.close();
+            } catch (ErrorNoStartup ex) {
+                logger.error("TSE error 'no startup' during disconnectFromTSE(), which is normal when trying to connect after TSE losing voltage");
+                logger.error("Exception:", ex);
+            } catch (ErrorTSECommunicationError ex) {
+                logger.error("TSE communication error during disconnectFromTSE(), which can happen when trying to connect after TSE losing voltage");
+                logger.error("Exception:", ex);
             } catch (IOException ex) {
                 logger.fatal("IOException upon closing connection to TSE");
                 logger.fatal("Exception:", ex);
@@ -317,7 +338,7 @@ public class WeltladenTSE extends WindowContent {
                 tseOperational = true;
             } else {
                 logger.info("Failed. Trying again...");
-                // Because connection to TSE was closed, we need to re-open it:
+                disconnectFromTSE();
                 connectToTSE();
             }
         }
@@ -878,20 +899,28 @@ public class WeltladenTSE extends WindowContent {
                 showTSEFailWarning();
             }
             passed = true;
+        } catch (ErrorTSECommunicationError ex) {
+            message = "TSE communication error during authenticateUser(), which is normal for first connection after TSE losing voltage";
+            logger.error("Fatal Error: {}", message);
+            logger.error("Exception:", ex);
+        } catch (ErrorNoStartup ex) {
+            message = "TSE error 'no startup' during authenticateUser(), which can happen on first connection after TSE losing voltage";
+            logger.error("Fatal Error: {}", message);
+            logger.error("Exception:", ex);
         } catch (ErrorSigningSystemOperationDataFailed ex) {
-            message = "Signing system operation data failed";
+            message = "Signing system operation data failed during authenticateUser()";
             logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         } catch (ErrorRetrieveLogMessageFailed ex) {
-            message = "Retrieve log message failed";
+            message = "Retrieve log message failed during authenticateUser()";
             logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         } catch (ErrorStorageFailure ex) {
-            message = "Storage failure";
+            message = "Storage failure during authenticateUser()";
             logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         } catch (ErrorSecureElementDisabled ex) {
-            message = "Secure element disabled";
+            message = "Secure element disabled during authenticateUser()";
             logger.fatal("Fatal Error: {}", message);
             logger.fatal("Exception:", ex);
         } catch (SEException ex) {
