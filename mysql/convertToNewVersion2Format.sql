@@ -269,3 +269,4 @@ GRANT INSERT ON kasse.tse_transaction TO 'mitarbeiter'@'localhost';
 -- that nothing is printed)
 
 UPDATE artikel SET menge = NULL, einheit = NULL WHERE artikel_id < 10; -- artikel_id from 1 up to 9 is internal articles like Rabatt and Pfand
+ALTER TABLE artikel MODIFY einheit VARCHAR(10) DEFAULT NULL;
