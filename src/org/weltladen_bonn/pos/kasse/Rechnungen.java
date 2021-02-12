@@ -482,6 +482,10 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 datet = new DateTime(now());
             TSETransaction tx = tse.getTransactionByRechNr(rechnungsNr);
             LinkedHashMap<String, String> tseStatusValues = null;
+            // TODO once DSFinV-K is finished, obtain TSE values for printed Quittung
+            // not from from currently operated TSE (because they might have been
+            // different in the past for the printed Quittung), but from the corresponding
+            // TSE table where the status values are contained for each Tagesabrechnung
             if (tse.inUse()) {
                 tseStatusValues = tse.getTSEStatusValues();
             }
