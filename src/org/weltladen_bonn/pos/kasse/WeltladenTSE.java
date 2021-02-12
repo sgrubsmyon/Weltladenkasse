@@ -1619,63 +1619,64 @@ public class WeltladenTSE extends WindowContent {
             logger.debug("!!! TSE FAILED !!! TX end time determined by Kasse: {}", tx.endTimeString);
             logger.debug("!!! TSE FAILED !!! TX processType: {}", tx.processType);
             logger.debug("!!! TSE FAILED !!! TX processData: {}", tx.processData);
-            return "OK"; // this is "normal" when TSE has failed, so return "OK", tx.tseError has already been set
-        }
-        try {
-            if (tx.txNumber != null) {
-                FinishTransactionResult result = tse.finishTransaction(bc.Z_KASSE_ID, tx.txNumber, processData.getBytes(), tx.processType, null);
-                tx.endTimeUnix = result.logTime;
-                tx.endTimeString = unixTimeToCalTime(result.logTime);
-                tx.sigCounter = result.signatureCounter;
-                tx.signatureBase64 = byteArrayToBase64String(result.signatureValue);
-                logger.debug("Finishing transaction:");
-                logger.debug("Rechnungsnummer: {}", tx.rechnungsNr);
-                logger.debug("TX number: {}", tx.txNumber);
-                logger.debug("TX start time: {}", tx.startTimeString);
-                logger.debug("TX end time: {}", tx.endTimeString);
-                logger.debug("TX processType: {}", tx.processType);
-                logger.debug("TX processData: {}", tx.processData);
-                logger.debug("TX sig counter: {}", tx.sigCounter);
-                logger.debug("TX signature base64: {}", tx.signatureBase64);
-                logger.debug("Number of open transactions: {}", tse.getCurrentNumberOfTransactions());
+            message = "OK"; // this is "normal" when TSE has failed, so return "OK", tx.tseError has already been set
+        } else {
+            try {
+                if (tx.txNumber != null) {
+                    FinishTransactionResult result = tse.finishTransaction(bc.Z_KASSE_ID, tx.txNumber, processData.getBytes(), tx.processType, null);
+                    tx.endTimeUnix = result.logTime;
+                    tx.endTimeString = unixTimeToCalTime(result.logTime);
+                    tx.sigCounter = result.signatureCounter;
+                    tx.signatureBase64 = byteArrayToBase64String(result.signatureValue);
+                    logger.debug("Finishing transaction:");
+                    logger.debug("Rechnungsnummer: {}", tx.rechnungsNr);
+                    logger.debug("TX number: {}", tx.txNumber);
+                    logger.debug("TX start time: {}", tx.startTimeString);
+                    logger.debug("TX end time: {}", tx.endTimeString);
+                    logger.debug("TX processType: {}", tx.processType);
+                    logger.debug("TX processData: {}", tx.processData);
+                    logger.debug("TX sig counter: {}", tx.sigCounter);
+                    logger.debug("TX signature base64: {}", tx.signatureBase64);
+                    logger.debug("Number of open transactions: {}", tse.getCurrentNumberOfTransactions());
+                }
+                message = "OK";
+            } catch (ErrorFinishTransactionFailed ex) {
+                message = "Start transaction failed";
+                logger.fatal("Fatal Error: {}", message);
+                logger.fatal("Exception:", ex);
+            } catch (ErrorNoTransaction ex) {
+                message = "No transaction (transaction number wrong)";
+                logger.fatal("Fatal Error: {}", message);
+                logger.fatal("Exception:", ex);
+            } catch (ErrorRetrieveLogMessageFailed ex) {
+                message = "Retrieve log message failed";
+                logger.fatal("Fatal Error: {}", message);
+                logger.fatal("Exception:", ex);
+            } catch (ErrorStorageFailure ex) {
+                message = "Storage failure";
+                logger.fatal("Fatal Error: {}", message);
+                logger.fatal("Exception:", ex);
+            } catch (ErrorSeApiNotInitialized ex) {
+                message = "SE API not initialized";
+                logger.fatal("Fatal Error: {}", message);
+                logger.fatal("Exception:", ex);
+            } catch (ErrorTimeNotSet ex) {
+                message = "Time not set";
+                logger.fatal("Fatal Error: {}", message);
+                logger.fatal("Exception:", ex);
+            } catch (ErrorCertificateExpired ex) {
+                message = "Certificate expired";
+                logger.fatal("Fatal Error: {}", message);
+                logger.fatal("Exception:", ex);
+            } catch (ErrorSecureElementDisabled ex) {
+                message = "Secure Element disabled";
+                logger.fatal("Fatal Error: {}", message);
+                logger.fatal("Exception:", ex);
+            } catch (SEException ex) {
+                message = "Unknown error during startTransaction(): "+ex.getMessage();
+                logger.fatal("Fatal Error: {}", message);
+                logger.fatal("Exception:", ex);
             }
-            message = "OK";
-        } catch (ErrorFinishTransactionFailed ex) {
-            message = "Start transaction failed";
-            logger.fatal("Fatal Error: {}", message);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorNoTransaction ex) {
-            message = "No transaction (transaction number wrong)";
-            logger.fatal("Fatal Error: {}", message);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorRetrieveLogMessageFailed ex) {
-            message = "Retrieve log message failed";
-            logger.fatal("Fatal Error: {}", message);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorStorageFailure ex) {
-            message = "Storage failure";
-            logger.fatal("Fatal Error: {}", message);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorSeApiNotInitialized ex) {
-            message = "SE API not initialized";
-            logger.fatal("Fatal Error: {}", message);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorTimeNotSet ex) {
-            message = "Time not set";
-            logger.fatal("Fatal Error: {}", message);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorCertificateExpired ex) {
-            message = "Certificate expired";
-            logger.fatal("Fatal Error: {}", message);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorSecureElementDisabled ex) {
-            message = "Secure Element disabled";
-            logger.fatal("Fatal Error: {}", message);
-            logger.fatal("Exception:", ex);
-        } catch (SEException ex) {
-            message = "Unknown error during startTransaction(): "+ex.getMessage();
-            logger.fatal("Fatal Error: {}", message);
-            logger.fatal("Exception:", ex);
         }
         if (message != "OK") {
             tx.tseError = message;
