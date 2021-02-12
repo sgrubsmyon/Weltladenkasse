@@ -259,3 +259,13 @@ CREATE TABLE tse_transaction (
     FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 GRANT INSERT ON kasse.tse_transaction TO 'mitarbeiter'@'localhost';
+
+-- ---------------
+-- Artikelmenge --
+-- ---------------
+
+-- New Quittung format (2 rows per article) also prints "Menge",
+-- so set it to sensible values for internal articles (NULL, so
+-- that nothing is printed)
+
+UPDATE artikel SET menge = NULL, einheit = NULL WHERE artikel_id < 10; -- artikel_id from 1 up to 9 is internal articles like Rabatt and Pfand
