@@ -85,15 +85,7 @@ public class Quittung extends WindowContent {
         this.tx = transaction;
         this.tseStatusValues = tseStatusValues;
 
-        logger.debug("TSE TX number: {}", tx.txNumber);
-        logger.debug("TSE TX start time: {}", tx.startTimeString);
-        logger.debug("TSE TX end time: {}", tx.endTimeString);
-        logger.debug("TSE TX processType: {}", tx.processType);
-        logger.debug("TSE TX processData: {}", tx.processData);
-        logger.debug("TSE TX sig counter: {}", tx.sigCounter);
-        logger.debug("TSE TX signature base64: {}", tx.signatureBase64);
-
-        printQuittungWithEscPos();
+        // printQuittungWithEscPos();
         // writeQuittungToDeviceFile();
     }
 
@@ -237,20 +229,16 @@ public class Quittung extends WindowContent {
 
     private void insertTSEValues(Sheet sheet, int continueAtRow) {
         int row = continueAtRow + 1; // leave one row empty for spacing
-        if (tseStatusValues != null) { // means TSE has failed
-            sheet.setValueAt("--- TSE ---", 0, row);
-        } else {
+        if (tx != null && tx.tseError != null) { // means TSE has failed
             sheet.setValueAt("--- TSE ausgefallen!!! ---", 0, row);
+        } else {
+            sheet.setValueAt("--- TSE ---", 0, row);
+
         }
         row++;
         if (tx == null) {
             sheet.setValueAt("TSE-Daten nicht verfügbar", 0, row);
         } else {
-            if (tx.txNumber != null) {
-                sheet.setValueAt("Transaktionsnr.:", 0, row);
-                sheet.setValueAt(tx.txNumber, 4, row);
-                row++;
-            }
             sheet.setValueAt("Start:", 0, row);
             String dateString = "???";
             try {
@@ -271,16 +259,21 @@ public class Quittung extends WindowContent {
             }
             sheet.setValueAt(dateString, 4, row);
             row++;
-            sheet.setValueAt("Kassen-Seriennr. (clientID):", 0, row);
-            row++;
-            sheet.setValueAt(bc.Z_KASSE_ID, 4, row);
-            if (tseStatusValues != null) {
+            if (tx.tseError == null) { // if TSE has not failed
+                sheet.setValueAt("Transaktionsnr.:", 0, row);
+                sheet.setValueAt(tx.txNumber, 4, row);
                 row++;
-                sheet.setValueAt("TSE-Seriennr.:", 0, row);
-                row = spreadTextOverSeveralRows(
-                    sheet, tseStatusValues.get("Seriennummer der TSE (Hex)"),
-                    4, row, 10, 30
-                );
+                sheet.setValueAt("Kassen-Seriennr. (clientID):", 0, row);
+                row++;
+                sheet.setValueAt(bc.Z_KASSE_ID, 4, row);
+                if (tseStatusValues != null) {
+                    row++;
+                    sheet.setValueAt("TSE-Seriennr.:", 0, row);
+                    row = spreadTextOverSeveralRows(
+                        sheet, tseStatusValues.get("Seriennummer der TSE (Hex)"),
+                        4, row, 10, 30
+                    );
+                }
             }
         }
     }
