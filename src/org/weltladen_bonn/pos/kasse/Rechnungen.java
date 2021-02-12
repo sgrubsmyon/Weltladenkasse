@@ -82,8 +82,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     /**
      *    The constructor.
      *       */
-    public Rechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw, String fs, String ts)
-    {
+    public Rechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw, String fs, String ts) {
 	    super(pool, mw);
         if (mw instanceof MainWindow) {
             MainWindow mainw = (MainWindow) mw;
@@ -97,80 +96,80 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    fillDataArray();
     }
 
-    void fillDataArray(){
-	this.data = new Vector< Vector<Object> >();
-	this.dates = new Vector<String>();
-	overviewLabels = new Vector<String>();
-	overviewLabels.add("");
-	overviewLabels.add("Rechnungs-Nr."); overviewLabels.add("Betrag");
-        overviewLabels.add("Zahlung"); overviewLabels.add("Kunde gibt");
-        overviewLabels.add("Datum");
-	overviewLabels.add("");
-	try {
-        Connection connection = this.pool.getConnection();
-	    // Create statement for MySQL database
-	    Statement stmt = connection.createStatement();
-	    // Run MySQL command
-	    ResultSet rs = stmt.executeQuery(
-		    "SELECT COUNT(*) FROM verkauf " +
-		    filterStr
-		    );
-	    // Now do something with the ResultSet ...
-	    rs.next();
-	    rechnungsZahl = rs.getString(1);
-	    rechnungsZahlInt = Integer.parseInt(rechnungsZahl);
-	    totalPage = rechnungsZahlInt/bc.rowsPerPage + 1;
-            if (currentPage > totalPage) {
-                currentPage = totalPage;
-            }
-	    rs.close();
-	    rs = stmt.executeQuery(
-		    "SELECT vd.rechnungs_nr, SUM(vd.ges_preis) AS rechnungs_betrag, "+
-            "verkauf.ec_zahlung, verkauf.kunde_gibt, " +
-		    "DATE_FORMAT(verkauf.verkaufsdatum, '"+bc.dateFormatSQL+"'), " +
-		    "verkauf.verkaufsdatum " +
-		    "FROM verkauf_details AS vd " +
-            "INNER JOIN verkauf USING (rechnungs_nr) " +
-		    filterStr +
-		    "GROUP BY vd.rechnungs_nr " +
-		    "ORDER BY vd.rechnungs_nr DESC " +
-		    "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
-		    );
-	    // Now do something with the ResultSet ...
-	    while (rs.next()) {
-		Vector<Object> row = new Vector<Object>();
-		row.add("");
-		row.add(rs.getString(1));
-                String p = bc.priceFormatter(rs.getString(2));
-                if (!p.equals("")) p += ' ' + bc.currencySymbol;
-                row.add(p);
-                row.add(rs.getBoolean(3) ? "EC" : "Bar");
-                p = bc.priceFormatter(rs.getString(4));
-                if (!p.equals("")) p += ' ' + bc.currencySymbol;
-                row.add(p);
-                row.add(rs.getString(5));
-		row.add("");
-		data.add(row);
+    void fillDataArray() {
+        this.data = new Vector< Vector<Object> >();
+        this.dates = new Vector<String>();
+        overviewLabels = new Vector<String>();
+        overviewLabels.add("");
+        overviewLabels.add("Rechnungs-Nr."); overviewLabels.add("Betrag");
+            overviewLabels.add("Zahlung"); overviewLabels.add("Kunde gibt");
+            overviewLabels.add("Datum");
+        overviewLabels.add("");
+        try {
+            Connection connection = this.pool.getConnection();
+            // Create statement for MySQL database
+            Statement stmt = connection.createStatement();
+            // Run MySQL command
+            ResultSet rs = stmt.executeQuery(
+                "SELECT COUNT(*) FROM verkauf " +
+                filterStr
+                );
+            // Now do something with the ResultSet ...
+            rs.next();
+            rechnungsZahl = rs.getString(1);
+            rechnungsZahlInt = Integer.parseInt(rechnungsZahl);
+            totalPage = rechnungsZahlInt/bc.rowsPerPage + 1;
+                if (currentPage > totalPage) {
+                    currentPage = totalPage;
+                }
+            rs.close();
+            rs = stmt.executeQuery(
+                "SELECT vd.rechnungs_nr, SUM(vd.ges_preis) AS rechnungs_betrag, "+
+                "verkauf.ec_zahlung, verkauf.kunde_gibt, " +
+                "DATE_FORMAT(verkauf.verkaufsdatum, '"+bc.dateFormatSQL+"'), " +
+                "verkauf.verkaufsdatum " +
+                "FROM verkauf_details AS vd " +
+                "INNER JOIN verkauf USING (rechnungs_nr) " +
+                filterStr +
+                "GROUP BY vd.rechnungs_nr " +
+                "ORDER BY vd.rechnungs_nr DESC " +
+                "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
+                );
+            // Now do something with the ResultSet ...
+            while (rs.next()) {
+            Vector<Object> row = new Vector<Object>();
+            row.add("");
+            row.add(rs.getString(1));
+                    String p = bc.priceFormatter(rs.getString(2));
+                    if (!p.equals("")) p += ' ' + bc.currencySymbol;
+                    row.add(p);
+                    row.add(rs.getBoolean(3) ? "EC" : "Bar");
+                    p = bc.priceFormatter(rs.getString(4));
+                    if (!p.equals("")) p += ' ' + bc.currencySymbol;
+                    row.add(p);
+                    row.add(rs.getString(5));
+            row.add("");
+            data.add(row);
 
-                dates.add(rs.getString(6));
-	    }
-	    rs.close();
-	    stmt.close();
-        connection.close();
-	} catch (SQLException ex) {
-	    logger.error("Exception:", ex);
-        showDBErrorDialog(ex.getMessage());
-	}
-	myTable = new AnyJComponentJTable(this.data, overviewLabels);
-//	myTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
-//	myTable.setFillsViewportHeight(true);
+                    dates.add(rs.getString(6));
+            }
+            rs.close();
+            stmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        myTable = new AnyJComponentJTable(this.data, overviewLabels);
+    //	myTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
+    //	myTable.setFillsViewportHeight(true);
     }
 
     abstract void addOtherStuff();
 
     abstract void addButtonsToTable();
 
-    void showTable(){
+    void showTable() {
         allPanel = new JPanel(new BorderLayout());
         allPanel.setBorder(BorderFactory.createTitledBorder(titleStr));
             headerPanel = new JPanel();
@@ -332,12 +331,12 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         // clear everything:
         this.remove(allPanel);
         this.revalidate();
-            kassierArtikel.clear();
-            mwsts.clear();
+        kassierArtikel.clear();
+        mwsts.clear();
 
         allPanel = new JPanel(new BorderLayout());
         allPanel.setBorder(BorderFactory.createTitledBorder(detailTitleStr));
-            headerPanel = new JPanel();
+        headerPanel = new JPanel();
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.PAGE_AXIS));
 
         // First row: Show total of invoice
@@ -346,25 +345,25 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         //coolRow.set(coolRow.size()-1, "");
         Vector<Vector<Object>> overviewData = new Vector<Vector<Object>>(1);
         overviewData.add(coolRow);
-            zahlungsModus = coolRow.get(3).toString().toLowerCase();
-            try {
-                kundeGibt = new BigDecimal( bc.priceFormatterIntern(coolRow.get(4).toString()) );
-            } catch (NumberFormatException ex) {
-                kundeGibt = null;
-            }
+        zahlungsModus = coolRow.get(3).toString().toLowerCase();
+        try {
+            kundeGibt = new BigDecimal( bc.priceFormatterIntern(coolRow.get(4).toString()) );
+        } catch (NumberFormatException ex) {
+            kundeGibt = null;
+        }
         datum = this.dates.get(detailRow);
         rechnungsNr = Integer.parseInt(coolRow.get(1).toString());
 
-            AnyJComponentJTable overviewTable = new AnyJComponentJTable(overviewData, overviewLabels){
-                private static final long serialVersionUID = 1L;
+        AnyJComponentJTable overviewTable = new AnyJComponentJTable(overviewData, overviewLabels){
+            private static final long serialVersionUID = 1L;
 
-                public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-                    Component c = super.prepareRenderer(renderer, row, column);
-                    // add custom rendering here
-                    c.setForeground(Color.black); // keep it black
-                    return c;
-                }
-            };
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                Component c = super.prepareRenderer(renderer, row, column);
+                // add custom rendering here
+                c.setForeground(Color.black); // keep it black
+                return c;
+            }
+        };
         backButton.addActionListener(this);
         overviewTable.setValueAt( backButton, 0, 0 );
         overviewTable.setValueAt( myTable.getValueAt(detailRow,overviewLabels.size()-1), 0, overviewLabels.size()-1 );
@@ -417,21 +416,21 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     }
 
     protected void setOverviewTableProperties(AnyJComponentJTable table){
-	// Spalteneigenschaften:
-	table.getColumnModel().getColumn(0).setPreferredWidth(10);
-	TableColumn rechnr = table.getColumn("Rechnungs-Nr.");
-	rechnr.setCellRenderer(rechtsAusrichter);
-	rechnr.setPreferredWidth(50);
-	TableColumn betrag = table.getColumn("Betrag");
-	betrag.setCellRenderer(rechtsAusrichter);
-	TableColumn zahlung = table.getColumn("Zahlung");
-	zahlung.setCellRenderer(rechtsAusrichter);
-	TableColumn kgibt = table.getColumn("Kunde gibt");
-	kgibt.setCellRenderer(rechtsAusrichter);
-	TableColumn datum = table.getColumn("Datum");
-	datum.setCellRenderer(rechtsAusrichter);
-	datum.setPreferredWidth(100);
-	table.getColumnModel().getColumn(overviewLabels.size()-1).setPreferredWidth(20);
+        // Spalteneigenschaften:
+        table.getColumnModel().getColumn(0).setPreferredWidth(10);
+        TableColumn rechnr = table.getColumn("Rechnungs-Nr.");
+        rechnr.setCellRenderer(rechtsAusrichter);
+        rechnr.setPreferredWidth(50);
+        TableColumn betrag = table.getColumn("Betrag");
+        betrag.setCellRenderer(rechtsAusrichter);
+        TableColumn zahlung = table.getColumn("Zahlung");
+        zahlung.setCellRenderer(rechtsAusrichter);
+        TableColumn kgibt = table.getColumn("Kunde gibt");
+        kgibt.setCellRenderer(rechtsAusrichter);
+        TableColumn datum = table.getColumn("Datum");
+        datum.setCellRenderer(rechtsAusrichter);
+        datum.setPreferredWidth(100);
+        table.getColumnModel().getColumn(overviewLabels.size()-1).setPreferredWidth(20);
     }
 
     /**
@@ -470,27 +469,27 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             return;
         }
         if (e.getSource() == quittungsButton){
-                TreeMap<BigDecimal, Vector<BigDecimal>> mwstValues = calculateMwStValuesInRechnung();
-                BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
-                BigDecimal rueckgeld = null;
-                if (kundeGibt != null){
-                    rueckgeld = kundeGibt.subtract(totalPrice);
-                }
-                DateTime datet = null;
-                if (!datum.equals(""))
-                    datet = new DateTime(datum);
-                else
-                    datet = new DateTime(now());
-                TSETransaction tx = tse.getTransactionByRechNr(rechnungsNr);
-                LinkedHashMap<String, String> tseStatusValues = null;
-                if (tse.inUse()) {
-                    tseStatusValues = tse.getTSEStatusValues();
-                }
-                Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
-                        datet, rechnungsNr, kassierArtikel,
-                        mwstValues, zahlungsModus,
-                        totalPrice, kundeGibt, rueckgeld, tx, tseStatusValues);
-                myQuittung.printReceipt();
+            TreeMap<BigDecimal, Vector<BigDecimal>> mwstValues = calculateMwStValuesInRechnung();
+            BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
+            BigDecimal rueckgeld = null;
+            if (kundeGibt != null){
+                rueckgeld = kundeGibt.subtract(totalPrice);
+            }
+            DateTime datet = null;
+            if (!datum.equals(""))
+                datet = new DateTime(datum);
+            else
+                datet = new DateTime(now());
+            TSETransaction tx = tse.getTransactionByRechNr(rechnungsNr);
+            LinkedHashMap<String, String> tseStatusValues = null;
+            if (tse.inUse()) {
+                tseStatusValues = tse.getTSEStatusValues();
+            }
+            Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
+                    datet, rechnungsNr, kassierArtikel,
+                    mwstValues, zahlungsModus,
+                    totalPrice, kundeGibt, rueckgeld, tx, tseStatusValues);
+            myQuittung.printReceipt();
             return;
         }
     }
