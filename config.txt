@@ -1,5 +1,5 @@
+operationMode = normal
 mysqlHost = mangopi
-#mysqlHost = localhost
 mysqlPath =
 sofficePath =
 printerName = quittungsdrucker

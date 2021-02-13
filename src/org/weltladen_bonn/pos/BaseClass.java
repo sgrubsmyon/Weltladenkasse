@@ -21,6 +21,7 @@ public class BaseClass {
 
     // configurable parameters (set default values here, overwritten later when parsing config.txt):
     public String currencySymbol = "€";
+    public String operationMode = "normal"; /** either 'normal' or 'training' (TSE logs transactions explicitly as AVTraining and they are written to special SQL table) */
     public String mysqlHost = "localhost"; /** hostname of mysql server */
     public String mysqlPath = ""; /** path where mysql and mysqldump lie around */
     public String sofficePath = ""; /** path where soffice lies around */
@@ -216,6 +217,9 @@ public class BaseClass {
         }
         try { this.currencySymbol = props.getProperty("currencySymbol"); } catch (Exception ex) {
             parseErrorMessage(ex, "currencySymbol", this.currencySymbol);
+        }
+        try { this.operationMode = props.getProperty("operationMode"); } catch (Exception ex) {
+            parseErrorMessage(ex, "operationMode", this.operationMode);
         }
         try { this.mysqlHost = props.getProperty("mysqlHost"); } catch (Exception ex) {
             parseErrorMessage(ex, "mysqlHost", this.mysqlHost);
