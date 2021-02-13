@@ -1,4 +1,4 @@
-#mysqlHost = mangopi
+operationMode = normal
 mysqlHost = localhost
 mysqlPath =
 sofficePath =

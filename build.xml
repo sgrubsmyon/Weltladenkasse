@@ -31,6 +31,7 @@
     <target name="convert" depends="copy" description="convert properties files">
         <native2ascii encoding="UTF-8" src="." dest="." includes="config.txt" ext=".properties"/>
         <native2ascii encoding="UTF-8" src="." dest="." includes="config_local.txt" ext=".properties"/>
+        <native2ascii encoding="UTF-8" src="." dest="." includes="config_training.txt" ext=".properties"/>
         <native2ascii encoding="UTF-8" src="." dest="." includes="config_Windows.txt" ext=".properties"/>
     </target>
 

@@ -1732,11 +1732,7 @@ public class WeltladenTSE extends WindowContent {
         steuer_durchschnitt_nr3 = steuer_durchschnitt_nr3 == null ? new BigDecimal("0.00") : steuer_durchschnitt_nr3;
         steuer_durchschnitt_nr1 = steuer_durchschnitt_nr1 == null ? new BigDecimal("0.00") : steuer_durchschnitt_nr1;
         steuer_null = steuer_null == null ? new BigDecimal("0.00") : steuer_null;
-        String processData = "Beleg^";
-        // processData += String.format("%s_%s_%s_%s_%s^",
-        //     bc.priceFormatterIntern(steuer_allgemein), bc.priceFormatterIntern(steuer_ermaessigt),
-        //     bc.priceFormatterIntern(steuer_durchschnitt_nr3), bc.priceFormatterIntern(steuer_durchschnitt_nr1),
-        //     bc.priceFormatterIntern(steuer_null));
+        String processData = bc.operationMode.equals("normal") ? "Beleg^" : "AVTraining^";
         processData += String.format("%.2f_%.2f_%.2f_%.2f_%.2f^", steuer_allgemein, steuer_ermaessigt,
             steuer_durchschnitt_nr3, steuer_durchschnitt_nr1, steuer_null);
 
