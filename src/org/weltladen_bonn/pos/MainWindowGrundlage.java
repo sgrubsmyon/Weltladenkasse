@@ -79,6 +79,9 @@ public abstract class MainWindowGrundlage extends JFrame {
         this.getContentPane().add(holdAll, BorderLayout.CENTER);
     }
 
+    protected String tableForMode(String tableName) {
+        return bc.operationMode.equals("normal") ? tableName : "training_"+tableName;
+    }
 
     public BigDecimal retrieveKassenstand() {
         BigDecimal ks = new BigDecimal("0.00");

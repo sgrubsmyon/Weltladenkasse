@@ -28,9 +28,10 @@ public class StornierteRechnungen extends Rechnungen {
      *    The constructor.
      *       */
     public StornierteRechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw){
-        super(pool, mw, "WHERE "+tableForMode("verkauf")+".storniert = TRUE AND " +
-                tableForMode("verkauf")+".rechnungs_nr > IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) ",
-                "Stornierte Rechnungen");
+        super(pool, mw, "", "Stornierte Rechnungen");
+        setFilterStr("WHERE "+tableForMode("verkauf")+".storniert = TRUE AND " +
+            tableForMode("verkauf")+".rechnungs_nr > "+
+            "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) ");
         showTable();
     }
 

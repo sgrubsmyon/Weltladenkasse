@@ -49,7 +49,7 @@ public class AbrechnungenJahr extends Abrechnungen {
      *       */
     public AbrechnungenJahr(MariaDbPoolDataSource pool, MainWindowGrundlage mw){
         super(pool, mw, "", "Jahresabrechnung", "yyyy", "yyyy",
-                "jahr", tableForMode("abrechnung_jahr"));
+                "jahr", "abrechnung_jahr");
         this.setExportDirFormat(bc.exportDirAbrechnungJahr);
         showTable();
     }
@@ -133,10 +133,10 @@ public class AbrechnungenJahr extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM "+tableForMode("abrechnung_tag_mwst")+" "+
-                    "INNER JOIN "+tableForMode("abrechnung_tag")+" USING (id) "+
-                    "WHERE id >= ? AND id <= ? GROUP BY mwst_satz"
-                    );
+                "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM "+tableForMode("abrechnung_tag_mwst")+" "+
+                "INNER JOIN "+tableForMode("abrechnung_tag")+" USING (id) "+
+                "WHERE id >= ? AND id <= ? GROUP BY mwst_satz"
+            );
             pstmt.setInt(1, minID);
             pstmt.setInt(2, maxID);
             ResultSet rs = pstmt.executeQuery();
@@ -232,6 +232,7 @@ public class AbrechnungenJahr extends Abrechnungen {
         }
     }
 
+    @Override
     void queryIncompleteAbrechnung() { // create new abrechnung (for display) from time of last abrechnung until now
         try {
             Connection connection = this.pool.getConnection();

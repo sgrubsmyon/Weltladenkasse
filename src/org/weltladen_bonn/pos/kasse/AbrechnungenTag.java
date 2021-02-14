@@ -78,7 +78,7 @@ class AbrechnungenTag extends Abrechnungen {
      *       */
     AbrechnungenTag(MariaDbPoolDataSource pool, MainWindowGrundlage mw, AbrechnungenTabbedPane atp, TabbedPane tp, Integer exportIndex){
         super(pool, mw, "", "Tagesabrechnung", "yyyy-MM-dd HH:mm:ss", "dd.MM. HH:mm (E)",
-                "zeitpunkt", tableForMode("abrechnung_tag"));
+                "zeitpunkt", "abrechnung_tag");
         if (mw instanceof MainWindow) {
             MainWindow mainw = (MainWindow) mw;
             tse = mainw.getTSE();
@@ -354,7 +354,6 @@ class AbrechnungenTag extends Abrechnungen {
         queryStornosRetourenEntnahmen();
         queryZaehlprotokoll();
     }
-
 
     @Override
     void queryIncompleteAbrechnung() { // create new abrechnung (for display) from time of last abrechnung until now
