@@ -92,12 +92,11 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         }
         filterStr = fs;
         titleStr = ts;
-
-	    fillDataArray();
     }
 
     protected void setFilterStr(String fs) {
         filterStr = fs;
+        fillDataArray();
     }
 
     void fillDataArray() {
@@ -115,7 +114,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             Statement stmt = connection.createStatement();
             // Run MySQL command
             ResultSet rs = stmt.executeQuery(
-                "SELECT COUNT(*) FROM "+tableForMode("verkauf")+" " +
+                "SELECT COUNT(*) FROM "+tableForMode("verkauf")+" AS v " +
                 filterStr
                 );
             // Now do something with the ResultSet ...
