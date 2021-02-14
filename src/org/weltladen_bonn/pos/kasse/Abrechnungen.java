@@ -161,11 +161,12 @@ public abstract class Abrechnungen extends WindowContent {
 
             // first, get the totals:
             // Gesamt Brutto
+            logger.debug("table for mode: {}", tableForMode("verkauf_details"));
             ResultSet rs = stmt.executeQuery(
                     "SELECT SUM(ges_preis) AS ges_brutto " +
-                    "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
+                    "FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
                     "WHERE storniert = FALSE AND rechnungs_nr > " +
-                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) "
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) "
                     );
             rs.next();
                 BigDecimal tagesGesamtBrutto =
@@ -174,9 +175,9 @@ public abstract class Abrechnungen extends WindowContent {
             // Gesamt Bar Brutto
             rs = stmt.executeQuery(
                     "SELECT SUM(ges_preis) AS ges_bar_brutto " +
-                    "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
+                    "FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
                     "WHERE storniert = FALSE AND rechnungs_nr > " +
-                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) AND ec_zahlung = FALSE "
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) AND ec_zahlung = FALSE "
                     );
             rs.next();
                 BigDecimal tagesGesamtBarBrutto =
@@ -211,24 +212,24 @@ public abstract class Abrechnungen extends WindowContent {
                 // https://de.wikipedia.org/wiki/Rundung)
                     //"SELECT mwst_satz, SUM( ROUND(ges_preis / (1.+mwst_satz), 2) ) AS mwst_netto, " +
                     //"SUM( ROUND(ges_preis / (1. + mwst_satz) * mwst_satz, 2) ) AS mwst_betrag " +
-                    //"FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
+                    //"FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
                     //"WHERE storniert = FALSE AND rechnungs_nr > " +
-                    //"IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) " +
+                    //"IFNULL((SELECT MAX(rechnungs_nr_bis) FROM +"tableForMode("abrechnung_tag")+"), 0) " +
                     //"GROUP BY mwst_satz"
                 // NEW: ROUND OF SUM
                     //"SELECT mwst_satz, SUM( ges_preis / (1.+mwst_satz) ) AS mwst_netto, " +
                     //"SUM( ges_preis / (1. + mwst_satz) * mwst_satz ) AS mwst_betrag " +
-                    //"FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
+                    //"FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
                     //"WHERE storniert = FALSE AND rechnungs_nr > " +
-                    //"IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) " +
+                    //"IFNULL((SELECT MAX(rechnungs_nr_bis) FROM +"tableForMode("abrechnung_tag")+"), 0) " +
                     //"GROUP BY mwst_satz"
                 // NEWER: Da für jede Rechnung einzeln summiert (und dann gerundet) werden müsste,
                 // ist es einfacher (und auch sicherer), die gerundete MwSt.-Information separat für jede
                 // Rechnung zu speichern (in Tabelle `verkauf_mwst`) und nur noch darüber zu summieren
                     "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag) "+
-                    "FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) "+
+                    "FROM "+tableForMode("verkauf_mwst")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) "+
                     "WHERE storniert = FALSE AND rechnungs_nr > " +
-                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) " +
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM +"tableForMode("abrechnung_tag")+"), 0) " +
                     "GROUP BY mwst_satz"
                     );
             while (rs.next()) {

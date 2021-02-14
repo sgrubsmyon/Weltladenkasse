@@ -111,7 +111,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             Statement stmt = connection.createStatement();
             // Run MySQL command
             ResultSet rs = stmt.executeQuery(
-                "SELECT COUNT(*) FROM verkauf " +
+                "SELECT COUNT(*) FROM "+tableForMode("verkauf")+" " +
                 filterStr
                 );
             // Now do something with the ResultSet ...
@@ -125,11 +125,11 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             rs.close();
             rs = stmt.executeQuery(
                 "SELECT vd.rechnungs_nr, SUM(vd.ges_preis) AS rechnungs_betrag, "+
-                "verkauf.ec_zahlung, verkauf.kunde_gibt, " +
-                "DATE_FORMAT(verkauf.verkaufsdatum, '"+bc.dateFormatSQL+"'), " +
-                "verkauf.verkaufsdatum " +
-                "FROM verkauf_details AS vd " +
-                "INNER JOIN verkauf USING (rechnungs_nr) " +
+                "v.ec_zahlung, v.kunde_gibt, " +
+                "DATE_FORMAT(v.verkaufsdatum, '"+bc.dateFormatSQL+"'), " +
+                "v.verkaufsdatum " +
+                "FROM "+tableForMode("verkauf_details")+" AS vd " +
+                "INNER JOIN "+tableForMode("verkauf")+" AS v USING (rechnungs_nr) " +
                 filterStr +
                 "GROUP BY vd.rechnungs_nr " +
                 "ORDER BY vd.rechnungs_nr DESC " +
@@ -227,7 +227,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 "(p.toplevel_id IS NULL AND p.sub_id = 1 AND a.artikel_id = 2) AS rechnung_rabatt, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
                 "vd.stueckzahl, vd.ges_preis, vd.mwst_satz " +
-                "FROM verkauf_details AS vd LEFT JOIN artikel AS a USING (artikel_id) " +
+                "FROM "+tableForMode("verkauf_details")+" AS vd LEFT JOIN artikel AS a USING (artikel_id) " +
                 "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
                 "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
                 "WHERE vd.rechnungs_nr = ?"
