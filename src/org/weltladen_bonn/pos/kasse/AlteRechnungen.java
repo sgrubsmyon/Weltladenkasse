@@ -65,8 +65,10 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
      * The constructor.
      */
     public AlteRechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw) {
-        super(pool, mw, "WHERE "+tableForMode("verkauf")+".rechnungs_nr <= (SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+") AND "+
-              tableForMode("verkauf")+".storniert = FALSE ", "Alte Rechnungen");
+        super(pool, mw, "", "Alte Rechnungen");
+        setFilterStr("WHERE "+tableForMode("verkauf")+".rechnungs_nr <= "+
+            "(SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+") AND "+
+            tableForMode("verkauf")+".storniert = FALSE ");
         queryEarliestRechnung();
         initiateSpinners();
         showTable();

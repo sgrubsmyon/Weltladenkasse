@@ -96,6 +96,10 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 	    fillDataArray();
     }
 
+    protected void setFilterStr(String fs) {
+        filterStr = fs;
+    }
+
     void fillDataArray() {
         this.data = new Vector< Vector<Object> >();
         this.dates = new Vector<String>();

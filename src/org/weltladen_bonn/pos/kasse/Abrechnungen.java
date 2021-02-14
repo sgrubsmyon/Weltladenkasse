@@ -78,16 +78,16 @@ public abstract class Abrechnungen extends WindowContent {
     JButton nextButton;
     private Vector<JButton> exportButtons;
     private Vector<String> abrechnungsDates;
-    Vector<Integer> abrechnungsIDs;
+    protected Vector<Integer> abrechnungsIDs;
     private Vector< Vector<BigDecimal> > abrechnungsTotals;
     protected Vector< HashMap<BigDecimal, Vector<BigDecimal>> > abrechnungsVATs;
-    String incompleteAbrechnungsDate;
-    Vector<BigDecimal> incompleteAbrechnungsTotals;
-    HashMap<BigDecimal, Vector<BigDecimal>> incompleteAbrechnungsVATs;
-    TreeSet<BigDecimal> mwstSet;
+    protected String incompleteAbrechnungsDate;
+    protected Vector<BigDecimal> incompleteAbrechnungsTotals;
+    protected HashMap<BigDecimal, Vector<BigDecimal>> incompleteAbrechnungsVATs;
+    protected TreeSet<BigDecimal> mwstSet;
     protected Vector< Vector<Object> > data;
     protected Vector< Vector<Color> > colors;
-    Vector< Vector<String> > fontStyles;
+    protected Vector< Vector<String> > fontStyles;
     protected Vector<String> columnLabels;
     private int abrechnungsZahl;
     private FileExistsAwareFileChooser odsChooser;
@@ -106,7 +106,7 @@ public abstract class Abrechnungen extends WindowContent {
         dateInFormat = dif;
         dateOutFormat = dof;
         timeName = tn;
-        abrechnungsTableName = atn;
+        abrechnungsTableName = tableForMode(atn);
 
         //footerPanel = new JPanel();
         //footerPanel.setLayout(new FlowLayout());
@@ -169,8 +169,8 @@ public abstract class Abrechnungen extends WindowContent {
                     "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) "
                     );
             rs.next();
-                BigDecimal tagesGesamtBrutto =
-                    new BigDecimal(rs.getString(1) == null ? "0" : rs.getString(1));
+            BigDecimal tagesGesamtBrutto =
+                new BigDecimal(rs.getString(1) == null ? "0" : rs.getString(1));
             rs.close();
             // Gesamt Bar Brutto
             rs = stmt.executeQuery(
@@ -180,8 +180,8 @@ public abstract class Abrechnungen extends WindowContent {
                     "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) AND ec_zahlung = FALSE "
                     );
             rs.next();
-                BigDecimal tagesGesamtBarBrutto =
-                    new BigDecimal(rs.getString(1) == null ?  "0" : rs.getString(1));
+            BigDecimal tagesGesamtBarBrutto =
+                new BigDecimal(rs.getString(1) == null ?  "0" : rs.getString(1));
             rs.close();
             // Gesamt EC Brutto
             BigDecimal tagesGesamtECBrutto = tagesGesamtBrutto.subtract(tagesGesamtBarBrutto);
@@ -229,7 +229,7 @@ public abstract class Abrechnungen extends WindowContent {
                     "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag) "+
                     "FROM "+tableForMode("verkauf_mwst")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) "+
                     "WHERE storniert = FALSE AND rechnungs_nr > " +
-                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM +"tableForMode("abrechnung_tag")+"), 0) " +
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) " +
                     "GROUP BY mwst_satz"
                     );
             while (rs.next()) {

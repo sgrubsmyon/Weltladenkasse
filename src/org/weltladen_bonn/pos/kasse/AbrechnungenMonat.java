@@ -49,7 +49,7 @@ public class AbrechnungenMonat extends Abrechnungen {
      *       */
     public AbrechnungenMonat(MariaDbPoolDataSource pool, MainWindowGrundlage mw){
         super(pool, mw, "", "Monatsabrechnung", "yyyy-MM-dd", "MMM yyyy",
-                "monat", tableForMode("abrechnung_monat"));
+                "monat", "abrechnung_monat");
         this.setExportDirFormat(bc.exportDirAbrechnungMonat);
         showTable();
     }
@@ -232,6 +232,7 @@ public class AbrechnungenMonat extends Abrechnungen {
         }
     }
 
+    @Override
     void queryIncompleteAbrechnung() { // create new abrechnung (for display) from time of last abrechnung until now
         try {
             Connection connection = this.pool.getConnection();
