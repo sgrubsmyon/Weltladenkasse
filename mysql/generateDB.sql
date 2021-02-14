@@ -266,7 +266,7 @@ CREATE TABLE tse_transaction (
     signature_counter INTEGER(10) UNSIGNED DEFAULT NULL,
     signature_base64 VARCHAR(512) DEFAULT NULL,
     tse_error TINYTEXT DEFAULT NULL,
-    process_data VARCHAR(60) DEFAULT NULL,
+    process_data VARCHAR(65) DEFAULT NULL,
     PRIMARY KEY (transaction_id),
     -- If planning to use method `getTransactionByTxNumber()`, can also create index on column `transaction_number`
     FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
@@ -275,7 +275,7 @@ CREATE TABLE tse_transaction (
 --     so they have a fixed length of 29 chars
 -- process_type will probably only ever need 14 chars (e.g. initially Kassenbeleg-V1, then Kassenbeleg-V2, ...)
 --     but in the specs, it has (up to) 30 characters, so better make sure it works
--- Example signatur in Base64:
+-- Example signature in Base64:
 --     XLBGMLidNi+vICwIAPO4B/PyDgSna+5EluXgchQOdNvNYfxcdJS/32mnmars0BxM+Dwk4W3kYaCavU7IEmPnIQ==
 -- so 88 chars, but let's stick to specs where it says up to 512 chars
 -- Example process_data with absurdly large amounts:
@@ -283,6 +283,126 @@ CREATE TABLE tse_transaction (
 --         AVBelegabbruch^0.00_0.00_0.00_0.00_0.00^
 --     Just to make sure, let's assume each tax class has a sum with 4 digits:
 --         Beleg^9999.00_9999.00_9999.00_9999.00_9999.00^49995.00:Unbar
---     Even this extreme case would fit into a 60 chars long field
+--         AVTraining^9999.00_9999.00_9999.00_9999.00_9999.00^49995.00:Unbar
+--     Even this extreme case would fit into a 65 chars long field
+
+-- copy of the cashier tables for training mode:
+CREATE TABLE training_verkauf (
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    verkaufsdatum DATETIME NOT NULL,
+    storniert BOOLEAN NOT NULL DEFAULT FALSE,
+    ec_zahlung BOOLEAN NOT NULL DEFAULT FALSE,
+    kunde_gibt DECIMAL(13,2) DEFAULT NULL,
+    PRIMARY KEY (rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE training_verkauf_mwst (
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (rechnungs_nr, mwst_satz),
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE training_verkauf_details (
+    vd_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL,
+    position SMALLINT(5) UNSIGNED DEFAULT NULL,
+    artikel_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    rabatt_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    stueckzahl SMALLINT(5) NOT NULL DEFAULT 1,
+    ges_preis DECIMAL(13,2) NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    PRIMARY KEY (vd_id),
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr),
+    FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id),
+    FOREIGN KEY (rabatt_id) REFERENCES rabattaktion(rabatt_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE training_kassenstand (
+    kassenstand_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    buchungsdatum DATETIME NOT NULL,
+    neuer_kassenstand DECIMAL(13,2) NOT NULL,
+    manuell BOOLEAN NOT NULL DEFAULT FALSE,
+    entnahme BOOLEAN NOT NULL DEFAULT FALSE,
+    rechnungs_nr INTEGER(10) UNSIGNED DEFAULT NULL,
+    kommentar VARCHAR(70),
+    PRIMARY KEY (kassenstand_id),
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE training_abrechnung_tag (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    zeitpunkt DATETIME NOT NULL,
+    zeitpunkt_real DATETIME NOT NULL,
+    kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    rechnungs_nr_von INTEGER(10) UNSIGNED NOT NULL,
+    rechnungs_nr_bis INTEGER(10) UNSIGNED NOT NULL,
+    last_tse_sig_counter INTEGER(10) DEFAULT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id),
+    FOREIGN KEY (rechnungs_nr_von) REFERENCES verkauf(rechnungs_nr),
+    FOREIGN KEY (rechnungs_nr_bis) REFERENCES verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE training_abrechnung_tag_mwst (
+    id INTEGER(10) UNSIGNED NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
+    bar_brutto DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id, mwst_satz)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE training_zaehlprotokoll (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    abrechnung_tag_id INTEGER(10) UNSIGNED NOT NULL,
+    zeitpunkt DATETIME NOT NULL,
+    kommentar TEXT NOT NULL,
+    aktiv BOOLEAN NOT NULL DEFAULT TRUE,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE training_zaehlprotokoll_details (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    zaehlprotokoll_id INTEGER(10) UNSIGNED NOT NULL,
+    anzahl SMALLINT(5) UNSIGNED NOT NULL,
+    einheit DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (zaehlprotokoll_id) REFERENCES zaehlprotokoll(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE training_abrechnung_monat (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    monat DATE NOT NULL,
+    abrechnung_tag_id_von INTEGER(10) UNSIGNED NOT NULL,
+    abrechnung_tag_id_bis INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES abrechnung_tag(id),
+    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE training_abrechnung_monat_mwst (
+    id INTEGER(10) UNSIGNED NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
+    bar_brutto DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id, mwst_satz)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE training_abrechnung_jahr (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    jahr YEAR NOT NULL,
+    abrechnung_tag_id_von INTEGER(10) UNSIGNED NOT NULL,
+    abrechnung_tag_id_bis INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES abrechnung_tag(id),
+    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE training_abrechnung_jahr_mwst (
+    id INTEGER(10) UNSIGNED NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
+    bar_brutto DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id, mwst_satz)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 SOURCE grants.sql;

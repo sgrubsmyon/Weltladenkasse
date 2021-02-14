@@ -89,9 +89,9 @@ public abstract class MainWindowGrundlage extends JFrame {
             Statement stmt = connection.createStatement();
             // Run MySQL command
             ResultSet rs = stmt.executeQuery(
-                        "SELECT neuer_kassenstand FROM kassenstand WHERE "+
-                        "kassenstand_id = (SELECT MAX(kassenstand_id) FROM kassenstand)"
-                        );
+                "SELECT neuer_kassenstand FROM "+tableForMode("kassenstand")+" WHERE "+
+                "kassenstand_id = (SELECT MAX(kassenstand_id) FROM "+tableForMode("kassenstand")+")"
+            );
             if ( rs.next() ){ ks = rs.getBigDecimal(1); }
             rs.close();
             stmt.close();
@@ -116,7 +116,7 @@ public abstract class MainWindowGrundlage extends JFrame {
             Statement stmt = connection.createStatement();
             // Run MySQL command
             ResultSet rs = stmt.executeQuery(
-                    "SELECT MAX(kassenstand_id) FROM kassenstand"
+                    "SELECT MAX(kassenstand_id) FROM "+tableForMode("kassenstand")
             );
             if ( rs.next() ){ id = rs.getInt(1); }
             rs.close();

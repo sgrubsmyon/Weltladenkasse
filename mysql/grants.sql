@@ -21,3 +21,16 @@ GRANT INSERT, DELETE ON kasse.abrechnung_jahr_mwst TO 'mitarbeiter'@'localhost';
 GRANT INSERT, UPDATE, DELETE ON kasse.bestellung TO 'mitarbeiter'@'localhost';
 GRANT INSERT, UPDATE, DELETE ON kasse.bestellung_details TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.tse_transaction TO 'mitarbeiter'@'localhost';
+-- training mode:
+GRANT INSERT, UPDATE ON kasse.training_verkauf TO 'mitarbeiter'@'localhost';
+GRANT INSERT ON kasse.training_verkauf_mwst TO 'mitarbeiter'@'localhost';
+GRANT INSERT ON kasse.training_verkauf_details TO 'mitarbeiter'@'localhost';
+GRANT INSERT ON kasse.training_kassenstand TO 'mitarbeiter'@'localhost';
+GRANT INSERT ON kasse.training_abrechnung_tag TO 'mitarbeiter'@'localhost';
+GRANT INSERT ON kasse.training_abrechnung_tag_mwst TO 'mitarbeiter'@'localhost';
+GRANT INSERT, UPDATE ON kasse.training_zaehlprotokoll TO 'mitarbeiter'@'localhost';
+GRANT INSERT ON kasse.training_zaehlprotokoll_details TO 'mitarbeiter'@'localhost';
+GRANT INSERT, DELETE ON kasse.training_abrechnung_monat TO 'mitarbeiter'@'localhost';
+GRANT INSERT, DELETE ON kasse.training_abrechnung_monat_mwst TO 'mitarbeiter'@'localhost';
+GRANT INSERT, DELETE ON kasse.training_abrechnung_jahr TO 'mitarbeiter'@'localhost';
+GRANT INSERT, DELETE ON kasse.training_abrechnung_jahr_mwst TO 'mitarbeiter'@'localhost';

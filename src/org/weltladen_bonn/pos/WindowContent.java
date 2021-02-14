@@ -1548,15 +1548,18 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
+    protected String tableForMode(String tableName) {
+        return bc.operationMode.equals("normal") ? tableName : "training_"+tableName;
+    }
 
     protected int insertIntoKassenstand(BigDecimal neuerKassenstand, Boolean entnahme, String kommentar) {
         int result = 0;
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "INSERT INTO kassenstand SET buchungsdatum = NOW(), " +
-                            "neuer_kassenstand = ?, manuell = TRUE, " +
-                            "entnahme = ?, kommentar = ?"
+                "INSERT INTO "+tableForMode("kassenstand")+" SET buchungsdatum = NOW(), " +
+                "neuer_kassenstand = ?, manuell = TRUE, " +
+                "entnahme = ?, kommentar = ?"
             );
             pstmt.setBigDecimal(1, neuerKassenstand);
             pstmt.setBoolean(2, entnahme);
@@ -1570,6 +1573,12 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
         return result;
     }
+
+
+
+    /**
+     * Calendar methods
+     */
 
     protected String now() {
         String date = "";
@@ -1596,12 +1605,6 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         }
         return date;
     }
-
-
-
-    /**
-     * Calendar methods
-     */
 
     protected void setCalButtFromSpinner(SpinnerModel m, JCalendarButton b) {
         if (m instanceof SpinnerDateModel) {

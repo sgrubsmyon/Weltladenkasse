@@ -123,7 +123,7 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             // Run MySQL command
             ResultSet rs = stmt.executeQuery(
                     "SELECT DAY(MIN(buchungsdatum)), MONTH(MIN(buchungsdatum)), " +
-                            "YEAR(MIN(buchungsdatum)) FROM kassenstand"
+                    "YEAR(MIN(buchungsdatum)) FROM "+tableForMode("kassenstand")
             );
             // Now do something with the ResultSet ...
             rs.next();
@@ -199,12 +199,12 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             // Run MySQL command
             ResultSet rs = stmt.executeQuery(
                     "SELECT DATE_FORMAT(buchungsdatum,'"+bc.dateFormatSQL+"'), "+
-                            "neuer_kassenstand, manuell, entnahme, rechnungs_nr, kommentar " +
-                            "FROM kassenstand " +
-                            "WHERE " + ausblendeString +
-                            filterStr +
-                            "ORDER BY buchungsdatum DESC " +
-                            "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
+                    "neuer_kassenstand, manuell, entnahme, rechnungs_nr, kommentar " +
+                    "FROM "+tableForMode("kassenstand")+" " +
+                    "WHERE " + ausblendeString +
+                    filterStr +
+                    "ORDER BY buchungsdatum DESC " +
+                    "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
             );
             // Now do something with the ResultSet ...
             while (rs.next()) {
@@ -219,8 +219,8 @@ public class Kassenstand extends WindowContent implements ChangeListener, Docume
             }
             rs.close();
             rs = stmt.executeQuery(
-                    "SELECT COUNT(*) FROM kassenstand WHERE TRUE " +
-                            filterStr
+                    "SELECT COUNT(*) FROM "+tableForMode("kassenstand")+" WHERE TRUE " +
+                    filterStr
             );
             // Now do something with the ResultSet ...
             rs.next();

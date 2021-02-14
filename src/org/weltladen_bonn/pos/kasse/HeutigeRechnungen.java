@@ -41,9 +41,9 @@ public class HeutigeRechnungen extends Rechnungen {
      *    The constructor.
      *       */
     public HeutigeRechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw, RechnungenTabbedPane tp){
-	    super(pool, mw, "WHERE verkauf.rechnungs_nr > " +
-                "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) AND "+
-                "verkauf.storniert = FALSE ", "Heutige Rechnungen");
+	    super(pool, mw, "WHERE "+tableForMode("verkauf")+".rechnungs_nr > " +
+                "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) AND "+
+                tableForMode("verkauf")+".storniert = FALSE ", "Heutige Rechnungen");
         tabbedPane = tp;
 	    showTable();
     }
@@ -71,7 +71,7 @@ public class HeutigeRechnungen extends Rechnungen {
         try { 
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                "UPDATE verkauf SET verkauf.storniert = 1 WHERE verkauf.rechnungs_nr = ?"
+                "UPDATE "+tableForMode("verkauf")+" SET storniert = 1 WHERE rechnungs_nr = ?"
             );
             pstmtSetInteger(pstmt, 1, rechnungsnummer);
             int result = pstmt.executeUpdate();
@@ -100,7 +100,7 @@ public class HeutigeRechnungen extends Rechnungen {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT SUM(ges_preis) FROM verkauf_details WHERE rechnungs_nr = ?"
+                    "SELECT SUM(ges_preis) FROM "+tableForMode("verkauf_details")+" WHERE rechnungs_nr = ?"
                     );
             pstmtSetInteger(pstmt, 1, rechnungsNr);
             ResultSet rs = pstmt.executeQuery();
@@ -109,7 +109,7 @@ public class HeutigeRechnungen extends Rechnungen {
             BigDecimal alterKassenstand = mainWindow.retrieveKassenstand();
             BigDecimal neuerKassenstand = alterKassenstand.subtract(betrag);
             pstmt = connection.prepareStatement(
-                    "INSERT INTO kassenstand SET rechnungs_nr = ?,"+
+                    "INSERT INTO "+tableForMode("kassenstand")+" SET rechnungs_nr = ?,"+
                     "buchungsdatum = NOW(), "+
                     "manuell = FALSE, neuer_kassenstand = ?, kommentar = ?"
                     );

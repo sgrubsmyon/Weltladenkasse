@@ -49,7 +49,7 @@ public class AbrechnungenJahr extends Abrechnungen {
      *       */
     public AbrechnungenJahr(MariaDbPoolDataSource pool, MainWindowGrundlage mw){
         super(pool, mw, "", "Jahresabrechnung", "yyyy", "yyyy",
-                "jahr", "abrechnung_jahr");
+                "jahr", tableForMode("abrechnung_jahr"));
         this.setExportDirFormat(bc.exportDirAbrechnungJahr);
         showTable();
     }
@@ -66,7 +66,7 @@ public class AbrechnungenJahr extends Abrechnungen {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
-                "SELECT MAX(jahr) FROM abrechnung_jahr"
+                "SELECT MAX(jahr) FROM "+tableForMode("abrechnung_jahr")
             );
             rs.next(); result = rs.getString(1); rs.close();
             stmt.close();
@@ -86,7 +86,7 @@ public class AbrechnungenJahr extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                "SELECT DISTINCT DATE_FORMAT(zeitpunkt, '%Y-01-01') FROM abrechnung_tag "+ // Select the distinct years of all Tagesabrechnungen after the last Jahresabrechnung
+                "SELECT DISTINCT DATE_FORMAT(zeitpunkt, '%Y-01-01') FROM "+tableForMode("abrechnung_tag")+" "+ // Select the distinct years of all Tagesabrechnungen after the last Jahresabrechnung
                 "WHERE zeitpunkt >= (? + INTERVAL 1 YEAR)"
             );
             pstmt.setString(1, maxDate);
@@ -109,7 +109,7 @@ public class AbrechnungenJahr extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                "SELECT MIN(id), MAX(id) FROM abrechnung_tag "+
+                "SELECT MIN(id), MAX(id) FROM "+tableForMode("abrechnung_tag")+" "+
                 "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 YEAR)"
             );
             pstmt.setString(1, year);
@@ -133,8 +133,8 @@ public class AbrechnungenJahr extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM abrechnung_tag_mwst "+
-                    "INNER JOIN abrechnung_tag USING (id) "+
+                    "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM "+tableForMode("abrechnung_tag_mwst")+" "+
+                    "INNER JOIN "+tableForMode("abrechnung_tag")+" USING (id) "+
                     "WHERE id >= ? AND id <= ? GROUP BY mwst_satz"
                     );
             pstmt.setInt(1, minID);
@@ -176,7 +176,7 @@ public class AbrechnungenJahr extends Abrechnungen {
 
                     Vector<Integer> range = queryJahresAbrechnungRange(year);
                     pstmt = connection.prepareStatement(
-                        "INSERT INTO abrechnung_jahr SET "+
+                        "INSERT INTO "+tableForMode("abrechnung_jahr")+" SET "+
                         "jahr = ?, "+
                         "abrechnung_tag_id_von = ?, "+
                         "abrechnung_tag_id_bis = ?"
@@ -201,7 +201,7 @@ public class AbrechnungenJahr extends Abrechnungen {
                             logger.info("mwst_satz: "+mwst_satz);
                             logger.info("betraege "+betraege);
                             pstmt = connection.prepareStatement(
-                                "INSERT INTO abrechnung_jahr_mwst SET "+
+                                "INSERT INTO "+tableForMode("abrechnung_jahr_mwst")+" SET "+
                                 "id = ?, "+
                                 "mwst_satz = ?, "+
                                 "mwst_netto = ?, "+
@@ -244,9 +244,9 @@ public class AbrechnungenJahr extends Abrechnungen {
 
             // totals (sum over mwsts)
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT SUM(mwst_netto + mwst_betrag), SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) FROM abrechnung_tag_mwst " +
+                    "SELECT SUM(mwst_netto + mwst_betrag), SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) FROM "+tableForMode("abrechnung_tag_mwst")+" " +
                        //   ^^^ Gesamt Brutto              ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
-                    "INNER JOIN abrechnung_tag USING (id) "+
+                    "INNER JOIN "+tableForMode("abrechnung_tag")+" USING (id) "+
                     "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 YEAR)"
                     );
             pstmt.setString(1, cur_year);

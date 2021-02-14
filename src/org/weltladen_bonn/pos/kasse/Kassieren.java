@@ -1311,7 +1311,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         try {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT MAX(rechnungs_nr) FROM verkauf");
+            ResultSet rs = stmt.executeQuery("SELECT MAX(rechnungs_nr) FROM "+tableForMode("verkauf"));
             rs.next();
             maxRechNr = rs.getInt(1);
             rs.close();
@@ -1330,7 +1330,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MAX(verkaufsdatum) "+
-                    "FROM verkauf WHERE storniert = FALSE");
+                    "FROM "+tableForMode("verkauf")+" WHERE storniert = FALSE");
             rs.next(); date = rs.getString(1); rs.close();
             if (date == null){
                 date = "";
@@ -1360,7 +1360,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                "INSERT INTO verkauf SET verkaufsdatum = NOW(), ec_zahlung = ?, kunde_gibt = ?"
+                "INSERT INTO "+tableForMode("verkauf")+" SET verkaufsdatum = NOW(), ec_zahlung = ?, kunde_gibt = ?"
             );
             pstmtSetBoolean(pstmt, 1, ec);
             pstmt.setBigDecimal(2, kundeGibt);
@@ -1373,7 +1373,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
             rechnungsNr = maxRechnungsNr();
             for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : this.vatMap.entrySet()) {
-                pstmt = connection.prepareStatement("INSERT INTO verkauf_mwst SET rechnungs_nr = ?, mwst_satz = ?, "
+                pstmt = connection.prepareStatement("INSERT INTO "+tableForMode("verkauf_mwst")+" SET rechnungs_nr = ?, mwst_satz = ?, "
                         + "mwst_netto = ?, mwst_betrag = ?");
                 pstmtSetInteger(pstmt, 1, rechnungsNr);
                 pstmt.setBigDecimal(2, entry.getKey());
@@ -1388,7 +1388,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 }
             }
             for (int i = 0; i < kassierArtikel.size(); i++) {
-                pstmt = connection.prepareStatement("INSERT INTO verkauf_details SET rechnungs_nr = ?, position = ?, "
+                pstmt = connection.prepareStatement("INSERT INTO "+tableForMode("verkauf_details")+" SET rechnungs_nr = ?, position = ?, "
                         + "artikel_id = ?, rabatt_id = ?, stueckzahl = ?, ges_preis = ?, mwst_satz = ?");
                 pstmtSetInteger(pstmt, 1, rechnungsNr);
                 pstmtSetInteger(pstmt, 2, kassierArtikel.get(i).getPosition());
@@ -1416,7 +1416,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection
-                    .prepareStatement("SELECT verkaufsdatum FROM verkauf WHERE rechnungs_nr = ?");
+                    .prepareStatement("SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?");
             pstmtSetInteger(pstmt, 1, rechnungsNr);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -1426,8 +1426,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             BigDecimal betrag = new BigDecimal(getTotalPrice());
             BigDecimal alterKassenstand = mainWindow.retrieveKassenstand();
             BigDecimal neuerKassenstand = alterKassenstand.add(betrag);
-            pstmt = connection.prepareStatement("INSERT INTO kassenstand SET rechnungs_nr = ?," + "buchungsdatum = ?, "
-                    + "manuell = FALSE, neuer_kassenstand = ?");
+            pstmt = connection.prepareStatement(
+                "INSERT INTO "+tableForMode("kassenstand")+" SET rechnungs_nr = ?, buchungsdatum = ?, "+
+                "manuell = FALSE, neuer_kassenstand = ?"
+            );
             pstmtSetInteger(pstmt, 1, rechnungsNr);
             pstmt.setString(2, verkaufsdatum);
             pstmt.setBigDecimal(3, neuerKassenstand);

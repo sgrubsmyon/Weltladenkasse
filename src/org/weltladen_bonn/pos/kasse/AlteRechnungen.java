@@ -65,8 +65,8 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
      * The constructor.
      */
     public AlteRechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw) {
-        super(pool, mw, "WHERE verkauf.rechnungs_nr <= (SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag) AND "
-                + "verkauf.storniert = FALSE ", "Alte Rechnungen");
+        super(pool, mw, "WHERE "+tableForMode("verkauf")+".rechnungs_nr <= (SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+") AND "+
+              tableForMode("verkauf")+".storniert = FALSE ", "Alte Rechnungen");
         queryEarliestRechnung();
         initiateSpinners();
         showTable();
@@ -82,8 +82,8 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
             Statement stmt = connection.createStatement();
             // Run MySQL command
             ResultSet rs = stmt
-                    .executeQuery("SELECT DAY(MIN(verkauf.verkaufsdatum)), MONTH(MIN(verkauf.verkaufsdatum)), "
-                            + "YEAR(MIN(verkauf.verkaufsdatum)) FROM verkauf WHERE verkauf.storniert = FALSE");
+                    .executeQuery("SELECT DAY(MIN(verkaufsdatum)), MONTH(MIN(verkaufsdatum)), "
+                            + "YEAR(MIN(verkaufsdatum)) FROM "+tableForMode("verkauf")+" WHERE storniert = FALSE");
             // Now do something with the ResultSet ...
             rs.next();
             day = rs.getInt(1);
@@ -261,13 +261,13 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
             java.sql.Date endDateSQL = new java.sql.Date(endDate.getTime());
             String startDateStr = startDateSQL.toString();
             String endDateStr = endDateSQL.toString();
-            this.filterStr = "WHERE DATE(verkauf.verkaufsdatum) >= DATE('" + startDateStr + "') "
-                    + "AND DATE(verkauf.verkaufsdatum) <= DATE('" + endDateStr + "') AND verkauf.storniert = FALSE ";
+            this.filterStr = "WHERE DATE("+tableForMode("verkauf")+".verkaufsdatum) >= DATE('" + startDateStr + "') "
+                    + "AND DATE("+tableForMode("verkauf")+".verkaufsdatum) <= DATE('" + endDateStr + "') AND "+tableForMode("verkauf")+".storniert = FALSE ";
             updateTable();
             return;
         }
         if (e.getSource() == resetButton) {
-            this.filterStr = "WHERE DATE(verkauf.verkaufsdatum) < CURRENT_DATE() AND verkauf.storniert = FALSE ";
+            this.filterStr = "WHERE DATE("+tableForMode("verkauf")+".verkaufsdatum) < CURRENT_DATE() AND "+tableForMode("verkauf")+".storniert = FALSE ";
             initiateSpinners();
             updateTable();
             return;
