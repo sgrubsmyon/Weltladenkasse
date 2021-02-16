@@ -1,5 +1,7 @@
 package org.weltladen_bonn.pos.kasse;
 
+import org.weltladen_bonn.pos.kasse.WeltladenTSE.TSEStatus;
+
 // Basic Java stuff:
 import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
@@ -1019,9 +1021,23 @@ class AbrechnungenTag extends Abrechnungen {
                 }
             }
             logger.info("previousLastSigCounter: {}", previousLastSigCounter());
+            logger.info("lastSigCounter: {}", lastSigCounter);
+            logger.info("Exporting TSE signatures from {} to {}", previousLastSigCounter() + 1, lastSigCounter);
             String message = tse.exportPartialTransactionDataBySigCounter(exportFilename, (long)previousLastSigCounter(), null);
             if (message != "OK") {
                 lastSigCounter = null;
+                logger.fatal("Could not create the TSE export for Tagesabrechnung");
+                if (tse.getStatus() != TSEStatus.failed) {
+                    tse.setStatus(TSEStatus.failed);
+                    tse.setFailReason("Die TSE-Daten des Tages konnten nach der Tagesabrechnung nicht exportiert werden");
+                    tse.showTSEFailWarning();
+                }
+                JOptionPane.showMessageDialog(this,
+                    "Fehler: TSE-Export unter '"+exportFilename+"' konnte nicht erstellt werden!\n"+
+                    "Das ist übel.\n"+
+                    "Bitte der/dem Administrator*in Bescheid geben.\n"+
+                    "     Fehlermeldung: "+message,
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
             }
         }
         return lastSigCounter;

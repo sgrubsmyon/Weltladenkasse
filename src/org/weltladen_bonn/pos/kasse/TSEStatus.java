@@ -304,11 +304,11 @@ public class TSEStatus extends WindowContent {
                     "Fehlermeldung: "+message,
                     "Fehler", JOptionPane.ERROR_MESSAGE);
             } else {
-                logger.info("Could not create the TSE export");
+                logger.error("Could not create the TSE export");
                 JOptionPane.showMessageDialog(this,
-                        "Fehler: TSE-Export '"+filename+"' konnte nicht erstellt werden.\n"+
-                        "Fehlermeldung: "+message,
-                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                    "Fehler: TSE-Export '"+filename+"' konnte nicht erstellt werden.\n"+
+                    "Fehlermeldung: "+message,
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
             }
             return;    
         }

@@ -158,6 +158,9 @@ public class WeltladenTSE extends WindowContent {
      */
     public WeltladenTSE(MariaDbPoolDataSource pool, MainWindow mw) {
         super(pool, mw);
+        if (!bc.operationMode.equals("normal")) {
+            this.status = TSEStatus.training;
+        }
         connectToTSE();
         if (inUse()) {
             LongOperationIndicatorDialog dialog = new LongOperationIndicatorDialog(
@@ -1423,8 +1426,12 @@ public class WeltladenTSE extends WindowContent {
             tse.exportMoreData(serial, lastExcludedSignatureCounter, maxRecords, stream);
             stream.close();
             return "OK";
+        } catch (ErrorTSECommunicationError ex) {
+            logger.fatal("TSE got stuck.");
+            logger.fatal("Exception:", ex);
+            return "TSECommunicationError";
         } catch (FileNotFoundException ex) {
-            logger.fatal("File not found exception during exportPartialTransactionDataBySigCounter()");            
+            logger.fatal("File not found exception during exportPartialTransactionDataBySigCounter()");
             logger.fatal("Exception:", ex);
             return "FileNotFoundException";
         } catch (IOException ex) {
@@ -1732,7 +1739,7 @@ public class WeltladenTSE extends WindowContent {
         steuer_durchschnitt_nr3 = steuer_durchschnitt_nr3 == null ? new BigDecimal("0.00") : steuer_durchschnitt_nr3;
         steuer_durchschnitt_nr1 = steuer_durchschnitt_nr1 == null ? new BigDecimal("0.00") : steuer_durchschnitt_nr1;
         steuer_null = steuer_null == null ? new BigDecimal("0.00") : steuer_null;
-        String processData = bc.operationMode.equals("normal") ? "Beleg^" : "AVTraining^";
+        String processData = (status == TSEStatus.training ? "AVTraining^" : "Beleg^");
         processData += String.format("%.2f_%.2f_%.2f_%.2f_%.2f^", steuer_allgemein, steuer_ermaessigt,
             steuer_durchschnitt_nr3, steuer_durchschnitt_nr1, steuer_null);
 
