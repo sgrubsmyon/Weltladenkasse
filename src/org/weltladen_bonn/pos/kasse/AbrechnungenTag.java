@@ -1064,7 +1064,10 @@ class AbrechnungenTag extends Abrechnungen {
             }
             // get ID of current kassenstand (highest ID due to auto-increment)
             Integer kassenstand_id = mainWindow.retrieveKassenstandId();
-            Integer lastSigCounter = exportTSELog();
+            Integer lastSigCounter = null;
+            if (bc.operationMode.equals("normal")) {
+                lastSigCounter = exportTSELog(); // no TSE exports in training mode
+            }
 
             // Need to do this before inserting new Tagesabrechnung:
             // get netto values grouped by mwst:
