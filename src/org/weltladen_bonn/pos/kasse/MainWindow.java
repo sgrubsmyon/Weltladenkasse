@@ -121,6 +121,10 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
         return myTabbedPane.isThereIncompleteAbrechnungTag();
     }
 
+    public boolean isInTrainingMode() {
+        return !bc.operationMode.equals("normal");
+    }
+
     /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.

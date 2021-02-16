@@ -82,12 +82,24 @@ public class Kasse {
             logger.info("Password was correct.");
 
             // Check if there is an incomplete Tagesabrechnung from the start!
+            if ( myWindow.isInTrainingMode() ){
+                JOptionPane.showMessageDialog(myWindow,
+                    "Willkommen im Trainings-Modus der Weltladen-Kasse.\n\n"+
+                    "Die folgenden zwei Aktivitäten können geübt werden:\n"+
+                    "     * Kassieren\n"+
+                    "     * Tagesabrechnung erstellen\n\n"+
+                    "Diese beiden gehen nicht in die Buchhaltung ein und beeinflussen die\n"+
+                    "\"echte\" Kasse nicht. Andere Änderungen, z.B. an Artikeln, werden jedoch\n"+
+                    "in der \"echten\" Kasse gespeichert!!! (Also besser keine Artikel bearbeiten)",
+                    "Achtung: Trainings-Modus", JOptionPane.WARNING_MESSAGE);
+            }
             if ( myWindow.isThereIncompleteAbrechnungTag() ){
                 JOptionPane.showMessageDialog(myWindow,
-                        "Hinweis: Es gibt eine offene Tagesabrechnung.\n"+
-                        "Wurde vergessen, die Tagesabrechnung zu machen (unter 'Abrechnungen')?",
-                        "Ausstehende Abrechnung", JOptionPane.WARNING_MESSAGE);
+                    "Hinweis: Es gibt eine offene Tagesabrechnung.\n"+
+                    "Wurde vergessen, die Tagesabrechnung zu machen (unter 'Abrechnungen')?",
+                    "Ausstehende Abrechnung", JOptionPane.WARNING_MESSAGE);
             }
+
             return;
         }
     }
