@@ -1025,7 +1025,11 @@ class AbrechnungenTag extends Abrechnungen {
             logger.info("Exporting TSE signatures from {} to {}", previousLastSigCounter() + 1, lastSigCounter);
             String message = tse.exportPartialTransactionDataBySigCounter(exportFilename, (long)previousLastSigCounter(), null);
             if (message != "OK") {
-                lastSigCounter = null;
+                // lastSigCounter = null; // There can be the problem of TSECommunicationError when trying to export too old (how old?)
+                    // transactions. If export fails due to old transactions, and lastSigCounter is set to null,
+                    // it will be tried over and over again to start export at those old transactions and it will never work
+                    // again. So let's rather live with one failed export file (will have 0 bytes) than break export forever.
+                    // Hopefully, these failures can be prevented altogether by using USB-MicroSD adapter.
                 logger.fatal("Could not create the TSE export for Tagesabrechnung");
                 if (tse.getStatus() != TSEStatus.failed) {
                     tse.setStatus(TSEStatus.failed);
