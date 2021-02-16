@@ -247,6 +247,7 @@ CREATE TABLE tse_transaction (
     transaction_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     transaction_number INTEGER(10) UNSIGNED DEFAULT NULL,
     rechnungs_nr INTEGER(10) UNSIGNED DEFAULT NULL,
+    training BOOLEAN NOT NULL DEFAULT FALSE,
     transaction_start CHAR(29) DEFAULT NULL,
     transaction_end CHAR(29) DEFAULT NULL,
     process_type VARCHAR(30) DEFAULT NULL,

@@ -1830,6 +1830,7 @@ public class WeltladenTSE extends WindowContent {
                 "INSERT INTO tse_transaction SET "+
                 "transaction_number = ?, "+
                 "rechnungs_nr = ?, "+
+                "training = ?, "+
                 "transaction_start = ?, "+
                 "transaction_end = ?, "+
                 "process_type = ?, "+
@@ -1840,13 +1841,14 @@ public class WeltladenTSE extends WindowContent {
             );
             pstmtSetInteger(pstmt, 1, tx.txNumber == null ? null : Math.toIntExact(tx.txNumber));
             pstmtSetInteger(pstmt, 2, tx.rechnungsNr);
-            pstmt.setString(3, tx.startTimeString);
-            pstmt.setString(4, tx.endTimeString);
-            pstmt.setString(5, tx.processType);
-            pstmtSetInteger(pstmt, 6, tx.sigCounter == null ? null : Math.toIntExact(tx.sigCounter));
-            pstmt.setString(7, tx.signatureBase64);
-            pstmt.setString(8, tx.tseError);
-            pstmt.setString(9, tx.processData);
+            pstmtSetBoolean(pstmt, 3, status == TSEStatus.training);
+            pstmt.setString(4, tx.startTimeString);
+            pstmt.setString(5, tx.endTimeString);
+            pstmt.setString(6, tx.processType);
+            pstmtSetInteger(pstmt, 7, tx.sigCounter == null ? null : Math.toIntExact(tx.sigCounter));
+            pstmt.setString(8, tx.signatureBase64);
+            pstmt.setString(9, tx.tseError);
+            pstmt.setString(10, tx.processData);
             int result = pstmt.executeUpdate();
             if (result == 0){
                 message = "executeUpdate() returned 0";
@@ -1880,9 +1882,10 @@ public class WeltladenTSE extends WindowContent {
                 "transaction_number, transaction_start, transaction_end, "+
                 "process_type, signature_counter, signature_base64, tse_error, "+
                 "process_data "+
-                "FROM tse_transaction WHERE rechnungs_nr = ?"
+                "FROM tse_transaction WHERE rechnungs_nr = ? AND training = ?"
             );
             pstmtSetInteger(pstmt, 1, rechnungsNr);
+            pstmtSetBoolean(pstmt, 2, status == TSEStatus.training);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 transaction = new TSETransaction();
