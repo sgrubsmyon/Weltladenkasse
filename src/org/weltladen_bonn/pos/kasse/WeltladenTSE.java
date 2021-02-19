@@ -117,6 +117,7 @@ public class WeltladenTSE extends WindowContent {
 
     protected class TSETransaction {
         public Integer rechnungsNr = null; // for connecting TSE data to SQL table 'verkauf'
+        public Boolean training = null; // is this a transaction done in training mode?
         public Long txNumber = null; // of the StartTransaction operation
         public Long startTimeUnix = null; // of the StartTransaction operation
         public String startTimeString = null; // of the StartTransaction operation
@@ -1613,6 +1614,7 @@ public class WeltladenTSE extends WindowContent {
     private String sendFinishTransaction(String processData, Integer rechnungsNr) {
         String message = "";
         tx.rechnungsNr = rechnungsNr;
+        tx.training = status == TSEStatus.training;
         tx.processType = defaultProcessType;
         tx.processData = processData;
         if (status == TSEStatus.failed) { // same as !inUse()
@@ -1841,7 +1843,7 @@ public class WeltladenTSE extends WindowContent {
             );
             pstmtSetInteger(pstmt, 1, tx.txNumber == null ? null : Math.toIntExact(tx.txNumber));
             pstmtSetInteger(pstmt, 2, tx.rechnungsNr);
-            pstmtSetBoolean(pstmt, 3, status == TSEStatus.training);
+            pstmtSetBoolean(pstmt, 3, tx.training);
             pstmt.setString(4, tx.startTimeString);
             pstmt.setString(5, tx.endTimeString);
             pstmt.setString(6, tx.processType);
@@ -1890,6 +1892,7 @@ public class WeltladenTSE extends WindowContent {
             if (rs.next()) {
                 transaction = new TSETransaction();
                 transaction.rechnungsNr = rechnungsNr;
+                transaction.training = status == TSEStatus.training;
                 transaction.txNumber = (long)rs.getInt(1);
                 transaction.startTimeString = rs.getString(2);
                 transaction.endTimeString = rs.getString(3);

@@ -605,6 +605,11 @@ public class Quittung extends WindowContent {
             Integer continueAtRow = editFooter(sheet);
 
             if (continueAtRow != null) { // if this is the last file written in case of multiple files
+                if (tx != null && tx.training) { // means transaction was done in training mode
+                    continueAtRow++; // leave one row empty for spacing
+                    sheet.setValueAt("!!! TRAININGSMODUS !!!", 0, continueAtRow);
+                    continueAtRow++;
+                }
                 insertTSEValues(sheet, continueAtRow);
             }
 
