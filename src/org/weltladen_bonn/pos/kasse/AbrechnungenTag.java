@@ -985,13 +985,13 @@ class AbrechnungenTag extends Abrechnungen {
     }
 
     private Integer previousLastSigCounter() {
-        Integer previousLastSigCounter = null;
+        Integer prevLastSigCounter = null;
         try {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT IFNULL(MAX(last_tse_sig_counter), 0) FROM "+tableForMode("abrechnung_tag"));
             rs.next();
-            previousLastSigCounter = rs.getInt(1);
+            prevLastSigCounter = rs.getInt(1);
             rs.close();
             stmt.close();
             connection.close();
@@ -999,18 +999,39 @@ class AbrechnungenTag extends Abrechnungen {
             logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
-        return previousLastSigCounter;
+        return prevLastSigCounter;
+    }
+
+    private Integer previousLastTxNumber() {
+        Integer prevLastTxNumber = 1;
+        try {
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                "SELECT transaction_number FROM tse_transaction "+
+                "WHERE rechnungs_nr = (SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+")"
+            );
+            rs.next();
+            prevLastTxNumber = rs.getInt(1);
+            rs.close();
+            stmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return prevLastTxNumber;
     }
 
     private Integer exportTSELog() {
-        Integer lastSigCounter = tse.getSignatureCounter(); // this is the last sig counter that will be included in the export;
+        Integer lastSigCounter = null;
         if (tse.inUse()) {
+            lastSigCounter = tse.getSignatureCounter(); // this is the last sig counter that will be included in the export
+            Integer prevLastSigCounter = previousLastSigCounter();
             Date date = nowDate();
             String year = new SimpleDateFormat("yyyy").format(date);
             String dateStr = new SimpleDateFormat("yyyy-MM-dd").format(date);
             String exportDir = System.getProperty("user.home")+bc.fileSep+bc.finDatDir+bc.fileSep+year;
-            String exportFilename = exportDir+bc.fileSep+"tse_export_"+dateStr+"_"+lastSigCounter+".tar";
-            logger.info("exportFilename: {}", exportFilename);
             Path path = Paths.get(exportDir);
             if (!Files.exists(path)) {
                 // Create directory recursively:
@@ -1020,28 +1041,44 @@ class AbrechnungenTag extends Abrechnungen {
                     logger.error("Exception: {}", ex);
                 }
             }
-            logger.info("previousLastSigCounter: {}", previousLastSigCounter());
+            logger.info("previousLastSigCounter: {}", prevLastSigCounter);
             logger.info("lastSigCounter: {}", lastSigCounter);
-            logger.info("Exporting TSE signatures from {} to {}", previousLastSigCounter() + 1, lastSigCounter);
-            String message = tse.exportPartialTransactionDataBySigCounter(exportFilename, (long)previousLastSigCounter(), null);
-            if (message != "OK") {
-                // lastSigCounter = null; // There can be the problem of TSECommunicationError when trying to export too old (how old?)
-                    // transactions. If export fails due to old transactions, and lastSigCounter is set to null,
-                    // it will be tried over and over again to start export at those old transactions and it will never work
-                    // again. So let's rather live with one failed export file (will have 0 bytes) than break export forever.
-                    // Hopefully, these failures can be prevented altogether by using USB-MicroSD adapter.
-                logger.fatal("Could not create the TSE export for Tagesabrechnung");
-                if (tse.getStatus() != TSEStatus.failed) {
-                    tse.setStatus(TSEStatus.failed);
-                    tse.setFailReason("Die TSE-Daten des Tages konnten nach der Tagesabrechnung nicht exportiert werden");
-                    tse.showTSEFailWarning();
+            logger.info("Exporting TSE signatures from {} to {}", prevLastSigCounter + 1, lastSigCounter);
+            String exportFilename = exportDir+bc.fileSep+"tse_export_"+dateStr+"_Sig_from_"+(prevLastSigCounter + 1)+"_to_"+lastSigCounter+".tar";
+            logger.info("exportFilename: {}", exportFilename);
+            String message = tse.exportPartialTransactionDataBySigCounter(exportFilename, (long)prevLastSigCounter, null);
+            if (!message.equals("OK")) {
+                // Try exporting by transaction number, not by signature counter, as a fallback:
+                logger.error("!!! Tagesabrechnung TSE export via signature counter using tse.exportMoreData() failed!");
+                logger.error("!!! Error message: {}", message);
+                logger.error("!!! Trying to export via tx number using tse.exportData()...");
+                Integer lastTxNumber = tse.getTransactionNumber(); // this is the last tx number that will be included in the export
+                Integer prevLastTxNumber = previousLastTxNumber();
+                logger.info("previousLastTxNumber: {}", prevLastTxNumber);
+                logger.info("lastTxNumber: {}", lastTxNumber);
+                logger.info("Exporting TSE transactions from {} to {}", prevLastTxNumber + 1, lastTxNumber);
+                exportFilename = exportDir+bc.fileSep+"tse_export_"+dateStr+"_Tx_from_"+(prevLastTxNumber + 1)+"_to_"+lastTxNumber+".tar";
+                logger.info("exportFilename: {}", exportFilename);
+                message = tse.exportPartialTransactionDataByTXNumber(exportFilename, (long)(prevLastTxNumber + 1), null, null);
+                if (!message.equals("OK")) {
+                    // If it still did not work: inform user about failure
+                    // lastSigCounter = null; // There can be the problem of TSECommunicationError when trying to export too old (how old?)
+                        // transactions. If export fails due to old transactions, and lastSigCounter is set to null,
+                        // it will be tried over and over again to start export at those old transactions and it will never work
+                        // again. So let's rather live with one failed export file (will have 0 bytes) than break export forever.
+                    logger.fatal("Could not create the TSE export for Tagesabrechnung");
+                    if (tse.getStatus() != TSEStatus.failed) {
+                        tse.setStatus(TSEStatus.failed);
+                        tse.setFailReason("Die TSE-Daten des Tages konnten nach der Tagesabrechnung nicht exportiert werden");
+                        tse.showTSEFailWarning();
+                    }
+                    JOptionPane.showMessageDialog(this,
+                        "Fehler: TSE-Export des Tagesabschlusses konnte nicht erstellt werden!\n"+
+                        "Das ist übel.\n"+
+                        "Bitte der/dem Administrator*in Bescheid geben.\n"+
+                        "     Fehlermeldung: "+message,
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
-                JOptionPane.showMessageDialog(this,
-                    "Fehler: TSE-Export unter '"+exportFilename+"' konnte nicht erstellt werden!\n"+
-                    "Das ist übel.\n"+
-                    "Bitte der/dem Administrator*in Bescheid geben.\n"+
-                    "     Fehlermeldung: "+message,
-                    "Fehler", JOptionPane.ERROR_MESSAGE);
             }
         }
         return lastSigCounter;

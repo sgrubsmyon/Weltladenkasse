@@ -335,7 +335,7 @@ public class WeltladenTSE extends WindowContent {
         while (!tseOperational) {
             logger.info("Trying to authenticate as user 'TimeAdmin'...");
             String message = authenticateAs("TimeAdmin", timeAdminPIN, false);
-            if (message == "OK") {
+            if (message.equals("OK")) {
                 logger.info("Success!!! Now we can continue normally...");
                 dialog.dispose();
                 logOutAs("TimeAdmin");
@@ -1368,6 +1368,21 @@ public class WeltladenTSE extends WindowContent {
         return sigCount;
     }
 
+    public Integer getTransactionNumber() {
+        Integer txNumber = null;
+        try {
+            long txNumberLong = tse.getTransactionCounter();
+            txNumber = Math.toIntExact(txNumberLong);
+        } catch (SEException ex) {
+            logger.fatal("SE exception during getTransactionNumber()");
+            logger.fatal("Exception:", ex);
+        } catch (ArithmeticException ex) {
+            logger.error("Current transactionNumber is too large to store as integer in DB!!!");
+            logger.error("Exception:", ex);
+        }
+        return txNumber;
+    }
+
     private byte[] getTransaction(Long txNumber) {
         try {
             byte[] exportData = tse.exportData(null, txNumber, null, null, null, null, null);
@@ -1687,7 +1702,7 @@ public class WeltladenTSE extends WindowContent {
                 logger.fatal("Exception:", ex);
             }
         }
-        if (message != "OK") {
+        if (!message.equals("OK")) {
             tx.tseError = message;
         }
         storeTransactionInDB();
@@ -1705,7 +1720,7 @@ public class WeltladenTSE extends WindowContent {
         TSETransaction res_tx = tx;
         // Make room for next transaction:
         tx = new TSETransaction();
-        if (message != "OK") {
+        if (!message.equals("OK")) {
             // Setting status to failed would mean giving up. But the error might be only transient. But at least inform user.
             // status = TSEStatus.failed;
             // failReason = "Die TSE-Transaktion konnte nicht abgebrochen werden.\n"+
@@ -1807,7 +1822,7 @@ public class WeltladenTSE extends WindowContent {
         TSETransaction res_tx = tx;
         // Make room for next transaction:
         tx = new TSETransaction();
-        if (message != "OK") {
+        if (!message.equals("OK")) {
             // Setting status to failed would mean giving up. But the error might be only transient. But at least inform user.
             // status = TSEStatus.failed;
             // failReason = "Die TSE-Transaktion konnte nicht abgeschlossen werden.\n"+
@@ -1866,7 +1881,7 @@ public class WeltladenTSE extends WindowContent {
             message = "One of txNumber or sigCounter is too large to store as integer in DB!!!\n"+
                 ex.getMessage();
         }
-        if (message != "OK") {
+        if (!message.equals("OK")) {
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die TSE-Transaktion konnte nicht in der Datenbank gespeichert werden.\n"+
                 "Verbindung zum Datenbank-Server unterbrochen?\n"+
