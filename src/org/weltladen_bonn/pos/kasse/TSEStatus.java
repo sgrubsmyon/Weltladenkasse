@@ -261,7 +261,7 @@ public class TSEStatus extends WindowContent {
                         logger.info("Exporting partial transaction data by Sig counter, excluding everything up to {}, limited by {} signatures",
                             0, numRecords);
                         message = tse.exportPartialTransactionDataBySigCounter(filename, (long)0, numRecords);
-                        if (message == "OK") {
+                        if (message.equals("OK")) {
                             highestExportedSig = tse.discoverHighestExportedSigCounterFromExport(filename);
                             logger.info("Highest exported Sig counter was found to be: {}", highestExportedSig);
                             if (highestExportedSig <= 0) {
@@ -279,7 +279,7 @@ public class TSEStatus extends WindowContent {
                     }
                 }
             }
-            if (message == "OK") {
+            if (message.equals("OK")) {
                 logger.info("TSE export created successfully");
                 JOptionPane.showMessageDialog(this,
                     "TSE-Export '"+filename+"' wurde erfolgreich angelegt.",
@@ -289,10 +289,10 @@ public class TSEStatus extends WindowContent {
                         "Alle Signaturen bis "+highestExportedSig+" wurden von der TSE gelöscht.",
                         "Info", JOptionPane.INFORMATION_MESSAGE);
                 }
-            } else if (message == "") {
+            } else if (message.equals("")) {
                 // do nothing, operation was canceled by user.
                 logger.info("TSE export canceled by user");
-            } else if (message == "ErrorTooManyRecords") {
+            } else if (message.equals("ErrorTooManyRecords")) {
                 // inform the user:
                 JOptionPane.showMessageDialog(this,
                     "Fehler: Maximale Anzahl Signaturen ist zu klein.\n"+
