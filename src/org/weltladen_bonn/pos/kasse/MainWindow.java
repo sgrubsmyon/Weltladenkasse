@@ -10,6 +10,7 @@ import org.mariadb.jdbc.MariaDbPoolDataSource;
 // GUI stuff:
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
@@ -17,6 +18,7 @@ import javax.swing.*; // JFrame, JPanel, JButton, JLabel, ...
 import javax.swing.Timer; // ambiguity with java.util.Timer
 
 import org.weltladen_bonn.pos.MainWindowGrundlage;
+import org.weltladen_bonn.pos.BaseClass;
 
 // Logging:
 import org.apache.logging.log4j.LogManager;
@@ -57,7 +59,22 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
 
         if (dbconn.connectionWorks) {
             myTabbedPane = new TabbedPane(this.pool, this);
-            setContentPanel(myTabbedPane);
+            JPanel contentPanel = new JPanel();
+            contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+            if (isInTrainingMode()) {
+                JPanel trainingPanel = new JPanel(new BorderLayout());
+                // center
+                JPanel centerPanel = new JPanel();
+                JButton trainingBadge = new BaseClass.BigButton("TRAININGSMODUS");
+                trainingBadge.setBackground(Color.RED);
+                trainingBadge.setForeground(Color.WHITE.brighter().brighter().brighter());
+                trainingBadge.setEnabled(false);
+                centerPanel.add(trainingBadge);
+                trainingPanel.add(centerPanel, BorderLayout.CENTER);
+                contentPanel.add(trainingPanel);
+            }
+            contentPanel.add(myTabbedPane);
+            setContentPanel(contentPanel);
         }
         //topPanel.setLayout(new FlowLayout());
         //beendenButton.addActionListener(this);
