@@ -164,7 +164,7 @@ public abstract class Abrechnungen extends WindowContent {
             ResultSet rs = stmt.executeQuery(
                     "SELECT SUM(ges_preis) AS ges_brutto " +
                     "FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND rechnungs_nr > " +
+                    "WHERE rechnungs_nr > " +
                     "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) "
                     );
             rs.next();
@@ -175,7 +175,7 @@ public abstract class Abrechnungen extends WindowContent {
             rs = stmt.executeQuery(
                     "SELECT SUM(ges_preis) AS ges_bar_brutto " +
                     "FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND rechnungs_nr > " +
+                    "WHERE rechnungs_nr > " +
                     "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) AND ec_zahlung = FALSE "
                     );
             rs.next();
@@ -212,14 +212,14 @@ public abstract class Abrechnungen extends WindowContent {
                     //"SELECT mwst_satz, SUM( ROUND(ges_preis / (1.+mwst_satz), 2) ) AS mwst_netto, " +
                     //"SUM( ROUND(ges_preis / (1. + mwst_satz) * mwst_satz, 2) ) AS mwst_betrag " +
                     //"FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
-                    //"WHERE storniert = FALSE AND rechnungs_nr > " +
+                    //"WHERE rechnungs_nr > " +
                     //"IFNULL((SELECT MAX(rechnungs_nr_bis) FROM +"tableForMode("abrechnung_tag")+"), 0) " +
                     //"GROUP BY mwst_satz"
                 // NEW: ROUND OF SUM
                     //"SELECT mwst_satz, SUM( ges_preis / (1.+mwst_satz) ) AS mwst_netto, " +
                     //"SUM( ges_preis / (1. + mwst_satz) * mwst_satz ) AS mwst_betrag " +
                     //"FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
-                    //"WHERE storniert = FALSE AND rechnungs_nr > " +
+                    //"WHERE rechnungs_nr > " +
                     //"IFNULL((SELECT MAX(rechnungs_nr_bis) FROM +"tableForMode("abrechnung_tag")+"), 0) " +
                     //"GROUP BY mwst_satz"
                 // NEWER: Da für jede Rechnung einzeln summiert (und dann gerundet) werden müsste,
@@ -227,7 +227,7 @@ public abstract class Abrechnungen extends WindowContent {
                 // Rechnung zu speichern (in Tabelle `verkauf_mwst`) und nur noch darüber zu summieren
                     "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag) "+
                     "FROM "+tableForMode("verkauf_mwst")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) "+
-                    "WHERE storniert = FALSE AND rechnungs_nr > " +
+                    "WHERE rechnungs_nr > " +
                     "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) " +
                     "GROUP BY mwst_satz"
                     );

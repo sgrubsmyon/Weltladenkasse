@@ -67,8 +67,7 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
     public AlteRechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw) {
         super(pool, mw, "", "Alte Rechnungen");
         setFilterStr("WHERE v.rechnungs_nr <= "+
-            "(SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+") AND "+
-            "v.storniert = FALSE ");
+            "(SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+") ");
         queryEarliestRechnung();
         initiateSpinners();
         showTable();
@@ -85,7 +84,7 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
             // Run MySQL command
             ResultSet rs = stmt
                     .executeQuery("SELECT DAY(MIN(verkaufsdatum)), MONTH(MIN(verkaufsdatum)), "
-                            + "YEAR(MIN(verkaufsdatum)) FROM "+tableForMode("verkauf")+" WHERE storniert = FALSE");
+                            + "YEAR(MIN(verkaufsdatum)) FROM "+tableForMode("verkauf"));
             // Now do something with the ResultSet ...
             rs.next();
             day = rs.getInt(1);
@@ -263,13 +262,13 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
             java.sql.Date endDateSQL = new java.sql.Date(endDate.getTime());
             String startDateStr = startDateSQL.toString();
             String endDateStr = endDateSQL.toString();
-            this.filterStr = "WHERE DATE("+tableForMode("verkauf")+".verkaufsdatum) >= DATE('" + startDateStr + "') "
-                    + "AND DATE("+tableForMode("verkauf")+".verkaufsdatum) <= DATE('" + endDateStr + "') AND "+tableForMode("verkauf")+".storniert = FALSE ";
+            this.filterStr = "WHERE DATE(v.verkaufsdatum) >= DATE('" + startDateStr + "') "
+                    + "AND DATE(v.verkaufsdatum) <= DATE('" + endDateStr + "') ";
             updateTable();
             return;
         }
         if (e.getSource() == resetButton) {
-            this.filterStr = "WHERE DATE("+tableForMode("verkauf")+".verkaufsdatum) < CURRENT_DATE() AND "+tableForMode("verkauf")+".storniert = FALSE ";
+            this.filterStr = "WHERE DATE(v.verkaufsdatum) < CURRENT_DATE() ";
             initiateSpinners();
             updateTable();
             return;
