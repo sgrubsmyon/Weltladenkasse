@@ -135,12 +135,12 @@ class AbrechnungenTag extends Abrechnungen {
     private PreparedStatement prepareStmtRetouren(Connection connection, Integer abrechnung_tag_id) throws SQLException {
         // Summe über Retouren:
         PreparedStatement pstmt = connection.prepareStatement(
-                // SELECT mwst_satz, SUM(ges_preis) FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) INNER JOIN artikel USING (artikel_id) WHERE storniert = FALSE AND rechnungs_nr >= IFNULL((SELECT rechnungs_nr_von FROM abrechnung_tag WHERE id = 0), 0) AND rechnungs_nr <= IFNULL((SELECT rechnungs_nr_bis FROM abrechnung_tag WHERE id = 9999999999999), 4294967295) AND stueckzahl < 0 AND produktgruppen_id >= 9 GROUP BY mwst_satz;
+                // SELECT mwst_satz, SUM(ges_preis) FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) INNER JOIN artikel USING (artikel_id) WHERE rechnungs_nr >= IFNULL((SELECT rechnungs_nr_von FROM abrechnung_tag WHERE id = 0), 0) AND rechnungs_nr <= IFNULL((SELECT rechnungs_nr_bis FROM abrechnung_tag WHERE id = 9999999999999), 4294967295) AND stueckzahl < 0 AND produktgruppen_id >= 9 GROUP BY mwst_satz;
                 "SELECT mwst_satz, SUM(ges_preis) " +
                 "FROM "+tableForMode("verkauf_details")+" " +
                 "INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
                 "LEFT JOIN artikel USING (artikel_id) " + // left join needed because Rabattaktionen do not have an artikel_id
-                "WHERE storniert = FALSE AND " +
+                "WHERE " +
                 "rechnungs_nr >= IFNULL((SELECT rechnungs_nr_von FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?), 0) AND " +
                 "rechnungs_nr <= IFNULL((SELECT rechnungs_nr_bis FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?), 4294967295) AND " +
                 "stueckzahl < 0 AND ( produktgruppen_id NOT IN (1, 6, 7, 8) OR produktgruppen_id IS NULL ) " + // exclude internal articles, Gutschein, and Pfand
@@ -440,10 +440,10 @@ class AbrechnungenTag extends Abrechnungen {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
-                // SELECT mwst_satz, SUM(ges_preis) AS bar_brutto FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) WHERE storniert = FALSE AND rechnungs_nr > IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) AND ec_zahlung = FALSE GROUP BY mwst_satz;
+                // SELECT mwst_satz, SUM(ges_preis) AS bar_brutto FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) WHERE rechnungs_nr > IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) AND ec_zahlung = FALSE GROUP BY mwst_satz;
                     "SELECT mwst_satz, SUM(ges_preis) AS bar_brutto " +
                     "FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND rechnungs_nr > " +
+                    "WHERE rechnungs_nr > " +
                     "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) AND ec_zahlung = FALSE " +
                     "GROUP BY mwst_satz"
                     );
@@ -851,7 +851,7 @@ class AbrechnungenTag extends Abrechnungen {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MIN(rechnungs_nr) "+
-                    "FROM "+tableForMode("verkauf")+" WHERE storniert = FALSE AND rechnungs_nr > "+
+                    "FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr > "+
                     "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0)");
             rs.next(); nr = rs.getInt(1); rs.close();
             stmt.close();
@@ -869,7 +869,7 @@ class AbrechnungenTag extends Abrechnungen {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MAX(rechnungs_nr) "+
-                    "FROM "+tableForMode("verkauf")+" WHERE storniert = FALSE AND rechnungs_nr > "+
+                    "FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr > "+
                     "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0)");
             rs.next(); nr = rs.getInt(1); rs.close();
             stmt.close();

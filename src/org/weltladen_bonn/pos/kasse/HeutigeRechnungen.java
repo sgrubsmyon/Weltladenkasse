@@ -43,8 +43,7 @@ public class HeutigeRechnungen extends Rechnungen {
     public HeutigeRechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw, RechnungenTabbedPane tp){
 	    super(pool, mw, "", "Heutige Rechnungen");
         setFilterStr("WHERE v.rechnungs_nr > " +
-            "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) AND "+
-            "v.storniert = FALSE ");
+            "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) ");
         tabbedPane = tp;
 	    showTable();
     }

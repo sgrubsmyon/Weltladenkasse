@@ -38,7 +38,6 @@ import org.weltladen_bonn.pos.TabbedPaneGrundlage;
 public class RechnungenTabbedPane extends TabbedPaneGrundlage {
     private HeutigeRechnungen myRech;
     private AlteRechnungen myArchiv;
-    private StornierteRechnungen myStorniert;
 
     // Methoden:
     /**
@@ -54,10 +53,8 @@ public class RechnungenTabbedPane extends TabbedPaneGrundlage {
 
         myRech = new HeutigeRechnungen(this.pool, this.mainWindow, this);
         myArchiv = new AlteRechnungen(this.pool, this.mainWindow);
-        myStorniert = new StornierteRechnungen(this.pool, this.mainWindow);
         tabbedPane.addTab("Heutige Rechnungen", null, myRech, "Rechnungen von heute");
         tabbedPane.addTab("Alte Rechnungen", null, myArchiv, "Rechnungen von gestern und früher");
-        tabbedPane.addTab("Stornierte Rechnungen", null, myStorniert, "Heutige stornierte Rechnungen");
 
         this.add(tabbedPane, BorderLayout.CENTER);
     }

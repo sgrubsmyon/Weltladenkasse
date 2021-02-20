@@ -1330,7 +1330,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MAX(verkaufsdatum) "+
-                    "FROM "+tableForMode("verkauf")+" WHERE storniert = FALSE");
+                    "FROM "+tableForMode("verkauf"));
             rs.next(); date = rs.getString(1); rs.close();
             if (date == null){
                 date = "";
