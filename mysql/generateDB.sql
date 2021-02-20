@@ -95,7 +95,8 @@ CREATE TABLE verkauf (
     storno_von INTEGER(10) UNSIGNED DEFAULT NULL,
     ec_zahlung BOOLEAN NOT NULL DEFAULT FALSE,
     kunde_gibt DECIMAL(13,2) DEFAULT NULL,
-    PRIMARY KEY (rechnungs_nr)
+    PRIMARY KEY (rechnungs_nr),
+    FOREIGN KEY (storno_von) REFERENCES verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE verkauf_mwst (
     rechnungs_nr INTEGER(10) UNSIGNED NOT NULL,
