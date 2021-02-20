@@ -92,7 +92,7 @@ CREATE TABLE rabattaktion (
 CREATE TABLE verkauf (
     rechnungs_nr INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     verkaufsdatum DATETIME NOT NULL,
-    storniert BOOLEAN NOT NULL DEFAULT FALSE,
+    storno_von INTEGER(10) UNSIGNED DEFAULT NULL,
     ec_zahlung BOOLEAN NOT NULL DEFAULT FALSE,
     kunde_gibt DECIMAL(13,2) DEFAULT NULL,
     PRIMARY KEY (rechnungs_nr)
@@ -291,7 +291,7 @@ CREATE TABLE tse_transaction (
 CREATE TABLE training_verkauf (
     rechnungs_nr INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     verkaufsdatum DATETIME NOT NULL,
-    storniert BOOLEAN NOT NULL DEFAULT FALSE,
+    storno_von INTEGER(10) UNSIGNED DEFAULT NULL,
     ec_zahlung BOOLEAN NOT NULL DEFAULT FALSE,
     kunde_gibt DECIMAL(13,2) DEFAULT NULL,
     PRIMARY KEY (rechnungs_nr)
@@ -302,7 +302,7 @@ CREATE TABLE training_verkauf_mwst (
     mwst_netto DECIMAL(13,2) NOT NULL,
     mwst_betrag DECIMAL(13,2) NOT NULL,
     PRIMARY KEY (rechnungs_nr, mwst_satz),
-    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
+    FOREIGN KEY (rechnungs_nr) REFERENCES training_verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE training_verkauf_details (
     vd_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -314,7 +314,7 @@ CREATE TABLE training_verkauf_details (
     ges_preis DECIMAL(13,2) NOT NULL,
     mwst_satz DECIMAL(6,5) NOT NULL,
     PRIMARY KEY (vd_id),
-    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr),
+    FOREIGN KEY (rechnungs_nr) REFERENCES training_verkauf(rechnungs_nr),
     FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id),
     FOREIGN KEY (rabatt_id) REFERENCES rabattaktion(rabatt_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -328,7 +328,7 @@ CREATE TABLE training_kassenstand (
     rechnungs_nr INTEGER(10) UNSIGNED DEFAULT NULL,
     kommentar VARCHAR(70),
     PRIMARY KEY (kassenstand_id),
-    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
+    FOREIGN KEY (rechnungs_nr) REFERENCES training_verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE training_abrechnung_tag (
@@ -340,9 +340,9 @@ CREATE TABLE training_abrechnung_tag (
     rechnungs_nr_bis INTEGER(10) UNSIGNED NOT NULL,
     last_tse_sig_counter INTEGER(10) DEFAULT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id),
-    FOREIGN KEY (rechnungs_nr_von) REFERENCES verkauf(rechnungs_nr),
-    FOREIGN KEY (rechnungs_nr_bis) REFERENCES verkauf(rechnungs_nr)
+    FOREIGN KEY (kassenstand_id) REFERENCES training_kassenstand(kassenstand_id),
+    FOREIGN KEY (rechnungs_nr_von) REFERENCES training_verkauf(rechnungs_nr),
+    FOREIGN KEY (rechnungs_nr_bis) REFERENCES training_verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE training_abrechnung_tag_mwst (
     id INTEGER(10) UNSIGNED NOT NULL,
@@ -359,7 +359,7 @@ CREATE TABLE training_zaehlprotokoll (
     kommentar TEXT NOT NULL,
     aktiv BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY (id),
-    FOREIGN KEY (abrechnung_tag_id) REFERENCES abrechnung_tag(id)
+    FOREIGN KEY (abrechnung_tag_id) REFERENCES training_abrechnung_tag(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE training_zaehlprotokoll_details (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -367,7 +367,7 @@ CREATE TABLE training_zaehlprotokoll_details (
     anzahl SMALLINT(5) UNSIGNED NOT NULL,
     einheit DECIMAL(13,2) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (zaehlprotokoll_id) REFERENCES zaehlprotokoll(id)
+    FOREIGN KEY (zaehlprotokoll_id) REFERENCES training_zaehlprotokoll(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE training_abrechnung_monat (
@@ -376,8 +376,8 @@ CREATE TABLE training_abrechnung_monat (
     abrechnung_tag_id_von INTEGER(10) UNSIGNED NOT NULL,
     abrechnung_tag_id_bis INTEGER(10) UNSIGNED NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES abrechnung_tag(id),
-    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES abrechnung_tag(id)
+    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES training_abrechnung_tag(id),
+    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES training_abrechnung_tag(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE training_abrechnung_monat_mwst (
     id INTEGER(10) UNSIGNED NOT NULL,
@@ -394,8 +394,8 @@ CREATE TABLE training_abrechnung_jahr (
     abrechnung_tag_id_von INTEGER(10) UNSIGNED NOT NULL,
     abrechnung_tag_id_bis INTEGER(10) UNSIGNED NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES abrechnung_tag(id),
-    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES abrechnung_tag(id)
+    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES training_abrechnung_tag(id),
+    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES training_abrechnung_tag(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE training_abrechnung_jahr_mwst (
     id INTEGER(10) UNSIGNED NOT NULL,

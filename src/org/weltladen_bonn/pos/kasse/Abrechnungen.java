@@ -161,7 +161,6 @@ public abstract class Abrechnungen extends WindowContent {
 
             // first, get the totals:
             // Gesamt Brutto
-            logger.debug("table for mode: {}", tableForMode("verkauf_details"));
             ResultSet rs = stmt.executeQuery(
                     "SELECT SUM(ges_preis) AS ges_brutto " +
                     "FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +

@@ -279,7 +279,7 @@ ALTER TABLE artikel MODIFY einheit VARCHAR(10) DEFAULT NULL;
 CREATE TABLE training_verkauf (
     rechnungs_nr INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     verkaufsdatum DATETIME NOT NULL,
-    storniert BOOLEAN NOT NULL DEFAULT FALSE,
+    storno_von INTEGER(10) UNSIGNED DEFAULT NULL,
     ec_zahlung BOOLEAN NOT NULL DEFAULT FALSE,
     kunde_gibt DECIMAL(13,2) DEFAULT NULL,
     PRIMARY KEY (rechnungs_nr)
@@ -290,7 +290,7 @@ CREATE TABLE training_verkauf_mwst (
     mwst_netto DECIMAL(13,2) NOT NULL,
     mwst_betrag DECIMAL(13,2) NOT NULL,
     PRIMARY KEY (rechnungs_nr, mwst_satz),
-    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
+    FOREIGN KEY (rechnungs_nr) REFERENCES training_verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE training_verkauf_details (
     vd_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -302,7 +302,7 @@ CREATE TABLE training_verkauf_details (
     ges_preis DECIMAL(13,2) NOT NULL,
     mwst_satz DECIMAL(6,5) NOT NULL,
     PRIMARY KEY (vd_id),
-    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr),
+    FOREIGN KEY (rechnungs_nr) REFERENCES training_verkauf(rechnungs_nr),
     FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id),
     FOREIGN KEY (rabatt_id) REFERENCES rabattaktion(rabatt_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -316,7 +316,7 @@ CREATE TABLE training_kassenstand (
     rechnungs_nr INTEGER(10) UNSIGNED DEFAULT NULL,
     kommentar VARCHAR(70),
     PRIMARY KEY (kassenstand_id),
-    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
+    FOREIGN KEY (rechnungs_nr) REFERENCES training_verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE training_abrechnung_tag (
@@ -328,9 +328,9 @@ CREATE TABLE training_abrechnung_tag (
     rechnungs_nr_bis INTEGER(10) UNSIGNED NOT NULL,
     last_tse_sig_counter INTEGER(10) DEFAULT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id),
-    FOREIGN KEY (rechnungs_nr_von) REFERENCES verkauf(rechnungs_nr),
-    FOREIGN KEY (rechnungs_nr_bis) REFERENCES verkauf(rechnungs_nr)
+    FOREIGN KEY (kassenstand_id) REFERENCES training_kassenstand(kassenstand_id),
+    FOREIGN KEY (rechnungs_nr_von) REFERENCES training_verkauf(rechnungs_nr),
+    FOREIGN KEY (rechnungs_nr_bis) REFERENCES training_verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE training_abrechnung_tag_mwst (
     id INTEGER(10) UNSIGNED NOT NULL,
@@ -347,7 +347,7 @@ CREATE TABLE training_zaehlprotokoll (
     kommentar TEXT NOT NULL,
     aktiv BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY (id),
-    FOREIGN KEY (abrechnung_tag_id) REFERENCES abrechnung_tag(id)
+    FOREIGN KEY (abrechnung_tag_id) REFERENCES training_abrechnung_tag(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE training_zaehlprotokoll_details (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -355,7 +355,7 @@ CREATE TABLE training_zaehlprotokoll_details (
     anzahl SMALLINT(5) UNSIGNED NOT NULL,
     einheit DECIMAL(13,2) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (zaehlprotokoll_id) REFERENCES zaehlprotokoll(id)
+    FOREIGN KEY (zaehlprotokoll_id) REFERENCES training_zaehlprotokoll(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE training_abrechnung_monat (
@@ -364,8 +364,8 @@ CREATE TABLE training_abrechnung_monat (
     abrechnung_tag_id_von INTEGER(10) UNSIGNED NOT NULL,
     abrechnung_tag_id_bis INTEGER(10) UNSIGNED NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES abrechnung_tag(id),
-    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES abrechnung_tag(id)
+    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES training_abrechnung_tag(id),
+    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES training_abrechnung_tag(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE training_abrechnung_monat_mwst (
     id INTEGER(10) UNSIGNED NOT NULL,
@@ -382,8 +382,8 @@ CREATE TABLE training_abrechnung_jahr (
     abrechnung_tag_id_von INTEGER(10) UNSIGNED NOT NULL,
     abrechnung_tag_id_bis INTEGER(10) UNSIGNED NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES abrechnung_tag(id),
-    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES abrechnung_tag(id)
+    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES training_abrechnung_tag(id),
+    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES training_abrechnung_tag(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE training_abrechnung_jahr_mwst (
     id INTEGER(10) UNSIGNED NOT NULL,
@@ -406,3 +406,307 @@ GRANT INSERT, DELETE ON kasse.training_abrechnung_monat TO 'mitarbeiter'@'localh
 GRANT INSERT, DELETE ON kasse.training_abrechnung_monat_mwst TO 'mitarbeiter'@'localhost';
 GRANT INSERT, DELETE ON kasse.training_abrechnung_jahr TO 'mitarbeiter'@'localhost';
 GRANT INSERT, DELETE ON kasse.training_abrechnung_jahr_mwst TO 'mitarbeiter'@'localhost';
+
+-- ------------------------------------
+-- verkauf (Storno als Gegenbuchung) --
+-- ------------------------------------
+
+-- create temporary verkauf copy:
+CREATE TABLE verkauf_copy (
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    verkaufsdatum DATETIME NOT NULL,
+    storniert BOOLEAN NOT NULL DEFAULT FALSE,
+    ec_zahlung BOOLEAN NOT NULL DEFAULT FALSE,
+    kunde_gibt DECIMAL(13,2) DEFAULT NULL,
+    PRIMARY KEY (rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO verkauf_copy SELECT * FROM verkauf;
+
+-- also need copies of the FK constraint tables:
+CREATE TABLE verkauf_mwst_copy (
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (rechnungs_nr, mwst_satz),
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf_copy(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO verkauf_mwst_copy SELECT * FROM verkauf_mwst;
+CREATE TABLE verkauf_details_copy (
+    vd_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL,
+    position SMALLINT(5) UNSIGNED DEFAULT NULL,
+    artikel_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    rabatt_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    stueckzahl SMALLINT(5) NOT NULL DEFAULT 1,
+    ges_preis DECIMAL(13,2) NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    PRIMARY KEY (vd_id),
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf_copy(rechnungs_nr),
+    FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id),
+    FOREIGN KEY (rabatt_id) REFERENCES rabattaktion(rabatt_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO verkauf_details_copy SELECT * FROM verkauf_details;
+CREATE TABLE kassenstand_copy (
+    kassenstand_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    buchungsdatum DATETIME NOT NULL,
+    neuer_kassenstand DECIMAL(13,2) NOT NULL,
+    manuell BOOLEAN NOT NULL DEFAULT FALSE,
+    entnahme BOOLEAN NOT NULL DEFAULT FALSE,
+    rechnungs_nr INTEGER(10) UNSIGNED DEFAULT NULL,
+    kommentar VARCHAR(70),
+    PRIMARY KEY (kassenstand_id),
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf_copy(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- There was a different column order, so need to explicitly name them:
+INSERT INTO kassenstand_copy SELECT kassenstand_id, buchungsdatum,
+    neuer_kassenstand, manuell, entnahme, rechnungs_nr, kommentar
+    FROM kassenstand;
+CREATE TABLE abrechnung_tag_copy (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    zeitpunkt DATETIME NOT NULL,
+    zeitpunkt_real DATETIME NOT NULL,
+    kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    rechnungs_nr_von INTEGER(10) UNSIGNED NOT NULL,
+    rechnungs_nr_bis INTEGER(10) UNSIGNED NOT NULL,
+    last_tse_sig_counter INTEGER(10) DEFAULT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (kassenstand_id) REFERENCES kassenstand_copy(kassenstand_id),
+    FOREIGN KEY (rechnungs_nr_von) REFERENCES verkauf_copy(rechnungs_nr),
+    FOREIGN KEY (rechnungs_nr_bis) REFERENCES verkauf_copy(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO abrechnung_tag_copy SELECT * FROM abrechnung_tag;
+CREATE TABLE zaehlprotokoll_copy (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    abrechnung_tag_id INTEGER(10) UNSIGNED NOT NULL,
+    zeitpunkt DATETIME NOT NULL,
+    kommentar TEXT NOT NULL,
+    aktiv BOOLEAN NOT NULL DEFAULT TRUE,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id) REFERENCES abrechnung_tag_copy(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO zaehlprotokoll_copy SELECT * FROM zaehlprotokoll;
+CREATE TABLE zaehlprotokoll_details_copy (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    zaehlprotokoll_id INTEGER(10) UNSIGNED NOT NULL,
+    anzahl SMALLINT(5) UNSIGNED NOT NULL,
+    einheit DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (zaehlprotokoll_id) REFERENCES zaehlprotokoll_copy(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO zaehlprotokoll_details_copy SELECT * FROM zaehlprotokoll_details;
+CREATE TABLE abrechnung_monat_copy (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    monat DATE NOT NULL,
+    abrechnung_tag_id_von INTEGER(10) UNSIGNED NOT NULL,
+    abrechnung_tag_id_bis INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES abrechnung_tag_copy(id),
+    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES abrechnung_tag_copy(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO abrechnung_monat_copy SELECT * FROM abrechnung_monat;
+CREATE TABLE abrechnung_jahr_copy (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    jahr YEAR NOT NULL,
+    abrechnung_tag_id_von INTEGER(10) UNSIGNED NOT NULL,
+    abrechnung_tag_id_bis INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES abrechnung_tag_copy(id),
+    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES abrechnung_tag_copy(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO abrechnung_jahr_copy SELECT * FROM abrechnung_jahr;
+CREATE TABLE tse_transaction_copy (
+    transaction_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    transaction_number INTEGER(10) UNSIGNED DEFAULT NULL,
+    rechnungs_nr INTEGER(10) UNSIGNED DEFAULT NULL,
+    training BOOLEAN NOT NULL DEFAULT FALSE,
+    transaction_start CHAR(29) DEFAULT NULL,
+    transaction_end CHAR(29) DEFAULT NULL,
+    process_type VARCHAR(30) DEFAULT NULL,
+    signature_counter INTEGER(10) UNSIGNED DEFAULT NULL,
+    signature_base64 VARCHAR(512) DEFAULT NULL,
+    tse_error TINYTEXT DEFAULT NULL,
+    process_data VARCHAR(65) DEFAULT NULL,
+    PRIMARY KEY (transaction_id),
+    -- If planning to use method `getTransactionByTxNumber()`, can also create index on column `transaction_number`
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf_copy(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO tse_transaction_copy SELECT * FROM tse_transaction;
+
+-- drop the original verkauf and FK constraint tables:
+DROP TABLE tse_transaction, abrechnung_jahr, abrechnung_monat,
+  zaehlprotokoll_details, zaehlprotokoll,
+  abrechnung_tag, kassenstand, verkauf_details,
+  verkauf_mwst, verkauf;
+
+-- create the new verkauf and FK constraint tables and fill them:
+CREATE TABLE verkauf (
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    verkaufsdatum DATETIME NOT NULL,
+    storno_von INTEGER(10) UNSIGNED DEFAULT NULL,
+    ec_zahlung BOOLEAN NOT NULL DEFAULT FALSE,
+    kunde_gibt DECIMAL(13,2) DEFAULT NULL,
+    PRIMARY KEY (rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- ------------------------------------
+-- Insert the normal transactions:
+INSERT INTO verkauf SELECT rechnungs_nr, verkaufsdatum,
+    NULL, ec_zahlung, kunde_gibt FROM verkauf_copy;
+-- Insert the storno (cancelling) transactions:
+INSERT INTO verkauf SELECT NULL, DATE_ADD(verkaufsdatum, INTERVAL 1 MINUTE),
+    rechnungs_nr, ec_zahlung, NULL
+    FROM verkauf_copy WHERE storniert = TRUE;
+-- ------------------------------------
+CREATE TABLE verkauf_mwst (
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    mwst_netto DECIMAL(13,2) NOT NULL,
+    mwst_betrag DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (rechnungs_nr, mwst_satz),
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- ------------------------------------
+-- Insert the normal transactions:
+INSERT INTO verkauf_mwst SELECT * FROM verkauf_mwst_copy;
+-- Insert the storno (cancelling) transactions with inverse values:
+INSERT INTO verkauf_mwst SELECT
+    (SELECT rechnungs_nr FROM verkauf WHERE storno_von = v.rechnungs_nr) AS rechnungs_nr,
+    mwst_satz, -mwst_netto, -mwst_betrag
+    FROM verkauf_mwst_copy AS v
+    WHERE v.rechnungs_nr IN
+        (SELECT storno_von FROM verkauf WHERE storno_von IS NOT NULL);
+-- ------------------------------------
+CREATE TABLE verkauf_details (
+    vd_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL,
+    position SMALLINT(5) UNSIGNED DEFAULT NULL,
+    artikel_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    rabatt_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    stueckzahl SMALLINT(5) NOT NULL DEFAULT 1,
+    ges_preis DECIMAL(13,2) NOT NULL,
+    mwst_satz DECIMAL(6,5) NOT NULL,
+    PRIMARY KEY (vd_id),
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr),
+    FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id),
+    FOREIGN KEY (rabatt_id) REFERENCES rabattaktion(rabatt_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- ------------------------------------
+-- Insert the normal transactions:
+INSERT INTO verkauf_details SELECT * FROM verkauf_details_copy;
+-- Insert the storno (cancelling) transactions with inverse stueckzahl:
+INSERT INTO verkauf_details SELECT NULL,
+    (SELECT rechnungs_nr FROM verkauf WHERE storno_von = v.rechnungs_nr) AS rechnungs_nr,
+    position, artikel_id, rabatt_id, -stueckzahl, -ges_preis, mwst_satz
+    FROM verkauf_details_copy AS v
+    WHERE v.rechnungs_nr IN
+        (SELECT storno_von FROM verkauf WHERE storno_von IS NOT NULL);
+-- ------------------------------------
+CREATE TABLE kassenstand (
+    kassenstand_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    buchungsdatum DATETIME NOT NULL,
+    neuer_kassenstand DECIMAL(13,2) NOT NULL,
+    manuell BOOLEAN NOT NULL DEFAULT FALSE,
+    entnahme BOOLEAN NOT NULL DEFAULT FALSE,
+    rechnungs_nr INTEGER(10) UNSIGNED DEFAULT NULL,
+    kommentar VARCHAR(70),
+    PRIMARY KEY (kassenstand_id),
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- ------------------------------------
+-- Insert the normal transactions:
+INSERT INTO kassenstand SELECT * FROM kassenstand_copy;
+-- ------------------------------------
+CREATE TABLE abrechnung_tag (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    zeitpunkt DATETIME NOT NULL,
+    zeitpunkt_real DATETIME NOT NULL,
+    kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    rechnungs_nr_von INTEGER(10) UNSIGNED NOT NULL,
+    rechnungs_nr_bis INTEGER(10) UNSIGNED NOT NULL,
+    last_tse_sig_counter INTEGER(10) DEFAULT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (kassenstand_id) REFERENCES kassenstand(kassenstand_id),
+    FOREIGN KEY (rechnungs_nr_von) REFERENCES verkauf(rechnungs_nr),
+    FOREIGN KEY (rechnungs_nr_bis) REFERENCES verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- ------------------------------------
+-- Insert the normal transactions:
+INSERT INTO abrechnung_tag SELECT * FROM abrechnung_tag_copy;
+-- ------------------------------------
+CREATE TABLE zaehlprotokoll (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    abrechnung_tag_id INTEGER(10) UNSIGNED NOT NULL,
+    zeitpunkt DATETIME NOT NULL,
+    kommentar TEXT NOT NULL,
+    aktiv BOOLEAN NOT NULL DEFAULT TRUE,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- ------------------------------------
+-- Insert the normal transactions:
+INSERT INTO zaehlprotokoll SELECT * FROM zaehlprotokoll_copy;
+-- ------------------------------------
+CREATE TABLE zaehlprotokoll_details (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    zaehlprotokoll_id INTEGER(10) UNSIGNED NOT NULL,
+    anzahl SMALLINT(5) UNSIGNED NOT NULL,
+    einheit DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (zaehlprotokoll_id) REFERENCES zaehlprotokoll(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- ------------------------------------
+-- Insert the normal transactions:
+INSERT INTO zaehlprotokoll_details SELECT * FROM zaehlprotokoll_details_copy;
+-- ------------------------------------
+CREATE TABLE abrechnung_monat (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    monat DATE NOT NULL,
+    abrechnung_tag_id_von INTEGER(10) UNSIGNED NOT NULL,
+    abrechnung_tag_id_bis INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES abrechnung_tag(id),
+    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- ------------------------------------
+-- Insert the normal transactions:
+INSERT INTO abrechnung_monat SELECT * FROM abrechnung_monat_copy;
+-- ------------------------------------
+CREATE TABLE abrechnung_jahr (
+    id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    jahr YEAR NOT NULL,
+    abrechnung_tag_id_von INTEGER(10) UNSIGNED NOT NULL,
+    abrechnung_tag_id_bis INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (abrechnung_tag_id_von) REFERENCES abrechnung_tag(id),
+    FOREIGN KEY (abrechnung_tag_id_bis) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- ------------------------------------
+-- Insert the normal transactions:
+INSERT INTO abrechnung_jahr SELECT * FROM abrechnung_jahr_copy;
+-- ------------------------------------
+CREATE TABLE tse_transaction (
+    transaction_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    transaction_number INTEGER(10) UNSIGNED DEFAULT NULL,
+    rechnungs_nr INTEGER(10) UNSIGNED DEFAULT NULL,
+    training BOOLEAN NOT NULL DEFAULT FALSE,
+    transaction_start CHAR(29) DEFAULT NULL,
+    transaction_end CHAR(29) DEFAULT NULL,
+    process_type VARCHAR(30) DEFAULT NULL,
+    signature_counter INTEGER(10) UNSIGNED DEFAULT NULL,
+    signature_base64 VARCHAR(512) DEFAULT NULL,
+    tse_error TINYTEXT DEFAULT NULL,
+    process_data VARCHAR(65) DEFAULT NULL,
+    PRIMARY KEY (transaction_id),
+    -- If planning to use method `getTransactionByTxNumber()`, can also create index on column `transaction_number`
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- ------------------------------------
+-- Insert the normal transactions:
+INSERT INTO tse_transaction SELECT * FROM tse_transaction_copy;
+-- ------------------------------------
+
+-- drop the temporary copies:
+DROP TABLE tse_transaction_copy, abrechnung_jahr_copy, abrechnung_monat_copy,
+  zaehlprotokoll_details_copy, zaehlprotokoll_copy,
+  abrechnung_tag_copy, kassenstand_copy, verkauf_details_copy,
+  verkauf_mwst_copy, verkauf_copy;
