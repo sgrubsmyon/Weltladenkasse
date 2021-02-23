@@ -597,7 +597,7 @@ INSERT INTO rechnungs_nr_alt_neu
 INSERT INTO verkauf SELECT
     rechnungs_nr_neu + 1, IFNULL(
     -- ^ rechnungs_nr     ^ verkaufsdatum
-        (SELECT buchungsdatum FROM kassenstand_copy WHERE rechnungs_nr = altneu.rechnungs_nr_alt AND kommentar = "Storno"),
+        (SELECT buchungsdatum FROM kassenstand_copy WHERE rechnungs_nr = altneu.rechnungs_nr_alt AND manuell = 0 AND kommentar = "Storno"),
         DATE_ADD(verkaufsdatum, INTERVAL 1 MINUTE)
     ),
     rechnungs_nr_neu, ec_zahlung,  NULL
@@ -675,6 +675,8 @@ INSERT INTO kassenstand SELECT kassenstand_id, buchungsdatum, neuer_kassenstand,
     manuell, entnahme, rechnungs_nr_neu, kommentar
     FROM kassenstand_copy AS v LEFT JOIN rechnungs_nr_alt_neu AS altneu -- left join because rechnungs_nr can be NULL
     ON v.rechnungs_nr = altneu.rechnungs_nr_alt;
+-- Increase the rechnungs_nr of the storno bookings by one, since this is their number generated above on row 598
+UPDATE kassenstand SET rechnungs_nr = rechnungs_nr + 1 WHERE manuell = 0 AND kommentar = "Storno";
 -- ------------------------------------
 CREATE TABLE abrechnung_tag (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
