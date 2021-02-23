@@ -119,7 +119,7 @@ class AbrechnungenTag extends Abrechnungen {
     private PreparedStatement prepareStmtStornos(Connection connection, Integer abrechnung_tag_id) throws SQLException {
         // Summe über Stornos:
         PreparedStatement pstmt = connection.prepareStatement(
-                // SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) FROM "+tableForMode("verkauf_mwst")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) WHERE storniert = TRUE AND rechnungs_nr >= IFNULL((SELECT rechnungs_nr_von FROM abrechnung_tag WHERE id = 18), 0) AND rechnungs_nr <= IFNULL((SELECT rechnungs_nr_bis FROM abrechnung_tag WHERE id = 18), 4294967295) GROUP BY mwst_satz;
+                // SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) WHERE storniert = TRUE AND rechnungs_nr >= IFNULL((SELECT rechnungs_nr_von FROM abrechnung_tag WHERE id = 18), 0) AND rechnungs_nr <= IFNULL((SELECT rechnungs_nr_bis FROM abrechnung_tag WHERE id = 18), 4294967295) GROUP BY mwst_satz;
                 "SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) " +
                 "FROM "+tableForMode("verkauf_mwst")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
                 "WHERE storniert = TRUE AND " +

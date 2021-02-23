@@ -553,10 +553,58 @@ CREATE TABLE verkauf (
 -- Insert the normal transactions:
 INSERT INTO verkauf SELECT rechnungs_nr, verkaufsdatum,
     NULL, ec_zahlung, kunde_gibt FROM verkauf_copy;
--- Insert the storno (cancelling) transactions:
-INSERT INTO verkauf SELECT NULL, DATE_ADD(verkaufsdatum, INTERVAL 1 MINUTE),
-    rechnungs_nr, ec_zahlung, NULL
-    FROM verkauf_copy WHERE storniert = TRUE;
+-- ------------------------------------
+-- Make room for the rechnung_nr of the storno (cancelling) transactions:
+--   (directly after the original transaction)
+SET @n_storno = (SELECT COUNT(*) FROM verkauf_copy WHERE storniert = TRUE);
+SET @loop_var = @n_storno;
+DELIMITER $$ -- Need to change delimiter to be able to execute several statements (a while loop) (see https://stackoverflow.com/questions/6628390/mysql-trouble-with-creating-user-defined-function-udf/6628455#6628455)
+WHILE @loop_var > 0 DO
+    SET @row_num = 0;
+    -- Select the @loop_var'th storno rechnungs_nr
+    SET @storno_nr = (
+        SELECT rechnungs_nr FROM (
+            SELECT rechnungs_nr, @row_num := @row_num + 1 AS rank
+            FROM verkauf_copy WHERE storniert = TRUE
+        ) AS d WHERE rank = @loop_var
+    );
+    -- Increment all rechnungs_nrs afterwards,
+    --   descendingly to avoid temporary duplicates
+    UPDATE verkauf SET rechnungs_nr = rechnungs_nr + 1
+        WHERE rechnungs_nr > @storno_nr
+        ORDER BY rechnungs_nr DESC;
+    SET @loop_var = @loop_var - 1; -- Continue with next storno (descendingly)
+END WHILE;
+$$
+DELIMITER ;
+-- Remove variables:
+SET @n_storno = NULL;
+SET @loop_var = NULL;
+SET @storno_nr = NULL;
+SET @row_num = NULL;
+-- ------------------------------------
+-- Create temporary table with translation from old to new rechnungs_nr
+CREATE TABLE rechnungs_nr_alt_neu (
+    rechnungs_nr_alt INTEGER(10) UNSIGNED NOT NULL,
+    rechnungs_nr_neu INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (rechnungs_nr_alt)
+);
+INSERT INTO rechnungs_nr_alt_neu
+    SELECT alt.rechnungs_nr, neu.rechnungs_nr
+    FROM verkauf_copy AS alt INNER JOIN verkauf AS neu USING (verkaufsdatum);
+-- ------------------------------------
+-- Insert the storno (cancelling) transactions into the created gaps:
+INSERT INTO verkauf SELECT
+    rechnungs_nr_neu + 1, IFNULL(
+    -- ^ rechnungs_nr     ^ verkaufsdatum
+        (SELECT buchungsdatum FROM kassenstand_copy WHERE rechnungs_nr = altneu.rechnungs_nr_alt AND kommentar = "Storno"),
+        DATE_ADD(verkaufsdatum, INTERVAL 1 MINUTE)
+    ),
+    rechnungs_nr_neu, ec_zahlung,  NULL
+    -- ^ storno_von   ^ ec_zahlung ^ kunde_gibt
+    FROM verkauf_copy AS v INNER JOIN rechnungs_nr_alt_neu AS altneu
+    ON v.rechnungs_nr = altneu.rechnungs_nr_alt
+    WHERE storniert = TRUE;
 -- ------------------------------------
 CREATE TABLE verkauf_mwst (
     rechnungs_nr INTEGER(10) UNSIGNED NOT NULL,
@@ -568,13 +616,17 @@ CREATE TABLE verkauf_mwst (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 -- ------------------------------------
 -- Insert the normal transactions:
-INSERT INTO verkauf_mwst SELECT * FROM verkauf_mwst_copy;
+INSERT INTO verkauf_mwst SELECT
+    rechnungs_nr_neu, mwst_satz, mwst_netto, mwst_betrag
+    FROM verkauf_mwst_copy AS v INNER JOIN rechnungs_nr_alt_neu AS altneu
+    ON v.rechnungs_nr = altneu.rechnungs_nr_alt;
 -- Insert the storno (cancelling) transactions with inverse values:
 INSERT INTO verkauf_mwst SELECT
-    (SELECT rechnungs_nr FROM verkauf WHERE storno_von = v.rechnungs_nr) AS rechnungs_nr,
+    (SELECT rechnungs_nr FROM verkauf WHERE storno_von = altneu.rechnungs_nr_neu) AS rechnungs_nr,
     mwst_satz, -mwst_netto, -mwst_betrag
-    FROM verkauf_mwst_copy AS v
-    WHERE v.rechnungs_nr IN
+    FROM verkauf_mwst_copy AS v INNER JOIN rechnungs_nr_alt_neu AS altneu
+    ON v.rechnungs_nr = altneu.rechnungs_nr_alt
+    WHERE altneu.rechnungs_nr_neu IN
         (SELECT storno_von FROM verkauf WHERE storno_von IS NOT NULL);
 -- ------------------------------------
 CREATE TABLE verkauf_details (
@@ -593,13 +645,17 @@ CREATE TABLE verkauf_details (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 -- ------------------------------------
 -- Insert the normal transactions:
-INSERT INTO verkauf_details SELECT * FROM verkauf_details_copy;
+INSERT INTO verkauf_details SELECT vd_id, rechnungs_nr_neu, position,
+    artikel_id, rabatt_id, stueckzahl, ges_preis, mwst_satz
+    FROM verkauf_details_copy AS v INNER JOIN rechnungs_nr_alt_neu AS altneu
+    ON v.rechnungs_nr = altneu.rechnungs_nr_alt;
 -- Insert the storno (cancelling) transactions with inverse stueckzahl:
 INSERT INTO verkauf_details SELECT NULL,
-    (SELECT rechnungs_nr FROM verkauf WHERE storno_von = v.rechnungs_nr) AS rechnungs_nr,
+    (SELECT rechnungs_nr FROM verkauf WHERE storno_von = altneu.rechnungs_nr_neu) AS rechnungs_nr,
     position, artikel_id, rabatt_id, -stueckzahl, -ges_preis, mwst_satz
-    FROM verkauf_details_copy AS v
-    WHERE v.rechnungs_nr IN
+    FROM verkauf_details_copy AS v INNER JOIN rechnungs_nr_alt_neu AS altneu
+    ON v.rechnungs_nr = altneu.rechnungs_nr_alt
+    WHERE altneu.rechnungs_nr_neu IN
         (SELECT storno_von FROM verkauf WHERE storno_von IS NOT NULL);
 -- ------------------------------------
 CREATE TABLE kassenstand (
@@ -615,7 +671,10 @@ CREATE TABLE kassenstand (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 -- ------------------------------------
 -- Insert the normal transactions:
-INSERT INTO kassenstand SELECT * FROM kassenstand_copy;
+INSERT INTO kassenstand SELECT kassenstand_id, buchungsdatum, neuer_kassenstand,
+    manuell, entnahme, rechnungs_nr_neu, kommentar
+    FROM kassenstand_copy AS v LEFT JOIN rechnungs_nr_alt_neu AS altneu -- left join because rechnungs_nr can be NULL
+    ON v.rechnungs_nr = altneu.rechnungs_nr_alt;
 -- ------------------------------------
 CREATE TABLE abrechnung_tag (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -632,7 +691,13 @@ CREATE TABLE abrechnung_tag (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 -- ------------------------------------
 -- Insert the normal transactions:
-INSERT INTO abrechnung_tag SELECT * FROM abrechnung_tag_copy;
+INSERT INTO abrechnung_tag SELECT id, zeitpunkt, zeitpunkt_real,
+    kassenstand_id, altneu_von.rechnungs_nr_neu, altneu_bis.rechnungs_nr_neu,
+    last_tse_sig_counter
+    FROM abrechnung_tag_copy AS v INNER JOIN rechnungs_nr_alt_neu AS altneu_von
+    ON v.rechnungs_nr_von = altneu_von.rechnungs_nr_alt
+    INNER JOIN rechnungs_nr_alt_neu AS altneu_bis
+    ON v.rechnungs_nr_bis = altneu_bis.rechnungs_nr_alt;
 -- ------------------------------------
 CREATE TABLE zaehlprotokoll (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -703,9 +768,15 @@ CREATE TABLE tse_transaction (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 -- ------------------------------------
 -- Insert the normal transactions:
-INSERT INTO tse_transaction SELECT * FROM tse_transaction_copy;
+INSERT INTO tse_transaction SELECT transaction_id, transaction_number, rechnungs_nr_neu,
+    training, transaction_start, transaction_end, process_type, signature_counter,
+    signature_base64, tse_error, process_data
+    FROM tse_transaction_copy AS v LEFT JOIN rechnungs_nr_alt_neu AS altneu -- left join because rechnungs_nr can be NULL
+    ON v.rechnungs_nr = altneu.rechnungs_nr_alt;
 -- ------------------------------------
 
+-- drop the temporary translation table:
+DROP TABLE rechnungs_nr_alt_neu;
 -- drop the temporary copies:
 DROP TABLE tse_transaction_copy, abrechnung_jahr_copy, abrechnung_monat_copy,
   zaehlprotokoll_details_copy, zaehlprotokoll_copy,
