@@ -70,23 +70,59 @@ public class HeutigeRechnungen extends Rechnungen {
         String zahlungsModus = data.get(stornoRow).get(3).toString();
         try { 
             Connection connection = this.pool.getConnection();
+            
+            // insert Gegenbuchung into verkauf
             PreparedStatement pstmt = connection.prepareStatement(
-                "UPDATE "+tableForMode("verkauf")+" SET storniert = 1 WHERE rechnungs_nr = ?"
+                "INSERT INTO "+tableForMode("verkauf")+" SET verkaufsdatum = NOW(), "+
+                "storno_von = ?, ec_zahlung = ?, kunde_gibt = NULL"
             );
             pstmtSetInteger(pstmt, 1, rechnungsnummer);
-            int result = pstmt.executeUpdate();
-            if (result != 0){
+            pstmtSetBoolean(pstmt, 2, !zahlungsModus.equals("Bar"));
+            int result1 = pstmt.executeUpdate();
+
+            // retrieve the storno rechnungs_nr
+            pstmt = connection.prepareStatement(
+                "SELECT rechnungs_nr FROM "+tableForMode("verkauf")+" WHERE storno_von = ?"
+            );
+            pstmtSetInteger(pstmt, 1, rechnungsnummer);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); int stornorechnungsnummer = rs.getInt(1); rs.close();
+            
+            // insert Gegenbuchung (negated values) into verkauf_mwst
+            pstmt = connection.prepareStatement(
+                "INSERT INTO "+tableForMode("verkauf_mwst")+" SELECT "+
+                "?, mwst_satz, -mwst_netto, -mwst_betrag "+
+                "FROM "+tableForMode("verkauf_mwst")+" "+
+                "WHERE rechnungs_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, stornorechnungsnummer);
+            pstmtSetInteger(pstmt, 2, rechnungsnummer);
+            int result2 = pstmt.executeUpdate();
+
+            // insert Gegenbuchung (negated stueckzahl) into verkauf_details
+            pstmt = connection.prepareStatement(
+                "INSERT INTO "+tableForMode("verkauf_details")+" SELECT NULL, "+
+                "?, position, artikel_id, rabatt_id, -stueckzahl, -ges_preis, mwst_satz "+
+                "FROM "+tableForMode("verkauf_details")+" "+
+                "WHERE rechnungs_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, stornorechnungsnummer);
+            pstmtSetInteger(pstmt, 2, rechnungsnummer);
+            int result3 = pstmt.executeUpdate();
+
+            if (result1 != 0 && result2 != 0 && result3 != 0){
                 JOptionPane.showMessageDialog(this, "Rechnung " + rechnungsnummer + " wurde storniert.",
                     "Stornierung ausgeführt", JOptionPane.INFORMATION_MESSAGE);
 
                 if (zahlungsModus.equals("Bar")) { // if Barzahlung
-                    insertStornoIntoKassenstand(rechnungsnummer);
+                    insertStornoIntoKassenstand(rechnungsnummer, stornorechnungsnummer);
                 }
             } else {
                 JOptionPane.showMessageDialog(this,
                     "Fehler: Rechnung " + rechnungsnummer + " konnte nicht storniert werden.",
                     "Fehler bei Stornierung", JOptionPane.ERROR_MESSAGE);
             }
+
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
@@ -96,7 +132,7 @@ public class HeutigeRechnungen extends Rechnungen {
         updateTable();
     }
 
-    private void insertStornoIntoKassenstand(int rechnungsNr) {
+    private void insertStornoIntoKassenstand(int rechnungsNr, int stornoRechnungsNr) {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
@@ -113,7 +149,7 @@ public class HeutigeRechnungen extends Rechnungen {
                     "buchungsdatum = NOW(), "+
                     "manuell = FALSE, neuer_kassenstand = ?, kommentar = ?"
                     );
-            pstmtSetInteger(pstmt, 1, rechnungsNr);
+            pstmtSetInteger(pstmt, 1, stornoRechnungsNr);
             pstmt.setBigDecimal(2, neuerKassenstand);
             pstmt.setString(3, "Storno");
             int result = pstmt.executeUpdate();
