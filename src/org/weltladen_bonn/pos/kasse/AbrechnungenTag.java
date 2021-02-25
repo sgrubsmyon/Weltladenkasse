@@ -143,7 +143,8 @@ class AbrechnungenTag extends Abrechnungen {
                 "WHERE " +
                 "rechnungs_nr >= IFNULL((SELECT rechnungs_nr_von FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?), 0) AND " +
                 "rechnungs_nr <= IFNULL((SELECT rechnungs_nr_bis FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?), 4294967295) AND " +
-                "stueckzahl < 0 AND ( produktgruppen_id NOT IN (1, 6, 7, 8) OR produktgruppen_id IS NULL ) " + // exclude internal articles, Gutschein, and Pfand
+                "stueckzahl < 0 AND ( produktgruppen_id NOT IN (1, 6, 7, 8) OR produktgruppen_id IS NULL ) AND " + // exclude internal articles, Gutschein, and Pfand
+                "storno_von IS NULL " + // exclude Storno
                 // produktgruppen_id is null for Rabattaktionen
                 "GROUP BY mwst_satz"
         );
