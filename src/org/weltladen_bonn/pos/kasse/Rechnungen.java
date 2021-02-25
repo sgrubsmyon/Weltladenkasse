@@ -75,7 +75,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     protected String rechnungsZahl;
     protected int rechnungsZahlInt;
 
-    private WeltladenTSE tse;
+    protected WeltladenTSE tse;
 
     // Methoden:
 
@@ -436,6 +436,34 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         table.getColumnModel().getColumn(overviewLabels.size()-1).setPreferredWidth(20);
     }
 
+    protected void printQuittung() {
+            DateTime datet = null;
+            if (!datum.equals(""))
+                datet = new DateTime(datum);
+            else
+                datet = new DateTime(now());
+            TreeMap<BigDecimal, Vector<BigDecimal>> mwstValues = calculateMwStValuesInRechnung();
+            BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
+            BigDecimal rueckgeld = null;
+            if (kundeGibt != null){
+                rueckgeld = kundeGibt.subtract(totalPrice);
+            }
+            TSETransaction tx = tse.getTransactionByRechNr(rechnungsNr);
+            LinkedHashMap<String, String> tseStatusValues = null;
+            // TODO once DSFinV-K is finished, obtain TSE values for printed Quittung
+            // not from from currently operated TSE (because they might have been
+            // different in the past for the printed Quittung), but from the corresponding
+            // TSE table where the status values are contained for each Tagesabrechnung
+            if (tse.inUse()) {
+                tseStatusValues = tse.getTSEStatusValues();
+            }
+            Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
+                datet, rechnungsNr, kassierArtikel,
+                mwstValues, zahlungsModus,
+                totalPrice, kundeGibt, rueckgeld, tx, tseStatusValues);
+            myQuittung.printReceipt();
+    }
+
     /**
      *    * Each non abstract class that implements the ActionListener
      *      must have this method.
@@ -472,31 +500,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             return;
         }
         if (e.getSource() == quittungsButton){
-            TreeMap<BigDecimal, Vector<BigDecimal>> mwstValues = calculateMwStValuesInRechnung();
-            BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
-            BigDecimal rueckgeld = null;
-            if (kundeGibt != null){
-                rueckgeld = kundeGibt.subtract(totalPrice);
-            }
-            DateTime datet = null;
-            if (!datum.equals(""))
-                datet = new DateTime(datum);
-            else
-                datet = new DateTime(now());
-            TSETransaction tx = tse.getTransactionByRechNr(rechnungsNr);
-            LinkedHashMap<String, String> tseStatusValues = null;
-            // TODO once DSFinV-K is finished, obtain TSE values for printed Quittung
-            // not from from currently operated TSE (because they might have been
-            // different in the past for the printed Quittung), but from the corresponding
-            // TSE table where the status values are contained for each Tagesabrechnung
-            if (tse.inUse()) {
-                tseStatusValues = tse.getTSEStatusValues();
-            }
-            Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
-                    datet, rechnungsNr, kassierArtikel,
-                    mwstValues, zahlungsModus,
-                    totalPrice, kundeGibt, rueckgeld, tx, tseStatusValues);
-            myQuittung.printReceipt();
+            printQuittung();
             return;
         }
     }
