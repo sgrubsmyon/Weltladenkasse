@@ -398,7 +398,7 @@ CREATE TABLE training_abrechnung_jahr_mwst (
     PRIMARY KEY (id, mwst_satz)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-GRANT INSERT, UPDATE ON kasse.training_verkauf TO 'mitarbeiter'@'localhost';
+GRANT INSERT ON kasse.training_verkauf TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.training_verkauf_mwst TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.training_verkauf_details TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.training_kassenstand TO 'mitarbeiter'@'localhost';
@@ -793,3 +793,7 @@ DROP TABLE tse_transaction_copy, abrechnung_jahr_copy, abrechnung_monat_copy,
   zaehlprotokoll_details_copy, zaehlprotokoll_copy,
   abrechnung_tag_copy, kassenstand_copy, verkauf_details_copy,
   verkauf_mwst_copy, verkauf_copy;
+
+-- finally, since storno is now performed by inserting a new Gegenbuchung,
+-- we can revoke the UPDATE grant for table verkauf
+REVOKE UPDATE ON kasse.verkauf FROM 'mitarbeiter'@'localhost';
