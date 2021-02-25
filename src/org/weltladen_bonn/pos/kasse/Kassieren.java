@@ -1966,9 +1966,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             rechnungsNr = maxRechnungsNr() + 1;
         }
         Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
-            new DateTime(now()), rechnungsNr, kassierArtikel,
-            mwstValues, zahlungsModus, totalPrice,
-            kundeGibt, rueckgeld, tx, tseStatusValues);
+            new DateTime(now()), rechnungsNr, null,
+            kassierArtikel, mwstValues, zahlungsModus,
+            totalPrice, kundeGibt, rueckgeld,
+            tx, tseStatusValues);
         myQuittung.printReceipt();
     }
 

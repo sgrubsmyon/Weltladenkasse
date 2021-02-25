@@ -36,6 +36,8 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
     protected BigDecimal kundeGibt;
     protected String datum;
     protected Integer rechnungsNr;
+    protected Integer stornoVon;
+    protected Boolean storniert;
     protected Vector<String> columnLabels;
     protected TreeMap< BigDecimal, Vector<BigDecimal> > vatMap;
 
@@ -62,6 +64,8 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         kundeGibt = null;
         datum = "";
         rechnungsNr = null;
+        stornoVon = null;
+        storniert = null;
     }
 
     //////////////////////////////////

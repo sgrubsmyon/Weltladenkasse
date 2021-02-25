@@ -71,6 +71,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 
     protected Vector<Vector<Object>> data;
     protected Vector<String> dates;
+    protected Vector<Boolean> stornoStatuses;
     protected Vector<String> overviewLabels;
     protected String rechnungsZahl;
     protected int rechnungsZahlInt;
@@ -102,11 +103,15 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     void fillDataArray() {
         this.data = new Vector< Vector<Object> >();
         this.dates = new Vector<String>();
+        this.stornoStatuses = new Vector<Boolean>();
         overviewLabels = new Vector<String>();
         overviewLabels.add("");
-        overviewLabels.add("Rechnungs-Nr."); overviewLabels.add("Betrag");
-            overviewLabels.add("Zahlung"); overviewLabels.add("Kunde gibt");
-            overviewLabels.add("Datum");
+        overviewLabels.add("Rechnungs-Nr.");
+        overviewLabels.add("Storniert Rechn.-Nr.");
+        overviewLabels.add("Betrag");
+        overviewLabels.add("Zahlung");
+        overviewLabels.add("Kunde gibt");
+        overviewLabels.add("Datum");
         overviewLabels.add("");
         try {
             Connection connection = this.pool.getConnection();
@@ -116,45 +121,49 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             ResultSet rs = stmt.executeQuery(
                 "SELECT COUNT(*) FROM "+tableForMode("verkauf")+" AS v " +
                 filterStr
-                );
+            );
             // Now do something with the ResultSet ...
             rs.next();
             rechnungsZahl = rs.getString(1);
             rechnungsZahlInt = Integer.parseInt(rechnungsZahl);
             totalPage = rechnungsZahlInt/bc.rowsPerPage + 1;
-                if (currentPage > totalPage) {
-                    currentPage = totalPage;
-                }
+            if (currentPage > totalPage) {
+                currentPage = totalPage;
+            }
             rs.close();
             rs = stmt.executeQuery(
-                "SELECT vd.rechnungs_nr, SUM(vd.ges_preis) AS rechnungs_betrag, "+
+                "SELECT vd.rechnungs_nr, v.storno_von, " +
+                "SUM(vd.ges_preis) AS rechnungs_betrag, " +
                 "v.ec_zahlung, v.kunde_gibt, " +
                 "DATE_FORMAT(v.verkaufsdatum, '"+bc.dateFormatSQL+"'), " +
-                "v.verkaufsdatum " +
+                "v.verkaufsdatum, " +
+                "vd.rechnungs_nr IN (SELECT storno_von FROM "+tableForMode("verkauf")+" WHERE storno_von IS NOT NULL) AS storniert " +
                 "FROM "+tableForMode("verkauf_details")+" AS vd " +
                 "INNER JOIN "+tableForMode("verkauf")+" AS v USING (rechnungs_nr) " +
                 filterStr +
                 "GROUP BY vd.rechnungs_nr " +
                 "ORDER BY vd.rechnungs_nr DESC " +
                 "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
-                );
+            );
             // Now do something with the ResultSet ...
             while (rs.next()) {
-            Vector<Object> row = new Vector<Object>();
-            row.add("");
-            row.add(rs.getString(1));
-                    String p = bc.priceFormatter(rs.getString(2));
-                    if (!p.equals("")) p += ' ' + bc.currencySymbol;
-                    row.add(p);
-                    row.add(rs.getBoolean(3) ? "EC" : "Bar");
-                    p = bc.priceFormatter(rs.getString(4));
-                    if (!p.equals("")) p += ' ' + bc.currencySymbol;
-                    row.add(p);
-                    row.add(rs.getString(5));
-            row.add("");
-            data.add(row);
+                Vector<Object> row = new Vector<Object>();
+                row.add("");
+                row.add(rs.getString(1));
+                row.add(rs.getString(2));
+                String p = bc.priceFormatter(rs.getString(3));
+                if (!p.equals("")) p += ' ' + bc.currencySymbol;
+                row.add(p);
+                row.add(rs.getBoolean(4) ? "EC" : "Bar");
+                p = bc.priceFormatter(rs.getString(5));
+                if (!p.equals("")) p += ' ' + bc.currencySymbol;
+                row.add(p);
+                row.add(rs.getString(6));
+                row.add("");
+                data.add(row);
 
-                    dates.add(rs.getString(6));
+                dates.add(rs.getString(7));
+                stornoStatuses.add(rs.getBoolean(8));
             }
             rs.close();
             stmt.close();
@@ -348,14 +357,16 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         //coolRow.set(coolRow.size()-1, "");
         Vector<Vector<Object>> overviewData = new Vector<Vector<Object>>(1);
         overviewData.add(coolRow);
-        zahlungsModus = coolRow.get(3).toString().toLowerCase();
+        zahlungsModus = coolRow.get(4).toString().toLowerCase();
         try {
-            kundeGibt = new BigDecimal( bc.priceFormatterIntern(coolRow.get(4).toString()) );
+            kundeGibt = new BigDecimal( bc.priceFormatterIntern(coolRow.get(5).toString()) );
         } catch (NumberFormatException ex) {
             kundeGibt = null;
         }
         datum = this.dates.get(detailRow);
         rechnungsNr = Integer.parseInt(coolRow.get(1).toString());
+        stornoVon = coolRow.get(2) == null ? null : Integer.parseInt(coolRow.get(2).toString());
+        storniert = this.stornoStatuses.get(detailRow);
 
         AnyJComponentJTable overviewTable = new AnyJComponentJTable(overviewData, overviewLabels){
             private static final long serialVersionUID = 1L;
@@ -369,7 +380,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         };
         backButton.addActionListener(this);
         overviewTable.setValueAt( backButton, 0, 0 );
-        overviewTable.setValueAt( myTable.getValueAt(detailRow,overviewLabels.size()-1), 0, overviewLabels.size()-1 );
+        overviewTable.setValueAt( myTable.getValueAt(detailRow, overviewLabels.size()-1), 0, overviewLabels.size()-1 );
         setOverviewTableProperties(overviewTable);
 
         headerPanel.add(overviewTable.getTableHeader());
@@ -424,6 +435,9 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         TableColumn rechnr = table.getColumn("Rechnungs-Nr.");
         rechnr.setCellRenderer(rechtsAusrichter);
         rechnr.setPreferredWidth(50);
+        TableColumn stornovon = table.getColumn("Storniert Rechn.-Nr.");
+        stornovon.setCellRenderer(rechtsAusrichter);
+        stornovon.setPreferredWidth(50);
         TableColumn betrag = table.getColumn("Betrag");
         betrag.setCellRenderer(rechtsAusrichter);
         TableColumn zahlung = table.getColumn("Zahlung");
@@ -458,9 +472,10 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 tseStatusValues = tse.getTSEStatusValues();
             }
             Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
-                datet, rechnungsNr, kassierArtikel,
-                mwstValues, zahlungsModus,
-                totalPrice, kundeGibt, rueckgeld, tx, tseStatusValues);
+                datet, rechnungsNr, stornoVon,
+                kassierArtikel, mwstValues, zahlungsModus,
+                totalPrice, kundeGibt, rueckgeld,
+                tx, tseStatusValues);
             myQuittung.printReceipt();
     }
 
@@ -489,17 +504,17 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         }
         final int numberOfRows = detailButtons.size();
         int detailRow = -1;
-        for (int i=0; i<numberOfRows; i++){
-            if (e.getSource() == detailButtons.get(i) ){
+        for (int i=0; i<numberOfRows; i++) {
+            if (e.getSource() == detailButtons.get(i) ) {
             detailRow = i;
             break;
             }
         }
-        if (detailRow > -1){
+        if (detailRow > -1) {
             showDetailTable(detailRow, this.titleStr);
             return;
         }
-        if (e.getSource() == quittungsButton){
+        if (e.getSource() == quittungsButton) {
             printQuittung();
             return;
         }
