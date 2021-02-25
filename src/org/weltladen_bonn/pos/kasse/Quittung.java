@@ -51,6 +51,7 @@ public class Quittung extends WindowContent {
 
     private DateTime datetime;
     private Integer rechnungsNr;
+    private Integer stornoVon;
     private Vector<KassierArtikel> kassierArtikel;
     private TreeMap< BigDecimal, Vector<BigDecimal> > mwstValues;
     private String zahlungsModus;
@@ -68,7 +69,7 @@ public class Quittung extends WindowContent {
      *    The constructor.
      *       */
     public Quittung(MariaDbPoolDataSource pool, MainWindowGrundlage mw,
-            DateTime dt, Integer rechnungsNr,
+            DateTime dt, Integer rechnungsNr, Integer stv,
             Vector<KassierArtikel> ka,
             TreeMap< BigDecimal, Vector<BigDecimal> > mv,
             String zm, BigDecimal tp, BigDecimal kgb, BigDecimal rg,
@@ -77,6 +78,7 @@ public class Quittung extends WindowContent {
 	    super(pool, mw);
         this.datetime = dt;
         this.rechnungsNr = rechnungsNr;
+        this.stornoVon = stv;
         this.kassierArtikel = ka;
         this.mwstValues = mv;
         this.zahlungsModus = zm;
@@ -176,6 +178,10 @@ public class Quittung extends WindowContent {
             } else if ( zahlungsModus.equals("ec") ){
                 sheet.setValueAt("EC", 0, 201+rowOffset);
             }
+            if (stornoVon != null) {
+                sheet.setValueAt("!!! STORNO VON !!!", 0, 202+rowOffset);
+                sheet.setValueAt("!!! RECHN.-NR. "+stornoVon+" !!!", 0, 203+rowOffset);
+            }
             sheet.setValueAt(totalPrice, 2, 201+rowOffset);
             // fill mwst values
             row = 205+rowOffset; // now at header of mwst values
@@ -201,7 +207,7 @@ public class Quittung extends WindowContent {
                 row++;
                 mwstIndex++;
             }
-            if ( zahlungsModus.equals("ec") ){
+            if ( zahlungsModus.equals("ec") && stornoVon == null ){
                 // Delete rows holding "Kunde gibt" and "Rückgeld" in case of Bar (in case of EC empty)
                 sheet.removeRows(202+rowOffset, 204+rowOffset); // last row is exclusive
                 row -= 2;

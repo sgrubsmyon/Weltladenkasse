@@ -60,15 +60,20 @@ public class HeutigeRechnungen extends Rechnungen {
             detailButtons.add(new JButton("+"));
             detailButtons.get(i).addActionListener(this);
             myTable.setValueAt( detailButtons.get(i), i, 0 );
-            stornoButtons.add(new JButton("Storno"));
-            stornoButtons.get(i).addActionListener(this);
-            myTable.setValueAt( stornoButtons.get(i), i, overviewLabels.size()-1 );
+            stornoButtons.add(null);
+            if (data.get(i).get(2) == null) { // exclude canceling bookings since they cannot be canceled
+                if (!stornoStatuses.get(i)) { // exclude already canceled bookings
+                    stornoButtons.set(i, new JButton("Storno"));
+                    stornoButtons.get(i).addActionListener(this);
+                    myTable.setValueAt( stornoButtons.get(i), i, overviewLabels.size()-1 );
+                }
+            }
         }
     }
 
     private void stornieren(int stornoRow) {
         Integer rechNr = Integer.parseInt(data.get(stornoRow).get(1).toString());
-        String zahlMod = data.get(stornoRow).get(3).toString();
+        String zahlMod = data.get(stornoRow).get(4).toString();
         Integer stornoRechNr = insertStornoIntoVerkauf(rechNr, zahlMod);
         updateTable(); // Update the table so that you can load the details of the storno booking.
                        // This saves us a massive amount of code rewrite in order to fetch all the details
@@ -215,15 +220,15 @@ public class HeutigeRechnungen extends Rechnungen {
      **/
     public void actionPerformed(ActionEvent e) {
         super.actionPerformed(e);
-	final int numberOfRows = stornoButtons.size();
-	int stornoRow=-1;
+        final int numberOfRows = stornoButtons.size();
+        int stornoRow=-1;
         for (int i=0; i<numberOfRows; i++){
             if (e.getSource() == stornoButtons.get(i) ){
                 stornoRow = i;
                 break;
             }
         }
-	if (stornoRow > -1){
+	    if (stornoRow > -1){
             int answer = JOptionPane.showConfirmDialog(this,
                     "Rechnung " + (String) data.get(stornoRow).get(1) + " wirklich stornieren?", "Storno",
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -231,7 +236,7 @@ public class HeutigeRechnungen extends Rechnungen {
                 stornieren(stornoRow);
                 tabbedPane.recreateTabbedPane();
             }
-	    return;
-	}
+            return;
+        }
     }
 }
