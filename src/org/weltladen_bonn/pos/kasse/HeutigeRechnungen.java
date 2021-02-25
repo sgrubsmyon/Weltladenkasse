@@ -25,6 +25,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import org.weltladen_bonn.pos.MainWindowGrundlage;
+import org.weltladen_bonn.pos.kasse.WeltladenTSE.TSETransaction;
 
 // Logging:
 import org.apache.logging.log4j.LogManager;
@@ -66,8 +67,26 @@ public class HeutigeRechnungen extends Rechnungen {
     }
 
     private void stornieren(int stornoRow) {
-        Integer rechnungsnummer = Integer.parseInt(data.get(stornoRow).get(1).toString());
-        String zahlungsModus = data.get(stornoRow).get(3).toString();
+        Integer rechNr = Integer.parseInt(data.get(stornoRow).get(1).toString());
+        String zahlMod = data.get(stornoRow).get(3).toString();
+        Integer stornoRechNr = insertStornoIntoVerkauf(rechNr, zahlMod);
+        updateTable(); // Update the table so that you can load the details of the storno booking.
+                       // This saves us a massive amount of code rewrite in order to fetch all the details
+                       // of the booking (kassierArtikel, mwstValues etc.)
+        showDetailTable(0, this.titleStr);
+        insertStornoIntoTSE(stornoRechNr, zahlMod);
+        if (stornoRechNr != null && zahlMod.equals("Bar")) { // if Barzahlung
+            insertStornoIntoKassenstand(rechNr, stornoRechNr);
+            printQuittung();
+        } else { // EC-Zahlung
+            printQuittung();
+            // Thread.sleep(5000); // wait for 5 seconds, no, printer is too slow anyway and this blocks UI unnecessarily
+            printQuittung();
+        }
+    }
+
+    private Integer insertStornoIntoVerkauf(int rechNr, String zahlMod) {
+        Integer stornoRechNr = null;
         try { 
             Connection connection = this.pool.getConnection();
             
@@ -76,17 +95,17 @@ public class HeutigeRechnungen extends Rechnungen {
                 "INSERT INTO "+tableForMode("verkauf")+" SET verkaufsdatum = NOW(), "+
                 "storno_von = ?, ec_zahlung = ?, kunde_gibt = NULL"
             );
-            pstmtSetInteger(pstmt, 1, rechnungsnummer);
-            pstmtSetBoolean(pstmt, 2, !zahlungsModus.equals("Bar"));
+            pstmtSetInteger(pstmt, 1, rechNr);
+            pstmtSetBoolean(pstmt, 2, !zahlMod.equals("Bar"));
             int result1 = pstmt.executeUpdate();
 
             // retrieve the storno rechnungs_nr
             pstmt = connection.prepareStatement(
                 "SELECT rechnungs_nr FROM "+tableForMode("verkauf")+" WHERE storno_von = ?"
             );
-            pstmtSetInteger(pstmt, 1, rechnungsnummer);
+            pstmtSetInteger(pstmt, 1, rechNr);
             ResultSet rs = pstmt.executeQuery();
-            rs.next(); int stornorechnungsnummer = rs.getInt(1); rs.close();
+            rs.next(); stornoRechNr = rs.getInt(1); rs.close();
             
             // insert Gegenbuchung (negated values) into verkauf_mwst
             pstmt = connection.prepareStatement(
@@ -95,8 +114,8 @@ public class HeutigeRechnungen extends Rechnungen {
                 "FROM "+tableForMode("verkauf_mwst")+" "+
                 "WHERE rechnungs_nr = ?"
             );
-            pstmtSetInteger(pstmt, 1, stornorechnungsnummer);
-            pstmtSetInteger(pstmt, 2, rechnungsnummer);
+            pstmtSetInteger(pstmt, 1, stornoRechNr);
+            pstmtSetInteger(pstmt, 2, rechNr);
             int result2 = pstmt.executeUpdate();
 
             // insert Gegenbuchung (negated stueckzahl) into verkauf_details
@@ -106,20 +125,16 @@ public class HeutigeRechnungen extends Rechnungen {
                 "FROM "+tableForMode("verkauf_details")+" "+
                 "WHERE rechnungs_nr = ?"
             );
-            pstmtSetInteger(pstmt, 1, stornorechnungsnummer);
-            pstmtSetInteger(pstmt, 2, rechnungsnummer);
+            pstmtSetInteger(pstmt, 1, stornoRechNr);
+            pstmtSetInteger(pstmt, 2, rechNr);
             int result3 = pstmt.executeUpdate();
 
             if (result1 != 0 && result2 != 0 && result3 != 0){
-                JOptionPane.showMessageDialog(this, "Rechnung " + rechnungsnummer + " wurde storniert.",
+                JOptionPane.showMessageDialog(this, "Rechnung " + rechNr + " wurde storniert.",
                     "Stornierung ausgeführt", JOptionPane.INFORMATION_MESSAGE);
-
-                if (zahlungsModus.equals("Bar")) { // if Barzahlung
-                    insertStornoIntoKassenstand(rechnungsnummer, stornorechnungsnummer);
-                }
             } else {
                 JOptionPane.showMessageDialog(this,
-                    "Fehler: Rechnung " + rechnungsnummer + " konnte nicht storniert werden.",
+                    "Fehler: Rechnung " + rechNr + " konnte nicht storniert werden.",
                     "Fehler bei Stornierung", JOptionPane.ERROR_MESSAGE);
             }
 
@@ -129,27 +144,51 @@ public class HeutigeRechnungen extends Rechnungen {
             logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
-        updateTable();
+        return stornoRechNr;
     }
 
-    private void insertStornoIntoKassenstand(int rechnungsNr, int stornoRechnungsNr) {
+    private void insertStornoIntoTSE(int stornoRechNr, String zahlMod) {
+        tse.startTransaction();
+
+        // Send data to TSE:
+        Vector<String> zahlung = new Vector<String>();
+        zahlung.add(zahlMod.equals("Bar") ? "Bar" : "Unbar");
+        zahlung.add( bc.priceFormatterIntern(getTotalPrice()) );
+        // Omit currency code because it's always in EUR
+        Vector<Vector<String>> zahlungen = new Vector<Vector<String>>();
+        zahlungen.add(zahlung);
+        HashMap<Integer, Vector<BigDecimal>> mwstIDsAndValues = getAllCurrentMwstValuesByID();
+        
+        // always finish the transaction, also when TSE is not in use (has failed), in which case end date is determined by Kasse
+        TSETransaction tx = tse.finishTransaction(
+            stornoRechNr,
+            mwstIDsAndValues.get(3) != null ? mwstIDsAndValues.get(3).get(3) : null, // steuer_allgemein = mwst_id: 3 = 19% MwSt
+            mwstIDsAndValues.get(2) != null ? mwstIDsAndValues.get(2).get(3) : null, // steuer_ermaessigt = mwst_id: 2 = 7% MwSt
+            mwstIDsAndValues.get(5) != null ? mwstIDsAndValues.get(5).get(3) : null, // steuer_durchschnitt_nr3 = mwst_id: 5 = 10,7% MwSt
+            mwstIDsAndValues.get(4) != null ? mwstIDsAndValues.get(4).get(3) : null, // steuer_durchschnitt_nr1 = mwst_id: 4 = 5,5% MwSt
+            mwstIDsAndValues.get(1) != null ? mwstIDsAndValues.get(1).get(3) : null, // steuer_null = mwst_id: 1 = 0% MwSt
+            zahlungen
+        );
+    }
+
+    private void insertStornoIntoKassenstand(int rechNr, int stornoRechNr) {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT SUM(ges_preis) FROM "+tableForMode("verkauf_details")+" WHERE rechnungs_nr = ?"
-                    );
-            pstmtSetInteger(pstmt, 1, rechnungsNr);
+                "SELECT SUM(ges_preis) FROM "+tableForMode("verkauf_details")+" WHERE rechnungs_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, rechNr);
             ResultSet rs = pstmt.executeQuery();
             rs.next(); BigDecimal betrag = rs.getBigDecimal(1); rs.close();
             pstmt.close();
             BigDecimal alterKassenstand = mainWindow.retrieveKassenstand();
             BigDecimal neuerKassenstand = alterKassenstand.subtract(betrag);
             pstmt = connection.prepareStatement(
-                    "INSERT INTO "+tableForMode("kassenstand")+" SET rechnungs_nr = ?,"+
-                    "buchungsdatum = NOW(), "+
-                    "manuell = FALSE, neuer_kassenstand = ?, kommentar = ?"
-                    );
-            pstmtSetInteger(pstmt, 1, stornoRechnungsNr);
+                "INSERT INTO "+tableForMode("kassenstand")+" SET rechnungs_nr = ?,"+
+                "buchungsdatum = NOW(), "+
+                "manuell = FALSE, neuer_kassenstand = ?, kommentar = ?"
+            );
+            pstmtSetInteger(pstmt, 1, stornoRechNr);
             pstmt.setBigDecimal(2, neuerKassenstand);
             pstmt.setString(3, "Storno");
             int result = pstmt.executeUpdate();

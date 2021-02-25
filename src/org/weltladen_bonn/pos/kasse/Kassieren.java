@@ -1644,28 +1644,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         zwischensumme();
     }
 
-    /* Don't use this method for historical Rechnung, only current in Kassieren (problem when MwSt values change) */
-    private HashMap<Integer, Vector<BigDecimal>> getAllCurrentMwstValuesByID() {
-        LinkedHashMap<Integer, BigDecimal> vats = retrieveVATs();
-        HashMap<Integer, Vector<BigDecimal>> mwstIDsAndValues = new HashMap< Integer, Vector<BigDecimal> >();
-        TreeMap<BigDecimal, Vector<BigDecimal>> mwstValues = calculateMwStValuesInRechnung();
-        for ( Map.Entry<Integer, BigDecimal​> vat : vats.entrySet() ){
-            BigDecimal steuersatz = vat.getValue();
-            //if (steuersatz.signum() != 0){ // need to calculate 0% also for correct booking (DSFinV-K)
-            if ( mwstValues.containsKey(steuersatz) ){
-                Vector<BigDecimal> values = mwstValues.get(steuersatz);
-                Vector<BigDecimal> v = new Vector<BigDecimal>();
-                v.add(steuersatz);
-                v.add(values.get(0));
-                v.add(values.get(1));
-                v.add(values.get(2)); // = Umsatz
-                mwstIDsAndValues.put(vat.getKey(), v);
-            }
-            //}
-        }
-        return mwstIDsAndValues;
-    }
-
     private int neuerKunde() {
         // Send data to TSE:
         Vector<String> zahlung = new Vector<String>();

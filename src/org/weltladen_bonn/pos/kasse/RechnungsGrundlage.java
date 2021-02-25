@@ -128,6 +128,29 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         return mwstValues;
     }
 
+    /* Don't use this method for historical Rechnung, only for current Rechnung in Kassieren or storno in HeutigeRechnungen (problem when MwSt values change)
+       (assume MwSt does not change within one Tagesabrechnung) */
+    protected HashMap<Integer, Vector<BigDecimal>> getAllCurrentMwstValuesByID() {
+        LinkedHashMap<Integer, BigDecimal> vats = retrieveVATs();
+        HashMap<Integer, Vector<BigDecimal>> mwstIDsAndValues = new HashMap< Integer, Vector<BigDecimal> >();
+        TreeMap<BigDecimal, Vector<BigDecimal>> mwstValues = calculateMwStValuesInRechnung();
+        for ( Map.Entry<Integer, BigDecimal​> vat : vats.entrySet() ){
+            BigDecimal steuersatz = vat.getValue();
+            //if (steuersatz.signum() != 0){ // need to calculate 0% also for correct booking (DSFinV-K)
+            if ( mwstValues.containsKey(steuersatz) ){
+                Vector<BigDecimal> values = mwstValues.get(steuersatz);
+                Vector<BigDecimal> v = new Vector<BigDecimal>();
+                v.add(steuersatz);
+                v.add(values.get(0));
+                v.add(values.get(1));
+                v.add(values.get(2)); // = Umsatz
+                mwstIDsAndValues.put(vat.getKey(), v);
+            }
+            //}
+        }
+        return mwstIDsAndValues;
+    }
+
     protected JPanel createBottomPanel() {
         JPanel bottomPanel = new JPanel(new BorderLayout());
         
