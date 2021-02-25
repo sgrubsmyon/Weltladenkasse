@@ -79,7 +79,7 @@ public class HeutigeRechnungen extends Rechnungen {
                        // This saves us a massive amount of code rewrite in order to fetch all the details
                        // of the booking (kassierArtikel, mwstValues etc.)
         showDetailTable(0, this.titleStr);
-        insertStornoIntoTSE(stornoRechNr, zahlMod);
+        insertStornoIntoTSE(stornoRechNr);
         if (stornoRechNr != null && zahlMod.equals("Bar")) { // if Barzahlung
             insertStornoIntoKassenstand(rechNr, stornoRechNr);
             printQuittung();
@@ -152,12 +152,12 @@ public class HeutigeRechnungen extends Rechnungen {
         return stornoRechNr;
     }
 
-    private void insertStornoIntoTSE(int stornoRechNr, String zahlMod) {
+    private void insertStornoIntoTSE(int stornoRechNr) {
         tse.startTransaction();
 
         // Send data to TSE:
         Vector<String> zahlung = new Vector<String>();
-        zahlung.add(zahlMod.equals("Bar") ? "Bar" : "Unbar");
+        zahlung.add("Bar"); // zahlMod.equals("Bar") ? "Bar" : "Unbar" // Weltladen can only pay back in bar, so always use "Bar" here, even in case of EC payment
         zahlung.add( bc.priceFormatterIntern(getTotalPrice()) );
         // Omit currency code because it's always in EUR
         Vector<Vector<String>> zahlungen = new Vector<Vector<String>>();
@@ -165,7 +165,7 @@ public class HeutigeRechnungen extends Rechnungen {
         HashMap<Integer, Vector<BigDecimal>> mwstIDsAndValues = getAllCurrentMwstValuesByID();
         
         // always finish the transaction, also when TSE is not in use (has failed), in which case end date is determined by Kasse
-        TSETransaction tx = tse.finishTransaction(
+        tse.finishTransaction(
             stornoRechNr,
             mwstIDsAndValues.get(3) != null ? mwstIDsAndValues.get(3).get(3) : null, // steuer_allgemein = mwst_id: 3 = 19% MwSt
             mwstIDsAndValues.get(2) != null ? mwstIDsAndValues.get(2).get(3) : null, // steuer_ermaessigt = mwst_id: 2 = 7% MwSt
