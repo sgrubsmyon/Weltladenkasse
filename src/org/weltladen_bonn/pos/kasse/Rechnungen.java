@@ -132,17 +132,17 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             }
             rs.close();
             rs = stmt.executeQuery(
-                "SELECT vd.rechnungs_nr, v.storno_von, " +
+                "SELECT v.rechnungs_nr, v.storno_von, " +
                 "SUM(vd.ges_preis) AS rechnungs_betrag, " +
                 "v.ec_zahlung, v.kunde_gibt, " +
                 "DATE_FORMAT(v.verkaufsdatum, '"+bc.dateFormatSQL+"'), " +
                 "v.verkaufsdatum, " +
-                "vd.rechnungs_nr IN (SELECT storno_von FROM "+tableForMode("verkauf")+" WHERE storno_von IS NOT NULL) AS storniert " +
-                "FROM "+tableForMode("verkauf_details")+" AS vd " +
-                "INNER JOIN "+tableForMode("verkauf")+" AS v USING (rechnungs_nr) " +
+                "v.rechnungs_nr IN (SELECT storno_von FROM "+tableForMode("verkauf")+" WHERE storno_von IS NOT NULL) AS storniert " +
+                "FROM "+tableForMode("verkauf")+" AS v " +
+                "INNER JOIN "+tableForMode("verkauf_details")+" AS vd USING (rechnungs_nr) " +
                 filterStr +
-                "GROUP BY vd.rechnungs_nr " +
-                "ORDER BY vd.rechnungs_nr DESC " +
+                "GROUP BY v.rechnungs_nr, storniert " +
+                "ORDER BY v.rechnungs_nr DESC " +
                 "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
             );
             // Now do something with the ResultSet ...
