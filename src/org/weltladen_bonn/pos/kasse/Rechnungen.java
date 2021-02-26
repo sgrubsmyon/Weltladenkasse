@@ -21,6 +21,7 @@ import java.awt.*;
 //import java.awt.event.ActionEvent;
 //import java.awt.event.ActionListener;
 import java.awt.event.*;
+import java.awt.font.TextAttribute;
 
 //import javax.swing.JFrame;
 //import javax.swing.JPanel;
@@ -172,9 +173,22 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
-        myTable = new AnyJComponentJTable(this.data, overviewLabels);
-    //	myTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
-    //	myTable.setFillsViewportHeight(true);
+        myTable = new AnyJComponentJTable(this.data, overviewLabels){
+            private static final long serialVersionUID = 1L;
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                Component c = super.prepareRenderer(renderer, row, column);
+                if (column > 0 && column < overviewLabels.size()-1 && (stornoStatuses.get(row) || data.get(row).get(2) != null)) { // if this is a storno row
+                    Font font = c.getFont();
+                    Map<TextAttribute, Object> attributes = new HashMap<TextAttribute, Object>(font.getAttributes());
+                    attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
+                    c.setFont(new Font(attributes));
+                    c.setForeground(Color.red);
+                } else {
+                    c.setForeground(Color.black); // paint it black
+                }
+                return c;
+            }
+        };
     }
 
     abstract void addOtherStuff();
@@ -370,7 +384,6 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 
         AnyJComponentJTable overviewTable = new AnyJComponentJTable(overviewData, overviewLabels){
             private static final long serialVersionUID = 1L;
-
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component c = super.prepareRenderer(renderer, row, column);
                 // add custom rendering here
