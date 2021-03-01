@@ -61,12 +61,10 @@ public class HeutigeRechnungen extends Rechnungen {
             detailButtons.get(i).addActionListener(this);
             myTable.setValueAt( detailButtons.get(i), i, 0 );
             stornoButtons.add(null);
-            if (data.get(i).get(2) == null) { // exclude canceling bookings since they cannot be canceled
-                if (!stornoStatuses.get(i)) { // exclude already canceled bookings
-                    stornoButtons.set(i, new JButton("Storno"));
-                    stornoButtons.get(i).addActionListener(this);
-                    myTable.setValueAt( stornoButtons.get(i), i, overviewLabels.size()-1 );
-                }
+            if (!stornoStatuses.get(i)) { // exclude already canceled bookings
+                stornoButtons.set(i, new JButton("Storno"));
+                stornoButtons.get(i).addActionListener(this);
+                myTable.setValueAt( stornoButtons.get(i), i, overviewLabels.size()-1 );
             }
         }
     }

@@ -138,11 +138,11 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 "v.ec_zahlung, v.kunde_gibt, " +
                 "DATE_FORMAT(v.verkaufsdatum, '"+bc.dateFormatSQL+"'), " +
                 "v.verkaufsdatum, " +
-                "v.rechnungs_nr IN (SELECT storno_von FROM "+tableForMode("verkauf")+" WHERE storno_von IS NOT NULL) AS storniert " +
+                "v.storno_von IS NOT NULL OR v.rechnungs_nr IN (SELECT storno_von FROM "+tableForMode("verkauf")+" WHERE storno_von IS NOT NULL) AS storniert " +
                 "FROM "+tableForMode("verkauf")+" AS v " +
                 "INNER JOIN "+tableForMode("verkauf_details")+" AS vd USING (rechnungs_nr) " +
                 filterStr +
-                "GROUP BY v.rechnungs_nr, storniert " +
+                "GROUP BY v.rechnungs_nr " +
                 "ORDER BY v.rechnungs_nr DESC " +
                 "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
             );
@@ -177,7 +177,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             private static final long serialVersionUID = 1L;
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component c = super.prepareRenderer(renderer, row, column);
-                if (column > 0 && column < overviewLabels.size()-1 && (stornoStatuses.get(row) || data.get(row).get(2) != null)) { // if this is a storno row
+                if (column > 0 && column < overviewLabels.size()-1 && stornoStatuses.get(row)) { // if this is a storno row
                     Font font = c.getFont();
                     Map<TextAttribute, Object> attributes = new HashMap<TextAttribute, Object>(font.getAttributes());
                     attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
