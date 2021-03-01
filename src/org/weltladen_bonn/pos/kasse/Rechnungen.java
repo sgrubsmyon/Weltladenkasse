@@ -180,7 +180,8 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 if (column > 0 && column < overviewLabels.size()-1 && stornoStatuses.get(row)) { // if this is a storno row
                     Font font = c.getFont();
                     Map<TextAttribute, Object> attributes = new HashMap<TextAttribute, Object>(font.getAttributes());
-                    attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
+                    // attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
+                    attributes.put(TextAttribute.POSTURE, TextAttribute.POSTURE_OBLIQUE); // means italic
                     c.setFont(new Font(attributes));
                     c.setForeground(Color.red);
                 } else {
