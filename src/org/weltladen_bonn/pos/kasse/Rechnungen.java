@@ -125,8 +125,13 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             Statement stmt = connection.createStatement();
             // Run MySQL command
             ResultSet rs = stmt.executeQuery(
-                "SELECT COUNT(*) FROM "+tableForMode("verkauf")+" AS v " +
-                filterStr
+                "SELECT COUNT(*) FROM (" +
+                "  SELECT " +
+                "    v.storno_von IS NOT NULL OR v.rechnungs_nr IN (SELECT storno_von FROM "+tableForMode("verkauf")+" WHERE storno_von IS NOT NULL) AS storniert " +
+                "  FROM "+tableForMode("verkauf")+" AS v " +
+                filterStr +
+                ") AS d " +
+                stornoFilterStr
             );
             // Now do something with the ResultSet ...
             rs.next();
