@@ -549,19 +549,16 @@ public abstract class Rechnungen extends RechnungsGrundlage {
      **/
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == alleButton) {
-            logger.info("ALLE!");
             this.stornoFilterStr = ""; // reset to normal
             updateTable();
             return;
         }
         if (e.getSource() == stornierteButton) {
-            logger.info("STORNIERTE!");
             this.stornoFilterStr = "WHERE storniert = TRUE ";
             updateTable();
             return;
         }
         if (e.getSource() == ohneStornierteButton) {
-            logger.info("OHNE STORNIERTE!");
             this.stornoFilterStr = "WHERE storniert = FALSE ";
             updateTable();
             return;
