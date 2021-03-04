@@ -150,9 +150,10 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 filterStr +
                 "  GROUP BY v.rechnungs_nr " +
                 "  ORDER BY v.rechnungs_nr DESC " +
-                "  LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage +
+                (stornoFilterStr.equals("") ? "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage : "") +
                 ") AS d " +
-                stornoFilterStr
+                stornoFilterStr +
+                (!stornoFilterStr.equals("") ? "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage : "")
             );
             // Now do something with the ResultSet ...
             while (rs.next()) {
