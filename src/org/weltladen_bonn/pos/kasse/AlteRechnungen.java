@@ -70,6 +70,7 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
             "(SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+") ");
         queryEarliestRechnung();
         initiateSpinners();
+        createAllPanel();
         showTable();
     }
 

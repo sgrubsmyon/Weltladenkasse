@@ -56,13 +56,18 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 
     protected String filterStr;
     protected String titleStr;
+    private String stornoFilterStr = "";
 
     // The bottom panel which holds button.
     protected JPanel allPanel;
     protected JPanel headerPanel;
+    protected JPanel tablePanel;
     // The table holding the invoices. This is "anonymously subclassed" and two method are overridden
     protected AnyJComponentJTable myTable;
 
+    private JRadioButton alleButton;
+    private JRadioButton stornierteButton;
+    private JRadioButton ohneStornierteButton;
     protected JButton prevButton;
     protected JButton nextButton;
     protected JButton backButton = new JButton("Zurück");
@@ -133,18 +138,21 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             }
             rs.close();
             rs = stmt.executeQuery(
-                "SELECT v.rechnungs_nr, v.storno_von, " +
-                "SUM(vd.ges_preis) AS rechnungs_betrag, " +
-                "v.ec_zahlung, v.kunde_gibt, " +
-                "DATE_FORMAT(v.verkaufsdatum, '"+bc.dateFormatSQL+"'), " +
-                "v.verkaufsdatum, " +
-                "v.storno_von IS NOT NULL OR v.rechnungs_nr IN (SELECT storno_von FROM "+tableForMode("verkauf")+" WHERE storno_von IS NOT NULL) AS storniert " +
-                "FROM "+tableForMode("verkauf")+" AS v " +
-                "INNER JOIN "+tableForMode("verkauf_details")+" AS vd USING (rechnungs_nr) " +
+                "SELECT * FROM (" +
+                "  SELECT v.rechnungs_nr, v.storno_von, " +
+                "  SUM(vd.ges_preis) AS rechnungs_betrag, " +
+                "  v.ec_zahlung, v.kunde_gibt, " +
+                "  DATE_FORMAT(v.verkaufsdatum, '"+bc.dateFormatSQL+"'), " +
+                "  v.verkaufsdatum, " +
+                "  v.storno_von IS NOT NULL OR v.rechnungs_nr IN (SELECT storno_von FROM "+tableForMode("verkauf")+" WHERE storno_von IS NOT NULL) AS storniert " +
+                "  FROM "+tableForMode("verkauf")+" AS v " +
+                "  INNER JOIN "+tableForMode("verkauf_details")+" AS vd USING (rechnungs_nr) " +
                 filterStr +
-                "GROUP BY v.rechnungs_nr " +
-                "ORDER BY v.rechnungs_nr DESC " +
-                "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
+                "  GROUP BY v.rechnungs_nr " +
+                "  ORDER BY v.rechnungs_nr DESC " +
+                "  LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage +
+                ") AS d " +
+                stornoFilterStr
             );
             // Now do something with the ResultSet ...
             while (rs.next()) {
@@ -196,48 +204,82 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 
     abstract void addButtonsToTable();
 
-    void showTable() {
+    void createAllPanel() {
         allPanel = new JPanel(new BorderLayout());
         allPanel.setBorder(BorderFactory.createTitledBorder(titleStr));
-            headerPanel = new JPanel();
+        headerPanel = new JPanel();
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.PAGE_AXIS));
 
-            addOtherStuff();
+        addOtherStuff();
+
+        JPanel stornoFilterPanel = new JPanel();
+        stornoFilterPanel.setLayout(new FlowLayout());
+        alleButton = new JRadioButton("Alle");
+        alleButton.setSelected(true);
+        stornierteButton = new JRadioButton("Nur stornierte");
+        ohneStornierteButton = new JRadioButton("Ohne stornierte");
+        alleButton.addActionListener(this);
+        stornierteButton.addActionListener(this);
+        ohneStornierteButton.addActionListener(this);
+        // Group the radio buttons
+        ButtonGroup stornoSelectGroup = new ButtonGroup();
+        stornoSelectGroup.add(alleButton);
+        stornoSelectGroup.add(stornierteButton);
+        stornoSelectGroup.add(ohneStornierteButton);
+        JLabel stornoFilterLabel = new JLabel("Anzeigen:");
+        stornoFilterPanel.add(stornoFilterLabel);
+        stornoFilterLabel.setLabelFor(alleButton);
+        stornoFilterPanel.add(stornoFilterLabel);
+        stornoFilterPanel.add(alleButton);
+        stornoFilterPanel.add(stornierteButton);
+        stornoFilterPanel.add(ohneStornierteButton);
+        headerPanel.add(stornoFilterPanel);
+
+        allPanel.add(headerPanel, BorderLayout.NORTH);
+        this.add(allPanel, BorderLayout.CENTER);
+    }
+
+    void showTable() {
+        tablePanel = new JPanel(new BorderLayout());
 
         JPanel pageChangePanel = new JPanel();
         pageChangePanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-    //	pageChangePanel.setMaximumSize(new Dimension(1024,30));
+        // pageChangePanel.setMaximumSize(new Dimension(1024,30));
         prevButton = new JButton("<<");
-        if (this.currentPage <= 1)
-            prevButton.setEnabled(false);
-            nextButton = new JButton(">>");
-            if (this.currentPage >= totalPage)
-                nextButton.setEnabled(false);
-            pageChangePanel.add(prevButton);
-            pageChangePanel.add(nextButton);
-            prevButton.addActionListener(this);
-            nextButton.addActionListener(this);
-            int currentPageMin = (currentPage-1)*bc.rowsPerPage + 1;
-            int currentPageMax = bc.rowsPerPage*currentPage;
-            currentPageMax = (currentPageMax <= rechnungsZahlInt) ? currentPageMax : rechnungsZahlInt;
-            JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Rechnungen "+
-                currentPageMin + " bis "+ currentPageMax +" von "+ rechnungsZahlInt);
-            pageChangePanel.add(header);
-            headerPanel.add(pageChangePanel);
+        if (this.currentPage <= 1) prevButton.setEnabled(false);
+        nextButton = new JButton(">>");
+        if (this.currentPage >= totalPage) nextButton.setEnabled(false);
+        pageChangePanel.add(prevButton);
+        pageChangePanel.add(nextButton);
+        prevButton.addActionListener(this);
+        nextButton.addActionListener(this);
+        int currentPageMin = (currentPage-1)*bc.rowsPerPage + 1;
+        int currentPageMax = bc.rowsPerPage*currentPage;
+        currentPageMax = (currentPageMax <= rechnungsZahlInt) ? currentPageMax : rechnungsZahlInt;
+        JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Rechnungen "+
+        currentPageMin + " bis "+ currentPageMax +" von "+ rechnungsZahlInt);
+        pageChangePanel.add(header);
+        tablePanel.add(pageChangePanel, BorderLayout.NORTH);
 
-                allPanel.add(headerPanel, BorderLayout.NORTH);
+        addButtonsToTable();
+        setOverviewTableProperties(myTable);
+        JScrollPane scrollPane = new JScrollPane(myTable);
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
 
-            addButtonsToTable();
-            setOverviewTableProperties(myTable);
-            JScrollPane scrollPane = new JScrollPane(myTable);
-            allPanel.add(scrollPane, BorderLayout.CENTER);
+        allPanel.add(tablePanel, BorderLayout.CENTER);
+    }
 
-            this.add(allPanel, BorderLayout.CENTER);
-        }
+    protected void updateTable(){
+        allPanel.remove(tablePanel);
+        this.revalidate();
+        fillDataArray();
+        showTable();
+    }
 
-        protected void updateTable(){
+    protected void updateAll(){
         this.remove(allPanel);
         this.revalidate();
+        createAllPanel();
         fillDataArray();
         showTable();
     }
@@ -500,6 +542,24 @@ public abstract class Rechnungen extends RechnungsGrundlage {
      *    @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == alleButton) {
+            logger.info("ALLE!");
+            this.stornoFilterStr = ""; // reset to normal
+            updateTable();
+            return;
+        }
+        if (e.getSource() == stornierteButton) {
+            logger.info("STORNIERTE!");
+            this.stornoFilterStr = "WHERE storniert = TRUE ";
+            updateTable();
+            return;
+        }
+        if (e.getSource() == ohneStornierteButton) {
+            logger.info("OHNE STORNIERTE!");
+            this.stornoFilterStr = "WHERE storniert = FALSE ";
+            updateTable();
+            return;
+        }
         if (e.getSource() == prevButton) {
             if (this.currentPage > 1)
                 this.currentPage--;
@@ -513,7 +573,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             return;
         }
         if (e.getSource() == backButton) {
-            updateTable();
+            updateAll();
             return;
         }
         final int numberOfRows = detailButtons.size();
