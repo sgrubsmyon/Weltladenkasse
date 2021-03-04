@@ -46,6 +46,7 @@ public class HeutigeRechnungen extends Rechnungen {
         setFilterStr("WHERE v.rechnungs_nr > " +
             "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) ");
         tabbedPane = tp;
+        createAllPanel();
 	    showTable();
     }
 
