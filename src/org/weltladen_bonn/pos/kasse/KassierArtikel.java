@@ -53,7 +53,7 @@ public class KassierArtikel {
         setType(type);
         setMenge(menge);
         setStueckzahl(stueckzahl);
-        setEinzelpreis(einzelpreis);
+        setEinzelPreis(einzelpreis);
         setGesPreis(ges_preis);
         setMwst(mwst_satz);
     }
@@ -206,7 +206,7 @@ public class KassierArtikel {
             this.stueckzahl = stueckzahl;
     }
 
-    public void setEinzelpreis(BigDecimal einzelpreis) {
+    public void setEinzelPreis(BigDecimal einzelpreis) {
         if (einzelpreis == null)
             this.einzelpreis = new BigDecimal("0.00");
         else

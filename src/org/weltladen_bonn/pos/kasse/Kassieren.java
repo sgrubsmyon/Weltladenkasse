@@ -1200,7 +1200,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         ka.setType("rabatt");
         ka.setMenge("");
         ka.setStueckzahl(stueck.intValue());
-        ka.setEinzelpreis(reduktion);
+        ka.setEinzelPreis(reduktion);
         ka.setGesPreis(reduktion);
         ka.setMwst(artikelMwSt);
         kassierArtikel.add(ka);
@@ -1239,7 +1239,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             ka.setType("pfand");
             ka.setMenge("");
             ka.setStueckzahl(stueck.intValue());
-            ka.setEinzelpreis(new BigDecimal(bc.priceFormatterIntern(pfand)));
+            ka.setEinzelPreis(new BigDecimal(bc.priceFormatterIntern(pfand)));
             ka.setGesPreis(new BigDecimal(bc.priceFormatterIntern(gesamtPfand)));
             ka.setMwst(pfandMwSt);
             kassierArtikel.add(ka);
@@ -1512,7 +1512,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         ka.setType(type);
         ka.setMenge(menge);
         ka.setStueckzahl(stueck);
-        ka.setEinzelpreis(new BigDecimal(artikelPreis));
+        ka.setEinzelPreis(new BigDecimal(artikelPreis));
         ka.setGesPreis(gesPreis);
         ka.setMwst(new BigDecimal(artikelMwSt));
         kassierArtikel.add(ka);
@@ -1742,7 +1742,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         ka.setType("rabatt");
         ka.setMenge("");
         ka.setStueckzahl(selectedStueck);
-        ka.setEinzelpreis(einzelReduktion);
+        ka.setEinzelPreis(einzelReduktion);
         ka.setGesPreis(gesReduktion);
         ka.setMwst(artikelMwSt);
         kassierArtikel.add(i + 1, ka);
@@ -1785,7 +1785,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         ka.setType("rabatt");
         ka.setMenge("");
         ka.setStueckzahl(selectedStueck);
-        ka.setEinzelpreis(einzelReduktion);
+        ka.setEinzelPreis(einzelReduktion);
         ka.setGesPreis(gesReduktion);
         ka.setMwst(artikelMwSt);
         kassierArtikel.add(i + 1, ka);
@@ -1873,7 +1873,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             ka.setType("rabattrechnung");
             ka.setMenge("");
             ka.setStueckzahl(1);
-            ka.setEinzelpreis(reduktion);
+            ka.setEinzelPreis(reduktion);
             ka.setGesPreis(reduktion);
             ka.setMwst(mwst);
             kassierArtikel.add(ka);
@@ -2127,18 +2127,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (e.getSource() == abweichenderPreisButton) {
             int i = getLastArticleIndex();
             BigDecimal neuerEinzelPreis = new BigDecimal(bc.priceFormatterIntern(abweichenderPreisField.getText()));
-            BigDecimal neuerGesPreis = neuerEinzelPreis.multiply(
-                    new BigDecimal(kassierArtikel.get(i).getStueckzahl())
-                    );
-            String neuerEinzelPreisString = bc.priceFormatter(neuerEinzelPreis)+' '+bc.currencySymbol;
-            String neuerGesPreisString = bc.priceFormatter(neuerGesPreis)+' '+bc.currencySymbol;
-            kassierArtikel.get(i).setEinzelpreis(neuerEinzelPreis);
-            kassierArtikel.get(i).setGesPreis(neuerGesPreis);
-            data.get(i).set(4, neuerEinzelPreisString);
-            data.get(i).set(5, neuerGesPreisString);
-            updateAll();
-            updateDisplay(kassierArtikel.get(i).getName(),
-                    kassierArtikel.get(i).getStueckzahl(), neuerEinzelPreisString);
+            BigDecimal alterEinzelPreis = kassierArtikel.get(i).getEinzelPreis();
+            BigDecimal rabatt = alterEinzelPreis.subtract(neuerEinzelPreis);
+            artikelRabattierenAbsolut(rabatt);
             unsetFields();
             return;
         }
