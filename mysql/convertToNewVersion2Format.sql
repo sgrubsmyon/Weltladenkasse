@@ -9,16 +9,16 @@
 
 USE kasse;
 
--- --------
+-- -------
 -- mwst --
--- --------
+-- -------
 
 INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (4,0.05500);
 INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (5,0.10700);
 
--- ------------------
+-- -----------------
 -- abrechnung_tag --
--- ------------------
+-- -----------------
 
 -- create temporary abrechnung_tag copy:
 CREATE TABLE abrechnung_tag_copy (
@@ -62,6 +62,7 @@ DROP TABLE zaehlprotokoll;
 DROP TABLE abrechnung_tag;
 CREATE TABLE abrechnung_tag (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    z_kasse_id VARCHAR(30) NOT NULL,
     zeitpunkt DATETIME NOT NULL,
     zeitpunkt_real DATETIME NOT NULL,
     kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
@@ -102,7 +103,7 @@ CREATE TABLE zaehlprotokoll_details (
 -- Fill the new tables:
 -- SELECT DISTINCT id, zeitpunkt, zeitpunkt_real, kassenstand_id, (SELECT MIN(rechnungs_nr) FROM verkauf WHERE verkaufsdatum > (SELECT DISTINCT zeitpunkt FROM abrechnung_tag_copy WHERE id = at.id - 1) AND verkaufsdatum <= zeitpunkt) AS rechnungs_nr_von, (SELECT MAX(rechnungs_nr) FROM verkauf WHERE verkaufsdatum > (SELECT DISTINCT zeitpunkt FROM abrechnung_tag_copy WHERE id = at.id - 1) AND verkaufsdatum <= zeitpunkt) AS rechnungs_nr_bis, NULL AS last_tse_sig_counter FROM abrechnung_tag_copy AS at LIMIT 5;
 INSERT INTO abrechnung_tag
-    SELECT DISTINCT id, zeitpunkt, zeitpunkt_real, kassenstand_id,
+    SELECT DISTINCT id, '877666797878-01', zeitpunkt, zeitpunkt_real, kassenstand_id,
         (SELECT MIN(rechnungs_nr) FROM verkauf WHERE
             verkaufsdatum > IFNULL((SELECT DISTINCT zeitpunkt_real FROM abrechnung_tag_copy WHERE id = at.id - 1), '0001-01-01') AND
             verkaufsdatum <= zeitpunkt_real
@@ -325,6 +326,7 @@ CREATE TABLE training_kassenstand (
 
 CREATE TABLE training_abrechnung_tag (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    z_kasse_id VARCHAR(30) NOT NULL,
     zeitpunkt DATETIME NOT NULL,
     zeitpunkt_real DATETIME NOT NULL,
     kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
@@ -468,6 +470,7 @@ INSERT INTO kassenstand_copy SELECT kassenstand_id, buchungsdatum,
     FROM kassenstand;
 CREATE TABLE abrechnung_tag_copy (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    z_kasse_id VARCHAR(30) NOT NULL,
     zeitpunkt DATETIME NOT NULL,
     zeitpunkt_real DATETIME NOT NULL,
     kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
@@ -684,6 +687,7 @@ UPDATE kassenstand SET rechnungs_nr = rechnungs_nr + 1 WHERE manuell = 0 AND kom
 -- ------------------------------------
 CREATE TABLE abrechnung_tag (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    z_kasse_id VARCHAR(30) NOT NULL,
     zeitpunkt DATETIME NOT NULL,
     zeitpunkt_real DATETIME NOT NULL,
     kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
@@ -697,7 +701,7 @@ CREATE TABLE abrechnung_tag (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 -- ------------------------------------
 -- Insert the normal transactions:
-INSERT INTO abrechnung_tag SELECT id, zeitpunkt, zeitpunkt_real,
+INSERT INTO abrechnung_tag SELECT id, z_kasse_id, zeitpunkt, zeitpunkt_real,
     kassenstand_id, altneu_von.rechnungs_nr_neu, altneu_bis.rechnungs_nr_neu,
     last_tse_sig_counter
     FROM abrechnung_tag_copy AS v INNER JOIN rechnungs_nr_alt_neu AS altneu_von

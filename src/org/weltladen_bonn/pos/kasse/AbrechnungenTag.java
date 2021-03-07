@@ -1117,6 +1117,7 @@ class AbrechnungenTag extends Abrechnungen {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO "+tableForMode("abrechnung_tag")+" SET "+
+                "z_kasse_id = ?, "+
                 "zeitpunkt = ?, "+
                 "zeitpunkt_real = ?, "+
                 "kassenstand_id = ?, " +
@@ -1124,12 +1125,13 @@ class AbrechnungenTag extends Abrechnungen {
                 "rechnungs_nr_bis = ?, " +
                 "last_tse_sig_counter = ?"
             );
-            pstmt.setString(1, zeitpunkt);
-            pstmt.setString(2, nowDate);
-            pstmtSetInteger(pstmt, 3, kassenstand_id);
-            pstmtSetInteger(pstmt, 4, firstNr);
-            pstmtSetInteger(pstmt, 5, lastNr);
-            pstmtSetInteger(pstmt, 6, lastSigCounter);
+            pstmt.setString(1, bc.Z_KASSE_ID);
+            pstmt.setString(2, zeitpunkt);
+            pstmt.setString(3, nowDate);
+            pstmtSetInteger(pstmt, 4, kassenstand_id);
+            pstmtSetInteger(pstmt, 5, firstNr);
+            pstmtSetInteger(pstmt, 6, lastNr);
+            pstmtSetInteger(pstmt, 7, lastSigCounter);
             int result = pstmt.executeUpdate();
             pstmt.close();
             if (result == 0) {
