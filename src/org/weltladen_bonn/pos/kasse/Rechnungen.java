@@ -125,12 +125,8 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             Statement stmt = connection.createStatement();
             // Run MySQL command
             ResultSet rs = stmt.executeQuery(
-                "SELECT COUNT(*) FROM (" +
-                "  SELECT " +
-                "    v.storno_von IS NOT NULL OR v.rechnungs_nr IN (SELECT storno_von FROM "+tableForMode("verkauf")+" WHERE storno_von IS NOT NULL) AS storniert " +
-                "  FROM "+tableForMode("verkauf")+" AS v " +
+                "SELECT COUNT(*) FROM "+tableForMode("verkauf")+" AS v " +
                 filterStr +
-                ") AS d " +
                 stornoFilterStr
             );
             // Now do something with the ResultSet ...
@@ -143,22 +139,19 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             }
             rs.close();
             rs = stmt.executeQuery(
-                "SELECT * FROM (" +
-                "  SELECT v.rechnungs_nr, v.storno_von, " +
-                "  SUM(vd.ges_preis) AS rechnungs_betrag, " +
-                "  v.ec_zahlung, v.kunde_gibt, " +
-                "  DATE_FORMAT(v.verkaufsdatum, '"+bc.dateFormatSQL+"'), " +
-                "  v.verkaufsdatum, " +
-                "  v.storno_von IS NOT NULL OR v.rechnungs_nr IN (SELECT storno_von FROM "+tableForMode("verkauf")+" WHERE storno_von IS NOT NULL) AS storniert " +
-                "  FROM "+tableForMode("verkauf")+" AS v " +
-                "  INNER JOIN "+tableForMode("verkauf_details")+" AS vd USING (rechnungs_nr) " +
+                "SELECT v.rechnungs_nr, v.storno_von, " +
+                "SUM(vd.ges_preis) AS rechnungs_betrag, " +
+                "v.ec_zahlung, v.kunde_gibt, " +
+                "DATE_FORMAT(v.verkaufsdatum, '"+bc.dateFormatSQL+"'), " +
+                "v.verkaufsdatum, " +
+                "v.storno_von IS NOT NULL OR v.rechnungs_nr IN (SELECT storno_von FROM "+tableForMode("verkauf")+" WHERE storno_von IS NOT NULL) AS storniert " +
+                "FROM "+tableForMode("verkauf")+" AS v " +
+                "INNER JOIN "+tableForMode("verkauf_details")+" AS vd USING (rechnungs_nr) " +
                 filterStr +
-                "  GROUP BY v.rechnungs_nr " +
-                "  ORDER BY v.rechnungs_nr DESC " +
-                (stornoFilterStr.equals("") ? "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage : "") +
-                ") AS d " +
                 stornoFilterStr +
-                (!stornoFilterStr.equals("") ? "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage : "")
+                "GROUP BY v.rechnungs_nr " +
+                "ORDER BY v.rechnungs_nr DESC " +
+                "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
             );
             // Now do something with the ResultSet ...
             while (rs.next()) {
@@ -554,12 +547,12 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             return;
         }
         if (e.getSource() == stornierteButton) {
-            this.stornoFilterStr = "WHERE storniert = TRUE ";
+            this.stornoFilterStr = "AND (v.storno_von IS NOT NULL OR v.rechnungs_nr IN (SELECT storno_von FROM "+tableForMode("verkauf")+" WHERE storno_von IS NOT NULL)) ";
             updateTable();
             return;
         }
         if (e.getSource() == ohneStornierteButton) {
-            this.stornoFilterStr = "WHERE storniert = FALSE ";
+            this.stornoFilterStr = "AND NOT (v.storno_von IS NOT NULL OR v.rechnungs_nr IN (SELECT storno_von FROM "+tableForMode("verkauf")+" WHERE storno_von IS NOT NULL)) ";
             updateTable();
             return;
         }
