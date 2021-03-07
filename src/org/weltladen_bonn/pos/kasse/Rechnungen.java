@@ -370,7 +370,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 ka.setType(null);
                 ka.setMenge(menge);
                 ka.setStueckzahl(stueckDec.intValue());
-                ka.setEinzelpreis(new BigDecimal( bc.priceFormatterIntern(einzelPreis) ));
+                ka.setEinzelPreis(new BigDecimal( bc.priceFormatterIntern(einzelPreis) ));
                 ka.setGesPreis(gesPreisDec);
                 ka.setMwst(mwst);
                 kassierArtikel.add(ka);
