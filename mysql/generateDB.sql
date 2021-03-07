@@ -147,6 +147,7 @@ CREATE TABLE kassenstand (
 -- ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE abrechnung_tag (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    z_kasse_id VARCHAR(30) NOT NULL,
     zeitpunkt DATETIME NOT NULL,
     zeitpunkt_real DATETIME NOT NULL,
     kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
@@ -334,6 +335,7 @@ CREATE TABLE training_kassenstand (
 
 CREATE TABLE training_abrechnung_tag (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    z_kasse_id VARCHAR(30) NOT NULL,
     zeitpunkt DATETIME NOT NULL,
     zeitpunkt_real DATETIME NOT NULL,
     kassenstand_id INTEGER(10) UNSIGNED DEFAULT NULL,
