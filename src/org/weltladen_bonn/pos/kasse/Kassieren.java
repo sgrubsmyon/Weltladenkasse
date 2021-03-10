@@ -43,7 +43,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private final BigDecimal ecSchwelle = new BigDecimal("20.00");
     private int artikelRabattArtikelID = 1;
     private int rechnungRabattArtikelID = 2;
-    private int gutscheinArtikelID = 3;
+    private int preisanpassungArtikelID = 3;
+    private int anzahlungArtikelID = 4;
+    private int anzahlungsaufloesungArtikelID = 5;
+    private int gutscheinArtikelID = 6;
 
     private MainWindow mw;
     private Kundendisplay display;
