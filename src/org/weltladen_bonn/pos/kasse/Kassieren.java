@@ -1767,6 +1767,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     }
 
     private void artikelRabattierenAbsolut(BigDecimal rabattAbsolut) {
+        // is this Rabatt or Aufschlag? (rabattAbsolut > 0 or < 0?)
+        int specialArticleID = rabattAbsolut.signum() > 0 ? artikelRabattArtikelID : preisanpassungArtikelID;
+        
         // Get data
         int i = kassierArtikel.size() - 1;
         while (!kassierArtikel.get(i).getType().equals("artikel")) {
@@ -1777,11 +1780,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         BigDecimal stueck = new BigDecimal(selectedStueck);
         BigDecimal gesReduktion = einzelReduktion.multiply(stueck);
         BigDecimal artikelMwSt = kassierArtikel.get(i).getMwst();
-        String rabattName = getArticleName(artikelRabattArtikelID)[0];
+        String rabattName = getArticleName(specialArticleID)[0];
 
         KassierArtikel ka = new KassierArtikel(bc);
         ka.setPosition(null);
-        ka.setArtikelID(artikelRabattArtikelID);
+        ka.setArtikelID(specialArticleID);
         ka.setRabattID(null);
         ka.setName(einrueckung + rabattName);
         ka.setColor("red");
@@ -1799,7 +1802,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         Vector<Object> rabattRow = new Vector<Object>();
         rabattRow.add(""); // pos
         rabattRow.add(einrueckung + rabattName);
-        rabattRow.add("RABATT");
+        rabattRow.add(rabattAbsolut.signum() > 0 ? "RABATT" : "ANPASSUNG");
         rabattRow.add(Integer.toString(selectedStueck));
         rabattRow.add(bc.priceFormatter(einzelReduktion) + " " + bc.currencySymbol);
         rabattRow.add(bc.priceFormatter(gesReduktion) + " " + bc.currencySymbol);
