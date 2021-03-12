@@ -84,12 +84,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private JButton neuerKundeButton;
     private JButton individuellRabattRelativButton;
     private JButton individuellRabattAbsolutButton;
-    private JButton mitarbeiterRabattButton;
     private JButton abweichenderPreisButton;
-    private JButton anzahlungNeuButton;
-    private JTextField anzahlungsBetragField;
-    private JButton anzahlungNeuOKButton;
-    private JButton anzahlungAufloesButton;
+    private JButton mitarbeiterRabattButton;
 
     private Vector<JButton> rabattButtons;
 
@@ -97,8 +93,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private JPanel allPanel;
     private JPanel rabattPanel;
     private JPanel abweichenderPreisPanel;
-    private JPanel anzahlungsPanel;
-    private JPanel anzahlungNeuPanel;
     private JPanel articleListPanel;
 
     // The table holding the purchase articles.
@@ -605,6 +599,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     Integer showRabattIndividuellPanel(GridBagConstraints c, Integer i) {
         JPanel individuellRabattPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints c2 = new GridBagConstraints();
+        c2.fill = GridBagConstraints.HORIZONTAL;
+        c2.insets = new Insets(3, 3, 3, 3);
         individuellRabattPanel.setBorder(BorderFactory.createTitledBorder("individuell"));
 
         individuellRabattRelativField = new JTextField("");
@@ -673,9 +670,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         individuellRabattAbsolutButton = new BaseClass.BigButton("OK");
         individuellRabattAbsolutButton.addActionListener(this);
 
-        GridBagConstraints c2 = new GridBagConstraints();
-        c2.fill = GridBagConstraints.HORIZONTAL;
-        c2.insets = new Insets(3, 3, 3, 3);
         c2.anchor = GridBagConstraints.EAST;
         c2.gridy = 0;
         c2.gridx = 0;
@@ -712,6 +706,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     void showAbweichenderPreisPanel() {
         abweichenderPreisPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints c2 = new GridBagConstraints();
+        c2.fill = GridBagConstraints.HORIZONTAL;
+        c2.insets = new Insets(3, 3, 3, 3);
         abweichenderPreisPanel.setBorder(BorderFactory.createTitledBorder("Abweichender Preis"));
 
         abweichenderPreisField = new JTextField("");
@@ -747,9 +744,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         abweichenderPreisButton = new BaseClass.BigButton("OK");
         abweichenderPreisButton.addActionListener(this);
 
-        GridBagConstraints c2 = new GridBagConstraints();
-        c2.fill = GridBagConstraints.HORIZONTAL;
-        c2.insets = new Insets(3, 3, 3, 3);
         c2.anchor = GridBagConstraints.EAST;
         c2.gridy = 0;
         c2.gridx = 0;
@@ -764,108 +758,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         abweichenderPreisPanel.add(abweichenderPreisButton, c2);
     }
 
-    void showAnzahlungsPanel() {
-        anzahlungsPanel = new JPanel(new GridBagLayout());
-        anzahlungsPanel.setBorder(BorderFactory.createTitledBorder("Anzahlungen"));
-
-        anzahlungNeuButton = new BaseClass.BigButton("Neue Anzahlung");
-        anzahlungNeuButton.setBackground(new Color(70, 197, 80));
-        anzahlungNeuButton.addActionListener(this);
-        anzahlungNeuPanel = new JPanel(new GridBagLayout());
-        anzahlungAufloesButton = new BaseClass.BigButton("Anzahlung auflösen");
-        anzahlungAufloesButton.setBackground(new Color(70, 197, 175));
-        anzahlungAufloesButton.addActionListener(this);
-
-        GridBagConstraints c2 = new GridBagConstraints();
-        c2.anchor = GridBagConstraints.NORTH;
-        c2.fill = GridBagConstraints.HORIZONTAL;
-        c2.ipady = 10;
-        c2.insets = new Insets(3, 0, 3, 0);
-        c2.gridy = 0;
-        anzahlungsPanel.add(anzahlungNeuButton, c2);
-        c2.gridy = 1;
-        anzahlungsPanel.add(anzahlungNeuPanel, c2);
-        c2.gridy = 2;
-        anzahlungsPanel.add(anzahlungAufloesButton, c2);
-    }
-
-    void showAnzahlungNeuPanel() {
-        anzahlungsPanel.remove(anzahlungNeuPanel);
-        anzahlungsPanel.revalidate();
-        anzahlungNeuPanel = new JPanel(new GridBagLayout());
-
-        anzahlungsBetragField = new JTextField("");
-        anzahlungsBetragField.setColumns(5);
-        removeDefaultKeyBindings(anzahlungsBetragField);
-        anzahlungsBetragField.addKeyListener(removeNumPadAdapter);
-        anzahlungsBetragField.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) {
-                if (anzahlungsBetragField.getText().length() > 0) {
-                    anzahlungNeuOKButton.setEnabled(true);
-                } else {
-                    anzahlungNeuOKButton.setEnabled(false);
-                }
-            }
-
-            public void removeUpdate(DocumentEvent e) {
-                this.insertUpdate(e);
-            }
-
-            public void changedUpdate(DocumentEvent e) {
-                // Plain text components do not fire these events
-            }
-        });
-        ((AbstractDocument) anzahlungsBetragField.getDocument()).setDocumentFilter(bc.geldFilter);
-        anzahlungsBetragField.addKeyListener(new KeyAdapter() {
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    anzahlungNeuOKButton.doClick();
-                }
-            }
-        });
-        anzahlungsBetragField.setHorizontalAlignment(JTextField.RIGHT);
-        anzahlungNeuOKButton = new BaseClass.BigButton("OK");
-        anzahlungNeuOKButton.addActionListener(this);
-
-        GridBagConstraints c2 = new GridBagConstraints();
-        c2.fill = GridBagConstraints.HORIZONTAL;
-        c2.insets = new Insets(3, 3, 3, 3);
-        c2.anchor = GridBagConstraints.EAST;
-        c2.gridy = 0;
-        c2.gridx = 0;
-        anzahlungNeuPanel.add(new JLabel("Betrag:"), c2);
-        c2.gridy = 1;
-        c2.gridx = 0;
-        anzahlungNeuPanel.add(anzahlungsBetragField, c2);
-        c2.anchor = GridBagConstraints.WEST;
-        c2.gridy = 1;
-        c2.gridx = 1;
-        anzahlungNeuPanel.add(new BigLabel(bc.currencySymbol), c2);
-        c2.anchor = GridBagConstraints.EAST;
-        c2.gridy = 1;
-        c2.gridx = 2;
-        anzahlungNeuPanel.add(anzahlungNeuOKButton, c2);
-        c2.anchor = GridBagConstraints.NORTH;
-        c2.ipady = 10;
-        c2.insets = new Insets(3, 0, 3, 0);
-        c2.gridx = 0;
-        c2.gridy = 1;
-        anzahlungsPanel.add(anzahlungNeuPanel, c2);
-    }
-
-    void hideAnzahlungNeuPanel() {
-        anzahlungsPanel.remove(anzahlungNeuPanel);
-        anzahlungsPanel.revalidate();
-        anzahlungNeuPanel = new JPanel(new GridBagLayout());
-
-        GridBagConstraints c2 = new GridBagConstraints();
-        c2.anchor = GridBagConstraints.NORTH;
-        c2.fill = GridBagConstraints.HORIZONTAL;
-        c2.ipady = 10;
-        c2.insets = new Insets(3, 0, 3, 0);
-        c2.gridy = 1;
-        anzahlungsPanel.add(anzahlungNeuPanel, c2);
-    }
 
     void showButtons() {
         JPanel buttonPanel = new JPanel(new BorderLayout());
@@ -886,11 +778,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         i = showRabattButtons(c, i);
         i = showRabattIndividuellPanel(c, i);
         showAbweichenderPreisPanel();
-        showAnzahlungsPanel();
 
         northPanel.add(rabattPanel);
         northPanel.add(abweichenderPreisPanel);
-        northPanel.add(anzahlungsPanel);
         buttonPanel.add(northPanel, BorderLayout.NORTH);
         this.add(buttonPanel, BorderLayout.WEST);
     }
@@ -1025,20 +915,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         zwischensummeButton.setForeground(Color.WHITE);
         zwischensummeButton.setMnemonic(KeyEvent.VK_Z);
         zwischensummeButton.addActionListener(this);
-        if (data.size() == 0) {
+        if (data.size() == 0)
             zwischensummeButton.setEnabled(false);
-            anzahlungNeuButton.setEnabled(false); // whenever ZWS is possible, also Anzahlung must be possible
-            hideAnzahlungNeuPanel();
-        } else {
-            anzahlungNeuButton.setEnabled(true);
-            for (KassierArtikel ka : kassierArtikel) {
-                if (ka.getType().equals("anzahlung")) {
-                    anzahlungNeuButton.setEnabled(false);
-                    hideAnzahlungNeuPanel();
-                    break;
-                }
-            }
-        }
         zwischensummePanel.add(zwischensummeButton);
         zwischensummePanel.add(Box.createRigidArea(new Dimension(20,0)));
         bottomPanel.add(zwischensummePanel, BorderLayout.EAST);
@@ -2260,11 +2138,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             artikelRabattierenAbsolut(rabatt);
             unsetFields();
             return;
-        }
-        if (e.getSource() == anzahlungNeuButton) {
-            showAnzahlungNeuPanel();
-        }
-        if (e.getSource() == anzahlungAufloesButton) {
         }
         int removeRow = -1;
         for (int i = 0; i < removeButtons.size(); i++) {
