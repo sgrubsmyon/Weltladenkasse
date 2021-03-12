@@ -1,0 +1,11 @@
+#11: Standard-Einheiten für Produktgruppen
+@sgrubsmyon opened this issue 657 days ago.  [open] 
+@sgrubsmyon is assigned. [enhancement]
+
+    **Idee von Anka**
+    Geplante Umsetzung:
+    - [x] Hinzufügen des Feldes  einheit  oder  def_einheit  in Tabelle  produktgruppen  der DB
+    - [ ] UI zu Produktgruppen aktualisieren: Anzeige der Std.-Einheit und Änderung/Setzen in Prod.gr. bearbeiten und neu eingeben
+    - [x] Im  ArtikelFormular : Bei Wechsel der Produktgruppe Feld "Einheit" mit der Std.-Einheit aktualisieren
+
+

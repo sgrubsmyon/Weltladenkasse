@@ -1,0 +1,4 @@
+Profile and optimize this search query:
+
+SELECT DISTINCT a.artikel_name, l.lieferant_kurzname, a.vk_preis, a.sortiment, a.lieferant_id FROM artikel AS a LEFT JOIN produktgruppe AS p USING (produktgruppen_id) LEFT JOIN lieferant AS l USING (lieferant_id) WHERE artikel_name LIKE "%cos%" AND a.aktiv = TRUE  AND (toplevel_id IS NOT NULL OR sub_id = 2 OR sub_id = 4) ORDER BY a.artikel_name, l.lieferant_kurzname;
+
