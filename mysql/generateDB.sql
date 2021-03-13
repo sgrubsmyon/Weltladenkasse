@@ -136,7 +136,7 @@ CREATE TABLE anzahlung (
     anzahlung_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     datum DATETIME NOT NULL,
     anzahlung_in_rech_nr INTEGER(10) UNSIGNED NOT NULL,
-    aufloesung_in_rech_nr INTEGER(10) UNSIGNED NOT NULL,
+    aufloesung_in_rech_nr INTEGER(10) UNSIGNED DEFAULT NULL,
     PRIMARY KEY (anzahlung_id),
     FOREIGN KEY (anzahlung_in_rech_nr) REFERENCES verkauf(rechnungs_nr),
     FOREIGN KEY (aufloesung_in_rech_nr) REFERENCES verkauf(rechnungs_nr)
@@ -346,7 +346,7 @@ CREATE TABLE training_anzahlung (
     anzahlung_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     datum DATETIME NOT NULL,
     anzahlung_in_rech_nr INTEGER(10) UNSIGNED NOT NULL,
-    aufloesung_in_rech_nr INTEGER(10) UNSIGNED NOT NULL,
+    aufloesung_in_rech_nr INTEGER(10) UNSIGNED DEFAULT NULL,
     PRIMARY KEY (anzahlung_id),
     FOREIGN KEY (anzahlung_in_rech_nr) REFERENCES training_verkauf(rechnungs_nr),
     FOREIGN KEY (aufloesung_in_rech_nr) REFERENCES training_verkauf(rechnungs_nr)
