@@ -1030,12 +1030,15 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             zwischensummeButton.setEnabled(false);
             anzahlungNeuButton.setEnabled(false); // whenever ZWS is possible, also Anzahlung must be possible
             hideAnzahlungNeuPanel();
+            anzahlungAufloesButton.setEnabled(true);
         } else {
             anzahlungNeuButton.setEnabled(true);
+            anzahlungAufloesButton.setEnabled(true);
             for (KassierArtikel ka : kassierArtikel) {
                 if (ka.getType().equals("anzahlung")) {
                     anzahlungNeuButton.setEnabled(false);
                     hideAnzahlungNeuPanel();
+                    anzahlungAufloesButton.setEnabled(false);
                     break;
                 }
             }
@@ -1779,8 +1782,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             if (!kassierArtikel.get(i).getType().equals("anzahlung")) {
                 // kassierArtikel.get(i).setEinzelpreis(bc.zero);
                 kassierArtikel.get(i).setGesPreis(bc.zero);
-                // data.get(i).set(4, "");
-                data.get(i).set(5, "");
+                // data.get(i).set(4, ""); // column Einzelpreis
+                data.get(i).set(5, ""); // column Gesamtpreis
                 updateAll();
             }
         }
@@ -2143,6 +2146,15 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
+    void reconstructPrices() {
+        for (int i = 0; i < kassierArtikel.size(); i++) {
+            KassierArtikel ka = kassierArtikel.get(i);
+            BigDecimal gesPreis = ka.getEinzelPreis().multiply(new BigDecimal(ka.getStueckzahl()));
+            ka.setGesPreis(gesPreis);
+            data.get(i).set(5, bc.priceFormatter(gesPreis));
+        }
+    }
+
     /**
      * A class implementing ArticleSelectUser must have this method.
      */
@@ -2345,6 +2357,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
         }
         if (removeRow > -1) {
+            if (kassierArtikel.get(removeRow).getType() == "anzahlung")
+                reconstructPrices();
+
             data.remove(removeRow);
             kassierArtikel.remove(removeRow);
             mwsts.remove(removeRow);
@@ -2364,9 +2379,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     kassierArtikel.get(i).setPosition(oldVal - 1);
                 }
             }
-
             removeRabattAufRechnung();
-
             refreshPositionsInData();
             updateAll();
             if (display != null && display.deviceWorks()) {
