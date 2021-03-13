@@ -132,6 +132,16 @@ CREATE TABLE kassenstand (
     FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE anzahlung (
+    anzahlung_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    datum DATETIME NOT NULL,
+    anzahlung_in_rech_nr INTEGER(10) UNSIGNED NOT NULL,
+    aufloesung_in_rech_nr INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (anzahlung_id),
+    FOREIGN KEY (anzahlung_in_rech_nr) REFERENCES verkauf(rechnungs_nr),
+    FOREIGN KEY (aufloesung_in_rech_nr) REFERENCES verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- CREATE TABLE abrechnung_tag (
 --     id INTEGER(10) UNSIGNED NOT NULL,
 --     zeitpunkt DATETIME NOT NULL,
@@ -330,6 +340,16 @@ CREATE TABLE training_kassenstand (
     kommentar VARCHAR(70),
     PRIMARY KEY (kassenstand_id),
     FOREIGN KEY (rechnungs_nr) REFERENCES training_verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE training_anzahlung (
+    anzahlung_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    datum DATETIME NOT NULL,
+    anzahlung_in_rech_nr INTEGER(10) UNSIGNED NOT NULL,
+    aufloesung_in_rech_nr INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (anzahlung_id),
+    FOREIGN KEY (anzahlung_in_rech_nr) REFERENCES training_verkauf(rechnungs_nr),
+    FOREIGN KEY (aufloesung_in_rech_nr) REFERENCES training_verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE training_abrechnung_tag (
