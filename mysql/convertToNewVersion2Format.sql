@@ -859,3 +859,6 @@ CREATE TABLE training_anzahlung (
     FOREIGN KEY (anzahlung_in_rech_nr) REFERENCES training_verkauf(rechnungs_nr),
     FOREIGN KEY (aufloesung_in_rech_nr) REFERENCES training_verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+GRANT INSERT ON kasse.anzahlung TO 'mitarbeiter'@'localhost';
+GRANT INSERT ON kasse.training_anzahlung TO 'mitarbeiter'@'localhost';
