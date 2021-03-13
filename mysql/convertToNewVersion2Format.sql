@@ -835,3 +835,27 @@ ALTER TABLE training_verkauf_details ADD FOREIGN KEY (artikel_id) REFERENCES art
 INSERT INTO `artikel` (`artikel_id`, `produktgruppen_id`, `lieferant_id`, `artikel_nr`, `artikel_name`, `kurzname`, `menge`, `einheit`, `barcode`, `herkunft`, `vpe`, `setgroesse`, `vk_preis`, `empf_vk_preis`, `ek_rabatt`, `ek_preis`, `variabler_preis`, `sortiment`, `lieferbar`, `beliebtheit`, `bestand`, `von`, `bis`, `aktiv`) VALUES (3,2,1,'ANPASSUNG','Manuelle Preisanpassung','Preisanpassung',NULL,NULL,NULL,NULL,NULL,1,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,1);
 INSERT INTO `artikel` (`artikel_id`, `produktgruppen_id`, `lieferant_id`, `artikel_nr`, `artikel_name`, `kurzname`, `menge`, `einheit`, `barcode`, `herkunft`, `vpe`, `setgroesse`, `vk_preis`, `empf_vk_preis`, `ek_rabatt`, `ek_preis`, `variabler_preis`, `sortiment`, `lieferbar`, `beliebtheit`, `bestand`, `von`, `bis`, `aktiv`) VALUES (4,2,1,'ANZAHLUNG','Anzahlung','Anzahlung',NULL,NULL,NULL,NULL,NULL,1,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,1);
 INSERT INTO `artikel` (`artikel_id`, `produktgruppen_id`, `lieferant_id`, `artikel_nr`, `artikel_name`, `kurzname`, `menge`, `einheit`, `barcode`, `herkunft`, `vpe`, `setgroesse`, `vk_preis`, `empf_vk_preis`, `ek_rabatt`, `ek_preis`, `variabler_preis`, `sortiment`, `lieferbar`, `beliebtheit`, `bestand`, `von`, `bis`, `aktiv`) VALUES (5,2,1,'ANZAHLAUFLOES','Anzahlungsauflösung','Anzahl.auflös.',NULL,NULL,NULL,NULL,NULL,1,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,1);
+
+-- ------------
+-- anzahlung --
+-- ------------
+
+CREATE TABLE anzahlung (
+    anzahlung_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    datum DATETIME NOT NULL,
+    anzahlung_in_rech_nr INTEGER(10) UNSIGNED NOT NULL,
+    aufloesung_in_rech_nr INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (anzahlung_id),
+    FOREIGN KEY (anzahlung_in_rech_nr) REFERENCES verkauf(rechnungs_nr),
+    FOREIGN KEY (aufloesung_in_rech_nr) REFERENCES verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE training_anzahlung (
+    anzahlung_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    datum DATETIME NOT NULL,
+    anzahlung_in_rech_nr INTEGER(10) UNSIGNED NOT NULL,
+    aufloesung_in_rech_nr INTEGER(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (anzahlung_id),
+    FOREIGN KEY (anzahlung_in_rech_nr) REFERENCES training_verkauf(rechnungs_nr),
+    FOREIGN KEY (aufloesung_in_rech_nr) REFERENCES training_verkauf(rechnungs_nr)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
