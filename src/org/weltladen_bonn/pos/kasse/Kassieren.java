@@ -4,6 +4,7 @@ package org.weltladen_bonn.pos.kasse;
 import java.util.*; // for Vector
 import java.util.Date;
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
+import java.math.RoundingMode;
 
 // MySQL Connector/J stuff:
 import java.sql.*;
@@ -1661,7 +1662,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         row.add(removeButtons.lastElement());
         data.add(row);
 
-        if (type != "leergut") {
+        if (type != "leergut" && type != "anzahlung" && type != "anzahlungsaufloesung") {
             checkForRabatt();
             checkForPfand();
         }
@@ -1720,6 +1721,36 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
+    private void anzahlungHinzufuegen() {
+        Integer stueck = 1;
+        selectedStueck = stueck;
+        String anzahlungName = getArticleName(anzahlungArtikelID)[0];
+        BigDecimal gesamtAnzahlung = new BigDecimal(bc.priceFormatterIntern(anzahlungsBetragField.getText()));
+        // discover all the contained VATs and split the Anzahlung according to contribution to total price
+        BigDecimal gesUmsatz = new BigDecimal(getTotalPrice());
+        // vatMap = calculateMwStValuesInRechnung(); // should have been calculated before
+        for ( BigDecimal steuersatz : vatMap.keySet() ){
+            BigDecimal brutto = vatMap.get(steuersatz).get(2); // = Umsatz
+            // Anteil des Steuersatzes am Gesamtumsatz:
+            BigDecimal anzahlungsWert = brutto.divide(gesUmsatz, 10, RoundingMode.HALF_UP).multiply(gesamtAnzahlung);
+            String anzahlung = bc.priceFormatterIntern(anzahlungsWert);
+            String mwst = steuersatz.toString();
+            hinzufuegen(anzahlungArtikelID, anzahlungName, "ANZAHLUNG", "red", "anzahlung", "",
+                        stueck, anzahlung, anzahlungsWert, mwst);
+        }
+        // now zero all prices except for anzahlung
+        for (int i = 0; i < kassierArtikel.size(); i++) {
+            if (!kassierArtikel.get(i).getType().equals("anzahlung")) {
+                // kassierArtikel.get(i).setEinzelpreis(bc.zero);
+                kassierArtikel.get(i).setGesPreis(bc.zero);
+                // data.get(i).set(4, "");
+                data.get(i).set(5, "");
+                updateAll();
+            }
+        }
+        updateDisplay(anzahlungName, stueck, bc.priceFormatter(gesamtAnzahlung));
+    }
+
     private void zwischensumme() {
         bigPriceField.setText(totalPriceField.getText());
         updateRabattButtonsZwischensumme();
@@ -1773,7 +1804,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         // Send data to TSE:
         Vector<String> zahlung = new Vector<String>();
         zahlung.add(kundeGibtField.isEditable() ? "Bar" : "Unbar");
-        zahlung.add( bc.priceFormatterIntern(calculateTotalPrice()) );
+        zahlung.add( bc.priceFormatterIntern(getTotalPrice()) );
         // Omit currency code because it's always in EUR
         Vector<Vector<String>> zahlungen = new Vector<Vector<String>>();
         zahlungen.add(zahlung);
@@ -2263,6 +2294,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
         if (e.getSource() == anzahlungNeuButton) {
             showAnzahlungNeuPanel();
+        }
+        if (e.getSource() == anzahlungNeuOKButton) {
+            anzahlungHinzufuegen();
         }
         if (e.getSource() == anzahlungAufloesButton) {
         }

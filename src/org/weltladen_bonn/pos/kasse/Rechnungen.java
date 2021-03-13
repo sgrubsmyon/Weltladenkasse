@@ -326,7 +326,8 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 String einzelPreis = "";
                 if (stueck != null){
                     einzelPreis = bc.priceFormatter(
-                            gesPreisDec.divide(stueckDec, 10, RoundingMode.HALF_UP ) )+' '+bc.currencySymbol;
+                        gesPreisDec.divide(stueckDec, 10, RoundingMode.HALF_UP )
+                    )+' '+bc.currencySymbol;
                 }
                 gesPreis = bc.priceFormatter(gesPreis)+' '+bc.currencySymbol;
                 String name = "";
