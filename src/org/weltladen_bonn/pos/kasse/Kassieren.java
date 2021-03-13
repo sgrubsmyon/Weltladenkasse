@@ -1574,6 +1574,42 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
+    private void maybeInsertIntoAnzahlung(int rechnungsNr) {
+        // find out if Anzahlung has been made in this rechnung:
+        boolean thisIsAnzahlung = false;
+        for (KassierArtikel ka : kassierArtikel) {
+            if (ka.getType().equals("anzahlung")) {
+                thisIsAnzahlung = true;
+                break;
+            }
+        }
+        if (thisIsAnzahlung) {
+            // insert into table anzahlung
+            try {
+                Connection connection = this.pool.getConnection();
+                PreparedStatement pstmt = connection.prepareStatement(
+                    "INSERT INTO "+tableForMode("anzahlung")+" SET "+
+                    "datum = (SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?), "+
+                    "anzahlung_in_rech_nr = ?"
+                );
+                pstmtSetInteger(pstmt, 1, rechnungsNr);
+                pstmtSetInteger(pstmt, 2, rechnungsNr);
+                int result = pstmt.executeUpdate();
+                pstmt.close();
+                connection.close();
+                if (result == 0) {
+                    JOptionPane.showMessageDialog(this, "Fehler: Abrechnung konnte nicht gespeichert werden.", "Fehler",
+                        JOptionPane.ERROR_MESSAGE);
+                } else {
+                    mainWindow.updateBottomPanel();
+                }
+            } catch (SQLException ex) {
+                logger.error("Exception:", ex);
+                showDBErrorDialog(ex.getMessage());
+            } 
+        }
+    }
+
     protected void setButtonsEnabled() {
         if (preisField.getText().length() > 0) {
             hinzufuegenButton.setEnabled(true);
@@ -1848,6 +1884,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             // Thread.sleep(5000); // wait for 5 seconds, no, printer is too slow anyway and this blocks UI unnecessarily
             printQuittung(rechnungsNr, tx, tseStatusValues);
         }
+        maybeInsertIntoAnzahlung(rechnungsNr);
         clearAll();
         updateAll();
 
