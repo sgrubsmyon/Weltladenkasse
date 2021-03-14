@@ -2348,6 +2348,17 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             anzahlungHinzufuegen();
         }
         if (e.getSource() == anzahlungAufloesButton) {
+            JDialog dialog = new JDialog(this.mainWindow, "Anzahlung auflösen", true);
+            AnzahlungAufloesDialog aad = new AnzahlungAufloesDialog(this.pool, this.mainWindow, dialog);
+            dialog.getContentPane().add(aad, BorderLayout.CENTER);
+            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+            dialog.pack();
+            dialog.setLocationRelativeTo(null);
+            dialog.setVisible(true);
+            boolean aborted = aad.getAborted();
+            if (!aborted) {
+                // ...
+            }
         }
         int removeRow = -1;
         for (int i = 0; i < removeButtons.size(); i++) {
