@@ -62,7 +62,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     protected JPanel allPanel;
     protected JPanel headerPanel;
     protected JPanel tablePanel;
-    // The table holding the invoices. This is "anonymously subclassed" and two method are overridden
+    // The table holding the invoices. This is "anonymously subclassed" and two methods are overridden
     protected AnyJComponentJTable myTable;
 
     private JRadioButton alleButton;

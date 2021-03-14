@@ -173,8 +173,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         leftPanel = new JPanel();
         rightPanel = new JPanel();
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                leftPanel,
-                rightPanel);
+            leftPanel, rightPanel);
         splitPane.setOneTouchExpandable(true);
         //splitPane.setResizeWeight(0.3);
         splitPane.setDividerLocation(0.3);
@@ -205,13 +204,13 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         JLabel dateLabelStart = (JLabel)vecStart.get(0);
         dateChooserStart = (JDateChooser)vecStart.get(1);
         //dateSpinnerStart = (JSpinner)vecEnd.get(2);
-	//dateSpinnerStart.addChangeListener(this);
+	    //dateSpinnerStart.addChangeListener(this);
 
         Vector<Object> vecEnd = setupDateChooser("Enddatum:", latestDate, earliestDate, latestDate);
         JLabel dateLabelEnd = (JLabel)vecEnd.get(0);
         dateChooserEnd = (JDateChooser)vecEnd.get(1);
         //dateSpinnerEnd = (JSpinner)vecEnd.get(2);
-	//dateSpinnerEnd.addChangeListener(this);
+	    //dateSpinnerEnd.addChangeListener(this);
 
         changeDateButton = new JButton(
                 //new ImageIcon(WindowContent.class.getResource("/resources/icons/refreshButtonSmall.gif")));
@@ -227,7 +226,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         c1.gridy = 1; c1.gridx = 1; datePanel.add(dateChooserEnd, c1);
         c1.gridy = 1; c1.gridx = 2; datePanel.add(changeDateButton, c1);
 
-	leftPanel.add(datePanel, BorderLayout.NORTH);
+	    leftPanel.add(datePanel, BorderLayout.NORTH);
     }
 
     void showOrderTable() {
@@ -236,25 +235,25 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 
         retrieveOrderData();
 
-	JPanel pageChangePanel = new JPanel();
-	pageChangePanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-	prevButton = new JButton("<<");
-	if (this.currentPage <= 1)
-	    prevButton.setEnabled(false);
-	nextButton = new JButton(">>");
-	if (this.currentPage >= totalPage)
-	    nextButton.setEnabled(false);
-	pageChangePanel.add(prevButton);
-	pageChangePanel.add(nextButton);
-	prevButton.addActionListener(this);
-	nextButton.addActionListener(this);
-	int currentPageMin = (currentPage-1)*bc.rowsPerPage + 1;
-	int currentPageMax = bc.rowsPerPage*currentPage;
-	currentPageMax = (currentPageMax <= bestellungsZahlInt) ? currentPageMax : bestellungsZahlInt;
-	JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Bestellungen "+
-	    currentPageMin + " bis "+ currentPageMax +" von "+ bestellungsZahlInt);
-	pageChangePanel.add(header);
-	orderTablePanel.add(pageChangePanel, BorderLayout.NORTH);
+        JPanel pageChangePanel = new JPanel();
+        pageChangePanel.setLayout(new FlowLayout(FlowLayout.LEADING));
+        prevButton = new JButton("<<");
+        if (this.currentPage <= 1)
+            prevButton.setEnabled(false);
+        nextButton = new JButton(">>");
+        if (this.currentPage >= totalPage)
+            nextButton.setEnabled(false);
+        pageChangePanel.add(prevButton);
+        pageChangePanel.add(nextButton);
+        prevButton.addActionListener(this);
+        nextButton.addActionListener(this);
+        int currentPageMin = (currentPage-1)*bc.rowsPerPage + 1;
+        int currentPageMax = bc.rowsPerPage*currentPage;
+        currentPageMax = (currentPageMax <= bestellungsZahlInt) ? currentPageMax : bestellungsZahlInt;
+        JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Bestellungen "+
+            currentPageMin + " bis "+ currentPageMax +" von "+ bestellungsZahlInt);
+        pageChangePanel.add(header);
+        orderTablePanel.add(pageChangePanel, BorderLayout.NORTH);
 
         orderLabels = new Vector<String>();
         orderLabels.add("Nr.");
@@ -276,21 +275,21 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         orderTable.getSelectionModel().addListSelectionListener(new RowListener());
 
         // set table properties:
-	TableColumn nr = orderTable.getColumn("Nr.");
-	nr.setCellRenderer(rechtsAusrichter);
-	nr.setPreferredWidth(100);
-	TableColumn typ = orderTable.getColumn("Typ");
-	typ.setCellRenderer(zentralAusrichter);
-	typ.setPreferredWidth(100);
-	TableColumn jahr = orderTable.getColumn("Jahr");
-	jahr.setCellRenderer(rechtsAusrichter);
-	jahr.setPreferredWidth(100);
-	TableColumn kw = orderTable.getColumn("KW");
-	kw.setCellRenderer(rechtsAusrichter);
-	kw.setPreferredWidth(100);
-	TableColumn datum = orderTable.getColumn("Datum");
-	datum.setCellRenderer(linksAusrichter);
-	datum.setPreferredWidth(200);
+        TableColumn nr = orderTable.getColumn("Nr.");
+        nr.setCellRenderer(rechtsAusrichter);
+        nr.setPreferredWidth(100);
+        TableColumn typ = orderTable.getColumn("Typ");
+        typ.setCellRenderer(zentralAusrichter);
+        typ.setPreferredWidth(100);
+        TableColumn jahr = orderTable.getColumn("Jahr");
+        jahr.setCellRenderer(rechtsAusrichter);
+        jahr.setPreferredWidth(100);
+        TableColumn kw = orderTable.getColumn("KW");
+        kw.setCellRenderer(rechtsAusrichter);
+        kw.setPreferredWidth(100);
+        TableColumn datum = orderTable.getColumn("Datum");
+        datum.setCellRenderer(linksAusrichter);
+        datum.setPreferredWidth(200);
 
         JScrollPane scrollPane = new JScrollPane(orderTable);
         orderTablePanel.add(scrollPane, BorderLayout.CENTER);
@@ -323,30 +322,30 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             orderDetailTablePanel = new JPanel();
             orderDetailTablePanel.setLayout(new BoxLayout(orderDetailTablePanel, BoxLayout.Y_AXIS));
 
-                // Header
-                JLabel headerLabel = new JLabel("Details der Bestellung:");
-                headerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-                orderDetailTablePanel.add(headerLabel);
+            // Header
+            JLabel headerLabel = new JLabel("Details der Bestellung:");
+            headerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            orderDetailTablePanel.add(headerLabel);
 
-                /*
-                // Table with general order data:
-                Vector<String> bestellung = orderData.get(bestellNummernUndTyp.indexOf(bestellNrUndTyp));
-                Vector< Vector<String> > bestellData = new Vector< Vector<String> >();
-                bestellData.add(bestellung);
-                JTable bestellTable = new JTable(bestellData, orderLabels);
-                JScrollPane sp1 = new JScrollPane(bestellTable);
-                sp1.setPreferredSize(new Dimension((int)sp1.getPreferredSize().getWidth(), 40));
-                orderDetailTablePanel.add(sp1);
-                */
+            /*
+            // Table with general order data:
+            Vector<String> bestellung = orderData.get(bestellNummernUndTyp.indexOf(bestellNrUndTyp));
+            Vector< Vector<String> > bestellData = new Vector< Vector<String> >();
+            bestellData.add(bestellung);
+            JTable bestellTable = new JTable(bestellData, orderLabels);
+            JScrollPane sp1 = new JScrollPane(bestellTable);
+            sp1.setPreferredSize(new Dimension((int)sp1.getPreferredSize().getWidth(), 40));
+            orderDetailTablePanel.add(sp1);
+            */
 
-                // Table with order details:
-                retrieveOrderDetailData(bestellNrUndTyp);
-                orderDetailTable = new BestellungsTable(bc, orderDetailDisplayData,
-                        columnLabels, orderDetailColors);
-                setTableProperties(orderDetailTable);
+            // Table with order details:
+            retrieveOrderDetailData(bestellNrUndTyp);
+            orderDetailTable = new BestellungsTable(bc, orderDetailDisplayData,
+                    columnLabels, orderDetailColors);
+            setTableProperties(orderDetailTable);
 
-                orderDetailScrollPane = new JScrollPane(orderDetailTable);
-                orderDetailTablePanel.add(orderDetailScrollPane);
+            orderDetailScrollPane = new JScrollPane(orderDetailTable);
+            orderDetailTablePanel.add(orderDetailScrollPane);
 
             rightPanel.add(orderDetailTablePanel, BorderLayout.CENTER);
 
@@ -354,8 +353,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             JPanel buttonPanel = new JPanel(new FlowLayout());
             exportButton = new JButton("Exportieren");
             editButton = new JButton("Bearbeiten");
-	    exportButton.addActionListener(this);
-	    editButton.addActionListener(this);
+            exportButton.addActionListener(this);
+            editButton.addActionListener(this);
             buttonPanel.add(exportButton);
             buttonPanel.add(editButton);
 
@@ -367,23 +366,23 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             filterField.getDocument().addDocumentListener(this);
             filterField.setAlignmentX(JComponent.RIGHT_ALIGNMENT);
             buttonPanel.add(filterField);
-	    emptyFilterButton = new JButton("x");
-	    emptyFilterButton.addActionListener(this);
-	    buttonPanel.add(emptyFilterButton);
+            emptyFilterButton = new JButton("x");
+            emptyFilterButton.addActionListener(this);
+            buttonPanel.add(emptyFilterButton);
 
             rightPanel.add(buttonPanel, BorderLayout.SOUTH);
         }
     }
 
-    private void updateAll(){
-	this.remove(splitPane);
-	this.revalidate();
+    private void updateAll() {
+        this.remove(splitPane);
+        this.revalidate();
         selBestellNrUndTyp = new Vector<Object>();
         selBestellNrUndTyp.add(-1); selBestellNrUndTyp.add("");
-	showAll();
+	    showAll();
     }
 
-    private void updateOrderTable(){
+    private void updateOrderTable() {
         leftPanel.remove(orderTablePanel);
         selBestellNrUndTyp = new Vector<Object>();
         selBestellNrUndTyp.add(-1); selBestellNrUndTyp.add("");
@@ -391,20 +390,20 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         updateRightPanel();
     }
 
-    private void updateRightPanel(){
+    private void updateRightPanel() {
         rightPanel = new JPanel();
         splitPane.setRightComponent(rightPanel);
-	//this.revalidate();
-	showRightPanel(selBestellNrUndTyp);
+        //this.revalidate();
+        showRightPanel(selBestellNrUndTyp);
     }
 
     private void updateDetailTable() {
         applyFilter(filterStrOrderDetail, orderDetailDisplayData, orderDetailDisplayIndices);
         orderDetailTablePanel.remove(orderDetailScrollPane);
-	orderDetailTablePanel.revalidate();
+	    orderDetailTablePanel.revalidate();
 
         orderDetailTable = new BestellungsTable(bc, orderDetailDisplayData,
-                columnLabels, orderDetailColors);
+            columnLabels, orderDetailColors);
         setTableProperties(orderDetailTable);
 
         orderDetailScrollPane = new JScrollPane(orderDetailTable);
@@ -426,17 +425,17 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
             bestellungsZahl = rs.getString(1);
             bestellungsZahlInt = Integer.parseInt(bestellungsZahl);
             totalPage = bestellungsZahlInt/bc.rowsPerPage + 1;
-                if (currentPage > totalPage) {
-                    currentPage = totalPage;
-                }
+            if (currentPage > totalPage) {
+                currentPage = totalPage;
+            }
             rs.close();
             rs = stmt.executeQuery(
-                    "SELECT bestell_nr, typ, jahr, kw, DATE_FORMAT(bestell_datum, "+
-                    "'"+bc.dateFormatSQL+"') FROM bestellung "+
-            filterStrOrders +
-                    "ORDER BY bestell_nr DESC "+
-                    "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
-                    );
+                "SELECT bestell_nr, typ, jahr, kw, DATE_FORMAT(bestell_datum, "+
+                "'"+bc.dateFormatSQL+"') FROM bestellung "+
+                filterStrOrders +
+                "ORDER BY bestell_nr DESC "+
+                "LIMIT " + (currentPage-1)*bc.rowsPerPage + "," + bc.rowsPerPage
+            );
             while ( rs.next() ){
                 Vector<Object> bestNrUndTyp = new Vector<Object>();
                     bestNrUndTyp.add(rs.getInt(1)); bestNrUndTyp.add(rs.getString(2));
@@ -913,7 +912,7 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
         }
         if (e.getSource() == editButton){
             if ( (Integer)selBestellNrUndTyp.get(0) > 0){
-                if (!tabbedPane.bestellenTableIsEmpty()){
+                if (!tabbedPane.bestellenTableIsEmpty()) {
                     int answer = JOptionPane.showConfirmDialog(this,
                             "Achtung: Bestellen-Tab enthält bereits eine Bestellung,\nderen Daten verloren gehen. Fortfahren?",
                             "Warnung",
@@ -937,8 +936,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 // switch to Bestellen tab
                 tabbedPane.switchToBestellen();
             }
-	    return;
-	}
+            return;
+        }
         if (e.getSource() == exportButton){
             SimpleDateFormat sdfOut = new SimpleDateFormat(bc.exportDirBestellung);
             String formattedDate = sdfOut.format(nowDate());
@@ -976,11 +975,11 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
                 logger.info("Save command cancelled by user.");
             }
             return;
-	}
+        }
         if (e.getSource() == emptyFilterButton){
             filterField.setText("");
             filterField.requestFocus();
-	    return;
-	}
+            return;
+        }
     }
 }
