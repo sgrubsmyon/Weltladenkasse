@@ -374,7 +374,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
     void updateTable() {
         applyFilter(filterStr, displayData, displayIndices);
         produktgruppenListPanel.remove(scrollPane);
-	produktgruppenListPanel.revalidate();
+	    produktgruppenListPanel.revalidate();
 
         scrollPane = new JScrollPane(myTable);
         produktgruppenListPanel.add(scrollPane);
