@@ -10,6 +10,7 @@ import org.weltladen_bonn.pos.ArticleSelectTable;
 
 // Basic Java stuff:
 import java.util.Vector;
+import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -47,9 +48,7 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
     private Vector<Vector<Object>> anzahlungData;
     private Vector<String> anzahlungLabels;
     private Vector< Vector<Object> > anzahlungDetailData;
-    private Vector<Integer> anzahlungDetailArtikelIDs;
     private Vector<String> anzahlungDetailColors;
-    private Vector< Vector<Object> > anzahlungDetailDisplayData;
 
     private JSplitPane splitPane;
     private JPanel leftPanel;
@@ -64,6 +63,9 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
     private JButton okButton;
     private JButton cancelButton;
     private boolean aborted = true;
+
+    // Die Ausrichter:
+    protected final String einrueckung = "      ";
 
     // Methoden:
     public AnzahlungAufloesDialog(MariaDbPoolDataSource pool, MainWindowGrundlage mw, JDialog dia) {
@@ -175,7 +177,65 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
     public void showRightPanel(int rechnungsNr) {
         if (rechnungsNr > 0) {
             rightPanel.setLayout(new BorderLayout());
+
+            // Panel for header and both tables
+            anzahlungDetailTablePanel = new JPanel();
+            anzahlungDetailTablePanel.setLayout(new BoxLayout(anzahlungDetailTablePanel, BoxLayout.Y_AXIS));
+
+            // Header
+            JLabel headerLabel = new JLabel("Artikel der Anzahlung:");
+            headerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            anzahlungDetailTablePanel.add(headerLabel);
+
+            /*
+            // Table with general anzahlung data:
+            Vector<String> bestellung = anzahlungData.get(bestellNummernUndTyp.indexOf(bestellNrUndTyp));
+            Vector< Vector<String> > bestellData = new Vector< Vector<String> >();
+            bestellData.add(bestellung);
+            JTable bestellTable = new JTable(bestellData, anzahlungLabels);
+            JScrollPane sp1 = new JScrollPane(bestellTable);
+            sp1.setPreferredSize(new Dimension((int)sp1.getPreferredSize().getWidth(), 40));
+            anzahlungDetailTablePanel.add(sp1);
+            */
+
+            Vector<String> columnLabels = new Vector<String>();
+            columnLabels.add("Pos.");
+            columnLabels.add("Artikel-Name"); columnLabels.add("Artikel-Nr."); columnLabels.add("Stückzahl");
+            columnLabels.add("Einzelpreis"); columnLabels.add("Gesamtpreis"); columnLabels.add("MwSt.");
+
+            // Table with anzahlung details:
+            retrieveAnzahlungDetailData(selRechNr);
+            anzahlungDetailTable = new ArticleSelectTable(anzahlungDetailData, columnLabels, anzahlungDetailColors);
+            setTableProperties(anzahlungDetailTable);
+
+            anzahlungDetailScrollPane = new JScrollPane(anzahlungDetailTable);
+            anzahlungDetailTablePanel.add(anzahlungDetailScrollPane);
+
+            rightPanel.add(anzahlungDetailTablePanel, BorderLayout.CENTER);
         }
+    }
+
+    private void setTableProperties(ArticleSelectTable table) {
+        // Spalteneigenschaften:
+        //	table.getColumnModel().getColumn(0).setPreferredWidth(10);
+        TableColumn pos = table.getColumn("Pos.");
+        pos.setCellRenderer(zentralAusrichter);
+        pos.setPreferredWidth(5);
+        TableColumn artikelbez = table.getColumn("Artikel-Name");
+        artikelbez.setCellRenderer(linksAusrichter);
+        artikelbez.setPreferredWidth(150);
+        TableColumn artikelnr = table.getColumn("Artikel-Nr.");
+        artikelnr.setCellRenderer(rechtsAusrichter);
+        artikelnr.setPreferredWidth(50);
+        TableColumn stueckzahl = table.getColumn("Stückzahl");
+        stueckzahl.setCellRenderer(rechtsAusrichter);
+        TableColumn preis = table.getColumn("Einzelpreis");
+        preis.setCellRenderer(rechtsAusrichter);
+        TableColumn gespreis = table.getColumn("Gesamtpreis");
+        gespreis.setCellRenderer(rechtsAusrichter);
+        TableColumn mwst = table.getColumn("MwSt.");
+        mwst.setCellRenderer(rechtsAusrichter);
+        mwst.setPreferredWidth(5);
     }
 
     private class RowListener implements ListSelectionListener {
@@ -251,8 +311,8 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
                 pstmt = connection.prepareStatement(
                     "SELECT SUM(stueckzahl*vk_preis) FROM "+tableForMode("verkauf_details")+" "+
                     "INNER JOIN "+tableForMode("artikel")+" USING (artikel_id) "+
-                    "WHERE rechnungs_nr = ? AND position < ("+
-                    "  SELECT MIN(position) FROM "+tableForMode("verkauf_details")+" "+
+                    "WHERE rechnungs_nr = ? AND vd_id < ("+
+                    "  SELECT MIN(vd_id) FROM "+tableForMode("verkauf_details")+" "+
                     "  WHERE rechnungs_nr = ? AND artikel_id = ?"+
                     ")"
                 );
@@ -273,63 +333,98 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
 
     void retrieveAnzahlungDetailData(int rechnungsNr) {
         anzahlungDetailData = new Vector< Vector<Object> >();
-        anzahlungDetailArtikelIDs = new Vector<Integer>();
         anzahlungDetailColors = new Vector<String>();
-        // try {
-        //     Connection connection = this.pool.getConnection();
-        //     PreparedStatement pstmt = connection.prepareStatement(
-        //             "SELECT bd.position, l.lieferant_name, a.artikel_nr, a.artikel_name, "+
-        //             "a.empf_vk_preis, a.vk_preis, a.vpe, bd.stueckzahl, a.beliebtheit, a.sortiment, bd.artikel_id "+
-        //             "FROM bestellung_details AS bd "+
-        //             "LEFT JOIN artikel AS a USING (artikel_id) "+
-        //             "LEFT JOIN lieferant AS l USING (lieferant_id) "+
-        //             "WHERE bd.bestell_nr = ? "+
-        //             "ORDER BY bd.position DESC"
-        //             );
-        //     pstmtSetInteger(pstmt, 1, rechnungsNr);
-        //     ResultSet rs = pstmt.executeQuery();
-        //     // Now do something with the ResultSet, should be only one result ...
-        //     while ( rs.next() ){
-        //         String pos = rs.getString(1);
-        //         String lieferant = rs.getString(2);
-        //         String artikelNummer = rs.getString(3);
-        //         String artikelName = rs.getString(4);
-        //         String empf_vkpreis = rs.getString(5);
-        //         String vkpreis = rs.getString(6);
-        //         String vpe = rs.getString(7);
-        //         //Integer vpeInt = rs.getInt(7);
-        //         //vpeInt = vpeInt > 0 ? vpeInt : 0;
-        //         Integer stueck = rs.getInt(8);
-        //         Integer beliebt = rs.getInt(9);
-        //         Boolean sortimentBool = rs.getBoolean(10);
-        //         String color = sortimentBool ? "default" : "gray";
-        //         Integer artikelID = rs.getInt(11);
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT vd.position, a.kurzname, a.artikel_name, ra.aktionsname, " +
+                "a.artikel_nr, a.sortiment, " +
+                "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, " +
+                "(p.toplevel_id IS NULL AND p.sub_id = 1 AND a.artikel_id = 2) AS rechnung_rabatt, " +
+                "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
+                "vd.stueckzahl, a.vk_preis, vd.mwst_satz " +
+                "FROM "+tableForMode("verkauf_details")+" AS vd LEFT JOIN artikel AS a USING (artikel_id) " +
+                "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
+                "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
+                "WHERE vd.rechnungs_nr = ? AND " +
+                "vd.vd_id < ("+
+                "  SELECT MIN(vd_id) FROM "+tableForMode("verkauf_details")+" "+
+                "  WHERE rechnungs_nr = ? AND artikel_id = ?"+
+                ")"
+            );
+            pstmtSetInteger(pstmt, 1, rechnungsNr);
+            pstmtSetInteger(pstmt, 2, rechnungsNr);
+            pstmtSetInteger(pstmt, 3, anzahlungArtikelID);
+            ResultSet rs = pstmt.executeQuery();
+            // Now do something with the ResultSet, should be only one result ...
+            while ( rs.next() ){
+                Integer pos = rs.getString(1) == null ? null : rs.getInt(1);
+                String kurzname = rs.getString(2);
+                String artikelname = rs.getString(3);
+                String aktionsname = rs.getString(4);
+                String artikelnummer = rs.getString(5);
+                boolean sortiment = rs.getBoolean(6);
+                boolean manuRabatt = rs.getBoolean(7);
+                boolean rechnungRabatt = rs.getBoolean(8);
+                boolean pfand = rs.getBoolean(9);
+                String stueck = rs.getString(10);
+                BigDecimal stueckDec = new BigDecimal(0);
+                if (stueck != null)
+                    stueckDec = new BigDecimal(stueck);
+                String einzelPreis = rs.getString(11);
+                BigDecimal einzelPreisDec = new BigDecimal(einzelPreis);
+                BigDecimal mwst = new BigDecimal(rs.getString(12));
+                String gesPreis = "";
+                if (stueck != null){
+                    gesPreis = bc.priceFormatter(einzelPreisDec.multiply(stueckDec))+' '+bc.currencySymbol;
+                }
+                einzelPreis = bc.priceFormatter(einzelPreis)+' '+bc.currencySymbol;
+                String name = "";
+                String color = "default";
+                if ( aktionsname != null ) { // Aktionsrabatt
+                    name = einrueckung+aktionsname;
+                    color = "red"; artikelnummer = "RABATT";// einzelPreis = "";
+                }
+                else if ( rechnungRabatt ){ // Manueller Rabatt auf Rechnung
+                    name = artikelname; color = "red";
+                    artikelnummer = "RABATT";// einzelPreis = "";
+                }
+                else if ( manuRabatt ){ // Manueller Rabatt auf Artikel
+                    name = einrueckung+artikelname; color = "red"; artikelnummer = "RABATT";
+                }
+                else if ( pfand && stueckDec.signum() > 0 ){
+                    name = einrueckung+artikelname; color = "blue"; artikelnummer = "PFAND";
+                }
+                else if ( pfand && stueckDec.signum() < 0 ){
+                    name = artikelname; color = "green"; artikelnummer = "LEERGUT";
+                }
+                else {
+                    if ( kurzname != null && !kurzname.equals("") ){
+                        name = kurzname;
+                    } else if (artikelname != null ){
+                        name = artikelname;
+                    }
+                    if ( stueckDec.signum() < 0 ){
+                        color = "green";
+                    }
+                    else if ( !sortiment ){ color = "gray"; }
+                    else { color = "default"; }
+                }
 
-        //         String vkp;
-        //         if (empf_vkpreis == null || empf_vkpreis.equals("")){
-        //             vkp = vkpreis;
-        //         } else {
-        //             vkp = empf_vkpreis;
-        //         }
-
-        //         Vector<Object> row = new Vector<Object>();
-        //             row.add(pos);
-        //             row.add(lieferant); row.add(artikelNummer); row.add(artikelName);
-        //             row.add(bc.priceFormatter(vkp)+" "+bc.currencySymbol); row.add(vpe);
-        //             row.add(stueck); row.add(beliebt);
-        //             row.add(""); // row.add(removeButtons.lastElement())
-        //         anzahlungDetailData.add(row);
-        //         anzahlungDetailArtikelIDs.add(artikelID);
-        //         anzahlungDetailColors.add(color);
-        //     }
-        //     rs.close();
-        //     pstmt.close();
-        //     connection.close();
-        // } catch (SQLException ex) {
-        //     logger.error("Exception:", ex);
-        //     showDBErrorDialog(ex.getMessage());
-        // }
-        anzahlungDetailDisplayData = new Vector< Vector<Object> >(anzahlungDetailData);
+                Vector<Object> row = new Vector<Object>();
+                row.add(pos);
+                row.add(name); row.add(artikelnummer); row.add(stueck);
+                row.add(einzelPreis); row.add(gesPreis); row.add(bc.vatFormatter(mwst));
+                anzahlungDetailData.add(row);
+                anzahlungDetailColors.add(color);
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
     }
 
     protected void showFooter() {
