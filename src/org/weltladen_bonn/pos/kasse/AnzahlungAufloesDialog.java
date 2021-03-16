@@ -11,6 +11,7 @@ import org.weltladen_bonn.pos.ArticleSelectTable;
 // Basic Java stuff:
 import java.util.Vector;
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
+import java.math.RoundingMode;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -299,6 +300,7 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
             // }
             for (Vector<Object> row : incompleteData) {
                 int rechNr = Integer.parseInt((String)row.get(0));
+                // What is Anzahlung?
                 pstmt = connection.prepareStatement(
                     "SELECT SUM(ges_preis) FROM "+tableForMode("verkauf_details")+" "+
                     "WHERE rechnungs_nr = ? AND artikel_id = ?"
@@ -308,17 +310,12 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
                 rs = pstmt.executeQuery();
                 rs.next(); row.add(bc.priceFormatter(rs.getString(1))+" "+bc.currencySymbol); rs.close();
                 pstmt.close();
+                // What is Rechnungssumme?
                 pstmt = connection.prepareStatement(
-                    "SELECT SUM(stueckzahl*vk_preis) FROM "+tableForMode("verkauf_details")+" "+
-                    "INNER JOIN "+tableForMode("artikel")+" USING (artikel_id) "+
-                    "WHERE rechnungs_nr = ? AND vd_id < ("+
-                    "  SELECT MIN(vd_id) FROM "+tableForMode("verkauf_details")+" "+
-                    "  WHERE rechnungs_nr = ? AND artikel_id = ?"+
-                    ")"
+                    "SELECT SUM(ges_preis) FROM "+tableForMode("anzahlung_details")+" "+
+                    "WHERE rechnungs_nr = ?"
                 );
                 pstmtSetInteger(pstmt, 1, rechNr);
-                pstmtSetInteger(pstmt, 2, rechNr);
-                pstmtSetInteger(pstmt, 3, anzahlungArtikelID);
                 rs = pstmt.executeQuery();
                 rs.next(); row.add(bc.priceFormatter(rs.getString(1))+" "+bc.currencySymbol); rs.close();
                 pstmt.close();
@@ -342,8 +339,11 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
                 "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 1 AND a.artikel_id = 2) AS rechnung_rabatt, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
-                "vd.stueckzahl, a.vk_preis, vd.mwst_satz " +
-                "FROM "+tableForMode("verkauf_details")+" AS vd LEFT JOIN artikel AS a USING (artikel_id) " +
+                "vd.stueckzahl, ad.ges_preis, vd.mwst_satz " +
+                "FROM "+tableForMode("verkauf_details")+" AS vd " +
+                "LEFT JOIN "+tableForMode("anzahlung_details")+" AS ad " +
+                "  ON vd.rechnungs_nr = ad.rechnungs_nr AND vd.vd_id = ad.vd_id " +
+                "LEFT JOIN artikel AS a USING (artikel_id) " +
                 "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
                 "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
                 "WHERE vd.rechnungs_nr = ? AND " +
@@ -371,14 +371,16 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
                 BigDecimal stueckDec = new BigDecimal(0);
                 if (stueck != null)
                     stueckDec = new BigDecimal(stueck);
-                String einzelPreis = rs.getString(11);
-                BigDecimal einzelPreisDec = new BigDecimal(einzelPreis);
+                String gesPreis = rs.getString(11);
+                BigDecimal gesPreisDec = new BigDecimal(gesPreis);
                 BigDecimal mwst = new BigDecimal(rs.getString(12));
-                String gesPreis = "";
+                String einzelPreis = "";
                 if (stueck != null){
-                    gesPreis = bc.priceFormatter(einzelPreisDec.multiply(stueckDec))+' '+bc.currencySymbol;
+                    einzelPreis = bc.priceFormatter(
+                        gesPreisDec.divide(stueckDec, 10, RoundingMode.HALF_UP))+
+                        ' '+bc.currencySymbol;
                 }
-                einzelPreis = bc.priceFormatter(einzelPreis)+' '+bc.currencySymbol;
+                gesPreis = bc.priceFormatter(gesPreis)+' '+bc.currencySymbol;
                 String name = "";
                 String color = "default";
                 if ( aktionsname != null ) { // Aktionsrabatt

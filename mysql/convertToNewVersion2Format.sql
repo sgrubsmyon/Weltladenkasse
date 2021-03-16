@@ -851,10 +851,12 @@ CREATE TABLE anzahlung (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE anzahlung_details (
     ad_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    anzahlung_id INTEGER(10) UNSIGNED NOT NULL,
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL,
+    vd_id INTEGER(10) UNSIGNED NOT NULL,
     ges_preis DECIMAL(13,2) NOT NULL,
     PRIMARY KEY (ad_id),
-    FOREIGN KEY (anzahlung_id) REFERENCES anzahlung(anzahlung_id)
+    FOREIGN KEY (rechnungs_nr) REFERENCES verkauf_details(rechnungs_nr),
+    FOREIGN KEY (vd_id) REFERENCES verkauf_details(vd_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE training_anzahlung (
@@ -868,10 +870,12 @@ CREATE TABLE training_anzahlung (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE training_anzahlung_details (
     ad_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    anzahlung_id INTEGER(10) UNSIGNED NOT NULL,
+    rechnungs_nr INTEGER(10) UNSIGNED NOT NULL,
+    vd_id INTEGER(10) UNSIGNED NOT NULL,
     ges_preis DECIMAL(13,2) NOT NULL,
     PRIMARY KEY (ad_id),
-    FOREIGN KEY (anzahlung_id) REFERENCES training_anzahlung(anzahlung_id)
+    FOREIGN KEY (rechnungs_nr) REFERENCES training_verkauf_details(rechnungs_nr),
+    FOREIGN KEY (vd_id) REFERENCES training_verkauf_details(vd_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 GRANT INSERT ON kasse.anzahlung TO 'mitarbeiter'@'localhost';
