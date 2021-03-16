@@ -1587,8 +1587,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
         }
         if (thisIsAnzahlung) {
-            // insert into table anzahlung
             try {
+                // insert into table anzahlung
                 Connection connection = this.pool.getConnection();
                 PreparedStatement pstmt = connection.prepareStatement(
                     "INSERT INTO "+tableForMode("anzahlung")+" SET "+
@@ -1599,13 +1599,43 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 pstmtSetInteger(pstmt, 2, rechnungsNr);
                 int result = pstmt.executeUpdate();
                 pstmt.close();
-                connection.close();
                 if (result == 0) {
-                    JOptionPane.showMessageDialog(this, "Fehler: Abrechnung konnte nicht gespeichert werden.", "Fehler",
+                    JOptionPane.showMessageDialog(this, "Fehler: Anzahlung konnte nicht gespeichert werden.", "Fehler",
                         JOptionPane.ERROR_MESSAGE);
-                } else {
-                    mainWindow.updateBottomPanel();
                 }
+                reconstructPrices(); // need to recover zeroed prices
+                // to store actual prices, need to fetch all the vd_ids in order
+                pstmt = connection.prepareStatement(
+                    "SELECT vd_id FROM "+tableForMode("verkauf_details")+" "+
+                    "WHERE rechnungs_nr = ?"
+                );
+                pstmtSetInteger(pstmt, 1, rechnungsNr);
+                ResultSet rs = pstmt.executeQuery();
+                Vector<Integer> vdIDs = new Vector<Integer>();
+                while (rs.next()) {
+                    vdIDs.add(rs.getInt(1));
+                }
+                rs.close();
+                // now insert prices into table anzahlung_details for each article belonging
+                // to anzahlung (starting at beginning, up to artikel_id == anzahlungArtikelID)
+                for (int i = 0; i < kassierArtikel.size(); i++) {
+                    KassierArtikel ka = kassierArtikel.get(i);
+                    if (ka.getArtikelID() == anzahlungArtikelID) break; // rest does not belong to anzahlung
+                    pstmt = connection.prepareStatement(
+                        "INSERT INTO "+tableForMode("anzahlung_details")+" "+
+                        "SET rechnungs_nr = ?, vd_id = ?, "+
+                        "ges_preis = ?");
+                    pstmtSetInteger(pstmt, 1, rechnungsNr);
+                    pstmtSetInteger(pstmt, 2, vdIDs.get(i));
+                    pstmt.setBigDecimal(3, ka.getGesPreis());
+                    result = pstmt.executeUpdate();
+                    pstmt.close();
+                    if (result == 0) {
+                        JOptionPane.showMessageDialog(this, "Fehler: Artikel mit vd_id " + vdIDs.get(i)+
+                        " konnte nicht in Anzahlung gespeichert werden.", "Fehler", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+                connection.close();
             } catch (SQLException ex) {
                 logger.error("Exception:", ex);
                 showDBErrorDialog(ex.getMessage());
