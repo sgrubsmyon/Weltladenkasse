@@ -423,27 +423,6 @@ public abstract class ArtikelGrundlage extends WindowContent {
         return new String[]{menge, preis, kg_preis};
     }
 
-    protected String formatMengeForOutput(BigDecimal menge_bd, String einheit) {
-        String menge = "";
-        try {
-            if (menge_bd.signum() > 0){
-                if ( einheit.equals("kg") || einheit.equals("l") ){
-                    if ( menge_bd.compareTo(bc.one) < 0 ){ // if menge < 1 kg or 1 l
-                        menge_bd = menge_bd.multiply(bc.thousand);
-                        if ( einheit.equals("kg") )
-                            einheit = "g";
-                        else if ( einheit.equals("l") )
-                            einheit = "ml";
-                    }
-                }
-                menge = (bc.unifyDecimal(menge_bd)+" "+einheit).trim();
-            }
-        } catch (NullPointerException ex) {
-            logger.warn("Either menge_bd ({}) or einheit ({}) is null for this article.", menge_bd, einheit);
-        }
-        return menge;
-    }
-
     protected String calculatePricePerKg(BigDecimal preis_bd, BigDecimal menge_bd) {
         String kg_preis = "";
         try {
