@@ -270,7 +270,7 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-		        "SELECT anzahlung_in_rech_nr, DATE_FORMAT(datum, "+
+		"SELECT anzahlung_in_rech_nr, DATE_FORMAT(datum, "+
                 "'"+bc.dateFormatSQL+"') "+
                 "FROM "+tableForMode("anzahlung")+" "+
                 "WHERE "+
@@ -399,7 +399,7 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
                     name = artikelname;
                     color = "red";
                     artikelnummer = "RABATT";
-                    type = "rabatt";
+                    type = "rabattrechnung";
                 }
                 else if ( manuRabatt ){ // Manueller Rabatt auf Artikel
                     name = einrueckung+artikelname;
