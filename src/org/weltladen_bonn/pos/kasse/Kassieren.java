@@ -42,12 +42,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private final BigDecimal mitarbeiterRabatt = new BigDecimal("0.1");
     private final boolean allowMitarbeiterRabatt = true;
     private final BigDecimal ecSchwelle = new BigDecimal("20.00");
-    private int artikelRabattArtikelID = 1;
-    private int rechnungRabattArtikelID = 2;
-    private int preisanpassungArtikelID = 3;
-    private int anzahlungArtikelID = 4;
-    private int anzahlungsaufloesungArtikelID = 5;
-    private int gutscheinArtikelID = 6;
 
     private MainWindow mw;
     private Kundendisplay display;
@@ -1690,18 +1684,25 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
-    private void hinzufuegen(int artID, String kurzname, String artikelNummer, String color, String type, String menge,
-                             Integer stueck, String artikelPreis, BigDecimal gesPreis, String artikelMwSt) {
+    private void hinzufuegenRaw(int artID, int rabID, String kurzname, String artikelNummer,
+                                String color, String type, String menge, Integer stueck,
+                                String artikelPreis, BigDecimal gesPreis, BigDecimal artikelMwSt,
+                                boolean addPosition, boolean addRemButton,
+                                Integer index) {
         if (kassierArtikel.size() == 0) {
             // First item is added, this is a new TSE transaction
             tse.startTransaction();
         }
         
-        Integer lastPos = getLastPosition();
-        KassierArtikel ka = new KassierArtikel(bc);
-        ka.setPosition(lastPos + 1);
+        if (addPosition) {
+            Integer lastPos = getLastPosition();
+            KassierArtikel ka = new KassierArtikel(bc);
+            ka.setPosition(lastPos + 1);
+        } else {
+            ka.setPosition(null);
+        }
         ka.setArtikelID(artID);
-        ka.setRabattID(null);
+        ka.setRabattID(rabID);
         ka.setName(kurzname);
         ka.setColor(color);
         ka.setType(type);
@@ -1709,27 +1710,54 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         ka.setStueckzahl(stueck);
         ka.setEinzelPreis(new BigDecimal(artikelPreis));
         ka.setGesPreis(gesPreis);
-        ka.setMwst(new BigDecimal(artikelMwSt));
-        kassierArtikel.add(ka);
+        ka.setMwst(artikelMwSt);
+        if (index == null) {
+            kassierArtikel.add(ka);
+        } else {
+            kassierArtikel.add(index, ka);
+        }
 
-        mwsts.add(new BigDecimal(artikelMwSt));
-        removeButtons.add(new JButton("-"));
-        removeButtons.lastElement().addActionListener(this);
+        mwsts.add(artikelMwSt);
+        if (addRemButton) {
+            removeButtons.add(new JButton("-"));
+            removeButtons.lastElement().addActionListener(this);
+        } else {
+            removeButtons.add(null);
+        }
 
         String gesPreisString = bc.priceFormatterIntern(gesPreis);
         gesPreisString = bc.decimalMark(gesPreisString) + ' ' + bc.currencySymbol;
         artikelPreis = bc.decimalMark(artikelPreis) + ' ' + bc.currencySymbol;
 
         Vector<Object> row = new Vector<Object>();
-        row.add(ka.getPosition());
+        if (addPosition) {
+            row.add(ka.getPosition());
+        } else {
+            row.add("");
+        }
         row.add(kurzname);
         row.add(artikelNummer);
         row.add(stueck.toString());
         row.add(artikelPreis);
         row.add(gesPreisString);
         row.add(bc.vatFormatter(artikelMwSt));
-        row.add(removeButtons.lastElement());
-        data.add(row);
+        if (addRemButton) {
+            row.add(removeButtons.lastElement());
+        } else {
+            row.add("");
+        }
+        if (index == null) {
+            data.add(row);
+        } else {
+            data.add(index, row);
+        }
+    }
+
+    private void hinzufuegen(int artID, String kurzname, String artikelNummer, String color, String type, String menge,
+                             Integer stueck, String artikelPreis, BigDecimal gesPreis, String artikelMwSt) {
+        hinzufuegenRaw(artID, null, kurzname, artikelNummer, color,
+                       type, menge, stueck, artikelPreis, gesPreis,
+                       new BigDecimal(artikelMwSt), true, true, null);
 
         if (type != "leergut" && type != "anzahlung" && type != "anzahlungsaufloesung") {
             checkForRabatt();
@@ -1952,40 +1980,20 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         // Now i points to the Artikel that gets the Rabatt
         BigDecimal einzelPreis = kassierArtikel.get(i).getEinzelPreis();
         BigDecimal gesPreis = kassierArtikel.get(i).getGesPreis();
-        BigDecimal einzelReduktion = new BigDecimal(
-                bc.priceFormatterIntern(rabattRelativ.multiply(einzelPreis).multiply(bc.minusOne)));
-        BigDecimal gesReduktion = new BigDecimal(
-                bc.priceFormatterIntern(rabattRelativ.multiply(gesPreis).multiply(bc.minusOne)));
+        String einzelReduktion = bc.priceFormatterIntern(
+            rabattRelativ.multiply(einzelPreis).multiply(bc.minusOne)
+        );
+        BigDecimal gesReduktion = new BigDecimal(bc.priceFormatterIntern(
+            rabattRelativ.multiply(gesPreis).multiply(bc.minusOne)
+        ));
         BigDecimal artikelMwSt = kassierArtikel.get(i).getMwst();
         String rabattName = getArticleName(artikelRabattArtikelID)[0];
 
-        KassierArtikel ka = new KassierArtikel(bc);
-        ka.setPosition(null);
-        ka.setArtikelID(artikelRabattArtikelID);
-        ka.setRabattID(null);
-        ka.setName(einrueckung + rabattName);
-        ka.setColor("red");
-        ka.setType("rabatt");
-        ka.setMenge("");
-        ka.setStueckzahl(selectedStueck);
-        ka.setEinzelPreis(einzelReduktion);
-        ka.setGesPreis(gesReduktion);
-        ka.setMwst(artikelMwSt);
-        kassierArtikel.add(i + 1, ka);
+        hinzufuegenRaw(artikelRabattArtikelID, null, einrueckung + rabattName,
+                       "RABATT", "red", "rabatt", "", selectedStueck,
+                       einzelReduktion, gesReduktion, artikelMwSt,
+                       false, false, i + 1);
 
-        mwsts.add(artikelMwSt);
-        removeButtons.add(null);
-
-        Vector<Object> rabattRow = new Vector<Object>();
-        rabattRow.add(""); // pos
-        rabattRow.add(einrueckung + rabattName);
-        rabattRow.add("RABATT");
-        rabattRow.add(Integer.toString(selectedStueck));
-        rabattRow.add(bc.priceFormatter(einzelReduktion) + " " + bc.currencySymbol);
-        rabattRow.add(bc.priceFormatter(gesReduktion) + " " + bc.currencySymbol);
-        rabattRow.add(bc.vatFormatter(artikelMwSt));
-        rabattRow.add("");
-        data.add(i + 1, rabattRow);
         updateAll();
     }
 
@@ -2005,33 +2013,12 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         BigDecimal artikelMwSt = kassierArtikel.get(i).getMwst();
         String rabattName = getArticleName(specialArticleID)[0];
 
-        KassierArtikel ka = new KassierArtikel(bc);
-        ka.setPosition(null);
-        ka.setArtikelID(specialArticleID);
-        ka.setRabattID(null);
-        ka.setName(einrueckung + rabattName);
-        ka.setColor("red");
-        ka.setType("rabatt");
-        ka.setMenge("");
-        ka.setStueckzahl(selectedStueck);
-        ka.setEinzelPreis(einzelReduktion);
-        ka.setGesPreis(gesReduktion);
-        ka.setMwst(artikelMwSt);
-        kassierArtikel.add(i + 1, ka);
+        hinzufuegenRaw(specialArticleID, null, einrueckung + rabattName,
+                       rabattAbsolut.signum() > 0 ? "RABATT" : "ANPASSUNG",
+                       "red", "rabatt", "", selectedStueck,
+                       einzelReduktion, gesReduktion, artikelMwSt,
+                       false, false, i + 1);
 
-        mwsts.add(artikelMwSt);
-        removeButtons.add(null);
-
-        Vector<Object> rabattRow = new Vector<Object>();
-        rabattRow.add(""); // pos
-        rabattRow.add(einrueckung + rabattName);
-        rabattRow.add(rabattAbsolut.signum() > 0 ? "RABATT" : "ANPASSUNG");
-        rabattRow.add(Integer.toString(selectedStueck));
-        rabattRow.add(bc.priceFormatter(einzelReduktion) + " " + bc.currencySymbol);
-        rabattRow.add(bc.priceFormatter(gesReduktion) + " " + bc.currencySymbol);
-        rabattRow.add(bc.vatFormatter(artikelMwSt));
-        rabattRow.add("");
-        data.add(i + 1, rabattRow);
         updateAll();
     }
 
@@ -2093,34 +2080,13 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     bc.priceFormatterIntern(rabattRelativ.multiply(entry.getValue()).multiply(bc.minusOne)));
             BigDecimal mwst = entry.getKey();
 
-            KassierArtikel ka = new KassierArtikel(bc);
-            ka.setPosition(null);
-            ka.setArtikelID(rechnungRabattArtikelID);
-            ka.setRabattID(null);
-            ka.setName(rabattName);
-            ka.setColor("red");
-            ka.setType("rabattrechnung");
-            ka.setMenge("");
-            ka.setStueckzahl(1);
-            ka.setEinzelPreis(reduktion);
-            ka.setGesPreis(reduktion);
-            ka.setMwst(mwst);
-            kassierArtikel.add(ka);
+            hinzufuegenRaw(rechnungRabattArtikelID, null, rabattName,
+                "RABATT", "red", "rabattrechnung", "", 1,
+                reduktion.toPlainString(), reduktion, mwst,
+                false, true, null);
 
-            mwsts.add(mwst);
-            removeButtons.add(new JButton("-"));
-            removeButtons.lastElement().addActionListener(this);
-
-            Vector<Object> rabattRow = new Vector<Object>();
-            rabattRow.add(""); // pos
-            rabattRow.add(rabattName);
-            rabattRow.add("RABATT");
-            rabattRow.add(1);
-            rabattRow.add(bc.priceFormatter(reduktion) + " " + bc.currencySymbol);
-            rabattRow.add(bc.priceFormatter(reduktion) + " " + bc.currencySymbol);
-            rabattRow.add(bc.vatFormatter(mwst));
-            rabattRow.add(removeButtons.lastElement());
-            data.add(rabattRow);
+            // CONTINUE HERE, search for ka.setMwst and replace
+            // code blocks with hinzufuegenRaw()
 
             // updateAll fuer Arme
             this.remove(allPanel);
