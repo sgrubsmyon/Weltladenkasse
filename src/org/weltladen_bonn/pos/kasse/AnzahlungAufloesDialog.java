@@ -41,8 +41,6 @@ import org.apache.logging.log4j.Logger;
 public class AnzahlungAufloesDialog extends DialogWindow implements DocumentListener {
     private static final Logger logger = LogManager.getLogger(AnzahlungAufloesDialog.class);
 
-    private int anzahlungArtikelID = 4;
-
     private int pageNumber = 1;
     private int selRechNr;
     protected Vector<Integer> rechnungsNummern;
@@ -334,8 +332,9 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                "SELECT vd.position, a.kurzname, a.artikel_name, ra.aktionsname, " +
-                "a.artikel_nr, a.sortiment, " +
+                "SELECT vd.position, vd.artikel_id, vd.rabatt_id, "+
+                "a.kurzname, a.artikel_name, ra.aktionsname, " +
+                "a.artikel_nr, a.sortiment, a.menge, a.einheit, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 1 AND a.artikel_id = 2) AS rechnung_rabatt, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
@@ -359,21 +358,26 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
             // Now do something with the ResultSet, should be only one result ...
             while ( rs.next() ){
                 Integer pos = rs.getString(1) == null ? null : rs.getInt(1);
-                String kurzname = rs.getString(2);
-                String artikelname = rs.getString(3);
-                String aktionsname = rs.getString(4);
-                String artikelnummer = rs.getString(5);
-                boolean sortiment = rs.getBoolean(6);
-                boolean manuRabatt = rs.getBoolean(7);
-                boolean rechnungRabatt = rs.getBoolean(8);
-                boolean pfand = rs.getBoolean(9);
-                String stueck = rs.getString(10);
+                Integer artikelID = rs.getString(2) == null ? null : rs.getInt(2);
+                Integer rabattID = rs.getString(3) == null ? null : rs.getInt(3);
+                String kurzname = rs.getString(4);
+                String artikelname = rs.getString(5);
+                String aktionsname = rs.getString(6);
+                String artikelnummer = rs.getString(7);
+                boolean sortiment = rs.getBoolean(8);
+                BigDecimal menge_bd = rs.getBigDecimal(9);
+                String einheit = rs.getString(10);
+                String menge = formatMengeForOutput(menge_bd, einheit);
+                boolean manuRabatt = rs.getBoolean(11);
+                boolean rechnungRabatt = rs.getBoolean(12);
+                boolean pfand = rs.getBoolean(13);
+                String stueck = rs.getString(14);
                 BigDecimal stueckDec = new BigDecimal(0);
                 if (stueck != null)
                     stueckDec = new BigDecimal(stueck);
-                String gesPreis = rs.getString(11);
+                String gesPreis = rs.getString(15);
                 BigDecimal gesPreisDec = new BigDecimal(gesPreis);
-                BigDecimal mwst = new BigDecimal(rs.getString(12));
+                BigDecimal mwst = new BigDecimal(rs.getString(16));
                 String einzelPreis = "";
                 if (stueck != null){
                     einzelPreis = bc.priceFormatter(
@@ -383,22 +387,37 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
                 gesPreis = bc.priceFormatter(gesPreis)+' '+bc.currencySymbol;
                 String name = "";
                 String color = "default";
+                String type = "artikel";
+                if (artikelID == gutscheinArtikelID) type = "gutschein";
                 if ( aktionsname != null ) { // Aktionsrabatt
                     name = einrueckung+aktionsname;
-                    color = "red"; artikelnummer = "RABATT";// einzelPreis = "";
+                    color = "red";
+                    artikelnummer = "RABATT";
+                    type = "rabatt";
                 }
                 else if ( rechnungRabatt ){ // Manueller Rabatt auf Rechnung
-                    name = artikelname; color = "red";
-                    artikelnummer = "RABATT";// einzelPreis = "";
+                    name = artikelname;
+                    color = "red";
+                    artikelnummer = "RABATT";
+                    type = "rabatt";
                 }
                 else if ( manuRabatt ){ // Manueller Rabatt auf Artikel
-                    name = einrueckung+artikelname; color = "red"; artikelnummer = "RABATT";
+                    name = einrueckung+artikelname;
+                    color = "red";
+                    artikelnummer = "RABATT";
+                    type = "rabatt";
                 }
                 else if ( pfand && stueckDec.signum() > 0 ){
-                    name = einrueckung+artikelname; color = "blue"; artikelnummer = "PFAND";
+                    name = einrueckung+artikelname;
+                    color = "blue";
+                    artikelnummer = "PFAND";
+                    type = "pfand";
                 }
                 else if ( pfand && stueckDec.signum() < 0 ){
-                    name = artikelname; color = "green"; artikelnummer = "LEERGUT";
+                    name = artikelname;
+                    color = "green";
+                    artikelnummer = "LEERGUT";
+                    type = "leergut";
                 }
                 else {
                     if ( kurzname != null && !kurzname.equals("") ){
@@ -408,10 +427,25 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
                     }
                     if ( stueckDec.signum() < 0 ){
                         color = "green";
+                        type = "rueckgabe";
                     }
                     else if ( !sortiment ){ color = "gray"; }
                     else { color = "default"; }
                 }
+
+                KassierArtikel ka = new KassierArtikel(bc);
+                ka.setPosition(pos);
+                ka.setArtikelID(artikelID);
+                ka.setRabattID(rabattID);
+                ka.setName(name);
+                ka.setColor(color);
+                ka.setType(type);
+                ka.setMenge(menge);
+                ka.setStueckzahl(stueckDec.intValue());
+                ka.setEinzelPreis(new BigDecimal( bc.priceFormatterIntern(einzelPreis) ));
+                ka.setGesPreis(gesPreisDec);
+                ka.setMwst(mwst);
+                kassierArtikel.add(ka);
 
                 Vector<Object> row = new Vector<Object>();
                 row.add(pos);

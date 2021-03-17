@@ -42,6 +42,13 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected MainWindowGrundlage mainWindow = null;
     protected BaseClass bc = null;
 
+    protected int artikelRabattArtikelID = 1;
+    protected int rechnungRabattArtikelID = 2;
+    protected int preisanpassungArtikelID = 3;
+    protected int anzahlungArtikelID = 4;
+    protected int anzahlungsaufloesungArtikelID = 5;
+    protected int gutscheinArtikelID = 6;
+
     // Die Ausrichter:
     protected DefaultTableCellRenderer rechtsAusrichter = new DefaultTableCellRenderer();
     protected DefaultTableCellRenderer linksAusrichter = new DefaultTableCellRenderer();
@@ -351,6 +358,27 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             return false;
         }
         return true;
+    }
+
+    protected String formatMengeForOutput(BigDecimal menge_bd, String einheit) {
+        String menge = "";
+        try {
+            if (menge_bd.signum() > 0){
+                if ( einheit.equals("kg") || einheit.equals("l") ){
+                    if ( menge_bd.compareTo(bc.one) < 0 ){ // if menge < 1 kg or 1 l
+                        menge_bd = menge_bd.multiply(bc.thousand);
+                        if ( einheit.equals("kg") )
+                            einheit = "g";
+                        else if ( einheit.equals("l") )
+                            einheit = "ml";
+                    }
+                }
+                menge = (bc.unifyDecimal(menge_bd)+" "+einheit).trim();
+            }
+        } catch (NullPointerException ex) {
+            logger.warn("Either menge_bd ({}) or einheit ({}) is null for this article.", menge_bd, einheit);
+        }
+        return menge;
     }
 
     /**
