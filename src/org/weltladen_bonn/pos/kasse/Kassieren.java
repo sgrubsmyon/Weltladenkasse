@@ -1314,33 +1314,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private void addRabattRow(int rabattID, String aktionsname, BigDecimal reduktion, BigDecimal stueck) {
         BigDecimal artikelMwSt = kassierArtikel.lastElement().getMwst();
 
-        KassierArtikel ka = new KassierArtikel(bc);
-        ka.setPosition(null);
-        ka.setArtikelID(null);
-        ka.setRabattID(rabattID);
-        ka.setName(einrueckung + aktionsname);
-        ka.setColor("red");
-        ka.setType("rabatt");
-        ka.setMenge("");
-        ka.setStueckzahl(stueck.intValue());
-        ka.setEinzelPreis(reduktion);
-        ka.setGesPreis(reduktion);
-        ka.setMwst(artikelMwSt);
-        kassierArtikel.add(ka);
-
-        mwsts.add(artikelMwSt);
-        removeButtons.add(null);
-
-        Vector<Object> row = new Vector<Object>();
-        row.add(""); // pos
-        row.add(einrueckung + aktionsname);
-        row.add("RABATT");
-        row.add(stueck.toPlainString());
-        row.add(bc.priceFormatter(reduktion) + " " + bc.currencySymbol);
-        row.add(bc.priceFormatter(reduktion) + " " + bc.currencySymbol);
-        row.add(bc.vatFormatter(artikelMwSt));
-        row.add("");
-        data.add(row);
+        hinzufuegenRaw(null, rabattID, einrueckung + aktionsname,
+            "RABATT", "red", "rabatt", "", stueck.intValue(),
+            reduktion.toPlainString(), reduktion, artikelMwSt,
+            false, false, null);
     }
 
     private void checkForPfand() {
@@ -1353,33 +1330,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             BigDecimal gesamtPfand = pfand.multiply(stueck);
             BigDecimal pfandMwSt = kassierArtikel.lastElement().getMwst();
 
-            KassierArtikel ka = new KassierArtikel(bc);
-            ka.setPosition(null);
-            ka.setArtikelID(pfandArtikelID);
-            ka.setRabattID(null);
-            ka.setName(einrueckung + pfandName);
-            ka.setColor("blue");
-            ka.setType("pfand");
-            ka.setMenge("");
-            ka.setStueckzahl(stueck.intValue());
-            ka.setEinzelPreis(new BigDecimal(bc.priceFormatterIntern(pfand)));
-            ka.setGesPreis(new BigDecimal(bc.priceFormatterIntern(gesamtPfand)));
-            ka.setMwst(pfandMwSt);
-            kassierArtikel.add(ka);
-
-            mwsts.add(pfandMwSt);
-            removeButtons.add(null);
-
-            Vector<Object> row = new Vector<Object>();
-            row.add(""); // pos
-            row.add(einrueckung + pfandName);
-            row.add("PFAND");
-            row.add(stueck);
-            row.add(bc.priceFormatter(pfand) + ' ' + bc.currencySymbol);
-            row.add(bc.priceFormatter(gesamtPfand) + ' ' + bc.currencySymbol);
-            row.add(bc.vatFormatter(pfandMwSt));
-            row.add("");
-            data.add(row);
+            hinzufuegenRaw(pfandArtikelID, null, einrueckung + pfandName,
+                "PFAND", "blue", "pfand", "", stueck.intValue(),
+                bc.priceFormatterIntern(pfand), gesamtPfand, pfandMwSt,
+                false, false, null);
         }
     }
 
@@ -1694,9 +1648,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             tse.startTransaction();
         }
         
+        KassierArtikel ka = new KassierArtikel(bc);
         if (addPosition) {
             Integer lastPos = getLastPosition();
-            KassierArtikel ka = new KassierArtikel(bc);
             ka.setPosition(lastPos + 1);
         } else {
             ka.setPosition(null);
@@ -1835,7 +1789,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             hinzufuegen(anzahlungArtikelID, anzahlungName, "ANZAHLUNG", "red", "anzahlung", "",
                         stueck, anzahlung, anzahlungsWert, mwst);
         }
-        // now zero all prices except for anzahlung
+        // now zero all prices except the anzahlung
         for (int i = 0; i < kassierArtikel.size(); i++) {
             if (!kassierArtikel.get(i).getType().equals("anzahlung")) {
                 // kassierArtikel.get(i).setEinzelpreis(bc.zero);
@@ -2084,9 +2038,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 "RABATT", "red", "rabattrechnung", "", 1,
                 reduktion.toPlainString(), reduktion, mwst,
                 false, true, null);
-
-            // CONTINUE HERE, search for ka.setMwst and replace
-            // code blocks with hinzufuegenRaw()
 
             // updateAll fuer Arme
             this.remove(allPanel);
