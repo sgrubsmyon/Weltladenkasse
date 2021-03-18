@@ -391,33 +391,38 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
                 if (artikelID == gutscheinArtikelID) type = "gutschein";
                 if ( aktionsname != null ) { // Aktionsrabatt
                     name = einrueckung+aktionsname;
-                    color = "red";
                     artikelnummer = "RABATT";
+                    color = "red";
                     type = "rabatt";
+                    menge = "";
                 }
                 else if ( rechnungRabatt ){ // Manueller Rabatt auf Rechnung
                     name = artikelname;
-                    color = "red";
                     artikelnummer = "RABATT";
+                    color = "red";
                     type = "rabattrechnung";
+                    menge = "";
                 }
                 else if ( manuRabatt ){ // Manueller Rabatt auf Artikel
                     name = einrueckung+artikelname;
-                    color = "red";
                     artikelnummer = "RABATT";
+                    color = "red";
                     type = "rabatt";
+                    menge = "";
                 }
                 else if ( pfand && stueckDec.signum() > 0 ){
                     name = einrueckung+artikelname;
-                    color = "blue";
                     artikelnummer = "PFAND";
+                    color = "blue";
                     type = "pfand";
+                    menge = "";
                 }
                 else if ( pfand && stueckDec.signum() < 0 ){
                     name = artikelname;
-                    color = "green";
                     artikelnummer = "LEERGUT";
+                    color = "green";
                     type = "leergut";
+                    menge = "";
                 }
                 else {
                     if ( kurzname != null && !kurzname.equals("") ){
