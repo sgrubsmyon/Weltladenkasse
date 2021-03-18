@@ -38,7 +38,7 @@ import javax.swing.table.TableColumn;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class AnzahlungAufloesDialog extends DialogWindow implements DocumentListener {
+public class AnzahlungAufloesDialog extends DialogWindow {
     private static final Logger logger = LogManager.getLogger(AnzahlungAufloesDialog.class);
 
     private int pageNumber = 1;
@@ -46,6 +46,7 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
     protected Vector<Integer> rechnungsNummern;
     private Vector<Vector<Object>> anzahlungData;
     private Vector<String> anzahlungLabels;
+    private Vector<KassierArtikel> kassierArtikel;
     private Vector< Vector<Object> > anzahlungDetailData;
     private Vector<String> anzahlungDetailColors;
 
@@ -240,7 +241,6 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
     private class RowListener implements ListSelectionListener {
         public void valueChanged(ListSelectionEvent event) {
             if (event.getValueIsAdjusting()) {
-                logger.debug("The mouse button has not yet been released");
                 return;
             }
             int[] selRows = anzahlungTable.getSelectedRows();
@@ -251,6 +251,11 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
                 selRechNr = -1;
             }
             updateRightPanel();
+            if (selRechNr > 0) {
+                okButton.setEnabled(true);
+            } else {
+                okButton.setEnabled(false);
+            }
         }
     }
 
@@ -270,7 +275,7 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-		"SELECT anzahlung_in_rech_nr, DATE_FORMAT(datum, "+
+                "SELECT anzahlung_in_rech_nr, DATE_FORMAT(datum, "+
                 "'"+bc.dateFormatSQL+"') "+
                 "FROM "+tableForMode("anzahlung")+" "+
                 "WHERE "+
@@ -293,9 +298,6 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
             }
             rs.close();
             pstmt.close();
-            // if (incompleteData.size() == 0) {
-            //     loadMoreButton.setEnabled(false);
-            // }
             for (Vector<Object> row : incompleteData) {
                 int rechNr = Integer.parseInt((String)row.get(0));
                 // What is Anzahlung?
@@ -327,6 +329,7 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
     }
 
     void retrieveAnzahlungDetailData(int rechnungsNr) {
+        kassierArtikel = new Vector<KassierArtikel>();
         anzahlungDetailData = new Vector< Vector<Object> >();
         anzahlungDetailColors = new Vector<String>();
         try {
@@ -405,7 +408,7 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
                 }
                 else if ( manuRabatt ){ // Manueller Rabatt auf Artikel
                     name = einrueckung+artikelname;
-                    artikelnummer = "RABATT";
+                    artikelnummer = gesPreisDec.signum() < 0 ? "RABATT" : "ANPASSUNG";
                     color = "red";
                     type = "rabatt";
                     menge = "";
@@ -443,6 +446,7 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
                 ka.setArtikelID(artikelID);
                 ka.setRabattID(rabattID);
                 ka.setName(name);
+                ka.setArtikelNummer(artikelnummer);
                 ka.setColor(color);
                 ka.setType(type);
                 ka.setMenge(menge);
@@ -498,6 +502,10 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
         return selRechNr;
     }
 
+    public Vector<KassierArtikel> getKassierArtikel() {
+        return kassierArtikel;
+    }
+
     /**
      * Each non abstract class that implements the ActionListener
      * must have this method.
@@ -505,11 +513,12 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
      * @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
-        updateOKButton();
         if (e.getSource() == loadMoreButton) {
             pageNumber += 1;
             retrieveAnzahlungData();
             updateLeftPanel();
+            selRechNr = -1;
+            okButton.setEnabled(false);
         }
         if (e.getSource() == okButton) {
             aborted = false;
@@ -522,30 +531,5 @@ public class AnzahlungAufloesDialog extends DialogWindow implements DocumentList
             return;
         }
         super.actionPerformed(e);
-    }
-
-    private void updateOKButton() {
-        // ...
-    }
-
-    /**
-     * Each non abstract class that implements the DocumentListener must have
-     * these methods.
-     * @param documentEvent
-     *            the document event.
-     **/
-    @Override
-    public void insertUpdate(DocumentEvent documentEvent) {
-        updateOKButton();
-    }
-
-    @Override
-    public void removeUpdate(DocumentEvent documentEvent) {
-        insertUpdate(documentEvent);
-    }
-
-    @Override
-    public void changedUpdate(DocumentEvent documentEvent) {
-        // Plain text components do not fire these events
     }
 }

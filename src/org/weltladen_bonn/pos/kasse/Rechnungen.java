@@ -334,20 +334,28 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 String color = "default";
                 if ( aktionsname != null ) { // Aktionsrabatt
                     name = einrueckung+aktionsname;
-                    color = "red"; artikelnummer = "RABATT";// einzelPreis = "";
+                    artikelnummer = "RABATT";// einzelPreis = "";
+                    color = "red";
                 }
                 else if ( rechnungRabatt ){ // Manueller Rabatt auf Rechnung
-                    name = artikelname; color = "red";
+                    name = artikelname;
                     artikelnummer = "RABATT";// einzelPreis = "";
+                    color = "red";
                 }
                 else if ( manuRabatt ){ // Manueller Rabatt auf Artikel
-                    name = einrueckung+artikelname; color = "red"; artikelnummer = "RABATT";
+                    name = einrueckung+artikelname;
+                    artikelnummer = gesPreisDec.signum() < 0 ? "RABATT" : "ANPASSUNG";
+                    color = "red";
                 }
                 else if ( pfand && stueckDec.signum() > 0 ){
-                    name = einrueckung+artikelname; color = "blue"; artikelnummer = "PFAND";
+                    name = einrueckung+artikelname;
+                    artikelnummer = "PFAND";
+                    color = "blue";
                 }
                 else if ( pfand && stueckDec.signum() < 0 ){
-                    name = artikelname; color = "green"; artikelnummer = "LEERGUT";
+                    name = artikelname;
+                    artikelnummer = "LEERGUT";
+                    color = "green";
                 }
                 else {
                     if ( kurzname != null && !kurzname.equals("") ){
@@ -367,6 +375,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 ka.setArtikelID(null);
                 ka.setRabattID(null);
                 ka.setName(name);
+                ka.setArtikelNummer(artikelnummer);
                 ka.setColor(color);
                 ka.setType(null);
                 ka.setMenge(menge);

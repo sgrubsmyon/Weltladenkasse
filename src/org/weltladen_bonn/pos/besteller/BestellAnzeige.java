@@ -299,7 +299,6 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
     private class RowListener implements ListSelectionListener {
         public void valueChanged(ListSelectionEvent event) {
             if (event.getValueIsAdjusting()) {
-                logger.debug("The mouse button has not yet been released");
                 return;
             }
             int[] selRows = orderTable.getSelectedRows();
