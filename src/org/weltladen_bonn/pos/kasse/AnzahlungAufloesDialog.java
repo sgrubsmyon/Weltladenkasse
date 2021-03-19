@@ -462,7 +462,9 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                     // this is the anzahlung itself
                     // invert price (it's a kind of rabatt) and change type etc.
                     artikelID = anzahlungsaufloesungArtikelID;
-                    name = getArticleName(anzahlungsaufloesungArtikelID)[0];
+                    // find the date for the anzahlung:
+                    String date = (String)anzahlungData.get(rechnungsNummern.indexOf(rechnungsNr)).get(1);
+                    name = "Anzahlung vom "+date+", Rech.-Nr. "+rechnungsNr;
                     artikelnummer = "ANZAHLUNGSAUFLÖSUNG";
                     color = "red";
                     type = "anzahlungsaufloesung";
