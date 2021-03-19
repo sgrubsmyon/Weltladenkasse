@@ -1029,10 +1029,12 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             anzahlungNeuButton.setEnabled(true);
             anzahlungAufloesButton.setEnabled(true);
             for (KassierArtikel ka : kassierArtikel) {
-                if (ka.getType().equals("anzahlung")) {
+                if (ka.getType().equals("anzahlung") || ka.getType().equals("anzahlungsaufloesung")) {
                     anzahlungNeuButton.setEnabled(false);
                     hideAnzahlungNeuPanel();
-                    anzahlungAufloesButton.setEnabled(false);
+                    if (ka.getType().equals("anzahlung")) {
+                        anzahlungAufloesButton.setEnabled(false);
+                    }
                     break;
                 }
             }
@@ -2317,6 +2319,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                                    ka.getGesPreis(), ka.getMwst(), addPos, addRemButton, null);
                     updateAll();
                     updateDisplay(ka.getName(), ka.getStueckzahl(), bc.priceFormatter(ka.getEinzelPreis()));
+                    zwischensumme();
                 }
             }
         }

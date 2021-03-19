@@ -496,6 +496,36 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return hasVarPrice;
     }
 
+    public String[] getArticleName(int artikelID) {
+        String artikelName = new String();
+        String lieferant = new String();
+        Boolean sortiment = false;
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                    "SELECT a.artikel_name, l.lieferant_name, a.sortiment FROM artikel AS a " +
+                    "LEFT JOIN lieferant AS l USING (lieferant_id) " +
+                    "WHERE a.artikel_id = ? " +
+                    "AND a.aktiv = TRUE"
+                    );
+            pstmtSetInteger(pstmt, 1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            artikelName = rs.getString(1);
+            lieferant = rs.getString(2) != null ? rs.getString(2) : "";
+            sortiment = rs.getBoolean(3);
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            // System.out.println("Exception: " + ex.getMessage());
+            // ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
+        }
+        return new String[]{artikelName, lieferant, sortiment.toString()};
+    }
+
     private int setArticleInactive(Artikel a) {
         // returns 0 if there was an error, otherwise number of rows affected
         // (>0)
