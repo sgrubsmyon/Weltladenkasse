@@ -175,44 +175,45 @@ public class AnzahlungAufloesDialog extends DialogWindow {
     }
 
     public void showRightPanel(int rechnungsNr) {
+        rightPanel.setLayout(new BorderLayout());
+
+        // Panel for header and both tables
+        anzahlungDetailTablePanel = new JPanel();
+        anzahlungDetailTablePanel.setLayout(new BoxLayout(anzahlungDetailTablePanel, BoxLayout.Y_AXIS));
+
+        // Header
+        JLabel headerLabel = new JLabel("Artikel der Anzahlung:");
+        headerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        anzahlungDetailTablePanel.add(headerLabel);
+
+        /*
+        // Table with general anzahlung data:
+        Vector<String> bestellung = anzahlungData.get(bestellNummernUndTyp.indexOf(bestellNrUndTyp));
+        Vector< Vector<String> > bestellData = new Vector< Vector<String> >();
+        bestellData.add(bestellung);
+        JTable bestellTable = new JTable(bestellData, anzahlungLabels);
+        JScrollPane sp1 = new JScrollPane(bestellTable);
+        sp1.setPreferredSize(new Dimension((int)sp1.getPreferredSize().getWidth(), 40));
+        anzahlungDetailTablePanel.add(sp1);
+        */
+
+        Vector<String> columnLabels = new Vector<String>();
+        columnLabels.add("Pos.");
+        columnLabels.add("Artikel-Name"); columnLabels.add("Artikel-Nr."); columnLabels.add("Stückzahl");
+        columnLabels.add("Einzelpreis"); columnLabels.add("Gesamtpreis"); columnLabels.add("MwSt.");
+
+        // Table with anzahlung details:
         if (rechnungsNr > 0) {
-            rightPanel.setLayout(new BorderLayout());
-
-            // Panel for header and both tables
-            anzahlungDetailTablePanel = new JPanel();
-            anzahlungDetailTablePanel.setLayout(new BoxLayout(anzahlungDetailTablePanel, BoxLayout.Y_AXIS));
-
-            // Header
-            JLabel headerLabel = new JLabel("Artikel der Anzahlung:");
-            headerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            anzahlungDetailTablePanel.add(headerLabel);
-
-            /*
-            // Table with general anzahlung data:
-            Vector<String> bestellung = anzahlungData.get(bestellNummernUndTyp.indexOf(bestellNrUndTyp));
-            Vector< Vector<String> > bestellData = new Vector< Vector<String> >();
-            bestellData.add(bestellung);
-            JTable bestellTable = new JTable(bestellData, anzahlungLabels);
-            JScrollPane sp1 = new JScrollPane(bestellTable);
-            sp1.setPreferredSize(new Dimension((int)sp1.getPreferredSize().getWidth(), 40));
-            anzahlungDetailTablePanel.add(sp1);
-            */
-
-            Vector<String> columnLabels = new Vector<String>();
-            columnLabels.add("Pos.");
-            columnLabels.add("Artikel-Name"); columnLabels.add("Artikel-Nr."); columnLabels.add("Stückzahl");
-            columnLabels.add("Einzelpreis"); columnLabels.add("Gesamtpreis"); columnLabels.add("MwSt.");
-
-            // Table with anzahlung details:
-            retrieveAnzahlungDetailData(selRechNr);
-            anzahlungDetailTable = new ArticleSelectTable(anzahlungDetailData, columnLabels, anzahlungDetailColors);
-            setTableProperties(anzahlungDetailTable);
-
-            anzahlungDetailScrollPane = new JScrollPane(anzahlungDetailTable);
-            anzahlungDetailTablePanel.add(anzahlungDetailScrollPane);
-
-            rightPanel.add(anzahlungDetailTablePanel, BorderLayout.CENTER);
+            retrieveAnzahlungDetailData(rechnungsNr);
         }
+        anzahlungDetailTable = new ArticleSelectTable(anzahlungDetailData, columnLabels, anzahlungDetailColors);
+        setTableProperties(anzahlungDetailTable);
+
+        anzahlungDetailScrollPane = new JScrollPane(anzahlungDetailTable);
+        anzahlungDetailTablePanel.add(anzahlungDetailScrollPane);
+        anzahlungDetailTablePanel.setMinimumSize(new Dimension(600, 400));
+
+        rightPanel.add(anzahlungDetailTablePanel, BorderLayout.CENTER);
     }
 
     private void setTableProperties(ArticleSelectTable table) {
