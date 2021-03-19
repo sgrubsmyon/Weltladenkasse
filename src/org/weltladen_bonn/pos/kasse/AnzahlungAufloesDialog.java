@@ -342,7 +342,7 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                 "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 1 AND a.artikel_id = 2) AS rechnung_rabatt, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
-                "vd.stueckzahl, ad.ges_preis, vd.mwst_satz " +
+                "vd.stueckzahl, ad.ges_preis, vd.ges_preis, vd.mwst_satz " +
                 "FROM "+tableForMode("verkauf_details")+" AS vd " +
                 "LEFT JOIN "+tableForMode("anzahlung_details")+" AS ad " +
                 "  ON vd.rechnungs_nr = ad.rechnungs_nr AND vd.vd_id = ad.vd_id " +
@@ -350,8 +350,8 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                 "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
                 "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
                 "WHERE vd.rechnungs_nr = ? AND " +
-                "vd.vd_id < ("+
-                "  SELECT MIN(vd_id) FROM "+tableForMode("verkauf_details")+" "+
+                "vd.vd_id <= ("+
+                "  SELECT MAX(vd_id) FROM "+tableForMode("verkauf_details")+" "+
                 "  WHERE rechnungs_nr = ? AND artikel_id = ?"+
                 ")"
             );
@@ -377,16 +377,23 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                 boolean pfand = rs.getBoolean(13);
                 String stueck = rs.getString(14);
                 BigDecimal stueckDec = new BigDecimal(0);
-                if (stueck != null)
+                if (stueck != null) {
                     stueckDec = new BigDecimal(stueck);
+                }
                 String gesPreis = rs.getString(15);
-                BigDecimal gesPreisDec = new BigDecimal(gesPreis);
-                BigDecimal mwst = new BigDecimal(rs.getString(16));
-                String einzelPreis = "";
-                if (stueck != null){
-                    einzelPreis = bc.priceFormatter(
-                        gesPreisDec.divide(stueckDec, 10, RoundingMode.HALF_UP))+
-                        ' '+bc.currencySymbol;
+                String gesPreisInCaseOfAnzahlung = rs.getString(16);
+                BigDecimal gesPreisInCaseOfAnzahlungDec = new BigDecimal(gesPreisInCaseOfAnzahlung);
+                BigDecimal mwst = new BigDecimal(rs.getString(17));
+                BigDecimal gesPreisDec = null;
+                BigDecimal einzelPreis = null;
+                if (gesPreis != null) {
+                    gesPreisDec = new BigDecimal(gesPreis);
+                    if (stueck != null) {
+                        einzelPreis = gesPreisDec.divide(stueckDec, 10, RoundingMode.HALF_UP);
+                    }
+                } else {
+                    gesPreisDec = gesPreisInCaseOfAnzahlungDec;
+                    einzelPreis = gesPreisDec;
                 }
                 gesPreis = bc.priceFormatter(gesPreis)+' '+bc.currencySymbol;
                 String name = "";
@@ -442,6 +449,29 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                     else { color = "default"; }
                 }
 
+                if (artikelID != anzahlungArtikelID) {
+                    // show this artikel in detail table
+                    Vector<Object> row = new Vector<Object>();
+                    row.add(pos);
+                    row.add(name); row.add(artikelnummer); row.add(stueck);
+                    row.add(bc.priceFormatter(einzelPreis)+' '+bc.currencySymbol);
+                    row.add(gesPreis); row.add(bc.vatFormatter(mwst));
+                    anzahlungDetailData.add(row);
+                    anzahlungDetailColors.add(color);
+                } else {
+                    // this is the anzahlung itself
+                    // invert price (it's a kind of rabatt) and change type etc.
+                    artikelID = anzahlungsaufloesungArtikelID;
+                    name = getArticleName(anzahlungsaufloesungArtikelID)[0];
+                    artikelnummer = "ANZAHLUNGSAUFLÖSUNG";
+                    color = "red";
+                    type = "anzahlungsaufloesung";
+                    menge = "";
+                    gesPreisDec = gesPreisInCaseOfAnzahlungDec.multiply(bc.minusOne);
+                    einzelPreis = gesPreisDec;
+                }
+
+                // add this artikel for addition to rechnung
                 KassierArtikel ka = new KassierArtikel(bc);
                 ka.setPosition(pos);
                 ka.setArtikelID(artikelID);
@@ -452,17 +482,10 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                 ka.setType(type);
                 ka.setMenge(menge);
                 ka.setStueckzahl(stueckDec.intValue());
-                ka.setEinzelPreis(new BigDecimal( bc.priceFormatterIntern(einzelPreis) ));
+                ka.setEinzelPreis(einzelPreis);
                 ka.setGesPreis(gesPreisDec);
                 ka.setMwst(mwst);
                 kassierArtikel.add(ka);
-
-                Vector<Object> row = new Vector<Object>();
-                row.add(pos);
-                row.add(name); row.add(artikelnummer); row.add(stueck);
-                row.add(einzelPreis); row.add(gesPreis); row.add(bc.vatFormatter(mwst));
-                anzahlungDetailData.add(row);
-                anzahlungDetailColors.add(color);
             }
             rs.close();
             pstmt.close();
