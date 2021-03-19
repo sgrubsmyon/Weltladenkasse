@@ -1589,7 +1589,38 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             } catch (SQLException ex) {
                 logger.error("Exception:", ex);
                 showDBErrorDialog(ex.getMessage());
-            } 
+            }
+        }
+    }
+
+    private void maybeInsertAufloesungIntoAnzahlung(int rechnungsNr) {
+        // fuege Zeile in aufloesung Tabelle für jede Anzahlungsaufloesung:
+        for (KassierArtikel ka : kassierArtikel) {
+            if (ka.getType().equals("anzahlungsaufloesung")) {
+                try {
+                    // insert into table anzahlung
+                    Connection connection = this.pool.getConnection();
+                    PreparedStatement pstmt = connection.prepareStatement(
+                        "INSERT INTO "+tableForMode("anzahlung")+" SET "+
+                        "datum = (SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?), "+
+                        "anzahlung_in_rech_nr = ?, "+
+                        "aufloesung_in_rech_nr = ?"
+                    );
+                    pstmtSetInteger(pstmt, 1, rechnungsNr);
+                    pstmtSetInteger(pstmt, 2, ka.getAnzahlungRechNr());
+                    pstmtSetInteger(pstmt, 3, rechnungsNr);
+                    int result = pstmt.executeUpdate();
+                    pstmt.close();
+                    if (result == 0) {
+                        JOptionPane.showMessageDialog(this, "Fehler: Anzahlung konnte nicht gespeichert werden.", "Fehler",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                    connection.close();
+                } catch (SQLException ex) {
+                    logger.error("Exception:", ex);
+                    showDBErrorDialog(ex.getMessage());
+                }
+            }
         }
     }
 
@@ -1900,6 +1931,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             printQuittung(rechnungsNr, tx, tseStatusValues);
         }
         maybeInsertIntoAnzahlung(rechnungsNr);
+        maybeInsertAufloesungIntoAnzahlung(rechnungsNr);
         clearAll();
         updateAll();
 
@@ -2304,6 +2336,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             dialog.setVisible(true);
             boolean aborted = aad.getAborted();
             if (!aborted) {
+                int anzahlungRechNr = aad.getSelectedRechNr();
                 Vector<KassierArtikel> kas = aad.getKassierArtikel();
                 for (KassierArtikel ka : kas) {
                     boolean addPos = true, addRemButton = true;
@@ -2317,6 +2350,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                                    ka.getArtikelNummer(), ka.getColor(), ka.getType(),
                                    ka.getMenge(), ka.getStueckzahl(), ka.getEinzelPreis(),
                                    ka.getGesPreis(), ka.getMwst(), addPos, addRemButton, null);
+                    if (ka.getType().equals("anzahlungsaufloesung")) {
+                        // store the anzahlungRechNr with the KassierArtikel;
+                        kassierArtikel.get(kassierArtikel.size() - 1).setAnzahlungRechNr(anzahlungRechNr);
+                    }
                     updateAll();
                     updateDisplay(ka.getName(), ka.getStueckzahl(), bc.priceFormatter(ka.getEinzelPreis()));
                     zwischensumme();

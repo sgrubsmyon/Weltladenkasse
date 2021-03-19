@@ -25,6 +25,7 @@ public class KassierArtikel {
     private BigDecimal einzelpreis = new BigDecimal("0.00");
     private BigDecimal ges_preis = new BigDecimal("0.00");
     private BigDecimal mwst_satz = new BigDecimal("0.00");
+    private Integer anzahlung_rech_nr = null;
 
     public KassierArtikel(BaseClass bc) {
         this.bc = bc;
@@ -151,6 +152,10 @@ public class KassierArtikel {
         return mwst_satz;
     }
 
+    public Integer getAnzahlungRechNr() {
+        return anzahlung_rech_nr;
+    }
+
 
     /**
      * Setters
@@ -228,5 +233,9 @@ public class KassierArtikel {
             this.mwst_satz = new BigDecimal("0.00");
         else
             this.mwst_satz = mwst_satz;
+    }
+
+    public void setAnzahlungRechNr(Integer anz_rech_nr) {
+        this.anzahlung_rech_nr = anz_rech_nr;
     }
 }
