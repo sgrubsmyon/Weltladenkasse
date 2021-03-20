@@ -101,6 +101,12 @@ public class Quittung extends WindowContent {
         this.tx = transaction;
         this.tseStatusValues = tseStatusValues;
 
+        // Create a list from the set of mwst values
+        this.mwstList = new Vector<BigDecimal>(this.mwstValues.size());
+        for ( BigDecimal vat : this.mwstValues.keySet() ) {
+            this.mwstList.add(vat);
+        }
+
         // printQuittungWithEscPos();
         // writeQuittungToDeviceFile();
     }
@@ -413,6 +419,45 @@ public class Quittung extends WindowContent {
         return " ".repeat(spacesInFront) + text + " ".repeat(spacesBehind);
     }
 
+    private String leftAlignedString(String text, int nCharRow) {
+        if (text.length() > nCharRow) {
+            return text.substring(0, nCharRow);
+        }
+        return text;
+    }
+
+    private String leftAlignedString(String text) {
+        return leftAlignedString(text, rowLength);
+    }
+
+    private String rightAlignedString(String text, int nCharRow) {
+        if (text.length() > nCharRow) {
+            return text.substring(0, nCharRow);
+        }
+        if (text.length() == nCharRow) {
+            return text;
+        }
+        int spaces = nCharRow - text.length();
+        return " ".repeat(spaces) + text;
+    }
+
+    private String rightAlignedString(String text) {
+        return rightAlignedString(text, rowLength);
+    }
+
+    private String columnStrings(int[] colWidths, String[] strings, int nCharRow) {
+        String result = "";
+        for (int i = 0; i < colWidths.length; i++) {
+            if (i > 0) result += " ";
+            result += rightAlignedString(strings[i], colWidths[i]);
+        }
+        return leftAlignedString(result, nCharRow);
+    }
+
+    private String columnStrings(int[] colWidths, String[] strings) {
+        return columnStrings(colWidths, strings, rowLength);
+    }
+
     private String dividerLine() {
         return "-".repeat(rowLength);
     }
@@ -428,6 +473,10 @@ public class Quittung extends WindowContent {
         }
         int spaces = nCharRow - nLeft - nRight;
         return stringLeft + " ".repeat(spaces) + stringRight;
+    }
+
+    private String spaceBetweenStrings(String stringLeft, String stringRight) {
+        return spaceBetweenStrings(stringLeft, stringRight, rowLength);
     }
 
     private void printEscPosHeader(EscPos escpos) throws IOException, UnsupportedEncodingException {
@@ -466,24 +515,54 @@ public class Quittung extends WindowContent {
     }
 
     private void printEscPosItems(EscPos escpos) throws IOException, UnsupportedEncodingException {
-        escpos.writeLF(normal,     indent + "Pfand 0,15 Euro                ");
-        escpos.writeLF(normal,     indent + "          -1 x   0,15   -0,15 2");
-        escpos.writeLF(normal,     indent + "Örangensaft 1 l                ");
-        escpos.writeLF(normal,     indent + "     1l    1 x   2,90    2,90 2");
-        escpos.writeLF(normal,     indent + "   Pfand 0,15 Euro             ");
-        escpos.writeLF(normal,     indent + "           1 x   0,15    0,15 2");
-        escpos.writeLF(normal,     indent + "Schoko Crispies                ");
-        escpos.writeLF(normal,     indent + "   100g    1 x   2,70    2,70 1");
-        escpos.writeLF(normal,     indent + "Rooibos Good Friends, mit Zimt ");
-        escpos.writeLF(normal,     indent + "   100g    1 x   5,00    5,00 1");
-        escpos.writeLF(normal,     indent + "Mascobado Weiße Schokolade     ");
-        escpos.writeLF(normal,     indent + "   100g    1 x   2,00    2,00 1");
-        escpos.writeLF(normal,     indent + "Hom Mali Jasminreis            ");
-        escpos.writeLF(normal,     indent + "    1kg    1 x   5,50    5,50 1");
-        escpos.writeLF(normal,     indent + "Rabatt auf Rechnung            ");
-        escpos.writeLF(normal,     indent + "                        -0,29 2");
-        escpos.writeLF(normal,     indent + "Rabatt auf Rechnung            ");
-        escpos.writeLF(normal,     indent + "                        -1,52 1");
+        for (KassierArtikel ka : kassierArtikel) {
+            escpos.writeLF(normal, indent + leftAlignedString(ka.getName()));
+            Integer mwstIndex = mwstList.indexOf(ka.getMwst()) + 1;
+            escpos.writeLF(normal, indent + columnStrings(
+                new int[] {7, 6, 6, 7, 1},
+                new String[] {
+                    saveSpaceInMenge(ka.getMenge()),
+                    ka.getStueckzahl().toString() + " x",
+                    bc.priceFormatter(ka.getEinzelPreis()),
+                    bc.priceFormatter(ka.getGesPreis()),
+                    mwstIndex.toString()
+                }
+            ));
+        }
+
+        for (KassierArtikel ka : kassierArtikel) {
+            logger.debug("{}", indent + leftAlignedString(ka.getName()));
+            Integer mwstIndex = mwstList.indexOf(ka.getMwst()) + 1;
+            logger.debug("{}", indent + columnStrings(
+                new int[] {7, 6, 6, 7, 1},
+                new String[] {
+                    saveSpaceInMenge(ka.getMenge()),
+                    ka.getStueckzahl().toString() + " x",
+                    bc.priceFormatter(ka.getEinzelPreis()),
+                    bc.priceFormatter(ka.getGesPreis()),
+                    mwstIndex.toString()
+                }
+            ));
+        }
+
+        // escpos.writeLF(normal,     indent + "Pfand 0,15 Euro                ");
+        // escpos.writeLF(normal,     indent + "          -1 x   0,15   -0,15 2");
+        // escpos.writeLF(normal,     indent + "Örangensaft 1 l                ");
+        // escpos.writeLF(normal,     indent + "     1l    1 x   2,90    2,90 2");
+        // escpos.writeLF(normal,     indent + "   Pfand 0,15 Euro             ");
+        // escpos.writeLF(normal,     indent + "           1 x   0,15    0,15 2");
+        // escpos.writeLF(normal,     indent + "Schoko Crispies                ");
+        // escpos.writeLF(normal,     indent + "   100g    1 x   2,70    2,70 1");
+        // escpos.writeLF(normal,     indent + "Rooibos Good Friends, mit Zimt ");
+        // escpos.writeLF(normal,     indent + "   100g    1 x   5,00    5,00 1");
+        // escpos.writeLF(normal,     indent + "Mascobado Weiße Schokolade     ");
+        // escpos.writeLF(normal,     indent + "   100g    1 x   2,00    2,00 1");
+        // escpos.writeLF(normal,     indent + "Hom Mali Jasminreis            ");
+        // escpos.writeLF(normal,     indent + "    1kg    1 x   5,50    5,50 1");
+        // escpos.writeLF(normal,     indent + "Rabatt auf Rechnung            ");
+        // escpos.writeLF(normal,     indent + "                        -0,29 2");
+        // escpos.writeLF(normal,     indent + "Rabatt auf Rechnung            ");
+        // escpos.writeLF(normal,     indent + "                        -1,52 1");
     }
 
     private void printEscPosTotals(EscPos escpos) throws IOException, UnsupportedEncodingException {
@@ -635,11 +714,6 @@ public class Quittung extends WindowContent {
     // }
 
     private void printQuittungWithSofficeTemplate() {
-        // Create a list from the set of mwst values
-        mwstList = new Vector<BigDecimal>(mwstValues.size());
-        for ( BigDecimal vat : mwstValues.keySet() ) {
-            mwstList.add(vat);
-        }
         artikelIndex = 0;
         while (artikelIndex < kassierArtikel.size()) {
             // Create a new sheet from the template file
