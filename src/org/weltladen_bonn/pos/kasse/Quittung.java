@@ -65,6 +65,20 @@ public class Quittung extends WindowContent {
     private int rowOffset = 7;
     private Vector<BigDecimal> mwstList;
 
+    // ESC/POS font setup:
+    // Use PrintModeStyle with Font_B (default of TM-U220), which is the slightly smaller small font:
+    private PrintModeStyle normal = new PrintModeStyle().setFontName(FontName.Font_B);
+    private PrintModeStyle bold = new PrintModeStyle().setFontName(FontName.Font_B).setBold(true);
+    private PrintModeStyle larger = new PrintModeStyle().setFontName(FontName.Font_A_Default);
+    private PrintModeStyle boldlarger = new PrintModeStyle().setFontName(FontName.Font_A_Default).setBold(true);
+    private String indent = "         ";
+    private int rowLength = 31; // 31 chars fit on one row of a receipt
+    // for header:
+    private String shopName = "WELTLADEN BONN";
+    private String shopAddress = String.join(" ", String.join(", ", bc.STRASSE, bc.PLZ), bc.ORT);
+    private String shopPhone = "Telefon: 0228 / 69 70 52";
+    private String shopURL = "www.weltladen-bonn.org";
+
     /**
      *    The constructor.
      *       */
@@ -361,236 +375,266 @@ public class Quittung extends WindowContent {
         try {
             escpos = new EscPos(new PrinterOutputStream(printService));
             
-            // escpos.writeLF("        Hello World!");
-            // escpos.feed(5);
-            // escpos.cut(EscPos.CutMode.FULL);
-            // escpos.close();
-
             // Unfortunately, printer does not react to the more fine-grained "Style" commands, but only to PrintModeStyle commands:
             // Style smallStyle = new Style()
             //     .setFontSize(Style.FontSize._1, Style.FontSize._1);
             // Style bigStyle = new Style()
             //     .setFontSize(Style.FontSize._8, Style.FontSize._8);
             
+            // for German umlauts etc.:
             escpos.setCharacterCodeTable(CharacterCodeTable.CP858_Euro);
             // if it does not work, use this code to explicitly set to CP858:
             // escpos.setPrinterCharacterTable(19);
             // escpos.setCharsetName("cp858");
 
-            // Use PrintModeStyle with Font_B (default of TM-U220), which is the slightly smaller small font:
-            PrintModeStyle normal = new PrintModeStyle().setFontName(FontName.Font_B);
-            PrintModeStyle bold = new PrintModeStyle().setFontName(FontName.Font_B).setBold(true);
-            PrintModeStyle larger = new PrintModeStyle().setFontName(FontName.Font_A_Default);
-            PrintModeStyle boldlarger = new PrintModeStyle().setFontName(FontName.Font_A_Default).setBold(true);
-            // escpos.writeLF(normal,"hello normal PrintModeStyle");
-            // escpos.writeLF(rightBold,"Right bold");
-            // escpos.feed(5).cut(EscPos.CutMode.FULL);
-            // escpos.close();
-
-            // This is maximum width printer can handle (31 chars with 9 empty spaces in front to get text onto paper)
-            escpos.writeLF(bold,         "                  WELTLADEN BONN        ");
-            escpos.writeLF(normal,       "             Maxstraße 36, 53111 Bonn   ");
-            escpos.writeLF(normal,       "             Telefon: 0228 / 69 70 52   ");
-            escpos.writeLF(normal,       "              www.weltladen-bonn.org    ");
-            escpos.writeLF(normal,       "         -------------------------------");
-            escpos.writeLF(normal,       "              20.01.2021, 18:44 Uhr     ");
-            escpos.writeLF(normal,       "         Rechnungsnümmer:          34149");
-            escpos.writeLF(normal,       "         -------------------------------");
-            escpos.writeLF(bold,         "         Bezeichnung          Betrag € M");
-            escpos.writeLF(normal,       "         -------------------------------");
-            escpos.writeLF(normal,       "         Pfand 0,15 Euro                ");
-            escpos.writeLF(normal,       "                   -1 x   0,15   -0,15 2");
-            escpos.writeLF(normal,       "         Örangensaft 1 l                ");
-            escpos.writeLF(normal,       "              1l    1 x   2,90    2,90 2");
-            escpos.writeLF(normal,       "            Pfand 0,15 Euro             ");
-            escpos.writeLF(normal,       "                    1 x   0,15    0,15 2");
-            escpos.writeLF(normal,       "         Schoko Crispies                ");
-            escpos.writeLF(normal,       "            100g    1 x   2,70    2,70 1");
-            escpos.writeLF(normal,       "         Rooibos Good Friends, mit Zimt ");
-            escpos.writeLF(normal,       "            100g    1 x   5,00    5,00 1");
-            escpos.writeLF(normal,       "         Mascobado Weiße Schokolade     ");
-            escpos.writeLF(normal,       "            100g    1 x   2,00    2,00 1");
-            escpos.writeLF(normal,       "         Hom Mali Jasminreis            ");
-            escpos.writeLF(normal,       "             1kg    1 x   5,50    5,50 1");
-            escpos.writeLF(normal,       "         Rabatt auf Rechnung            ");
-            escpos.writeLF(normal,       "                                 -0,29 2");
-            escpos.writeLF(normal,       "         Rabatt auf Rechnung            ");
-            escpos.writeLF(normal,       "                                 -1,52 1");
-            escpos.writeLF(normal,       "         -------------------------------");
-            escpos.writeLF(normal,       "         MwSt.   Netto  Steuer  Umsatz  ");
-            escpos.writeLF(normal,       "         7%      12,79    0,89   13,68 1");
-            escpos.writeLF(normal,       "         19%      2,19    0,42    2,61 2");
-            escpos.feed(1);
-            escpos.writeLF(boldlarger,   "         BAR              16,29 €");
-            escpos.writeLF(boldlarger,   "         Kunde gibt       17,09 €");
-            escpos.writeLF(boldlarger,   "         Rueckgeld         0,80 €");
-            escpos.feed(1);
-            escpos.writeLF(normal,       "         --- TSE ---                    ");
-            escpos.writeLF(normal,       "         Transaktionsnr:              88");
-            escpos.writeLF(normal,       "         Start:  2021-01-20T18:43:00.000");
-            escpos.writeLF(normal,       "         Ende:   2021-01-20T18:44:09.000");
-            escpos.writeLF(normal,       "         Kassen-Seriennr (clientID):    ");
-            escpos.writeLF(normal,       "                         877666797878-01");
-            escpos.writeLF(normal,       "         TSE-Seriennr:  4a3f03a2dec81878");
-            escpos.writeLF(normal,       "                b432548668f603d14f7b7f90");
-            escpos.writeLF(normal,       "                d230e30c87c1a705dce1c890");
+            printEscPosHeader(escpos);
+            printEscPosItems(escpos);
+            printEscPosTotals(escpos);
+            printEscPosTSEValues(escpos);
+            
             escpos.feed(6).cut(EscPos.CutMode.FULL);
             escpos.close();
-
-            // Style title = new Style()
-            //         .setFontSize(Style.FontSize._3, Style.FontSize._3)
-            //         .setJustification(EscPosConst.Justification.Center);
-            // Style subtitle = new Style(escpos.getStyle())
-            //         .setBold(true)
-            //         .setUnderline(Style.Underline.OneDotThick);
-            // Style bold = new Style(escpos.getStyle())
-            //         .setBold(true);
-            // escpos.writeLF(title,"        My Market")
-            //         .feed(3)
-            //         .write("        Client: ")
-            //         .writeLF(subtitle, "John Doe")
-            //         .feed(3)
-            //         .writeLF("        Cup of coffee                      $1.00")
-            //         .writeLF("        Bottle of water                    $0.50")
-            //         .writeLF("        ----------------------------------------")
-            //         .feed(2)
-            //         .writeLF(bold, 
-            //                  "        TOTAL                              $1.50")
-            //         .writeLF("        ----------------------------------------")
-            //         .feed(8)
-            //         .cut(EscPos.CutMode.FULL);
-            // escpos.close();
 
         } catch (IOException ex) {
             logger.error("{}", ex);
         }
     }
 
-    private void writeQuittungToDeviceFile() {
-        File file = new File(bc.printerDeviceFile);
-        if (file.exists()) {
-            logger.debug("Trying to write receipt data to printer device file {}...", bc.printerDeviceFile);
-
-            String quittungStr = "";
-            // Old format (one-line):
-            // quittungStr += "                  WELTLADEN BONN        " + bc.lineSep;
-            // quittungStr += "            Maxstrasse 36, 53111 Bonn   " + bc.lineSep;
-            // quittungStr += "             Telefon: 0228 / 69 70 52   " + bc.lineSep;
-            // quittungStr += "              www.weltladen-bonn.org    " + bc.lineSep;
-            // quittungStr += "         -------------------------------" + bc.lineSep;
-            // quittungStr += "              20.01.2021, 18:44 Uhr     " + bc.lineSep;
-            // quittungStr += "         Rechnungsnummer:          34149" + bc.lineSep;
-            // quittungStr += "         -------------------------------" + bc.lineSep;
-            // quittungStr += "         Bezeichnung       Betrag Euro M" + bc.lineSep;
-            // quittungStr += "         -------------------------------" + bc.lineSep;
-            // quittungStr += "         Pfand 0,15 Euro         -0,15 2" + bc.lineSep;
-            // quittungStr += "         Orangensaft 1 l          2,90 2" + bc.lineSep;
-            // quittungStr += "            Pfand 0,15 Euro       0,15 2" + bc.lineSep;
-            // quittungStr += "         Schoko Crispies          2,70 1" + bc.lineSep;
-            // quittungStr += "         Rooibos Good Friends     5,00 1" + bc.lineSep;
-            // quittungStr += "         Mascobado Weisse Schokol 2,00 1" + bc.lineSep;
-            // quittungStr += "         Hom Mali Jasminreis      5,50 1" + bc.lineSep;
-            // quittungStr += "         Rabatt auf Rechnung     -0,29 2" + bc.lineSep;
-            // quittungStr += "         Rabatt auf Rechnung     -1,52 1" + bc.lineSep;
-            // quittungStr += "         -------------------------------" + bc.lineSep;
-            // quittungStr += "         MwSt.   Netto  Steuer  Umsatz  " + bc.lineSep;
-            // quittungStr += "         7%      12,79    0,89   13,68 1" + bc.lineSep;
-            // quittungStr += "         19%      2,19    0,42    2,61 2" + bc.lineSep;
-            // quittungStr += "                                        " + bc.lineSep;
-            // quittungStr += "         BAR                16,29 Euro  " + bc.lineSep;
-            // quittungStr += "         Kunde gibt         17,09 Euro  " + bc.lineSep;
-            // quittungStr += "         Rueckgeld           0,80 Euro  " + bc.lineSep;
-            // quittungStr += "                                        " + bc.lineSep;
-            // quittungStr += "         --- TSE ---				    " + bc.lineSep;
-            // quittungStr += "         Transaktionsnr:              88" + bc.lineSep;
-            // quittungStr += "         Start:  2021-01-20T18:43:00.000" + bc.lineSep;
-            // quittungStr += "         Ende:   2021-01-20T18:44:09.000" + bc.lineSep;
-            // quittungStr += "         Kassen-Seriennr (clientID):    " + bc.lineSep;
-            // quittungStr += "                         877666797878-01" + bc.lineSep;
-            // quittungStr += "         TSE-Seriennr:  4a3f03a2dec81878" + bc.lineSep;
-            // quittungStr += "                b432548668f603d14f7b7f90" + bc.lineSep;
-            // quittungStr += "                d230e30c87c1a705dce1c890" + bc.lineSep;
-
-            // New format (two-line):
-            quittungStr += "                  WELTLADEN BONN        " + bc.lineSep;
-            quittungStr += "            Maxstrasse 36, 53111 Bonn   " + bc.lineSep;
-            quittungStr += "             Telefon: 0228 / 69 70 52   " + bc.lineSep;
-            quittungStr += "              www.weltladen-bonn.org    " + bc.lineSep;
-            quittungStr += "         -------------------------------" + bc.lineSep;
-            quittungStr += "              20.01.2021, 18:44 Uhr     " + bc.lineSep;
-            quittungStr += "         Rechnungsnummer:          34149" + bc.lineSep;
-            quittungStr += "         -------------------------------" + bc.lineSep;
-            quittungStr += "         Bezeichnung       Betrag Euro M" + bc.lineSep;
-            quittungStr += "         -------------------------------" + bc.lineSep;
-            quittungStr += "         Pfand 0,15 Euro                " + bc.lineSep;
-            quittungStr += "                   -1 x   0,15   -0,15 2" + bc.lineSep;
-            quittungStr += "         Orangensaft 1 l                " + bc.lineSep;
-            quittungStr += "              1l    1 x   2,90    2,90 2" + bc.lineSep;
-            quittungStr += "            Pfand 0,15 Euro             " + bc.lineSep;
-            quittungStr += "                    1 x   0,15    0,15 2" + bc.lineSep;
-            quittungStr += "         Schoko Crispies                " + bc.lineSep;
-            quittungStr += "            100g    1 x   2,70    2,70 1" + bc.lineSep;
-            quittungStr += "         Rooibos Good Friends, mit Zimt " + bc.lineSep;
-            quittungStr += "            100g    1 x   5,00    5,00 1" + bc.lineSep;
-            quittungStr += "         Mascobado Weisse Schokolade    " + bc.lineSep;
-            quittungStr += "            100g    1 x   2,00    2,00 1" + bc.lineSep;
-            quittungStr += "         Hom Mali Jasminreis            " + bc.lineSep;
-            quittungStr += "             1kg    1 x   5,50    5,50 1" + bc.lineSep;
-            quittungStr += "         Rabatt auf Rechnung            " + bc.lineSep;
-            quittungStr += "                                 -0,29 2" + bc.lineSep;
-            quittungStr += "         Rabatt auf Rechnung            " + bc.lineSep;
-            quittungStr += "                                 -1,52 1" + bc.lineSep;
-            quittungStr += "         -------------------------------" + bc.lineSep;
-            quittungStr += "         MwSt.   Netto  Steuer  Umsatz  " + bc.lineSep;
-            quittungStr += "         7%      12,79    0,89   13,68 1" + bc.lineSep;
-            quittungStr += "         19%      2,19    0,42    2,61 2" + bc.lineSep;
-            quittungStr += "                                        " + bc.lineSep;
-            quittungStr += "         BAR                16,29 Euro  " + bc.lineSep;
-            quittungStr += "         Kunde gibt         17,09 Euro  " + bc.lineSep;
-            quittungStr += "         Rueckgeld           0,80 Euro  " + bc.lineSep;
-            quittungStr += "                                        " + bc.lineSep;
-            quittungStr += "         --- TSE ---                    " + bc.lineSep;
-            quittungStr += "         Transaktionsnr:              88" + bc.lineSep;
-            quittungStr += "         Start:  2021-01-20T18:43:00.000" + bc.lineSep;
-            quittungStr += "         Ende:   2021-01-20T18:44:09.000" + bc.lineSep;
-            quittungStr += "         Kassen-Seriennr (clientID):    " + bc.lineSep;
-            quittungStr += "                         877666797878-01" + bc.lineSep;
-            quittungStr += "         TSE-Seriennr:  4a3f03a2dec81878" + bc.lineSep;
-            quittungStr += "                b432548668f603d14f7b7f90" + bc.lineSep;
-            quittungStr += "                d230e30c87c1a705dce1c890" + bc.lineSep;
-            quittungStr += bc.lineSep;
-            quittungStr += bc.lineSep;
-            quittungStr += bc.lineSep;
-            quittungStr += bc.lineSep;
-            quittungStr += bc.lineSep;
-            quittungStr += bc.lineSep;
-            quittungStr += bc.lineSep;
-
-            BufferedWriter writer = null;
-            try {
-                // Use this for German umlauts:
-                // file.write("#$@°\\è^ùàòèì\n".getBytes("Cp858"));
-                writer = new BufferedWriter(new FileWriter(bc.printerDeviceFile));
-                writer.write(quittungStr);
-            } catch (Exception ex) {
-                logger.error("Error writing to file {}", file.getName());
-                logger.error("Exception:", ex);
-            } finally {
-                try {
-                    // Close the writer regardless of what happens...
-                    writer.close();
-                } catch (Exception ex) {
-                    logger.error("Error closing file {}", file.getName());
-                    logger.error("Exception:", ex);
-                }
-            }
-        } else {
-            logger.warn("Printer device file {} does not exist, cannot print receipt!!! " +
-                "Printer disconnected?", bc.printerDeviceFile);
+    private String centerString(String text) {
+        if (text.length() > rowLength) {
+            return text.substring(0, rowLength);
         }
+        if (text.length() == rowLength) {
+            return text;
+        }
+        int spaces = rowLength - text.length();
+        int spacesInFront = spaces / 2; // this should always round down, so that with odd numbers, spaces before are one less than behind
+        int spacesBehind = spaces - spacesInFront;
+        return " ".repeat(spacesInFront) + text + " ".repeat(spacesBehind);
     }
 
-    public void printReceipt() {
+    private String dividerLine() {
+        return "-".repeat(rowLength);
+    }
+
+    private String spaceBetweenStrings(String stringLeft, String stringRight, int nCharRow) {
+        int nLeft = stringLeft.length();
+        int nRight = stringRight.length();
+        if (nLeft + nRight > nCharRow) {
+            return stringLeft + stringRight.substring(0, nCharRow - nLeft);
+        }
+        if (nLeft + nRight == nCharRow) {
+            return stringLeft + stringRight;
+        }
+        int spaces = nCharRow - nLeft - nRight;
+        return stringLeft + " ".repeat(spaces) + stringRight;
+    }
+
+    private void printEscPosHeader(EscPos escpos) throws IOException, UnsupportedEncodingException {
+        // Use maximum width printer can handle (31 chars with indent of 9 empty spaces in front to get text onto paper)
+        escpos.writeLF(bold,   indent + centerString(shopName));
+        escpos.writeLF(normal, indent + centerString(shopAddress));
+        escpos.writeLF(normal, indent + centerString(shopPhone));
+        escpos.writeLF(normal, indent + centerString(shopURL));
+        escpos.writeLF(normal, indent + dividerLine());
+        String datetimeStr = (datetime != null) ? datetime.format(bc.dateFormatDate4j) : "";
+        escpos.writeLF(normal, indent + centerString(datetimeStr));
+        String rechnungsNrStr = (rechnungsNr != null) ? rechnungsNr.toString() : "";
+        escpos.writeLF(normal, indent + spaceBetweenStrings(
+            "Rechnungsnummer:", rechnungsNrStr, rowLength
+        ));
+        escpos.writeLF(normal, indent + dividerLine());
+        escpos.writeLF(normal, indent + spaceBetweenStrings(
+            "Bezeichnung", "Betrag € M", rowLength
+        ));
+        escpos.writeLF(normal, indent + dividerLine());
+
+        logger.debug("{}", indent + centerString(shopName));
+        logger.debug("{}", indent + centerString(shopAddress));
+        logger.debug("{}", indent + centerString(shopPhone));
+        logger.debug("{}", indent + centerString(shopURL));
+        logger.debug("{}", indent + dividerLine());
+        logger.debug("{}", indent + centerString(datetimeStr));
+        logger.debug("{}", indent + spaceBetweenStrings(
+            "Rechnungsnummer:", rechnungsNrStr, rowLength
+        ));
+        logger.debug("{}", indent + dividerLine());
+        logger.debug("{}", indent + spaceBetweenStrings(
+            "Bezeichnung", "Betrag € M", rowLength
+        ));
+        logger.debug("{}", indent + dividerLine());
+    }
+
+    private void printEscPosItems(EscPos escpos) throws IOException, UnsupportedEncodingException {
+        escpos.writeLF(normal,     indent + "Pfand 0,15 Euro                ");
+        escpos.writeLF(normal,     indent + "          -1 x   0,15   -0,15 2");
+        escpos.writeLF(normal,     indent + "Örangensaft 1 l                ");
+        escpos.writeLF(normal,     indent + "     1l    1 x   2,90    2,90 2");
+        escpos.writeLF(normal,     indent + "   Pfand 0,15 Euro             ");
+        escpos.writeLF(normal,     indent + "           1 x   0,15    0,15 2");
+        escpos.writeLF(normal,     indent + "Schoko Crispies                ");
+        escpos.writeLF(normal,     indent + "   100g    1 x   2,70    2,70 1");
+        escpos.writeLF(normal,     indent + "Rooibos Good Friends, mit Zimt ");
+        escpos.writeLF(normal,     indent + "   100g    1 x   5,00    5,00 1");
+        escpos.writeLF(normal,     indent + "Mascobado Weiße Schokolade     ");
+        escpos.writeLF(normal,     indent + "   100g    1 x   2,00    2,00 1");
+        escpos.writeLF(normal,     indent + "Hom Mali Jasminreis            ");
+        escpos.writeLF(normal,     indent + "    1kg    1 x   5,50    5,50 1");
+        escpos.writeLF(normal,     indent + "Rabatt auf Rechnung            ");
+        escpos.writeLF(normal,     indent + "                        -0,29 2");
+        escpos.writeLF(normal,     indent + "Rabatt auf Rechnung            ");
+        escpos.writeLF(normal,     indent + "                        -1,52 1");
+    }
+
+    private void printEscPosTotals(EscPos escpos) throws IOException, UnsupportedEncodingException {
+        escpos.writeLF(normal,     indent + "-------------------------------");
+        escpos.writeLF(normal,     indent + "MwSt.   Netto  Steuer  Umsatz  ");
+        escpos.writeLF(normal,     indent + "7%      12,79    0,89   13,68 1");
+        escpos.writeLF(normal,     indent + "19%      2,19    0,42    2,61 2");
+        escpos.feed(1);
+        escpos.writeLF(boldlarger, indent + " BAR             16,29 €");
+        escpos.writeLF(boldlarger, indent + " Kunde gibt      17,09 €");
+        escpos.writeLF(boldlarger, indent + " Rueckgeld        0,80 €");
+        escpos.feed(1);
+    }
+
+    private void printEscPosTSEValues(EscPos escpos) throws IOException, UnsupportedEncodingException {
+        escpos.writeLF(normal,     indent + "--- TSE ---                    ");
+        escpos.writeLF(normal,     indent + "Transaktionsnr:              88");
+        escpos.writeLF(normal,     indent + "Start:  2021-01-20T18:43:00.000");
+        escpos.writeLF(normal,     indent + "Ende:   2021-01-20T18:44:09.000");
+        escpos.writeLF(normal,     indent + "Kassen-Seriennr (clientID):    ");
+        escpos.writeLF(normal,     indent + "                877666797878-01");
+        escpos.writeLF(normal,     indent + "TSE-Seriennr:  4a3f03a2dec81878");
+        escpos.writeLF(normal,     indent + "       b432548668f603d14f7b7f90");
+        escpos.writeLF(normal,     indent + "       d230e30c87c1a705dce1c890");
+    }
+
+    // private void writeQuittungToDeviceFile() {
+    //     File file = new File(bc.printerDeviceFile);
+    //     if (file.exists()) {
+    //         logger.debug("Trying to write receipt data to printer device file {}...", bc.printerDeviceFile);
+
+    //         String quittungStr = "";
+    //         // Old format (one-line):
+    //         // quittungStr += "                  WELTLADEN BONN        " + bc.lineSep;
+    //         // quittungStr += "            Maxstrasse 36, 53111 Bonn   " + bc.lineSep;
+    //         // quittungStr += "             Telefon: 0228 / 69 70 52   " + bc.lineSep;
+    //         // quittungStr += "              www.weltladen-bonn.org    " + bc.lineSep;
+    //         // quittungStr += "         -------------------------------" + bc.lineSep;
+    //         // quittungStr += "              20.01.2021, 18:44 Uhr     " + bc.lineSep;
+    //         // quittungStr += "         Rechnungsnummer:          34149" + bc.lineSep;
+    //         // quittungStr += "         -------------------------------" + bc.lineSep;
+    //         // quittungStr += "         Bezeichnung       Betrag Euro M" + bc.lineSep;
+    //         // quittungStr += "         -------------------------------" + bc.lineSep;
+    //         // quittungStr += "         Pfand 0,15 Euro         -0,15 2" + bc.lineSep;
+    //         // quittungStr += "         Orangensaft 1 l          2,90 2" + bc.lineSep;
+    //         // quittungStr += "            Pfand 0,15 Euro       0,15 2" + bc.lineSep;
+    //         // quittungStr += "         Schoko Crispies          2,70 1" + bc.lineSep;
+    //         // quittungStr += "         Rooibos Good Friends     5,00 1" + bc.lineSep;
+    //         // quittungStr += "         Mascobado Weisse Schokol 2,00 1" + bc.lineSep;
+    //         // quittungStr += "         Hom Mali Jasminreis      5,50 1" + bc.lineSep;
+    //         // quittungStr += "         Rabatt auf Rechnung     -0,29 2" + bc.lineSep;
+    //         // quittungStr += "         Rabatt auf Rechnung     -1,52 1" + bc.lineSep;
+    //         // quittungStr += "         -------------------------------" + bc.lineSep;
+    //         // quittungStr += "         MwSt.   Netto  Steuer  Umsatz  " + bc.lineSep;
+    //         // quittungStr += "         7%      12,79    0,89   13,68 1" + bc.lineSep;
+    //         // quittungStr += "         19%      2,19    0,42    2,61 2" + bc.lineSep;
+    //         // quittungStr += "                                        " + bc.lineSep;
+    //         // quittungStr += "         BAR                16,29 Euro  " + bc.lineSep;
+    //         // quittungStr += "         Kunde gibt         17,09 Euro  " + bc.lineSep;
+    //         // quittungStr += "         Rueckgeld           0,80 Euro  " + bc.lineSep;
+    //         // quittungStr += "                                        " + bc.lineSep;
+    //         // quittungStr += "         --- TSE ---				    " + bc.lineSep;
+    //         // quittungStr += "         Transaktionsnr:              88" + bc.lineSep;
+    //         // quittungStr += "         Start:  2021-01-20T18:43:00.000" + bc.lineSep;
+    //         // quittungStr += "         Ende:   2021-01-20T18:44:09.000" + bc.lineSep;
+    //         // quittungStr += "         Kassen-Seriennr (clientID):    " + bc.lineSep;
+    //         // quittungStr += "                         877666797878-01" + bc.lineSep;
+    //         // quittungStr += "         TSE-Seriennr:  4a3f03a2dec81878" + bc.lineSep;
+    //         // quittungStr += "                b432548668f603d14f7b7f90" + bc.lineSep;
+    //         // quittungStr += "                d230e30c87c1a705dce1c890" + bc.lineSep;
+
+    //         // New format (two-line):
+    //         quittungStr += "                  WELTLADEN BONN        " + bc.lineSep;
+    //         quittungStr += "            Maxstrasse 36, 53111 Bonn   " + bc.lineSep;
+    //         quittungStr += "             Telefon: 0228 / 69 70 52   " + bc.lineSep;
+    //         quittungStr += "              www.weltladen-bonn.org    " + bc.lineSep;
+    //         quittungStr += "         -------------------------------" + bc.lineSep;
+    //         quittungStr += "              20.01.2021, 18:44 Uhr     " + bc.lineSep;
+    //         quittungStr += "         Rechnungsnummer:          34149" + bc.lineSep;
+    //         quittungStr += "         -------------------------------" + bc.lineSep;
+    //         quittungStr += "         Bezeichnung       Betrag Euro M" + bc.lineSep;
+    //         quittungStr += "         -------------------------------" + bc.lineSep;
+    //         quittungStr += "         Pfand 0,15 Euro                " + bc.lineSep;
+    //         quittungStr += "                   -1 x   0,15   -0,15 2" + bc.lineSep;
+    //         quittungStr += "         Orangensaft 1 l                " + bc.lineSep;
+    //         quittungStr += "              1l    1 x   2,90    2,90 2" + bc.lineSep;
+    //         quittungStr += "            Pfand 0,15 Euro             " + bc.lineSep;
+    //         quittungStr += "                    1 x   0,15    0,15 2" + bc.lineSep;
+    //         quittungStr += "         Schoko Crispies                " + bc.lineSep;
+    //         quittungStr += "            100g    1 x   2,70    2,70 1" + bc.lineSep;
+    //         quittungStr += "         Rooibos Good Friends, mit Zimt " + bc.lineSep;
+    //         quittungStr += "            100g    1 x   5,00    5,00 1" + bc.lineSep;
+    //         quittungStr += "         Mascobado Weisse Schokolade    " + bc.lineSep;
+    //         quittungStr += "            100g    1 x   2,00    2,00 1" + bc.lineSep;
+    //         quittungStr += "         Hom Mali Jasminreis            " + bc.lineSep;
+    //         quittungStr += "             1kg    1 x   5,50    5,50 1" + bc.lineSep;
+    //         quittungStr += "         Rabatt auf Rechnung            " + bc.lineSep;
+    //         quittungStr += "                                 -0,29 2" + bc.lineSep;
+    //         quittungStr += "         Rabatt auf Rechnung            " + bc.lineSep;
+    //         quittungStr += "                                 -1,52 1" + bc.lineSep;
+    //         quittungStr += "         -------------------------------" + bc.lineSep;
+    //         quittungStr += "         MwSt.   Netto  Steuer  Umsatz  " + bc.lineSep;
+    //         quittungStr += "         7%      12,79    0,89   13,68 1" + bc.lineSep;
+    //         quittungStr += "         19%      2,19    0,42    2,61 2" + bc.lineSep;
+    //         quittungStr += "                                        " + bc.lineSep;
+    //         quittungStr += "         BAR                16,29 Euro  " + bc.lineSep;
+    //         quittungStr += "         Kunde gibt         17,09 Euro  " + bc.lineSep;
+    //         quittungStr += "         Rueckgeld           0,80 Euro  " + bc.lineSep;
+    //         quittungStr += "                                        " + bc.lineSep;
+    //         quittungStr += "         --- TSE ---                    " + bc.lineSep;
+    //         quittungStr += "         Transaktionsnr:              88" + bc.lineSep;
+    //         quittungStr += "         Start:  2021-01-20T18:43:00.000" + bc.lineSep;
+    //         quittungStr += "         Ende:   2021-01-20T18:44:09.000" + bc.lineSep;
+    //         quittungStr += "         Kassen-Seriennr (clientID):    " + bc.lineSep;
+    //         quittungStr += "                         877666797878-01" + bc.lineSep;
+    //         quittungStr += "         TSE-Seriennr:  4a3f03a2dec81878" + bc.lineSep;
+    //         quittungStr += "                b432548668f603d14f7b7f90" + bc.lineSep;
+    //         quittungStr += "                d230e30c87c1a705dce1c890" + bc.lineSep;
+    //         quittungStr += bc.lineSep;
+    //         quittungStr += bc.lineSep;
+    //         quittungStr += bc.lineSep;
+    //         quittungStr += bc.lineSep;
+    //         quittungStr += bc.lineSep;
+    //         quittungStr += bc.lineSep;
+    //         quittungStr += bc.lineSep;
+
+    //         BufferedWriter writer = null;
+    //         try {
+    //             // Use this for German umlauts:
+    //             // file.write("#$@°\\è^ùàòèì\n".getBytes("Cp858"));
+    //             writer = new BufferedWriter(new FileWriter(bc.printerDeviceFile));
+    //             writer.write(quittungStr);
+    //         } catch (Exception ex) {
+    //             logger.error("Error writing to file {}", file.getName());
+    //             logger.error("Exception:", ex);
+    //         } finally {
+    //             try {
+    //                 // Close the writer regardless of what happens...
+    //                 writer.close();
+    //             } catch (Exception ex) {
+    //                 logger.error("Error closing file {}", file.getName());
+    //                 logger.error("Exception:", ex);
+    //             }
+    //         }
+    //     } else {
+    //         logger.warn("Printer device file {} does not exist, cannot print receipt!!! " +
+    //             "Printer disconnected?", bc.printerDeviceFile);
+    //     }
+    // }
+
+    private void printQuittungWithSofficeTemplate() {
         // Create a list from the set of mwst values
         mwstList = new Vector<BigDecimal>(mwstValues.size());
         for ( BigDecimal vat : mwstValues.keySet() ) {
@@ -642,6 +686,11 @@ public class Quittung extends WindowContent {
                 logger.error("Exception:", ex);
             }
         }
+    }
+
+    public void printReceipt() {
+        // printQuittungWithSofficeTemplate();
+        printQuittungWithEscPos();
     }
 
     /**
