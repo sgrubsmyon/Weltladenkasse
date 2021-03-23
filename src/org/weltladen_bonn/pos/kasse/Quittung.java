@@ -406,24 +406,32 @@ public class Quittung extends WindowContent {
         }
     }
 
-    private String centerString(String text) {
-        if (text.length() > rowLength) {
-            return text.substring(0, rowLength);
+    private String centerString(String text, int nCharRow) {
+        if (text.length() > nCharRow) {
+            return text.substring(0, nCharRow);
         }
-        if (text.length() == rowLength) {
+        if (text.length() == nCharRow) {
             return text;
         }
-        int spaces = rowLength - text.length();
+        int spaces = nCharRow - text.length();
         int spacesInFront = spaces / 2; // this should always round down, so that with odd numbers, spaces before are one less than behind
         int spacesBehind = spaces - spacesInFront;
         return " ".repeat(spacesInFront) + text + " ".repeat(spacesBehind);
+    }
+
+    private String centerString(String text) {
+        return centerString(text, rowLength);
     }
 
     private String leftAlignedString(String text, int nCharRow) {
         if (text.length() > nCharRow) {
             return text.substring(0, nCharRow);
         }
-        return text;
+        if (text.length() == nCharRow) {
+            return text;
+        }
+        int spaces = nCharRow - text.length();
+        return text + " ".repeat(spaces);
     }
 
     private String leftAlignedString(String text) {
@@ -445,13 +453,24 @@ public class Quittung extends WindowContent {
         return rightAlignedString(text, rowLength);
     }
 
-    private String columnStrings(int[] colWidths, String[] strings, int nCharRow) {
+    private String columnStrings(int[] colWidths, String[] alignments, String[] strings, int nCharRow) {
         String result = "";
         for (int i = 0; i < colWidths.length; i++) {
             if (i > 0) result += " ";
-            result += rightAlignedString(strings[i], colWidths[i]);
+            result += alignments[i].equals("r") ? rightAlignedString(strings[i], colWidths[i]) :
+                alignments[i].equals("c") ? centerString(strings[i], colWidths[i]) :
+                leftAlignedString(strings[i], colWidths[i]);
         }
         return leftAlignedString(result, nCharRow);
+    }
+
+    private String columnStrings(int[] colWidths, String[] alignments, String[] strings) {
+        return columnStrings(colWidths, alignments, strings, rowLength);
+    }
+
+    private String columnStrings(int[] colWidths, String[] strings, int nCharRow) {
+        String[] alignments = "r".repeat(strings.length).split("");
+        return columnStrings(colWidths, alignments, strings, nCharRow);
     }
 
     private String columnStrings(int[] colWidths, String[] strings) {
@@ -493,8 +512,10 @@ public class Quittung extends WindowContent {
             "Rechnungsnummer:", rechnungsNrStr, rowLength
         ));
         escpos.writeLF(normal, indent + dividerLine());
-        escpos.writeLF(normal, indent + spaceBetweenStrings(
-            "Bezeichnung", "Betrag € M", rowLength
+        escpos.writeLF(normal, indent + leftAlignedString("Bezeichnung"));
+        escpos.writeLF(normal, indent + columnStrings(
+            new int[] {7, 6, 6, 7, 1},
+            new String[] {"Menge", "Stk", "Einzel", "Ges. €", "M"}
         ));
         escpos.writeLF(normal, indent + dividerLine());
 
@@ -508,41 +529,73 @@ public class Quittung extends WindowContent {
             "Rechnungsnummer:", rechnungsNrStr, rowLength
         ));
         logger.debug("{}", indent + dividerLine());
-        logger.debug("{}", indent + spaceBetweenStrings(
-            "Bezeichnung", "Betrag € M", rowLength
+        logger.debug("{}", indent + leftAlignedString("Bezeichnung"));
+        logger.debug("{}", indent + columnStrings(
+            new int[] {7, 6, 6, 7, 1},
+            new String[] {"Menge", "Stk", "Einzel", "Ges. €", "M"}
         ));
         logger.debug("{}", indent + dividerLine());
     }
 
     private void printEscPosItems(EscPos escpos) throws IOException, UnsupportedEncodingException {
         for (KassierArtikel ka : kassierArtikel) {
-            escpos.writeLF(normal, indent + leftAlignedString(ka.getName()));
             Integer mwstIndex = mwstList.indexOf(ka.getMwst()) + 1;
-            escpos.writeLF(normal, indent + columnStrings(
-                new int[] {7, 6, 6, 7, 1},
-                new String[] {
-                    saveSpaceInMenge(ka.getMenge()),
-                    ka.getStueckzahl().toString() + " x",
-                    bc.priceFormatter(ka.getEinzelPreis()),
-                    bc.priceFormatter(ka.getGesPreis()),
-                    mwstIndex.toString()
-                }
-            ));
+            if (ka.getType().equals("gutschein") || ka.getType().equals("rabattrechnung") ||
+                ka.getType().equals("anzahlung") || ka.getType().equals("anzahlungsaufloesung")) {
+                // display compact in one line
+                escpos.writeLF(normal, indent + columnStrings(
+                    new int[] {21, 7, 1},
+                    new String[] {"l", "r", "r"},
+                    new String[] {
+                        ka.getName(),
+                        bc.priceFormatter(ka.getGesPreis()),
+                        mwstIndex.toString()
+                    }
+                ));
+            } else {
+                // normaler Artikel: display extended in two lines
+                escpos.writeLF(normal, indent + leftAlignedString(ka.getName()));
+                escpos.writeLF(normal, indent + columnStrings(
+                    new int[] {7, 6, 6, 7, 1},
+                    new String[] {
+                        saveSpaceInMenge(ka.getMenge()),
+                        ka.getStueckzahl().toString() + " x",
+                        bc.priceFormatter(ka.getEinzelPreis()),
+                        bc.priceFormatter(ka.getGesPreis()),
+                        mwstIndex.toString()
+                    }
+                ));
+            }
         }
 
         for (KassierArtikel ka : kassierArtikel) {
-            logger.debug("{}", indent + leftAlignedString(ka.getName()));
             Integer mwstIndex = mwstList.indexOf(ka.getMwst()) + 1;
-            logger.debug("{}", indent + columnStrings(
-                new int[] {7, 6, 6, 7, 1},
-                new String[] {
-                    saveSpaceInMenge(ka.getMenge()),
-                    ka.getStueckzahl().toString() + " x",
-                    bc.priceFormatter(ka.getEinzelPreis()),
-                    bc.priceFormatter(ka.getGesPreis()),
-                    mwstIndex.toString()
-                }
-            ));
+            if (ka.getType().equals("gutschein") || ka.getType().equals("rabattrechnung") ||
+                ka.getType().equals("anzahlung") || ka.getType().equals("anzahlungsaufloesung")) {
+                // display compact in one line
+                logger.debug("{}", indent + columnStrings(
+                    new int[] {21, 7, 1},
+                    new String[] {"l", "r", "r"},
+                    new String[] {
+                        ka.getName(),
+                        bc.priceFormatter(ka.getGesPreis()),
+                        mwstIndex.toString()
+                    }
+                ));
+            } else {
+                // normaler Artikel
+                logger.debug("{}", indent + leftAlignedString(ka.getName()));
+                logger.debug("{}", indent + columnStrings(
+                    new int[] {7, 6, 6, 7, 1},
+                    new String[] {
+                        saveSpaceInMenge(ka.getMenge()),
+                        ka.getStueckzahl().toString() + " x",
+                        bc.priceFormatter(ka.getEinzelPreis()),
+                        bc.priceFormatter(ka.getGesPreis()),
+                        mwstIndex.toString()
+                    }
+                ));
+            }
         }
 
         // escpos.writeLF(normal,     indent + "Pfand 0,15 Euro                ");
@@ -566,10 +619,10 @@ public class Quittung extends WindowContent {
     }
 
     private void printEscPosTotals(EscPos escpos) throws IOException, UnsupportedEncodingException {
-        escpos.writeLF(normal,     indent + "-------------------------------");
-        escpos.writeLF(normal,     indent + "MwSt.   Netto  Steuer  Umsatz  ");
-        escpos.writeLF(normal,     indent + "7%      12,79    0,89   13,68 1");
-        escpos.writeLF(normal,     indent + "19%      2,19    0,42    2,61 2");
+        escpos.writeLF(normal, indent + dividerLine());
+        escpos.writeLF(normal, indent + "MwSt.   Netto  Steuer  Umsatz  ");
+        escpos.writeLF(normal, indent + "7%      12,79    0,89   13,68 1");
+        escpos.writeLF(normal, indent + "19%      2,19    0,42    2,61 2");
         escpos.feed(1);
         escpos.writeLF(boldlarger, indent + " BAR             16,29 €");
         escpos.writeLF(boldlarger, indent + " Kunde gibt      17,09 €");

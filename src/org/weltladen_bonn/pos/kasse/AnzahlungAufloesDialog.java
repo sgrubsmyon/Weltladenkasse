@@ -339,8 +339,6 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                 "SELECT vd.position, vd.artikel_id, vd.rabatt_id, "+
                 "a.kurzname, a.artikel_name, ra.aktionsname, " +
                 "a.artikel_nr, a.sortiment, a.menge, a.einheit, " +
-                "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, " +
-                "(p.toplevel_id IS NULL AND p.sub_id = 1 AND a.artikel_id = 2) AS rechnung_rabatt, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
                 "vd.stueckzahl, ad.ges_preis, vd.ges_preis, vd.mwst_satz " +
                 "FROM "+tableForMode("verkauf_details")+" AS vd " +
@@ -372,18 +370,16 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                 BigDecimal menge_bd = rs.getBigDecimal(9);
                 String einheit = rs.getString(10);
                 String menge = formatMengeForOutput(menge_bd, einheit);
-                boolean manuRabatt = rs.getBoolean(11);
-                boolean rechnungRabatt = rs.getBoolean(12);
-                boolean pfand = rs.getBoolean(13);
-                String stueck = rs.getString(14);
+                boolean pfand = rs.getBoolean(11);
+                String stueck = rs.getString(12);
                 BigDecimal stueckDec = new BigDecimal(0);
                 if (stueck != null) {
                     stueckDec = new BigDecimal(stueck);
                 }
-                String gesPreis = rs.getString(15);
-                String gesPreisInCaseOfAnzahlung = rs.getString(16);
+                String gesPreis = rs.getString(13);
+                String gesPreisInCaseOfAnzahlung = rs.getString(14);
                 BigDecimal gesPreisInCaseOfAnzahlungDec = new BigDecimal(gesPreisInCaseOfAnzahlung);
-                BigDecimal mwst = new BigDecimal(rs.getString(17));
+                BigDecimal mwst = new BigDecimal(rs.getString(15));
                 BigDecimal gesPreisDec = null;
                 BigDecimal einzelPreis = null;
                 if (gesPreis != null) {
@@ -399,24 +395,31 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                 String name = "";
                 String color = "default";
                 String type = "artikel";
-                if (artikelID == gutscheinArtikelID) type = "gutschein";
-                if ( aktionsname != null ) { // Aktionsrabatt
+                if (artikelID == gutscheinArtikelID) { type = "gutschein"; }
+                else if ( aktionsname != null ) { // Aktionsrabatt
                     name = einrueckung+aktionsname;
                     artikelnummer = "RABATT";
                     color = "red";
                     type = "rabatt";
                     menge = "";
                 }
-                else if ( rechnungRabatt ){ // Manueller Rabatt auf Rechnung
+                else if ( artikelID == artikelRabattArtikelID ){ // Manueller Rabatt auf Artikel
+                    name = einrueckung+artikelname;
+                    artikelnummer = "RABATT";
+                    color = "red";
+                    type = "rabatt";
+                    menge = "";
+                }
+                else if ( artikelID == rechnungRabattArtikelID ){ // Manueller Rabatt auf Rechnung
                     name = artikelname;
                     artikelnummer = "RABATT";
                     color = "red";
                     type = "rabattrechnung";
                     menge = "";
                 }
-                else if ( manuRabatt ){ // Manueller Rabatt auf Artikel
+                else if ( artikelID == preisanpassungArtikelID ){ // Manuelle Preisanpassung auf Artikel
                     name = einrueckung+artikelname;
-                    artikelnummer = gesPreisDec.signum() < 0 ? "RABATT" : "ANPASSUNG";
+                    artikelnummer = "ANPASSUNG";
                     color = "red";
                     type = "rabatt";
                     menge = "";
