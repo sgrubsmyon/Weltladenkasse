@@ -289,10 +289,9 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                "SELECT vd.position, a.kurzname, a.artikel_name, ra.aktionsname, " +
+                "SELECT vd.position, vd.artikel_id, vd.rabatt_id, "+
+                "a.kurzname, a.artikel_name, ra.aktionsname, " +
                 "a.artikel_nr, a.sortiment, a.menge, a.einheit, " +
-                "(p.toplevel_id IS NULL AND p.sub_id = 1) AS manu_rabatt, " +
-                "(p.toplevel_id IS NULL AND p.sub_id = 1 AND a.artikel_id = 2) AS rechnung_rabatt, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
                 "vd.stueckzahl, vd.ges_preis, vd.mwst_satz " +
                 "FROM "+tableForMode("verkauf_details")+" AS vd LEFT JOIN artikel AS a USING (artikel_id) " +
@@ -305,16 +304,16 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             // Now do something with the ResultSet ...
             while (rs.next()) {
                 Integer pos = rs.getString(1) == null ? null : rs.getInt(1);
-                String kurzname = rs.getString(2);
-                String artikelname = rs.getString(3);
-                String aktionsname = rs.getString(4);
-                String artikelnummer = rs.getString(5);
-                boolean sortiment = rs.getBoolean(6);
-                BigDecimal menge_bd = rs.getBigDecimal(7);
-                String einheit = rs.getString(8);
+                Integer artikelID = rs.getString(2) == null ? null : rs.getInt(2);
+                Integer rabattID = rs.getString(3) == null ? null : rs.getInt(3);
+                String kurzname = rs.getString(4);
+                String artikelname = rs.getString(5);
+                String aktionsname = rs.getString(6);
+                String artikelnummer = rs.getString(7);
+                boolean sortiment = rs.getBoolean(8);
+                BigDecimal menge_bd = rs.getBigDecimal(9);
+                String einheit = rs.getString(10);
                 String menge = formatMengeForOutput(menge_bd, einheit);
-                boolean manuRabatt = rs.getBoolean(9);
-                boolean rechnungRabatt = rs.getBoolean(10);
                 boolean pfand = rs.getBoolean(11);
                 String stueck = rs.getString(12);
                 BigDecimal stueckDec = new BigDecimal(0);
@@ -332,30 +331,63 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 gesPreis = bc.priceFormatter(gesPreis)+' '+bc.currencySymbol;
                 String name = "";
                 String color = "default";
-                if ( aktionsname != null ) { // Aktionsrabatt
+                String type = "artikel";
+                if (artikelID == gutscheinArtikelID) { type = "gutschein"; }
+                else if ( aktionsname != null ) { // Aktionsrabatt
                     name = einrueckung+aktionsname;
-                    artikelnummer = "RABATT";// einzelPreis = "";
+                    artikelnummer = "RABATT";
                     color = "red";
+                    type = "rabatt";
+                    // menge = "";
                 }
-                else if ( rechnungRabatt ){ // Manueller Rabatt auf Rechnung
-                    name = artikelname;
-                    artikelnummer = "RABATT";// einzelPreis = "";
-                    color = "red";
-                }
-                else if ( manuRabatt ){ // Manueller Rabatt auf Artikel
+                else if ( artikelID == artikelRabattArtikelID ){ // Manueller Rabatt auf Artikel
                     name = einrueckung+artikelname;
-                    artikelnummer = gesPreisDec.signum() < 0 ? "RABATT" : "ANPASSUNG";
+                    artikelnummer = "RABATT";
                     color = "red";
+                    type = "rabatt";
+                    // menge = "";
+                }
+                else if ( artikelID == rechnungRabattArtikelID ){ // Manueller Rabatt auf Rechnung
+                    name = artikelname;
+                    artikelnummer = "RABATT";
+                    color = "red";
+                    type = "rabattrechnung";
+                    menge = "";
+                }
+                else if ( artikelID == preisanpassungArtikelID ){ // Manuelle Preisanpassung auf Artikel
+                    name = einrueckung+artikelname;
+                    artikelnummer = "ANPASSUNG";
+                    color = "red";
+                    type = "rabatt";
+                    // menge = "";
+                }
+                else if ( artikelID == anzahlungArtikelID ){ // Anzahlung
+                    name = artikelname;
+                    artikelnummer = "ANZAHLUNG";
+                    color = "red";
+                    type = "anzahlung";
+                    // menge = "";
+                }
+                else if ( artikelID == anzahlungsaufloesungArtikelID ){ // Anzahlungsauflösung
+                    name = artikelname;
+                    artikelnummer = "ANZAHLUNGSAUFLÖSUNG";
+                    color = "red";
+                    type = "anzahlungsaufloesung";
+                    // menge = "";
                 }
                 else if ( pfand && stueckDec.signum() > 0 ){
                     name = einrueckung+artikelname;
                     artikelnummer = "PFAND";
                     color = "blue";
+                    type = "pfand";
+                    // menge = "";
                 }
                 else if ( pfand && stueckDec.signum() < 0 ){
                     name = artikelname;
                     artikelnummer = "LEERGUT";
                     color = "green";
+                    type = "leergut";
+                    // menge = "";
                 }
                 else {
                     if ( kurzname != null && !kurzname.equals("") ){
@@ -365,6 +397,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                     }
                     if ( stueckDec.signum() < 0 ){
                         color = "green";
+                        type = "rueckgabe";
                     }
                     else if ( !sortiment ){ color = "gray"; }
                     else { color = "default"; }
@@ -372,12 +405,12 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 
                 KassierArtikel ka = new KassierArtikel(bc);
                 ka.setPosition(pos);
-                ka.setArtikelID(null);
-                ka.setRabattID(null);
+                ka.setArtikelID(artikelID);
+                ka.setRabattID(rabattID);
                 ka.setName(name);
                 ka.setArtikelNummer(artikelnummer);
                 ka.setColor(color);
-                ka.setType(null);
+                ka.setType(type);
                 ka.setMenge(menge);
                 ka.setStueckzahl(stueckDec.intValue());
                 ka.setEinzelPreis(new BigDecimal( bc.priceFormatterIntern(einzelPreis) ));
