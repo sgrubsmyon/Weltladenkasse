@@ -283,7 +283,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         showTable();
     }
 
-    private Vector< Vector<Object> > getDetailData(int detailRow) {
+    private Vector< Vector<Object> > getDetailData() {
         // Now select details of the invoice
         Vector< Vector<Object> > detailData = new Vector< Vector<Object> >();
         try {
@@ -299,7 +299,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
                 "WHERE vd.rechnungs_nr = ?"
             );
-            pstmtSetInteger(pstmt, 1, Integer.parseInt(this.data.get(detailRow).get(1).toString()));
+            pstmtSetInteger(pstmt, 1, rechnungsNr);
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet ...
             while (rs.next()) {
@@ -338,14 +338,12 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                     artikelnummer = "RABATT";
                     color = "red";
                     type = "rabatt";
-                    // menge = "";
                 }
                 else if ( artikelID == artikelRabattArtikelID ){ // Manueller Rabatt auf Artikel
                     name = einrueckung+artikelname;
                     artikelnummer = "RABATT";
                     color = "red";
                     type = "rabatt";
-                    // menge = "";
                 }
                 else if ( artikelID == rechnungRabattArtikelID ){ // Manueller Rabatt auf Rechnung
                     name = artikelname;
@@ -359,35 +357,30 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                     artikelnummer = "ANPASSUNG";
                     color = "red";
                     type = "rabatt";
-                    // menge = "";
                 }
                 else if ( artikelID == anzahlungArtikelID ){ // Anzahlung
                     name = artikelname;
                     artikelnummer = "ANZAHLUNG";
                     color = "red";
                     type = "anzahlung";
-                    // menge = "";
                 }
                 else if ( artikelID == anzahlungsaufloesungArtikelID ){ // Anzahlungsauflösung
-                    name = artikelname;
+                    name = artikelNameAnzAuflWithDateAndRechNr();
                     artikelnummer = "ANZAHLUNGSAUFLÖSUNG";
                     color = "red";
                     type = "anzahlungsaufloesung";
-                    // menge = "";
                 }
                 else if ( pfand && stueckDec.signum() > 0 ){
                     name = einrueckung+artikelname;
                     artikelnummer = "PFAND";
                     color = "blue";
                     type = "pfand";
-                    // menge = "";
                 }
                 else if ( pfand && stueckDec.signum() < 0 ){
                     name = artikelname;
                     artikelnummer = "LEERGUT";
                     color = "green";
                     type = "leergut";
-                    // menge = "";
                 }
                 else {
                     if ( kurzname != null && !kurzname.equals("") ){
@@ -435,6 +428,36 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             showDBErrorDialog(ex.getMessage());
         }
         return detailData;
+    }
+
+
+    private String artikelNameAnzAuflWithDateAndRechNr() {
+        String result = "Anzahlungsauflösung";
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT anzahlung_in_rech_nr, DATE_FORMAT(datum, "+
+                "'"+bc.dateFormatSQL+"') "+
+                "FROM "+tableForMode("anzahlung")+" "+
+                "WHERE anzahlung_in_rech_nr = ("+
+                "  SELECT anzahlung_in_rech_nr FROM "+tableForMode("anzahlung")+" "+
+                "    WHERE aufloesung_in_rech_nr = ? LIMIT 1"+
+                ") AND aufloesung_in_rech_nr IS NULL"
+            );
+            pstmtSetInteger(pstmt, 1, rechnungsNr);
+            ResultSet rs = pstmt.executeQuery();
+            // Now do something with the ResultSet ...
+            if (rs.next()) {
+                result = "Anzahlung vom "+rs.getString(2)+", Rech.-Nr. "+rs.getString(1);
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return result;
     }
 
 
@@ -489,7 +512,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
 
         allPanel.add(headerPanel, BorderLayout.NORTH);
 
-        Vector< Vector<Object> > detailData = getDetailData(detailRow);
+        Vector< Vector<Object> > detailData = getDetailData();
         Vector<String> colors = new Vector<String>();
         for (KassierArtikel a : kassierArtikel) {
             colors.add(a.getColor());
