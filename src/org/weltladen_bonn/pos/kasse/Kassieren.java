@@ -2325,6 +2325,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
         if (e.getSource() == anzahlungNeuOKButton) {
             anzahlungHinzufuegen();
+            zwischensumme();
         }
         if (e.getSource() == anzahlungAufloesButton) {
             JDialog dialog = new JDialog(this.mainWindow, "Anzahlung auflösen", true);
