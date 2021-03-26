@@ -1825,6 +1825,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             if (!kassierArtikel.get(i).getType().equals("anzahlung")) {
                 // kassierArtikel.get(i).setEinzelpreis(bc.zero);
                 kassierArtikel.get(i).setGesPreis(bc.zero);
+                kassierArtikel.get(i).setPartOfAnzahlung(true);
                 // data.get(i).set(4, ""); // column Einzelpreis
                 data.get(i).set(5, ""); // column Gesamtpreis
                 updateAll();
