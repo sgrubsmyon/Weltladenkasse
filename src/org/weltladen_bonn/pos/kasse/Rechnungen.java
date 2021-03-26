@@ -293,10 +293,14 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 "a.kurzname, a.artikel_name, ra.aktionsname, " +
                 "a.artikel_nr, a.sortiment, a.menge, a.einheit, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
-                "vd.stueckzahl, vd.ges_preis, vd.mwst_satz " +
-                "FROM "+tableForMode("verkauf_details")+" AS vd LEFT JOIN artikel AS a USING (artikel_id) " +
+                "vd.stueckzahl, vd.ges_preis, " +
+                "IFNULL(ad.ges_preis / vd.stueckzahl, vd.ges_preis / vd.stueckzahl) AS einzelpreis, " +
+                "vd.mwst_satz, ad.ges_preis IS NOT NULL AS part_of_anzahlung " +
+                "FROM "+tableForMode("verkauf_details")+" AS vd " +
+                "LEFT JOIN artikel AS a USING (artikel_id) " +
                 "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
                 "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
+                "LEFT JOIN anzahlung_details AS ad USING (vd_id) " +
                 "WHERE vd.rechnungs_nr = ?"
             );
             pstmtSetInteger(pstmt, 1, rechnungsNr);
@@ -321,14 +325,14 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                     stueckDec = new BigDecimal(stueck);
                 String gesPreis = rs.getString(13);
                 BigDecimal gesPreisDec = new BigDecimal(gesPreis);
-                BigDecimal mwst = new BigDecimal(rs.getString(14));
                 String einzelPreis = "";
                 if (stueck != null){
-                    einzelPreis = bc.priceFormatter(
-                        gesPreisDec.divide(stueckDec, 10, RoundingMode.HALF_UP )
-                    )+' '+bc.currencySymbol;
+                    einzelPreis = bc.priceFormatter(rs.getString(14))+' '+bc.currencySymbol;
                 }
-                gesPreis = bc.priceFormatter(gesPreis)+' '+bc.currencySymbol;
+                BigDecimal mwst = new BigDecimal(rs.getString(15));
+                Boolean part_of_anzahlung = rs.getBoolean(16);
+                if (part_of_anzahlung) gesPreis = "";
+                else gesPreis = bc.priceFormatter(gesPreisDec)+' '+bc.currencySymbol;
                 String name = "";
                 String color = "default";
                 String type = "artikel";
@@ -409,6 +413,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 ka.setEinzelPreis(new BigDecimal( bc.priceFormatterIntern(einzelPreis) ));
                 ka.setGesPreis(gesPreisDec);
                 ka.setMwst(mwst);
+                ka.setPartOfAnzahlung(part_of_anzahlung);
                 kassierArtikel.add(ka);
 
                 mwsts.add(mwst);

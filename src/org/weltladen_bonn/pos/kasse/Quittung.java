@@ -561,7 +561,7 @@ public class Quittung extends WindowContent {
                         saveSpaceInMenge(ka.getMenge()),
                         ka.getStueckzahl().toString() + " x",
                         bc.priceFormatter(ka.getEinzelPreis()),
-                        bc.priceFormatter(ka.getGesPreis()),
+                        ka.getPartOfAnzahlung() ? "" : bc.priceFormatter(ka.getGesPreis()),
                         mwstIndex.toString()
                     }
                 ));
@@ -591,7 +591,7 @@ public class Quittung extends WindowContent {
                         saveSpaceInMenge(ka.getMenge()),
                         ka.getStueckzahl().toString() + " x",
                         bc.priceFormatter(ka.getEinzelPreis()),
-                        bc.priceFormatter(ka.getGesPreis()),
+                        ka.getPartOfAnzahlung() ? "" : bc.priceFormatter(ka.getGesPreis()),
                         mwstIndex.toString()
                     }
                 ));
