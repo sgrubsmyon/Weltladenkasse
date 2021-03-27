@@ -257,7 +257,7 @@ public class Quittung extends WindowContent {
         escpos.writeLF(normal, indent + centerString(datetimeStr));
         String rechnungsNrStr = (rechnungsNr != null) ? rechnungsNr.toString() : "";
         escpos.writeLF(normal, indent + spaceBetweenStrings(
-            "Rechnungsnummer:", rechnungsNrStr, rowLength
+            "Rechnungsnummer:", rechnungsNrStr
         ));
         escpos.writeLF(normal, indent + dividerLine());
         escpos.writeLF(normal, indent + leftAlignedString("Bezeichnung"));
@@ -267,6 +267,8 @@ public class Quittung extends WindowContent {
         ));
         escpos.writeLF(normal, indent + dividerLine());
 
+        // -------------------------------------------------------------
+
         logger.debug("{}", indent + centerString(shopName));
         logger.debug("{}", indent + centerString(shopAddress));
         logger.debug("{}", indent + centerString(shopPhone));
@@ -274,7 +276,7 @@ public class Quittung extends WindowContent {
         logger.debug("{}", indent + dividerLine());
         logger.debug("{}", indent + centerString(datetimeStr));
         logger.debug("{}", indent + spaceBetweenStrings(
-            "Rechnungsnummer:", rechnungsNrStr, rowLength
+            "Rechnungsnummer:", rechnungsNrStr
         ));
         logger.debug("{}", indent + dividerLine());
         logger.debug("{}", indent + leftAlignedString("Bezeichnung"));
@@ -316,6 +318,8 @@ public class Quittung extends WindowContent {
             }
         }
 
+        // -------------------------------------------------------------
+
         for (KassierArtikel ka : kassierArtikel) {
             Integer mwstIndex = mwstList.indexOf(ka.getMwst()) + 1;
             if (ka.getType().equals("gutschein") || ka.getType().equals("rabattrechnung") ||
@@ -345,25 +349,6 @@ public class Quittung extends WindowContent {
                 ));
             }
         }
-
-        // escpos.writeLF(normal,     indent + "Pfand 0,15 Euro                ");
-        // escpos.writeLF(normal,     indent + "          -1 x   0,15   -0,15 2");
-        // escpos.writeLF(normal,     indent + "Örangensaft 1 l                ");
-        // escpos.writeLF(normal,     indent + "     1l    1 x   2,90    2,90 2");
-        // escpos.writeLF(normal,     indent + "   Pfand 0,15 Euro             ");
-        // escpos.writeLF(normal,     indent + "           1 x   0,15    0,15 2");
-        // escpos.writeLF(normal,     indent + "Schoko Crispies                ");
-        // escpos.writeLF(normal,     indent + "   100g    1 x   2,70    2,70 1");
-        // escpos.writeLF(normal,     indent + "Rooibos Good Friends, mit Zimt ");
-        // escpos.writeLF(normal,     indent + "   100g    1 x   5,00    5,00 1");
-        // escpos.writeLF(normal,     indent + "Mascobado Weiße Schokolade     ");
-        // escpos.writeLF(normal,     indent + "   100g    1 x   2,00    2,00 1");
-        // escpos.writeLF(normal,     indent + "Hom Mali Jasminreis            ");
-        // escpos.writeLF(normal,     indent + "    1kg    1 x   5,50    5,50 1");
-        // escpos.writeLF(normal,     indent + "Rabatt auf Rechnung            ");
-        // escpos.writeLF(normal,     indent + "                        -0,29 2");
-        // escpos.writeLF(normal,     indent + "Rabatt auf Rechnung            ");
-        // escpos.writeLF(normal,     indent + "                        -1,52 1");
     }
 
     private void printEscPosTotals(EscPos escpos) throws IOException, UnsupportedEncodingException {
@@ -423,6 +408,8 @@ public class Quittung extends WindowContent {
             escpos.feed(1);
         }
 
+        // -------------------------------------------------------------
+
         logger.debug("{}", indent + dividerLine());
         logger.debug("{}", indent + columnStrings(
             new int[] {5, 7, 7, 7, 1},
@@ -481,20 +468,122 @@ public class Quittung extends WindowContent {
     }
 
     private void printEscPosTSEValues(EscPos escpos) throws IOException, UnsupportedEncodingException {
-        escpos.writeLF(normal, indent + "--- TSE ---                    ");
-        escpos.writeLF(normal, indent + "Transaktionsnr:              88");
-        escpos.writeLF(normal, indent + "Start:  2021-01-20T18:43:00.000");
-        escpos.writeLF(normal, indent + "Ende:   2021-01-20T18:44:09.000");
-        escpos.writeLF(normal, indent + "Kassen-Seriennr (clientID):    ");
-        escpos.writeLF(normal, indent + "                877666797878-01");
-        escpos.writeLF(normal, indent + "TSE-Seriennr:  4a3f03a2dec81878");
-        escpos.writeLF(normal, indent + "       b432548668f603d14f7b7f90");
-        escpos.writeLF(normal, indent + "       d230e30c87c1a705dce1c890");
+        if (tx != null && tx.tseError != null) { // means TSE has failed
+            escpos.writeLF(normal, indent + leftAlignedString("--- TSE ausgefallen!!! ---"));
+        } else {
+            escpos.writeLF(normal, indent + leftAlignedString("--- TSE ---"));
+        }
+        if (tx == null) {
+            escpos.writeLF(normal, indent + leftAlignedString("TSE-Daten nicht verfügbar"));
+        } else {
+            String dateString = "???";
+            try {
+                Date date = new SimpleDateFormat(WeltladenTSE.dateFormatDSFinVK).parse(tx.startTimeString);
+                dateString = new SimpleDateFormat(WeltladenTSE.dateFormatQuittung).format(date);
+            } catch (ParseException ex) {
+                logger.error("{}", ex);
+            }
+            escpos.writeLF(normal, indent + spaceBetweenStrings(
+                "Start:", dateString
+            ));
+            dateString = "???";
+            try {
+                Date date = new SimpleDateFormat(WeltladenTSE.dateFormatDSFinVK).parse(tx.endTimeString);
+                dateString = new SimpleDateFormat(WeltladenTSE.dateFormatQuittung).format(date);
+            } catch (ParseException ex) {
+                logger.error("{}", ex);
+            }
+            escpos.writeLF(normal, indent + spaceBetweenStrings(
+                "Ende:", dateString
+            ));
+            if (tx.tseError == null) { // if TSE has not failed
+                escpos.writeLF(normal, indent + spaceBetweenStrings(
+                    "Transaktionsnr.:", tx.txNumber.toString()
+                ));
+                escpos.writeLF(normal, indent + leftAlignedString(
+                    "Kassen-Seriennr. (clientID):"
+                ));
+                escpos.writeLF(normal, indent + rightAlignedString(
+                    bc.Z_KASSE_ID
+                ));
+                if (tseStatusValues != null) {
+                    String serial_id = tseStatusValues.get("Seriennummer der TSE (Hex)");
+                    int chars = 16; // print first 16 chars on first row
+                    escpos.writeLF(normal, indent + spaceBetweenStrings(
+                        "TSE-Seriennr.:", serial_id.substring(0, chars)
+                    ));
+                    while (chars < serial_id.length()) {
+                        // now 24 chars per row
+                        escpos.writeLF(normal, indent + rightAlignedString(
+                            serial_id.substring(chars, chars + 24)
+                        ));
+                        chars += 24;
+                    }
+                }
+            }
+        }
+
+        // -------------------------------------------------------------
+
+        if (tx != null && tx.tseError != null) { // means TSE has failed
+            logger.debug("{}", indent + leftAlignedString("--- TSE ausgefallen!!! ---"));
+        } else {
+            logger.debug("{}", indent + leftAlignedString("--- TSE ---"));
+        }
+        if (tx == null) {
+            logger.debug("{}", indent + leftAlignedString("TSE-Daten nicht verfügbar"));
+        } else {
+            String dateString = "???";
+            try {
+                Date date = new SimpleDateFormat(WeltladenTSE.dateFormatDSFinVK).parse(tx.startTimeString);
+                dateString = new SimpleDateFormat(WeltladenTSE.dateFormatQuittung).format(date);
+            } catch (ParseException ex) {
+                logger.error("{}", ex);
+            }
+            logger.debug("{}", indent + spaceBetweenStrings(
+                "Start:", dateString
+            ));
+            dateString = "???";
+            try {
+                Date date = new SimpleDateFormat(WeltladenTSE.dateFormatDSFinVK).parse(tx.endTimeString);
+                dateString = new SimpleDateFormat(WeltladenTSE.dateFormatQuittung).format(date);
+            } catch (ParseException ex) {
+                logger.error("{}", ex);
+            }
+            logger.debug("{}", indent + spaceBetweenStrings(
+                "Ende:", dateString
+            ));
+            if (tx.tseError == null) { // if TSE has not failed
+                logger.debug("{}", indent + spaceBetweenStrings(
+                    "Transaktionsnr.:", tx.txNumber.toString()
+                ));
+                logger.debug("{}", indent + leftAlignedString(
+                    "Kassen-Seriennr. (clientID):"
+                ));
+                logger.debug("{}", indent + rightAlignedString(
+                    bc.Z_KASSE_ID
+                ));
+                if (tseStatusValues != null) {
+                    String serial_id = tseStatusValues.get("Seriennummer der TSE (Hex)");
+                    int chars = 16; // print first 16 chars on first row
+                    logger.debug("{}", indent + spaceBetweenStrings(
+                        "TSE-Seriennr.:", serial_id.substring(0, chars)
+                    ));
+                    while (chars < serial_id.length()) {
+                        // now 24 chars per row
+                        logger.debug("{}", indent + rightAlignedString(
+                            serial_id.substring(chars, chars + 24)
+                        ));
+                        chars += 24;
+                    }
+                }
+            }
+        }
     }
 
     public void printReceipt() {
-        // printQuittungWithSofficeTemplate();
-        printQuittungWithEscPos();
+        // printQuittungWithSofficeTemplate(); // old printing with LibreOffice template file
+        printQuittungWithEscPos(); // new printing (much faster and higher quality) with EPSON ESC/POS driver
     }
 
     // private void writeQuittungToDeviceFile() {
@@ -621,7 +710,7 @@ public class Quittung extends WindowContent {
     //     }
     // }
 
-private Sheet createSheetFromTemplate() {
+    private Sheet createSheetFromTemplate() {
         final Sheet sheet;
         try {
             String filename = "vorlagen"+bc.fileSep+"Quittung.ods";
@@ -764,7 +853,6 @@ private Sheet createSheetFromTemplate() {
             sheet.setValueAt("--- TSE ausgefallen!!! ---", 0, row);
         } else {
             sheet.setValueAt("--- TSE ---", 0, row);
-
         }
         row++;
         if (tx == null) {
