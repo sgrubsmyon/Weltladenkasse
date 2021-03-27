@@ -173,7 +173,7 @@ public class Kundendisplay {
 
     private void setCodePage() {
         /**
-         * Set Code Page to one with € symbol (858), which is county code 0x34,
+         * Set Code Page to one with € symbol (858), which is country code 0x34,
          * according to user's manual of BA63/USB.
          */
         byte[] data = new byte[]{0x02, 0x00, 0x03,
