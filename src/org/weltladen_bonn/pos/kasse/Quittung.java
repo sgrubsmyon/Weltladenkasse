@@ -515,7 +515,7 @@ public class Quittung extends WindowContent {
         escpos.writeLF(normal, indent + leftAlignedString("Bezeichnung"));
         escpos.writeLF(normal, indent + columnStrings(
             new int[] {7, 6, 6, 7, 1},
-            new String[] {"Menge", "Stk", "Einzel", "Ges. €", "M"}
+            new String[] {"Menge", "Stk", "Einzel", "Ges. "+bc.currencySymbol, "M"}
         ));
         escpos.writeLF(normal, indent + dividerLine());
 
@@ -532,7 +532,7 @@ public class Quittung extends WindowContent {
         logger.debug("{}", indent + leftAlignedString("Bezeichnung"));
         logger.debug("{}", indent + columnStrings(
             new int[] {7, 6, 6, 7, 1},
-            new String[] {"Menge", "Stk", "Einzel", "Ges. €", "M"}
+            new String[] {"Menge", "Stk", "Einzel", "Ges. "+bc.currencySymbol, "M"}
         ));
         logger.debug("{}", indent + dividerLine());
     }
@@ -620,26 +620,128 @@ public class Quittung extends WindowContent {
 
     private void printEscPosTotals(EscPos escpos) throws IOException, UnsupportedEncodingException {
         escpos.writeLF(normal, indent + dividerLine());
-        escpos.writeLF(normal, indent + "MwSt.   Netto  Steuer  Umsatz  ");
-        escpos.writeLF(normal, indent + "7%      12,79    0,89   13,68 1");
-        escpos.writeLF(normal, indent + "19%      2,19    0,42    2,61 2");
+        escpos.writeLF(normal, indent + columnStrings(
+            new int[] {5, 7, 7, 7, 1},
+            new String[] {"l", "r", "r", "r", "r"},
+            new String[] {"MwSt.", "Netto", "Steuer", "Umsatz", "M"}
+        ));
+        Integer mwstIndex = 1;
+        for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : mwstValues.entrySet()) {
+            BigDecimal steuersatz = entry.getKey();
+            Vector<BigDecimal> values = entry.getValue();
+            escpos.writeLF(normal, indent + columnStrings(
+                new int[] {5, 7, 7, 7, 1},
+                new String[] {"l", "r", "r", "r", "r"},
+                new String[] {
+                    bc.vatFormatter(steuersatz),
+                    bc.priceFormatter(values.get(0)), // Netto (see calculateMwStValuesInRechnung() in RechnungsGrundlage.java)
+                    bc.priceFormatter(values.get(1)), // Steuer
+                    bc.priceFormatter(values.get(2)), // Brutto/Umsatz
+                    mwstIndex.toString()
+                }
+            ));
+            mwstIndex++;
+        }
         escpos.feed(1);
-        escpos.writeLF(boldlarger, indent + " BAR             16,29 €");
-        escpos.writeLF(boldlarger, indent + " Kunde gibt      17,09 €");
-        escpos.writeLF(boldlarger, indent + " Rueckgeld        0,80 €");
+        if ( zahlungsModus.equals("bar") ) {
+            escpos.writeLF(boldlarger, indent + " " + columnStrings(
+                new int[] {10, 12},
+                new String[] {"l", "r"},
+                new String[] {"BAR", bc.priceFormatter(totalPrice)+" "+bc.currencySymbol}
+            ));
+            if (kundeGibt != null && rueckgeld != null) {
+                escpos.writeLF(boldlarger, indent + " " + columnStrings(
+                    new int[] {10, 12},
+                    new String[] {"l", "r"},
+                    new String[] {"Kunde gibt", bc.priceFormatter(kundeGibt)+" "+bc.currencySymbol}
+                ));
+                escpos.writeLF(boldlarger, indent + " " + columnStrings(
+                    new int[] {10, 12},
+                    new String[] {"l", "r"},
+                    new String[] {"Rückgeld", bc.priceFormatter(rueckgeld)+" "+bc.currencySymbol}
+                ));
+            }
+        } else if ( zahlungsModus.equals("ec") ){
+            escpos.writeLF(boldlarger, indent + " " + columnStrings(
+                new int[] {10, 12},
+                new String[] {"l", "r"},
+                new String[] {"EC", bc.priceFormatter(totalPrice)+" "+bc.currencySymbol}
+            ));
+        }
         escpos.feed(1);
+        if (stornoVon != null) {
+            escpos.writeLF(normal, indent + "!!! STORNO VON !!!");
+            escpos.writeLF(normal, indent + "!!! RECHN.-NR. "+stornoVon+" !!!");
+            escpos.feed(1);
+        }
+
+        logger.debug("{}", indent + dividerLine());
+        logger.debug("{}", indent + columnStrings(
+            new int[] {5, 7, 7, 7, 1},
+            new String[] {"l", "r", "r", "r", "r"},
+            new String[] {"MwSt.", "Netto", "Steuer", "Umsatz", "M"}
+        ));
+        mwstIndex = 1;
+        for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : mwstValues.entrySet()) {
+            BigDecimal steuersatz = entry.getKey();
+            Vector<BigDecimal> values = entry.getValue();
+            logger.debug("{}", indent + columnStrings(
+                new int[] {5, 7, 7, 7, 1},
+                new String[] {"l", "r", "r", "r", "r"},
+                new String[] {
+                    bc.vatFormatter(steuersatz),
+                    bc.priceFormatter(values.get(0)), // Netto (see calculateMwStValuesInRechnung() in RechnungsGrundlage.java)
+                    bc.priceFormatter(values.get(1)), // Steuer
+                    bc.priceFormatter(values.get(2)), // Brutto/Umsatz
+                    mwstIndex.toString()
+                }
+            ));
+            mwstIndex++;
+        }
+        logger.debug("");
+        if ( zahlungsModus.equals("bar") ) {
+            logger.debug("{}", indent + " " + columnStrings(
+                new int[] {10, 12},
+                new String[] {"l", "r"},
+                new String[] {"BAR", bc.priceFormatter(totalPrice)+" "+bc.currencySymbol}
+            ));
+            if (kundeGibt != null && rueckgeld != null) {
+                logger.debug("{}", indent + " " + columnStrings(
+                    new int[] {10, 12},
+                    new String[] {"l", "r"},
+                    new String[] {"Kunde gibt", bc.priceFormatter(kundeGibt)+" "+bc.currencySymbol}
+                ));
+                logger.debug("{}", indent + " " + columnStrings(
+                    new int[] {10, 12},
+                    new String[] {"l", "r"},
+                    new String[] {"Rückgeld", bc.priceFormatter(rueckgeld)+" "+bc.currencySymbol}
+                ));
+            }
+        } else if ( zahlungsModus.equals("ec") ){
+            logger.debug("{}", indent + " " + columnStrings(
+                new int[] {10, 12},
+                new String[] {"l", "r"},
+                new String[] {"EC", bc.priceFormatter(totalPrice)+" "+bc.currencySymbol}
+            ));
+        }
+        logger.debug("");
+        if (stornoVon != null) {
+            escpos.writeLF(normal, indent + "!!! STORNO VON !!!");
+            escpos.writeLF(normal, indent + "!!! RECHN.-NR. "+stornoVon+" !!!");
+            logger.debug("");
+        }
     }
 
     private void printEscPosTSEValues(EscPos escpos) throws IOException, UnsupportedEncodingException {
-        escpos.writeLF(normal,     indent + "--- TSE ---                    ");
-        escpos.writeLF(normal,     indent + "Transaktionsnr:              88");
-        escpos.writeLF(normal,     indent + "Start:  2021-01-20T18:43:00.000");
-        escpos.writeLF(normal,     indent + "Ende:   2021-01-20T18:44:09.000");
-        escpos.writeLF(normal,     indent + "Kassen-Seriennr (clientID):    ");
-        escpos.writeLF(normal,     indent + "                877666797878-01");
-        escpos.writeLF(normal,     indent + "TSE-Seriennr:  4a3f03a2dec81878");
-        escpos.writeLF(normal,     indent + "       b432548668f603d14f7b7f90");
-        escpos.writeLF(normal,     indent + "       d230e30c87c1a705dce1c890");
+        escpos.writeLF(normal, indent + "--- TSE ---                    ");
+        escpos.writeLF(normal, indent + "Transaktionsnr:              88");
+        escpos.writeLF(normal, indent + "Start:  2021-01-20T18:43:00.000");
+        escpos.writeLF(normal, indent + "Ende:   2021-01-20T18:44:09.000");
+        escpos.writeLF(normal, indent + "Kassen-Seriennr (clientID):    ");
+        escpos.writeLF(normal, indent + "                877666797878-01");
+        escpos.writeLF(normal, indent + "TSE-Seriennr:  4a3f03a2dec81878");
+        escpos.writeLF(normal, indent + "       b432548668f603d14f7b7f90");
+        escpos.writeLF(normal, indent + "       d230e30c87c1a705dce1c890");
     }
 
     // private void writeQuittungToDeviceFile() {
