@@ -1228,6 +1228,26 @@ class AbrechnungenTag extends Abrechnungen {
                     pstmt.setString(7, null);
                     pstmt.setString(8, null);
                     pstmt.setString(9, null);
+                    // // For testing:
+                    // pstmtSetInteger(pstmt, 2, bc.TSE_ID);
+                    // pstmt.setString(3, substrIfLongerThan(68, "4a3f03a2dec81878b432548668f603d14f7b7f90d230e30c87c1a705dce1c890"));
+                    // pstmt.setString(4, substrIfLongerThan(21, "ecdsa-plain-SHA256"));
+                    // pstmt.setString(5, substrIfLongerThan(31, "unixTime"));
+                    // pstmt.setString(6, substrIfLongerThan(5, bc.TSE_PD_ENCODING));
+                    // pstmt.setString(7, substrIfLongerThan(512, "BHhWOeisRpPBTGQ1W4VUH95TXx2GARf8e2NYZXJoInjtGqnxJ8sZ3CQpYgjI+LYEmW5A37sLWHsyU7nSJUBemyU="));
+                    // String cert = "MEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4";
+                    // int cert_length = cert.length();
+                    // pstmt.setString(8, cert.substring(0, cert_length <= 1000 ? cert_length : 1000));
+                    // if (cert_length > 1000) {
+                    //     pstmt.setString(9, cert.substring(1000, cert_length <= 2000 ? cert_length : 2000));
+                    //     if (cert_length > 2000) {
+                    //         JOptionPane.showMessageDialog(this,
+                    //             "Fehler: TSE-Zertifikat mit "+cert_length+" Zeichen zu lang (mehr als 2000 Zeichen), bitte dem Administrator Bescheid geben!",
+                    //             "Fehler", JOptionPane.ERROR_MESSAGE);
+                    //     }
+                    // } else {
+                    //     pstmt.setString(9, null);
+                    // }
                 }
                 result = pstmt.executeUpdate();
                 pstmt.close();
