@@ -119,15 +119,21 @@ class AbrechnungenTag extends Abrechnungen {
     private PreparedStatement prepareStmtStornos(Connection connection, Integer abrechnung_tag_id) throws SQLException {
         // Summe über Stornos:
         PreparedStatement pstmt = connection.prepareStatement(
-                // SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) WHERE rechnungs_nr IN (SELECT storno_von FROM verkauf WHERE storno_von IS NOT NULL) AND rechnungs_nr >= IFNULL((SELECT rechnungs_nr_von FROM abrechnung_tag WHERE id = 18), 0) AND rechnungs_nr <= IFNULL((SELECT rechnungs_nr_bis FROM abrechnung_tag WHERE id = 18), 4294967295) GROUP BY mwst_satz;
+                // SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) WHERE rechnungs_nr IN (SELECT storno_von FROM verkauf WHERE storno_von IS NOT NULL) AND rechnungs_nr >= IF((SELECT COUNT(*) FROM abrechnung_tag) = 0, 0, (SELECT rechnungs_nr_von FROM abrechnung_tag WHERE id = 18)) AND rechnungs_nr <= IF((SELECT COUNT(*) FROM abrechnung_tag) = 0, 4294967295, (SELECT rechnungs_nr_bis FROM abrechnung_tag WHERE id = 18)) GROUP BY mwst_satz;
                 "SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) " +
                 "FROM "+tableForMode("verkauf_mwst")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
                 "WHERE rechnungs_nr IN (SELECT storno_von FROM verkauf WHERE storno_von IS NOT NULL) AND " +
-                "rechnungs_nr >= IFNULL((SELECT rechnungs_nr_von FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?), 0) AND " +
-                "rechnungs_nr <= IFNULL((SELECT rechnungs_nr_bis FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?), 4294967295) " + // this is highest value for unsigned int
+                "rechnungs_nr >= " +
+                "  IF((SELECT COUNT(*) FROM "+tableForMode("abrechnung_tag")+") = 0, " + // if table is still completely empty: include all rechnungen
+                "    0, (SELECT rechnungs_nr_von FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?)" +
+                "  ) AND " +
+                "rechnungs_nr <= " +
+                "  IF((SELECT COUNT(*) FROM "+tableForMode("abrechnung_tag")+") = 0, " + // if table is still completely empty: include all rechnungen
+                "    4294967295, (SELECT rechnungs_nr_bis FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?)" + // this is highest value for unsigned int
+                "  ) " +
                 "GROUP BY mwst_satz"
         );
-        pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
+        pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
         pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
         return pstmt;
     }
@@ -135,20 +141,26 @@ class AbrechnungenTag extends Abrechnungen {
     private PreparedStatement prepareStmtRetouren(Connection connection, Integer abrechnung_tag_id) throws SQLException {
         // Summe über Retouren:
         PreparedStatement pstmt = connection.prepareStatement(
-                // SELECT mwst_satz, SUM(ges_preis) FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) INNER JOIN artikel USING (artikel_id) WHERE rechnungs_nr >= IFNULL((SELECT rechnungs_nr_von FROM abrechnung_tag WHERE id = 0), 0) AND rechnungs_nr <= IFNULL((SELECT rechnungs_nr_bis FROM abrechnung_tag WHERE id = 9999999999999), 4294967295) AND stueckzahl < 0 AND produktgruppen_id >= 9 GROUP BY mwst_satz;
+                // SELECT mwst_satz, SUM(ges_preis) FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) LEFT JOIN artikel USING (artikel_id) WHERE rechnungs_nr >= IF((SELECT COUNT(*) FROM abrechnung_tag) = 0, 0, (SELECT rechnungs_nr_von FROM abrechnung_tag WHERE id = 1461)) AND rechnungs_nr <= IF((SELECT COUNT(*) FROM abrechnung_tag) = 0, 4294967295, (SELECT rechnungs_nr_bis FROM abrechnung_tag WHERE id = 1461)) AND stueckzahl < 0 AND ( produktgruppen_id NOT IN (1, 6, 7, 8) OR produktgruppen_id IS NULL ) AND storno_von IS NULL GROUP BY mwst_satz;
                 "SELECT mwst_satz, SUM(ges_preis) " +
                 "FROM "+tableForMode("verkauf_details")+" " +
                 "INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
                 "LEFT JOIN artikel USING (artikel_id) " + // left join needed because Rabattaktionen do not have an artikel_id
                 "WHERE " +
-                "rechnungs_nr >= IFNULL((SELECT rechnungs_nr_von FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?), 0) AND " +
-                "rechnungs_nr <= IFNULL((SELECT rechnungs_nr_bis FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?), 4294967295) AND " +
+                "rechnungs_nr >= " +
+                "  IF((SELECT COUNT(*) FROM "+tableForMode("abrechnung_tag")+") = 0, " + // if table is still completely empty: include all rechnungen
+                "    0, (SELECT rechnungs_nr_von FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?)" +
+                "  ) AND " +
+                "rechnungs_nr <= " +
+                "  IF((SELECT COUNT(*) FROM "+tableForMode("abrechnung_tag")+") = 0, " + // if table is still completely empty: include all rechnungen
+                "    4294967295, (SELECT rechnungs_nr_bis FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?)" + // this is highest value for unsigned int
+                "  ) AND " +
                 "stueckzahl < 0 AND ( produktgruppen_id NOT IN (1, 6, 7, 8) OR produktgruppen_id IS NULL ) AND " + // exclude internal articles, Gutschein, and Pfand
                 "storno_von IS NULL " + // exclude Storno
                 // produktgruppen_id is null for Rabattaktionen
                 "GROUP BY mwst_satz"
         );
-        pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
+        pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
         pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
         return pstmt;
     }
@@ -159,12 +171,12 @@ class AbrechnungenTag extends Abrechnungen {
             // SELECT SUM(entnahme_betrag) FROM (SELECT kassenstand_id AS kid, neuer_kassenstand - (SELECT neuer_kassenstand FROM kassenstand WHERE kassenstand_id = kid-1) AS entnahme_betrag FROM kassenstand WHERE kassenstand_id > IFNULL((SELECT kassenstand_id FROM abrechnung_tag WHERE id = 0), 0) AND kassenstand_id < IFNULL((SELECT kassenstand_id FROM abrechnung_tag WHERE id = 9999999999999), 4294967295) AND entnahme = TRUE) AS entnahme_table;
             "SELECT SUM(entnahme_betrag) " +
             "FROM (" +
-            "SELECT kassenstand_id AS kid, " +
-            "neuer_kassenstand - (SELECT neuer_kassenstand FROM "+tableForMode("kassenstand")+" WHERE kassenstand_id = kid-1) AS entnahme_betrag " +
-            "FROM "+tableForMode("kassenstand")+" WHERE " +
-            "kassenstand_id > IFNULL((SELECT kassenstand_id FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?), 0) AND " +
-            "kassenstand_id < IFNULL((SELECT kassenstand_id FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?), 4294967295) AND " +
-            "entnahme = TRUE" +
+            "  SELECT kassenstand_id AS kid, " +
+            "  neuer_kassenstand - (SELECT neuer_kassenstand FROM "+tableForMode("kassenstand")+" WHERE kassenstand_id = kid-1) AS entnahme_betrag " +
+            "  FROM "+tableForMode("kassenstand")+" WHERE " +
+            "  kassenstand_id > IFNULL((SELECT kassenstand_id FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?), 0) AND " +
+            "  kassenstand_id < IFNULL((SELECT kassenstand_id FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?), 4294967295) AND " +
+            "  entnahme = TRUE" +
             ") AS entnahme_table"
         );
         pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
