@@ -882,3 +882,38 @@ GRANT INSERT ON kasse.anzahlung TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.anzahlung_details TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.training_anzahlung TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.training_anzahlung_details TO 'mitarbeiter'@'localhost';
+
+-- ---------------------
+-- abrechnung_tag_tse --
+-- ---------------------
+
+CREATE TABLE abrechnung_tag_tse (
+    id INTEGER(10) UNSIGNED NOT NULL,
+    tse_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    tse_serial VARCHAR(68) DEFAULT NULL,
+    tse_sig_algo VARCHAR(21) DEFAULT NULL,
+    tse_time_format VARCHAR(31) DEFAULT NULL,
+    tse_pd_encoding VARCHAR(5) DEFAULT NULL,
+    tse_public_key VARCHAR(512) DEFAULT NULL,
+    tse_cert_i VARCHAR(1000) DEFAULT NULL,
+    tse_cert_ii VARCHAR(1000) DEFAULT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (id) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE training_abrechnung_tag_tse (
+    id INTEGER(10) UNSIGNED NOT NULL,
+    tse_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    tse_serial VARCHAR(68) DEFAULT NULL,
+    tse_sig_algo VARCHAR(21) DEFAULT NULL,
+    tse_time_format VARCHAR(31) DEFAULT NULL,
+    tse_pd_encoding VARCHAR(5) DEFAULT NULL,
+    tse_public_key VARCHAR(512) DEFAULT NULL,
+    tse_cert_i VARCHAR(1000) DEFAULT NULL,
+    tse_cert_ii VARCHAR(1000) DEFAULT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (id) REFERENCES training_abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+GRANT INSERT ON kasse.abrechnung_tag_tse TO 'mitarbeiter'@'localhost';
+GRANT INSERT ON kasse.training_abrechnung_tag_tse TO 'mitarbeiter'@'localhost';

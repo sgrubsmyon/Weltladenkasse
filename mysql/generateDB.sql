@@ -185,6 +185,19 @@ CREATE TABLE abrechnung_tag_mwst (
     bar_brutto DECIMAL(13,2) NOT NULL,
     PRIMARY KEY (id, mwst_satz)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE abrechnung_tag_tse (
+    id INTEGER(10) UNSIGNED NOT NULL,
+    tse_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    tse_serial VARCHAR(68) DEFAULT NULL,
+    tse_sig_algo VARCHAR(21) DEFAULT NULL,
+    tse_time_format VARCHAR(31) DEFAULT NULL,
+    tse_pd_encoding VARCHAR(5) DEFAULT NULL,
+    tse_public_key VARCHAR(512) DEFAULT NULL,
+    tse_cert_i VARCHAR(1000) DEFAULT NULL,
+    tse_cert_ii VARCHAR(1000) DEFAULT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (id) REFERENCES abrechnung_tag(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE zaehlprotokoll (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     abrechnung_tag_id INTEGER(10) UNSIGNED NOT NULL,
@@ -391,6 +404,19 @@ CREATE TABLE training_abrechnung_tag_mwst (
     mwst_betrag DECIMAL(13,2) NOT NULL,
     bar_brutto DECIMAL(13,2) NOT NULL,
     PRIMARY KEY (id, mwst_satz)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE training_abrechnung_tag_tse (
+    id INTEGER(10) UNSIGNED NOT NULL,
+    tse_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    tse_serial VARCHAR(68) DEFAULT NULL,
+    tse_sig_algo VARCHAR(21) DEFAULT NULL,
+    tse_time_format VARCHAR(31) DEFAULT NULL,
+    tse_pd_encoding VARCHAR(5) DEFAULT NULL,
+    tse_public_key VARCHAR(512) DEFAULT NULL,
+    tse_cert_i VARCHAR(1000) DEFAULT NULL,
+    tse_cert_ii VARCHAR(1000) DEFAULT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (id) REFERENCES training_abrechnung_tag(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE training_zaehlprotokoll (
     id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
