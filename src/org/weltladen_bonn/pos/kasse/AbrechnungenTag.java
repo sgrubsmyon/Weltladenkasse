@@ -1085,6 +1085,13 @@ class AbrechnungenTag extends Abrechnungen {
         return lastSigCounter;
     }
 
+    String substrIfLongerThan(int max_length, String s) {
+        if (s.length() > max_length) {
+            return s.substring(0, max_length);
+        }
+        return s;
+    }
+
     private Integer insertTagesAbrechnung() {
         /** create new abrechnung (and save in DB) from time of last abrechnung until now */
         Integer id = null;
@@ -1172,6 +1179,63 @@ class AbrechnungenTag extends Abrechnungen {
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                         id = null;
                     }
+                }
+
+                // Make one entry in the abrechnung_tag_tse table with TSE status values:
+                LinkedHashMap<String, String> tseStatusValues = null;
+                if (tse.inUse()) { // only if TSE is operational, tseStatusValues is not null
+                    tseStatusValues = tse.getTSEStatusValues();
+                }
+                pstmt = connection.prepareStatement(
+                    "INSERT INTO "+tableForMode("abrechnung_tag_tse")+" SET "+
+                    "id = ?, "+
+                    "tse_id = ?, "+
+                    "tse_serial = ?, "+
+                    "tse_sig_algo = ?, "+
+                    "tse_time_format = ?, "+
+                    "tse_pd_encoding = ?, "+
+                    "tse_public_key = ?, "+
+                    "tse_cert_i = ?, "+
+                    "tse_cert_ii = ?"
+                );
+                pstmtSetInteger(pstmt, 1, id);
+                if (tseStatusValues != null) {
+                    pstmtSetInteger(pstmt, 2, bc.TSE_ID);
+                    pstmt.setString(3, substrIfLongerThan(68, tseStatusValues.get("Seriennummer der TSE (Hex)")));
+                    pstmt.setString(4, substrIfLongerThan(21, tseStatusValues.get("Signatur-Algorithmus")));
+                    pstmt.setString(5, substrIfLongerThan(31, tseStatusValues.get("Zeitformat")));
+                    pstmt.setString(6, substrIfLongerThan(5, bc.TSE_PD_ENCODING));
+                    pstmt.setString(7, substrIfLongerThan(512, tseStatusValues.get("Öffentlicher Schlüssel (Base64)")));
+                    String cert = tseStatusValues.get("TSE-Zertifikat (Base64)");
+                    int cert_length = cert.length();
+                    pstmt.setString(8, cert.substring(0, cert_length <= 1000 ? cert_length : 1000));
+                    if (cert_length > 1000) {
+                        pstmt.setString(9, cert.substring(1000, cert_length <= 2000 ? cert_length : 2000));
+                        if (cert_length > 2000) {
+                            JOptionPane.showMessageDialog(this,
+                                "Fehler: TSE-Zertifikat mit "+cert_length+" Zeichen zu lang (mehr als 2000 Zeichen), bitte dem Administrator Bescheid geben!",
+                                "Fehler", JOptionPane.ERROR_MESSAGE);
+                        }
+                    } else {
+                        pstmt.setString(9, null);
+                    }
+                } else { // TSE not operational, so do not store TSE status values
+                    pstmtSetInteger(pstmt, 2, null);
+                    pstmt.setString(3, null);
+                    pstmt.setString(4, null);
+                    pstmt.setString(5, null);
+                    pstmt.setString(6, null);
+                    pstmt.setString(7, null);
+                    pstmt.setString(8, null);
+                    pstmt.setString(9, null);
+                }
+                result = pstmt.executeUpdate();
+                pstmt.close();
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                        "Fehler: TSE-Status-Werte konnten nicht zur Tagesabrechnung dazu gespeichert werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                    id = null;
                 }
             }
 
