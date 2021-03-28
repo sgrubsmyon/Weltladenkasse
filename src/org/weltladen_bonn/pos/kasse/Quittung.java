@@ -59,6 +59,7 @@ public class Quittung extends WindowContent {
     private BigDecimal kundeGibt;
     private BigDecimal rueckgeld;
     private TSETransaction tx;
+    private String z_kasse_id;
     private LinkedHashMap<String, String> tseStatusValues;
 
     private int artikelIndex = 0;
@@ -88,7 +89,7 @@ public class Quittung extends WindowContent {
             Vector<KassierArtikel> ka,
             TreeMap< BigDecimal, Vector<BigDecimal> > mv,
             String zm, BigDecimal tp, BigDecimal kgb, BigDecimal rg,
-            TSETransaction transaction,
+            TSETransaction transaction, String z_kasse_id,
             LinkedHashMap<String, String> tseStatusValues) {
 	    super(pool, mw);
         this.datetime = dt;
@@ -100,6 +101,7 @@ public class Quittung extends WindowContent {
         this.totalPrice = tp;
         this.kundeGibt = kgb; this.rueckgeld = rg;
         this.tx = transaction;
+        this.z_kasse_id = z_kasse_id;
         this.tseStatusValues = tseStatusValues;
 
         // Create a list from the set of mwst values
@@ -500,12 +502,14 @@ public class Quittung extends WindowContent {
                 escpos.writeLF(normal, indent + spaceBetweenStrings(
                     "Transaktionsnr.:", tx.txNumber.toString()
                 ));
-                escpos.writeLF(normal, indent + leftAlignedString(
-                    "Kassen-Seriennr. (clientID):"
-                ));
-                escpos.writeLF(normal, indent + rightAlignedString(
-                    bc.Z_KASSE_ID
-                ));
+                if (z_kasse_id != null) {
+                    escpos.writeLF(normal, indent + leftAlignedString(
+                        "Kassen-Seriennr. (clientID):"
+                    ));
+                    escpos.writeLF(normal, indent + rightAlignedString(
+                        z_kasse_id
+                    ));
+                }
                 if (tseStatusValues != null) {
                     String serial_id = tseStatusValues.get("Seriennummer der TSE (Hex)");
                     int chars = 16; // print first 16 chars on first row
@@ -561,7 +565,7 @@ public class Quittung extends WindowContent {
                     "Kassen-Seriennr. (clientID):"
                 ));
                 logger.debug("{}", indent + rightAlignedString(
-                    bc.Z_KASSE_ID
+                    z_kasse_id
                 ));
                 if (tseStatusValues != null) {
                     String serial_id = tseStatusValues.get("Seriennummer der TSE (Hex)");
@@ -884,7 +888,7 @@ public class Quittung extends WindowContent {
                 row++;
                 sheet.setValueAt("Kassen-Seriennr. (clientID):", 0, row);
                 row++;
-                sheet.setValueAt(bc.Z_KASSE_ID, 4, row);
+                sheet.setValueAt(z_kasse_id, 4, row);
                 if (tseStatusValues != null) {
                     row++;
                     sheet.setValueAt("TSE-Seriennr.:", 0, row);
