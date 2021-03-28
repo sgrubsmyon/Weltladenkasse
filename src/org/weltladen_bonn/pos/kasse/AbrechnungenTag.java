@@ -1204,7 +1204,7 @@ class AbrechnungenTag extends Abrechnungen {
                     pstmt.setString(3, substrIfLongerThan(68, tseStatusValues.get("Seriennummer der TSE (Hex)")));
                     pstmt.setString(4, substrIfLongerThan(21, tseStatusValues.get("Signatur-Algorithmus")));
                     pstmt.setString(5, substrIfLongerThan(31, tseStatusValues.get("Zeitformat")));
-                    pstmt.setString(6, substrIfLongerThan(5, bc.TSE_PD_ENCODING));
+                    pstmt.setString(6, substrIfLongerThan(5, tseStatusValues.get("Encoding der processData-Strings")));
                     pstmt.setString(7, substrIfLongerThan(512, tseStatusValues.get("Öffentlicher Schlüssel (Base64)")));
                     String cert = tseStatusValues.get("TSE-Zertifikat (Base64)");
                     int cert_length = cert.length();

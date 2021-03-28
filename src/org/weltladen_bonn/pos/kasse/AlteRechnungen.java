@@ -185,7 +185,8 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
     }
 
     protected String getZKasseId() {
-        // query the historical Z_KASSE_ID corresponding to the currently displayed detail rechnung (rechnungsNr)
+        // query the historical Z_KASSE_ID corresponding to the currently displayed
+        // detail rechnung (rechnungsNr)
         String z_kasse_id = "";
         try {
             Connection connection = this.pool.getConnection();
@@ -209,6 +210,52 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
         }
         return z_kasse_id;
     }
+
+    protected LinkedHashMap<String, String> getTSEStatusValues() {
+        // query the historical TSE status values corresponding to the currently displayed
+        // detail rechnung (rechnungsNr)
+        LinkedHashMap<String, String> tseStatusValues = new LinkedHashMap<String, String>();
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT "+
+                "tse_serial, "+
+                "tse_sig_algo, "+
+                "tse_time_format, "+
+                "tse_pd_encoding, "+
+                "tse_public_key, "+
+                "tse_cert_i, "+
+                "tse_cert_ii "+
+                "FROM "+tableForMode("abrechnung_tag_tse")+" "+
+                "INNER JOIN "+tableForMode("abrechnung_tag")+" USING (id) "+
+                "WHERE rechnungs_nr_von <= ? AND rechnungs_nr_bis >= ?"
+            );
+            pstmtSetInteger(pstmt, 1, rechnungsNr);
+            pstmtSetInteger(pstmt, 2, rechnungsNr);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                tseStatusValues.put("Seriennummer der TSE (Hex)", rs.getString(1));
+                tseStatusValues.put("Signatur-Algorithmus", rs.getString(2));
+                tseStatusValues.put("Zeitformat", rs.getString(3));
+                tseStatusValues.put("Encoding der processData-Strings", rs.getString(4));
+                tseStatusValues.put("Öffentlicher Schlüssel (Base64)", rs.getString(5));
+                String cert = rs.getString(6);
+                String cert_ii = rs.getString(7);
+                if (cert != null && cert_ii != null) {
+                    cert = cert + cert_ii;
+                }
+                tseStatusValues.put("TSE-Zertifikat (Base64)", cert);
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return tseStatusValues;
+    }
+
 
     /**
      * * Each non abstract class that implements the ChangeListener must have

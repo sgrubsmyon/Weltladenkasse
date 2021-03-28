@@ -75,6 +75,15 @@ public class HeutigeRechnungen extends Rechnungen {
         return bc.Z_KASSE_ID;
     }
 
+    protected LinkedHashMap<String, String> getTSEStatusValues() {
+        // use the status values of the currently operated TSE
+        LinkedHashMap<String, String> tseStatusValues = null;
+        if (tse.inUse()) {
+            tseStatusValues = tse.getTSEStatusValues();
+        }
+        return tseStatusValues;
+    }
+
     private void stornieren(int stornoRow) {
         Integer rechNr = Integer.parseInt(data.get(stornoRow).get(1).toString());
         String zahlMod = data.get(stornoRow).get(4).toString();

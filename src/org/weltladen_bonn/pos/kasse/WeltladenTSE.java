@@ -696,6 +696,9 @@ public class WeltladenTSE extends WindowContent {
                     // Lesen des letzten gespeicherten und abgesicherten Anwendungs- und Protokolldatensatzes
                     statusValues.put("Letzte Protokolldaten (ASN.1)", byteArrayToASN1String(tse.readLogMessage()));
                 }
+                // Kann nicht abgefragt werden, wird aber für DSFinV-K und den QR-Code auf Quittungen benötigt.
+                // Entweder: "UTF-8" oder "ASCII". Da in Java immer alles Unicode ist, nehme ich an, es ist "UTF-8"
+                statusValues.put("Encoding der processData-Strings", bc.TSE_PD_ENCODING);
             } catch (SEException ex) {
                 logger.error("Error at reading of TSE status values");
                 logger.error("Exception:", ex);

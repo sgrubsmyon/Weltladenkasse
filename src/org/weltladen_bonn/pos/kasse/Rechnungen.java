@@ -577,6 +577,8 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     }
 
     protected abstract String getZKasseId();
+    
+    protected abstract LinkedHashMap<String, String> getTSEStatusValues();
 
     protected void printQuittung() {
             DateTime datet = null;
@@ -591,19 +593,11 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 rueckgeld = kundeGibt.subtract(totalPrice);
             }
             TSETransaction tx = tse.getTransactionByRechNr(rechnungsNr);
-            LinkedHashMap<String, String> tseStatusValues = null;
-            // TODO once DSFinV-K is finished, obtain TSE values for printed Quittung
-            // not from currently operated TSE (because they might have been
-            // different in the past for the printed Quittung), but from the corresponding
-            // TSE table where the status values are contained for each Tagesabrechnung
-            if (tse.inUse()) {
-                tseStatusValues = tse.getTSEStatusValues();
-            }
             Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
                 datet, rechnungsNr, stornoVon,
                 kassierArtikel, mwstValues, zahlungsModus,
                 totalPrice, kundeGibt, rueckgeld,
-                tx, getZKasseId(), tseStatusValues);
+                tx, getZKasseId(), getTSEStatusValues());
             myQuittung.printReceipt();
     }
 
