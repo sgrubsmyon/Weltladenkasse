@@ -7,6 +7,7 @@ import java.util.*; // for Vector
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 //import java.sql.Date;
 import org.mariadb.jdbc.MariaDbPoolDataSource;
@@ -181,6 +182,32 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
             detailButtons.get(i).addActionListener(this);
             myTable.setValueAt(detailButtons.get(i), i, 0);
         }
+    }
+
+    protected String getZKasseId() {
+        // query the historical Z_KASSE_ID corresponding to the currently displayed detail rechnung (rechnungsNr)
+        String z_kasse_id = "";
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT z_kasse_id "+
+                "FROM "+tableForMode("abrechnung_tag")+" "+
+                "WHERE rechnungs_nr_von <= ? AND rechnungs_nr_bis >= ?"
+            );
+            pstmtSetInteger(pstmt, 1, rechnungsNr);
+            pstmtSetInteger(pstmt, 2, rechnungsNr);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                z_kasse_id = rs.getString(1);
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return z_kasse_id;
     }
 
     /**

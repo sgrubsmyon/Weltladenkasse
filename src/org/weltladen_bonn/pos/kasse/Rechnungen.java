@@ -576,6 +576,8 @@ public abstract class Rechnungen extends RechnungsGrundlage {
         table.getColumnModel().getColumn(overviewLabels.size()-1).setPreferredWidth(20);
     }
 
+    protected abstract String getZKasseId();
+
     protected void printQuittung() {
             DateTime datet = null;
             if (!datum.equals(""))
@@ -591,7 +593,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             TSETransaction tx = tse.getTransactionByRechNr(rechnungsNr);
             LinkedHashMap<String, String> tseStatusValues = null;
             // TODO once DSFinV-K is finished, obtain TSE values for printed Quittung
-            // not from from currently operated TSE (because they might have been
+            // not from currently operated TSE (because they might have been
             // different in the past for the printed Quittung), but from the corresponding
             // TSE table where the status values are contained for each Tagesabrechnung
             if (tse.inUse()) {
@@ -601,7 +603,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 datet, rechnungsNr, stornoVon,
                 kassierArtikel, mwstValues, zahlungsModus,
                 totalPrice, kundeGibt, rueckgeld,
-                tx, tseStatusValues);
+                tx, getZKasseId(), tseStatusValues);
             myQuittung.printReceipt();
     }
 

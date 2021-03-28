@@ -70,6 +70,11 @@ public class HeutigeRechnungen extends Rechnungen {
         }
     }
 
+    protected String getZKasseId() {
+        // use the currently configured Z_KASSE_ID
+        return bc.Z_KASSE_ID;
+    }
+
     private void stornieren(int stornoRow) {
         Integer rechNr = Integer.parseInt(data.get(stornoRow).get(1).toString());
         String zahlMod = data.get(stornoRow).get(4).toString();
