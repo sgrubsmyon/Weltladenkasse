@@ -55,8 +55,8 @@ public class BaseClass {
     public String LAND;
     public String STNR;
     public String USTID;
-    public String TSE_ID;
-    public String TSE_PD_ENCODING;
+    public Integer TSE_ID = 1;
+    public String TSE_PD_ENCODING = "UTF-8";
     public String KASSE_SW_BRAND;
     public String KASSE_SW_VERSION;
     public String KASSE_SERIENNR;
@@ -261,7 +261,7 @@ public class BaseClass {
             parseErrorMessage(ex, "dateFormatDate4j", this.dateFormatDate4j);
         }
         try { this.delimiter = props.getProperty("delimiter"); } catch (Exception ex) { // for CSV export/import
-        parseErrorMessage(ex, "delimiter", this.delimiter);
+            parseErrorMessage(ex, "delimiter", this.delimiter);
         }
         try { this.rowsPerPage = Integer.parseInt(props.getProperty("rowsPerPage")); } catch (Exception ex) {
             parseErrorMessage(ex, "rowsPerPage", this.rowsPerPage);
@@ -316,7 +316,7 @@ public class BaseClass {
         try { this.USTID = props.getProperty("USTID"); } catch (Exception ex) {
             parseErrorMessage(ex, "USTID", this.USTID);
         }
-        try { this.TSE_ID = props.getProperty("TSE_ID"); } catch (Exception ex) {
+        try { this.TSE_ID = Integer.parseInt(props.getProperty("TSE_ID")); } catch (Exception ex) {
             parseErrorMessage(ex, "TSE_ID", this.TSE_ID);
         }
         try { this.TSE_PD_ENCODING = props.getProperty("TSE_PD_ENCODING"); } catch (Exception ex) {
