@@ -1,7 +1,6 @@
 package org.weltladen_bonn.pos.kasse;
 
 import org.weltladen_bonn.pos.WindowContent;
-import org.weltladen_bonn.pos.LongOperationIndicatorDialog;
 
 import java.io.IOException;
 import java.io.File;
@@ -325,34 +324,14 @@ public class WeltladenTSE extends WindowContent {
         }
     }
 
-    private LongOperationIndicatorDialog installLongOperationIndicatorDialogWithCancelButton() {
-        JPanel buttonPanel = new JPanel();
-        JButton cancelButton = new JButton("Abbrechen");
-        cancelButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                logger.info("User canceled the start-up workaround loop");
-                disconnectFromTSE();
-                System.exit(0);
-            }
-        });
-        buttonPanel.add(cancelButton);
-        LongOperationIndicatorDialog dialog = new LongOperationIndicatorDialog(
-            new JLabel("Versuche, Verbindung zur TSE aufzubauen (kann ca. 30-60 Sekunden dauern)..."),
-            buttonPanel
-        );
-        return dialog;
-    }
-
     private void tseStartUpWorkaroundLoop() {
         byte[] timeAdminPIN = readTimeAdminPINFromFile();
-        LongOperationIndicatorDialog dialog = installLongOperationIndicatorDialogWithCancelButton();
         boolean tseOperational = false;
         while (!tseOperational) {
             logger.info("Trying to authenticate as user 'TimeAdmin'...");
             String message = authenticateAs("TimeAdmin", timeAdminPIN, false);
             if (message.equals("OK")) {
                 logger.info("Success!!! Now we can continue normally...");
-                dialog.dispose();
                 logOutAs("TimeAdmin");
                 tseOperational = true;
             } else {
@@ -782,14 +761,12 @@ public class WeltladenTSE extends WindowContent {
         String error = "";
         System.out.println("\nBEFORE initializePinValues():");
         printStatusValues();
-        LongOperationIndicatorDialog dialog = installLongOperationIndicatorDialogWithCancelButton();
         boolean tseOperational = false;
         while (!tseOperational) {
             logger.info("Trying to set PIN and PUK...");
             try {
                 tse.initializePinValues(adminPIN, adminPUK, timeAdminPIN, timeAdminPUK);
                 logger.info("Success!!! Now we can continue normally...");
-                dialog.dispose();
                 tseOperational = true;
             } catch (ErrorTSECommandDataInvalid ex) {
                 error = "Data given to TSE's initializePinValues() invalid";
