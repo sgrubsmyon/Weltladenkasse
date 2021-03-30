@@ -30,13 +30,14 @@ import org.jopendocument.model.OpenDocument;
 import org.jopendocument.print.ODTPrinter;
 
 // EPSON ESC/POS printing:
-import com.github.anastaciocintra.output.PrinterOutputStream;
 import com.github.anastaciocintra.escpos.EscPos;
-import com.github.anastaciocintra.escpos.EscPos.CharacterCodeTable;
 import com.github.anastaciocintra.escpos.EscPosConst;
-import com.github.anastaciocintra.escpos.Style;
+import com.github.anastaciocintra.escpos.EscPos.CharacterCodeTable;
+// import com.github.anastaciocintra.escpos.Style;
 import com.github.anastaciocintra.escpos.PrintModeStyle;
 import com.github.anastaciocintra.escpos.PrintModeStyle.FontName;
+import com.github.anastaciocintra.output.PrinterOutputStream;
+import com.github.anastaciocintra.escpos.barcode.QRCode;
 
 // Logging:
 import org.apache.logging.log4j.LogManager;
@@ -80,6 +81,7 @@ public class Quittung extends WindowContent {
     private String shopAddress = String.join(" ", String.join(", ", bc.STRASSE, bc.PLZ), bc.ORT);
     private String shopPhone = "Telefon: 0228 / 69 70 52";
     private String shopURL = "www.weltladen-bonn.org";
+    private String qrCodeVersion = "V0"; // defined in DSFinV-K, update it here if it ever changes in DSFinV-K
 
     /**
      *    The constructor.
@@ -112,6 +114,11 @@ public class Quittung extends WindowContent {
 
         // printQuittungWithEscPos();
         // writeQuittungToDeviceFile();
+    }
+
+    public void printReceipt() {
+        // printQuittungWithSofficeTemplate(); // old printing with LibreOffice template file
+        printQuittungWithEscPos(); // new printing (much faster and higher quality) with EPSON ESC/POS driver
     }
 
     private String saveSpaceInMenge(String menge) {
@@ -147,10 +154,10 @@ public class Quittung extends WindowContent {
             printEscPosItems(escpos);
             printEscPosTotals(escpos);
             printEscPosTSEValues(escpos);
+            printEscPosTSEQRCode(escpos);
             
             escpos.feed(6).cut(EscPos.CutMode.FULL);
             escpos.close();
-
         } catch (IOException ex) {
             logger.error("{}", ex);
         }
@@ -561,12 +568,14 @@ public class Quittung extends WindowContent {
                 logger.debug("{}", indent + spaceBetweenStrings(
                     "Transaktionsnr.:", tx.txNumber.toString()
                 ));
-                logger.debug("{}", indent + leftAlignedString(
-                    "Kassen-Seriennr. (clientID):"
-                ));
-                logger.debug("{}", indent + rightAlignedString(
-                    z_kasse_id
-                ));
+                if (z_kasse_id != null) {
+                    logger.debug("{}", indent + leftAlignedString(
+                        "Kassen-Seriennr. (clientID):"
+                    ));
+                    logger.debug("{}", indent + rightAlignedString(
+                        z_kasse_id
+                    ));
+                }
                 if (tseStatusValues != null) {
                     String serial_id = tseStatusValues.get("Seriennummer der TSE (Hex)");
                     int chars = 16; // print first 16 chars on first row
@@ -585,9 +594,45 @@ public class Quittung extends WindowContent {
         }
     }
 
-    public void printReceipt() {
-        // printQuittungWithSofficeTemplate(); // old printing with LibreOffice template file
-        printQuittungWithEscPos(); // new printing (much faster and higher quality) with EPSON ESC/POS driver
+    private void printEscPosTSEQRCode(EscPos escpos) throws IOException, UnsupportedEncodingException {
+        // tx != null means there are TSE data at all (not prior to 2021-04-01)
+        // tseError == null means TSE has not failed
+        // z_kasse_id != null && tseStatusValues != null means the required data for QR code are there
+        if (tx != null && tx.tseError == null && z_kasse_id != null && tseStatusValues != null) {
+            escpos.feed(1);
+            QRCode qrcode = new QRCode();
+            qrcode.setJustification(EscPosConst.Justification.Center); // hope that works (QR code must not start too far left in unprintable area)
+            // qrcode.setJustification(EscPosConst.Justification.Right); // hope that works (QR code must not start too far left in unprintable area)
+            // qrcode.setSize(1); // can experiment with this if QR code does not fit
+
+            // as defined by DSFinV-K, Anhang I, Punkt 2:
+            // <qr-code-version>;<kassen-seriennummer>;<processType>;<processData>;
+            // <transaktions-nummer>;<signatur-zaehler>;<start-zeit>;<log-time>;
+            // <sig-alg>;<log-time-format>;<signatur>;<public-key>
+            String kassenSeriennummer = z_kasse_id;
+            String processType = tx.processType;
+            String processData = tx.processData;
+            String transaktionsNummer = tx.txNumber.toString();
+            String signaturZaehler = tx.sigCounter.toString();
+            String startZeit = tx.startTimeString;
+            String logTime = tx.endTimeString;
+            String sigAlg = tseStatusValues.get("Signatur-Algorithmus");
+            String logTimeFormat = tseStatusValues.get("Zeitformat");
+            String signatur = tx.signatureBase64;
+            String publicKey = tseStatusValues.get("Öffentlicher Schlüssel (Base64)");
+            String qrcodeString = String.join(";", qrCodeVersion, kassenSeriennummer,
+                processType, processData, transaktionsNummer, signaturZaehler,
+                startZeit, logTime, sigAlg, logTimeFormat,
+                signatur, publicKey);
+            
+            // "V0;955002-00;Kassenbeleg-V1;Beleg^0.00_2.55_0.00_0.00_0.00^2.55:Bar;18;112;2019-07-10T18:41:04.000Z;2019-07-10T18:41:04.000Z;ecdsa-plain-SHA256;unixTime;MEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIMWRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==;BHhWOeisRpPBTGQ1W4VUH95TXx2GARf8e2NYZXJoInjtGqnxJ8sZ3CQpYgjI+LYEmW5A37sLWHsyU7nSJUBemyU=";
+
+            escpos.write(qrcode, qrcodeString);
+
+            // -------------------------------------------------------------
+
+            logger.debug("{}", qrcodeString);
+        }
     }
 
     // private void writeQuittungToDeviceFile() {
@@ -714,306 +759,311 @@ public class Quittung extends WindowContent {
     //     }
     // }
 
-    private Sheet createSheetFromTemplate() {
-        final Sheet sheet;
-        try {
-            String filename = "vorlagen"+bc.fileSep+"Quittung.ods";
-            File infile = new File(filename);
-            if (!infile.exists()){
-                JOptionPane.showMessageDialog(this,
-                        "Fehler: Quittungsvorlage "+
-                        "'"+filename+"' nicht gefunden.",
-                        "Fehler", JOptionPane.ERROR_MESSAGE);
-                return null;
-            }
-            sheet = SpreadSheet.createFromFile(infile).getSheet(0);
-        } catch (IOException ex) {
-            logger.error("Exception:", ex);
-            return null;
-        }
-        return sheet;
-    }
 
-    private void editHeader(Sheet sheet) {
-        // if this is not the first page:
-        rowOffset = 7;
-        if (artikelIndex > 0){
-            // Delete header
-            sheet.removeRows(0, rowOffset); // last row is exclusive
-            rowOffset = 0;
-        } else {
-            // Fill header
-            if (datetime != null) {
-                sheet.getCellAt("A5").setValue(datetime.format(bc.dateFormatDate4j));
-            }
-            if (rechnungsNr != null) {
-                sheet.getCellAt("D6").setValue(rechnungsNr);
-            } else {
-                sheet.getCellAt("A6").setValue("");
-            }
-            rowOffset = 7;
-        }
-    }
+    // ------------------------------------------------------------------------------------
 
-    private int insertItems(Sheet sheet) {
-        int row = rowOffset; // start here in ods document
-        for (int i=artikelIndex; i<kassierArtikel.size(); i++){
-            sheet.setValueAt(kassierArtikel.get(i).getName(), 0, row); // name on full row
-            row++; // price infos on next row:
-            sheet.setValueAt(saveSpaceInMenge(kassierArtikel.get(i).getMenge()), 0, row);
-            sheet.setValueAt(kassierArtikel.get(i).getStueckzahl().toString() + " x", 1, row);
-            sheet.setValueAt(kassierArtikel.get(i).getEinzelPreis(), 2, row);
-            sheet.setValueAt(kassierArtikel.get(i).getGesPreis(), 3, row);
-            Integer mwstIndex = mwstList.indexOf(kassierArtikel.get(i).getMwst()) + 1;
-            sheet.setValueAt(mwstIndex, 4, row);
-            row++;
-            artikelIndex = i+1; // index of next item
-            // if list becomes too long: print this sheet and create new sheet
-            if (row >= 200+rowOffset){
-                break;
-            }
-        }
-        return row; // first empty row
-    }
+    // Deprecated LibreOffice printing, but keep it, might be useful later:
 
-    private Integer editFooter(Sheet sheet) {
-        Integer row = 0;
-        // if this is not the last page:
-        if (artikelIndex < kassierArtikel.size()){
-            // Delete footer
-            sheet.removeRow(201+rowOffset);
-            row = null;
-        } else {
-            // Fill footer
-            if ( zahlungsModus.equals("bar") ){
-                sheet.setValueAt("Bar", 0, 201+rowOffset);
-                if (kundeGibt != null && rueckgeld != null){
-                    sheet.setValueAt("Kunde gibt", 0, 202+rowOffset);
-                    sheet.setValueAt("Rückgeld", 0, 203+rowOffset);
-                    sheet.setValueAt(kundeGibt, 3, 202+rowOffset);
-                    sheet.setValueAt(rueckgeld, 3, 203+rowOffset);
-                }
-            } else if ( zahlungsModus.equals("ec") ){
-                sheet.setValueAt("EC", 0, 201+rowOffset);
-            }
-            if (stornoVon != null) {
-                sheet.setValueAt("!!! STORNO VON !!!", 0, 202+rowOffset);
-                sheet.setValueAt("!!! RECHN.-NR. "+stornoVon+" !!!", 0, 203+rowOffset);
-            }
-            sheet.setValueAt(totalPrice, 2, 201+rowOffset);
-            // fill mwst values
-            row = 205+rowOffset; // now at header of mwst values
-            sheet.setValueAt("Enthaltene MwSt.:", 0, row);
-            row++;
-            sheet.setValueAt("Satz", 0, row);
-            sheet.setValueAt("Netto", 1, row);
-            sheet.setValueAt("Steuer", 2, row);
-            sheet.setValueAt("Brutto", 3, row);
-            row++;
-            Integer mwstIndex = 1;
-            for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : mwstValues.entrySet()) {
-                BigDecimal steuersatz = entry.getKey();
-                Vector<BigDecimal> values = entry.getValue();
-                sheet.setValueAt(bc.vatFormatter(steuersatz), 0, row);
-                int col = 1;
-                for (int i = 0; i < values.size(); i++) {
-                    BigDecimal val = values.get(i);
-                    sheet.setValueAt(val, col, row);
-                    col++;
-                }
-                sheet.setValueAt(mwstIndex, col, row);
-                row++;
-                mwstIndex++;
-            }
-            if ( zahlungsModus.equals("ec") && stornoVon == null ){
-                // Delete rows holding "Kunde gibt" and "Rückgeld" in case of Bar (in case of EC empty)
-                sheet.removeRows(202+rowOffset, 204+rowOffset); // last row is exclusive
-                row -= 2;
-            }
-        }
-        return row; // first empty row
-    }
+    // private Sheet createSheetFromTemplate() {
+    //     final Sheet sheet;
+    //     try {
+    //         String filename = "vorlagen"+bc.fileSep+"Quittung.ods";
+    //         File infile = new File(filename);
+    //         if (!infile.exists()){
+    //             JOptionPane.showMessageDialog(this,
+    //                     "Fehler: Quittungsvorlage "+
+    //                     "'"+filename+"' nicht gefunden.",
+    //                     "Fehler", JOptionPane.ERROR_MESSAGE);
+    //             return null;
+    //         }
+    //         sheet = SpreadSheet.createFromFile(infile).getSheet(0);
+    //     } catch (IOException ex) {
+    //         logger.error("Exception:", ex);
+    //         return null;
+    //     }
+    //     return sheet;
+    // }
 
-    private int spreadTextOverSeveralRows(Sheet sheet, String text, int col, int startRow, int firstBreakAfterChar, int charsPerRow) {
-        int row = startRow;
-        int pos = 0;
-        int textLength = text.length();
-        String putText = text.substring(pos, firstBreakAfterChar > textLength ? textLength : firstBreakAfterChar);
-        sheet.setValueAt(putText, col, row);
-        pos = firstBreakAfterChar;
-        row++;
-        while (textLength > pos) {
-            putText = text.substring(pos, pos + charsPerRow > textLength ? textLength : pos + charsPerRow);
-            sheet.setValueAt(putText, col, row);
-            pos = pos + charsPerRow;
-            row++;
-        }
-        return row;
-    }
+    // private void editHeader(Sheet sheet) {
+    //     // if this is not the first page:
+    //     rowOffset = 7;
+    //     if (artikelIndex > 0){
+    //         // Delete header
+    //         sheet.removeRows(0, rowOffset); // last row is exclusive
+    //         rowOffset = 0;
+    //     } else {
+    //         // Fill header
+    //         if (datetime != null) {
+    //             sheet.getCellAt("A5").setValue(datetime.format(bc.dateFormatDate4j));
+    //         }
+    //         if (rechnungsNr != null) {
+    //             sheet.getCellAt("D6").setValue(rechnungsNr);
+    //         } else {
+    //             sheet.getCellAt("A6").setValue("");
+    //         }
+    //         rowOffset = 7;
+    //     }
+    // }
 
-    private void insertTSEValues(Sheet sheet, int continueAtRow) {
-        int row = continueAtRow + 1; // leave one row empty for spacing
-        if (tx != null && tx.tseError != null) { // means TSE has failed
-            sheet.setValueAt("--- TSE ausgefallen!!! ---", 0, row);
-        } else {
-            sheet.setValueAt("--- TSE ---", 0, row);
-        }
-        row++;
-        if (tx == null) {
-            sheet.setValueAt("TSE-Daten nicht verfügbar", 0, row);
-        } else {
-            sheet.setValueAt("Start:", 0, row);
-            String dateString = "???";
-            try {
-                Date date = new SimpleDateFormat(WeltladenTSE.dateFormatDSFinVK).parse(tx.startTimeString);
-                dateString = new SimpleDateFormat(WeltladenTSE.dateFormatQuittung).format(date);
-            } catch (ParseException ex) {
-                logger.error("{}", ex);
-            }
-            sheet.setValueAt(dateString, 4, row);
-            row++;
-            sheet.setValueAt("Ende:", 0, row);
-            dateString = "???";
-            try {
-                Date date = new SimpleDateFormat(WeltladenTSE.dateFormatDSFinVK).parse(tx.endTimeString);
-                dateString = new SimpleDateFormat(WeltladenTSE.dateFormatQuittung).format(date);
-            } catch (ParseException ex) {
-                logger.error("{}", ex);
-            }
-            sheet.setValueAt(dateString, 4, row);
-            row++;
-            if (tx.tseError == null) { // if TSE has not failed
-                sheet.setValueAt("Transaktionsnr.:", 0, row);
-                sheet.setValueAt(tx.txNumber, 4, row);
-                row++;
-                sheet.setValueAt("Kassen-Seriennr. (clientID):", 0, row);
-                row++;
-                sheet.setValueAt(z_kasse_id, 4, row);
-                if (tseStatusValues != null) {
-                    row++;
-                    sheet.setValueAt("TSE-Seriennr.:", 0, row);
-                    row = spreadTextOverSeveralRows(
-                        sheet, tseStatusValues.get("Seriennummer der TSE (Hex)"),
-                        4, row, 10, 30
-                    );
-                }
-            }
-        }
-    }
+    // private int insertItems(Sheet sheet) {
+    //     int row = rowOffset; // start here in ods document
+    //     for (int i=artikelIndex; i<kassierArtikel.size(); i++){
+    //         sheet.setValueAt(kassierArtikel.get(i).getName(), 0, row); // name on full row
+    //         row++; // price infos on next row:
+    //         sheet.setValueAt(saveSpaceInMenge(kassierArtikel.get(i).getMenge()), 0, row);
+    //         sheet.setValueAt(kassierArtikel.get(i).getStueckzahl().toString() + " x", 1, row);
+    //         sheet.setValueAt(kassierArtikel.get(i).getEinzelPreis(), 2, row);
+    //         sheet.setValueAt(kassierArtikel.get(i).getGesPreis(), 3, row);
+    //         Integer mwstIndex = mwstList.indexOf(kassierArtikel.get(i).getMwst()) + 1;
+    //         sheet.setValueAt(mwstIndex, 4, row);
+    //         row++;
+    //         artikelIndex = i+1; // index of next item
+    //         // if list becomes too long: print this sheet and create new sheet
+    //         if (row >= 200+rowOffset){
+    //             break;
+    //         }
+    //     }
+    //     return row; // first empty row
+    // }
 
-    void printQuittungFromJava(File tmpFile) {
-        /** Complicated method: printing from Java (doesn't work) */
-        final OpenDocument doc = new OpenDocument();
-        doc.loadFrom(tmpFile);
-        //doc.loadFrom(new File("/tmp/Untitled.ods"));
+    // private Integer editFooter(Sheet sheet) {
+    //     Integer row = 0;
+    //     // if this is not the last page:
+    //     if (artikelIndex < kassierArtikel.size()){
+    //         // Delete footer
+    //         sheet.removeRow(201+rowOffset);
+    //         row = null;
+    //     } else {
+    //         // Fill footer
+    //         if ( zahlungsModus.equals("bar") ){
+    //             sheet.setValueAt("Bar", 0, 201+rowOffset);
+    //             if (kundeGibt != null && rueckgeld != null){
+    //                 sheet.setValueAt("Kunde gibt", 0, 202+rowOffset);
+    //                 sheet.setValueAt("Rückgeld", 0, 203+rowOffset);
+    //                 sheet.setValueAt(kundeGibt, 3, 202+rowOffset);
+    //                 sheet.setValueAt(rueckgeld, 3, 203+rowOffset);
+    //             }
+    //         } else if ( zahlungsModus.equals("ec") ){
+    //             sheet.setValueAt("EC", 0, 201+rowOffset);
+    //         }
+    //         if (stornoVon != null) {
+    //             sheet.setValueAt("!!! STORNO VON !!!", 0, 202+rowOffset);
+    //             sheet.setValueAt("!!! RECHN.-NR. "+stornoVon+" !!!", 0, 203+rowOffset);
+    //         }
+    //         sheet.setValueAt(totalPrice, 2, 201+rowOffset);
+    //         // fill mwst values
+    //         row = 205+rowOffset; // now at header of mwst values
+    //         sheet.setValueAt("Enthaltene MwSt.:", 0, row);
+    //         row++;
+    //         sheet.setValueAt("Satz", 0, row);
+    //         sheet.setValueAt("Netto", 1, row);
+    //         sheet.setValueAt("Steuer", 2, row);
+    //         sheet.setValueAt("Brutto", 3, row);
+    //         row++;
+    //         Integer mwstIndex = 1;
+    //         for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : mwstValues.entrySet()) {
+    //             BigDecimal steuersatz = entry.getKey();
+    //             Vector<BigDecimal> values = entry.getValue();
+    //             sheet.setValueAt(bc.vatFormatter(steuersatz), 0, row);
+    //             int col = 1;
+    //             for (int i = 0; i < values.size(); i++) {
+    //                 BigDecimal val = values.get(i);
+    //                 sheet.setValueAt(val, col, row);
+    //                 col++;
+    //             }
+    //             sheet.setValueAt(mwstIndex, col, row);
+    //             row++;
+    //             mwstIndex++;
+    //         }
+    //         if ( zahlungsModus.equals("ec") && stornoVon == null ){
+    //             // Delete rows holding "Kunde gibt" and "Rückgeld" in case of Bar (in case of EC empty)
+    //             sheet.removeRows(202+rowOffset, 204+rowOffset); // last row is exclusive
+    //             row -= 2;
+    //         }
+    //     }
+    //     return row; // first empty row
+    // }
 
-        // Print.
-        ODTPrinter printer = new ODTPrinter(doc);
-        PrinterJob job = PrinterJob.getPrinterJob();
+    // private int spreadTextOverSeveralRows(Sheet sheet, String text, int col, int startRow, int firstBreakAfterChar, int charsPerRow) {
+    //     int row = startRow;
+    //     int pos = 0;
+    //     int textLength = text.length();
+    //     String putText = text.substring(pos, firstBreakAfterChar > textLength ? textLength : firstBreakAfterChar);
+    //     sheet.setValueAt(putText, col, row);
+    //     pos = firstBreakAfterChar;
+    //     row++;
+    //     while (textLength > pos) {
+    //         putText = text.substring(pos, pos + charsPerRow > textLength ? textLength : pos + charsPerRow);
+    //         sheet.setValueAt(putText, col, row);
+    //         pos = pos + charsPerRow;
+    //         row++;
+    //     }
+    //     return row;
+    // }
 
-        // Get a handle on the printer, by requiring a printer with the given name
-        PrintServiceAttributeSet attrSet = new HashPrintServiceAttributeSet();
-        attrSet.add(new PrinterName(bc.printerName, null));
-        PrintService[] pservices = PrintServiceLookup.lookupPrintServices(null, attrSet);
-        PrintService ps;
-        try {
-            ps = pservices[0];
-            job.setPrintService(ps);   // Try setting the printer you want
-        } catch (ArrayIndexOutOfBoundsException e){
-            System.err.println("Error: No printer named '"+bc.printerName+"', using default printer.");
-        } catch (PrinterException exception) {
-            System.err.println("Printing error: " + exception);
-        }
-        PageFormat pageFormat = job.defaultPage();
-        Paper paper = pageFormat.getPaper();
-        paper.setSize(76. / 25.4 * 72., 279.4 / 25.4 * 72.);
-        paper.setImageableArea(8. / 25.4 * 72., 3. / 25.4 * 72., 68. / 25.4 * 72., 259.4 / 25.4 * 72.);
-        pageFormat.setPaper(paper);
+    // private void insertTSEValues(Sheet sheet, int continueAtRow) {
+    //     int row = continueAtRow + 1; // leave one row empty for spacing
+    //     if (tx != null && tx.tseError != null) { // means TSE has failed
+    //         sheet.setValueAt("--- TSE ausgefallen!!! ---", 0, row);
+    //     } else {
+    //         sheet.setValueAt("--- TSE ---", 0, row);
+    //     }
+    //     row++;
+    //     if (tx == null) {
+    //         sheet.setValueAt("TSE-Daten nicht verfügbar", 0, row);
+    //     } else {
+    //         sheet.setValueAt("Start:", 0, row);
+    //         String dateString = "???";
+    //         try {
+    //             Date date = new SimpleDateFormat(WeltladenTSE.dateFormatDSFinVK).parse(tx.startTimeString);
+    //             dateString = new SimpleDateFormat(WeltladenTSE.dateFormatQuittung).format(date);
+    //         } catch (ParseException ex) {
+    //             logger.error("{}", ex);
+    //         }
+    //         sheet.setValueAt(dateString, 4, row);
+    //         row++;
+    //         sheet.setValueAt("Ende:", 0, row);
+    //         dateString = "???";
+    //         try {
+    //             Date date = new SimpleDateFormat(WeltladenTSE.dateFormatDSFinVK).parse(tx.endTimeString);
+    //             dateString = new SimpleDateFormat(WeltladenTSE.dateFormatQuittung).format(date);
+    //         } catch (ParseException ex) {
+    //             logger.error("{}", ex);
+    //         }
+    //         sheet.setValueAt(dateString, 4, row);
+    //         row++;
+    //         if (tx.tseError == null) { // if TSE has not failed
+    //             sheet.setValueAt("Transaktionsnr.:", 0, row);
+    //             sheet.setValueAt(tx.txNumber, 4, row);
+    //             row++;
+    //             sheet.setValueAt("Kassen-Seriennr. (clientID):", 0, row);
+    //             row++;
+    //             sheet.setValueAt(z_kasse_id, 4, row);
+    //             if (tseStatusValues != null) {
+    //                 row++;
+    //                 sheet.setValueAt("TSE-Seriennr.:", 0, row);
+    //                 row = spreadTextOverSeveralRows(
+    //                     sheet, tseStatusValues.get("Seriennummer der TSE (Hex)"),
+    //                     4, row, 10, 30
+    //                 );
+    //             }
+    //         }
+    //     }
+    // }
 
-        // Book with setPageable instead of setPrintable
-        Book book = new Book();//java.awt.print.Book
-        book.append(printer, pageFormat);
-        job.setPageable(book);
+    // void printQuittungFromJava(File tmpFile) {
+    //     /** Complicated method: printing from Java (doesn't work) */
+    //     final OpenDocument doc = new OpenDocument();
+    //     doc.loadFrom(tmpFile);
+    //     //doc.loadFrom(new File("/tmp/Untitled.ods"));
 
-        try {
-            job.print();   // Actual print command
-        } catch (PrinterException exception) {
-            System.err.println("Printing error: " + exception);
-        }
-    }
+    //     // Print.
+    //     ODTPrinter printer = new ODTPrinter(doc);
+    //     PrinterJob job = PrinterJob.getPrinterJob();
 
-    private void printQuittungWithSoffice(String filename) {
-        /** Simple method: printing with openoffice command line tool 'soffice' */
-        String program = constructProgramPath(bc.sofficePath, "soffice");
-        String[] executeCmd = new String[] {program, "--headless",
-            "--pt", bc.printerName, filename};
-        String log = "Print command: ";
-        for (String s : executeCmd){
-            log += s+" ";
-        }
-        logger.info(log);
-        try {
-            Runtime shell = Runtime.getRuntime();
-            Process proc = shell.exec(executeCmd);
-            int processComplete = proc.waitFor();
-            if (processComplete == 0) {
-                logger.info("Printing of file '"+filename+"' with soffice was successful");
-            } else {
-                logger.info("Could not print file '"+filename+"' with soffice");
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
+    //     // Get a handle on the printer, by requiring a printer with the given name
+    //     PrintServiceAttributeSet attrSet = new HashPrintServiceAttributeSet();
+    //     attrSet.add(new PrinterName(bc.printerName, null));
+    //     PrintService[] pservices = PrintServiceLookup.lookupPrintServices(null, attrSet);
+    //     PrintService ps;
+    //     try {
+    //         ps = pservices[0];
+    //         job.setPrintService(ps);   // Try setting the printer you want
+    //     } catch (ArrayIndexOutOfBoundsException e){
+    //         System.err.println("Error: No printer named '"+bc.printerName+"', using default printer.");
+    //     } catch (PrinterException exception) {
+    //         System.err.println("Printing error: " + exception);
+    //     }
+    //     PageFormat pageFormat = job.defaultPage();
+    //     Paper paper = pageFormat.getPaper();
+    //     paper.setSize(76. / 25.4 * 72., 279.4 / 25.4 * 72.);
+    //     paper.setImageableArea(8. / 25.4 * 72., 3. / 25.4 * 72., 68. / 25.4 * 72., 259.4 / 25.4 * 72.);
+    //     pageFormat.setPaper(paper);
 
-    private void printQuittungWithSofficeTemplate() {
-        artikelIndex = 0;
-        while (artikelIndex < kassierArtikel.size()) {
-            // Create a new sheet from the template file
-            final Sheet sheet = createSheetFromTemplate();
-            if (sheet == null) return;
+    //     // Book with setPageable instead of setPrintable
+    //     Book book = new Book();//java.awt.print.Book
+    //     book.append(printer, pageFormat);
+    //     job.setPageable(book);
 
-            editHeader(sheet);
+    //     try {
+    //         job.print();   // Actual print command
+    //     } catch (PrinterException exception) {
+    //         System.err.println("Printing error: " + exception);
+    //     }
+    // }
 
-            // Insert items
-            int startRemRow = insertItems(sheet);
-            int endRemRow = 200+rowOffset; // delete normally up to row 207
+    // private void printQuittungWithSoffice(String filename) {
+    //     /** Simple method: printing with openoffice command line tool 'soffice' */
+    //     String program = constructProgramPath(bc.sofficePath, "soffice");
+    //     String[] executeCmd = new String[] {program, "--headless",
+    //         "--pt", bc.printerName, filename};
+    //     String log = "Print command: ";
+    //     for (String s : executeCmd){
+    //         log += s+" ";
+    //     }
+    //     logger.info(log);
+    //     try {
+    //         Runtime shell = Runtime.getRuntime();
+    //         Process proc = shell.exec(executeCmd);
+    //         int processComplete = proc.waitFor();
+    //         if (processComplete == 0) {
+    //             logger.info("Printing of file '"+filename+"' with soffice was successful");
+    //         } else {
+    //             logger.info("Could not print file '"+filename+"' with soffice");
+    //         }
+    //     } catch (Exception ex) {
+    //         ex.printStackTrace();
+    //     }
+    // }
+
+    // private void printQuittungWithSofficeTemplate() {
+    //     artikelIndex = 0;
+    //     while (artikelIndex < kassierArtikel.size()) {
+    //         // Create a new sheet from the template file
+    //         final Sheet sheet = createSheetFromTemplate();
+    //         if (sheet == null) return;
+
+    //         editHeader(sheet);
+
+    //         // Insert items
+    //         int startRemRow = insertItems(sheet);
+    //         int endRemRow = 200+rowOffset; // delete normally up to row 207
             
-            Integer continueAtRow = editFooter(sheet);
+    //         Integer continueAtRow = editFooter(sheet);
 
-            if (continueAtRow != null) { // if this is the last file written in case of multiple files
-                if (tx != null && tx.training) { // means transaction was done in training mode
-                    continueAtRow++; // leave one row empty for spacing
-                    sheet.setValueAt("!!! TRAININGSMODUS !!!", 0, continueAtRow);
-                    continueAtRow++;
-                }
-                insertTSEValues(sheet, continueAtRow);
-            }
+    //         if (continueAtRow != null) { // if this is the last file written in case of multiple files
+    //             if (tx != null && tx.training) { // means transaction was done in training mode
+    //                 continueAtRow++; // leave one row empty for spacing
+    //                 sheet.setValueAt("!!! TRAININGSMODUS !!!", 0, continueAtRow);
+    //                 continueAtRow++;
+    //             }
+    //             insertTSEValues(sheet, continueAtRow);
+    //         }
 
-            // Remove all empty rows between item list and footer
-            sheet.removeRows(startRemRow, endRemRow); // last row is exclusive
+    //         // Remove all empty rows between item list and footer
+    //         sheet.removeRows(startRemRow, endRemRow); // last row is exclusive
 
-            try {
-                // Save to temp file.
-                File tmpFile = File.createTempFile("Quittung", ".ods");
-                //OOUtils.open(sheet.getSpreadSheet().saveAs(tmpFile)); // for testing
-                sheet.getSpreadSheet().saveAs(tmpFile);
+    //         try {
+    //             // Save to temp file.
+    //             File tmpFile = File.createTempFile("Quittung", ".ods");
+    //             //OOUtils.open(sheet.getSpreadSheet().saveAs(tmpFile)); // for testing
+    //             sheet.getSpreadSheet().saveAs(tmpFile);
 
-                // Complicated method: printing from Java (doesn't work)
-                //printQuittungFromJava(tmpFile);
+    //             // Complicated method: printing from Java (doesn't work)
+    //             //printQuittungFromJava(tmpFile);
 
-                // Simple method: printing with openoffice command line tool 'soffice'
-                printQuittungWithSoffice(tmpFile.getAbsolutePath());
+    //             // Simple method: printing with openoffice command line tool 'soffice'
+    //             printQuittungWithSoffice(tmpFile.getAbsolutePath());
 
-                tmpFile.deleteOnExit();
-                //tmpFile.delete();
-            } catch (FileNotFoundException ex) {
-                logger.error("Exception:", ex);
-            } catch (IOException ex) {
-                logger.error("Exception:", ex);
-            }
-        }
-    }
+    //             tmpFile.deleteOnExit();
+    //             //tmpFile.delete();
+    //         } catch (FileNotFoundException ex) {
+    //             logger.error("Exception:", ex);
+    //         } catch (IOException ex) {
+    //             logger.error("Exception:", ex);
+    //         }
+    //     }
+    // }
 
     /**
      *    * Each non abstract class that implements the ActionListener
