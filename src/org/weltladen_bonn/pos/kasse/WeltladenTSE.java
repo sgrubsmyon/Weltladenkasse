@@ -186,13 +186,14 @@ public class WeltladenTSE extends WindowContent {
             checkInitializationStatus();
             updateTSEStatusValues(); // might have changes inside checkInitializationStatus()
             printAllStatusValues();
-            // System.out.println("\n\n*** WRITING FIRST TRANSACTION TO TSE ***");
-            // System.out.println("\n --- Status before: \n");
+            
+            // logger.debug("\n\n*** WRITING FIRST TRANSACTION TO TSE ***");
+            // logger.debug("\n --- Status before: \n");
             // printStatusValues();
             // for (int i = 0; i < 50; i++) {
             // writeTestTransaction();
             // }
-            // System.out.println("\n --- Status after: \n");
+            // logger.debug("\n --- Status after: \n");
             // printStatusValues();
             // exportTransactionData();
 
@@ -725,13 +726,13 @@ public class WeltladenTSE extends WindowContent {
         };
         // Vector<String> interestingValues = new Vector<String>(Arrays.asList(interestingValuesArray));
         for (String s : interestingValuesArray) {
-            System.out.println(s + ": " + statusValues.get(s));
+            logger.debug(s + ": " + statusValues.get(s));
         }
     }
 
      private void printAllStatusValues() {
         for (String k : statusValues.keySet()) {
-            System.out.println(k + ": " + statusValues.get(k));
+            logger.debug(k + ": " + statusValues.get(k));
         }
     }
 
@@ -759,7 +760,7 @@ public class WeltladenTSE extends WindowContent {
 
     public void setPINandPUK(byte[] adminPIN, byte[] adminPUK, byte[] timeAdminPIN, byte[] timeAdminPUK) {
         String error = "";
-        System.out.println("\nBEFORE initializePinValues():");
+        logger.debug("\nBEFORE initializePinValues():");
         printStatusValues();
         boolean tseOperational = false;
         while (!tseOperational && status != TSEStatus.failed) { // status is set to Failed via cancel button on splash screen
@@ -797,7 +798,7 @@ public class WeltladenTSE extends WindowContent {
                 writeTimeAdminPINtoFile(timeAdminPIN);
             }
         }
-        System.out.println("\nAFTER initializePinValues():");
+        logger.debug("\nAFTER initializePinValues():");
         printStatusValues();
     }
 
@@ -989,10 +990,10 @@ public class WeltladenTSE extends WindowContent {
         boolean passed = false;
         String error = "";
         try {
-            System.out.println("\nBEFORE initialize():");
+            logger.debug("\nBEFORE initialize():");
             printStatusValues();
             tse.initialize();
-            System.out.println("\nAFTER initialize():");
+            logger.debug("\nAFTER initialize():");
             printStatusValues();
             passed = true;
         } catch (ErrorSigningSystemOperationDataFailed ex) {
@@ -1064,7 +1065,7 @@ public class WeltladenTSE extends WindowContent {
         boolean passed = false;
         String error = "";
         try {
-            // System.out.println("\nBEFORE updateTime():");
+            // logger.debug("\nBEFORE updateTime():");
             // printStatusValues();
             logger.info("Updating TSE's time...");
             authenticateAs("TimeAdmin", timeAdminPIN, true);
@@ -1072,7 +1073,7 @@ public class WeltladenTSE extends WindowContent {
             logOutAs("TimeAdmin");
             logger.info("...done updating TSE's time");
             nextSyncTime = currentUtcTime + timeSyncInterval;
-            // System.out.println("\nAFTER updateTime():");
+            // logger.debug("\nAFTER updateTime():");
             // printStatusValues();
             passed = true;
         } catch (ErrorUpdateTimeFailed ex) {
@@ -1184,11 +1185,11 @@ public class WeltladenTSE extends WindowContent {
         boolean passed = false;
         String error = "";
         try {
-            System.out.println("\nBEFORE mapERStoKey():");
+            logger.debug("\nBEFORE mapERStoKey():");
             printStatusValues();
             /** Configure the TSE to use the ERS bc.Z_KASSE_ID with the given transaction key (serial number) */
             tse.mapERStoKey(bc.Z_KASSE_ID, serialNumber);
-            System.out.println("\nAFTER mapERStoKey():");
+            logger.debug("\nAFTER mapERStoKey():");
             printStatusValues();
             passed = true;
         } catch (ErrorSigningSystemOperationDataFailed ex) {
@@ -1254,98 +1255,98 @@ public class WeltladenTSE extends WindowContent {
         }
     }
 
-    private void writeTestTransaction() {
-        try {
-            long n = tse.getCurrentNumberOfClients();
-            logger.debug("Number of clients: {}", n);
-            n = tse.getCurrentNumberOfTransactions();
-            logger.debug("Number of transactions: {}", n);
+    // private void writeTestTransaction() {
+    //     try {
+    //         long n = tse.getCurrentNumberOfClients();
+    //         logger.debug("Number of clients: {}", n);
+    //         n = tse.getCurrentNumberOfTransactions();
+    //         logger.debug("Number of transactions: {}", n);
 
-            /** Start a new transaction for the ERS (cash register) */
-            StartTransactionResult result = tse.startTransaction(bc.Z_KASSE_ID, "processData".getBytes(), "whateverProcessType", "additionalData".getBytes());
-            logger.debug("StartTransaction: transactionNumber: {}", result.transactionNumber);
-            logger.debug("StartTransaction: signatureCounter: {}", result.signatureCounter);
-            logger.debug("StartTransaction: logTime (unix): {}", result.logTime);
-            logger.debug("StartTransaction: logTime (cal): {}", unixTimeToCalTime(result.logTime));
-            // logger.debug("StartTransaction: serialNumber (Hex): {}", byteArrayToHexString(result.serialNumber));
-            logger.debug("StartTransaction: signatureValue (Base64): {}", byteArrayToBase64String(result.signatureValue));
-            logger.debug("StartTransaction: signatureValue (Hex): {}", byteArrayToHexString(result.signatureValue));
+    //         /** Start a new transaction for the ERS (cash register) */
+    //         StartTransactionResult result = tse.startTransaction(bc.Z_KASSE_ID, "processData".getBytes(), "whateverProcessType", "additionalData".getBytes());
+    //         logger.debug("StartTransaction: transactionNumber: {}", result.transactionNumber);
+    //         logger.debug("StartTransaction: signatureCounter: {}", result.signatureCounter);
+    //         logger.debug("StartTransaction: logTime (unix): {}", result.logTime);
+    //         logger.debug("StartTransaction: logTime (cal): {}", unixTimeToCalTime(result.logTime));
+    //         // logger.debug("StartTransaction: serialNumber (Hex): {}", byteArrayToHexString(result.serialNumber));
+    //         logger.debug("StartTransaction: signatureValue (Base64): {}", byteArrayToBase64String(result.signatureValue));
+    //         logger.debug("StartTransaction: signatureValue (Hex): {}", byteArrayToHexString(result.signatureValue));
 
-            /** again some status information */
-            n = tse.getCurrentNumberOfTransactions();
-            logger.debug("Number of open transactions: {}", n);
+    //         /** again some status information */
+    //         n = tse.getCurrentNumberOfTransactions();
+    //         logger.debug("Number of open transactions: {}", n);
 
-            // /** Update the transaction */
-            // UpdateTransactionResult updRes = tse.updateTransaction(bc.Z_KASSE_ID, result.transactionNumber, new byte[TSE.MAX_SIZE_TRANSPORT_LAYER-100], "anyProcessTypeString");
-            // logger.debug("UpdateTransaction: signatureCounter: {}", updRes.signatureCounter);
-            // logger.debug("UpdateTransaction: logTime: {}", updRes.logTime);
-            // // logger.debug("UpdateTransaction: serialNumber (Hex): {}", byteArrayToHexString(updRes.serialNumber));
-            // logger.debug("UpdateTransaction: signatureValue (Base64): {}", byteArrayToBase64String(updRes.signatureValue));
+    //         // /** Update the transaction */
+    //         // UpdateTransactionResult updRes = tse.updateTransaction(bc.Z_KASSE_ID, result.transactionNumber, new byte[TSE.MAX_SIZE_TRANSPORT_LAYER-100], "anyProcessTypeString");
+    //         // logger.debug("UpdateTransaction: signatureCounter: {}", updRes.signatureCounter);
+    //         // logger.debug("UpdateTransaction: logTime: {}", updRes.logTime);
+    //         // // logger.debug("UpdateTransaction: serialNumber (Hex): {}", byteArrayToHexString(updRes.serialNumber));
+    //         // logger.debug("UpdateTransaction: signatureValue (Base64): {}", byteArrayToBase64String(updRes.signatureValue));
 
-            // /** again some status information */
-            // n = tse.getCurrentNumberOfTransactions();
-            // logger.debug("Number of open transactions: {}", n);
+    //         // /** again some status information */
+    //         // n = tse.getCurrentNumberOfTransactions();
+    //         // logger.debug("Number of open transactions: {}", n);
 
-            /** receive list of all pending transaction numbers */
-            long[] openTransactions = tse.getOpenTransactions();
-            logger.debug("Open transactions: {}", openTransactions);
+    //         /** receive list of all pending transaction numbers */
+    //         long[] openTransactions = tse.getOpenTransactions();
+    //         logger.debug("Open transactions: {}", openTransactions);
 
-            /** Finish the transaction */
-            FinishTransactionResult finRes = tse.finishTransaction(bc.Z_KASSE_ID, result.transactionNumber, "lastData".getBytes(), "maybeYetAnotherProcessType", null);
-            logger.debug("FinishTransaction: signatureCounter: {}", finRes.signatureCounter);
-            logger.debug("FinishTransaction: logTime (unix): {}", finRes.logTime);
-            logger.debug("FinishTransaction: logTime (cal): {}", unixTimeToCalTime(finRes.logTime));
-            logger.debug("FinishTransaction: logTime (cal): {}", unixTimeToCalTime(finRes.logTime, bc.dateFormatJava));
-            // logger.debug("FinishTransaction: serialNumber (Hex): {}", byteArrayToHexString(finRes.serialNumber));
-            logger.debug("FinishTransaction: signatureValue (Base64): {}", byteArrayToBase64String(finRes.signatureValue));
-            logger.debug("FinishTransaction: signatureValue (Hex): {}", byteArrayToHexString(finRes.signatureValue));
+    //         /** Finish the transaction */
+    //         FinishTransactionResult finRes = tse.finishTransaction(bc.Z_KASSE_ID, result.transactionNumber, "lastData".getBytes(), "maybeYetAnotherProcessType", null);
+    //         logger.debug("FinishTransaction: signatureCounter: {}", finRes.signatureCounter);
+    //         logger.debug("FinishTransaction: logTime (unix): {}", finRes.logTime);
+    //         logger.debug("FinishTransaction: logTime (cal): {}", unixTimeToCalTime(finRes.logTime));
+    //         logger.debug("FinishTransaction: logTime (cal): {}", unixTimeToCalTime(finRes.logTime, bc.dateFormatJava));
+    //         // logger.debug("FinishTransaction: serialNumber (Hex): {}", byteArrayToHexString(finRes.serialNumber));
+    //         logger.debug("FinishTransaction: signatureValue (Base64): {}", byteArrayToBase64String(finRes.signatureValue));
+    //         logger.debug("FinishTransaction: signatureValue (Hex): {}", byteArrayToHexString(finRes.signatureValue));
 
-            /** again some status information - should be 0 again */
-            n = tse.getCurrentNumberOfTransactions();
-            logger.debug("Number of open transactions: {}", n);
+    //         /** again some status information - should be 0 again */
+    //         n = tse.getCurrentNumberOfTransactions();
+    //         logger.debug("Number of open transactions: {}", n);
 
-            /** should be empty */
-            openTransactions = tse.getOpenTransactions();
-            logger.debug("Open transactions: {}", openTransactions);
+    //         /** should be empty */
+    //         openTransactions = tse.getOpenTransactions();
+    //         logger.debug("Open transactions: {}", openTransactions);
 
-            byte[] transx = getTransaction(result.transactionNumber);
-            System.out.println(TSEUntar.extractStartTransactionAsASN1(transx));
-            System.out.println(TSEUntar.extractFinishTransactionAsASN1(transx));
-        } catch (ErrorSeApiNotInitialized ex) {
-            logger.fatal("SE API not initialized");
-            logger.fatal("Exception:", ex);
-        } catch (ErrorSecureElementDisabled ex) {
-            logger.fatal("Secure Element disabled");
-            logger.fatal("Exception:", ex);
-        } catch (ErrorStartTransactionFailed ex) {
-            logger.fatal("Start transaction failed");
-            logger.fatal("Exception:", ex);
-        } catch (ErrorRetrieveLogMessageFailed ex) {
-            logger.fatal("Retrieve log message failed");
-            logger.fatal("Exception:", ex);
-        } catch (ErrorStorageFailure ex) {
-            logger.fatal("Storage failure");
-            logger.fatal("Exception:", ex);
-        } catch (ErrorTimeNotSet ex) {
-            logger.fatal("Time not set");
-            logger.fatal("Exception:", ex);
-        } catch (ErrorCertificateExpired ex) {
-            logger.fatal("Certificate expired");
-            logger.fatal("Exception:", ex);
-        } catch (ErrorUpdateTransactionFailed ex) {
-            logger.fatal("Update transaction failed");
-            logger.fatal("Exception:", ex);
-        } catch (ErrorNoTransaction ex) {
-            logger.fatal("No transaction");
-            logger.fatal("Exception:", ex);
-        } catch (ErrorFinishTransactionFailed ex) {
-            logger.fatal("Finish transaction failed");
-            logger.fatal("Exception:", ex);
-        } catch (SEException ex) {
-            logger.fatal("Unknown error during writeTestTransaction(): "+ex.getMessage());
-            logger.fatal("Exception:", ex);
-        }
-    }
+    //         byte[] transx = getTransaction(result.transactionNumber);
+    //         logger.debug(TSEUntar.extractStartTransactionAsASN1(transx));
+    //         logger.debug(TSEUntar.extractFinishTransactionAsASN1(transx));
+    //     } catch (ErrorSeApiNotInitialized ex) {
+    //         logger.fatal("SE API not initialized");
+    //         logger.fatal("Exception:", ex);
+    //     } catch (ErrorSecureElementDisabled ex) {
+    //         logger.fatal("Secure Element disabled");
+    //         logger.fatal("Exception:", ex);
+    //     } catch (ErrorStartTransactionFailed ex) {
+    //         logger.fatal("Start transaction failed");
+    //         logger.fatal("Exception:", ex);
+    //     } catch (ErrorRetrieveLogMessageFailed ex) {
+    //         logger.fatal("Retrieve log message failed");
+    //         logger.fatal("Exception:", ex);
+    //     } catch (ErrorStorageFailure ex) {
+    //         logger.fatal("Storage failure");
+    //         logger.fatal("Exception:", ex);
+    //     } catch (ErrorTimeNotSet ex) {
+    //         logger.fatal("Time not set");
+    //         logger.fatal("Exception:", ex);
+    //     } catch (ErrorCertificateExpired ex) {
+    //         logger.fatal("Certificate expired");
+    //         logger.fatal("Exception:", ex);
+    //     } catch (ErrorUpdateTransactionFailed ex) {
+    //         logger.fatal("Update transaction failed");
+    //         logger.fatal("Exception:", ex);
+    //     } catch (ErrorNoTransaction ex) {
+    //         logger.fatal("No transaction");
+    //         logger.fatal("Exception:", ex);
+    //     } catch (ErrorFinishTransactionFailed ex) {
+    //         logger.fatal("Finish transaction failed");
+    //         logger.fatal("Exception:", ex);
+    //     } catch (SEException ex) {
+    //         logger.fatal("Unknown error during writeTestTransaction(): "+ex.getMessage());
+    //         logger.fatal("Exception:", ex);
+    //     }
+    // }
 
     public Integer getSignatureCounter() {
         Integer sigCount = null;
@@ -1796,7 +1797,7 @@ public class WeltladenTSE extends WindowContent {
             v.add(z2);
             v.add(z1);
             v.add(z3);
-            System.out.println(renderProcessData(new BigDecimal("75.33"), new BigDecimal("7.99"), null, null, null, v));
+            logger.debug(renderProcessData(new BigDecimal("75.33"), new BigDecimal("7.99"), null, null, null, v));
         */
     }
 
