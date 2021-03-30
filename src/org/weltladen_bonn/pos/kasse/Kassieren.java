@@ -2157,7 +2157,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             new DateTime(now()), rechnungsNr, null,
             kassierArtikel, mwstValues, zahlungsModus,
             totalPrice, kundeGibt, rueckgeld,
-            tx, tseStatusValues);
+            tx, bc.Z_KASSE_ID, tseStatusValues);
         myQuittung.printReceipt();
     }
 
