@@ -1249,7 +1249,7 @@ class AbrechnungenTag extends Abrechnungen {
                         pstmt.setString(9, cert.substring(1000, cert_length <= 2000 ? cert_length : 2000));
                         if (cert_length > 2000) {
                             JOptionPane.showMessageDialog(this,
-                                "Fehler: TSE-Zertifikat mit "+cert_length+" Zeichen zu lang (mehr als 2000 Zeichen), bitte dem Administrator Bescheid geben!",
+                                "Fehler: TSE-Zertifikat mit "+cert_length+" Zeichen zu lang (mehr als 2000 Zeichen), bitte der/dem Administrator*in Bescheid geben!",
                                 "Fehler", JOptionPane.ERROR_MESSAGE);
                         }
                     } else {
@@ -1278,7 +1278,7 @@ class AbrechnungenTag extends Abrechnungen {
                     //     pstmt.setString(9, cert.substring(1000, cert_length <= 2000 ? cert_length : 2000));
                     //     if (cert_length > 2000) {
                     //         JOptionPane.showMessageDialog(this,
-                    //             "Fehler: TSE-Zertifikat mit "+cert_length+" Zeichen zu lang (mehr als 2000 Zeichen), bitte dem Administrator Bescheid geben!",
+                    //             "Fehler: TSE-Zertifikat mit "+cert_length+" Zeichen zu lang (mehr als 2000 Zeichen), bitte der/dem Administrator*in Bescheid geben!",
                     //             "Fehler", JOptionPane.ERROR_MESSAGE);
                     //     }
                     // } else {
