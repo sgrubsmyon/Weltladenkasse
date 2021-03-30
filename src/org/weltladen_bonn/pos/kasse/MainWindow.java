@@ -57,7 +57,7 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
         // This can take up to 30-60 seconds of time, so do this while showing the user a splash screen to inform
         splash.setStatusLabel("Stelle Verbindung zur TSE her (das kann 30 bis 60 Sekunden dauern)...");
         splash.setProgress(4 * 100 / nTasks);
-        tse = new WeltladenTSE(this.pool, this);
+        tse = new WeltladenTSE(this.pool, this, splash);
 
         splash.setStatusLabel("Stelle Verbindung zum Kundendisplay her...");
         splash.setProgress(5 * 100 / nTasks);
