@@ -213,8 +213,8 @@ public class BestellAnzeige extends BestellungsGrundlage implements DocumentList
 	    //dateSpinnerEnd.addChangeListener(this);
 
         changeDateButton = new JButton(
-                //new ImageIcon(WindowContent.class.getResource("/resources/icons/refreshButtonSmall.gif")));
-                "Anwenden");
+            //new ImageIcon(WindowContent.class.getResource("/resources/icons/refreshButtonSmall.gif")));
+            "Anwenden");
         changeDateButton.addActionListener(this);
         resetButton = new JButton("Reset");
         resetButton.addActionListener(this);

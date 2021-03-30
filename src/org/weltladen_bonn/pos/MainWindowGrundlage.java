@@ -25,6 +25,8 @@ import javax.swing.JOptionPane;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import org.weltladen_bonn.pos.SplashScreen;
+
 // interface holding the window of the application GUI:
 public abstract class MainWindowGrundlage extends JFrame {
     private static final Logger logger = LogManager.getLogger(MainWindowGrundlage.class);
@@ -52,6 +54,7 @@ public abstract class MainWindowGrundlage extends JFrame {
     protected JLabel kassenstandLabel;
     protected JLabel hostLabel;
 
+    protected SplashScreen splash;
 
     //***************************************************
     // Methods
@@ -60,16 +63,23 @@ public abstract class MainWindowGrundlage extends JFrame {
     /**
      *    The constructor.
      *       */
-    public MainWindowGrundlage() {
+    public MainWindowGrundlage(SplashScreen spl, int nTasks) {
+        this.splash = spl;
+        this.splash.setStatusLabel("Lade Basis-Klasse...");
+        this.splash.setProgress(1 * 100 / nTasks);
         bc = new BaseClass();
-        initiate();
+        initiate(nTasks);
     }
 
-    private void initiate() {
+    private void initiate(int nTasks) {
+        this.splash.setStatusLabel("Stelle Verbindung zur Datenbank her...");
+        this.splash.setProgress(2 * 100 / nTasks);
         this.dbconn = new DBConnection(bc);
         if (!this.dbconn.connectionWorks) return;
         this.pool = this.dbconn.pool;
 
+        this.splash.setStatusLabel("Baue Fenster auf...");
+        this.splash.setProgress(3 * 100 / nTasks);
         holdAll.setLayout(new BorderLayout());
 
         bottomPanel.setLayout(new FlowLayout());

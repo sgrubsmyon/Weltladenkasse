@@ -24,6 +24,8 @@ import org.weltladen_bonn.pos.BaseClass;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import org.weltladen_bonn.pos.SplashScreen;
+
 // Class holding the window of the application GUI:
 public class MainWindow extends MainWindowGrundlage implements ActionListener {
     //***************************************************
@@ -48,16 +50,23 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
     /**
      *    The constructor.
      *       */
-    public MainWindow() {
-        super();
+    public MainWindow(SplashScreen spl, int nTasks) {
+        super(spl, nTasks);
 
         // Initiate TSE (after connecting to DB)
+        // This can take up to 30-60 seconds of time, so do this while showing the user a splash screen to inform
+        splash.setStatusLabel("Stelle Verbindung zur TSE her (das kann 30 bis 60 Sekunden dauern)...");
+        splash.setProgress(4 * 100 / nTasks);
         tse = new WeltladenTSE(this.pool, this);
 
+        splash.setStatusLabel("Stelle Verbindung zum Kundendisplay her...");
+        splash.setProgress(5 * 100 / nTasks);
         display = new Kundendisplay(bc);
         setDisplayBlankTimer();
 
         if (dbconn.connectionWorks) {
+            splash.setStatusLabel("Lade die Tabs...");
+            splash.setProgress(6 * 100 / nTasks);
             myTabbedPane = new TabbedPane(this.pool, this);
             JPanel contentPanel = new JPanel();
             contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));

@@ -98,14 +98,14 @@ public class ZaehlprotokollDialog extends DialogWindow
         }
 
         Vector<ImageIcon> muenz_icons = new Vector<>();
-        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/1cent_klein.gif" ), "1 Cent"));
-        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/2cent_klein.gif" ), "2 Cent"));
-        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/5cent_klein.gif" ), "5 Cent"));
-        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/10cent_klein.gif" ), "10 Cent"));
-        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/20cent_klein.gif" ), "20 Cent"));
-        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/50cent_klein.gif" ), "50 Cent"));
-        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/1euro_klein.gif" ), "1 Euro"));
-        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/2euro_klein.gif" ), "2 Euro"));
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/1cent_klein.gif"), "1 Cent"));
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/2cent_klein.gif"), "2 Cent"));
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/5cent_klein.gif"), "5 Cent"));
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/10cent_klein.gif"), "10 Cent"));
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/20cent_klein.gif"), "20 Cent"));
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/50cent_klein.gif"), "50 Cent"));
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/1euro_klein.gif"), "1 Euro"));
+        muenz_icons.add(new ImageIcon(getClass().getResource("/resources/icons/coins/2euro_klein.gif"), "2 Euro"));
 
         muenz_spinners = new Vector<>();
         for (String name : bc.muenz_namen) {
