@@ -15,6 +15,7 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 
 import org.weltladen_bonn.pos.MainWindowGrundlage;
+import org.weltladen_bonn.pos.SplashScreen;
 
 // Class holding the window of the application GUI:
 public class MainWindow extends MainWindowGrundlage implements ActionListener {
@@ -30,9 +31,11 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
     /**
      *    The constructor.
      *       */
-    public MainWindow(){
-        super();
+    public MainWindow(SplashScreen spl, int nTasks) {
+        super(spl, nTasks);
         if (dbconn.connectionWorks){
+            splash.setStatusLabel("Lade die Tabs...");
+            splash.setProgress(4 * 100 / nTasks);
             myTabbedPane = new TabbedPane(this.pool, this);
             setContentPanel(myTabbedPane);
         }
@@ -44,6 +47,6 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
      *
      *    @param e the action event.
      **/
-    public void actionPerformed(ActionEvent e){
+    public void actionPerformed(ActionEvent e) {
     }
 }
