@@ -154,7 +154,7 @@ public class Quittung extends WindowContent {
             printEscPosItems(escpos);
             printEscPosTotals(escpos);
             printEscPosTSEValues(escpos);
-            printEscPosTSEQRCode(escpos);
+            // printEscPosTSEQRCode(escpos); // unfortunately, it seems our printer does not support QR code printing
             
             escpos.feed(6).cut(EscPos.CutMode.FULL);
             escpos.close();
@@ -278,22 +278,22 @@ public class Quittung extends WindowContent {
 
         // -------------------------------------------------------------
 
-        logger.debug("{}", indent + centerString(shopName));
-        logger.debug("{}", indent + centerString(shopAddress));
-        logger.debug("{}", indent + centerString(shopPhone));
-        logger.debug("{}", indent + centerString(shopURL));
-        logger.debug("{}", indent + dividerLine());
-        logger.debug("{}", indent + centerString(datetimeStr));
-        logger.debug("{}", indent + spaceBetweenStrings(
-            "Rechnungsnummer:", rechnungsNrStr
-        ));
-        logger.debug("{}", indent + dividerLine());
-        logger.debug("{}", indent + leftAlignedString("Bezeichnung"));
-        logger.debug("{}", indent + columnStrings(
-            new int[] {7, 6, 6, 7, 1},
-            new String[] {"Menge", "Stk", "Einzel", "Ges. "+bc.currencySymbol, "M"}
-        ));
-        logger.debug("{}", indent + dividerLine());
+        // logger.debug("{}", indent + centerString(shopName));
+        // logger.debug("{}", indent + centerString(shopAddress));
+        // logger.debug("{}", indent + centerString(shopPhone));
+        // logger.debug("{}", indent + centerString(shopURL));
+        // logger.debug("{}", indent + dividerLine());
+        // logger.debug("{}", indent + centerString(datetimeStr));
+        // logger.debug("{}", indent + spaceBetweenStrings(
+        //     "Rechnungsnummer:", rechnungsNrStr
+        // ));
+        // logger.debug("{}", indent + dividerLine());
+        // logger.debug("{}", indent + leftAlignedString("Bezeichnung"));
+        // logger.debug("{}", indent + columnStrings(
+        //     new int[] {7, 6, 6, 7, 1},
+        //     new String[] {"Menge", "Stk", "Einzel", "Ges. "+bc.currencySymbol, "M"}
+        // ));
+        // logger.debug("{}", indent + dividerLine());
     }
 
     private void printEscPosItems(EscPos escpos) throws IOException, UnsupportedEncodingException {
@@ -306,14 +306,14 @@ public class Quittung extends WindowContent {
                     new int[] {21, 7, 1},
                     new String[] {"l", "r", "r"},
                     new String[] {
-                        ka.getName(),
+                        ka.getName().strip(),
                         bc.priceFormatter(ka.getGesPreis()),
                         mwstIndex.toString()
                     }
                 ));
             } else {
                 // normaler Artikel: display extended in two lines
-                escpos.writeLF(normal, indent + leftAlignedString(ka.getName(), bezLaenge));
+                escpos.writeLF(normal, indent + leftAlignedString(ka.getName().strip(), bezLaenge));
                 escpos.writeLF(normal, indent + columnStrings(
                     new int[] {7, 6, 6, 7, 1},
                     new String[] {
@@ -329,35 +329,35 @@ public class Quittung extends WindowContent {
 
         // -------------------------------------------------------------
 
-        for (KassierArtikel ka : kassierArtikel) {
-            Integer mwstIndex = mwstList.indexOf(ka.getMwst()) + 1;
-            if (ka.getType().equals("gutschein") || ka.getType().equals("rabattrechnung") ||
-                ka.getType().equals("anzahlung") || ka.getType().equals("anzahlungsaufloesung")) {
-                // display compact in one line
-                logger.debug("{}", indent + columnStrings(
-                    new int[] {21, 7, 1},
-                    new String[] {"l", "r", "r"},
-                    new String[] {
-                        ka.getName(),
-                        bc.priceFormatter(ka.getGesPreis()),
-                        mwstIndex.toString()
-                    }
-                ));
-            } else {
-                // normaler Artikel
-                logger.debug("{}", indent + leftAlignedString(ka.getName(), bezLaenge));
-                logger.debug("{}", indent + columnStrings(
-                    new int[] {7, 6, 6, 7, 1},
-                    new String[] {
-                        saveSpaceInMenge(ka.getMenge()),
-                        ka.getStueckzahl().toString() + " x",
-                        bc.priceFormatter(ka.getEinzelPreis()),
-                        ka.getPartOfAnzahlung() ? "" : bc.priceFormatter(ka.getGesPreis()),
-                        mwstIndex.toString()
-                    }
-                ));
-            }
-        }
+        // for (KassierArtikel ka : kassierArtikel) {
+        //     Integer mwstIndex = mwstList.indexOf(ka.getMwst()) + 1;
+        //     if (ka.getType().equals("gutschein") || ka.getType().equals("rabattrechnung") ||
+        //         ka.getType().equals("anzahlung") || ka.getType().equals("anzahlungsaufloesung")) {
+        //         // display compact in one line
+        //         logger.debug("{}", indent + columnStrings(
+        //             new int[] {21, 7, 1},
+        //             new String[] {"l", "r", "r"},
+        //             new String[] {
+        //                 ka.getName().strip(),
+        //                 bc.priceFormatter(ka.getGesPreis()),
+        //                 mwstIndex.toString()
+        //             }
+        //         ));
+        //     } else {
+        //         // normaler Artikel
+        //         logger.debug("{}", indent + leftAlignedString(ka.getName().strip(), bezLaenge));
+        //         logger.debug("{}", indent + columnStrings(
+        //             new int[] {7, 6, 6, 7, 1},
+        //             new String[] {
+        //                 saveSpaceInMenge(ka.getMenge()),
+        //                 ka.getStueckzahl().toString() + " x",
+        //                 bc.priceFormatter(ka.getEinzelPreis()),
+        //                 ka.getPartOfAnzahlung() ? "" : bc.priceFormatter(ka.getGesPreis()),
+        //                 mwstIndex.toString()
+        //             }
+        //         ));
+        //     }
+        // }
     }
 
     private void printEscPosTotals(EscPos escpos) throws IOException, UnsupportedEncodingException {
@@ -389,25 +389,29 @@ public class Quittung extends WindowContent {
             escpos.writeLF(boldlarger, indent + " " + columnStrings(
                 new int[] {10, 12},
                 new String[] {"l", "r"},
-                new String[] {"BAR", bc.priceFormatter(totalPrice)+" "+bc.currencySymbol}
+                new String[] {"BAR", bc.priceFormatter(totalPrice)+" "+bc.currencySymbol},
+                23
             ));
             if (kundeGibt != null && rueckgeld != null) {
                 escpos.writeLF(boldlarger, indent + " " + columnStrings(
                     new int[] {10, 12},
                     new String[] {"l", "r"},
-                    new String[] {"Kunde gibt", bc.priceFormatter(kundeGibt)+" "+bc.currencySymbol}
+                    new String[] {"Kunde gibt", bc.priceFormatter(kundeGibt)+" "+bc.currencySymbol},
+                    23
                 ));
                 escpos.writeLF(boldlarger, indent + " " + columnStrings(
                     new int[] {10, 12},
                     new String[] {"l", "r"},
-                    new String[] {"Rückgeld", bc.priceFormatter(rueckgeld)+" "+bc.currencySymbol}
+                    new String[] {"Rückgeld", bc.priceFormatter(rueckgeld)+" "+bc.currencySymbol},
+                    23
                 ));
             }
         } else if ( zahlungsModus.equals("ec") ){
             escpos.writeLF(boldlarger, indent + " " + columnStrings(
                 new int[] {10, 12},
                 new String[] {"l", "r"},
-                new String[] {"EC", bc.priceFormatter(totalPrice)+" "+bc.currencySymbol}
+                new String[] {"EC", bc.priceFormatter(totalPrice)+" "+bc.currencySymbol},
+                23
             ));
         }
         escpos.feed(1);
@@ -419,61 +423,61 @@ public class Quittung extends WindowContent {
 
         // -------------------------------------------------------------
 
-        logger.debug("{}", indent + dividerLine());
-        logger.debug("{}", indent + columnStrings(
-            new int[] {5, 7, 7, 7, 1},
-            new String[] {"l", "r", "r", "r", "r"},
-            new String[] {"MwSt.", "Netto", "Steuer", "Umsatz", "M"}
-        ));
-        mwstIndex = 1;
-        for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : mwstValues.entrySet()) {
-            BigDecimal steuersatz = entry.getKey();
-            Vector<BigDecimal> values = entry.getValue();
-            logger.debug("{}", indent + columnStrings(
-                new int[] {5, 7, 7, 7, 1},
-                new String[] {"l", "r", "r", "r", "r"},
-                new String[] {
-                    bc.vatFormatter(steuersatz),
-                    bc.priceFormatter(values.get(0)), // Netto (see calculateMwStValuesInRechnung() in RechnungsGrundlage.java)
-                    bc.priceFormatter(values.get(1)), // Steuer
-                    bc.priceFormatter(values.get(2)), // Brutto/Umsatz
-                    mwstIndex.toString()
-                }
-            ));
-            mwstIndex++;
-        }
-        logger.debug("");
-        if ( zahlungsModus.equals("bar") ) {
-            logger.debug("{}", indent + " " + columnStrings(
-                new int[] {10, 12},
-                new String[] {"l", "r"},
-                new String[] {"BAR", bc.priceFormatter(totalPrice)+" "+bc.currencySymbol}
-            ));
-            if (kundeGibt != null && rueckgeld != null) {
-                logger.debug("{}", indent + " " + columnStrings(
-                    new int[] {10, 12},
-                    new String[] {"l", "r"},
-                    new String[] {"Kunde gibt", bc.priceFormatter(kundeGibt)+" "+bc.currencySymbol}
-                ));
-                logger.debug("{}", indent + " " + columnStrings(
-                    new int[] {10, 12},
-                    new String[] {"l", "r"},
-                    new String[] {"Rückgeld", bc.priceFormatter(rueckgeld)+" "+bc.currencySymbol}
-                ));
-            }
-        } else if ( zahlungsModus.equals("ec") ){
-            logger.debug("{}", indent + " " + columnStrings(
-                new int[] {10, 12},
-                new String[] {"l", "r"},
-                new String[] {"EC", bc.priceFormatter(totalPrice)+" "+bc.currencySymbol}
-            ));
-        }
-        logger.debug("");
-        if (stornoVon != null) {
-            logger.debug("{}", indent + leftAlignedString("!!! STORNO VON !!!"));
-            logger.debug("{}", indent + leftAlignedString("!!! RECHN.-NR. "+stornoVon+" !!!"));
-            logger.debug("");
-        }
+        // logger.debug("{}", indent + dividerLine());
+        // logger.debug("{}", indent + columnStrings(
+        //     new int[] {5, 7, 7, 7, 1},
+        //     new String[] {"l", "r", "r", "r", "r"},
+        //     new String[] {"MwSt.", "Netto", "Steuer", "Umsatz", "M"}
+        // ));
+        // mwstIndex = 1;
+        // for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : mwstValues.entrySet()) {
+        //     BigDecimal steuersatz = entry.getKey();
+        //     Vector<BigDecimal> values = entry.getValue();
+        //     logger.debug("{}", indent + columnStrings(
+        //         new int[] {5, 7, 7, 7, 1},
+        //         new String[] {"l", "r", "r", "r", "r"},
+        //         new String[] {
+        //             bc.vatFormatter(steuersatz),
+        //             bc.priceFormatter(values.get(0)), // Netto (see calculateMwStValuesInRechnung() in RechnungsGrundlage.java)
+        //             bc.priceFormatter(values.get(1)), // Steuer
+        //             bc.priceFormatter(values.get(2)), // Brutto/Umsatz
+        //             mwstIndex.toString()
+        //         }
+        //     ));
+        //     mwstIndex++;
+        // }
+        // logger.debug("");
+        // if ( zahlungsModus.equals("bar") ) {
+        //     logger.debug("{}", indent + " " + columnStrings(
+        //         new int[] {10, 12},
+        //         new String[] {"l", "r"},
+        //         new String[] {"BAR", bc.priceFormatter(totalPrice)+" "+bc.currencySymbol}
+        //     ));
+        //     if (kundeGibt != null && rueckgeld != null) {
+        //         logger.debug("{}", indent + " " + columnStrings(
+        //             new int[] {10, 12},
+        //             new String[] {"l", "r"},
+        //             new String[] {"Kunde gibt", bc.priceFormatter(kundeGibt)+" "+bc.currencySymbol}
+        //         ));
+        //         logger.debug("{}", indent + " " + columnStrings(
+        //             new int[] {10, 12},
+        //             new String[] {"l", "r"},
+        //             new String[] {"Rückgeld", bc.priceFormatter(rueckgeld)+" "+bc.currencySymbol}
+        //         ));
+        //     }
+        // } else if ( zahlungsModus.equals("ec") ){
+        //     logger.debug("{}", indent + " " + columnStrings(
+        //         new int[] {10, 12},
+        //         new String[] {"l", "r"},
+        //         new String[] {"EC", bc.priceFormatter(totalPrice)+" "+bc.currencySymbol}
+        //     ));
+        // }
+        // logger.debug("");
+        // if (stornoVon != null) {
+        //     logger.debug("{}", indent + leftAlignedString("!!! STORNO VON !!!"));
+        //     logger.debug("{}", indent + leftAlignedString("!!! RECHN.-NR. "+stornoVon+" !!!"));
+        //     logger.debug("");
+        // }
     }
 
     private void printEscPosTSEValues(EscPos escpos) throws IOException, UnsupportedEncodingException {
@@ -536,62 +540,62 @@ public class Quittung extends WindowContent {
 
         // -------------------------------------------------------------
 
-        if (tx != null && tx.tseError != null) { // means TSE has failed
-            logger.debug("{}", indent + leftAlignedString("--- TSE ausgefallen!!! ---"));
-        } else {
-            logger.debug("{}", indent + leftAlignedString("--- TSE ---"));
-        }
-        if (tx == null) {
-            logger.debug("{}", indent + leftAlignedString("TSE-Daten nicht verfügbar"));
-        } else {
-            String dateString = "???";
-            try {
-                Date date = new SimpleDateFormat(WeltladenTSE.dateFormatDSFinVK).parse(tx.startTimeString);
-                dateString = new SimpleDateFormat(WeltladenTSE.dateFormatQuittung).format(date);
-            } catch (ParseException ex) {
-                logger.error("{}", ex);
-            }
-            logger.debug("{}", indent + spaceBetweenStrings(
-                "Start:", dateString
-            ));
-            dateString = "???";
-            try {
-                Date date = new SimpleDateFormat(WeltladenTSE.dateFormatDSFinVK).parse(tx.endTimeString);
-                dateString = new SimpleDateFormat(WeltladenTSE.dateFormatQuittung).format(date);
-            } catch (ParseException ex) {
-                logger.error("{}", ex);
-            }
-            logger.debug("{}", indent + spaceBetweenStrings(
-                "Ende:", dateString
-            ));
-            if (tx.tseError == null) { // if TSE has not failed
-                logger.debug("{}", indent + spaceBetweenStrings(
-                    "Transaktionsnr.:", tx.txNumber.toString()
-                ));
-                if (z_kasse_id != null) {
-                    logger.debug("{}", indent + leftAlignedString(
-                        "Kassen-Seriennr. (clientID):"
-                    ));
-                    logger.debug("{}", indent + rightAlignedString(
-                        z_kasse_id
-                    ));
-                }
-                if (tseStatusValues != null) {
-                    String serial_id = tseStatusValues.get("Seriennummer der TSE (Hex)");
-                    int chars = 16; // print first 16 chars on first row
-                    logger.debug("{}", indent + spaceBetweenStrings(
-                        "TSE-Seriennr.:", serial_id.substring(0, chars)
-                    ));
-                    while (chars < serial_id.length()) {
-                        // now 24 chars per row
-                        logger.debug("{}", indent + rightAlignedString(
-                            serial_id.substring(chars, chars + 24)
-                        ));
-                        chars += 24;
-                    }
-                }
-            }
-        }
+        // if (tx != null && tx.tseError != null) { // means TSE has failed
+        //     logger.debug("{}", indent + leftAlignedString("--- TSE ausgefallen!!! ---"));
+        // } else {
+        //     logger.debug("{}", indent + leftAlignedString("--- TSE ---"));
+        // }
+        // if (tx == null) {
+        //     logger.debug("{}", indent + leftAlignedString("TSE-Daten nicht verfügbar"));
+        // } else {
+        //     String dateString = "???";
+        //     try {
+        //         Date date = new SimpleDateFormat(WeltladenTSE.dateFormatDSFinVK).parse(tx.startTimeString);
+        //         dateString = new SimpleDateFormat(WeltladenTSE.dateFormatQuittung).format(date);
+        //     } catch (ParseException ex) {
+        //         logger.error("{}", ex);
+        //     }
+        //     logger.debug("{}", indent + spaceBetweenStrings(
+        //         "Start:", dateString
+        //     ));
+        //     dateString = "???";
+        //     try {
+        //         Date date = new SimpleDateFormat(WeltladenTSE.dateFormatDSFinVK).parse(tx.endTimeString);
+        //         dateString = new SimpleDateFormat(WeltladenTSE.dateFormatQuittung).format(date);
+        //     } catch (ParseException ex) {
+        //         logger.error("{}", ex);
+        //     }
+        //     logger.debug("{}", indent + spaceBetweenStrings(
+        //         "Ende:", dateString
+        //     ));
+        //     if (tx.tseError == null) { // if TSE has not failed
+        //         logger.debug("{}", indent + spaceBetweenStrings(
+        //             "Transaktionsnr.:", tx.txNumber.toString()
+        //         ));
+        //         if (z_kasse_id != null) {
+        //             logger.debug("{}", indent + leftAlignedString(
+        //                 "Kassen-Seriennr. (clientID):"
+        //             ));
+        //             logger.debug("{}", indent + rightAlignedString(
+        //                 z_kasse_id
+        //             ));
+        //         }
+        //         if (tseStatusValues != null) {
+        //             String serial_id = tseStatusValues.get("Seriennummer der TSE (Hex)");
+        //             int chars = 16; // print first 16 chars on first row
+        //             logger.debug("{}", indent + spaceBetweenStrings(
+        //                 "TSE-Seriennr.:", serial_id.substring(0, chars)
+        //             ));
+        //             while (chars < serial_id.length()) {
+        //                 // now 24 chars per row
+        //                 logger.debug("{}", indent + rightAlignedString(
+        //                     serial_id.substring(chars, chars + 24)
+        //                 ));
+        //                 chars += 24;
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     private void printEscPosTSEQRCode(EscPos escpos) throws IOException, UnsupportedEncodingException {
@@ -601,9 +605,8 @@ public class Quittung extends WindowContent {
         if (tx != null && tx.tseError == null && z_kasse_id != null && tseStatusValues != null) {
             escpos.feed(1);
             QRCode qrcode = new QRCode();
-            qrcode.setJustification(EscPosConst.Justification.Center); // hope that works (QR code must not start too far left in unprintable area)
-            // qrcode.setJustification(EscPosConst.Justification.Right); // hope that works (QR code must not start too far left in unprintable area)
-            // qrcode.setSize(1); // can experiment with this if QR code does not fit
+            qrcode.setJustification(EscPosConst.Justification.Right); // hope that works (QR code must not start too far left in unprintable area)
+            qrcode.setSize(1); // can experiment with this if QR code does not fit
 
             // as defined by DSFinV-K, Anhang I, Punkt 2:
             // <qr-code-version>;<kassen-seriennummer>;<processType>;<processData>;
@@ -625,13 +628,14 @@ public class Quittung extends WindowContent {
                 startZeit, logTime, sigAlg, logTimeFormat,
                 signatur, publicKey);
             
+            // Example QR code data:
             // "V0;955002-00;Kassenbeleg-V1;Beleg^0.00_2.55_0.00_0.00_0.00^2.55:Bar;18;112;2019-07-10T18:41:04.000Z;2019-07-10T18:41:04.000Z;ecdsa-plain-SHA256;unixTime;MEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIMWRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==;BHhWOeisRpPBTGQ1W4VUH95TXx2GARf8e2NYZXJoInjtGqnxJ8sZ3CQpYgjI+LYEmW5A37sLWHsyU7nSJUBemyU=";
 
             escpos.write(qrcode, qrcodeString);
 
             // -------------------------------------------------------------
 
-            logger.debug("{}", qrcodeString);
+            // logger.debug("{}", qrcodeString);
         }
     }
 
@@ -808,7 +812,7 @@ public class Quittung extends WindowContent {
     // private int insertItems(Sheet sheet) {
     //     int row = rowOffset; // start here in ods document
     //     for (int i=artikelIndex; i<kassierArtikel.size(); i++){
-    //         sheet.setValueAt(kassierArtikel.get(i).getName(), 0, row); // name on full row
+    //         sheet.setValueAt(kassierArtikel.get(i).getName().strip(), 0, row); // name on full row
     //         row++; // price infos on next row:
     //         sheet.setValueAt(saveSpaceInMenge(kassierArtikel.get(i).getMenge()), 0, row);
     //         sheet.setValueAt(kassierArtikel.get(i).getStueckzahl().toString() + " x", 1, row);
