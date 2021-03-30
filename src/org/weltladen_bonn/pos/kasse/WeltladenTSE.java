@@ -327,7 +327,7 @@ public class WeltladenTSE extends WindowContent {
     private void tseStartUpWorkaroundLoop() {
         byte[] timeAdminPIN = readTimeAdminPINFromFile();
         boolean tseOperational = false;
-        while (!tseOperational) {
+        while (!tseOperational && status != TSEStatus.failed) { // status is set to Failed via cancel button on splash screen
             logger.info("Trying to authenticate as user 'TimeAdmin'...");
             String message = authenticateAs("TimeAdmin", timeAdminPIN, false);
             if (message.equals("OK")) {
@@ -762,7 +762,7 @@ public class WeltladenTSE extends WindowContent {
         System.out.println("\nBEFORE initializePinValues():");
         printStatusValues();
         boolean tseOperational = false;
-        while (!tseOperational) {
+        while (!tseOperational && status != TSEStatus.failed) { // status is set to Failed via cancel button on splash screen
             logger.info("Trying to set PIN and PUK...");
             try {
                 tse.initializePinValues(adminPIN, adminPUK, timeAdminPIN, timeAdminPUK);
