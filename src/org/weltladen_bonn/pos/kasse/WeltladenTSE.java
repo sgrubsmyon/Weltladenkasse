@@ -104,6 +104,8 @@ import org.mariadb.jdbc.MariaDbPoolDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import org.weltladen_bonn.pos.SplashScreen;
+
 /**
  * This class is for interaction with a TSE (Technische Sicherheitseinrichtung),
  * based on BSI TR-03151 SE API. In this case, TR-03151 is implemented by
@@ -153,21 +155,33 @@ public class WeltladenTSE extends WindowContent {
 
     private LinkedHashMap<String, String> statusValues;
 
+    private SplashScreen splash;
+
     /**
      *    The constructor.
      *
      */
-    public WeltladenTSE(MariaDbPoolDataSource pool, MainWindow mw) {
+    public WeltladenTSE(MariaDbPoolDataSource pool, MainWindow mw, SplashScreen spl) {
         super(pool, mw);
+        this.splash = spl;
         if (!bc.operationMode.equals("normal")) {
             this.status = TSEStatus.training;
         }
         connectToTSE();
         if (inUse()) {
-            LongOperationIndicatorDialog dialog = new LongOperationIndicatorDialog(
-                new JLabel("TSE wird initialisiert..."),
-                null
-            );
+            ActionListener cancelButtonListener = new ActionListener(){
+                public void actionPerformed(ActionEvent event){
+                    // if cancel button is pressed during long running init process
+                    logger.info("User canceled the TSE initialization process");
+                    disconnectFromTSE();
+                    status = TSEStatus.failed;
+                    failReason = "Die Initialisierung der TSE wurde durch den/die Nutzer*in abgebrochen. "+
+                                 "Bitte evtl. länger warten (kann bis zu 60 Sekunden dauern).";
+                    showTSEFailWarning();
+                }
+            };
+            splash.addCancelButtonListener(cancelButtonListener);
+            splash.enableCancelButton(true);
             
             updateTSEStatusValues(); // so that status values can be printed from inside checkInitializationStatus()
             checkInitializationStatus();
@@ -202,7 +216,8 @@ public class WeltladenTSE extends WindowContent {
             // exportPartialTransactionDataBySigCounter("/tmp/tse_export_51_60_2.tar", (long)50, (long)10);
             // deletePartialTransactionDataBySigCounter((long)60);
 
-            dialog.dispose();
+            splash.enableCancelButton(false);
+            splash.removeCancelButtonListener(cancelButtonListener);
         }
     }
 
