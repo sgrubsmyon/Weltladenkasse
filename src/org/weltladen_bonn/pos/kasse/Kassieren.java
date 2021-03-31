@@ -1611,10 +1611,80 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     pstmtSetInteger(pstmt, 3, rechnungsNr);
                     int result = pstmt.executeUpdate();
                     pstmt.close();
+                    connection.close();
                     if (result == 0) {
                         JOptionPane.showMessageDialog(this, "Fehler: Anzahlung konnte nicht gespeichert werden.", "Fehler",
                             JOptionPane.ERROR_MESSAGE);
                     }
+                } catch (SQLException ex) {
+                    logger.error("Exception:", ex);
+                    showDBErrorDialog(ex.getMessage());
+                }
+            }
+        }
+    }
+
+    private void maybeInsertIntoGutschein(int rechnungsNr) {
+        for (KassierArtikel ka : kassierArtikel) {
+            if (ka.getType().equals("gutschein")) {
+                try {
+                    // insert into table gutschein
+                    Connection connection = this.pool.getConnection();
+                    PreparedStatement pstmt = connection.prepareStatement(
+                        "INSERT INTO "+tableForMode("gutschein")+" SET "+
+                        "gutschein_nr = ?, "+
+                        "datum = (SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?), "+
+                        "gutschein_in_vd_id = (SELECT vd_id FROM "+tableForMode("verkauf_details")+" "+
+                        "    WHERE rechnungs_nr = ? AND position = ?), "+
+                        "einloesung_in_vd_id = NULL, "+
+                        "restbetrag = ?"
+                    );
+                    pstmtSetInteger(pstmt, 1, ka.getGutscheinNr());
+                    pstmtSetInteger(pstmt, 2, rechnungsNr);
+                    pstmtSetInteger(pstmt, 3, rechnungsNr);
+                    pstmtSetInteger(pstmt, 4, ka.getPosition());
+                    pstmt.setBigDecimal(5, ka.getEinzelPreis());
+                    int result = pstmt.executeUpdate();
+                    pstmt.close();
+                    connection.close();
+                    if (result == 0) {
+                        JOptionPane.showMessageDialog(this, "Fehler: Gutschein Nr. " + ka.getGutscheinNr() +
+                        " konnte nicht in Gutscheintabelle gespeichert werden.", "Fehler", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (SQLException ex) {
+                    logger.error("Exception:", ex);
+                    showDBErrorDialog(ex.getMessage());
+                }
+            }
+        }
+    }
+
+    private void maybeInsertEinloesungIntoGutschein(int rechnungsNr) {
+        for (KassierArtikel ka : kassierArtikel) {
+            if (ka.getType().equals("gutscheineinloesung")) {
+                try {
+                    // insert into table gutschein
+                    Connection connection = this.pool.getConnection();
+                    PreparedStatement pstmt = connection.prepareStatement(
+                        "INSERT INTO "+tableForMode("gutschein")+" SET "+
+                        "gutschein_nr = ?, "+
+                        "datum = (SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?), "+
+                        "gutschein_in_vd_id = (SELECT gutschein_in_vd_id FROM "+tableForMode("gutschein")+" "+
+                        "    WHERE gutschein_nr = ? AND einloesung_in_vd_id IS NULL), "+
+                        "einloesung_in_vd_id = (SELECT vd_id FROM "+tableForMode("verkauf_details")+" "+
+                        "    WHERE rechnungs_nr = ? AND position = ?), "+
+                        "restbetrag = (SELECT MIN(restbetrag) FROM "+tableForMode("gutschein")+" "+
+                        "    WHERE gutschein_nr = ?) - ?"
+                    );
+                    pstmtSetInteger(pstmt, 1, ka.getGutscheinNr());
+                    pstmtSetInteger(pstmt, 2, rechnungsNr);
+                    pstmtSetInteger(pstmt, 3, ka.getGutscheinNr());
+                    pstmtSetInteger(pstmt, 4, rechnungsNr);
+                    pstmtSetInteger(pstmt, 5, ka.getPosition();
+                    pstmtSetInteger(pstmt, 6, ka.getGutscheinNr());
+                    pstmt.setBigDecimal(7, ka.getEinzelPreis().abs());
+                    int result = pstmt.executeUpdate();
+                    pstmt.close();
                     connection.close();
                 } catch (SQLException ex) {
                     logger.error("Exception:", ex);
@@ -1933,6 +2003,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
         maybeInsertIntoAnzahlung(rechnungsNr);
         maybeInsertAufloesungIntoAnzahlung(rechnungsNr);
+        maybeInsertIntoGutschein(rechnungsNr);
+        maybeInsertEinloesungIntoGutschein(rechnungsNr);
         clearAll();
         updateAll();
 
