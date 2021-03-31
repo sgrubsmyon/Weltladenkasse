@@ -61,7 +61,7 @@ public class TSEPINOrPUKEntryDialog extends DialogWindow implements WindowListen
         headerPanel.setBorder(BorderFactory.createEmptyBorder(top, left, bottom, right));
 
         JTextArea erklaerText = new JTextArea(4, 40);
-        if (role == "TimeAdmin" && numbertype == "PIN") {
+        if (role.equals("TimeAdmin") && numbertype.equals("PIN")) {
             erklaerText.append(
                 "Die TimeAdmin PIN der TSE konnte nicht korrekt geladen werden.\n"+
                 "Bitte jetzt erneut eingeben.\n"+
@@ -150,7 +150,7 @@ public class TSEPINOrPUKEntryDialog extends DialogWindow implements WindowListen
                 JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (answer == JOptionPane.YES_OPTION) {
                 this.aborted = false;
-                if (role == "TimeAdmin" && numbertype == "PIN") {
+                if (role.equals("TimeAdmin") && numbertype.equals("PIN")) {
                     byte[] timeAdminPIN = pinField.getText().getBytes();
                     tse.writeTimeAdminPINtoFile(timeAdminPIN);
                 }
