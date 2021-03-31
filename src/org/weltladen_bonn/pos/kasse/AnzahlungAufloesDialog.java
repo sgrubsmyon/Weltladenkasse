@@ -340,13 +340,15 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                 "a.kurzname, a.artikel_name, ra.aktionsname, " +
                 "a.artikel_nr, a.sortiment, a.menge, a.einheit, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
-                "vd.stueckzahl, ad.ges_preis, vd.ges_preis, vd.mwst_satz " +
+                "vd.stueckzahl, ad.ges_preis, vd.ges_preis, vd.mwst_satz, " +
+                "gs.gutschein_nr " +
                 "FROM "+tableForMode("verkauf_details")+" AS vd " +
                 "LEFT JOIN "+tableForMode("anzahlung_details")+" AS ad " +
                 "  ON vd.rechnungs_nr = ad.rechnungs_nr AND vd.vd_id = ad.vd_id " +
                 "LEFT JOIN artikel AS a USING (artikel_id) " +
                 "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
                 "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
+                "LEFT JOIN "+tableForMode("gutschein")+" AS gs ON vd.vd_id = gs.gutschein_in_vd_id " +
                 "WHERE vd.rechnungs_nr = ? AND " +
                 "vd.vd_id <= ("+
                 "  SELECT MAX(vd_id) FROM "+tableForMode("verkauf_details")+" "+
@@ -380,6 +382,7 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                 String gesPreisInCaseOfAnzahlung = rs.getString(14);
                 BigDecimal gesPreisInCaseOfAnzahlungDec = new BigDecimal(gesPreisInCaseOfAnzahlung);
                 BigDecimal mwst = new BigDecimal(rs.getString(15));
+                Integer gutscheinNr = rs.getInt(16);
                 BigDecimal gesPreisDec = null;
                 BigDecimal einzelPreis = null;
                 if (gesPreis != null) {
@@ -392,63 +395,63 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                     einzelPreis = gesPreisDec;
                 }
                 gesPreis = bc.priceFormatter(gesPreis)+' '+bc.currencySymbol;
-                String name = "";
+                String name = artikelname;
                 String color = "default";
                 String type = "artikel";
-                if (artikelID == gutscheinArtikelID) { type = "gutschein"; }
-                else if ( aktionsname != null ) { // Aktionsrabatt
+                if (artikelID == gutscheinArtikelID) {
+                    // name = artikelNameGutschein();
+                    color = "green";
+                    type = "gutschein";
+                } else if (artikelID == gutscheineinloesungArtikelID) {
+                    // name = artikelNameGutscheinEinloes();
+                    color = "green";
+                    type = "gutscheineinloesung";
+                } else if ( aktionsname != null ) { // Aktionsrabatt
                     name = einrueckung+aktionsname;
                     artikelnummer = "RABATT";
                     color = "red";
                     type = "rabatt";
-                    menge = "";
-                }
-                else if ( artikelID == artikelRabattArtikelID ){ // Manueller Rabatt auf Artikel
+                    // menge = "";
+                } else if ( artikelID == artikelRabattArtikelID ){ // Manueller Rabatt auf Artikel
                     name = einrueckung+artikelname;
                     artikelnummer = "RABATT";
                     color = "red";
                     type = "rabatt";
-                    menge = "";
-                }
-                else if ( artikelID == rechnungRabattArtikelID ){ // Manueller Rabatt auf Rechnung
-                    name = artikelname;
+                    // menge = "";
+                } else if ( artikelID == rechnungRabattArtikelID ){ // Manueller Rabatt auf Rechnung
                     artikelnummer = "RABATT";
                     color = "red";
                     type = "rabattrechnung";
                     menge = "";
-                }
-                else if ( artikelID == preisanpassungArtikelID ){ // Manuelle Preisanpassung auf Artikel
+                } else if ( artikelID == preisanpassungArtikelID ){ // Manuelle Preisanpassung auf Artikel
                     name = einrueckung+artikelname;
                     artikelnummer = "ANPASSUNG";
                     color = "red";
                     type = "rabatt";
-                    menge = "";
-                }
-                else if ( pfand && stueckDec.signum() > 0 ){
+                    // menge = "";
+                } else if ( pfand && stueckDec.signum() > 0 ){
                     name = einrueckung+artikelname;
                     artikelnummer = "PFAND";
                     color = "blue";
                     type = "pfand";
-                    menge = "";
-                }
-                else if ( pfand && stueckDec.signum() < 0 ){
-                    name = artikelname;
+                    // menge = "";
+                } else if ( pfand && stueckDec.signum() < 0 ){
                     artikelnummer = "LEERGUT";
                     color = "green";
                     type = "leergut";
-                    menge = "";
-                }
-                else {
+                    // menge = "";
+                } else {
                     if ( kurzname != null && !kurzname.equals("") ){
                         name = kurzname;
                     } else if (artikelname != null ){
                         name = artikelname;
+                    } else {
+                        name = "";
                     }
                     if ( stueckDec.signum() < 0 ){
                         color = "green";
                         type = "rueckgabe";
-                    }
-                    else if ( !sortiment ){ color = "gray"; }
+                    } else if ( !sortiment ){ color = "gray"; }
                     else { color = "default"; }
                 }
 
@@ -490,6 +493,7 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                 ka.setEinzelPreis(einzelPreis);
                 ka.setGesPreis(gesPreisDec);
                 ka.setMwst(mwst);
+                ka.setGutscheinNr(gutscheinNr);
                 kassierArtikel.add(ka);
             }
             rs.close();

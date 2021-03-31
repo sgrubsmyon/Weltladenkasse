@@ -295,12 +295,14 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
                 "vd.stueckzahl, vd.ges_preis, " +
                 "IFNULL(ad.ges_preis / vd.stueckzahl, vd.ges_preis / vd.stueckzahl) AS einzelpreis, " +
-                "vd.mwst_satz, ad.ges_preis IS NOT NULL AS part_of_anzahlung " +
+                "vd.mwst_satz, ad.ges_preis IS NOT NULL AS part_of_anzahlung, " +
+                "gs.gutschein_nr " +
                 "FROM "+tableForMode("verkauf_details")+" AS vd " +
                 "LEFT JOIN artikel AS a USING (artikel_id) " +
                 "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
                 "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
-                "LEFT JOIN anzahlung_details AS ad USING (vd_id) " +
+                "LEFT JOIN "+tableForMode("anzahlung_details")+" AS ad USING (vd_id) " +
+                "LEFT JOIN "+tableForMode("gutschein")+" AS gs ON vd.vd_id = gs.gutschein_in_vd_id " +
                 "WHERE vd.rechnungs_nr = ?"
             );
             pstmtSetInteger(pstmt, 1, rechnungsNr);
@@ -331,72 +333,70 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 }
                 BigDecimal mwst = new BigDecimal(rs.getString(15));
                 Boolean part_of_anzahlung = rs.getBoolean(16);
+                Integer gutscheinNr = rs.getInt(17);
                 if (part_of_anzahlung) gesPreis = "";
                 else gesPreis = bc.priceFormatter(gesPreisDec)+' '+bc.currencySymbol;
-                String name = "";
+                String name = artikelname;
                 String color = "default";
                 String type = "artikel";
-                if (artikelID == gutscheinArtikelID) { type = "gutschein"; }
-                else if ( aktionsname != null ) { // Aktionsrabatt
+                if (artikelID == gutscheinArtikelID) { 
+                    // name = artikelNameGutschein();
+                    color = "green";
+                    type = "gutschein";
+                } else if (artikelID == gutscheineinloesungArtikelID) { 
+                    // name = artikelNameGutscheinEinloes();
+                    color = "green";
+                    type = "gutscheineinloesung";
+                } else if ( aktionsname != null ) { // Aktionsrabatt
                     name = einrueckung+aktionsname;
                     artikelnummer = "RABATT";
                     color = "red";
                     type = "rabatt";
-                }
-                else if ( artikelID == artikelRabattArtikelID ){ // Manueller Rabatt auf Artikel
+                } else if ( artikelID == artikelRabattArtikelID ){ // Manueller Rabatt auf Artikel
                     name = einrueckung+artikelname;
                     artikelnummer = "RABATT";
                     color = "red";
                     type = "rabatt";
-                }
-                else if ( artikelID == rechnungRabattArtikelID ){ // Manueller Rabatt auf Rechnung
-                    name = artikelname;
+                } else if ( artikelID == rechnungRabattArtikelID ){ // Manueller Rabatt auf Rechnung
                     artikelnummer = "RABATT";
                     color = "red";
                     type = "rabattrechnung";
                     menge = "";
-                }
-                else if ( artikelID == preisanpassungArtikelID ){ // Manuelle Preisanpassung auf Artikel
+                } else if ( artikelID == preisanpassungArtikelID ){ // Manuelle Preisanpassung auf Artikel
                     name = einrueckung+artikelname;
                     artikelnummer = "ANPASSUNG";
                     color = "red";
                     type = "rabatt";
-                }
-                else if ( artikelID == anzahlungArtikelID ){ // Anzahlung
-                    name = artikelname;
+                } else if ( artikelID == anzahlungArtikelID ){ // Anzahlung
                     artikelnummer = "ANZAHLUNG";
                     color = "red";
                     type = "anzahlung";
-                }
-                else if ( artikelID == anzahlungsaufloesungArtikelID ){ // Anzahlungsauflösung
+                } else if ( artikelID == anzahlungsaufloesungArtikelID ){ // Anzahlungsauflösung
                     name = artikelNameAnzAuflWithDateAndRechNr();
                     artikelnummer = "ANZAHLUNGSAUFLÖSUNG";
                     color = "red";
                     type = "anzahlungsaufloesung";
-                }
-                else if ( pfand && stueckDec.signum() > 0 ){
+                } else if ( pfand && stueckDec.signum() > 0 ){
                     name = einrueckung+artikelname;
                     artikelnummer = "PFAND";
                     color = "blue";
                     type = "pfand";
-                }
-                else if ( pfand && stueckDec.signum() < 0 ){
-                    name = artikelname;
+                } else if ( pfand && stueckDec.signum() < 0 ){
                     artikelnummer = "LEERGUT";
                     color = "green";
                     type = "leergut";
-                }
-                else {
+                } else {
                     if ( kurzname != null && !kurzname.equals("") ){
                         name = kurzname;
-                    } else if (artikelname != null ){
+                    } else if (artikelname != null){
                         name = artikelname;
+                    } else {
+                        name = "";
                     }
                     if ( stueckDec.signum() < 0 ){
                         color = "green";
                         type = "rueckgabe";
-                    }
-                    else if ( !sortiment ){ color = "gray"; }
+                    } else if ( !sortiment ){ color = "gray"; }
                     else { color = "default"; }
                 }
 
@@ -413,6 +413,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 ka.setEinzelPreis(new BigDecimal( bc.priceFormatterIntern(einzelPreis) ));
                 ka.setGesPreis(gesPreisDec);
                 ka.setMwst(mwst);
+                ka.setGutscheinNr(gutscheinNr);
                 ka.setPartOfAnzahlung(part_of_anzahlung);
                 kassierArtikel.add(ka);
 
