@@ -23,11 +23,11 @@ SOURCE interne_artikel.sql;
 
 LOCK TABLES `pfand` WRITE;
 /*!40000 ALTER TABLE `pfand` DISABLE KEYS */;
-INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (1,7);
-INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (2,8);
-INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (3,9);
-INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (4,10);
-INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (5,11);
-INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (6,12);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (1,8);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (2,9);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (3,10);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (4,11);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (5,12);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (6,13);
 /*!40000 ALTER TABLE `pfand` ENABLE KEYS */;
 UNLOCK TABLES;

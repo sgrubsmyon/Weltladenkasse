@@ -151,6 +151,18 @@ CREATE TABLE anzahlung_details (
     FOREIGN KEY (vd_id) REFERENCES verkauf_details(vd_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE gutschein (
+    gutschein_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    gutschein_nr INTEGER(10) UNSIGNED NOT NULL,
+    datum DATETIME NOT NULL,
+    gutschein_in_vd_id INTEGER(10) UNSIGNED NOT NULL,
+    einloesung_in_vd_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    restbetrag DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (gutschein_id),
+    FOREIGN KEY (gutschein_in_vd_id) REFERENCES verkauf_details(vd_id),
+    FOREIGN KEY (einloesung_in_vd_id) REFERENCES verkauf_details(vd_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- CREATE TABLE abrechnung_tag (
 --     id INTEGER(10) UNSIGNED NOT NULL,
 --     zeitpunkt DATETIME NOT NULL,
@@ -381,6 +393,18 @@ CREATE TABLE training_anzahlung_details (
     PRIMARY KEY (ad_id),
     FOREIGN KEY (rechnungs_nr) REFERENCES training_verkauf_details(rechnungs_nr),
     FOREIGN KEY (vd_id) REFERENCES training_verkauf_details(vd_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE training_gutschein (
+    gutschein_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    gutschein_nr INTEGER(10) UNSIGNED NOT NULL,
+    datum DATETIME NOT NULL,
+    gutschein_in_vd_id INTEGER(10) UNSIGNED NOT NULL,
+    einloesung_in_vd_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    restbetrag DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (gutschein_id),
+    FOREIGN KEY (gutschein_in_vd_id) REFERENCES training_verkauf_details(vd_id),
+    FOREIGN KEY (einloesung_in_vd_id) REFERENCES training_verkauf_details(vd_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE training_abrechnung_tag (
