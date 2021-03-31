@@ -50,16 +50,18 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     private int selectedArticleID;
     private int selectedStueck;
+    
+    private Color gutscheinColor = Color.MAGENTA.darker().darker();
 
     protected ArticleSelectPanelKassieren asPanel;
     private JButton sonstigesButton;
+    private JButton gutscheinVerkaufenButton;
     private JButton sevenPercentButton;
     private JButton nineteenPercentButton;
     private JSpinner anzahlSpinner;
     protected JFormattedTextField anzahlField;
     protected JTextField preisField;
     private JTextField kundeGibtField;
-    private JTextField gutscheinField;
     private JTextField bigPriceField;
     private JTextField rueckgeldField;
     private JTextField individuellRabattRelativField;
@@ -74,7 +76,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private JButton ecButton;
     private JButton stornoButton;
     private JButton passendButton;
-    private JButton gutscheinButton;
+    private JButton gutscheinEinloesenButton;
     private JLabel zahlungsLabel;
     private JButton neuerKundeButton;
     private JButton individuellRabattRelativButton;
@@ -292,27 +294,26 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         c1.insets = new Insets(1, 0, 1, 0);
         sonstigesPanel.setBorder(BorderFactory.createTitledBorder("Variabler Preis"));
         sonstigesButton = new BaseClass.BigButton("Sonstiges...");
+        gutscheinVerkaufenButton = new JButton("Gutschein verk.");
+        gutscheinVerkaufenButton.setBackground(gutscheinColor);
+        gutscheinVerkaufenButton.setForeground(Color.WHITE);
         sevenPercentButton = new BaseClass.BigButton("7% MwSt.");
         nineteenPercentButton = new BaseClass.BigButton("19% MwSt.");
-        sonstigesButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-        sevenPercentButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-        nineteenPercentButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         sonstigesButton.addActionListener(this);
+        gutscheinVerkaufenButton.addActionListener(this);
         sevenPercentButton.addActionListener(this);
         nineteenPercentButton.addActionListener(this);
 
-        int i = 0;
-        c1.gridy = i;
-        i++;
+        c1.gridx = 0; c1.gridy = 0;
         sonstigesPanel.add(sonstigesButton, c1);
-        c1.gridy = i;
-        i++;
+        c1.gridx = 0; c1.gridy = 1;
+        sonstigesPanel.add(gutscheinVerkaufenButton, c1);
+        c1.gridx = 1; c1.gridy = 0;
         sonstigesPanel.add(sevenPercentButton, c1);
-        c1.gridy = i;
-        i++;
+        c1.gridx = 1; c1.gridy = 1;
         sonstigesPanel.add(nineteenPercentButton, c1);
-        articleSelectPanel.add(sonstigesPanel);
 
+        articleSelectPanel.add(sonstigesPanel);
         artikelFormularPanel.add(articleSelectPanel);
 
         JPanel spinnerPanel = new JPanel();
@@ -478,28 +479,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
         JPanel gutscheinPanel = new JPanel();
         gutscheinPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-        gutscheinField = new BigPriceField("");
-        gutscheinField.setColumns(5);
-        removeDefaultKeyBindings(gutscheinField);
-        gutscheinField.addKeyListener(removeNumPadAdapter);
-        gutscheinField.setEditable(false);
-        gutscheinField.addKeyListener(new KeyAdapter() {
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    if (gutscheinButton.isEnabled()) {
-                        gutscheinButton.doClick();
-                    }
-                }
-            }
-        });
-        ((AbstractDocument) gutscheinField.getDocument()).setDocumentFilter(bc.geldFilter);
-        gutscheinField.getDocument().addDocumentListener(this);
-        gutscheinPanel.add(gutscheinField);
-        gutscheinPanel.add(new BigLabel(bc.currencySymbol));
-        gutscheinButton = new BaseClass.BigButton("OK");
-        gutscheinButton.setEnabled(false);
-        gutscheinButton.addActionListener(this);
-        gutscheinPanel.add(gutscheinButton);
+        gutscheinEinloesenButton = new BaseClass.BigButton("GUTSCHEIN EINLÖSEN");
+        gutscheinEinloesenButton.setBackground(gutscheinColor);
+        gutscheinEinloesenButton.setForeground(Color.WHITE);
+        gutscheinEinloesenButton.addActionListener(this);
+        gutscheinPanel.add(gutscheinEinloesenButton);
 
         JPanel zuZahlenPanel = new JPanel();
         zuZahlenPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
@@ -916,7 +900,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     abweichEnabled = true;
                     break;
                 }
-                if (type.equals("gutschein")) {
+                if (type.equals("gutschein") || type.equals("gutscheineinloesung")) {
                     // Es handelt sich um einen Gutschein, kein Rabatt
                     // erlauben
                     break;
@@ -1318,7 +1302,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
         hinzufuegenRaw(null, rabattID, einrueckung + aktionsname,
             "RABATT", "red", "rabatt", "", stueck.intValue(),
-            reduktion, reduktion, artikelMwSt,
+            reduktion, reduktion, artikelMwSt, null,
             false, false, null);
     }
 
@@ -1334,7 +1318,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
             hinzufuegenRaw(pfandArtikelID, null, einrueckung + pfandName,
                 "PFAND", "blue", "pfand", "", stueck.intValue(),
-                pfand, gesamtPfand, pfandMwSt,
+                pfand, gesamtPfand, pfandMwSt, null,
                 false, false, null);
         }
     }
@@ -1680,7 +1664,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     pstmtSetInteger(pstmt, 2, rechnungsNr);
                     pstmtSetInteger(pstmt, 3, ka.getGutscheinNr());
                     pstmtSetInteger(pstmt, 4, rechnungsNr);
-                    pstmtSetInteger(pstmt, 5, ka.getPosition();
+                    pstmtSetInteger(pstmt, 5, ka.getPosition());
                     pstmtSetInteger(pstmt, 6, ka.getGutscheinNr());
                     pstmt.setBigDecimal(7, ka.getEinzelPreis().abs());
                     int result = pstmt.executeUpdate();
@@ -1744,7 +1728,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private void hinzufuegenRaw(Integer artID, Integer rabID, String kurzname, String artikelNummer,
                                 String color, String type, String menge, Integer stueck,
                                 BigDecimal einzelPreis, BigDecimal gesPreis, BigDecimal artikelMwSt,
-                                boolean addPosition, boolean addRemButton,
+                                Integer gutscheinNr, boolean addPosition, boolean addRemButton,
                                 Integer index) {
         if (kassierArtikel.size() == 0) {
             // First item is added, this is a new TSE transaction
@@ -1768,6 +1752,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         ka.setEinzelPreis(einzelPreis);
         ka.setGesPreis(gesPreis);
         ka.setMwst(artikelMwSt);
+        ka.setGutscheinNr(gutscheinNr);
         if (index == null) {
             kassierArtikel.add(ka);
         } else {
@@ -1810,12 +1795,13 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     }
 
     private void hinzufuegen(int artID, String kurzname, String artikelNummer, String color, String type, String menge,
-                             Integer stueck, BigDecimal artikelPreis, BigDecimal gesPreis, String artikelMwSt) {
+                             Integer stueck, BigDecimal artikelPreis, BigDecimal gesPreis, String artikelMwSt,
+                             Integer gutscheinNr) {
         hinzufuegenRaw(artID, null, kurzname, artikelNummer, color,
                        type, menge, stueck, artikelPreis, gesPreis,
-                       new BigDecimal(artikelMwSt), true, true, null);
+                       new BigDecimal(artikelMwSt), gutscheinNr, true, true, null);
 
-        if (type != "leergut" && type != "anzahlung" && type != "anzahlungsaufloesung") {
+        if (type.equals("artikel") || type.equals("rueckgabe")) {
             checkForRabatt();
             checkForPfand();
         }
@@ -1833,7 +1819,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         String kurzname = getShortName(a);
         String artikelMwSt = getVAT(selectedArticleID);
         hinzufuegen(selectedArticleID, kurzname, artikelNummer, color, type, menge,
-                    stueck, artikelPreis, gesPreis, artikelMwSt);
+                    stueck, artikelPreis, gesPreis, artikelMwSt, null);
     }
 
     private void artikelNormalHinzufuegen() {
@@ -1844,14 +1830,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             return;
         }
         Integer stueck = (Integer) anzahlSpinner.getValue();
-        String type = "artikel";
-        if (selectedArticleID == gutscheinArtikelID) {
-            type = "gutschein";
-        }
         Artikel a = getArticle(selectedArticleID);
         Boolean sortiment = a.getSortiment();
         String color = sortiment ? "default" : "gray";
-        artikelHinzufuegen(stueck, type, color);
+        artikelHinzufuegen(stueck, "artikel", color);
     }
 
     private void artikelRueckgabeHinzufuegen() {
@@ -1870,7 +1852,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             BigDecimal gesamtPfand = pfand.multiply(new BigDecimal(stueck));
             String pfandMwSt = getVAT(selectedArticleID);
             hinzufuegen(pfandArtikelID, pfandName, "LEERGUT", "green", "leergut", "",
-                        stueck, pfand, gesamtPfand, pfandMwSt);
+                        stueck, pfand, gesamtPfand, pfandMwSt, null);
         }
     }
 
@@ -1888,7 +1870,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             BigDecimal anzahlungsWert = brutto.divide(gesUmsatz, 10, RoundingMode.HALF_UP).multiply(gesamtAnzahlung);
             String mwst = steuersatz.toString();
             hinzufuegen(anzahlungArtikelID, anzahlungName, "ANZAHLUNG", "red", "anzahlung", "",
-                        stueck, anzahlungsWert, anzahlungsWert, mwst);
+                        stueck, anzahlungsWert, anzahlungsWert, mwst, null);
         }
         // now zero all prices except the anzahlung
         for (int i = 0; i < kassierArtikel.size(); i++) {
@@ -1902,6 +1884,67 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
         }
         updateDisplay(anzahlungName, stueck, bc.priceFormatter(gesamtAnzahlung));
+    }
+
+    private Integer getMaxGutscheinNr() {
+        Integer maxGutscheinNr = null;
+        try {
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                "SELECT IFNULL(MAX(gutschein_nr), 199) FROM gutschein"
+            );
+            if (rs.next()) {
+                maxGutscheinNr = rs.getInt(1);
+                for (KassierArtikel ka : kassierArtikel) {
+                    logger.debug(ka.getGutscheinNr());
+                    if (ka.getGutscheinNr() != null && ka.getGutscheinNr() > maxGutscheinNr) {
+                        maxGutscheinNr = ka.getGutscheinNr();
+                    }
+                }
+            }
+            rs.close();
+            stmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return maxGutscheinNr;
+    }
+
+    private void gutscheineHinzufuegen() {
+        Integer nGutscheine = (Integer) anzahlSpinner.getValue();
+        Integer maxGutscheinNr = getMaxGutscheinNr();
+        BigDecimal gutscheinWert = new BigDecimal(bc.priceFormatterIntern(preisField.getText()));
+        if (maxGutscheinNr != null) {
+            for (int i=0; i<nGutscheine; i++) {
+                // fuege nGutscheine separate Gutscheine hinzu, jeder mit distinkter gutscheinNr
+                gutscheinHinzufuegen(maxGutscheinNr+i+1, gutscheinWert);
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Fehler: Gutschein-Nr. kann nicht bestimmt werden.",
+            "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void gutscheinHinzufuegen(int gutscheinNr, BigDecimal gutscheinWert) {
+        Integer stueck = 1;
+        selectedStueck = stueck;
+        String gutscheinName = "Gutschein Nr. "+gutscheinNr;
+        String mwst = getVAT(gutscheinArtikelID);
+        hinzufuegen(gutscheinArtikelID, gutscheinName, "GUTSCHEIN", "green", "gutschein", "",
+                    stueck, gutscheinWert, gutscheinWert, mwst, gutscheinNr);
+    }
+
+    private void gutscheinEinloesungHinzufuegen(int gutscheinNr, BigDecimal einloesWert) {
+        Integer stueck = 1;
+        selectedStueck = stueck;
+        String gutscheinName = "Einlösung Gutschein Nr. "+gutscheinNr;
+        einloesWert = einloesWert.abs().multiply(bc.minusOne);
+        String mwst = getVAT(gutscheineinloesungArtikelID);
+        hinzufuegen(gutscheineinloesungArtikelID, gutscheinName, "GUTSCHEIN", "green", "gutscheineinloesung", "",
+                    stueck, einloesWert, einloesWert, mwst, gutscheinNr);
     }
 
     private void zwischensumme() {
@@ -1928,7 +1971,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         zahlungsLabel.setText("Bar-Zahlung. Bitte jetzt abrechnen.");
         kundeGibtField.setEditable(true);
         passendButton.setEnabled(true);
-        gutscheinField.setEditable(true);
         // neuerKundeButton.setEnabled(false);
         neuerKundeButton.setEnabled(true);
         kundeGibtField.requestFocus();
@@ -1940,16 +1982,15 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         kundeGibtField.setText("");
         kundeGibtField.setEditable(false);
         passendButton.setEnabled(false);
-        gutscheinField.setEditable(true);
         neuerKundeButton.setEnabled(true);
         neuerKundeButton.requestFocus();
     }
 
-    private void gutschein() {
-        selectedArticleID = gutscheinArtikelID; // internal Gutschein artikel_id
-        preisField.setText(gutscheinField.getText());
-        anzahlSpinner.setValue(1);
-        artikelRueckgabeHinzufuegen();
+    private void gutscheinEinloesen() {
+        selectedArticleID = gutscheineinloesungArtikelID; // internal Gutscheineinlösung artikel_id
+        // preisField.setText(gutscheinField.getText());
+        // anzahlSpinner.setValue(1);
+        // gutscheinEinloesungHinzufuegen(gutscheinNr, einloesWert);
         zwischensumme();
     }
 
@@ -2050,7 +2091,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
         hinzufuegenRaw(artikelRabattArtikelID, null, einrueckung + rabattName,
                        "RABATT", "red", "rabatt", "", selectedStueck,
-                       einzelReduktion, gesReduktion, artikelMwSt,
+                       einzelReduktion, gesReduktion, artikelMwSt, null,
                        false, false, i + 1);
 
         updateAll();
@@ -2075,7 +2116,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         hinzufuegenRaw(specialArticleID, null, einrueckung + rabattName,
                        rabattAbsolut.signum() > 0 ? "RABATT" : "ANPASSUNG",
                        "red", "rabatt", "", selectedStueck,
-                       einzelReduktion, gesReduktion, artikelMwSt,
+                       einzelReduktion, gesReduktion, artikelMwSt, null,
                        false, false, i + 1);
 
         updateAll();
@@ -2141,7 +2182,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
             hinzufuegenRaw(rechnungRabattArtikelID, null, rabattName,
                 "RABATT", "red", "rabattrechnung", "", 1,
-                reduktion, reduktion, mwst,
+                reduktion, reduktion, mwst, null,
                 false, true, null);
 
             // updateAll fuer Arme
@@ -2176,10 +2217,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     public void insertUpdate(DocumentEvent e) {
         if (e.getDocument() == preisField.getDocument()) {
             setButtonsEnabled();
-            return;
-        }
-        if (e.getDocument() == gutscheinField.getDocument()) {
-            gutscheinButton.setEnabled(gutscheinField.getText().length() > 0);
             return;
         }
     }
@@ -2270,6 +2307,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             asPanel.artikelField.requestFocus();
             return;
         }
+        if (e.getSource() == gutscheinVerkaufenButton) {
+            setSelectedArticle(gutscheinArtikelID); // Variabler Preis 7%
+            return;
+        }
         if (e.getSource() == sevenPercentButton) {
             setSelectedArticle(variablerPreis7PZArtikelID); // Variabler Preis 7%
             return;
@@ -2280,7 +2321,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
         if (e.getSource() == hinzufuegenButton) {
             removeRabattAufRechnung();
-            artikelNormalHinzufuegen();
+            if (selectedArticleID == gutscheinArtikelID) {
+                gutscheineHinzufuegen();
+            } else {
+                artikelNormalHinzufuegen();
+            }
             return;
         }
         if (e.getSource() == leergutButton) {
@@ -2318,8 +2363,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             kundeGibtField.setText( bc.priceFormatter(getTotalPrice()) );
             return;
         }
-        if (e.getSource() == gutscheinButton) {
-            gutschein();
+        if (e.getSource() == gutscheinEinloesenButton) {
+            gutscheinEinloesen();
             return;
         }
         if (e.getSource() == stornoButton) {
@@ -2423,7 +2468,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     hinzufuegenRaw(ka.getArtikelID(), ka.getRabattID(), ka.getName(),
                                    ka.getArtikelNummer(), ka.getColor(), ka.getType(),
                                    ka.getMenge(), ka.getStueckzahl(), ka.getEinzelPreis(),
-                                   ka.getGesPreis(), ka.getMwst(), addPos, addRemButton, null);
+                                   ka.getGesPreis(), ka.getMwst(), ka.getGutscheinNr(),
+                                   addPos, addRemButton, null);
                     if (ka.getType().equals("anzahlungsaufloesung")) {
                         // store the anzahlungRechNr with the KassierArtikel;
                         kassierArtikel.get(kassierArtikel.size() - 1).setAnzahlungRechNr(anzahlungRechNr);
