@@ -118,11 +118,11 @@ public class Bestellen extends BestellungsGrundlage implements
             }
         };
         doc.setDocumentFilter(
-                new IntegerDocumentFilter(
-                    (Integer)((SpinnerNumberModel)spinner.getModel()).getMinimum(),
-                    (Integer)((SpinnerNumberModel)spinner.getModel()).getMaximum(), "Anzahl", this
-                    )
-                );
+            new IntegerDocumentFilter(
+                (Integer)((SpinnerNumberModel)spinner.getModel()).getMinimum(),
+                (Integer)((SpinnerNumberModel)spinner.getModel()).getMaximum(), "Anzahl", this
+            )
+        );
         JSpinner.NumberEditor editor = (JSpinner.NumberEditor)spinner.getEditor();
         JFormattedTextField field = editor.getTextField();
         field.setDocument(doc);
