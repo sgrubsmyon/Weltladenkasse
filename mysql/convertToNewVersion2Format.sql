@@ -812,7 +812,7 @@ ALTER TABLE rabattaktion DROP CONSTRAINT rabattaktion_ibfk_2;
 ALTER TABLE verkauf_details DROP CONSTRAINT verkauf_details_ibfk_2;
 ALTER TABLE bestellung_details DROP CONSTRAINT bestellung_details_ibfk_2;
 ALTER TABLE training_verkauf_details DROP CONSTRAINT training_verkauf_details_ibfk_2;
--- Update tables, i.e. shift artikel_id by 3 to make room:
+-- Update tables, i.e. shift artikel_id by 4 to make room:
 UPDATE artikel SET artikel_id = artikel_id + 3
     WHERE artikel_id >= 3 ORDER BY artikel_id DESC;
 UPDATE pfand SET artikel_id = artikel_id + 3
@@ -825,16 +825,40 @@ UPDATE bestellung_details SET artikel_id = artikel_id + 3
     WHERE artikel_id >= 3;
 UPDATE training_verkauf_details SET artikel_id = artikel_id + 3
     WHERE artikel_id >= 3;
+UPDATE artikel SET artikel_id = artikel_id + 1
+    WHERE artikel_id >= 7 ORDER BY artikel_id DESC;
+UPDATE pfand SET artikel_id = artikel_id + 1
+    WHERE artikel_id >= 7;
+UPDATE rabattaktion SET artikel_id = artikel_id + 1
+    WHERE artikel_id >= 7;
+UPDATE verkauf_details SET artikel_id = artikel_id + 1
+    WHERE artikel_id >= 7;
+UPDATE bestellung_details SET artikel_id = artikel_id + 1
+    WHERE artikel_id >= 7;
+UPDATE training_verkauf_details SET artikel_id = artikel_id + 1
+    WHERE artikel_id >= 7;
+-- Additionally, make extra room for potential future insertions: (up to 99 internal article slots)
+UPDATE artikel SET artikel_id = artikel_id + 86
+    WHERE artikel_id >= 14 ORDER BY artikel_id DESC;
+UPDATE rabattaktion SET artikel_id = artikel_id + 86
+    WHERE artikel_id >= 14;
+UPDATE verkauf_details SET artikel_id = artikel_id + 86
+    WHERE artikel_id >= 14;
+UPDATE bestellung_details SET artikel_id = artikel_id + 86
+    WHERE artikel_id >= 14;
+UPDATE training_verkauf_details SET artikel_id = artikel_id + 86
+    WHERE artikel_id >= 14;
 -- Add FK constraints again:
 ALTER TABLE pfand ADD FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id);
 ALTER TABLE rabattaktion ADD FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id);
 ALTER TABLE verkauf_details ADD FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id);
 ALTER TABLE bestellung_details ADD FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id);
 ALTER TABLE training_verkauf_details ADD FOREIGN KEY (artikel_id) REFERENCES artikel(artikel_id);
--- Insert the 3 new articles:
+-- Insert the 4 new articles:
 INSERT INTO `artikel` (`artikel_id`, `produktgruppen_id`, `lieferant_id`, `artikel_nr`, `artikel_name`, `kurzname`, `menge`, `einheit`, `barcode`, `herkunft`, `vpe`, `setgroesse`, `vk_preis`, `empf_vk_preis`, `ek_rabatt`, `ek_preis`, `variabler_preis`, `sortiment`, `lieferbar`, `beliebtheit`, `bestand`, `von`, `bis`, `aktiv`) VALUES (3,2,1,'ANPASSUNG','Manuelle Preisanpassung','Preisanpassung',NULL,NULL,NULL,NULL,NULL,1,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,1);
 INSERT INTO `artikel` (`artikel_id`, `produktgruppen_id`, `lieferant_id`, `artikel_nr`, `artikel_name`, `kurzname`, `menge`, `einheit`, `barcode`, `herkunft`, `vpe`, `setgroesse`, `vk_preis`, `empf_vk_preis`, `ek_rabatt`, `ek_preis`, `variabler_preis`, `sortiment`, `lieferbar`, `beliebtheit`, `bestand`, `von`, `bis`, `aktiv`) VALUES (4,2,1,'ANZAHLUNG','Anzahlung','Anzahlung',NULL,NULL,NULL,NULL,NULL,1,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,1);
 INSERT INTO `artikel` (`artikel_id`, `produktgruppen_id`, `lieferant_id`, `artikel_nr`, `artikel_name`, `kurzname`, `menge`, `einheit`, `barcode`, `herkunft`, `vpe`, `setgroesse`, `vk_preis`, `empf_vk_preis`, `ek_rabatt`, `ek_preis`, `variabler_preis`, `sortiment`, `lieferbar`, `beliebtheit`, `bestand`, `von`, `bis`, `aktiv`) VALUES (5,2,1,'ANZAHLAUFLOES','Anzahlungsauflösung','Anzahl.auflös.',NULL,NULL,NULL,NULL,NULL,1,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,1);
+INSERT INTO `artikel` (`artikel_id`, `produktgruppen_id`, `lieferant_id`, `artikel_nr`, `artikel_name`, `kurzname`, `menge`, `einheit`, `barcode`, `herkunft`, `vpe`, `setgroesse`, `vk_preis`, `empf_vk_preis`, `ek_rabatt`, `ek_preis`, `variabler_preis`, `sortiment`, `lieferbar`, `beliebtheit`, `bestand`, `von`, `bis`, `aktiv`) VALUES (7,6,1,'GUTSCHEINEINLOES','Gutscheineinlösung','Gutscheineinlösung',NULL,NULL,NULL,NULL,NULL,1,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,1);
 
 -- ------------
 -- anzahlung --
@@ -917,3 +941,39 @@ CREATE TABLE training_abrechnung_tag_tse (
 
 GRANT INSERT ON kasse.abrechnung_tag_tse TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.training_abrechnung_tag_tse TO 'mitarbeiter'@'localhost';
+
+
+-- ------------
+-- gutschein --
+-- ------------
+
+-- Gutschein muss mit 0% versteuert werden, weil es sich um einen "Mehrzweckgutschein" handelt,
+-- also ein zahlungsmittelähnliches Instrument gemäß § 3 Abs. 15 Satz 2 UStG
+UPDATE produktgruppe SET mwst_id = 1 WHERE produktgruppen_id = 6;
+
+CREATE TABLE gutschein (
+    gutschein_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    gutschein_nr INTEGER(10) UNSIGNED NOT NULL,
+    datum DATETIME NOT NULL,
+    gutschein_in_vd_id INTEGER(10) UNSIGNED NOT NULL,
+    einloesung_in_vd_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    restbetrag DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (gutschein_id),
+    FOREIGN KEY (gutschein_in_vd_id) REFERENCES verkauf_details(vd_id),
+    FOREIGN KEY (einloesung_in_vd_id) REFERENCES verkauf_details(vd_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE training_gutschein (
+    gutschein_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    gutschein_nr INTEGER(10) UNSIGNED NOT NULL,
+    datum DATETIME NOT NULL,
+    gutschein_in_vd_id INTEGER(10) UNSIGNED NOT NULL,
+    einloesung_in_vd_id INTEGER(10) UNSIGNED DEFAULT NULL,
+    restbetrag DECIMAL(13,2) NOT NULL,
+    PRIMARY KEY (gutschein_id),
+    FOREIGN KEY (gutschein_in_vd_id) REFERENCES training_verkauf_details(vd_id),
+    FOREIGN KEY (einloesung_in_vd_id) REFERENCES training_verkauf_details(vd_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+GRANT INSERT ON kasse.gutschein TO 'mitarbeiter'@'localhost';
+GRANT INSERT ON kasse.training_gutschein TO 'mitarbeiter'@'localhost';
