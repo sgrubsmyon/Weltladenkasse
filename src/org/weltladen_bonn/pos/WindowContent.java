@@ -48,6 +48,10 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected int anzahlungArtikelID = 4;
     protected int anzahlungsaufloesungArtikelID = 5;
     protected int gutscheinArtikelID = 6;
+    protected int gutscheineinloesungArtikelID = 7;
+    protected int sonstigesKHWArtikelID = 108;
+    protected int variablerPreis7PZArtikelID = 100;
+    protected int variablerPreis19PZArtikelID = 101;
 
     // Die Ausrichter:
     protected DefaultTableCellRenderer rechtsAusrichter = new DefaultTableCellRenderer();
