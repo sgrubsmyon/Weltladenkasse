@@ -238,11 +238,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         AbstractDocument doc = new PlainDocument() {
             @Override
             public void setDocumentFilter(DocumentFilter filter) {
-                if (filter instanceof IntegerDocumentFilter) { // w/o this if,
-                                                               // it's not
-                                                               // working
-                    // maybe the DocumentFilter is reset to a default filter for
-                    // Spinners
+                if (filter instanceof IntegerDocumentFilter) { // w/o this if, it's not working
+                    // maybe the DocumentFilter is reset to a default filter for spinners
                     super.setDocumentFilter(filter);
                 }
             }
@@ -289,7 +286,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         JPanel sonstigesPanel = new JPanel(new GridBagLayout());
         GridBagConstraints c1 = new GridBagConstraints();
         c1.anchor = GridBagConstraints.CENTER;
-        c1.fill = GridBagConstraints.HORIZONTAL;
+        c1.fill = GridBagConstraints.BOTH;
         c1.ipady = 5;
         c1.insets = new Insets(1, 0, 1, 0);
         sonstigesPanel.setBorder(BorderFactory.createTitledBorder("Variabler Preis"));
@@ -1990,8 +1987,18 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         selectedArticleID = gutscheineinloesungArtikelID; // internal Gutscheineinlösung artikel_id
         // preisField.setText(gutscheinField.getText());
         // anzahlSpinner.setValue(1);
-        // gutscheinEinloesungHinzufuegen(gutscheinNr, einloesWert);
-        zwischensumme();
+        JDialog dialog = new JDialog(this.mainWindow, "Bitte Nr. des einzulösenden Gutscheins eingeben", true);
+        GutscheinEinloesenDialog ged = new GutscheinEinloesenDialog(this.pool, this.mainWindow, dialog);
+        dialog.getContentPane().add(ged, BorderLayout.CENTER);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.pack();
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
+        boolean aborted = ged.getAborted();
+        if (!aborted) {
+            // gutscheinEinloesungHinzufuegen(gutscheinNr, einloesWert);
+            zwischensumme();
+        }
     }
 
     private int neuerKunde() {
