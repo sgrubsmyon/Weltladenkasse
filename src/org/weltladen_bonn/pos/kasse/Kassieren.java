@@ -2099,6 +2099,25 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
+    private BigDecimal queryGutscheinRestbetrag(int gutscheinNr) {
+        BigDecimal restbetrag = null;
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT MIN(restbetrag) FROM gutschein WHERE gutschein_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, gutscheinNr);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); restbetrag = rs.getBigDecimal(1); rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return restbetrag;
+    }
+
     private int neuerKunde() {
         // Send data to TSE:
         Vector<String> zahlung = new Vector<String>();
@@ -2440,7 +2459,40 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
         if (e.getSource() == rueckgabeButton) {
             removeRabattAufRechnung();
-            artikelRueckgabeHinzufuegen();
+            if (selectedArticleID == gutscheinArtikelID) {
+                String gutscheinNrStr = JOptionPane.showInputDialog(this, "Bitte Gutschein-Nr. eingeben: ");
+                Integer gutscheinNr = null;
+                try {
+                    gutscheinNr = Integer.parseInt(gutscheinNrStr);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this,
+                        "Fehlerhafte Eingabe.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+                if (gutscheinNr != null) {
+                    if (gutscheinNr < 200) { // TODO ändern, nachdem alle alten Gutscheine (<200) eingelöst worden sind
+                        JOptionPane.showMessageDialog(this,
+                            "Es können nur Gutscheine mit Nr. unter 200 zurückgegeben werden.\n"+
+                            "Gutscheine mit Nr. unter 200 bitte einlösen.",
+                            "Info", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        BigDecimal restbetrag = queryGutscheinRestbetrag(gutscheinNr);
+                        if (restbetrag == null) {
+                            JOptionPane.showMessageDialog(this,
+                                "Gutschein wurde nicht gefunden.",
+                                "Info", JOptionPane.INFORMATION_MESSAGE);
+                        } else if (restbetrag.compareTo(bc.zero) <= 0) {
+                            JOptionPane.showMessageDialog(this,
+                                "Dieser Gutschein wurde bereits vollständig eingelöst.",
+                                "Info", JOptionPane.INFORMATION_MESSAGE);
+                        } else {
+                            gutscheinEinloesungHinzufuegen(gutscheinNr, restbetrag);
+                        }
+                    }
+                }
+            } else {
+                artikelRueckgabeHinzufuegen();
+            }
             return;
         }
         if (e.getSource() == zwischensummeButton) {
