@@ -138,7 +138,7 @@ public abstract class RechnungsGrundlage extends ArtikelGrundlage {
         LinkedHashMap<Integer, BigDecimal> vats = retrieveVATs();
         HashMap<Integer, Vector<BigDecimal>> mwstIDsAndValues = new HashMap< Integer, Vector<BigDecimal> >();
         TreeMap<BigDecimal, Vector<BigDecimal>> mwstValues = calculateMwStValuesInRechnung();
-        for ( Map.Entry<Integer, BigDecimal​> vat : vats.entrySet() ){
+        for ( Map.Entry<Integer, BigDecimal> vat : vats.entrySet() ){
             BigDecimal steuersatz = vat.getValue();
             //if (steuersatz.signum() != 0){ // need to calculate 0% also for correct booking (DSFinV-K)
             if ( mwstValues.containsKey(steuersatz) ){
