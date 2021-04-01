@@ -401,7 +401,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
                 kg_preis = bc.priceFormatter(preis_pro_kg)+" "+bc.currencySymbol;
             }
         } catch (NullPointerException ex) {
-            logger.warn("Either menge_bd ({}) or preis_bd ({}) is null for this article.", menge_bd, preis_bd);
+            // logger.warn("Either menge_bd ({}) or preis_bd ({}) is null for this article.", menge_bd, preis_bd);
         }
         return kg_preis;
     }
