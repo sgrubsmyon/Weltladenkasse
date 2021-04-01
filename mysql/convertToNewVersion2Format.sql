@@ -907,6 +907,10 @@ GRANT INSERT ON kasse.anzahlung_details TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.training_anzahlung TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.training_anzahlung_details TO 'mitarbeiter'@'localhost';
 
+-- Set old Anzahlung articles to inactive:
+UPDATE artikel SET aktiv = FALSE WHERE artikel_ID IN (31293, 31294, 31295);
+-- check if any Anzahlung article is still found in article select panel
+
 -- ---------------------
 -- abrechnung_tag_tse --
 -- ---------------------
