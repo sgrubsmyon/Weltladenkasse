@@ -296,13 +296,15 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 "vd.stueckzahl, vd.ges_preis, " +
                 "IFNULL(ad.ges_preis / vd.stueckzahl, vd.ges_preis / vd.stueckzahl) AS einzelpreis, " +
                 "vd.mwst_satz, ad.ges_preis IS NOT NULL AS part_of_anzahlung, " +
-                "gs.gutschein_nr " +
+                "gsv.gutschein_nr AS gutschein_nr_verkauf, " +
+                "gse.gutschein_nr AS gutschein_nr_einloes " +
                 "FROM "+tableForMode("verkauf_details")+" AS vd " +
                 "LEFT JOIN artikel AS a USING (artikel_id) " +
                 "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
                 "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
                 "LEFT JOIN "+tableForMode("anzahlung_details")+" AS ad USING (vd_id) " +
-                "LEFT JOIN "+tableForMode("gutschein")+" AS gs ON vd.vd_id = gs.gutschein_in_vd_id " +
+                "LEFT JOIN "+tableForMode("gutschein")+" AS gsv ON vd.vd_id = gsv.gutschein_in_vd_id " +
+                "LEFT JOIN "+tableForMode("gutschein")+" AS gse ON vd.vd_id = gse.einloesung_in_vd_id " +
                 "WHERE vd.rechnungs_nr = ?"
             );
             pstmtSetInteger(pstmt, 1, rechnungsNr);
@@ -333,20 +335,29 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 }
                 BigDecimal mwst = new BigDecimal(rs.getString(15));
                 Boolean part_of_anzahlung = rs.getBoolean(16);
-                Integer gutscheinNr = rs.getInt(17);
+                Integer gutscheinNrVerkauf = rs.getInt(17);
+                Integer gutscheinNrEinloes = rs.getInt(18);
                 if (part_of_anzahlung) gesPreis = "";
                 else gesPreis = bc.priceFormatter(gesPreisDec)+' '+bc.currencySymbol;
                 String name = artikelname;
                 String color = "default";
                 String type = "artikel";
-                if (artikelID == gutscheinArtikelID) { 
+                Integer gutscheinNr = null;
+                // if (artikelID == gutscheinArtikelID) { 
+                if (gutscheinNrVerkauf != 0) { // rs.getInt() does not return null, but 0
                     // TODO Implement:
                     // name = artikelNameGutschein();
+                    gutscheinNr = gutscheinNrVerkauf;
+                    name = "Gutschein Nr. "+gutscheinNr;
                     color = "green";
                     type = "gutschein";
-                } else if (artikelID == gutscheineinloesungArtikelID) { 
+                // } else if (artikelID == gutscheineinloesungArtikelID) {
+                } else if (gutscheinNrEinloes != 0) { // rs.getInt() does not return null, but 0
                     // TODO Implement:
                     // name = artikelNameGutscheinEinloes();
+                    gutscheinNr = gutscheinNrEinloes;
+                    name = "Einlösung Gutschein Nr. "+gutscheinNr;
+                    artikelnummer = "GUTSCHEINEINLOES";
                     color = "green";
                     type = "gutscheineinloesung";
                 } else if ( aktionsname != null ) { // Aktionsrabatt

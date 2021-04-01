@@ -341,14 +341,16 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                 "a.artikel_nr, a.sortiment, a.menge, a.einheit, " +
                 "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
                 "vd.stueckzahl, ad.ges_preis, vd.ges_preis, vd.mwst_satz, " +
-                "gs.gutschein_nr " +
+                "gsv.gutschein_nr AS gutschein_nr_verkauf, " +
+                "gse.gutschein_nr AS gutschein_nr_einloes " +
                 "FROM "+tableForMode("verkauf_details")+" AS vd " +
                 "LEFT JOIN "+tableForMode("anzahlung_details")+" AS ad " +
                 "  ON vd.rechnungs_nr = ad.rechnungs_nr AND vd.vd_id = ad.vd_id " +
                 "LEFT JOIN artikel AS a USING (artikel_id) " +
                 "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
                 "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
-                "LEFT JOIN "+tableForMode("gutschein")+" AS gs ON vd.vd_id = gs.gutschein_in_vd_id " +
+                "LEFT JOIN "+tableForMode("gutschein")+" AS gsv ON vd.vd_id = gsv.gutschein_in_vd_id " +
+                "LEFT JOIN "+tableForMode("gutschein")+" AS gse ON vd.vd_id = gse.einloesung_in_vd_id " +
                 "WHERE vd.rechnungs_nr = ? AND " +
                 "vd.vd_id <= ("+
                 "  SELECT MAX(vd_id) FROM "+tableForMode("verkauf_details")+" "+
@@ -382,7 +384,8 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                 String gesPreisInCaseOfAnzahlung = rs.getString(14);
                 BigDecimal gesPreisInCaseOfAnzahlungDec = new BigDecimal(gesPreisInCaseOfAnzahlung);
                 BigDecimal mwst = new BigDecimal(rs.getString(15));
-                Integer gutscheinNr = rs.getInt(16);
+                Integer gutscheinNrVerkauf = rs.getInt(16);
+                Integer gutscheinNrEinloes = rs.getInt(17);
                 BigDecimal gesPreisDec = null;
                 BigDecimal einzelPreis = null;
                 if (gesPreis != null) {
@@ -398,14 +401,22 @@ public class AnzahlungAufloesDialog extends DialogWindow {
                 String name = artikelname;
                 String color = "default";
                 String type = "artikel";
-                if (artikelID == gutscheinArtikelID) {
+                Integer gutscheinNr = null;
+                // if (artikelID == gutscheinArtikelID) {
+                if (gutscheinNrVerkauf != 0) { // rs.getInt() does not return null, but 0
                     // TODO Implement:
                     // name = artikelNameGutschein();
+                    gutscheinNr = gutscheinNrVerkauf;
+                    name = "Gutschein Nr. "+gutscheinNr;
                     color = "green";
                     type = "gutschein";
-                } else if (artikelID == gutscheineinloesungArtikelID) {
+                // } else if (artikelID == gutscheineinloesungArtikelID) {
+                } else if (gutscheinNrEinloes != 0) { // rs.getInt() does not return null, but 0
                     // TODO Implement:
                     // name = artikelNameGutscheinEinloes();
+                    gutscheinNr = gutscheinNrEinloes;
+                    name = "Einlösung Gutschein Nr. "+gutscheinNr;
+                    artikelnummer = "GUTSCHEINEINLOES";
                     color = "green";
                     type = "gutscheineinloesung";
                 } else if ( aktionsname != null ) { // Aktionsrabatt
