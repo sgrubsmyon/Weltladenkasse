@@ -1643,80 +1643,110 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private void maybeInsertEinloesungIntoGutschein(int rechnungsNr) {
         for (KassierArtikel ka : kassierArtikel) {
             if (ka.getType().equals("gutscheineinloesung")) {
+                // TODO implement this also for gutscheinNr < 200!!!
+                Integer gutscheinNr = ka.getGutscheinNr();
                 try {
-                    // insert into table gutschein
                     Connection connection = this.pool.getConnection();
 
-                    // Because MySQL prevents SELECT subqueries on the same table as INSERTing INTO,
-                    // need to perform these two subqueries separately:
+                    if (gutscheinNr >= 200) { // TODO ändern, nachdem alle alten Gutscheine (<200) eingelöst worden sind
+                        // "normal" new voucher
 
-                    // 1: query for gutschein_in_vd_id
-                    PreparedStatement pstmt = connection.prepareStatement(
-                        "SELECT gutschein_in_vd_id FROM "+tableForMode("gutschein")+
-                        "    WHERE gutschein_nr = ? AND einloesung_in_vd_id IS NULL"
-                    );
-                    pstmtSetInteger(pstmt, 1, ka.getGutscheinNr());
-                    ResultSet rs = pstmt.executeQuery();
-                    Integer gutschein_in_vd_id = null;
-                    if (rs.next()) {
-                        gutschein_in_vd_id = rs.getInt(1);
-                    }
-                    rs.close();
-                    if (gutschein_in_vd_id == null) {
-                        JOptionPane.showMessageDialog(this, "Fehler: Gutschein Nr. " + ka.getGutscheinNr() +
-                        " konnte nicht als Einlösung in Gutscheintabelle gespeichert werden,\n"+
-                        "weil die gutschein_in_vd_id nicht ermittelt werden konnte.",
-                        "Fehler", JOptionPane.ERROR_MESSAGE);
-                        pstmt.close();
-                        connection.close();
-                    } else {
-
-                        // 2: query for restbetrag
-                        pstmt = connection.prepareStatement(
-                            "SELECT (SELECT MIN(restbetrag) FROM "+tableForMode("gutschein")+" "+
-                            "    WHERE gutschein_nr = ?) - ?"
+                        // Because MySQL prevents SELECT subqueries on the same table as INSERTing INTO,
+                        // need to perform these two subqueries separately:
+    
+                        // 1: query for gutschein_in_vd_id
+                        PreparedStatement pstmt = connection.prepareStatement(
+                            "SELECT gutschein_in_vd_id FROM "+tableForMode("gutschein")+
+                            "    WHERE gutschein_nr = ? AND einloesung_in_vd_id IS NULL"
                         );
-                        pstmtSetInteger(pstmt, 1, ka.getGutscheinNr());
-                        pstmt.setBigDecimal(2, ka.getEinzelPreis().abs());
-                        rs = pstmt.executeQuery();
-                        BigDecimal restbetrag = null;
+                        pstmtSetInteger(pstmt, 1, gutscheinNr);
+                        ResultSet rs = pstmt.executeQuery();
+                        Integer gutschein_in_vd_id = null;
                         if (rs.next()) {
-                            restbetrag = rs.getBigDecimal(1);
+                            gutschein_in_vd_id = rs.getInt(1);
                         }
                         rs.close();
-                        if (restbetrag == null) {
-                            JOptionPane.showMessageDialog(this, "Fehler: Gutschein Nr. " + ka.getGutscheinNr() +
+                        if (gutschein_in_vd_id == null) {
+                            JOptionPane.showMessageDialog(this, "Fehler: Gutschein Nr. " + gutscheinNr +
                             " konnte nicht als Einlösung in Gutscheintabelle gespeichert werden,\n"+
-                            "weil der Restbetrag nicht ermittelt werden konnte.",
+                            "weil die gutschein_in_vd_id nicht ermittelt werden konnte.",
                             "Fehler", JOptionPane.ERROR_MESSAGE);
                             pstmt.close();
                             connection.close();
                         } else {
-                            
-                            // 3: now, the insert:
+    
+                            // 2: query for restbetrag
                             pstmt = connection.prepareStatement(
-                                "INSERT INTO "+tableForMode("gutschein")+" SET "+
-                                "gutschein_nr = ?, "+
-                                "datum = (SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?), "+
-                                "gutschein_in_vd_id = ?, "+
-                                "einloesung_in_vd_id = (SELECT vd_id FROM "+tableForMode("verkauf_details")+" "+
-                                "    WHERE rechnungs_nr = ? AND position = ?), "+
-                                "restbetrag = ?"
+                                "SELECT (SELECT MIN(restbetrag) FROM "+tableForMode("gutschein")+" "+
+                                "    WHERE gutschein_nr = ?) - ?"
                             );
-                            pstmtSetInteger(pstmt, 1, ka.getGutscheinNr());
-                            pstmtSetInteger(pstmt, 2, rechnungsNr);
-                            pstmtSetInteger(pstmt, 3, gutschein_in_vd_id);
-                            pstmtSetInteger(pstmt, 4, rechnungsNr);
-                            pstmtSetInteger(pstmt, 5, ka.getPosition());
-                            pstmt.setBigDecimal(6, restbetrag);
-                            int result = pstmt.executeUpdate();
-                            pstmt.close();
-                            connection.close();
-                            if (result == 0) {
-                                JOptionPane.showMessageDialog(this, "Fehler: Gutschein Nr. " + ka.getGutscheinNr() +
-                                " konnte nicht als Einlösung in Gutscheintabelle gespeichert werden.",
-                                "Fehler", JOptionPane.ERROR_MESSAGE);
+                            pstmtSetInteger(pstmt, 1, gutscheinNr);
+                            pstmt.setBigDecimal(2, ka.getEinzelPreis().abs());
+                            rs = pstmt.executeQuery();
+                            BigDecimal restbetrag = null;
+                            if (rs.next()) {
+                                restbetrag = rs.getBigDecimal(1);
                             }
+                            rs.close();
+                            if (restbetrag == null) {
+                                JOptionPane.showMessageDialog(this, "Fehler: Gutschein Nr. " + gutscheinNr +
+                                " konnte nicht als Einlösung in Gutscheintabelle gespeichert werden,\n"+
+                                "weil der Restbetrag nicht ermittelt werden konnte.",
+                                "Fehler", JOptionPane.ERROR_MESSAGE);
+                                pstmt.close();
+                                connection.close();
+                            } else {
+                                
+                                // 3: now, insert into table gutschein
+                                pstmt = connection.prepareStatement(
+                                    "INSERT INTO "+tableForMode("gutschein")+" SET "+
+                                    "gutschein_nr = ?, "+
+                                    "datum = (SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?), "+
+                                    "gutschein_in_vd_id = ?, "+
+                                    "einloesung_in_vd_id = (SELECT vd_id FROM "+tableForMode("verkauf_details")+" "+
+                                    "    WHERE rechnungs_nr = ? AND position = ?), "+
+                                    "restbetrag = ?"
+                                );
+                                pstmtSetInteger(pstmt, 1, gutscheinNr);
+                                pstmtSetInteger(pstmt, 2, rechnungsNr);
+                                pstmtSetInteger(pstmt, 3, gutschein_in_vd_id);
+                                pstmtSetInteger(pstmt, 4, rechnungsNr);
+                                pstmtSetInteger(pstmt, 5, ka.getPosition());
+                                pstmt.setBigDecimal(6, restbetrag);
+                                int result = pstmt.executeUpdate();
+                                pstmt.close();
+                                connection.close();
+                                if (result == 0) {
+                                    JOptionPane.showMessageDialog(this, "Fehler: Gutschein Nr. " + gutscheinNr +
+                                    " konnte nicht als Einlösung in Gutscheintabelle gespeichert werden.",
+                                    "Fehler", JOptionPane.ERROR_MESSAGE);
+                                }
+                            }
+                        }
+                    } else {
+                        // old voucher listed on paper
+
+                        // insert into table gutschein
+                        PreparedStatement pstmt = connection.prepareStatement(
+                            "INSERT INTO "+tableForMode("gutschein")+" SET "+
+                            "gutschein_nr = ?, "+
+                            "datum = (SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?), "+
+                            "gutschein_in_vd_id = NULL, "+
+                            "einloesung_in_vd_id = (SELECT vd_id FROM "+tableForMode("verkauf_details")+" "+
+                            "    WHERE rechnungs_nr = ? AND position = ?), "+
+                            "restbetrag = 0.00"
+                        );
+                        pstmtSetInteger(pstmt, 1, gutscheinNr);
+                        pstmtSetInteger(pstmt, 2, rechnungsNr);
+                        pstmtSetInteger(pstmt, 3, rechnungsNr);
+                        pstmtSetInteger(pstmt, 4, ka.getPosition());
+                        int result = pstmt.executeUpdate();
+                        pstmt.close();
+                        connection.close();
+                        if (result == 0) {
+                            JOptionPane.showMessageDialog(this, "Fehler: Gutschein Nr. " + gutscheinNr +
+                            " konnte nicht als Einlösung in Gutscheintabelle gespeichert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
                         }
                     }
                 } catch (SQLException ex) {
@@ -2058,7 +2088,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 artikelRueckgabeHinzufuegen();
                 // hack to make the article "appear" to be a voucher:
                 kassierArtikel.get(kassierArtikel.size() - 1).setName("Gutscheineinlösung");
-                kassierArtikel.get(kassierArtikel.size() - 1).setType("gutscheineinloesung"); // TODO Check what happens now and if everything works!
+                kassierArtikel.get(kassierArtikel.size() - 1).setType("gutscheineinloesung");
+                kassierArtikel.get(kassierArtikel.size() - 1).setGutscheinNr(gutscheinNr);
                 data.get(data.size() - 1).set(1, "Gutscheineinlösung");
                 data.get(data.size() - 1).set(2, "GUTSCHEINEINLOES");
             } else {
