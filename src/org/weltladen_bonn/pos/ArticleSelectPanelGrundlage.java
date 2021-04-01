@@ -50,8 +50,10 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
 
     protected int selectedArticleID;
     // show all 'normal' items (toplevel_id IS NOT NULL), and in addition
-    // Gutscheine (where toplevel_id is NULL and sub_id is 2):
-    private String filterStr = " AND (toplevel_id IS NOT NULL OR sub_id = 2 OR sub_id = 4) "; // exceptions for Gutschein (sub_id = 2) and Pfand optional (sub_id = 4)
+    // Gutscheine (where toplevel_id is NULL and sub_id is 2)
+    // and Pfand optional (toplevel_id in NULL and sub_id is 4),
+    // but exclude "Gutscheineinlösung":
+    private String filterStr = " AND (toplevel_id IS NOT NULL OR sub_id = 2 OR sub_id = 4) AND artikel_id != "+gutscheineinloesungArtikelID+" ";
 
     public ArticleSelectPanelGrundlage(MariaDbPoolDataSource pool, MainWindowGrundlage mw, ArticleSelectUser asu, String fs) {
         super(pool, mw);
