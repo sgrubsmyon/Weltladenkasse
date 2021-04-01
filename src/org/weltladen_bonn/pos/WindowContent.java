@@ -380,7 +380,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
                 menge = (bc.unifyDecimal(menge_bd)+" "+einheit).trim();
             }
         } catch (NullPointerException ex) {
-            logger.warn("Either menge_bd ({}) or einheit ({}) is null for this article.", menge_bd, einheit);
+            // logger.warn("Either menge_bd ({}) or einheit ({}) is null for this article.", menge_bd, einheit);
         }
         return menge;
     }
