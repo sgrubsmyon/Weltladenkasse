@@ -2454,9 +2454,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (e.getSource() == ecButton) {
             if ((new BigDecimal(getTotalPrice())).compareTo(ecSchwelle) < 0) {
                 int answer = JOptionPane.showConfirmDialog(this,
-                        "ACHTUNG: Gesamtbetrag unter " + bc.priceFormatter(ecSchwelle) + " " + bc.currencySymbol
-                                + " !\n" + "Wirklich EC-Zahlung erlauben?",
-                        "Warnung", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    "ACHTUNG: Gesamtbetrag unter " + bc.priceFormatter(ecSchwelle) + " " + bc.currencySymbol + " !\n" +
+                    "Wirklich EC-Zahlung erlauben?",
+                    "Warnung", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if (answer == JOptionPane.NO_OPTION) {
                     return;
                 }
@@ -2474,8 +2474,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
         if (e.getSource() == stornoButton) {
             int answer = JOptionPane.showConfirmDialog(this,
-                    "Wirklich stornieren?", "Storno",
-                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                "Wirklich stornieren?", "Storno",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (answer == JOptionPane.YES_OPTION) {
                 stornieren();
             }

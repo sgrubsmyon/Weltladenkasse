@@ -232,6 +232,58 @@ public class HeutigeRechnungen extends Rechnungen {
         }
     }
 
+    private void maybeInsertStornoIntoGutschein(int stornierteRechNr, int stornierendeRechNr) {
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT DISTINCT gutschein_nr FROM "+tableForMode("gutschein")+" "+
+                "INNER JOIN "+tableForMode("verkauf_details")+" ON gutschein_in_vd_id = vd_id "+
+                "WHERE rechnungs_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, stornierteRechNr);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                // this means there was at least one voucher in this rechnung --> invalidate the vouchers by zeroing their restbetrag!
+                Integer gutscheinNr = rs.getInt(1);
+
+                // 1: query for gutschein_in_vd_id
+                PreparedStatement pstmt2 = connection.prepareStatement(
+                    "SELECT gutschein_in_vd_id FROM "+tableForMode("gutschein")+
+                    "    WHERE gutschein_nr = ? AND einloesung_in_vd_id IS NULL"
+                );
+                pstmtSetInteger(pstmt2, 1, gutscheinNr);
+                ResultSet rs2 = pstmt2.executeQuery();
+                rs2.next(); int gutschein_in_vd_id = rs2.getInt(1); rs2.close();
+                pstmt2.close();
+
+                // 2: now, insert into table gutschein
+                pstmt2 = connection.prepareStatement(
+                    "INSERT INTO "+tableForMode("gutschein")+" SET "+
+                    "gutschein_nr = ?, "+
+                    "datum = (SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?), "+
+                    "gutschein_in_vd_id = ?, "+
+                    "restbetrag = 0.00"
+                );
+                pstmtSetInteger(pstmt2, 1, gutscheinNr);
+                pstmtSetInteger(pstmt2, 2, stornierendeRechNr);
+                pstmtSetInteger(pstmt2, 3, gutschein_in_vd_id);
+                int result = pstmt2.executeUpdate();
+                pstmt2.close();
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                        "Fehler: In Rechnung enthaltener Gutschein Nr. "+gutscheinNr+" konnte nicht ungültig gemacht werden!",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+    }
+
     private BigDecimal insertStornoIntoKassenstand(int stornierteRechNr, int stornierendeRechNr) {
         BigDecimal betrag = null;
         try {
