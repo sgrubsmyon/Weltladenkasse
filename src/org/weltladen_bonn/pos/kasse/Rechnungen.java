@@ -340,10 +340,12 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 String color = "default";
                 String type = "artikel";
                 if (artikelID == gutscheinArtikelID) { 
+                    // TODO Implement:
                     // name = artikelNameGutschein();
                     color = "green";
                     type = "gutschein";
                 } else if (artikelID == gutscheineinloesungArtikelID) { 
+                    // TODO Implement:
                     // name = artikelNameGutscheinEinloes();
                     color = "green";
                     type = "gutscheineinloesung";

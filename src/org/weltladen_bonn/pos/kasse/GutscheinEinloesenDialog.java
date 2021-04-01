@@ -304,7 +304,7 @@ public class GutscheinEinloesenDialog extends DialogWindow implements DocumentLi
                 buildGutscheinFoundPanel(new JComponent[] {notFoundLabel});
                 einloesWertField.setEnabled(false);
                 okButton.setEnabled(false);
-            } else if (nr < 200) { // TODO ändern, nachdem alle alten Gutscheine eingelöst worden sind
+            } else if (nr < 200) { // TODO ändern, nachdem alle alten Gutscheine (<200) eingelöst worden sind
                 buildGutscheinFoundPanel(new JComponent[] {niceTextArea(
                     "Bei Gutscheinen mit Nr. unter 200 bitte in der Papierliste "+
                     "den vorhandenen Restbetrag prüfen und die Einlösung auch in die "+
