@@ -787,9 +787,13 @@ INSERT INTO tse_transaction SELECT transaction_id, transaction_number, rechnungs
 
 -- drop the temporary translation table:
 -- export the translation table into a CSV file for documentation purposes:
-(SELECT 'rechnungs_nr_alt', 'rechnungs_nr_neu')
-    UNION
-(SELECT rechnungs_nr_alt, rechnungs_nr_neu FROM rechnungs_nr_alt_neu)
+-- this adds column header row with "rechnungs_nr_alt   rechnungs_nr_neu", but does
+-- not work on Raspi:
+-- (SELECT 'rechnungs_nr_alt', 'rechnungs_nr_neu')
+--     UNION
+-- (SELECT rechnungs_nr_alt, rechnungs_nr_neu FROM rechnungs_nr_alt_neu)
+--     INTO OUTFILE 'neues_v2.0_format_uebersetzung_rechnungs_nr_alt_neu.csv'; -- IMPORTANT: copy this file before it gets lost upon reboot!!!
+SELECT rechnungs_nr_alt, rechnungs_nr_neu FROM rechnungs_nr_alt_neu
     INTO OUTFILE 'neues_v2.0_format_uebersetzung_rechnungs_nr_alt_neu.csv'; -- IMPORTANT: copy this file before it gets lost upon reboot!!!
 DROP TABLE rechnungs_nr_alt_neu;
 -- drop the temporary copies:
