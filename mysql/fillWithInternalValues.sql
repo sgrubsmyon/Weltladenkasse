@@ -11,6 +11,8 @@ LOCK TABLES `mwst` WRITE;
 INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (1,0.00000);
 INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (2,0.07000);
 INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (3,0.19000);
+INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (4,0.05500);
+INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (5,0.10700);
 /*!40000 ALTER TABLE `mwst` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -21,11 +23,11 @@ SOURCE interne_artikel.sql;
 
 LOCK TABLES `pfand` WRITE;
 /*!40000 ALTER TABLE `pfand` DISABLE KEYS */;
-INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (1,4);
-INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (2,5);
-INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (3,6);
-INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (4,7);
-INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (5,8);
-INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (6,9);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (1,8);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (2,9);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (3,10);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (4,11);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (5,12);
+INSERT INTO `pfand` (`pfand_id`, `artikel_id`) VALUES (6,13);
 /*!40000 ALTER TABLE `pfand` ENABLE KEYS */;
 UNLOCK TABLES;

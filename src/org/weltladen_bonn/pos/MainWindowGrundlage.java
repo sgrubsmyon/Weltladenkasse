@@ -25,6 +25,8 @@ import javax.swing.JOptionPane;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import org.weltladen_bonn.pos.SplashScreen;
+
 // interface holding the window of the application GUI:
 public abstract class MainWindowGrundlage extends JFrame {
     private static final Logger logger = LogManager.getLogger(MainWindowGrundlage.class);
@@ -52,6 +54,7 @@ public abstract class MainWindowGrundlage extends JFrame {
     protected JLabel kassenstandLabel;
     protected JLabel hostLabel;
 
+    protected SplashScreen splash;
 
     //***************************************************
     // Methods
@@ -60,27 +63,37 @@ public abstract class MainWindowGrundlage extends JFrame {
     /**
      *    The constructor.
      *       */
-    public MainWindowGrundlage() {
+    public MainWindowGrundlage(SplashScreen spl, int nTasks) {
+        this.splash = spl;
+        this.splash.setStatusLabel("Lade Basis-Klasse...");
+        this.splash.setProgress(1 * 100 / nTasks);
         bc = new BaseClass();
-        initiate();
+        initiate(nTasks);
     }
 
-    public void initiate(){
+    private void initiate(int nTasks) {
+        this.splash.setStatusLabel("Stelle Verbindung zur Datenbank her...");
+        this.splash.setProgress(2 * 100 / nTasks);
         this.dbconn = new DBConnection(bc);
         if (!this.dbconn.connectionWorks) return;
         this.pool = this.dbconn.pool;
 
+        this.splash.setStatusLabel("Baue Fenster auf...");
+        this.splash.setProgress(3 * 100 / nTasks);
         holdAll.setLayout(new BorderLayout());
 
         bottomPanel.setLayout(new FlowLayout());
         holdAll.add(bottomPanel, BorderLayout.SOUTH);
-            updateBottomPanel();
+        updateBottomPanel();
 
         this.getContentPane().add(holdAll, BorderLayout.CENTER);
     }
 
+    protected String tableForMode(String tableName) {
+        return bc.operationMode.equals("normal") ? tableName : "training_"+tableName;
+    }
 
-    public BigDecimal retrieveKassenstand(){
+    public BigDecimal retrieveKassenstand() {
         BigDecimal ks = new BigDecimal("0.00");
         try {
             // Grab connection from the pool
@@ -89,15 +102,15 @@ public abstract class MainWindowGrundlage extends JFrame {
             Statement stmt = connection.createStatement();
             // Run MySQL command
             ResultSet rs = stmt.executeQuery(
-                        "SELECT neuer_kassenstand FROM kassenstand WHERE "+
-                        "kassenstand_id = (SELECT MAX(kassenstand_id) FROM kassenstand)"
-                        );
+                "SELECT neuer_kassenstand FROM "+tableForMode("kassenstand")+" WHERE "+
+                "kassenstand_id = (SELECT MAX(kassenstand_id) FROM "+tableForMode("kassenstand")+")"
+            );
             if ( rs.next() ){ ks = rs.getBigDecimal(1); }
             rs.close();
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             JOptionPane.showMessageDialog(this,
                 "Verbindung zum Datenbank-Server unterbrochen?\n"+
                 "Fehlermeldung: "+ex.getMessage(),
@@ -107,7 +120,7 @@ public abstract class MainWindowGrundlage extends JFrame {
     }
 
 
-    public Integer retrieveKassenstandId(){
+    public Integer retrieveKassenstandId() {
         Integer id = null;
         try {
             // Grab connection from the pool
@@ -116,14 +129,14 @@ public abstract class MainWindowGrundlage extends JFrame {
             Statement stmt = connection.createStatement();
             // Run MySQL command
             ResultSet rs = stmt.executeQuery(
-                    "SELECT MAX(kassenstand_id) FROM kassenstand"
+                    "SELECT MAX(kassenstand_id) FROM "+tableForMode("kassenstand")
             );
             if ( rs.next() ){ id = rs.getInt(1); }
             rs.close();
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             JOptionPane.showMessageDialog(this,
                 "Verbindung zum Datenbank-Server unterbrochen?\n"+
                 "Fehlermeldung: "+ex.getMessage(),
@@ -134,12 +147,12 @@ public abstract class MainWindowGrundlage extends JFrame {
 
 
     // Setters & Getters:
-    public void setContentPanel(JPanel panel){
+    public void setContentPanel(JPanel panel) {
         this.contentPanel = panel;
         holdAll.add(this.contentPanel, BorderLayout.CENTER);
     }
 
-    public void changeContentPanel(JPanel panel){
+    public void changeContentPanel(JPanel panel) {
 //	this.contentPanel.removeAll();
         holdAll.remove(this.contentPanel);
         holdAll.revalidate();
@@ -147,7 +160,7 @@ public abstract class MainWindowGrundlage extends JFrame {
         holdAll.add(this.contentPanel, BorderLayout.CENTER);
     }
 
-    public void updateBottomPanel(){
+    public void updateBottomPanel() {
         holdAll.remove(this.bottomPanel);
         holdAll.revalidate();
         this.bottomPanel = new JPanel(); // The bottom panel which holds date and kassenstand bar.

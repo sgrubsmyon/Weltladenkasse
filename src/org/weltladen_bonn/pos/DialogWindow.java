@@ -50,9 +50,9 @@ public abstract class DialogWindow extends WindowContent {
     }
 
     protected void updateAll(){
-	this.remove(allPanel);
-	this.revalidate();
-	showAll();
+        this.remove(allPanel);
+        this.revalidate();
+        showAll();
     }
 
     protected abstract int submit();

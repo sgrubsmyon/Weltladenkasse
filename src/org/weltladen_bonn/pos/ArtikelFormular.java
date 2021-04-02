@@ -127,9 +127,7 @@ public class ArtikelFormular extends WindowContent
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
-            // System.out.println("Exception: " + ex.getMessage());
-            // ex.printStackTrace();
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }

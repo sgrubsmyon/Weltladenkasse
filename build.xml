@@ -6,8 +6,8 @@
     <property name="build-resources" location="build/resources"/>
     <property name="lib" location="lib"/>
     <property name="resources" location="resources"/>
-    <property name="jarfile-kasse" location="Weltladenkasse_v1.5.0.jar"/>
-    <property name="jarfile-besteller" location="Weltladenbesteller_v1.5.0.jar"/>
+    <property name="jarfile-kasse" location="Weltladenkasse_v2.0.0.jar"/>
+    <property name="jarfile-besteller" location="Weltladenbesteller_v2.0.0.jar"/>
 
     <!-- with a little help from: https://ant.apache.org/manual/tutorial-HelloWorldWithAnt.html -->
     <path id="classpath">
@@ -31,6 +31,7 @@
     <target name="convert" depends="copy" description="convert properties files">
         <native2ascii encoding="UTF-8" src="." dest="." includes="config.txt" ext=".properties"/>
         <native2ascii encoding="UTF-8" src="." dest="." includes="config_local.txt" ext=".properties"/>
+        <native2ascii encoding="UTF-8" src="." dest="." includes="config_training.txt" ext=".properties"/>
         <native2ascii encoding="UTF-8" src="." dest="." includes="config_Windows.txt" ext=".properties"/>
     </target>
 

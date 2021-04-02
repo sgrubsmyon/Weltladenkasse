@@ -1,8 +1,15 @@
 package org.weltladen_bonn.pos.kasse;
 
+import org.weltladen_bonn.pos.kasse.WeltladenTSE.TSEStatus;
+
 // Basic Java stuff:
 import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
+import java.text.SimpleDateFormat;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -65,6 +72,8 @@ class AbrechnungenTag extends Abrechnungen {
 
     private Boolean kassenstandWasChanged = false;
 
+    private WeltladenTSE tse;
+
     // Methoden:
     /**
      *    The constructor.
@@ -72,6 +81,12 @@ class AbrechnungenTag extends Abrechnungen {
     AbrechnungenTag(MariaDbPoolDataSource pool, MainWindowGrundlage mw, AbrechnungenTabbedPane atp, TabbedPane tp, Integer exportIndex){
         super(pool, mw, "", "Tagesabrechnung", "yyyy-MM-dd HH:mm:ss", "dd.MM. HH:mm (E)",
                 "zeitpunkt", "abrechnung_tag");
+        if (mw instanceof MainWindow) {
+            MainWindow mainw = (MainWindow) mw;
+            tse = mainw.getTSE();
+        } else {
+            tse = null;
+        }
         this.setExportDirFormat(bc.exportDirAbrechnungTag);
         this.abrechTabbedPane = atp;
         this.tabbedPane = tp;
@@ -100,56 +115,91 @@ class AbrechnungenTag extends Abrechnungen {
 
 // ----------------------------------------------------------------------------
 
+    private boolean abrechnungTagEmpty() {
+        boolean empty = true;
+        try {
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                "SELECT MAX(id) IS NULL FROM "+tableForMode("abrechnung_tag")
+            );
+            if (rs.next()) {
+                empty = rs.getBoolean(1);
+            }
+            rs.close();
+            stmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return empty;
+    }
 
-    private PreparedStatement prepareStmtStornos(Connection connection, Integer abrechnung_tag_id) throws SQLException {
+    private PreparedStatement prepareStmtStornos(Connection connection, Integer abrechnung_tag_id, Boolean abrTagEmpty) throws SQLException {
         // Summe über Stornos:
         PreparedStatement pstmt = connection.prepareStatement(
-                // SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) WHERE storniert = TRUE AND verkaufsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 17 LIMIT 1), '0001-01-01') AND verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 18 LIMIT 1), '9999-01-01') GROUP BY mwst_satz;
-                "SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) " +
-                        "FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) " +
-                        "WHERE storniert = TRUE AND " +
-                        "verkaufsdatum >= IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '0001-01-01') AND " +
-                        "verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '9999-01-01') " +
-                        "GROUP BY mwst_satz"
+            // SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) WHERE rechnungs_nr IN (SELECT storno_von FROM verkauf WHERE storno_von IS NOT NULL) AND rechnungs_nr >= IF((SELECT COUNT(*) FROM abrechnung_tag) = 0, 0, (SELECT rechnungs_nr_von FROM abrechnung_tag WHERE id = 18)) AND rechnungs_nr <= IF((SELECT COUNT(*) FROM abrechnung_tag) = 0, 4294967295, (SELECT rechnungs_nr_bis FROM abrechnung_tag WHERE id = 18)) GROUP BY mwst_satz;
+            "SELECT mwst_satz, SUM(mwst_netto + mwst_betrag) " +
+            "FROM "+tableForMode("verkauf_mwst")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
+            "WHERE rechnungs_nr IN (SELECT storno_von FROM verkauf WHERE storno_von IS NOT NULL) AND " +
+            "rechnungs_nr >= " +
+            (abrTagEmpty ? "0" : "(SELECT rechnungs_nr_von FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?)") + // if table is still completely empty: include all rechnungen
+            " AND " +
+            "rechnungs_nr <= " +
+            (abrTagEmpty ? "4294967295" : "(SELECT rechnungs_nr_bis FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?)") + // if table is still completely empty: include all rechnungen
+            //              ^^^^^^^^^^ this is highest value for unsigned int
+            " " +
+            "GROUP BY mwst_satz"
         );
-        pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
-        pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
+        if (!abrTagEmpty) {
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
+        }
         return pstmt;
     }
 
-    private PreparedStatement prepareStmtRetouren(Connection connection, Integer abrechnung_tag_id) throws SQLException {
+    private PreparedStatement prepareStmtRetouren(Connection connection, Integer abrechnung_tag_id, Boolean abrTagEmpty) throws SQLException {
         // Summe über Retouren:
         PreparedStatement pstmt = connection.prepareStatement(
-                // SELECT mwst_satz, SUM(ges_preis) FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) INNER JOIN artikel USING (artikel_id) WHERE storniert = FALSE AND verkaufsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 0 LIMIT 1), '0001-01-01') AND verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 9999999999999 LIMIT 1), '9999-01-01') AND stueckzahl < 0 AND produktgruppen_id >= 9 GROUP BY mwst_satz;
-                "SELECT mwst_satz, SUM(ges_preis) " +
-                        "FROM verkauf_details " +
-                        "INNER JOIN verkauf USING (rechnungs_nr) " +
-                        "LEFT JOIN artikel USING (artikel_id) " + // left join needed because Rabattaktionen do not have an artikel_id
-                        "WHERE storniert = FALSE AND " +
-                        "verkaufsdatum >= IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '0001-01-01') AND " +
-                        "verkaufsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '9999-01-01') AND " +
-                        "stueckzahl < 0 AND ( produktgruppen_id NOT IN (1, 6, 7, 8) OR produktgruppen_id IS NULL ) " + // exclude internal articles, Gutschein, and Pfand
-                        // produktgruppen_id is null for Rabattaktionen
-                        "GROUP BY mwst_satz"
+            // SELECT mwst_satz, SUM(ges_preis) FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) LEFT JOIN artikel USING (artikel_id) WHERE rechnungs_nr >= IF((SELECT COUNT(*) FROM abrechnung_tag) = 0, 0, (SELECT rechnungs_nr_von FROM abrechnung_tag WHERE id = 1461)) AND rechnungs_nr <= IF((SELECT COUNT(*) FROM abrechnung_tag) = 0, 4294967295, (SELECT rechnungs_nr_bis FROM abrechnung_tag WHERE id = 1461)) AND stueckzahl < 0 AND ( produktgruppen_id NOT IN (1, 6, 7, 8) OR produktgruppen_id IS NULL ) AND storno_von IS NULL GROUP BY mwst_satz;
+            "SELECT mwst_satz, SUM(ges_preis) " +
+            "FROM "+tableForMode("verkauf_details")+" " +
+            "INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
+            "LEFT JOIN artikel USING (artikel_id) " + // left join needed because Rabattaktionen do not have an artikel_id
+            "WHERE " +
+            "rechnungs_nr >= " +
+            (abrTagEmpty ? "0" : "(SELECT rechnungs_nr_von FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?)") + // if table is still completely empty: include all rechnungen
+            " AND " +
+            "rechnungs_nr <= " +
+            (abrTagEmpty ? "4294967295" : "(SELECT rechnungs_nr_bis FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?)") + // if table is still completely empty: include all rechnungen
+            //              ^^^^^^^^^^ this is highest value for unsigned int
+            " AND " +
+            "stueckzahl < 0 AND ( produktgruppen_id NOT IN (1, 6, 7, 8) OR produktgruppen_id IS NULL ) AND " + // exclude internal articles, Gutschein, and Pfand
+            "storno_von IS NULL " + // exclude Storno
+            // produktgruppen_id is null for Rabattaktionen
+            "GROUP BY mwst_satz"
         );
-        pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
-        pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
+        if (!abrTagEmpty) {
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
+        }
         return pstmt;
     }
 
     private PreparedStatement prepareStmtEntnahmen(Connection connection, Integer abrechnung_tag_id) throws SQLException {
         // Summe über Entnahmen:
         PreparedStatement pstmt = connection.prepareStatement(
-                // SELECT SUM(entnahme_betrag) FROM (SELECT kassenstand_id AS kid, neuer_kassenstand - (SELECT neuer_kassenstand FROM kassenstand WHERE kassenstand_id = kid-1) AS entnahme_betrag FROM kassenstand WHERE buchungsdatum > IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 0 LIMIT 1), '0001-01-01') AND buchungsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = 9999999999999 LIMIT 1), '9999-01-01') AND entnahme = TRUE) AS entnahme_table;
-                "SELECT SUM(entnahme_betrag) " +
-                        "FROM (" +
-                        "SELECT kassenstand_id AS kid, " +
-                        "neuer_kassenstand - (SELECT neuer_kassenstand FROM kassenstand WHERE kassenstand_id = kid-1) AS entnahme_betrag " +
-                        "FROM kassenstand WHERE " +
-                        "buchungsdatum >= IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '0001-01-01') AND " +
-                        "buchungsdatum < IFNULL((SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = ? LIMIT 1), '9999-01-01') AND " +
-                        "entnahme = TRUE" +
-                        ") AS entnahme_table"
+            // SELECT SUM(entnahme_betrag) FROM (SELECT kassenstand_id AS kid, neuer_kassenstand - (SELECT neuer_kassenstand FROM kassenstand WHERE kassenstand_id = kid-1) AS entnahme_betrag FROM kassenstand WHERE kassenstand_id > IFNULL((SELECT kassenstand_id FROM abrechnung_tag WHERE id = 0), 0) AND kassenstand_id < IFNULL((SELECT kassenstand_id FROM abrechnung_tag WHERE id = 9999999999999), 4294967295) AND entnahme = TRUE) AS entnahme_table;
+            "SELECT SUM(entnahme_betrag) " +
+            "FROM (" +
+            "  SELECT kassenstand_id AS kid, " +
+            "  neuer_kassenstand - (SELECT neuer_kassenstand FROM "+tableForMode("kassenstand")+" WHERE kassenstand_id = kid-1) AS entnahme_betrag " +
+            "  FROM "+tableForMode("kassenstand")+" WHERE " +
+            "  kassenstand_id > IFNULL((SELECT kassenstand_id FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?), 0) AND " +
+            "  kassenstand_id < IFNULL((SELECT kassenstand_id FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?), 4294967295) AND " +
+            "  entnahme = TRUE" +
+            ") AS entnahme_table"
         );
         pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
         pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
@@ -161,11 +211,12 @@ class AbrechnungenTag extends Abrechnungen {
         abrechnungsStornos = new Vector<>();
         abrechnungsRetouren = new Vector<>();
         abrechnungsEntnahmen = new Vector<>();
+        boolean abrTagEmpty = abrechnungTagEmpty();
         try {
             Connection connection = this.pool.getConnection();
             for (Integer id : abrechnungsIDs) {
                 // Summe über Stornos:
-                PreparedStatement pstmt = prepareStmtStornos(connection, id);
+                PreparedStatement pstmt = prepareStmtStornos(connection, id, abrTagEmpty);
                 ResultSet rs = pstmt.executeQuery();
                 HashMap<BigDecimal, BigDecimal> map = new HashMap<>();
                 while (rs.next()) {
@@ -179,7 +230,7 @@ class AbrechnungenTag extends Abrechnungen {
                 abrechnungsStornos.add(map);
 
                 // Summe über Retouren:
-                pstmt = prepareStmtRetouren(connection, id);
+                pstmt = prepareStmtRetouren(connection, id, abrTagEmpty);
                 rs = pstmt.executeQuery();
                 HashMap<BigDecimal, BigDecimal> map2 = new HashMap<>();
                 while (rs.next()) {
@@ -208,7 +259,7 @@ class AbrechnungenTag extends Abrechnungen {
             }
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -227,9 +278,9 @@ class AbrechnungenTag extends Abrechnungen {
             for (Integer id : abrechnungsIDs) {
                 PreparedStatement pstmt = connection.prepareStatement(
                         "SELECT id, zeitpunkt, kommentar, aktiv " +
-                                "FROM zaehlprotokoll " +
-                                "WHERE abrechnung_tag_id = ? " +
-                                "ORDER BY id DESC"
+                        "FROM "+tableForMode("zaehlprotokoll")+" " +
+                        "WHERE abrechnung_tag_id = ? " +
+                        "ORDER BY id DESC"
                 );
                 pstmtSetInteger(pstmt, 1, id);
                 ResultSet rs = pstmt.executeQuery();
@@ -243,8 +294,8 @@ class AbrechnungenTag extends Abrechnungen {
                     //
                     PreparedStatement pstmt2 = connection.prepareStatement(
                             "SELECT SUM(anzahl*einheit) " +
-                                    "FROM zaehlprotokoll_details " +
-                                    "WHERE zaehlprotokoll_id = ?"
+                            "FROM "+tableForMode("zaehlprotokoll_details")+" " +
+                            "WHERE zaehlprotokoll_id = ?"
                     );
                     pstmtSetInteger(pstmt2, 1, rs.getInt(1));
                     ResultSet rs2 = pstmt2.executeQuery();
@@ -256,9 +307,9 @@ class AbrechnungenTag extends Abrechnungen {
                     //
                     pstmt2 = connection.prepareStatement(
                             "SELECT einheit, anzahl " +
-                                    "FROM zaehlprotokoll_details " +
-                                    "WHERE zaehlprotokoll_id = ? " +
-                                    "ORDER BY einheit"
+                            "FROM "+tableForMode("zaehlprotokoll_details")+" " +
+                            "WHERE zaehlprotokoll_id = ? " +
+                            "ORDER BY einheit"
                     );
                     pstmtSetInteger(pstmt2, 1, rs.getInt(1));
                     rs2 = pstmt2.executeQuery();
@@ -271,10 +322,10 @@ class AbrechnungenTag extends Abrechnungen {
                 rs.close();
                 //
                 pstmt = connection.prepareStatement(
-                        "SELECT neuer_kassenstand " +
-                                "FROM kassenstand INNER JOIN abrechnung_tag USING (kassenstand_id) " +
-                                "WHERE abrechnung_tag.id = ? " +
-                                "LIMIT 1"
+                    // SELECT neuer_kassenstand FROM kassenstand INNER JOIN abrechnung_tag USING (kassenstand_id) WHERE abrechnung_tag.id = 324;
+                    "SELECT neuer_kassenstand " +
+                    "FROM "+tableForMode("kassenstand")+" INNER JOIN "+tableForMode("abrechnung_tag")+" AS at USING (kassenstand_id) " +
+                    "WHERE at.id = ?"
                 );
                 pstmtSetInteger(pstmt, 1, id);
                 rs = pstmt.executeQuery();
@@ -291,14 +342,15 @@ class AbrechnungenTag extends Abrechnungen {
                     }
                     differenzen.add(diff);
                 }
-                //
+                // Select the first 'neuer_kassenstand' from a Tagesabschluss after the Tagesabschluss period
                 pstmt = connection.prepareStatement(
+                        // SELECT neuer_kassenstand FROM kassenstand WHERE kassenstand_id > (SELECT kassenstand_id FROM abrechnung_tag WHERE id = 324) AND manuell = TRUE AND entnahme = FALSE AND kommentar = 'Tagesabschluss' ORDER BY kassenstand_id LIMIT 1;
                         "SELECT neuer_kassenstand "+
-                                "FROM kassenstand "+
-                                "WHERE kassenstand_id > "+
-                                "(SELECT DISTINCT kassenstand_id FROM abrechnung_tag WHERE id = ?) "+
-                                "AND manuell = TRUE AND entnahme = FALSE AND kommentar = 'Tagesabschluss' "+
-                                "ORDER BY kassenstand_id LIMIT 1"
+                        "FROM "+tableForMode("kassenstand")+" "+
+                        "WHERE kassenstand_id > "+
+                        "(SELECT kassenstand_id FROM "+tableForMode("abrechnung_tag")+" WHERE id = ?) "+
+                        "AND manuell = TRUE AND entnahme = FALSE AND kommentar = 'Tagesabschluss' "+
+                        "ORDER BY kassenstand_id LIMIT 1"
                 );
                 pstmtSetInteger(pstmt, 1, id);
                 rs = pstmt.executeQuery();
@@ -328,7 +380,7 @@ class AbrechnungenTag extends Abrechnungen {
             }
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -340,7 +392,6 @@ class AbrechnungenTag extends Abrechnungen {
         queryStornosRetourenEntnahmen();
         queryZaehlprotokoll();
     }
-
 
     @Override
     void queryIncompleteAbrechnung() { // create new abrechnung (for display) from time of last abrechnung until now
@@ -373,12 +424,13 @@ class AbrechnungenTag extends Abrechnungen {
         // the queries concerning Stornierungen, Retouren and Entnahmen
         incompleteAbrechnungsStornos = new HashMap<>();
         incompleteAbrechnungsRetouren = new HashMap<>();
+        boolean abrTagEmpty = abrechnungTagEmpty();
         try {
             Connection connection = this.pool.getConnection();
-            Integer id = id(); // ID of new, yet to come, abrechnung
+            Integer id = id() + 1; // ID of new, yet to come, abrechnung
             
             // Summe über Stornos:
-            PreparedStatement pstmt = prepareStmtStornos(connection, id);
+            PreparedStatement pstmt = prepareStmtStornos(connection, id, abrTagEmpty);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 BigDecimal mwst_satz = rs.getBigDecimal(1);
@@ -390,7 +442,7 @@ class AbrechnungenTag extends Abrechnungen {
             pstmt.close();
 
             // Summe über Retouren:
-            pstmt = prepareStmtRetouren(connection, id);
+            pstmt = prepareStmtRetouren(connection, id, abrTagEmpty);
             rs = pstmt.executeQuery();
             while (rs.next()) {
                 BigDecimal mwst_satz = rs.getBigDecimal(1);
@@ -414,7 +466,7 @@ class AbrechnungenTag extends Abrechnungen {
             
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -425,10 +477,11 @@ class AbrechnungenTag extends Abrechnungen {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
+                // SELECT mwst_satz, SUM(ges_preis) AS bar_brutto FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) WHERE rechnungs_nr > IFNULL((SELECT MAX(rechnungs_nr_bis) FROM abrechnung_tag), 0) AND ec_zahlung = FALSE GROUP BY mwst_satz;
                     "SELECT mwst_satz, SUM(ges_preis) AS bar_brutto " +
-                    "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01') AND ec_zahlung = FALSE " +
+                    "FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
+                    "WHERE rechnungs_nr > " +
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) AND ec_zahlung = FALSE " +
                     "GROUP BY mwst_satz"
                     );
             while (rs.next()) {
@@ -442,7 +495,7 @@ class AbrechnungenTag extends Abrechnungen {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return abrechnungBarBrutto;
@@ -829,38 +882,56 @@ class AbrechnungenTag extends Abrechnungen {
 
 // ----------------------------------------------------------------------------
 
-
-    private String queryEarliestVerkauf() {
-        String date = "";
+    private Integer queryEarliestVerkauf() {
+        Integer nr = null;
         try {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT MIN(verkaufsdatum) "+
-                    "FROM verkauf WHERE storniert = FALSE AND verkaufsdatum > "+
-                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag),'0001-01-01')");
-            rs.next(); date = rs.getString(1); rs.close();
+            ResultSet rs = stmt.executeQuery("SELECT MIN(rechnungs_nr) "+
+                    "FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr > "+
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0)");
+            rs.next(); nr = rs.getInt(1); rs.close();
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
-        return date;
+        return nr;
     }
 
-    private String queryLatestVerkauf() {
-        String date = "";
+    private Integer queryLatestVerkauf() {
+        Integer nr = null;
         try {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT MAX(verkaufsdatum) "+
-                    "FROM verkauf WHERE storniert = FALSE AND verkaufsdatum > "+
-                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01')");
-            rs.next(); date = rs.getString(1); rs.close();
+            ResultSet rs = stmt.executeQuery("SELECT MAX(rechnungs_nr) "+
+                    "FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr > "+
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0)");
+            rs.next(); nr = rs.getInt(1); rs.close();
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return nr;
+    }
+
+    private String queryVerkaufDate(Integer rechnungs_nr) {
+        String date = "";
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, rechnungs_nr);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); date = rs.getString(1); rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return date;
@@ -902,42 +973,169 @@ class AbrechnungenTag extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT COUNT(*) FROM "+abrechnungsName+" "+
-                    "WHERE "+timeName+" = "+zeitpunktParsing
-                    );
+                "SELECT id FROM "+abrechnungsName+" "+
+                "WHERE "+timeName+" = "+zeitpunktParsing
+            );
             pstmt.setString(1, zeitpunkt);
             ResultSet rs = pstmt.executeQuery();
-            rs.next(); int count = rs.getInt(1); rs.close();
+            Vector<Integer> ids = new Vector<Integer>();
+            while (rs.next()) {
+                ids.add(rs.getInt(1));
+            }
+            rs.close();
             pstmt.close();
-            if (count > 0){
+            for (int id : ids) {
                 pstmt = connection.prepareStatement(
-                        "DELETE FROM "+abrechnungsName+" "+
-                        "WHERE "+timeName+" = "+zeitpunktParsing
-                        );
-                pstmt.setString(1, zeitpunkt);
+                    "DELETE FROM "+abrechnungsName+"_mwst "+
+                    "WHERE id = ?"
+                );
+                pstmt.setInt(1, id);
                 int result = pstmt.executeUpdate();
                 pstmt.close();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Alte Abrechnung konnte nicht aus Tabelle "+
-                            "'"+abrechnungsName+"' gelöscht werden.",
-                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                        "Fehler: MwSt.-Beträge von alter Abrechnung zu "+timeName+" '"+zeitpunkt+"' "+
+                        "konnten nicht aus Tabelle "+
+                        "'"+abrechnungsName+"_mwst' gelöscht werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+                pstmt = connection.prepareStatement(
+                    "DELETE FROM "+abrechnungsName+" "+
+                    "WHERE id = ?"
+                );
+                pstmt.setInt(1, id);
+                result = pstmt.executeUpdate();
+                pstmt.close();
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                        "Fehler: Alte Abrechnung zu "+timeName+" '"+zeitpunkt+"' "+
+                        "konnte nicht aus Tabelle "+
+                        "'"+abrechnungsName+"' gelöscht werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
+    }
+
+    private Integer previousLastSigCounter() {
+        Integer prevLastSigCounter = null;
+        try {
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT IFNULL(MAX(last_tse_sig_counter), 0) FROM "+tableForMode("abrechnung_tag"));
+            rs.next();
+            prevLastSigCounter = rs.getInt(1);
+            rs.close();
+            stmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return prevLastSigCounter;
+    }
+
+    private Integer previousLastTxNumber() {
+        Integer prevLastTxNumber = 1;
+        try {
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                "SELECT transaction_number FROM tse_transaction "+
+                "WHERE rechnungs_nr = (SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+")"
+            );
+            rs.next();
+            prevLastTxNumber = rs.getInt(1);
+            rs.close();
+            stmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return prevLastTxNumber;
+    }
+
+    private Integer exportTSELog() {
+        Integer lastSigCounter = null;
+        if (tse.inUse()) {
+            lastSigCounter = tse.getSignatureCounter(); // this is the last sig counter that will be included in the export
+            Integer prevLastSigCounter = previousLastSigCounter();
+            Date date = nowDate();
+            String year = new SimpleDateFormat("yyyy").format(date);
+            String dateStr = new SimpleDateFormat("yyyy-MM-dd").format(date);
+            String exportDir = System.getProperty("user.home")+bc.fileSep+bc.finDatDir+bc.fileSep+year;
+            Path path = Paths.get(exportDir);
+            if (!Files.exists(path)) {
+                // Create directory recursively:
+                try {
+                    Files.createDirectories(path);
+                } catch (IOException ex) {
+                    logger.error("Exception: {}", ex);
+                }
+            }
+            logger.info("previousLastSigCounter: {}", prevLastSigCounter);
+            logger.info("lastSigCounter: {}", lastSigCounter);
+            logger.info("Exporting TSE signatures from {} to {}", prevLastSigCounter + 1, lastSigCounter);
+            String exportFilename = exportDir+bc.fileSep+"tse_export_"+dateStr+"_Sig_from_"+(prevLastSigCounter + 1)+"_to_"+lastSigCounter+".tar";
+            logger.info("exportFilename: {}", exportFilename);
+            String message = tse.exportPartialTransactionDataBySigCounter(exportFilename, (long)prevLastSigCounter, null);
+            if (!message.equals("OK")) {
+                // Try exporting by transaction number, not by signature counter, as a fallback:
+                logger.error("!!! Tagesabrechnung TSE export via signature counter using tse.exportMoreData() failed!");
+                logger.error("!!! Error message: {}", message);
+                logger.error("!!! Trying to export via tx number using tse.exportData()...");
+                Integer lastTxNumber = tse.getTransactionNumber(); // this is the last tx number that will be included in the export
+                Integer prevLastTxNumber = previousLastTxNumber();
+                logger.info("previousLastTxNumber: {}", prevLastTxNumber);
+                logger.info("lastTxNumber: {}", lastTxNumber);
+                logger.info("Exporting TSE transactions from {} to {}", prevLastTxNumber + 1, lastTxNumber);
+                exportFilename = exportDir+bc.fileSep+"tse_export_"+dateStr+"_Tx_from_"+(prevLastTxNumber + 1)+"_to_"+lastTxNumber+".tar";
+                logger.info("exportFilename: {}", exportFilename);
+                message = tse.exportPartialTransactionDataByTXNumber(exportFilename, (long)(prevLastTxNumber + 1), null, null);
+                if (!message.equals("OK")) {
+                    // If it still did not work: inform user about failure
+                    // lastSigCounter = null; // There can be the problem of TSECommunicationError when trying to export too old (how old?)
+                        // transactions. If export fails due to old transactions, and lastSigCounter is set to null,
+                        // it will be tried over and over again to start export at those old transactions and it will never work
+                        // again. So let's rather live with one failed export file (will have 0 bytes) than break export forever.
+                    logger.fatal("Could not create the TSE export for Tagesabrechnung");
+                    if (tse.getStatus() != TSEStatus.failed) {
+                        tse.setStatus(TSEStatus.failed);
+                        tse.setFailReason("Die TSE-Daten des Tages konnten nach der Tagesabrechnung nicht exportiert werden");
+                        tse.showTSEFailWarning();
+                    }
+                    JOptionPane.showMessageDialog(this,
+                        "Fehler: TSE-Export des Tagesabschlusses konnte nicht erstellt werden!\n"+
+                        "Das ist übel.\n"+
+                        "Bitte der/dem Administrator*in Bescheid geben.\n"+
+                        "     Fehlermeldung: "+message,
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+        return lastSigCounter;
+    }
+
+    String substrIfLongerThan(int max_length, String s) {
+        if (s.length() > max_length) {
+            return s.substring(0, max_length);
+        }
+        return s;
     }
 
     private Integer insertTagesAbrechnung() {
         /** create new abrechnung (and save in DB) from time of last abrechnung until now */
         Integer id = null;
         try {
-            id = id();
-            String firstDate = queryEarliestVerkauf();
-            String lastDate = queryLatestVerkauf();
+            Integer firstNr = queryEarliestVerkauf();
+            Integer lastNr = queryLatestVerkauf();
+            String firstDate = queryVerkaufDate(firstNr);
+            String lastDate = queryVerkaufDate(lastNr);
             String nowDate = now();
             String zeitpunkt = decideOnZeitpunkt(firstDate, lastDate, nowDate);
             logger.info("Selected Zeitpunkt: "+zeitpunkt);
@@ -947,58 +1145,162 @@ class AbrechnungenTag extends Abrechnungen {
             }
             // get ID of current kassenstand (highest ID due to auto-increment)
             Integer kassenstand_id = mainWindow.retrieveKassenstandId();
+            Integer lastSigCounter = null;
+            if (bc.operationMode.equals("normal")) {
+                lastSigCounter = exportTSELog(); // no TSE exports in training mode
+            }
+
+            // Need to do this before inserting new Tagesabrechnung:
             // get netto values grouped by mwst:
             HashMap<BigDecimal, Vector<BigDecimal>> abrechnungNettoBetrag = queryIncompleteAbrechnungTag_VATs();
             // get totals (bar brutto) grouped by mwst:
             HashMap<BigDecimal, BigDecimal> abrechnungBarBrutto = queryIncompleteAbrechnung_BarBruttoVATs();
-            //System.out.println("mwst_satz  mwst_netto  mwst_betrag  bar_brutto");
-            //System.out.println("----------------------------------------------");
-            for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : abrechnungNettoBetrag.entrySet() ){
-                BigDecimal mwst_satz = entry.getKey();
-                Vector<BigDecimal> values = entry.getValue();
-                BigDecimal mwst_netto = values.get(1);
-                BigDecimal mwst_betrag = values.get(2);
-                BigDecimal bar_brutto = new BigDecimal("0.00");
-                if ( abrechnungBarBrutto.containsKey(mwst_satz) ){
-                    bar_brutto = abrechnungBarBrutto.get(mwst_satz);
+
+            // Make an entry in the abrechnung_tag table:
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO "+tableForMode("abrechnung_tag")+" SET "+
+                "z_kasse_id = ?, "+
+                "zeitpunkt = ?, "+
+                "zeitpunkt_real = ?, "+
+                "kassenstand_id = ?, " +
+                "rechnungs_nr_von = ?, " +
+                "rechnungs_nr_bis = ?, " +
+                "last_tse_sig_counter = ?"
+            );
+            pstmt.setString(1, bc.Z_KASSE_ID);
+            pstmt.setString(2, zeitpunkt);
+            pstmt.setString(3, nowDate);
+            pstmtSetInteger(pstmt, 4, kassenstand_id);
+            pstmtSetInteger(pstmt, 5, firstNr);
+            pstmtSetInteger(pstmt, 6, lastNr);
+            pstmtSetInteger(pstmt, 7, lastSigCounter);
+            int result = pstmt.executeUpdate();
+            pstmt.close();
+            if (result == 0) {
+                JOptionPane.showMessageDialog(this,
+                    "Fehler: Tagesabrechnung konnte nicht gespeichert werden.",
+                    "Fehler", JOptionPane.ERROR_MESSAGE);
+            } else {
+                id = id();
+
+                // Make entries in the abrechnung_tag_mwst table:
+                for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : abrechnungNettoBetrag.entrySet() ){
+                    BigDecimal mwst_satz = entry.getKey();
+                    Vector<BigDecimal> values = entry.getValue();
+                    BigDecimal mwst_netto = values.get(1);
+                    BigDecimal mwst_betrag = values.get(2);
+                    BigDecimal bar_brutto = new BigDecimal("0.00");
+                    if ( abrechnungBarBrutto.containsKey(mwst_satz) ){
+                        bar_brutto = abrechnungBarBrutto.get(mwst_satz);
+                    }
+                    pstmt = connection.prepareStatement(
+                        "INSERT INTO "+tableForMode("abrechnung_tag_mwst")+" SET "+
+                        "id = ?, "+
+                        "mwst_satz = ?, "+
+                        "mwst_netto = ?, "+
+                        "mwst_betrag = ?, "+
+                        "bar_brutto = ?"
+                    );
+                    pstmtSetInteger(pstmt, 1, id);
+                    pstmt.setBigDecimal(2, mwst_satz);
+                    pstmt.setBigDecimal(3, mwst_netto);
+                    pstmt.setBigDecimal(4, mwst_betrag);
+                    pstmt.setBigDecimal(5, bar_brutto);
+                    result = pstmt.executeUpdate();
+                    pstmt.close();
+                    if (result == 0){
+                        JOptionPane.showMessageDialog(this,
+                            "Fehler: MwSt.-Betrag zum MwSt.-Satz '"+mwst_satz+"' der Tagesabrechnung konnte nicht gespeichert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                        id = null;
+                    }
                 }
-                //System.out.println("INSERT INTO abrechnung_tag: id: "+id+
-                //        "  "+mwst_satz+"  "+mwst_netto+"  "+mwst_betrag+
-                //        "   "+bar_brutto);
-                Connection connection = this.pool.getConnection();
-                PreparedStatement pstmt = connection.prepareStatement(
-                        "INSERT INTO abrechnung_tag SET id = ?, "+
-                                "zeitpunkt = ?, "+
-                                "zeitpunkt_real = ?, "+
-                                "mwst_satz = ?, "+
-                                "mwst_netto = ?, "+
-                                "mwst_betrag = ?, "+
-                                "bar_brutto = ?, "+
-                                "kassenstand_id = ?"
+
+                // Make one entry in the abrechnung_tag_tse table with TSE status values:
+                LinkedHashMap<String, String> tseStatusValues = null;
+                if (tse.inUse()) { // only if TSE is operational, tseStatusValues is not null
+                    tseStatusValues = tse.getTSEStatusValues();
+                }
+                pstmt = connection.prepareStatement(
+                    "INSERT INTO "+tableForMode("abrechnung_tag_tse")+" SET "+
+                    "id = ?, "+
+                    "tse_id = ?, "+
+                    "tse_serial = ?, "+
+                    "tse_sig_algo = ?, "+
+                    "tse_time_format = ?, "+
+                    "tse_pd_encoding = ?, "+
+                    "tse_public_key = ?, "+
+                    "tse_cert_i = ?, "+
+                    "tse_cert_ii = ?"
                 );
                 pstmtSetInteger(pstmt, 1, id);
-                pstmt.setString(2, zeitpunkt);
-                pstmt.setString(3, nowDate);
-                pstmt.setBigDecimal(4, mwst_satz);
-                pstmt.setBigDecimal(5, mwst_netto);
-                pstmt.setBigDecimal(6, mwst_betrag);
-                pstmt.setBigDecimal(7, bar_brutto);
-                pstmtSetInteger(pstmt, 8, kassenstand_id);
-                int result = pstmt.executeUpdate();
+                if (tseStatusValues != null) {
+                    pstmtSetInteger(pstmt, 2, bc.TSE_ID);
+                    pstmt.setString(3, substrIfLongerThan(68, tseStatusValues.get("Seriennummer der TSE (Hex)")));
+                    pstmt.setString(4, substrIfLongerThan(21, tseStatusValues.get("Signatur-Algorithmus")));
+                    pstmt.setString(5, substrIfLongerThan(31, tseStatusValues.get("Zeitformat")));
+                    pstmt.setString(6, substrIfLongerThan(5, tseStatusValues.get("Encoding der processData-Strings")));
+                    pstmt.setString(7, substrIfLongerThan(512, tseStatusValues.get("Öffentlicher Schlüssel (Base64)")));
+                    String cert = tseStatusValues.get("TSE-Zertifikat (Base64)");
+                    int cert_length = cert.length();
+                    pstmt.setString(8, cert.substring(0, cert_length <= 1000 ? cert_length : 1000));
+                    if (cert_length > 1000) {
+                        pstmt.setString(9, cert.substring(1000, cert_length <= 2000 ? cert_length : 2000));
+                        if (cert_length > 2000) {
+                            JOptionPane.showMessageDialog(this,
+                                "Fehler: TSE-Zertifikat mit "+cert_length+" Zeichen zu lang (mehr als 2000 Zeichen), bitte der/dem Administrator*in Bescheid geben!",
+                                "Fehler", JOptionPane.ERROR_MESSAGE);
+                        }
+                    } else {
+                        pstmt.setString(9, null);
+                    }
+                } else { // TSE not operational, so do not store TSE status values
+                    pstmtSetInteger(pstmt, 2, null);
+                    pstmt.setString(3, null);
+                    pstmt.setString(4, null);
+                    pstmt.setString(5, null);
+                    pstmt.setString(6, null);
+                    pstmt.setString(7, null);
+                    pstmt.setString(8, null);
+                    pstmt.setString(9, null);
+                    // // For testing:
+                    // pstmtSetInteger(pstmt, 2, bc.TSE_ID);
+                    // pstmt.setString(3, substrIfLongerThan(68, "4a3f03a2dec81878b432548668f603d14f7b7f90d230e30c87c1a705dce1c890"));
+                    // pstmt.setString(4, substrIfLongerThan(21, "ecdsa-plain-SHA256"));
+                    // pstmt.setString(5, substrIfLongerThan(31, "unixTime"));
+                    // pstmt.setString(6, substrIfLongerThan(5, bc.TSE_PD_ENCODING));
+                    // pstmt.setString(7, substrIfLongerThan(512, "BHhWOeisRpPBTGQ1W4VUH95TXx2GARf8e2NYZXJoInjtGqnxJ8sZ3CQpYgjI+LYEmW5A37sLWHsyU7nSJUBemyU="));
+                    // String cert = "MEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4P9k+7x9saDO0uRZ4El8QwN+qTgYiv1DIaJIM-WRiuAiAt+saFDGjK2Yi5Cxgy7PprXQ5O0seRgx4ltdpW9REvwA==abcMEQCIAy4";
+                    // int cert_length = cert.length();
+                    // pstmt.setString(8, cert.substring(0, cert_length <= 1000 ? cert_length : 1000));
+                    // if (cert_length > 1000) {
+                    //     pstmt.setString(9, cert.substring(1000, cert_length <= 2000 ? cert_length : 2000));
+                    //     if (cert_length > 2000) {
+                    //         JOptionPane.showMessageDialog(this,
+                    //             "Fehler: TSE-Zertifikat mit "+cert_length+" Zeichen zu lang (mehr als 2000 Zeichen), bitte der/dem Administrator*in Bescheid geben!",
+                    //             "Fehler", JOptionPane.ERROR_MESSAGE);
+                    //     }
+                    // } else {
+                    //     pstmt.setString(9, null);
+                    // }
+                }
+                result = pstmt.executeUpdate();
                 pstmt.close();
-                connection.close();
                 if (result == 0){
                     JOptionPane.showMessageDialog(this,
-                            "Fehler: Tagesabrechnung konnte nicht gespeichert werden.",
-                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                        "Fehler: TSE-Status-Werte konnten nicht zur Tagesabrechnung dazu gespeichert werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
                     id = null;
                 }
             }
+
+            connection.close();
             // NEED TO REDO Monats/Jahresabrechnung if needed (check if zeitpunkt lies in old month/year)!!!
-            deleteAbrechnungIfNeedBe("abrechnung_monat", "monat", "DATE_FORMAT(?, '%Y-%m-01')", zeitpunkt);
-            deleteAbrechnungIfNeedBe("abrechnung_jahr", "jahr", "YEAR(?)", zeitpunkt);
+            deleteAbrechnungIfNeedBe(tableForMode("abrechnung_monat"), "monat", "DATE_FORMAT(?, '%Y-%m-01')", zeitpunkt);
+            deleteAbrechnungIfNeedBe(tableForMode("abrechnung_jahr"), "jahr", "YEAR(?)", zeitpunkt);
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             JOptionPane.showMessageDialog(this,
                     "Fehler: Tagesabrechnung konnte nicht gespeichert werden.\n"+
                     "Keine Verbindung zum Datenbank-Server?\n"+
@@ -1014,14 +1316,14 @@ class AbrechnungenTag extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT MAX(id) FROM zaehlprotokoll");
+            ResultSet rs = stmt.executeQuery("SELECT MAX(id) FROM "+tableForMode("zaehlprotokoll"));
             rs.next();
             maxZaehlID = rs.getInt(1);
             rs.close();
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return maxZaehlID;
@@ -1031,9 +1333,9 @@ class AbrechnungenTag extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "INSERT INTO zaehlprotokoll SET abrechnung_tag_id = ?, "+
-                            "zeitpunkt = ?, "+
-                            "kommentar = ?"
+                    "INSERT INTO "+tableForMode("zaehlprotokoll")+" SET abrechnung_tag_id = ?, "+
+                    "zeitpunkt = ?, "+
+                    "kommentar = ?"
             );
             pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
             pstmt.setString(2, now());
@@ -1049,9 +1351,9 @@ class AbrechnungenTag extends Abrechnungen {
                 BigDecimal wert = entry.getKey();
                 Integer anzahl = entry.getValue();
                 pstmt = connection.prepareStatement(
-                        "INSERT INTO zaehlprotokoll_details SET zaehlprotokoll_id = ?, "+
-                                "anzahl = ?, "+
-                                "einheit = ?"
+                    "INSERT INTO "+tableForMode("zaehlprotokoll_details")+" SET zaehlprotokoll_id = ?, "+
+                    "anzahl = ?, "+
+                    "einheit = ?"
                 );
                 pstmtSetInteger(pstmt, 1, maxZaehlprotokollID());
                 pstmtSetInteger(pstmt, 2, anzahl);
@@ -1069,7 +1371,7 @@ class AbrechnungenTag extends Abrechnungen {
                         "Fehler", JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             JOptionPane.showMessageDialog(this,
                     "Fehler: Zählprotokoll konnte nicht gespeichert werden.\n"+
                     "Keine Verbindung zum Datenbank-Server?\n"+
@@ -1082,8 +1384,8 @@ class AbrechnungenTag extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "UPDATE zaehlprotokoll SET aktiv = FALSE "+
-                            "WHERE abrechnung_tag_id = ? AND aktiv = TRUE"
+                    "UPDATE "+tableForMode("zaehlprotokoll")+" SET aktiv = FALSE "+
+                    "WHERE abrechnung_tag_id = ? AND aktiv = TRUE"
             );
             pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
             int result = pstmt.executeUpdate();
@@ -1095,7 +1397,7 @@ class AbrechnungenTag extends Abrechnungen {
                         "Fehler", JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             JOptionPane.showMessageDialog(this,
                     "Fehler: Altes Zählprotokoll konnte nicht inaktiv gesetzt werden.\n"+
                     "Keine Verbindung zum Datenbank-Server?\n"+

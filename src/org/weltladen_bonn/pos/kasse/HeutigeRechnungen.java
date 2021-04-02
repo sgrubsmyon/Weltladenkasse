@@ -25,6 +25,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import org.weltladen_bonn.pos.MainWindowGrundlage;
+import org.weltladen_bonn.pos.kasse.WeltladenTSE.TSETransaction;
 
 // Logging:
 import org.apache.logging.log4j.LogManager;
@@ -41,10 +42,11 @@ public class HeutigeRechnungen extends Rechnungen {
      *    The constructor.
      *       */
     public HeutigeRechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw, RechnungenTabbedPane tp){
-	    super(pool, mw, "WHERE verkauf.verkaufsdatum > " +
-                "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag),'0001-01-01') AND "+
-                "verkauf.storniert = FALSE ", "Heutige Rechnungen");
+	    super(pool, mw, "", "Heutige Rechnungen");
+        setFilterStr("WHERE v.rechnungs_nr > " +
+            "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) ");
         tabbedPane = tp;
+        createAllPanel();
 	    showTable();
     }
 
@@ -59,61 +61,248 @@ public class HeutigeRechnungen extends Rechnungen {
             detailButtons.add(new JButton("+"));
             detailButtons.get(i).addActionListener(this);
             myTable.setValueAt( detailButtons.get(i), i, 0 );
-            stornoButtons.add(new JButton("Storno"));
-            stornoButtons.get(i).addActionListener(this);
-            myTable.setValueAt( stornoButtons.get(i), i, overviewLabels.size()-1 );
+            stornoButtons.add(null);
+            if (!stornoStatuses.get(i)) { // exclude already canceled bookings
+                stornoButtons.set(i, new JButton("Storno"));
+                stornoButtons.get(i).addActionListener(this);
+                myTable.setValueAt( stornoButtons.get(i), i, overviewLabels.size()-1 );
+            }
         }
+    }
+
+    protected String getZKasseId() {
+        // use the currently configured Z_KASSE_ID
+        return bc.Z_KASSE_ID;
+    }
+
+    protected LinkedHashMap<String, String> getTSEStatusValues() {
+        // use the status values of the currently operated TSE
+        LinkedHashMap<String, String> tseStatusValues = null;
+        if (tse.inUse()) {
+            tseStatusValues = tse.getTSEStatusValues();
+        }
+        return tseStatusValues;
     }
 
     private void stornieren(int stornoRow) {
-        Integer rechnungsnummer = Integer.parseInt(data.get(stornoRow).get(1).toString());
-        String zahlungsModus = data.get(stornoRow).get(3).toString();
+        Integer stornierteRechNr = Integer.parseInt(data.get(stornoRow).get(1).toString());
+        String zahlMod = data.get(stornoRow).get(4).toString();
+        Integer stornierendeRechNr = insertStornoIntoVerkauf(stornierteRechNr, zahlMod);
+        updateTable(); // Update the table so that you can load the details of the storno booking.
+                       // This saves us a massive amount of code rewrite in order to fetch all the details
+                       // of the booking (kassierArtikel, mwstValues etc.)
+        showDetailTable(0, this.titleStr);
+        insertStornoIntoTSE(stornierendeRechNr);
+        maybeInsertStornoIntoAnzahlung(stornierteRechNr, stornierendeRechNr);
+        maybeInsertStornoIntoGutschein(stornierteRechNr, stornierendeRechNr);
+        BigDecimal betrag = insertStornoIntoKassenstand(stornierteRechNr, stornierendeRechNr);
+        if (betrag != null) {
+            JOptionPane.showMessageDialog(this, "Bitte jetzt "+bc.priceFormatter(betrag)+" "+bc.currencySymbol+
+                " in bar herausgeben.",
+                "Storno-Betrag auszahlen", JOptionPane.INFORMATION_MESSAGE);
+        }
+        printQuittung();
+        // This would only be relevant if we could refund via EC
+        // if (zahlMod.equals("Bar")) { // if Barzahlung
+        //     printQuittung();
+        // } else { // EC-Zahlung
+        //     printQuittung();
+        //     // Thread.sleep(5000); // wait for 5 seconds, no, printer is too slow anyway and this blocks UI unnecessarily
+        //     printQuittung();
+        // }
+    }
+
+    private Integer insertStornoIntoVerkauf(int stornierteRechNr, String zahlMod) {
+        Integer stornierendeRechNr = null;
         try { 
             Connection connection = this.pool.getConnection();
+            
+            // insert Gegenbuchung into verkauf
             PreparedStatement pstmt = connection.prepareStatement(
-                "UPDATE verkauf SET verkauf.storniert = 1 WHERE verkauf.rechnungs_nr = ?"
+                "INSERT INTO "+tableForMode("verkauf")+" SET verkaufsdatum = NOW(), "+
+                "storno_von = ?, ec_zahlung = ?, kunde_gibt = NULL"
             );
-            pstmtSetInteger(pstmt, 1, rechnungsnummer);
-            int result = pstmt.executeUpdate();
-            if (result != 0){
-                JOptionPane.showMessageDialog(this, "Rechnung " + rechnungsnummer + " wurde storniert.",
-                    "Stornierung ausgeführt", JOptionPane.INFORMATION_MESSAGE);
+            pstmtSetInteger(pstmt, 1, stornierteRechNr);
+            pstmtSetBoolean(pstmt, 2, !zahlMod.equals("Bar"));
+            int result1 = pstmt.executeUpdate();
 
-                if (zahlungsModus.equals("Bar")) { // if Barzahlung
-                    insertStornoIntoKassenstand(rechnungsnummer);
-                }
+            // retrieve the storno rechnungs_nr
+            pstmt = connection.prepareStatement(
+                "SELECT rechnungs_nr FROM "+tableForMode("verkauf")+" WHERE storno_von = ?"
+            );
+            pstmtSetInteger(pstmt, 1, stornierteRechNr);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); stornierendeRechNr = rs.getInt(1); rs.close();
+            
+            // insert Gegenbuchung (negated values) into verkauf_mwst
+            pstmt = connection.prepareStatement(
+                "INSERT INTO "+tableForMode("verkauf_mwst")+" SELECT "+
+                "?, mwst_satz, -mwst_netto, -mwst_betrag "+
+                "FROM "+tableForMode("verkauf_mwst")+" "+
+                "WHERE rechnungs_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, stornierendeRechNr);
+            pstmtSetInteger(pstmt, 2, stornierteRechNr);
+            int result2 = pstmt.executeUpdate();
+
+            // insert Gegenbuchung (negated stueckzahl) into verkauf_details
+            pstmt = connection.prepareStatement(
+                "INSERT INTO "+tableForMode("verkauf_details")+" SELECT NULL, "+
+                "?, position, artikel_id, rabatt_id, -stueckzahl, -ges_preis, mwst_satz "+
+                "FROM "+tableForMode("verkauf_details")+" "+
+                "WHERE rechnungs_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, stornierendeRechNr);
+            pstmtSetInteger(pstmt, 2, stornierteRechNr);
+            int result3 = pstmt.executeUpdate();
+
+            if (result1 != 0 && result2 != 0 && result3 != 0){
+                JOptionPane.showMessageDialog(this, "Rechnung " + stornierteRechNr + " wurde storniert.",
+                    "Stornierung ausgeführt", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 JOptionPane.showMessageDialog(this,
-                    "Fehler: Rechnung " + rechnungsnummer + " konnte nicht storniert werden.",
+                    "Fehler: Rechnung " + stornierteRechNr + " konnte nicht storniert werden.",
                     "Fehler bei Stornierung", JOptionPane.ERROR_MESSAGE);
             }
+
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
-        updateTable();
+        return stornierendeRechNr;
     }
 
-    private void insertStornoIntoKassenstand(int rechnungsNr) {
+    private void insertStornoIntoTSE(int stornierendeRechNr) {
+        tse.startTransaction();
+
+        // Send data to TSE:
+        Vector<String> zahlung = new Vector<String>();
+        zahlung.add("Bar"); // zahlMod.equals("Bar") ? "Bar" : "Unbar" // Weltladen can only pay back in bar, so always use "Bar" here, even in case of EC payment
+        zahlung.add( bc.priceFormatterIntern(getTotalPrice()) );
+        // Omit currency code because it's always in EUR
+        Vector<Vector<String>> zahlungen = new Vector<Vector<String>>();
+        zahlungen.add(zahlung);
+        HashMap<Integer, Vector<BigDecimal>> mwstIDsAndValues = getAllCurrentMwstValuesByID();
+        
+        // always finish the transaction, also when TSE is not in use (has failed), in which case end date is determined by Kasse
+        tse.finishTransaction(
+            stornierendeRechNr,
+            mwstIDsAndValues.get(3) != null ? mwstIDsAndValues.get(3).get(3) : null, // steuer_allgemein = mwst_id: 3 = 19% MwSt
+            mwstIDsAndValues.get(2) != null ? mwstIDsAndValues.get(2).get(3) : null, // steuer_ermaessigt = mwst_id: 2 = 7% MwSt
+            mwstIDsAndValues.get(5) != null ? mwstIDsAndValues.get(5).get(3) : null, // steuer_durchschnitt_nr3 = mwst_id: 5 = 10,7% MwSt
+            mwstIDsAndValues.get(4) != null ? mwstIDsAndValues.get(4).get(3) : null, // steuer_durchschnitt_nr1 = mwst_id: 4 = 5,5% MwSt
+            mwstIDsAndValues.get(1) != null ? mwstIDsAndValues.get(1).get(3) : null, // steuer_null = mwst_id: 1 = 0% MwSt
+            zahlungen
+        );
+    }
+
+    private void maybeInsertStornoIntoAnzahlung(int stornierteRechNr, int stornierendeRechNr) {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT SUM(ges_preis) FROM verkauf_details WHERE rechnungs_nr = ?"
-                    );
-            pstmtSetInteger(pstmt, 1, rechnungsNr);
+                "SELECT COUNT(*) FROM "+tableForMode("anzahlung")+" WHERE anzahlung_in_rech_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, stornierteRechNr);
             ResultSet rs = pstmt.executeQuery();
-            rs.next(); BigDecimal betrag = rs.getBigDecimal(1); rs.close();
+            rs.next(); int count = rs.getInt(1); rs.close();
+            pstmt.close();
+            if (count == 1) {
+                // this means the rechnung was an anzahlung which is still open --> close it by inserting a second row!
+                pstmt = connection.prepareStatement(
+                    "INSERT INTO "+tableForMode("anzahlung")+" SET "+
+                    "datum = (SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?), "+
+                    "anzahlung_in_rech_nr = ?"
+                );
+                pstmtSetInteger(pstmt, 1, stornierendeRechNr);
+                pstmtSetInteger(pstmt, 2, stornierteRechNr);
+                int result = pstmt.executeUpdate();
+                pstmt.close();
+                connection.close();
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                        "Fehler: In Rechnung enthaltene offene Anzahlung konnte nicht geschlossen werden.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+    }
+
+    private void maybeInsertStornoIntoGutschein(int stornierteRechNr, int stornierendeRechNr) {
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT DISTINCT gutschein_nr FROM "+tableForMode("gutschein")+" "+
+                "INNER JOIN "+tableForMode("verkauf_details")+" ON gutschein_in_vd_id = vd_id "+
+                "WHERE rechnungs_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, stornierteRechNr);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                // this means there was at least one voucher in this rechnung --> invalidate the vouchers by zeroing their restbetrag!
+                Integer gutscheinNr = rs.getInt(1);
+
+                // 1: query for gutschein_in_vd_id
+                PreparedStatement pstmt2 = connection.prepareStatement(
+                    "SELECT gutschein_in_vd_id FROM "+tableForMode("gutschein")+
+                    "    WHERE gutschein_nr = ? AND einloesung_in_vd_id IS NULL"
+                );
+                pstmtSetInteger(pstmt2, 1, gutscheinNr);
+                ResultSet rs2 = pstmt2.executeQuery();
+                rs2.next(); int gutschein_in_vd_id = rs2.getInt(1); rs2.close();
+                pstmt2.close();
+
+                // 2: now, insert into table gutschein
+                pstmt2 = connection.prepareStatement(
+                    "INSERT INTO "+tableForMode("gutschein")+" SET "+
+                    "gutschein_nr = ?, "+
+                    "datum = (SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?), "+
+                    "gutschein_in_vd_id = ?, "+
+                    "restbetrag = 0.00"
+                );
+                pstmtSetInteger(pstmt2, 1, gutscheinNr);
+                pstmtSetInteger(pstmt2, 2, stornierendeRechNr);
+                pstmtSetInteger(pstmt2, 3, gutschein_in_vd_id);
+                int result = pstmt2.executeUpdate();
+                pstmt2.close();
+                if (result == 0){
+                    JOptionPane.showMessageDialog(this,
+                        "Fehler: In Rechnung enthaltener Gutschein Nr. "+gutscheinNr+" konnte nicht ungültig gemacht werden!",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+    }
+
+    private BigDecimal insertStornoIntoKassenstand(int stornierteRechNr, int stornierendeRechNr) {
+        BigDecimal betrag = null;
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT SUM(ges_preis) FROM "+tableForMode("verkauf_details")+" WHERE rechnungs_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, stornierteRechNr);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); betrag = rs.getBigDecimal(1); rs.close();
             pstmt.close();
             BigDecimal alterKassenstand = mainWindow.retrieveKassenstand();
             BigDecimal neuerKassenstand = alterKassenstand.subtract(betrag);
             pstmt = connection.prepareStatement(
-                    "INSERT INTO kassenstand SET rechnungs_nr = ?,"+
-                    "buchungsdatum = NOW(), "+
-                    "manuell = FALSE, neuer_kassenstand = ?, kommentar = ?"
-                    );
-            pstmtSetInteger(pstmt, 1, rechnungsNr);
+                "INSERT INTO "+tableForMode("kassenstand")+" SET rechnungs_nr = ?,"+
+                "buchungsdatum = NOW(), "+
+                "manuell = FALSE, neuer_kassenstand = ?, kommentar = ?"
+            );
+            pstmtSetInteger(pstmt, 1, stornierendeRechNr);
             pstmt.setBigDecimal(2, neuerKassenstand);
             pstmt.setString(3, "Storno");
             int result = pstmt.executeUpdate();
@@ -127,9 +316,10 @@ public class HeutigeRechnungen extends Rechnungen {
                 mainWindow.updateBottomPanel();
             }
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
+        return betrag;
     }
 
     /**
@@ -140,15 +330,15 @@ public class HeutigeRechnungen extends Rechnungen {
      **/
     public void actionPerformed(ActionEvent e) {
         super.actionPerformed(e);
-	final int numberOfRows = stornoButtons.size();
-	int stornoRow=-1;
+        final int numberOfRows = stornoButtons.size();
+        int stornoRow=-1;
         for (int i=0; i<numberOfRows; i++){
             if (e.getSource() == stornoButtons.get(i) ){
                 stornoRow = i;
                 break;
             }
         }
-	if (stornoRow > -1){
+	    if (stornoRow > -1){
             int answer = JOptionPane.showConfirmDialog(this,
                     "Rechnung " + (String) data.get(stornoRow).get(1) + " wirklich stornieren?", "Storno",
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -156,7 +346,7 @@ public class HeutigeRechnungen extends Rechnungen {
                 stornieren(stornoRow);
                 tabbedPane.recreateTabbedPane();
             }
-	    return;
-	}
+            return;
+        }
     }
 }

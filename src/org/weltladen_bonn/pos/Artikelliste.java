@@ -124,7 +124,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         try {
             connection = this.pool.getConnection();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -158,7 +158,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         try {
             pstmt = connection.prepareStatement(queryStr);
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -206,7 +206,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
                 }
             }
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -312,7 +312,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -763,7 +763,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         // does not work correctly when table is sorted and filter is used:
         /*
         artikelListPanel.remove(scrollPane);
-	artikelListPanel.revalidate();
+	    artikelListPanel.revalidate();
 
         applyFilter(filterStr, displayData, displayIndices);
 

@@ -40,11 +40,11 @@ public class JComponentCellEditor implements TableCellEditor, TreeCellEditor, Se
 	    Component dispatchComponent = SwingUtilities.getDeepestComponentAt(editorComponent, 3, 3 );
 	    MouseEvent e = (MouseEvent)anEvent;
 	    MouseEvent e2 = new MouseEvent( dispatchComponent, MouseEvent.MOUSE_RELEASED,
-		    e.getWhen() + 100000, e.getModifiers(), 3, 3, e.getClickCount(),
+		    e.getWhen() + 100000, e.getModifiersEx(), 3, 3, e.getClickCount(),
 		    e.isPopupTrigger() );
 	    dispatchComponent.dispatchEvent(e2); 
 	    e2 = new MouseEvent( dispatchComponent, MouseEvent.MOUSE_CLICKED,
-		    e.getWhen() + 100001, e.getModifiers(), 3, 3, 1,
+		    e.getWhen() + 100001, e.getModifiersEx(), 3, 3, 1,
 		    e.isPopupTrigger() );
 	    dispatchComponent.dispatchEvent(e2); 
 	}

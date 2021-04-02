@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=v1.5.0
+version=v2.0.0
 
 releasedir=../releases/Weltladenkasse_${version}
 trainingdir=../releases/Weltladenkasse_${version}_training
@@ -17,16 +17,19 @@ rsync -aPvci Weltladenbesteller.bat $releasedir
 rsync -aPvci config.properties $releasedir
 rsync -aPvci config_Windows.properties $releasedir
 rsync -aPvci config_log4j2.xml $releasedir
+rsync -aPvci config_tse.txt $releasedir
+#rsync -aPvci dll/ $releasedir
 rsync -aPvci --delete --exclude=".*" vorlagen $releasedir
 rsync -aPvci README.md $releasedir
 rsync -aPvci install-ubuntu.sh $releasedir
 rsync -aPvci install-arch.sh $releasedir
 rsync -aPvci --delete --exclude=".*" mysql $releasedir
+
 rsync -aPvci Weltladenkasse_$version.jar $trainingdir
 rsync -aPvci Weltladenbesteller_$version.jar $trainingdir
 rsync -aPvci Weltladenkasse.bat $trainingdir
 rsync -aPvci Weltladenbesteller.bat $trainingdir
-rsync -aPvci config_local.properties $trainingdir/config.properties
+rsync -aPvci config_training.properties $trainingdir/config.properties
 rsync -aPvci config_Windows.properties $trainingdir
 rsync -aPvci config_log4j2.xml $trainingdir
 rsync -aPvci --delete --exclude=".*" vorlagen $trainingdir

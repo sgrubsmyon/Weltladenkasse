@@ -19,10 +19,10 @@ $ javadoc -d ../docs jpos
 Batch-create PDF from Open/LibreOffice Document:
 $ soffice --headless --convert-to pdf file.ods
 Headless printing:
-$ soffice --headless -pt "epson_tmu220" /tmp/Quittung3778691455536663257.ods
+$ soffice --headless --pt "epson_tmu220" /tmp/Quittung3778691455536663257.ods
 
 Create JAR file by hand:
-$ jar cfe Weltladenkasse_v1.5.0.jar Weltladenkasse.Kasse icons/ jcalendarbutton/ Weltladenkasse/
+$ jar cfe Weltladenkasse_v2.0.0.jar Weltladenkasse.Kasse icons/ jcalendarbutton/ Weltladenkasse/
 
 Export Artikelliste.ods to .csv file:
    File -> Save As -> .csv file

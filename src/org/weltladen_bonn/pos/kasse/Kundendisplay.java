@@ -40,7 +40,8 @@ public class Kundendisplay {
 
     /**
      *    The constructor.
-     *       */
+     *
+     */
     public Kundendisplay(BaseClass bc_) {
         bc = bc_;
         listDevices();
@@ -152,21 +153,6 @@ public class Kundendisplay {
         }
     }
 
-    /**
-     * Release resources. Will call closeDevice().
-     *
-     * @throws Throwable
-     */
-    protected void finalize() throws Throwable {
-        // It is important to call closeDevice() if user forgot to do so.
-        try {
-           closeDevice();
-        } finally {
-           super.finalize();
-        }
-    }
-
-
     private void writeToDevice(byte[] data) {
         if (device != null){
             try {
@@ -187,7 +173,7 @@ public class Kundendisplay {
 
     private void setCodePage() {
         /**
-         * Set Code Page to one with € symbol (858), which is county code 0x34,
+         * Set Code Page to one with € symbol (858), which is country code 0x34,
          * according to user's manual of BA63/USB.
          */
         byte[] data = new byte[]{0x02, 0x00, 0x03,

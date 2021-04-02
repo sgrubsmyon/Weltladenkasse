@@ -66,13 +66,13 @@ public class AbrechnungenMonat extends Abrechnungen {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT MAX(monat) FROM abrechnung_monat"
-                    );
+                "SELECT MAX(monat) FROM "+tableForMode("abrechnung_monat")
+            );
             rs.next(); result = rs.getString(1); rs.close();
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         if (result == null){
@@ -86,9 +86,9 @@ public class AbrechnungenMonat extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT DISTINCT DATE_FORMAT(zeitpunkt, '%Y-%m-01') FROM abrechnung_tag "+
-                    "WHERE zeitpunkt >= (? + INTERVAL 1 MONTH)"
-                    );
+                "SELECT DISTINCT DATE_FORMAT(zeitpunkt, '%Y-%m-01') FROM "+tableForMode("abrechnung_tag")+" "+ // Select the distinct months of all Tagesabrechnungen after the last Monatsabrechnung
+                "WHERE zeitpunkt >= (? + INTERVAL 1 MONTH)"
+            );
             pstmt.setString(1, maxDate);
             ResultSet rs = pstmt.executeQuery();
             while(rs.next()){
@@ -98,22 +98,47 @@ public class AbrechnungenMonat extends Abrechnungen {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
 
-    HashMap<BigDecimal, Vector<BigDecimal>> queryMonatsAbrechnung(String month) {
+    Vector<Integer> queryMonatsAbrechnungRange(String month) {
+        Vector<Integer> range = new Vector<Integer>();
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT MIN(id), MAX(id) FROM "+tableForMode("abrechnung_tag")+" "+
+                "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 MONTH)"
+            );
+            pstmt.setString(1, month);
+            pstmt.setString(2, month);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            range.add(rs.getInt(1));
+            range.add(rs.getInt(2));
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return range;
+    }
+
+    HashMap<BigDecimal, Vector<BigDecimal>> queryMonatsAbrechnung(int minID, int maxID) {
         HashMap<BigDecimal, Vector<BigDecimal>> abrechnung = new HashMap<BigDecimal, Vector<BigDecimal>>();
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM abrechnung_tag "+
-                    "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 MONTH) GROUP BY mwst_satz"
-                    );
-            pstmt.setString(1, month);
-            pstmt.setString(2, month);
+                "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag), SUM(bar_brutto) FROM "+tableForMode("abrechnung_tag_mwst")+" "+
+                "INNER JOIN "+tableForMode("abrechnung_tag")+" USING (id) "+
+                "WHERE id >= ? AND id <= ? GROUP BY mwst_satz"
+            );
+            pstmt.setInt(1, minID);
+            pstmt.setInt(2, maxID);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()){
                 BigDecimal mwst_satz = rs.getBigDecimal(1);
@@ -128,7 +153,7 @@ public class AbrechnungenMonat extends Abrechnungen {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return abrechnung;
@@ -138,72 +163,93 @@ public class AbrechnungenMonat extends Abrechnungen {
         try {
             Connection connection = this.pool.getConnection();
             for (String month : months){
-                Integer id = id();
                 logger.info("new month: "+month);
                 PreparedStatement pstmt = connection.prepareStatement(
-                        "SELECT ? < DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')"
-                        );
+                    "SELECT ? < DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')"
+                );
                 pstmt.setString(1, month);
                 ResultSet rs = pstmt.executeQuery();
                 rs.next(); boolean doIt = rs.getBoolean(1); rs.close();
                 pstmt.close();
                 if (doIt){
-                    HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryMonatsAbrechnung(month);
-                    for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : sachen.entrySet() ){
-                        BigDecimal mwst_satz = entry.getKey();
-                        Vector<BigDecimal> betraege = entry.getValue();
-                        logger.info("mwst_satz: "+mwst_satz);
-                        logger.info("betraege "+betraege);
-                        pstmt = connection.prepareStatement(
-                                "INSERT INTO abrechnung_monat SET id = ?, monat = ?, "+
+                    Integer id = null;
+
+                    Vector<Integer> range = queryMonatsAbrechnungRange(month);
+                    pstmt = connection.prepareStatement(
+                        "INSERT INTO "+tableForMode("abrechnung_monat")+" SET "+
+                        "monat = ?, "+
+                        "abrechnung_tag_id_von = ?, "+
+                        "abrechnung_tag_id_bis = ?"
+                    );
+                    pstmt.setString(1, month);
+                    pstmt.setInt(2, range.get(0));
+                    pstmt.setInt(3, range.get(1));
+                    int result = pstmt.executeUpdate();
+                    pstmt.close();
+                    if (result == 0){
+                        JOptionPane.showMessageDialog(this,
+                            "Fehler: Monatsabrechnung für Monat "+month.substring(0,7)+" "+
+                            "konnte nicht gespeichert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                    } else {
+                        id = id();
+
+                        HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryMonatsAbrechnung(range.get(0), range.get(1));
+                        for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : sachen.entrySet() ){
+                            BigDecimal mwst_satz = entry.getKey();
+                            Vector<BigDecimal> betraege = entry.getValue();
+                            logger.info("mwst_satz: "+mwst_satz);
+                            logger.info("betraege "+betraege);
+                            pstmt = connection.prepareStatement(
+                                "INSERT INTO "+tableForMode("abrechnung_monat_mwst")+" SET "+
+                                "id = ?, "+
                                 "mwst_satz = ?, "+
                                 "mwst_netto = ?, "+
                                 "mwst_betrag = ?, "+
                                 "bar_brutto = ?"
-                                );
-                        pstmt.setInt(1, id);
-                        pstmt.setString(2, month);
-                        pstmt.setBigDecimal(3, mwst_satz);
-                        pstmt.setBigDecimal(4, betraege.get(1));
-                        pstmt.setBigDecimal(5, betraege.get(2));
-                        pstmt.setBigDecimal(6, betraege.get(3));
-                        int result = pstmt.executeUpdate();
-                        pstmt.close();
-                        if (result != 0){
-                            // do nothing
-                        }
-                        else {
-                            JOptionPane.showMessageDialog(this,
-                                    "Fehler: Monatsabrechnung für Monat "+month.substring(0,7)+", "+
-                                    "MwSt.-Satz "+mwst_satz+" konnte nicht gespeichert werden.",
+                            );
+                            pstmt.setInt(1, id);
+                            pstmt.setBigDecimal(2, mwst_satz);
+                            pstmt.setBigDecimal(3, betraege.get(1));
+                            pstmt.setBigDecimal(4, betraege.get(2));
+                            pstmt.setBigDecimal(5, betraege.get(3));
+                            result = pstmt.executeUpdate();
+                            pstmt.close();
+                            if (result == 0){
+                                JOptionPane.showMessageDialog(this,
+                                    "Fehler: MwSt.-Betrag der Monatsabrechnung für Monat "+month.substring(0,7)+", "+
+                                    "MwSt.-Satz '"+mwst_satz+"', konnte nicht gespeichert werden.",
                                     "Fehler", JOptionPane.ERROR_MESSAGE);
+                            }
                         }
                     }
                 }
             }
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
 
+    @Override
     void queryIncompleteAbrechnung() { // create new abrechnung (for display) from time of last abrechnung until now
         try {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
-                    "SELECT DATE_FORMAT(CURDATE(), '%Y-%m-01')"
-                    );
+                "SELECT DATE_FORMAT(CURDATE(), '%Y-%m-01')"
+            );
             rs.next(); String cur_month = rs.getString(1); rs.close();
             stmt.close();
 
             // totals (sum over mwsts)
             PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT SUM(mwst_netto + mwst_betrag), SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) FROM abrechnung_tag " +
-                       //   ^^^ Gesamt Brutto              ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
-                    "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 MONTH)"
-                    );
+                "SELECT SUM(mwst_netto + mwst_betrag), SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) FROM "+tableForMode("abrechnung_tag_mwst")+" " +
+                    //   ^^^ Gesamt Brutto              ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
+                "INNER JOIN "+tableForMode("abrechnung_tag")+" USING (id) "+
+                "WHERE zeitpunkt >= ? AND zeitpunkt < (? + INTERVAL 1 MONTH)"
+            );
             pstmt.setString(1, cur_month);
             pstmt.setString(2, cur_month);
             rs = pstmt.executeQuery();
@@ -228,7 +274,8 @@ public class AbrechnungenMonat extends Abrechnungen {
             incompleteAbrechnungsVATs = new HashMap<BigDecimal, Vector<BigDecimal>>();
 
             // grouped by mwst
-            HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryMonatsAbrechnung(cur_month);
+            Vector<Integer> range = queryMonatsAbrechnungRange(cur_month);
+            HashMap<BigDecimal, Vector<BigDecimal>> sachen = queryMonatsAbrechnung(range.get(0), range.get(1));
             for ( Map.Entry< BigDecimal, Vector<BigDecimal> > entry : sachen.entrySet() ){
                 BigDecimal mwst_satz = entry.getKey();
                 Vector<BigDecimal> betraege = entry.getValue();
@@ -264,7 +311,7 @@ public class AbrechnungenMonat extends Abrechnungen {
                 mwstSet.add(mwst_satz);
             }
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -272,8 +319,8 @@ public class AbrechnungenMonat extends Abrechnungen {
     void queryAbrechnungenSpecial() {
         String maxDate = returnMaxAbrechnungDate();
         Vector<String> months = returnAllNewMonths(maxDate);
-        logger.debug("max date is: "+maxDate);
-        logger.debug("new months are: "+months);
+        logger.debug("maxDate in AbrechnungMonat: {}", maxDate);
+        logger.debug("new months are: {}", months);
         insertNewMonths(months);
     }
 
@@ -284,7 +331,7 @@ public class AbrechnungenMonat extends Abrechnungen {
             cal.setTime(sdfIn.parse(date));
             cal.set(Calendar.DAY_OF_MONTH, 15);
         } catch (ParseException ex) {
-            logger.error("ParseException: {}", ex);
+            logger.error("ParseException:", ex);
         }
         return cal.getTime();
     }

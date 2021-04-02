@@ -1,0 +1,19 @@
+# transport=MSCJava10
+# transport=MscJna
+# path=F:/
+# path=/media/user/cv TSE
+transport=MSCJava10
+#transport=MscJna
+path=/media/mitarbeiterin/13F9-89FD
+
+# TSE communication timeout, seconds (default: 5)
+timeout=10
+
+# delay after direct IO operations, milliseconds (default: 0)
+delay=0
+
+# size of direct IO read/write operations. 512 on most Windows platforms, 2048 on some Linux. Smaller is faster, increase on Exception. (default: 512)
+#alignment=512
+# Must be 32768 for us Linux folks, as an exception will otherwise tell us.
+# (See also discussion with support at https://tse-support.cryptovision.com/jira/servicedesk/customer/portal/5/TDI-532)
+alignment=32768

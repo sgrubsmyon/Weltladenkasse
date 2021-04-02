@@ -85,7 +85,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -111,42 +111,12 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
         }
         return artikelID;
-    }
-
-    public String[] getArticleName(int artikelID) {
-        String artikelName = new String();
-        String lieferant = new String();
-        Boolean sortiment = false;
-        try {
-            Connection connection = this.pool.getConnection();
-            PreparedStatement pstmt = connection.prepareStatement(
-                    "SELECT a.artikel_name, l.lieferant_name, a.sortiment FROM artikel AS a " +
-                    "LEFT JOIN lieferant AS l USING (lieferant_id) " +
-                    "WHERE a.artikel_id = ? " +
-                    "AND a.aktiv = TRUE"
-                    );
-            pstmtSetInteger(pstmt, 1, artikelID);
-            ResultSet rs = pstmt.executeQuery();
-            rs.next();
-            artikelName = rs.getString(1);
-            lieferant = rs.getString(2) != null ? rs.getString(2) : "";
-            sortiment = rs.getBoolean(3);
-            rs.close();
-            pstmt.close();
-            connection.close();
-        } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
-            // System.out.println("Exception: " + ex.getMessage());
-            // ex.printStackTrace();
-            showDBErrorDialog(ex.getMessage());
-        }
-        return new String[]{artikelName, lieferant, sortiment.toString()};
     }
 
     public String[] getArticleNumber(int artikelID) {
@@ -163,7 +133,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -194,7 +164,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -229,7 +199,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -262,7 +232,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -284,7 +254,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -306,7 +276,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -328,7 +298,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -350,7 +320,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -374,7 +344,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -402,43 +372,38 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
         }
-        return calculatePricePerKg(menge_bd, einheit, preis_bd);
+        String menge = formatMengeForOutput(menge_bd, einheit);
+        String preis = bc.priceFormatter(preis_bd)+" "+bc.currencySymbol;
+        String kg_preis = calculatePricePerKg(preis_bd, menge_bd);
+        return new String[]{menge, preis, kg_preis};
     }
 
     protected String[] getMengePriceAndPricePerKg(Artikel a) {
-        return calculatePricePerKg(a.getMenge(), a.getEinheit(),
-                new BigDecimal(a.getVKP()));
+        BigDecimal menge_bd = a.getMenge();
+        String einheit = a.getEinheit();
+        BigDecimal preis_bd = new BigDecimal(a.getVKP());
+        String menge = formatMengeForOutput(menge_bd, einheit);
+        String preis = bc.priceFormatter(preis_bd)+" "+bc.currencySymbol;
+        String kg_preis = calculatePricePerKg(preis_bd, menge_bd);
+        return new String[]{menge, preis, kg_preis};
     }
 
-    private String[] calculatePricePerKg(BigDecimal menge_bd, String einheit, BigDecimal preis_bd) {
-        String menge = "";
-        String preis = bc.priceFormatter(preis_bd)+" "+bc.currencySymbol;
+    protected String calculatePricePerKg(BigDecimal preis_bd, BigDecimal menge_bd) {
         String kg_preis = "";
         try {
             if (menge_bd.signum() > 0){
                 BigDecimal preis_pro_kg = preis_bd.divide(menge_bd, 10, RoundingMode.HALF_UP);
                 kg_preis = bc.priceFormatter(preis_pro_kg)+" "+bc.currencySymbol;
-                if ( einheit.equals("kg") || einheit.equals("l") ){
-                    if ( menge_bd.compareTo(bc.one) < 0 ){ // if menge < 1 kg or 1 l
-                        menge_bd = menge_bd.multiply(bc.thousand);
-                        if ( einheit.equals("kg") )
-                            einheit = "g";
-                        else if ( einheit.equals("l") )
-                            einheit = "ml";
-                    }
-                }
-                menge = (bc.unifyDecimal(menge_bd)+" "+einheit).trim();
             }
         } catch (NullPointerException ex) {
-            logger.warn("Either menge_bd {} or einheit {} is null for this article.", menge_bd, einheit);
-            // System.out.println("Either menge_bd ("+menge_bd+") or einheit ("+einheit+") is null for this article.");
+            // logger.warn("Either menge_bd ({}) or preis_bd ({}) is null for this article.", menge_bd, preis_bd);
         }
-        return new String[]{menge, preis, kg_preis};
+        return kg_preis;
     }
 
     public String getVPE(int artikelID) {
@@ -457,7 +422,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -479,7 +444,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());
@@ -502,7 +467,7 @@ public abstract class ArtikelGrundlage extends WindowContent {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
             showDBErrorDialog(ex.getMessage());

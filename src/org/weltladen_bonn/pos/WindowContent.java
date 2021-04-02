@@ -5,6 +5,8 @@ import java.io.*; // for InputStream
 import java.util.*; // for Vector, Collections
 import java.util.Date; // because Date alone ambiguous due to java.sql.Date
 import java.math.*; // for monetary value representation and arithmetic with correct rounding
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 // MySQL Connector/J stuff:
 import java.sql.*;
@@ -39,6 +41,17 @@ public abstract class WindowContent extends JPanel implements ActionListener {
     protected MariaDbPoolDataSource pool; // pool of connections to MySQL database
     protected MainWindowGrundlage mainWindow = null;
     protected BaseClass bc = null;
+
+    protected int artikelRabattArtikelID = 1;
+    protected int rechnungRabattArtikelID = 2;
+    protected int preisanpassungArtikelID = 3;
+    protected int anzahlungArtikelID = 4;
+    protected int anzahlungsaufloesungArtikelID = 5;
+    protected int gutscheinArtikelID = 6;
+    protected int gutscheineinloesungArtikelID = 7;
+    protected int sonstigesKHWArtikelID = 108;
+    protected int variablerPreis7PZArtikelID = 100;
+    protected int variablerPreis19PZArtikelID = 101;
 
     // Die Ausrichter:
     protected DefaultTableCellRenderer rechtsAusrichter = new DefaultTableCellRenderer();
@@ -288,7 +301,8 @@ public abstract class WindowContent extends JPanel implements ActionListener {
          *      one.subtract( one.divide(one.add(mwst), 10, RoundingMode.HALF_UP) )
          *      );
          */
-        return totalPrice.divide(bc.one.add(mwst), 10, RoundingMode.HALF_UP).multiply(mwst);
+        BigDecimal vat = totalPrice.divide(bc.one.add(mwst), 10, RoundingMode.HALF_UP).multiply(mwst);
+        return new BigDecimal(bc.priceFormatterIntern(vat)); // this line is for rounding to 2 decimal places after separator
     }
 
     private BigDecimal calculateEKP(BigDecimal empfVKPreis, BigDecimal ekRabatt) {
@@ -348,6 +362,27 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             return false;
         }
         return true;
+    }
+
+    protected String formatMengeForOutput(BigDecimal menge_bd, String einheit) {
+        String menge = "";
+        try {
+            if (menge_bd.signum() > 0){
+                if ( einheit.equals("kg") || einheit.equals("l") ){
+                    if ( menge_bd.compareTo(bc.one) < 0 ){ // if menge < 1 kg or 1 l
+                        menge_bd = menge_bd.multiply(bc.thousand);
+                        if ( einheit.equals("kg") )
+                            einheit = "g";
+                        else if ( einheit.equals("l") )
+                            einheit = "ml";
+                    }
+                }
+                menge = (bc.unifyDecimal(menge_bd)+" "+einheit).trim();
+            }
+        } catch (NullPointerException ex) {
+            // logger.warn("Either menge_bd ({}) or einheit ({}) is null for this article.", menge_bd, einheit);
+        }
+        return menge;
     }
 
     /**
@@ -463,6 +498,36 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             showDBErrorDialog(ex.getMessage());
         }
         return hasVarPrice;
+    }
+
+    public String[] getArticleName(int artikelID) {
+        String artikelName = new String();
+        String lieferant = new String();
+        Boolean sortiment = false;
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                    "SELECT a.artikel_name, l.lieferant_name, a.sortiment FROM artikel AS a " +
+                    "LEFT JOIN lieferant AS l USING (lieferant_id) " +
+                    "WHERE a.artikel_id = ? " +
+                    "AND a.aktiv = TRUE"
+                    );
+            pstmtSetInteger(pstmt, 1, artikelID);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            artikelName = rs.getString(1);
+            lieferant = rs.getString(2) != null ? rs.getString(2) : "";
+            sortiment = rs.getBoolean(3);
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            // System.out.println("Exception: " + ex.getMessage());
+            // ex.printStackTrace();
+            showDBErrorDialog(ex.getMessage());
+        }
+        return new String[]{artikelName, lieferant, sortiment.toString()};
     }
 
     private int setArticleInactive(Artikel a) {
@@ -1545,15 +1610,18 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         return result;
     }
 
+    protected String tableForMode(String tableName) {
+        return bc.operationMode.equals("normal") ? tableName : "training_"+tableName;
+    }
 
     protected int insertIntoKassenstand(BigDecimal neuerKassenstand, Boolean entnahme, String kommentar) {
         int result = 0;
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                    "INSERT INTO kassenstand SET buchungsdatum = NOW(), " +
-                            "neuer_kassenstand = ?, manuell = TRUE, " +
-                            "entnahme = ?, kommentar = ?"
+                "INSERT INTO "+tableForMode("kassenstand")+" SET buchungsdatum = NOW(), " +
+                "neuer_kassenstand = ?, manuell = TRUE, " +
+                "entnahme = ?, kommentar = ?"
             );
             pstmt.setBigDecimal(1, neuerKassenstand);
             pstmt.setBoolean(2, entnahme);
@@ -1562,11 +1630,17 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return result;
     }
+
+
+
+    /**
+     * Calendar methods
+     */
 
     protected String now() {
         String date = "";
@@ -1578,17 +1652,21 @@ public abstract class WindowContent extends JPanel implements ActionListener {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return date;
     }
 
-
-
-    /**
-     * Calendar methods
-     */
+    protected Date nowDate() {
+        Date date = new Date();
+        try {
+            date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(now());
+        } catch (ParseException ex) {
+            logger.error("Could not parse NOW() date from MySQL DB. Exception:", ex);
+        }
+        return date;
+    }
 
     protected void setCalButtFromSpinner(SpinnerModel m, JCalendarButton b) {
         if (m instanceof SpinnerDateModel) {

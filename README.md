@@ -30,7 +30,7 @@ cd Pfad/zu/meinem/Verzeichnis
 Software auf Ubuntu ausführen:
 ------------------------------
 ```
-java -jar Weltladenkasse_v1.5.0.jar
+java -jar Weltladenkasse_v2.0.0.jar
 ```
 
 Eine Version des Java Runtime Environment (JRE) muss installiert sein,
@@ -109,6 +109,31 @@ Download and put into the folder `lib` the following jars:
 Unjar the hidapi-1.1.jar (with `jar -xvf hidapi-1.1.jar`) and copy the content
 of the `native/*` folders (files ending with `.so`, `.dll` or `.jnilib`) into
 folder `resources/natives`.
+
+For using TSE (German fiscalisation "Secure Element") from Bundesdruckerei/D-Trust/cryptovision:
+
+* jna-4.0.0.jar: (only when using MscJna TSE transport instead of MSCJava10Transport)
+    https://tse-support.cryptovision.com/confluence/display/TDI/cryptovision+TSE+-+Download-Bereich
+    (download `SE-API-Java.zip`, required file is in `se-api-test/lib/`).
+* `libse-msc-io_linux-x86-64.so`: (only when using MscJna TSE transport on Linux instead of MSCJava10Transport)
+    https://tse-support.cryptovision.com/confluence/display/TDI/cryptovision+TSE+-+Download-Bereich
+    Download `SE-API-Java.zip`, required file is in `se-api-impl/dll/`, put it inside a folder `linux-x86-64`
+    and create a jar file `libse-msc-io_linux-x86-64.jar`
+    (`jar cvf libse-msc-io_linux-x86-64.jar linux-x86-64`)
+    that you put into folder `lib`.
+* `se-msc-io_win32-x86-64.dll`: (only when using MscJna TSE transport on Windows instead of MSCJava10Transport)
+    https://tse-support.cryptovision.com/confluence/display/TDI/cryptovision+TSE+-+Download-Bereich
+    Download `SE-API-Java.zip`, required file is in `se-api-impl/dll/`, put it inside a folder `win32-x86-64`
+    and create a jar file `se-msc-io_win32-x86-64.jar`
+    (`jar cvf se-msc-io_win32-x86-64.jar win32-x86-64`)
+    that you put into folder `lib`.
+* bcprov-jdk15on-1.62.jar:
+    either http://www.bouncycastle.org/latest_releases.html or
+    https://tse-support.cryptovision.com/confluence/display/TDI/cryptovision+TSE+-+Download-Bereich
+    (download `SE-API-Java.zip`, required file is in `se-api-test/lib/`).
+    To prevent invalid signature problems, you need to unjar the file
+    (`jar xvf bcprov-jdk15on-1.62.jar`), delete all META-INF/*.SF and META-INF/*.DSA files
+    and recreate jar (`jar cvf bcprov-jdk15on-1.62_deleted_sf_dsa.jar *`).
 
 ## Optionally: Install receipt printer
 
@@ -248,8 +273,8 @@ ant
 
 Compile and run locally:
 ```
-ant && java -jar Weltladenkasse_v1.5.0.jar
-ant && java -jar Weltladenbesteller_v1.5.0.jar
+ant && java -jar Weltladenkasse_v2.0.0.jar
+ant && java -jar Weltladenbesteller_v2.0.0.jar
 ```
 
 Compile and make release (**CAUTION:** default release dir is `../releases`, adjust to your needs):

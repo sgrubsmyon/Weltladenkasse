@@ -13,42 +13,42 @@ public class KassierArtikel {
     private BaseClass bc;
 
     // All attributes:
-    private Integer position;
-    private Integer artikel_id;
-    private Integer rabatt_id;
-    private String artikel_name;
-    private String color;
-    private String type;
-    private Integer stueckzahl;
-    private BigDecimal einzelpreis;
-    private BigDecimal ges_preis;
-    private BigDecimal mwst_satz;
+    private Integer position = null;
+    private Integer artikel_id = null;
+    private Integer rabatt_id = null;
+    private String artikel_name = "";
+    private String artikel_nummer = "";
+    private String color = "default";
+    private String type = "artikel";
+    private String menge = "";
+    private Integer stueckzahl = 1;
+    private BigDecimal einzelpreis = new BigDecimal("0.00");
+    private BigDecimal ges_preis = new BigDecimal("0.00");
+    private BigDecimal mwst_satz = new BigDecimal("0.00");
+    private Integer anzahlung_rech_nr = null;
+    private Boolean part_of_anzahlung = false;
+    private Integer gutschein_nr = null;
 
     public KassierArtikel(BaseClass bc) {
         this.bc = bc;
-        this.position = null;
-        this.artikel_id = null;
-        this.rabatt_id = null;
-        this.artikel_name = "";
-        this.color = "default";
-        this.type = "artikel";
-        this.stueckzahl = 1;
-        this.einzelpreis = new BigDecimal("0.00");
-        this.ges_preis = new BigDecimal("0.00");
-        this.mwst_satz = new BigDecimal("0.00");
     }
 
     public KassierArtikel(BaseClass bc, Integer position, Integer artikel_id,
-            Integer rabatt_id, String artikel_name, String color, String type,
-            Integer stueckzahl, BigDecimal einzelpreis, BigDecimal ges_preis,
-            BigDecimal mwst_satz) {
+            Integer rabatt_id, String artikel_name, String artikel_nummer,
+            String color, String type, String menge, Integer stueckzahl,
+            BigDecimal einzelpreis, BigDecimal ges_preis, BigDecimal mwst_satz) {
         this.bc = bc;
         setPosition(position);
         setArtikelID(artikel_id);
         setRabattID(rabatt_id);
         setName(artikel_name);
+        setArtikelNummer(artikel_nummer);
         setColor(color);
         setType(type);
+        setMenge(menge);
+        setStueckzahl(stueckzahl);
+        setEinzelPreis(einzelpreis);
+        setGesPreis(ges_preis);
         setMwst(mwst_satz);
     }
 
@@ -65,6 +65,7 @@ public class KassierArtikel {
             if ( !bc.equalsThatHandlesNull(artikel_id, a.getArtikelID()) ){ return false; }
             if ( !bc.equalsThatHandlesNull(rabatt_id, a.getRabattID()) ){ return false; }
             if ( !bc.equalsThatHandlesNull(artikel_name, a.getName()) ){ return false; }
+            if ( !bc.equalsThatHandlesNull(artikel_nummer, a.getArtikelNummer()) ){ return false; }
             if ( !bc.equalsThatHandlesNull(color, a.getColor()) ){ return false; }
             if ( !bc.equalsThatHandlesNull(type, a.getType()) ){ return false; }
             if ( !bc.equalsThatHandlesNull(mwst_satz, a.getMwst()) ){ return false; }
@@ -92,6 +93,8 @@ public class KassierArtikel {
             return getColor();
         if ( objName.equals("type") )
             return getType();
+        if ( objName.equals("menge") )
+            return getMenge();
         if ( objName.equals("stueckzahl") )
             return getStueckzahl();
         if ( objName.equals("einzelpreis") )
@@ -119,12 +122,20 @@ public class KassierArtikel {
         return artikel_name;
     }
 
+    public String getArtikelNummer() {
+        return artikel_nummer;
+    }
+
     public String getColor() {
         return color;
     }
 
     public String getType() {
         return type;
+    }
+
+    public String getMenge() {
+        return menge;
     }
 
     public Integer getStueckzahl() {
@@ -141,6 +152,18 @@ public class KassierArtikel {
 
     public BigDecimal getMwst() {
         return mwst_satz;
+    }
+
+    public Integer getAnzahlungRechNr() {
+        return anzahlung_rech_nr;
+    }
+
+    public Boolean getPartOfAnzahlung() {
+        return part_of_anzahlung;
+    }
+
+    public Integer getGutscheinNr() {
+        return gutschein_nr;
     }
 
 
@@ -160,10 +183,17 @@ public class KassierArtikel {
     }
 
     public void setName(String name) {
-        if (artikel_name == null)
+        if (name == null)
             this.artikel_name = "";
         else
             this.artikel_name = name;
+    }
+
+    public void setArtikelNummer(String nummer) {
+        if (nummer == null)
+            this.artikel_nummer = "";
+        else
+            this.artikel_nummer = nummer;
     }
 
     public void setColor(String color) {
@@ -180,6 +210,13 @@ public class KassierArtikel {
             this.type = type;
     }
 
+    public void setMenge(String menge) {
+        if (menge == null)
+            this.menge = "";
+        else
+            this.menge = menge;
+    }
+
     public void setStueckzahl(Integer stueckzahl) {
         if (stueckzahl == null)
             this.stueckzahl = 1;
@@ -187,7 +224,7 @@ public class KassierArtikel {
             this.stueckzahl = stueckzahl;
     }
 
-    public void setEinzelpreis(BigDecimal einzelpreis) {
+    public void setEinzelPreis(BigDecimal einzelpreis) {
         if (einzelpreis == null)
             this.einzelpreis = new BigDecimal("0.00");
         else
@@ -206,5 +243,17 @@ public class KassierArtikel {
             this.mwst_satz = new BigDecimal("0.00");
         else
             this.mwst_satz = mwst_satz;
+    }
+
+    public void setAnzahlungRechNr(Integer anz_rech_nr) {
+        this.anzahlung_rech_nr = anz_rech_nr;
+    }
+
+    public void setPartOfAnzahlung(Boolean pao) {
+        this.part_of_anzahlung = pao;
+    }
+
+    public void setGutscheinNr(Integer gut_nr) {
+        this.gutschein_nr = gut_nr;
     }
 }

@@ -74,11 +74,11 @@ public class DBConnection {
             connectionWorks = true;
         } catch (SQLException ex) {
             logger.error("Exception: Perhaps password wrong or DB offline.");
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             noConnectionToServer = true;
             // showDBErrorDialog(ex.getMessage());
         } catch (Exception ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
         }
     }
 
@@ -97,7 +97,7 @@ public class DBConnection {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT CONNECTION_ID()");
-            // ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM verkauf");
+            // ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM "+tableForMode("verkauf"));
             rs.next();
             logger.info("DBConnection CONNECTION_ID: "+rs.getLong(1));
             rs.close();
@@ -106,11 +106,11 @@ public class DBConnection {
             connectionWorks = true;
         } catch (SQLException ex) {
             logger.error("Exception: Perhaps password wrong or DB offline.");
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             noConnectionToServer = true;
             // showDBErrorDialog(ex.getMessage());
         } catch (Exception ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
         }
         // this.pool.close(); // no, we want to use it as long as program is open
     }

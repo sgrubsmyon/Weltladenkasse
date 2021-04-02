@@ -78,16 +78,16 @@ public abstract class Abrechnungen extends WindowContent {
     JButton nextButton;
     private Vector<JButton> exportButtons;
     private Vector<String> abrechnungsDates;
-    Vector<Integer> abrechnungsIDs;
+    protected Vector<Integer> abrechnungsIDs;
     private Vector< Vector<BigDecimal> > abrechnungsTotals;
     protected Vector< HashMap<BigDecimal, Vector<BigDecimal>> > abrechnungsVATs;
-    String incompleteAbrechnungsDate;
-    Vector<BigDecimal> incompleteAbrechnungsTotals;
-    HashMap<BigDecimal, Vector<BigDecimal>> incompleteAbrechnungsVATs;
-    TreeSet<BigDecimal> mwstSet;
+    protected String incompleteAbrechnungsDate;
+    protected Vector<BigDecimal> incompleteAbrechnungsTotals;
+    protected HashMap<BigDecimal, Vector<BigDecimal>> incompleteAbrechnungsVATs;
+    protected TreeSet<BigDecimal> mwstSet;
     protected Vector< Vector<Object> > data;
     protected Vector< Vector<Color> > colors;
-    Vector< Vector<String> > fontStyles;
+    protected Vector< Vector<String> > fontStyles;
     protected Vector<String> columnLabels;
     private int abrechnungsZahl;
     private FileExistsAwareFileChooser odsChooser;
@@ -106,7 +106,7 @@ public abstract class Abrechnungen extends WindowContent {
         dateInFormat = dif;
         dateOutFormat = dof;
         timeName = tn;
-        abrechnungsTableName = atn;
+        abrechnungsTableName = tableForMode(atn);
 
         //footerPanel = new JPanel();
         //footerPanel.setLayout(new FlowLayout());
@@ -130,18 +130,18 @@ public abstract class Abrechnungen extends WindowContent {
     }
 
     Integer id() {
-        Integer id = -1;
+        Integer id = null;
         try {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT IFNULL("+
-                    "(SELECT MAX(id) FROM "+abrechnungsTableName+"), "+
-                    "0)");
-            rs.next(); id = rs.getInt(1)+1; rs.close();
+            ResultSet rs = stmt.executeQuery(
+                "SELECT MAX(id) FROM "+abrechnungsTableName
+            );
+            rs.next(); id = rs.getInt(1); rs.close();
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return id;
@@ -163,24 +163,24 @@ public abstract class Abrechnungen extends WindowContent {
             // Gesamt Brutto
             ResultSet rs = stmt.executeQuery(
                     "SELECT SUM(ges_preis) AS ges_brutto " +
-                    "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag),'0001-01-01') "
+                    "FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
+                    "WHERE rechnungs_nr > " +
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) "
                     );
             rs.next();
-                BigDecimal tagesGesamtBrutto =
-                    new BigDecimal(rs.getString(1) == null ? "0" : rs.getString(1));
+            BigDecimal tagesGesamtBrutto =
+                new BigDecimal(rs.getString(1) == null ? "0" : rs.getString(1));
             rs.close();
             // Gesamt Bar Brutto
             rs = stmt.executeQuery(
                     "SELECT SUM(ges_preis) AS ges_bar_brutto " +
-                    "FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    "WHERE storniert = FALSE AND verkaufsdatum > " +
-                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag),'0001-01-01') AND ec_zahlung = FALSE "
+                    "FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
+                    "WHERE rechnungs_nr > " +
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) AND ec_zahlung = FALSE "
                     );
             rs.next();
-                BigDecimal tagesGesamtBarBrutto =
-                    new BigDecimal(rs.getString(1) == null ?  "0" : rs.getString(1));
+            BigDecimal tagesGesamtBarBrutto =
+                new BigDecimal(rs.getString(1) == null ?  "0" : rs.getString(1));
             rs.close();
             // Gesamt EC Brutto
             BigDecimal tagesGesamtECBrutto = tagesGesamtBrutto.subtract(tagesGesamtBarBrutto);
@@ -192,7 +192,7 @@ public abstract class Abrechnungen extends WindowContent {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return values;
@@ -211,24 +211,24 @@ public abstract class Abrechnungen extends WindowContent {
                 // https://de.wikipedia.org/wiki/Rundung)
                     //"SELECT mwst_satz, SUM( ROUND(ges_preis / (1.+mwst_satz), 2) ) AS mwst_netto, " +
                     //"SUM( ROUND(ges_preis / (1. + mwst_satz) * mwst_satz, 2) ) AS mwst_betrag " +
-                    //"FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    //"WHERE storniert = FALSE AND verkaufsdatum > " +
-                    //"IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') " +
+                    //"FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
+                    //"WHERE rechnungs_nr > " +
+                    //"IFNULL((SELECT MAX(rechnungs_nr_bis) FROM +"tableForMode("abrechnung_tag")+"), 0) " +
                     //"GROUP BY mwst_satz"
                 // NEW: ROUND OF SUM
                     //"SELECT mwst_satz, SUM( ges_preis / (1.+mwst_satz) ) AS mwst_netto, " +
                     //"SUM( ges_preis / (1. + mwst_satz) * mwst_satz ) AS mwst_betrag " +
-                    //"FROM verkauf_details INNER JOIN verkauf USING (rechnungs_nr) " +
-                    //"WHERE storniert = FALSE AND verkaufsdatum > " +
-                    //"IFNULL((SELECT MAX(zeitpunkt) FROM abrechnung_tag),'0001-01-01') " +
+                    //"FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
+                    //"WHERE rechnungs_nr > " +
+                    //"IFNULL((SELECT MAX(rechnungs_nr_bis) FROM +"tableForMode("abrechnung_tag")+"), 0) " +
                     //"GROUP BY mwst_satz"
                 // NEWER: Da für jede Rechnung einzeln summiert (und dann gerundet) werden müsste,
                 // ist es einfacher (und auch sicherer), die gerundete MwSt.-Information separat für jede
                 // Rechnung zu speichern (in Tabelle `verkauf_mwst`) und nur noch darüber zu summieren
                     "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag) "+
-                    "FROM verkauf_mwst INNER JOIN verkauf USING (rechnungs_nr) "+
-                    "WHERE storniert = FALSE AND verkaufsdatum > "+
-                    "IFNULL((SELECT MAX(zeitpunkt_real) FROM abrechnung_tag), '0001-01-01') " +
+                    "FROM "+tableForMode("verkauf_mwst")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) "+
+                    "WHERE rechnungs_nr > " +
+                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) " +
                     "GROUP BY mwst_satz"
                     );
             while (rs.next()) {
@@ -253,7 +253,7 @@ public abstract class Abrechnungen extends WindowContent {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return map;
@@ -287,9 +287,11 @@ public abstract class Abrechnungen extends WindowContent {
                     "SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) "+
                     // ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
                     "FROM "+abrechnungsTableName+" "+
+                    "INNER JOIN "+abrechnungsTableName+"_mwst "+
+                    "USING (id) "+
                     "WHERE TRUE "+
                     filterStr +
-                    "GROUP BY id, "+timeName+" ORDER BY id DESC "+
+                    "GROUP BY id ORDER BY id DESC "+
                     "LIMIT " + offset + "," + noOfColumns;
             ResultSet rs = stmt.executeQuery(query);
             while (rs.next()) {
@@ -310,7 +312,9 @@ public abstract class Abrechnungen extends WindowContent {
             for (String date : abrechnungsDates){
                 PreparedStatement pstmt = connection.prepareStatement(
                         "SELECT mwst_satz, mwst_netto, mwst_betrag " +
-                        "FROM "+abrechnungsTableName+" " +
+                        "FROM "+abrechnungsTableName+" "+
+                        "INNER JOIN "+abrechnungsTableName+"_mwst "+
+                        "USING (id) "+
                         "WHERE "+timeName+" = ? " +
                         filterStr +
                         "ORDER BY mwst_satz "
@@ -344,7 +348,7 @@ public abstract class Abrechnungen extends WindowContent {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -356,7 +360,7 @@ public abstract class Abrechnungen extends WindowContent {
         try {
             formattedDate = sdfOut.format( sdfIn.parse(date) );
         } catch (ParseException ex) {
-            logger.error("ParseException: {}", ex);
+            logger.error("ParseException:", ex);
         }
         return formattedDate;
     }
@@ -367,7 +371,7 @@ public abstract class Abrechnungen extends WindowContent {
         try {
             d = sdfIn.parse(date);
         } catch (ParseException ex) {
-            logger.error("ParseException: {}", ex);
+            logger.error("ParseException:", ex);
         }
         return d;
     }
@@ -379,6 +383,9 @@ public abstract class Abrechnungen extends WindowContent {
     void fillHeaderColumn() {
         // fill header column
         columnLabels.add("");
+        data.add(new Vector<>()); data.lastElement().add("Laufende Nr. (Z_NR)");
+        colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
+        fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
         data.add(new Vector<>()); data.lastElement().add("Gesamt Brutto");
         colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
         fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
@@ -404,23 +411,27 @@ public abstract class Abrechnungen extends WindowContent {
         fontStyles.add(new Vector<>()); fontStyles.lastElement().add("normal");
     }
 
-    int fillDataArrayColumnWithData(String date, Vector<BigDecimal> totals, HashMap<BigDecimal, Vector<BigDecimal>> vats, Color color) {
+    int fillDataArrayColumnWithData(String date, Integer z_nr, Vector<BigDecimal> totals, HashMap<BigDecimal, Vector<BigDecimal>> vats, Color color) {
         String formattedDate = formatDate(date, this.dateOutFormat);
         columnLabels.add(formattedDate);
-        // add Gesamt Brutto
-        data.get(0).add( bc.priceFormatter( totals.get(0) )+" "+bc.currencySymbol );
+        // add Laufende Nr.
+        data.get(0).add(z_nr);
         colors.get(0).add(color);
         fontStyles.get(0).add("normal");
-        // add Gesamt Bar Brutto
-        data.get(1).add( bc.priceFormatter( totals.get(1) )+" "+bc.currencySymbol );
+        // add Gesamt Brutto
+        data.get(1).add( bc.priceFormatter( totals.get(0) )+" "+bc.currencySymbol );
         colors.get(1).add(color);
         fontStyles.get(1).add("normal");
-        // add Gesamt EC Brutto
-        data.get(2).add( bc.priceFormatter( totals.get(2) )+" "+bc.currencySymbol );
+        // add Gesamt Bar Brutto
+        data.get(2).add( bc.priceFormatter( totals.get(1) )+" "+bc.currencySymbol );
         colors.get(2).add(color);
         fontStyles.get(2).add("normal");
+        // add Gesamt EC Brutto
+        data.get(3).add( bc.priceFormatter( totals.get(2) )+" "+bc.currencySymbol );
+        colors.get(3).add(color);
+        fontStyles.get(3).add("normal");
         // add VATs
-        int rowIndex = 3;
+        int rowIndex = 4;
         for (BigDecimal mwst : mwstSet){
             for (int i=0; i<3; i++){
                 if (vats != null && vats.containsKey(mwst)){
@@ -438,7 +449,7 @@ public abstract class Abrechnungen extends WindowContent {
     }
 
     int fillIncompleteDataColumn() {
-        int rowIndex = fillDataArrayColumnWithData(incompleteAbrechnungsDate, incompleteAbrechnungsTotals, incompleteAbrechnungsVATs, Color.RED);
+        int rowIndex = fillDataArrayColumnWithData(incompleteAbrechnungsDate, null, incompleteAbrechnungsTotals, incompleteAbrechnungsVATs, Color.RED);
         data.get(rowIndex).add(""); // instead of exportButton
         colors.get(rowIndex).add(Color.BLACK);
         fontStyles.get(rowIndex).add("normal");
@@ -448,9 +459,10 @@ public abstract class Abrechnungen extends WindowContent {
 
     int fillDataArrayColumn(int colIndex) {
         String date = abrechnungsDates.get(colIndex);
+        Integer z_nr = abrechnungsIDs.get(colIndex);
         Vector<BigDecimal> totals = abrechnungsTotals.get(colIndex);
         HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(colIndex); // map with values for each mwst
-        int rowIndex = fillDataArrayColumnWithData(date, totals, vats, Color.BLACK);
+        int rowIndex = fillDataArrayColumnWithData(date, z_nr, totals, vats, Color.BLACK);
         rowIndex = addExportButton(rowIndex);
         return rowIndex;
     }
@@ -574,7 +586,7 @@ public abstract class Abrechnungen extends WindowContent {
             }
             sheet = SpreadSheet.createFromFile(infile).getSheet(0);
         } catch (IOException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             return null;
         }
 
@@ -616,7 +628,7 @@ public abstract class Abrechnungen extends WindowContent {
             // Save to file and open it.
             OOUtils.open(sheet.getSpreadSheet().saveAs(file));
         } catch (IOException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
         }
     }
 

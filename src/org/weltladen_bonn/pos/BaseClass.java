@@ -19,29 +19,49 @@ public class BaseClass {
 
     public final Locale myLocale = Locale.GERMAN;
 
-    // configurable parameters:
-    public String currencySymbol;
-    public String mysqlHost; /** hostname of mysql server */
-    public String mysqlPath; /** path where mysql and mysqldump lie around */
-    public String sofficePath; /** path where soffice lies around */
-    public String printerName; /** name of receipt printer as set in CUPS */
-    public String displayManufacturer; /** manufacturer of customer display */
-    public String displayModel; /** model name of customer display */
-    public Integer displayWidth; /** number of chars on one row */
-    public Integer displayShowWelcomeInterval; /** number of milliseconds after which to show welcome screen */
-    public Integer displayBlankInterval; /** number of milliseconds after which to blank screen to prevent burn-in */
-    public String dateFormatSQL;
-    public String dateFormatJava;
-    public String dateFormatDate4j;
-    public String delimiter; // for CSV export/import
-    public Integer rowsPerPage;
-    public BigDecimal sollMuenzKassenstand;
-    public BigDecimal sollScheinKassenstand;
-    public String exportDirAbrechnungTag;
-    public String exportDirAbrechnungMonat;
-    public String exportDirAbrechnungJahr;
-    public String exportDirBestellung;
-    public Boolean alwaysPrintReceipt;
+    // configurable parameters (set default values here, overwritten later when parsing config.txt):
+    public String currencySymbol = "€";
+    public String operationMode = "normal"; /** either 'normal' or 'training' (TSE logs transactions explicitly as AVTraining and they are written to special SQL table) */
+    public String mysqlHost = "localhost"; /** hostname of mysql server */
+    public String mysqlPath = ""; /** path where mysql and mysqldump lie around */
+    public String sofficePath = ""; /** path where soffice lies around */
+    public String printerName = "quittungsdrucker"; /** name of receipt printer as set in CUPS */
+    public String printerDeviceFile = "/dev/ttyUSB0"; /** name of receipt printer as set in CUPS */
+    public String displayManufacturer = "Wincor Nixdorf"; /** manufacturer of customer display */
+    public String displayModel = "BA63/USB"; /** model name of customer display */
+    public Integer displayWidth = 20; /** number of chars on one row */
+    public Integer displayShowWelcomeInterval = 30000; /** number of milliseconds after which to show welcome screen */
+    public Integer displayBlankInterval = 300000; /** number of milliseconds after which to blank screen to prevent burn-in */
+    public String dateFormatSQL = "%d.%m.%Y, %H:%i Uhr";
+    public String dateFormatJava = "dd.MM.yyyy, HH:mm 'Uhr'";
+    public String dateFormatDate4j = "DD.MM.YYYY, hh:mm:ss |Uhr|";
+    public String delimiter = ";"; // for CSV export/import
+    public Integer rowsPerPage = 32;
+    public BigDecimal sollMuenzKassenstand = new BigDecimal("50.00");
+    public BigDecimal sollScheinKassenstand = new BigDecimal("100.00");
+    public String exportDirAbrechnungTag = "'Dokumente/Kasse/Tagesabrechnungen/'yyyy'/'MM MMMM";
+    public String exportDirAbrechnungMonat = "'Dokumente/Kasse/Monatsabrechnungen/'yyyy";
+    public String exportDirAbrechnungJahr = "'Dokumente/Kasse/Jahresabrechnungen'";
+    public String exportDirBestellung = "'Dokumente/Bestellungen/Bestellungen FHZ 'yyyy";
+
+    // TSE and DSFinV-K setup:
+    public String finDatDir = ".Weltladenkasse_Finanzdaten"; // for export of financial data
+    public String Z_KASSE_ID = "877666797878-01"; // is used as clientID when talking to TSE
+    public String TAXONOMIE_VERSION = "2.2";
+    public String NAME;
+    public String STRASSE;
+    public String PLZ;
+    public String ORT;
+    public String LAND;
+    public String STNR;
+    public String USTID;
+    public Integer TSE_ID = 1;
+    public String TSE_PD_ENCODING = "UTF-8";
+    public String KASSE_SW_BRAND;
+    public String KASSE_SW_VERSION;
+    public String KASSE_SERIENNR;
+    public String KASSE_BRAND;
+    public String KASSE_MODELL;
 
     public final String fileSep = System.getProperty("file.separator");
     public final String lineSep = System.getProperty("line.separator");
@@ -176,64 +196,148 @@ public class BaseClass {
         return s.replaceAll("\"","");
     }
 
+    private void parseErrorMessage(Exception ex, String name, Object value) {
+        logger.error("Exception:", ex);
+        JOptionPane.showMessageDialog(null, "Fehler in der Konfigurationsdatei config.properties bei '"+name+"'.\n"+
+            "Es wird der Standardwert "+value+" benutzt.", "Fehler", JOptionPane.ERROR_MESSAGE);
+    }
+
     private void loadConfigFile() {
         // load config file:
         String filename = "config.properties";
+        Properties props = new Properties();
         try {
             InputStream fis = new FileInputStream(filename);
-            Properties props = new Properties();
             props.load(fis);
-
-            this.currencySymbol = props.getProperty("currencySymbol");
-            this.mysqlHost = props.getProperty("mysqlHost");
-            this.mysqlPath = props.getProperty("mysqlPath");
-            this.sofficePath = props.getProperty("sofficePath");
-            this.printerName = props.getProperty("printerName");
-            this.displayManufacturer = props.getProperty("displayManufacturer");
-            this.displayModel = props.getProperty("displayModel");
-            this.displayWidth = Integer.parseInt(props.getProperty("displayWidth"));
-            this.displayShowWelcomeInterval = Integer.parseInt(props.getProperty("displayShowWelcomeInterval"));
-            this.displayBlankInterval = Integer.parseInt(props.getProperty("displayBlankInterval"));
-            this.dateFormatSQL = props.getProperty("dateFormatSQL");
-            this.dateFormatJava = props.getProperty("dateFormatJava");
-            this.dateFormatDate4j = props.getProperty("dateFormatDate4j");
-            this.delimiter = props.getProperty("delimiter"); // for CSV export/import
-            this.rowsPerPage = Integer.parseInt(props.getProperty("rowsPerPage"));
-            this.sollMuenzKassenstand = new BigDecimal(props.getProperty("sollMuenzKassenstand"));
-            this.sollScheinKassenstand = new BigDecimal(props.getProperty("sollScheinKassenstand"));
-            this.exportDirAbrechnungTag = props.getProperty("exportDirAbrechnungTag");
-            this.exportDirAbrechnungMonat = props.getProperty("exportDirAbrechnungMonat");
-            this.exportDirAbrechnungJahr = props.getProperty("exportDirAbrechnungJahr");
-            this.exportDirBestellung = props.getProperty("exportDirBestellung");
-            this.alwaysPrintReceipt = Boolean.valueOf(props.getProperty("alwaysPrintReceipt"));
         } catch (Exception ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             JOptionPane.showMessageDialog(null, "Fehler in der Konfigurationsdatei config.properties.\n"+
-                    "Es werden die Standardwerte benutzt.", "Fehler",
-                    JOptionPane.ERROR_MESSAGE);
-            this.currencySymbol = "€";
-            this.mysqlHost = "localhost";
-            this.mysqlPath = "";
-            this.sofficePath = "";
-            this.printerName = "quittungsdrucker";
-            this.displayManufacturer = "Wincor Nixdorf";
-            this.displayModel = "BA63/USB";
-            this.displayWidth = 20;
-            this.displayShowWelcomeInterval = 30000;
-            this.displayBlankInterval = 300000;
-            this.dateFormatSQL = "%d.%m.%Y, %H:%i Uhr";
-            this.dateFormatJava = "dd.MM.yyyy, HH:mm 'Uhr'";
-            this.dateFormatDate4j = "DD.MM.YYYY, hh:mm |Uhr|";
-            this.delimiter = ";"; // for CSV export/import
-            this.rowsPerPage = 32;
-            this.sollMuenzKassenstand = new BigDecimal("50.00");
-            this.sollScheinKassenstand = new BigDecimal("100.00");
-            this.exportDirAbrechnungTag = "'Dokumente/Kasse/Tagesabrechnungen/'yyyy'/'MM MMMM";
-            this.exportDirAbrechnungMonat = "'Dokumente/Kasse/Monatsabrechnungen/'yyyy";
-            this.exportDirAbrechnungJahr = "'Dokumente/Kasse/Jahresabrechnungen'";
-            this.exportDirBestellung = "'Dokumente/Bestellungen/Bestellungen FHZ 'yyyy";
-            this.alwaysPrintReceipt = true;
+                "Es werden die Standardwerte benutzt.", "Fehler",
+                JOptionPane.ERROR_MESSAGE);
         }
+        try { this.currencySymbol = props.getProperty("currencySymbol"); } catch (Exception ex) {
+            parseErrorMessage(ex, "currencySymbol", this.currencySymbol);
+        }
+        try { this.operationMode = props.getProperty("operationMode"); } catch (Exception ex) {
+            parseErrorMessage(ex, "operationMode", this.operationMode);
+        }
+        try { this.mysqlHost = props.getProperty("mysqlHost"); } catch (Exception ex) {
+            parseErrorMessage(ex, "mysqlHost", this.mysqlHost);
+        }
+        try { this.mysqlPath = props.getProperty("mysqlPath"); } catch (Exception ex) {
+            parseErrorMessage(ex, "mysqlPath", this.mysqlPath);
+        }
+        try { this.sofficePath = props.getProperty("sofficePath"); } catch (Exception ex) {
+            parseErrorMessage(ex, "sofficePath", this.sofficePath);
+        }
+        try { this.printerName = props.getProperty("printerName"); } catch (Exception ex) {
+            parseErrorMessage(ex, "printerName", this.printerName);
+        }
+        try { this.printerDeviceFile = props.getProperty("printerDeviceFile"); } catch (Exception ex) {
+            parseErrorMessage(ex, "printerDeviceFile", this.printerDeviceFile);
+        }
+        try { this.displayManufacturer = props.getProperty("displayManufacturer"); } catch (Exception ex) {
+            parseErrorMessage(ex, "displayManufacturer", this.displayManufacturer);
+        }
+        try { this.displayModel = props.getProperty("displayModel"); } catch (Exception ex) {
+            parseErrorMessage(ex, "displayModel", this.displayModel);
+        }
+        try { this.displayWidth = Integer.parseInt(props.getProperty("displayWidth")); } catch (Exception ex) {
+            parseErrorMessage(ex, "displayWidth", this.displayWidth);
+        }
+        try { this.displayShowWelcomeInterval = Integer.parseInt(props.getProperty("displayShowWelcomeInterval")); } catch (Exception ex) {
+            parseErrorMessage(ex, "displayShowWelcomeInterval", this.displayShowWelcomeInterval);
+        }
+        try { this.displayBlankInterval = Integer.parseInt(props.getProperty("displayBlankInterval")); } catch (Exception ex) {
+            parseErrorMessage(ex, "displayBlankInterval", this.displayBlankInterval);
+        }
+        try { this.dateFormatSQL = props.getProperty("dateFormatSQL"); } catch (Exception ex) {
+            parseErrorMessage(ex, "dateFormatSQL", this.dateFormatSQL);
+        }
+        try { this.dateFormatJava = props.getProperty("dateFormatJava"); } catch (Exception ex) {
+            parseErrorMessage(ex, "dateFormatJava", this.dateFormatJava);
+        }
+        try { this.dateFormatDate4j = props.getProperty("dateFormatDate4j"); } catch (Exception ex) {
+            parseErrorMessage(ex, "dateFormatDate4j", this.dateFormatDate4j);
+        }
+        try { this.delimiter = props.getProperty("delimiter"); } catch (Exception ex) { // for CSV export/import
+            parseErrorMessage(ex, "delimiter", this.delimiter);
+        }
+        try { this.rowsPerPage = Integer.parseInt(props.getProperty("rowsPerPage")); } catch (Exception ex) {
+            parseErrorMessage(ex, "rowsPerPage", this.rowsPerPage);
+        }
+        try { this.sollMuenzKassenstand = new BigDecimal(props.getProperty("sollMuenzKassenstand")); } catch (Exception ex) {
+            parseErrorMessage(ex, "sollMuenzKassenstand", this.sollMuenzKassenstand);
+        }
+        try { this.sollScheinKassenstand = new BigDecimal(props.getProperty("sollScheinKassenstand")); } catch (Exception ex) {
+            parseErrorMessage(ex, "sollScheinKassenstand", this.sollScheinKassenstand);
+        }
+        try { this.exportDirAbrechnungTag = props.getProperty("exportDirAbrechnungTag"); } catch (Exception ex) {
+            parseErrorMessage(ex, "exportDirAbrechnungTag", this.exportDirAbrechnungTag);
+        }
+        try { this.exportDirAbrechnungMonat = props.getProperty("exportDirAbrechnungMonat"); } catch (Exception ex) {
+            parseErrorMessage(ex, "exportDirAbrechnungMonat", this.exportDirAbrechnungMonat);
+        }
+        try { this.exportDirAbrechnungJahr = props.getProperty("exportDirAbrechnungJahr"); } catch (Exception ex) {
+            parseErrorMessage(ex, "exportDirAbrechnungJahr", this.exportDirAbrechnungJahr);
+        }
+        try { this.exportDirBestellung = props.getProperty("exportDirBestellung"); } catch (Exception ex) {
+            parseErrorMessage(ex, "exportDirBestellung", this.exportDirBestellung);
+        }
+        
+        // TSE and DSFinV-K setup:
+        try { this.finDatDir = props.getProperty("finDatDir"); } catch (Exception ex) {
+            parseErrorMessage(ex, "finDatDir", this.finDatDir);
+        }
+        try { this.Z_KASSE_ID = props.getProperty("Z_KASSE_ID"); } catch (Exception ex) {
+            parseErrorMessage(ex, "Z_KASSE_ID", this.Z_KASSE_ID);
+        }
+        try { this.TAXONOMIE_VERSION = props.getProperty("TAXONOMIE_VERSION"); } catch (Exception ex) {
+            parseErrorMessage(ex, "TAXONOMIE_VERSION", this.TAXONOMIE_VERSION);
+        }
+        try { this.NAME = props.getProperty("NAME"); } catch (Exception ex) {
+            parseErrorMessage(ex, "NAME", this.NAME);
+        }
+        try { this.STRASSE = props.getProperty("STRASSE"); } catch (Exception ex) {
+            parseErrorMessage(ex, "STRASSE", this.STRASSE);
+        }
+        try { this.PLZ = props.getProperty("PLZ"); } catch (Exception ex) {
+            parseErrorMessage(ex, "PLZ", this.PLZ);
+        }
+        try { this.ORT = props.getProperty("ORT"); } catch (Exception ex) {
+            parseErrorMessage(ex, "ORT", this.ORT);
+        }
+        try { this.LAND = props.getProperty("LAND"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LAND", this.LAND);
+        }
+        try { this.STNR = props.getProperty("STNR"); } catch (Exception ex) {
+            parseErrorMessage(ex, "STNR", this.STNR);
+        }
+        try { this.USTID = props.getProperty("USTID"); } catch (Exception ex) {
+            parseErrorMessage(ex, "USTID", this.USTID);
+        }
+        try { this.TSE_ID = Integer.parseInt(props.getProperty("TSE_ID")); } catch (Exception ex) {
+            parseErrorMessage(ex, "TSE_ID", this.TSE_ID);
+        }
+        try { this.TSE_PD_ENCODING = props.getProperty("TSE_PD_ENCODING"); } catch (Exception ex) {
+            parseErrorMessage(ex, "TSE_PD_ENCODING", this.TSE_PD_ENCODING);
+        }
+        try { this.KASSE_SW_BRAND = props.getProperty("KASSE_SW_BRAND"); } catch (Exception ex) {
+            parseErrorMessage(ex, "KASSE_SW_BRAND", this.KASSE_SW_BRAND);
+        }
+        try { this.KASSE_SW_VERSION = props.getProperty("KASSE_SW_VERSION"); } catch (Exception ex) {
+            parseErrorMessage(ex, "KASSE_SW_VERSION", this.KASSE_SW_VERSION);
+        }
+        try { this.KASSE_SERIENNR = props.getProperty("KASSE_SERIENNR"); } catch (Exception ex) {
+            parseErrorMessage(ex, "KASSE_SERIENNR", this.KASSE_SERIENNR);
+        }
+        try { this.KASSE_BRAND = props.getProperty("KASSE_BRAND"); } catch (Exception ex) {
+            parseErrorMessage(ex, "KASSE_BRAND", this.KASSE_BRAND);
+        }
+        try { this.KASSE_MODELL = props.getProperty("KASSE_MODELL"); } catch (Exception ex) {
+            parseErrorMessage(ex, "KASSE_MODELL", this.KASSE_MODELL);
+        }
+       
         this.mysqlHost = removeQuotes(this.mysqlHost);
         this.printerName = removeQuotes(this.printerName);
         this.displayManufacturer = removeQuotes(this.displayManufacturer);
@@ -352,8 +456,8 @@ public class BaseClass {
             return "";
         try {
             BigDecimal price = new BigDecimal(
-                    priceStr.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.')
-                    );
+                priceStr.replace(currencySymbol,"").replaceAll("\\s","").replace(',','.')
+            );
             return priceFormatterIntern(price);
         } catch (NumberFormatException nfe) {
             return "";
