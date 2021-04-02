@@ -4,6 +4,7 @@ package org.weltladen_bonn.pos.kasse;
 import java.util.*; // for Vector
 import java.util.Date;
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
+import java.math.RoundingMode;
 
 // MySQL Connector/J stuff:
 import java.sql.*;
@@ -24,15 +25,16 @@ import hirondelle.date4j.DateTime;
 import org.weltladen_bonn.pos.*;
 import org.weltladen_bonn.pos.BaseClass.BigLabel;
 import org.weltladen_bonn.pos.BaseClass.BigButton;
+import org.weltladen_bonn.pos.kasse.WeltladenTSE.TSETransaction;
 
 // Logging:
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Main class of the cashier POS software
+ */
 public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, DocumentListener {
-    /**
-     * Main class of the cashier POS software
-     */
     private static final Logger logger = LogManager.getLogger(Kassieren.class);
 
     private static final long serialVersionUID = 1L;
@@ -40,26 +42,26 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private final BigDecimal mitarbeiterRabatt = new BigDecimal("0.1");
     private final boolean allowMitarbeiterRabatt = true;
     private final BigDecimal ecSchwelle = new BigDecimal("20.00");
-    private int artikelRabattArtikelID = 1;
-    private int rechnungRabattArtikelID = 2;
-    private int gutscheinArtikelID = 3;
 
     private MainWindow mw;
     private Kundendisplay display;
+    private WeltladenTSE tse;
     private TabbedPane tabbedPane;
 
     private int selectedArticleID;
     private int selectedStueck;
+    
+    private Color gutscheinColor = Color.MAGENTA.darker().darker();
 
     protected ArticleSelectPanelKassieren asPanel;
     private JButton sonstigesButton;
+    private JButton gutscheinVerkaufenButton;
     private JButton sevenPercentButton;
     private JButton nineteenPercentButton;
     private JSpinner anzahlSpinner;
     protected JFormattedTextField anzahlField;
     protected JTextField preisField;
     private JTextField kundeGibtField;
-    private JTextField gutscheinField;
     private JTextField bigPriceField;
     private JTextField rueckgeldField;
     private JTextField individuellRabattRelativField;
@@ -74,14 +76,17 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private JButton ecButton;
     private JButton stornoButton;
     private JButton passendButton;
-    private JButton gutscheinButton;
+    private JButton gutscheinEinloesenButton;
     private JLabel zahlungsLabel;
     private JButton neuerKundeButton;
-    private JButton quittungsButton;
     private JButton individuellRabattRelativButton;
     private JButton individuellRabattAbsolutButton;
-    private JButton abweichenderPreisButton;
     private JButton mitarbeiterRabattButton;
+    private JButton abweichenderPreisButton;
+    private JButton anzahlungNeuButton;
+    private JTextField anzahlungsBetragField;
+    private JButton anzahlungNeuOKButton;
+    private JButton anzahlungAufloesButton;
 
     private Vector<JButton> rabattButtons;
 
@@ -89,6 +94,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private JPanel allPanel;
     private JPanel rabattPanel;
     private JPanel abweichenderPreisPanel;
+    private JPanel anzahlungsPanel;
+    private JPanel anzahlungNeuPanel;
     private JPanel articleListPanel;
 
     // The table holding the purchase articles.
@@ -107,9 +114,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (mw instanceof MainWindow) {
             this.mw = (MainWindow) mw;
             display = this.mw.getDisplay();
+            tse = this.mw.getTSE();
         } else {
             this.mw = null;
             display = null;
+            tse = null;
         }
         this.tabbedPane = tp;
 
@@ -173,7 +182,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     private class KHWAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
-            setSelectedArticle(18); // Sonstiges Kunsthandwerk
+            setSelectedArticle(sonstigesKHWArtikelID); // Sonstiges Kunsthandwerk
         }
     }
 
@@ -229,11 +238,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         AbstractDocument doc = new PlainDocument() {
             @Override
             public void setDocumentFilter(DocumentFilter filter) {
-                if (filter instanceof IntegerDocumentFilter) { // w/o this if,
-                                                               // it's not
-                                                               // working
-                    // maybe the DocumentFilter is reset to a default filter for
-                    // Spinners
+                if (filter instanceof IntegerDocumentFilter) { // w/o this if, it's not working
+                    // maybe the DocumentFilter is reset to a default filter for spinners
                     super.setDocumentFilter(filter);
                 }
             }
@@ -280,32 +286,31 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         JPanel sonstigesPanel = new JPanel(new GridBagLayout());
         GridBagConstraints c1 = new GridBagConstraints();
         c1.anchor = GridBagConstraints.CENTER;
-        c1.fill = GridBagConstraints.HORIZONTAL;
+        c1.fill = GridBagConstraints.BOTH;
         c1.ipady = 5;
         c1.insets = new Insets(1, 0, 1, 0);
         sonstigesPanel.setBorder(BorderFactory.createTitledBorder("Variabler Preis"));
         sonstigesButton = new BaseClass.BigButton("Sonstiges...");
+        gutscheinVerkaufenButton = new JButton("Gutschein verk.");
+        gutscheinVerkaufenButton.setBackground(gutscheinColor);
+        gutscheinVerkaufenButton.setForeground(Color.WHITE);
         sevenPercentButton = new BaseClass.BigButton("7% MwSt.");
         nineteenPercentButton = new BaseClass.BigButton("19% MwSt.");
-        sonstigesButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-        sevenPercentButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-        nineteenPercentButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         sonstigesButton.addActionListener(this);
+        gutscheinVerkaufenButton.addActionListener(this);
         sevenPercentButton.addActionListener(this);
         nineteenPercentButton.addActionListener(this);
 
-        int i = 0;
-        c1.gridy = i;
-        i++;
+        c1.gridx = 0; c1.gridy = 0;
         sonstigesPanel.add(sonstigesButton, c1);
-        c1.gridy = i;
-        i++;
+        c1.gridx = 0; c1.gridy = 1;
+        sonstigesPanel.add(gutscheinVerkaufenButton, c1);
+        c1.gridx = 1; c1.gridy = 0;
         sonstigesPanel.add(sevenPercentButton, c1);
-        c1.gridy = i;
-        i++;
+        c1.gridx = 1; c1.gridy = 1;
         sonstigesPanel.add(nineteenPercentButton, c1);
-        articleSelectPanel.add(sonstigesPanel);
 
+        articleSelectPanel.add(sonstigesPanel);
         artikelFormularPanel.add(articleSelectPanel);
 
         JPanel spinnerPanel = new JPanel();
@@ -471,28 +476,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
         JPanel gutscheinPanel = new JPanel();
         gutscheinPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-        gutscheinField = new BigPriceField("");
-        gutscheinField.setColumns(5);
-        removeDefaultKeyBindings(gutscheinField);
-        gutscheinField.addKeyListener(removeNumPadAdapter);
-        gutscheinField.setEditable(false);
-        gutscheinField.addKeyListener(new KeyAdapter() {
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    if (gutscheinButton.isEnabled()) {
-                        gutscheinButton.doClick();
-                    }
-                }
-            }
-        });
-        ((AbstractDocument) gutscheinField.getDocument()).setDocumentFilter(bc.geldFilter);
-        gutscheinField.getDocument().addDocumentListener(this);
-        gutscheinPanel.add(gutscheinField);
-        gutscheinPanel.add(new BigLabel(bc.currencySymbol));
-        gutscheinButton = new BaseClass.BigButton("OK");
-        gutscheinButton.setEnabled(false);
-        gutscheinButton.addActionListener(this);
-        gutscheinPanel.add(gutscheinButton);
+        gutscheinEinloesenButton = new BaseClass.BigButton("GUTSCHEIN EINLÖSEN");
+        gutscheinEinloesenButton.setBackground(gutscheinColor);
+        gutscheinEinloesenButton.setForeground(Color.WHITE);
+        gutscheinEinloesenButton.addActionListener(this);
+        gutscheinPanel.add(gutscheinEinloesenButton);
 
         JPanel zuZahlenPanel = new JPanel();
         zuZahlenPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
@@ -568,17 +556,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         neuerKundeButton.addActionListener(this);
         centerPanel.add(neuerKundeButton);
         fertigButtonPanel.add(centerPanel, BorderLayout.CENTER);
-        // right
-        JPanel rightPanel = new JPanel();
-        rightPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
-        quittungsButton = new BaseClass.BigButton("Quittung");
-        quittungsButton.setBackground(Color.DARK_GRAY);
-        quittungsButton.setForeground(Color.WHITE);
-        quittungsButton.setMnemonic(KeyEvent.VK_Q);
-        quittungsButton.setEnabled(false);
-        quittungsButton.addActionListener(this);
-        rightPanel.add(quittungsButton);
-        fertigButtonPanel.add(rightPanel, BorderLayout.EAST);
         neuerKundePanel.add(fertigButtonPanel);
         bezahlPanel.add(neuerKundePanel);
 
@@ -604,9 +581,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     Integer showRabattIndividuellPanel(GridBagConstraints c, Integer i) {
         JPanel individuellRabattPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints c2 = new GridBagConstraints();
-        c2.fill = GridBagConstraints.HORIZONTAL;
-        c2.insets = new Insets(3, 3, 3, 3);
         individuellRabattPanel.setBorder(BorderFactory.createTitledBorder("individuell"));
 
         individuellRabattRelativField = new JTextField("");
@@ -675,6 +649,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         individuellRabattAbsolutButton = new BaseClass.BigButton("OK");
         individuellRabattAbsolutButton.addActionListener(this);
 
+        GridBagConstraints c2 = new GridBagConstraints();
+        c2.fill = GridBagConstraints.HORIZONTAL;
+        c2.insets = new Insets(3, 3, 3, 3);
         c2.anchor = GridBagConstraints.EAST;
         c2.gridy = 0;
         c2.gridx = 0;
@@ -711,9 +688,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
     void showAbweichenderPreisPanel() {
         abweichenderPreisPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints c2 = new GridBagConstraints();
-        c2.fill = GridBagConstraints.HORIZONTAL;
-        c2.insets = new Insets(3, 3, 3, 3);
         abweichenderPreisPanel.setBorder(BorderFactory.createTitledBorder("Abweichender Preis"));
 
         abweichenderPreisField = new JTextField("");
@@ -749,6 +723,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         abweichenderPreisButton = new BaseClass.BigButton("OK");
         abweichenderPreisButton.addActionListener(this);
 
+        GridBagConstraints c2 = new GridBagConstraints();
+        c2.fill = GridBagConstraints.HORIZONTAL;
+        c2.insets = new Insets(3, 3, 3, 3);
         c2.anchor = GridBagConstraints.EAST;
         c2.gridy = 0;
         c2.gridx = 0;
@@ -763,6 +740,108 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         abweichenderPreisPanel.add(abweichenderPreisButton, c2);
     }
 
+    void showAnzahlungsPanel() {
+        anzahlungsPanel = new JPanel(new GridBagLayout());
+        anzahlungsPanel.setBorder(BorderFactory.createTitledBorder("Anzahlungen"));
+
+        anzahlungNeuButton = new BaseClass.BigButton("Neue Anzahlung");
+        anzahlungNeuButton.setBackground(new Color(70, 197, 80));
+        anzahlungNeuButton.addActionListener(this);
+        anzahlungNeuPanel = new JPanel(new GridBagLayout());
+        anzahlungAufloesButton = new BaseClass.BigButton("Anzahlung auflösen");
+        anzahlungAufloesButton.setBackground(new Color(70, 197, 175));
+        anzahlungAufloesButton.addActionListener(this);
+
+        GridBagConstraints c2 = new GridBagConstraints();
+        c2.anchor = GridBagConstraints.NORTH;
+        c2.fill = GridBagConstraints.HORIZONTAL;
+        c2.ipady = 10;
+        c2.insets = new Insets(3, 0, 3, 0);
+        c2.gridy = 0;
+        anzahlungsPanel.add(anzahlungNeuButton, c2);
+        c2.gridy = 1;
+        anzahlungsPanel.add(anzahlungNeuPanel, c2);
+        c2.gridy = 2;
+        anzahlungsPanel.add(anzahlungAufloesButton, c2);
+    }
+
+    void showAnzahlungNeuPanel() {
+        anzahlungsPanel.remove(anzahlungNeuPanel);
+        anzahlungsPanel.revalidate();
+        anzahlungNeuPanel = new JPanel(new GridBagLayout());
+
+        anzahlungsBetragField = new JTextField("");
+        anzahlungsBetragField.setColumns(5);
+        removeDefaultKeyBindings(anzahlungsBetragField);
+        anzahlungsBetragField.addKeyListener(removeNumPadAdapter);
+        anzahlungsBetragField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) {
+                if (anzahlungsBetragField.getText().length() > 0) {
+                    anzahlungNeuOKButton.setEnabled(true);
+                } else {
+                    anzahlungNeuOKButton.setEnabled(false);
+                }
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                this.insertUpdate(e);
+            }
+
+            public void changedUpdate(DocumentEvent e) {
+                // Plain text components do not fire these events
+            }
+        });
+        ((AbstractDocument) anzahlungsBetragField.getDocument()).setDocumentFilter(bc.geldFilter);
+        anzahlungsBetragField.addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    anzahlungNeuOKButton.doClick();
+                }
+            }
+        });
+        anzahlungsBetragField.setHorizontalAlignment(JTextField.RIGHT);
+        anzahlungNeuOKButton = new BaseClass.BigButton("OK");
+        anzahlungNeuOKButton.addActionListener(this);
+
+        GridBagConstraints c2 = new GridBagConstraints();
+        c2.fill = GridBagConstraints.HORIZONTAL;
+        c2.insets = new Insets(3, 3, 3, 3);
+        c2.anchor = GridBagConstraints.EAST;
+        c2.gridy = 0;
+        c2.gridx = 0;
+        anzahlungNeuPanel.add(new JLabel("Betrag:"), c2);
+        c2.gridy = 1;
+        c2.gridx = 0;
+        anzahlungNeuPanel.add(anzahlungsBetragField, c2);
+        c2.anchor = GridBagConstraints.WEST;
+        c2.gridy = 1;
+        c2.gridx = 1;
+        anzahlungNeuPanel.add(new BigLabel(bc.currencySymbol), c2);
+        c2.anchor = GridBagConstraints.EAST;
+        c2.gridy = 1;
+        c2.gridx = 2;
+        anzahlungNeuPanel.add(anzahlungNeuOKButton, c2);
+        c2.anchor = GridBagConstraints.NORTH;
+        c2.ipady = 10;
+        c2.insets = new Insets(3, 0, 3, 0);
+        c2.gridx = 0;
+        c2.gridy = 1;
+        anzahlungsPanel.add(anzahlungNeuPanel, c2);
+    }
+
+    void hideAnzahlungNeuPanel() {
+        anzahlungsPanel.remove(anzahlungNeuPanel);
+        anzahlungsPanel.revalidate();
+        anzahlungNeuPanel = new JPanel(new GridBagLayout());
+
+        GridBagConstraints c2 = new GridBagConstraints();
+        c2.anchor = GridBagConstraints.NORTH;
+        c2.fill = GridBagConstraints.HORIZONTAL;
+        c2.ipady = 10;
+        c2.insets = new Insets(3, 0, 3, 0);
+        c2.gridy = 1;
+        anzahlungsPanel.add(anzahlungNeuPanel, c2);
+    }
 
     void showButtons() {
         JPanel buttonPanel = new JPanel(new BorderLayout());
@@ -783,9 +862,11 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         i = showRabattButtons(c, i);
         i = showRabattIndividuellPanel(c, i);
         showAbweichenderPreisPanel();
+        showAnzahlungsPanel();
 
         northPanel.add(rabattPanel);
         northPanel.add(abweichenderPreisPanel);
+        northPanel.add(anzahlungsPanel);
         buttonPanel.add(northPanel, BorderLayout.NORTH);
         this.add(buttonPanel, BorderLayout.WEST);
     }
@@ -816,7 +897,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     abweichEnabled = true;
                     break;
                 }
-                if (type.equals("gutschein")) {
+                if (type.equals("gutschein") || type.equals("gutscheineinloesung")) {
                     // Es handelt sich um einen Gutschein, kein Rabatt
                     // erlauben
                     break;
@@ -912,16 +993,37 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         scrollPane = new JScrollPane(myTable);
         articleListPanel.add(scrollPane, BorderLayout.CENTER);
 
-        JPanel totalPricePanel = createTotalPricePanel();
+        JPanel bottomPanel = createBottomPanel();
+        JPanel zwischensummePanel = new JPanel();
+        zwischensummePanel.setLayout(new FlowLayout());
         zwischensummeButton = new BaseClass.BigButton("ZWS");
         zwischensummeButton.setBackground(Color.RED.darker());
         zwischensummeButton.setForeground(Color.WHITE);
         zwischensummeButton.setMnemonic(KeyEvent.VK_Z);
         zwischensummeButton.addActionListener(this);
-        if (data.size() == 0)
+        if (data.size() == 0) {
             zwischensummeButton.setEnabled(false);
-        totalPricePanel.add(zwischensummeButton);
-        articleListPanel.add(totalPricePanel, BorderLayout.SOUTH);
+            anzahlungNeuButton.setEnabled(false); // whenever ZWS is possible, also Anzahlung must be possible
+            hideAnzahlungNeuPanel();
+            anzahlungAufloesButton.setEnabled(true);
+        } else {
+            anzahlungNeuButton.setEnabled(true);
+            anzahlungAufloesButton.setEnabled(true);
+            for (KassierArtikel ka : kassierArtikel) {
+                if (ka.getType().equals("anzahlung") || ka.getType().equals("anzahlungsaufloesung")) {
+                    anzahlungNeuButton.setEnabled(false);
+                    hideAnzahlungNeuPanel();
+                    if (ka.getType().equals("anzahlung")) {
+                        anzahlungAufloesButton.setEnabled(false);
+                    }
+                    break;
+                }
+            }
+        }
+        zwischensummePanel.add(zwischensummeButton);
+        zwischensummePanel.add(Box.createRigidArea(new Dimension(20,0)));
+        bottomPanel.add(zwischensummePanel, BorderLayout.EAST);
+        articleListPanel.add(bottomPanel, BorderLayout.SOUTH);
 
         allPanel.add(articleListPanel, BorderLayout.CENTER);
     }
@@ -1097,7 +1199,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
 
@@ -1195,32 +1297,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     private void addRabattRow(int rabattID, String aktionsname, BigDecimal reduktion, BigDecimal stueck) {
         BigDecimal artikelMwSt = kassierArtikel.lastElement().getMwst();
 
-        KassierArtikel ka = new KassierArtikel(bc);
-        ka.setPosition(null);
-        ka.setArtikelID(null);
-        ka.setRabattID(rabattID);
-        ka.setName(einrueckung + aktionsname);
-        ka.setColor("red");
-        ka.setType("rabatt");
-        ka.setMwst(artikelMwSt);
-        ka.setStueckzahl(stueck.intValue());
-        ka.setEinzelpreis(reduktion);
-        ka.setGesPreis(reduktion);
-        kassierArtikel.add(ka);
-
-        mwsts.add(artikelMwSt);
-        removeButtons.add(null);
-
-        Vector<Object> row = new Vector<Object>();
-        row.add(""); // pos
-        row.add(einrueckung + aktionsname);
-        row.add("RABATT");
-        row.add(stueck.toPlainString());
-        row.add(bc.priceFormatter(reduktion) + " " + bc.currencySymbol);
-        row.add(bc.priceFormatter(reduktion) + " " + bc.currencySymbol);
-        row.add(bc.vatFormatter(artikelMwSt));
-        row.add("");
-        data.add(row);
+        hinzufuegenRaw(null, rabattID, einrueckung + aktionsname,
+            "RABATT", "red", "rabatt", "", stueck.intValue(),
+            reduktion, reduktion, artikelMwSt, null,
+            false, false, null);
     }
 
     private void checkForPfand() {
@@ -1233,32 +1313,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             BigDecimal gesamtPfand = pfand.multiply(stueck);
             BigDecimal pfandMwSt = kassierArtikel.lastElement().getMwst();
 
-            KassierArtikel ka = new KassierArtikel(bc);
-            ka.setPosition(null);
-            ka.setArtikelID(pfandArtikelID);
-            ka.setRabattID(null);
-            ka.setName(einrueckung + pfandName);
-            ka.setColor("blue");
-            ka.setType("pfand");
-            ka.setMwst(pfandMwSt);
-            ka.setStueckzahl(stueck.intValue());
-            ka.setEinzelpreis(new BigDecimal(bc.priceFormatterIntern(pfand)));
-            ka.setGesPreis(new BigDecimal(bc.priceFormatterIntern(gesamtPfand)));
-            kassierArtikel.add(ka);
-
-            mwsts.add(pfandMwSt);
-            removeButtons.add(null);
-
-            Vector<Object> row = new Vector<Object>();
-            row.add(""); // pos
-            row.add(einrueckung + pfandName);
-            row.add("PFAND");
-            row.add(stueck);
-            row.add(bc.priceFormatter(pfand) + ' ' + bc.currencySymbol);
-            row.add(bc.priceFormatter(gesamtPfand) + ' ' + bc.currencySymbol);
-            row.add(bc.vatFormatter(pfandMwSt));
-            row.add("");
-            data.add(row);
+            hinzufuegenRaw(pfandArtikelID, null, einrueckung + pfandName,
+                "PFAND", "blue", "pfand", "", stueck.intValue(),
+                pfand, gesamtPfand, pfandMwSt, null,
+                false, false, null);
         }
     }
 
@@ -1278,7 +1336,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return pfandArtikelID;
@@ -1299,7 +1357,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return hasPfand;
@@ -1313,14 +1371,14 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         try {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT MAX(rechnungs_nr) FROM verkauf");
+            ResultSet rs = stmt.executeQuery("SELECT MAX(rechnungs_nr) FROM "+tableForMode("verkauf"));
             rs.next();
             maxRechNr = rs.getInt(1);
             rs.close();
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return maxRechNr;
@@ -1332,7 +1390,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT MAX(verkaufsdatum) "+
-                    "FROM verkauf WHERE storniert = FALSE");
+                    "FROM "+tableForMode("verkauf"));
             rs.next(); date = rs.getString(1); rs.close();
             if (date == null){
                 date = "";
@@ -1340,7 +1398,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return date;
@@ -1355,14 +1413,15 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 DateTime now = new DateTime(now());
                 if (now.lt(latestVerkauf)) {
                     JOptionPane.showMessageDialog(this, "Fehler: Rechnung kann nicht gespeichert werden, da das aktuelle Datum vor dem der letzten Rechnung liegt.\n"+
-                            "Bitte das Datum im Computer korrigieren.", "Fehler",
+                            "Bitte das Datum im Kassenserver korrigieren.", "Fehler",
                             JOptionPane.ERROR_MESSAGE);
                     return rechnungsNr;
                 }
             }
             Connection connection = this.pool.getConnection();
-            PreparedStatement pstmt = connection
-                    .prepareStatement("INSERT INTO verkauf SET verkaufsdatum = NOW(), ec_zahlung = ?, kunde_gibt = ?");
+            PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO "+tableForMode("verkauf")+" SET verkaufsdatum = NOW(), ec_zahlung = ?, kunde_gibt = ?"
+            );
             pstmtSetBoolean(pstmt, 1, ec);
             pstmt.setBigDecimal(2, kundeGibt);
             int result = pstmt.executeUpdate();
@@ -1374,7 +1433,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
             rechnungsNr = maxRechnungsNr();
             for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : this.vatMap.entrySet()) {
-                pstmt = connection.prepareStatement("INSERT INTO verkauf_mwst SET rechnungs_nr = ?, mwst_satz = ?, "
+                pstmt = connection.prepareStatement("INSERT INTO "+tableForMode("verkauf_mwst")+" SET rechnungs_nr = ?, mwst_satz = ?, "
                         + "mwst_netto = ?, mwst_betrag = ?");
                 pstmtSetInteger(pstmt, 1, rechnungsNr);
                 pstmt.setBigDecimal(2, entry.getKey());
@@ -1389,8 +1448,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 }
             }
             for (int i = 0; i < kassierArtikel.size(); i++) {
-                pstmt = connection.prepareStatement("INSERT INTO verkauf_details SET rechnungs_nr = ?, position = ?, "
-                        + "artikel_id = ?, rabatt_id = ?, stueckzahl = ?, " + "ges_preis = ?, mwst_satz = ?");
+                pstmt = connection.prepareStatement("INSERT INTO "+tableForMode("verkauf_details")+" SET rechnungs_nr = ?, position = ?, "
+                        + "artikel_id = ?, rabatt_id = ?, stueckzahl = ?, ges_preis = ?, mwst_satz = ?");
                 pstmtSetInteger(pstmt, 1, rechnungsNr);
                 pstmtSetInteger(pstmt, 2, kassierArtikel.get(i).getPosition());
                 pstmtSetInteger(pstmt, 3, kassierArtikel.get(i).getArtikelID());
@@ -1402,12 +1461,12 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 pstmt.close();
                 if (result == 0) {
                     JOptionPane.showMessageDialog(this, "Fehler: Artikel mit ID " + kassierArtikel.get(i).getArtikelID()
-                            + " konnte " + "nicht abgespeichert werden.", "Fehler", JOptionPane.ERROR_MESSAGE);
+                            + " konnte nicht abgespeichert werden.", "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
             }
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return rechnungsNr;
@@ -1417,7 +1476,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection
-                    .prepareStatement("SELECT verkaufsdatum FROM verkauf WHERE rechnungs_nr = ?");
+                    .prepareStatement("SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?");
             pstmtSetInteger(pstmt, 1, rechnungsNr);
             ResultSet rs = pstmt.executeQuery();
             rs.next();
@@ -1427,8 +1486,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             BigDecimal betrag = new BigDecimal(getTotalPrice());
             BigDecimal alterKassenstand = mainWindow.retrieveKassenstand();
             BigDecimal neuerKassenstand = alterKassenstand.add(betrag);
-            pstmt = connection.prepareStatement("INSERT INTO kassenstand SET rechnungs_nr = ?," + "buchungsdatum = ?, "
-                    + "manuell = FALSE, neuer_kassenstand = ?");
+            pstmt = connection.prepareStatement(
+                "INSERT INTO "+tableForMode("kassenstand")+" SET rechnungs_nr = ?, buchungsdatum = ?, "+
+                "manuell = FALSE, neuer_kassenstand = ?"
+            );
             pstmtSetInteger(pstmt, 1, rechnungsNr);
             pstmt.setString(2, verkaufsdatum);
             pstmt.setBigDecimal(3, neuerKassenstand);
@@ -1442,8 +1503,257 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                 mainWindow.updateBottomPanel();
             }
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
+        }
+    }
+
+    private void maybeInsertIntoAnzahlung(int rechnungsNr) {
+        // find out if Anzahlung has been made in this rechnung:
+        boolean thisIsAnzahlung = false;
+        for (KassierArtikel ka : kassierArtikel) {
+            if (ka.getType().equals("anzahlung")) {
+                thisIsAnzahlung = true;
+                break;
+            }
+        }
+        if (thisIsAnzahlung) {
+            try {
+                // insert into table anzahlung
+                Connection connection = this.pool.getConnection();
+                PreparedStatement pstmt = connection.prepareStatement(
+                    "INSERT INTO "+tableForMode("anzahlung")+" SET "+
+                    "datum = (SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?), "+
+                    "anzahlung_in_rech_nr = ?"
+                );
+                pstmtSetInteger(pstmt, 1, rechnungsNr);
+                pstmtSetInteger(pstmt, 2, rechnungsNr);
+                int result = pstmt.executeUpdate();
+                pstmt.close();
+                if (result == 0) {
+                    JOptionPane.showMessageDialog(this, "Fehler: Anzahlung konnte nicht gespeichert werden.", "Fehler",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+                reconstructPrices(); // need to recover zeroed prices
+                // to store actual prices, need to fetch all the vd_ids in order
+                pstmt = connection.prepareStatement(
+                    "SELECT vd_id FROM "+tableForMode("verkauf_details")+" "+
+                    "WHERE rechnungs_nr = ?"
+                );
+                pstmtSetInteger(pstmt, 1, rechnungsNr);
+                ResultSet rs = pstmt.executeQuery();
+                Vector<Integer> vdIDs = new Vector<Integer>();
+                while (rs.next()) {
+                    vdIDs.add(rs.getInt(1));
+                }
+                rs.close();
+                // now insert prices into table anzahlung_details for each article belonging
+                // to anzahlung (starting at beginning, up to artikel_id == anzahlungArtikelID)
+                for (int i = 0; i < kassierArtikel.size(); i++) {
+                    KassierArtikel ka = kassierArtikel.get(i);
+                    if (ka.getArtikelID() == anzahlungArtikelID) break; // rest does not belong to anzahlung
+                    pstmt = connection.prepareStatement(
+                        "INSERT INTO "+tableForMode("anzahlung_details")+" "+
+                        "SET rechnungs_nr = ?, vd_id = ?, "+
+                        "ges_preis = ?");
+                    pstmtSetInteger(pstmt, 1, rechnungsNr);
+                    pstmtSetInteger(pstmt, 2, vdIDs.get(i));
+                    pstmt.setBigDecimal(3, ka.getGesPreis());
+                    result = pstmt.executeUpdate();
+                    pstmt.close();
+                    if (result == 0) {
+                        JOptionPane.showMessageDialog(this, "Fehler: Artikel mit vd_id " + vdIDs.get(i)+
+                        " konnte nicht in Anzahlung gespeichert werden.", "Fehler", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+                connection.close();
+            } catch (SQLException ex) {
+                logger.error("Exception:", ex);
+                showDBErrorDialog(ex.getMessage());
+            }
+        }
+    }
+
+    private void maybeInsertAufloesungIntoAnzahlung(int rechnungsNr) {
+        // fuege Zeile in aufloesung Tabelle für jede Anzahlungsaufloesung:
+        for (KassierArtikel ka : kassierArtikel) {
+            if (ka.getType().equals("anzahlungsaufloesung")) {
+                try {
+                    // insert into table anzahlung
+                    Connection connection = this.pool.getConnection();
+                    PreparedStatement pstmt = connection.prepareStatement(
+                        "INSERT INTO "+tableForMode("anzahlung")+" SET "+
+                        "datum = (SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?), "+
+                        "anzahlung_in_rech_nr = ?, "+
+                        "aufloesung_in_rech_nr = ?"
+                    );
+                    pstmtSetInteger(pstmt, 1, rechnungsNr);
+                    pstmtSetInteger(pstmt, 2, ka.getAnzahlungRechNr());
+                    pstmtSetInteger(pstmt, 3, rechnungsNr);
+                    int result = pstmt.executeUpdate();
+                    pstmt.close();
+                    connection.close();
+                    if (result == 0) {
+                        JOptionPane.showMessageDialog(this, "Fehler: Anzahlung konnte nicht gespeichert werden.", "Fehler",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (SQLException ex) {
+                    logger.error("Exception:", ex);
+                    showDBErrorDialog(ex.getMessage());
+                }
+            }
+        }
+    }
+
+    private void maybeInsertIntoGutschein(int rechnungsNr) {
+        for (KassierArtikel ka : kassierArtikel) {
+            if (ka.getType().equals("gutschein")) {
+                try {
+                    // insert into table gutschein
+                    Connection connection = this.pool.getConnection();
+                    PreparedStatement pstmt = connection.prepareStatement(
+                        "INSERT INTO "+tableForMode("gutschein")+" SET "+
+                        "gutschein_nr = ?, "+
+                        "datum = (SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?), "+
+                        "gutschein_in_vd_id = (SELECT vd_id FROM "+tableForMode("verkauf_details")+" "+
+                        "    WHERE rechnungs_nr = ? AND position = ?), "+
+                        "einloesung_in_vd_id = NULL, "+
+                        "restbetrag = ?"
+                    );
+                    pstmtSetInteger(pstmt, 1, ka.getGutscheinNr());
+                    pstmtSetInteger(pstmt, 2, rechnungsNr);
+                    pstmtSetInteger(pstmt, 3, rechnungsNr);
+                    pstmtSetInteger(pstmt, 4, ka.getPosition());
+                    pstmt.setBigDecimal(5, ka.getEinzelPreis());
+                    int result = pstmt.executeUpdate();
+                    pstmt.close();
+                    connection.close();
+                    if (result == 0) {
+                        JOptionPane.showMessageDialog(this, "Fehler: Gutschein Nr. " + ka.getGutscheinNr() +
+                        " konnte nicht in Gutscheintabelle gespeichert werden.", "Fehler", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (SQLException ex) {
+                    logger.error("Exception:", ex);
+                    showDBErrorDialog(ex.getMessage());
+                }
+            }
+        }
+    }
+
+    private void maybeInsertEinloesungIntoGutschein(int rechnungsNr) {
+        for (KassierArtikel ka : kassierArtikel) {
+            if (ka.getType().equals("gutscheineinloesung")) {
+                // TODO implement this also for gutscheinNr < 200!!!
+                Integer gutscheinNr = ka.getGutscheinNr();
+                try {
+                    Connection connection = this.pool.getConnection();
+
+                    if (gutscheinNr >= 200) { // TODO ändern, nachdem alle alten Gutscheine (<200) eingelöst worden sind
+                        // "normal" new voucher
+
+                        // Because MySQL prevents SELECT subqueries on the same table as INSERTing INTO,
+                        // need to perform these two subqueries separately:
+    
+                        // 1: query for gutschein_in_vd_id
+                        PreparedStatement pstmt = connection.prepareStatement(
+                            "SELECT gutschein_in_vd_id FROM "+tableForMode("gutschein")+
+                            "    WHERE gutschein_nr = ? AND einloesung_in_vd_id IS NULL"
+                        );
+                        pstmtSetInteger(pstmt, 1, gutscheinNr);
+                        ResultSet rs = pstmt.executeQuery();
+                        Integer gutschein_in_vd_id = null;
+                        if (rs.next()) {
+                            gutschein_in_vd_id = rs.getInt(1);
+                        }
+                        rs.close();
+                        if (gutschein_in_vd_id == null) {
+                            JOptionPane.showMessageDialog(this, "Fehler: Gutschein Nr. " + gutscheinNr +
+                            " konnte nicht als Einlösung in Gutscheintabelle gespeichert werden,\n"+
+                            "weil die gutschein_in_vd_id nicht ermittelt werden konnte.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                            pstmt.close();
+                            connection.close();
+                        } else {
+    
+                            // 2: query for restbetrag
+                            pstmt = connection.prepareStatement(
+                                "SELECT (SELECT MIN(restbetrag) FROM "+tableForMode("gutschein")+" "+
+                                "    WHERE gutschein_nr = ?) - ?"
+                            );
+                            pstmtSetInteger(pstmt, 1, gutscheinNr);
+                            pstmt.setBigDecimal(2, ka.getEinzelPreis().abs());
+                            rs = pstmt.executeQuery();
+                            BigDecimal restbetrag = null;
+                            if (rs.next()) {
+                                restbetrag = rs.getBigDecimal(1);
+                            }
+                            rs.close();
+                            if (restbetrag == null) {
+                                JOptionPane.showMessageDialog(this, "Fehler: Gutschein Nr. " + gutscheinNr +
+                                " konnte nicht als Einlösung in Gutscheintabelle gespeichert werden,\n"+
+                                "weil der Restbetrag nicht ermittelt werden konnte.",
+                                "Fehler", JOptionPane.ERROR_MESSAGE);
+                                pstmt.close();
+                                connection.close();
+                            } else {
+                                
+                                // 3: now, insert into table gutschein
+                                pstmt = connection.prepareStatement(
+                                    "INSERT INTO "+tableForMode("gutschein")+" SET "+
+                                    "gutschein_nr = ?, "+
+                                    "datum = (SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?), "+
+                                    "gutschein_in_vd_id = ?, "+
+                                    "einloesung_in_vd_id = (SELECT vd_id FROM "+tableForMode("verkauf_details")+" "+
+                                    "    WHERE rechnungs_nr = ? AND position = ?), "+
+                                    "restbetrag = ?"
+                                );
+                                pstmtSetInteger(pstmt, 1, gutscheinNr);
+                                pstmtSetInteger(pstmt, 2, rechnungsNr);
+                                pstmtSetInteger(pstmt, 3, gutschein_in_vd_id);
+                                pstmtSetInteger(pstmt, 4, rechnungsNr);
+                                pstmtSetInteger(pstmt, 5, ka.getPosition());
+                                pstmt.setBigDecimal(6, restbetrag);
+                                int result = pstmt.executeUpdate();
+                                pstmt.close();
+                                connection.close();
+                                if (result == 0) {
+                                    JOptionPane.showMessageDialog(this, "Fehler: Gutschein Nr. " + gutscheinNr +
+                                    " konnte nicht als Einlösung in Gutscheintabelle gespeichert werden.",
+                                    "Fehler", JOptionPane.ERROR_MESSAGE);
+                                }
+                            }
+                        }
+                    } else {
+                        // old voucher listed on paper
+
+                        // insert into table gutschein
+                        PreparedStatement pstmt = connection.prepareStatement(
+                            "INSERT INTO "+tableForMode("gutschein")+" SET "+
+                            "gutschein_nr = ?, "+
+                            "datum = (SELECT verkaufsdatum FROM "+tableForMode("verkauf")+" WHERE rechnungs_nr = ?), "+
+                            "gutschein_in_vd_id = NULL, "+
+                            "einloesung_in_vd_id = (SELECT vd_id FROM "+tableForMode("verkauf_details")+" "+
+                            "    WHERE rechnungs_nr = ? AND position = ?), "+
+                            "restbetrag = 0.00"
+                        );
+                        pstmtSetInteger(pstmt, 1, gutscheinNr);
+                        pstmtSetInteger(pstmt, 2, rechnungsNr);
+                        pstmtSetInteger(pstmt, 3, rechnungsNr);
+                        pstmtSetInteger(pstmt, 4, ka.getPosition());
+                        int result = pstmt.executeUpdate();
+                        pstmt.close();
+                        connection.close();
+                        if (result == 0) {
+                            JOptionPane.showMessageDialog(this, "Fehler: Gutschein Nr. " + gutscheinNr +
+                            " konnte nicht als Einlösung in Gutscheintabelle gespeichert werden.",
+                            "Fehler", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                } catch (SQLException ex) {
+                    logger.error("Exception:", ex);
+                    showDBErrorDialog(ex.getMessage());
+                }
+            }
         }
     }
 
@@ -1494,124 +1804,226 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
-    private void hinzufuegen(Integer stueck, String color, String type) {
-        Artikel a = getArticle(selectedArticleID);
-        String artikelNummer = a.getNummer();
-        selectedStueck = stueck;
-        String artikelPreis = bc.priceFormatterIntern(preisField.getText());
-        BigDecimal gesPreis = new BigDecimal(artikelPreis).multiply(new BigDecimal(stueck));
-        String gesPreisString = bc.priceFormatterIntern(gesPreis);
-        String kurzname = getShortName(a);
-        String artikelMwSt = getVAT(selectedArticleID);
-        Boolean sortiment = a.getSortiment();
-        if (color.equals("default")) {
-            color = sortiment ? "default" : "gray";
+    private void hinzufuegenRaw(Integer artID, Integer rabID, String kurzname, String artikelNummer,
+                                String color, String type, String menge, Integer stueck,
+                                BigDecimal einzelPreis, BigDecimal gesPreis, BigDecimal artikelMwSt,
+                                Integer gutscheinNr, boolean addPosition, boolean addRemButton,
+                                Integer index) {
+        if (kassierArtikel.size() == 0) {
+            // First item is added, this is a new TSE transaction
+            tse.startTransaction();
         }
-
-        Integer lastPos = getLastPosition();
+        
         KassierArtikel ka = new KassierArtikel(bc);
-        ka.setPosition(lastPos + 1);
-        ka.setArtikelID(selectedArticleID);
-        ka.setRabattID(null);
+        if (addPosition) {
+            Integer lastPos = getLastPosition();
+            ka.setPosition(lastPos + 1);
+        } else {
+            ka.setPosition(null);
+        }
+        ka.setArtikelID(artID);
+        ka.setRabattID(rabID);
         ka.setName(kurzname);
         ka.setColor(color);
         ka.setType(type);
-        ka.setMwst(new BigDecimal(artikelMwSt));
+        ka.setMenge(menge);
         ka.setStueckzahl(stueck);
-        ka.setEinzelpreis(new BigDecimal(artikelPreis));
+        ka.setEinzelPreis(einzelPreis);
         ka.setGesPreis(gesPreis);
-        kassierArtikel.add(ka);
+        ka.setMwst(artikelMwSt);
+        ka.setGutscheinNr(gutscheinNr);
+        if (index == null) {
+            kassierArtikel.add(ka);
+        } else {
+            kassierArtikel.add(index, ka);
+        }
 
-        mwsts.add(new BigDecimal(artikelMwSt));
-        removeButtons.add(new JButton("-"));
-        removeButtons.lastElement().addActionListener(this);
+        mwsts.add(artikelMwSt);
+        if (addRemButton) {
+            removeButtons.add(new JButton("-"));
+            removeButtons.lastElement().addActionListener(this);
+        } else {
+            removeButtons.add(null);
+        }
 
-        gesPreisString = bc.decimalMark(gesPreisString) + ' ' + bc.currencySymbol;
-        artikelPreis = bc.decimalMark(artikelPreis) + ' ' + bc.currencySymbol;
+        String einzelPreisString = bc.priceFormatter(einzelPreis) + ' ' + bc.currencySymbol;
+        String gesPreisString = bc.priceFormatter(gesPreis) + ' ' + bc.currencySymbol;
 
         Vector<Object> row = new Vector<Object>();
-        row.add(ka.getPosition());
+        if (addPosition) {
+            row.add(ka.getPosition());
+        } else {
+            row.add("");
+        }
         row.add(kurzname);
         row.add(artikelNummer);
         row.add(stueck.toString());
-        row.add(artikelPreis);
+        row.add(einzelPreisString);
         row.add(gesPreisString);
         row.add(bc.vatFormatter(artikelMwSt));
-        row.add(removeButtons.lastElement());
-        data.add(row);
-
-        checkForRabatt();
-        checkForPfand();
-        updateAll();
-        updateDisplay(kurzname, stueck, artikelPreis);
+        if (addRemButton) {
+            row.add(removeButtons.lastElement());
+        } else {
+            row.add("");
+        }
+        if (index == null) {
+            data.add(row);
+        } else {
+            data.add(index, row);
+        }
     }
 
-    private void artikelHinzufuegen() {
-        Integer stueck = (Integer) anzahlSpinner.getValue();
+    private void hinzufuegen(int artID, String kurzname, String artikelNummer, String color, String type, String menge,
+                             Integer stueck, BigDecimal artikelPreis, BigDecimal gesPreis, String artikelMwSt,
+                             Integer gutscheinNr) {
+        hinzufuegenRaw(artID, null, kurzname, artikelNummer, color,
+                       type, menge, stueck, artikelPreis, gesPreis,
+                       new BigDecimal(artikelMwSt), gutscheinNr, true, true, null);
+
+        if (type.equals("artikel") || type.equals("rueckgabe")) {
+            checkForRabatt();
+            checkForPfand();
+        }
+        updateAll();
+        updateDisplay(kurzname, stueck, bc.priceFormatter(artikelPreis));
+    }
+
+    private void artikelHinzufuegen(Integer stueck, String type, String color) {
+        selectedStueck = stueck;
+        Artikel a = getArticle(selectedArticleID);
+        String artikelNummer = a.getNummer();
+        String menge = formatMengeForOutput(a.getMenge(), a.getEinheit());
+        BigDecimal artikelPreis = new BigDecimal(bc.priceFormatterIntern(preisField.getText()));
+        BigDecimal gesPreis = artikelPreis.multiply(new BigDecimal(stueck));
+        String kurzname = getShortName(a);
+        String artikelMwSt = getVAT(selectedArticleID);
+        hinzufuegen(selectedArticleID, kurzname, artikelNummer, color, type, menge,
+                    stueck, artikelPreis, gesPreis, artikelMwSt, null);
+    }
+
+    private void artikelNormalHinzufuegen() {
         if (asPanel.artikelBox.getItemCount() != 1 || asPanel.nummerBox.getItemCount() != 1) {
             logger.error("Error: article not selected unambiguously.");
             JOptionPane.showMessageDialog(this, "Fehler: Artikel nicht eindeutig ausgewählt.", "Fehler",
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
-        String type = "artikel";
-        if (selectedArticleID == gutscheinArtikelID) {
-            type = "gutschein";
-        }
-        hinzufuegen(stueck, "default", type);
+        Integer stueck = (Integer) anzahlSpinner.getValue();
+        Artikel a = getArticle(selectedArticleID);
+        Boolean sortiment = a.getSortiment();
+        String color = sortiment ? "default" : "gray";
+        artikelHinzufuegen(stueck, "artikel", color);
+    }
+
+    private void artikelRueckgabeHinzufuegen() {
+        Integer stueck = -(Integer) anzahlSpinner.getValue();
+        artikelHinzufuegen(stueck, "rueckgabe", "green");
     }
 
     private void leergutHinzufuegen() {
         int pfandArtikelID = queryPfandArtikelID(selectedArticleID);
         // gab es Pfand? Wenn ja, fuege Zeile in Tabelle:
         if (pfandArtikelID > 0) {
-            BigDecimal pfand = new BigDecimal(getSalePrice(pfandArtikelID));
-            String pfandName = getArticleName(pfandArtikelID)[0];
             Integer stueck = -(Integer) anzahlSpinner.getValue();
             selectedStueck = stueck;
+            BigDecimal pfand = new BigDecimal(getSalePrice(pfandArtikelID));
+            String pfandName = getArticleName(pfandArtikelID)[0];
             BigDecimal gesamtPfand = pfand.multiply(new BigDecimal(stueck));
             String pfandMwSt = getVAT(selectedArticleID);
-
-            Integer lastPos = getLastPosition();
-            KassierArtikel ka = new KassierArtikel(bc);
-            ka.setPosition(lastPos + 1);
-            ka.setArtikelID(pfandArtikelID);
-            ka.setRabattID(null);
-            ka.setName(pfandName);
-            ka.setColor("green");
-            ka.setType("leergut");
-            ka.setMwst(new BigDecimal(pfandMwSt));
-            ka.setStueckzahl(stueck);
-            ka.setEinzelpreis(pfand);
-            ka.setGesPreis(gesamtPfand);
-            kassierArtikel.add(ka);
-
-            mwsts.add(new BigDecimal(pfandMwSt));
-            removeButtons.add(new JButton("-"));
-            removeButtons.lastElement().addActionListener(this);
-
-            String gesPfandString = bc.priceFormatter(gesamtPfand) + ' ' + bc.currencySymbol;
-            String pfandString = bc.priceFormatter(pfand) + ' ' + bc.currencySymbol;
-
-            Vector<Object> row = new Vector<Object>();
-            row.add(ka.getPosition()); // pos
-            row.add(pfandName);
-            row.add("LEERGUT");
-            row.add(stueck.toString());
-            row.add(pfandString);
-            row.add(gesPfandString);
-            row.add(bc.vatFormatter(pfandMwSt));
-            row.add(removeButtons.lastElement());
-            data.add(row);
-
-            updateAll();
-            updateDisplay(pfandName, stueck, pfandString);
+            hinzufuegen(pfandArtikelID, pfandName, "LEERGUT", "green", "leergut", "",
+                        stueck, pfand, gesamtPfand, pfandMwSt, null);
         }
     }
 
-    private void rueckgabeHinzufuegen() {
-        Integer stueck = -(Integer) anzahlSpinner.getValue();
-        hinzufuegen(stueck, "green", "rueckgabe");
+    private void anzahlungHinzufuegen() {
+        Integer stueck = 1;
+        selectedStueck = stueck;
+        String anzahlungName = getArticleName(anzahlungArtikelID)[0];
+        BigDecimal gesamtAnzahlung = new BigDecimal(bc.priceFormatterIntern(anzahlungsBetragField.getText()));
+        // discover all the contained VATs and split the Anzahlung according to contribution to total price
+        BigDecimal gesUmsatz = new BigDecimal(getTotalPrice());
+        // vatMap = calculateMwStValuesInRechnung(); // should have been calculated before
+        for ( BigDecimal steuersatz : vatMap.keySet() ){
+            BigDecimal brutto = vatMap.get(steuersatz).get(2); // = Umsatz
+            // Anteil des Steuersatzes am Gesamtumsatz:
+            BigDecimal anzahlungsWert = brutto.divide(gesUmsatz, 10, RoundingMode.HALF_UP).multiply(gesamtAnzahlung);
+            String mwst = steuersatz.toString();
+            hinzufuegen(anzahlungArtikelID, anzahlungName, "ANZAHLUNG", "red", "anzahlung", "",
+                        stueck, anzahlungsWert, anzahlungsWert, mwst, null);
+        }
+        // now zero all prices except the anzahlung
+        for (int i = 0; i < kassierArtikel.size(); i++) {
+            if (!kassierArtikel.get(i).getType().equals("anzahlung")) {
+                // kassierArtikel.get(i).setEinzelpreis(bc.zero);
+                kassierArtikel.get(i).setGesPreis(bc.zero);
+                kassierArtikel.get(i).setPartOfAnzahlung(true);
+                // data.get(i).set(4, ""); // column Einzelpreis
+                data.get(i).set(5, ""); // column Gesamtpreis
+                updateAll();
+            }
+        }
+        updateDisplay(anzahlungName, stueck, bc.priceFormatter(gesamtAnzahlung));
+    }
+
+    private Integer getMaxGutscheinNr() {
+        Integer maxGutscheinNr = null;
+        try {
+            Connection connection = this.pool.getConnection();
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery(
+                "SELECT IFNULL(MAX(gutschein_nr), 199) FROM gutschein"
+            );
+            if (rs.next()) {
+                maxGutscheinNr = rs.getInt(1);
+                for (KassierArtikel ka : kassierArtikel) {
+                    logger.debug(ka.getGutscheinNr());
+                    if (ka.getGutscheinNr() != null && ka.getGutscheinNr() > maxGutscheinNr) {
+                        maxGutscheinNr = ka.getGutscheinNr();
+                    }
+                }
+            }
+            rs.close();
+            stmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return maxGutscheinNr;
+    }
+
+    private void gutscheineHinzufuegen() {
+        Integer nGutscheine = (Integer) anzahlSpinner.getValue();
+        Integer maxGutscheinNr = getMaxGutscheinNr();
+        BigDecimal gutscheinWert = new BigDecimal(bc.priceFormatterIntern(preisField.getText()));
+        if (maxGutscheinNr != null) {
+            for (int i=0; i<nGutscheine; i++) {
+                // fuege nGutscheine separate Gutscheine hinzu, jeder mit distinkter gutscheinNr
+                gutscheinHinzufuegen(maxGutscheinNr+i+1, gutscheinWert);
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Fehler: Gutschein-Nr. kann nicht bestimmt werden.",
+            "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void gutscheinHinzufuegen(int gutscheinNr, BigDecimal gutscheinWert) {
+        Integer stueck = 1;
+        selectedStueck = stueck;
+        String gutscheinName = "Gutschein Nr. "+gutscheinNr;
+        String mwst = getVAT(gutscheinArtikelID);
+        hinzufuegen(gutscheinArtikelID, gutscheinName, "GUTSCHEIN", "green", "gutschein", "",
+                    stueck, gutscheinWert, gutscheinWert, mwst, gutscheinNr);
+    }
+
+    private void gutscheinEinloesungHinzufuegen(int gutscheinNr, BigDecimal einloesWert) {
+        Integer stueck = 1;
+        selectedStueck = stueck;
+        String gutscheinName = "Einlösung Gutschein Nr. "+gutscheinNr;
+        einloesWert = einloesWert.abs().multiply(bc.minusOne);
+        String mwst = getVAT(gutscheineinloesungArtikelID);
+        hinzufuegen(gutscheineinloesungArtikelID, gutscheinName, "GUTSCHEIN", "green", "gutscheineinloesung", "",
+                    stueck, einloesWert, einloesWert, mwst, gutscheinNr);
     }
 
     private void zwischensumme() {
@@ -1638,10 +2050,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         zahlungsLabel.setText("Bar-Zahlung. Bitte jetzt abrechnen.");
         kundeGibtField.setEditable(true);
         passendButton.setEnabled(true);
-        gutscheinField.setEditable(true);
         // neuerKundeButton.setEnabled(false);
         neuerKundeButton.setEnabled(true);
-        quittungsButton.setEnabled(true);
         kundeGibtField.requestFocus();
     }
 
@@ -1651,44 +2061,115 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         kundeGibtField.setText("");
         kundeGibtField.setEditable(false);
         passendButton.setEnabled(false);
-        gutscheinField.setEditable(true);
         neuerKundeButton.setEnabled(true);
-        quittungsButton.setEnabled(false);
         neuerKundeButton.requestFocus();
     }
 
-    private void gutschein() {
-        selectedArticleID = gutscheinArtikelID; // internal Gutschein artikel_id
-        preisField.setText(gutscheinField.getText());
-        anzahlSpinner.setValue(1);
-        rueckgabeHinzufuegen();
-        zwischensumme();
+    private void gutscheinEinloesen() {
+        selectedArticleID = gutscheineinloesungArtikelID; // internal Gutscheineinlösung artikel_id
+        JDialog dialog = new JDialog(this.mainWindow, "Bitte Nr. des einzulösenden Gutscheins eingeben", true);
+        GutscheinEinloesenDialog ged = new GutscheinEinloesenDialog(this.pool, this.mainWindow, dialog);
+        dialog.getContentPane().add(ged, BorderLayout.CENTER);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.pack();
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
+        boolean aborted = ged.getAborted();
+        if (!aborted) {
+            Integer gutscheinNr = ged.getGutscheinNr();
+            BigDecimal einloesWert = ged.getEinloesWert();
+            logger.debug(gutscheinNr);
+            logger.debug(einloesWert);
+            // TODO ändern, nachdem alle alten Gutscheine (<200) eingelöst worden sind
+            if (gutscheinNr < 200) {
+                selectedArticleID = variablerPreis19PZArtikelID; // a workaround because "legacy" vouchers (2015 - 2021-03-31) use to be booked with 19% VAT
+                anzahlSpinner.setValue(1);
+                preisField.setText(bc.priceFormatter(einloesWert));
+                artikelRueckgabeHinzufuegen();
+                // hack to make the article "appear" to be a voucher:
+                kassierArtikel.get(kassierArtikel.size() - 1).setName("Gutscheineinlösung");
+                kassierArtikel.get(kassierArtikel.size() - 1).setType("gutscheineinloesung");
+                kassierArtikel.get(kassierArtikel.size() - 1).setGutscheinNr(gutscheinNr);
+                data.get(data.size() - 1).set(1, "Gutscheineinlösung");
+                data.get(data.size() - 1).set(2, "GUTSCHEINEINLOES");
+            } else {
+                gutscheinEinloesungHinzufuegen(gutscheinNr, einloesWert);
+            }
+            zwischensumme();
+        }
+    }
+
+    private BigDecimal queryGutscheinRestbetrag(int gutscheinNr) {
+        BigDecimal restbetrag = null;
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT MIN(restbetrag) FROM gutschein WHERE gutschein_nr = ?"
+            );
+            pstmtSetInteger(pstmt, 1, gutscheinNr);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next(); restbetrag = rs.getBigDecimal(1); rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return restbetrag;
     }
 
     private int neuerKunde() {
+        // Send data to TSE:
+        Vector<String> zahlung = new Vector<String>();
+        zahlung.add(kundeGibtField.isEditable() ? "Bar" : "Unbar");
+        zahlung.add( bc.priceFormatterIntern(getTotalPrice()) );
+        // Omit currency code because it's always in EUR
+        Vector<Vector<String>> zahlungen = new Vector<Vector<String>>();
+        zahlungen.add(zahlung);
+        HashMap<Integer, Vector<BigDecimal>> mwstIDsAndValues = getAllCurrentMwstValuesByID();
+
         int rechnungsNr = -1;
+        boolean ec = true;
+        BigDecimal kundeGibt = null;
         if (kundeGibtField.isEditable()) { // if Barzahlung
-            rechnungsNr = insertIntoVerkauf(false, new BigDecimal(getKundeGibt()));
-            if (rechnungsNr < 0){
-                return rechnungsNr;
-            }
-            insertIntoKassenstand(rechnungsNr);
-            if (bc.alwaysPrintReceipt) {
-              printQuittung(rechnungsNr);
-            }
-        } else { // EC-Zahlung
-            rechnungsNr = insertIntoVerkauf(true, null);
-            if (rechnungsNr < 0){
-                return rechnungsNr;
-            }
-            try {
-              printQuittung(rechnungsNr);
-              Thread.sleep(5000); // wait for 5 seconds
-              printQuittung(rechnungsNr);
-            } catch (InterruptedException ex) {
-              logger.error("Exception: {}", ex);
-            }
+            ec = false;
+            kundeGibt = new BigDecimal(getKundeGibt());
         }
+        rechnungsNr = insertIntoVerkauf(ec, kundeGibt);
+        if (rechnungsNr < 0){
+            return rechnungsNr;
+        }
+        
+        /* Zitat DSFinV-K: (S. 109) "Für jeden Steuersatz werden hier die Bruttoumsätze je Steuersatz [...] aufgelistet." */
+        // Bruttoumsatz = 4. Element in mwstIDsAndValues (get(3))
+        TSETransaction tx = null;
+        LinkedHashMap<String, String> tseStatusValues = null;
+        // always finish the transaction, also when TSE is not in use (has failed), in which case end date is determined by Kasse
+        tx = tse.finishTransaction(
+            rechnungsNr,
+            mwstIDsAndValues.get(3) != null ? mwstIDsAndValues.get(3).get(3) : null, // steuer_allgemein = mwst_id: 3 = 19% MwSt
+            mwstIDsAndValues.get(2) != null ? mwstIDsAndValues.get(2).get(3) : null, // steuer_ermaessigt = mwst_id: 2 = 7% MwSt
+            mwstIDsAndValues.get(5) != null ? mwstIDsAndValues.get(5).get(3) : null, // steuer_durchschnitt_nr3 = mwst_id: 5 = 10,7% MwSt
+            mwstIDsAndValues.get(4) != null ? mwstIDsAndValues.get(4).get(3) : null, // steuer_durchschnitt_nr1 = mwst_id: 4 = 5,5% MwSt
+            mwstIDsAndValues.get(1) != null ? mwstIDsAndValues.get(1).get(3) : null, // steuer_null = mwst_id: 1 = 0% MwSt
+            zahlungen
+        );
+        if (tse.inUse()) { // only if TSE is operational, tseStatusValues is not null
+            tseStatusValues = tse.getTSEStatusValues();
+        }
+
+        if (ec == false) { // if Barzahlung
+            insertIntoKassenstand(rechnungsNr);
+            printQuittung(rechnungsNr, tx, tseStatusValues); // always print receipt, it's not optional anymore
+        } else { // EC-Zahlung
+            printQuittung(rechnungsNr, tx, tseStatusValues);
+            // Thread.sleep(5000); // wait for 5 seconds, no, printer is too slow anyway and this blocks UI unnecessarily
+            printQuittung(rechnungsNr, tx, tseStatusValues);
+        }
+        maybeInsertIntoAnzahlung(rechnungsNr);
+        maybeInsertAufloesungIntoAnzahlung(rechnungsNr);
+        maybeInsertIntoGutschein(rechnungsNr);
+        maybeInsertEinloesungIntoGutschein(rechnungsNr);
         clearAll();
         updateAll();
 
@@ -1710,6 +2191,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (mw != null) {
             mw.setDisplayBlankTimer();
         }
+        // Cancel TSE transaction that was on-going:
+        tse.cancelTransaction();
     }
 
     private void artikelRabattierenRelativ(BigDecimal rabattRelativ) {
@@ -1721,43 +2204,27 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         // Now i points to the Artikel that gets the Rabatt
         BigDecimal einzelPreis = kassierArtikel.get(i).getEinzelPreis();
         BigDecimal gesPreis = kassierArtikel.get(i).getGesPreis();
-        BigDecimal einzelReduktion = new BigDecimal(
-                bc.priceFormatterIntern(rabattRelativ.multiply(einzelPreis).multiply(bc.minusOne)));
-        BigDecimal gesReduktion = new BigDecimal(
-                bc.priceFormatterIntern(rabattRelativ.multiply(gesPreis).multiply(bc.minusOne)));
+        BigDecimal einzelReduktion = new BigDecimal(bc.priceFormatterIntern(
+            rabattRelativ.multiply(einzelPreis).multiply(bc.minusOne)
+        ));
+        BigDecimal gesReduktion = new BigDecimal(bc.priceFormatterIntern(
+            rabattRelativ.multiply(gesPreis).multiply(bc.minusOne)
+        ));
         BigDecimal artikelMwSt = kassierArtikel.get(i).getMwst();
         String rabattName = getArticleName(artikelRabattArtikelID)[0];
 
-        KassierArtikel ka = new KassierArtikel(bc);
-        ka.setPosition(null);
-        ka.setArtikelID(artikelRabattArtikelID);
-        ka.setRabattID(null);
-        ka.setName(einrueckung + rabattName);
-        ka.setColor("red");
-        ka.setType("rabatt");
-        ka.setMwst(artikelMwSt);
-        ka.setStueckzahl(selectedStueck);
-        ka.setEinzelpreis(einzelReduktion);
-        ka.setGesPreis(gesReduktion);
-        kassierArtikel.add(i + 1, ka);
+        hinzufuegenRaw(artikelRabattArtikelID, null, einrueckung + rabattName,
+                       "RABATT", "red", "rabatt", "", selectedStueck,
+                       einzelReduktion, gesReduktion, artikelMwSt, null,
+                       false, false, i + 1);
 
-        mwsts.add(artikelMwSt);
-        removeButtons.add(null);
-
-        Vector<Object> rabattRow = new Vector<Object>();
-        rabattRow.add(""); // pos
-        rabattRow.add(einrueckung + rabattName);
-        rabattRow.add("RABATT");
-        rabattRow.add(Integer.toString(selectedStueck));
-        rabattRow.add(bc.priceFormatter(einzelReduktion) + " " + bc.currencySymbol);
-        rabattRow.add(bc.priceFormatter(gesReduktion) + " " + bc.currencySymbol);
-        rabattRow.add(bc.vatFormatter(artikelMwSt));
-        rabattRow.add("");
-        data.add(i + 1, rabattRow);
         updateAll();
     }
 
     private void artikelRabattierenAbsolut(BigDecimal rabattAbsolut) {
+        // is this Rabatt or Aufschlag? (rabattAbsolut > 0 or < 0?)
+        int specialArticleID = rabattAbsolut.signum() > 0 ? artikelRabattArtikelID : preisanpassungArtikelID;
+        
         // Get data
         int i = kassierArtikel.size() - 1;
         while (!kassierArtikel.get(i).getType().equals("artikel")) {
@@ -1768,34 +2235,14 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         BigDecimal stueck = new BigDecimal(selectedStueck);
         BigDecimal gesReduktion = einzelReduktion.multiply(stueck);
         BigDecimal artikelMwSt = kassierArtikel.get(i).getMwst();
-        String rabattName = getArticleName(artikelRabattArtikelID)[0];
+        String rabattName = getArticleName(specialArticleID)[0];
 
-        KassierArtikel ka = new KassierArtikel(bc);
-        ka.setPosition(null);
-        ka.setArtikelID(artikelRabattArtikelID);
-        ka.setRabattID(null);
-        ka.setName(einrueckung + rabattName);
-        ka.setColor("red");
-        ka.setType("rabatt");
-        ka.setMwst(artikelMwSt);
-        ka.setStueckzahl(selectedStueck);
-        ka.setEinzelpreis(einzelReduktion);
-        ka.setGesPreis(gesReduktion);
-        kassierArtikel.add(i + 1, ka);
+        hinzufuegenRaw(specialArticleID, null, einrueckung + rabattName,
+                       rabattAbsolut.signum() > 0 ? "RABATT" : "ANPASSUNG",
+                       "red", "rabatt", "", selectedStueck,
+                       einzelReduktion, gesReduktion, artikelMwSt, null,
+                       false, false, i + 1);
 
-        mwsts.add(artikelMwSt);
-        removeButtons.add(null);
-
-        Vector<Object> rabattRow = new Vector<Object>();
-        rabattRow.add(""); // pos
-        rabattRow.add(einrueckung + rabattName);
-        rabattRow.add("RABATT");
-        rabattRow.add(Integer.toString(selectedStueck));
-        rabattRow.add(bc.priceFormatter(einzelReduktion) + " " + bc.currencySymbol);
-        rabattRow.add(bc.priceFormatter(gesReduktion) + " " + bc.currencySymbol);
-        rabattRow.add(bc.vatFormatter(artikelMwSt));
-        rabattRow.add("");
-        data.add(i + 1, rabattRow);
         updateAll();
     }
 
@@ -1857,33 +2304,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     bc.priceFormatterIntern(rabattRelativ.multiply(entry.getValue()).multiply(bc.minusOne)));
             BigDecimal mwst = entry.getKey();
 
-            KassierArtikel ka = new KassierArtikel(bc);
-            ka.setPosition(null);
-            ka.setArtikelID(rechnungRabattArtikelID);
-            ka.setRabattID(null);
-            ka.setName(rabattName);
-            ka.setColor("red");
-            ka.setType("rabattrechnung");
-            ka.setMwst(mwst);
-            ka.setStueckzahl(1);
-            ka.setEinzelpreis(reduktion);
-            ka.setGesPreis(reduktion);
-            kassierArtikel.add(ka);
-
-            mwsts.add(mwst);
-            removeButtons.add(new JButton("-"));
-            removeButtons.lastElement().addActionListener(this);
-
-            Vector<Object> rabattRow = new Vector<Object>();
-            rabattRow.add(""); // pos
-            rabattRow.add(rabattName);
-            rabattRow.add("RABATT");
-            rabattRow.add(1);
-            rabattRow.add(bc.priceFormatter(reduktion) + " " + bc.currencySymbol);
-            rabattRow.add(bc.priceFormatter(reduktion) + " " + bc.currencySymbol);
-            rabattRow.add(bc.vatFormatter(mwst));
-            rabattRow.add(removeButtons.lastElement());
-            data.add(rabattRow);
+            hinzufuegenRaw(rechnungRabattArtikelID, null, rabattName,
+                "RABATT", "red", "rabattrechnung", "", 1,
+                reduktion, reduktion, mwst, null,
+                false, true, null);
 
             // updateAll fuer Arme
             this.remove(allPanel);
@@ -1919,10 +2343,6 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             setButtonsEnabled();
             return;
         }
-        if (e.getDocument() == gutscheinField.getDocument()) {
-            gutscheinButton.setEnabled(gutscheinField.getText().length() > 0);
-            return;
-        }
     }
 
     public void removeUpdate(DocumentEvent e) {
@@ -1939,6 +2359,15 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
+    void reconstructPrices() {
+        for (int i = 0; i < kassierArtikel.size(); i++) {
+            KassierArtikel ka = kassierArtikel.get(i);
+            BigDecimal gesPreis = ka.getEinzelPreis().multiply(new BigDecimal(ka.getStueckzahl()));
+            ka.setGesPreis(gesPreis);
+            data.get(i).set(5, bc.priceFormatter(gesPreis));
+        }
+    }
+
     /**
      * A class implementing ArticleSelectUser must have this method.
      */
@@ -1946,8 +2375,8 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         this.selectedArticleID = selectedArticleID;
     }
 
-    void printQuittung(Integer rechnungsNr) {
-        LinkedHashMap<BigDecimal, Vector<BigDecimal>> mwstsAndTheirValues = getMwstsAndTheirValues();
+    void printQuittung(Integer rechnungsNr, TSETransaction tx, LinkedHashMap<String, String> tseStatusValues) {
+        TreeMap<BigDecimal, Vector<BigDecimal>> mwstValues = calculateMwStValuesInRechnung();
         BigDecimal totalPrice = new BigDecimal(getTotalPrice());
         BigDecimal kundeGibt = null, rueckgeld = null;
         if (kundeGibtField.getDocument().getLength() > 0) {
@@ -1958,9 +2387,10 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             rechnungsNr = maxRechnungsNr() + 1;
         }
         Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
-                DateTime.now(TimeZone.getDefault()), rechnungsNr,
-                kassierArtikel, mwstsAndTheirValues, zahlungsModus, totalPrice,
-                kundeGibt, rueckgeld);
+            new DateTime(now()), rechnungsNr, null,
+            kassierArtikel, mwstValues, zahlungsModus,
+            totalPrice, kundeGibt, rueckgeld,
+            tx, bc.Z_KASSE_ID, tseStatusValues);
         myQuittung.printReceipt();
     }
 
@@ -2001,17 +2431,25 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             asPanel.artikelField.requestFocus();
             return;
         }
+        if (e.getSource() == gutscheinVerkaufenButton) {
+            setSelectedArticle(gutscheinArtikelID); // Variabler Preis 7%
+            return;
+        }
         if (e.getSource() == sevenPercentButton) {
-            setSelectedArticle(10); // Variabler Preis 7%
+            setSelectedArticle(variablerPreis7PZArtikelID); // Variabler Preis 7%
             return;
         }
         if (e.getSource() == nineteenPercentButton) {
-            setSelectedArticle(11); // Variabler Preis 19%
+            setSelectedArticle(variablerPreis19PZArtikelID); // Variabler Preis 19%
             return;
         }
         if (e.getSource() == hinzufuegenButton) {
             removeRabattAufRechnung();
-            artikelHinzufuegen();
+            if (selectedArticleID == gutscheinArtikelID) {
+                gutscheineHinzufuegen();
+            } else {
+                artikelNormalHinzufuegen();
+            }
             return;
         }
         if (e.getSource() == leergutButton) {
@@ -2021,7 +2459,40 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
         if (e.getSource() == rueckgabeButton) {
             removeRabattAufRechnung();
-            rueckgabeHinzufuegen();
+            if (selectedArticleID == gutscheinArtikelID) {
+                String gutscheinNrStr = JOptionPane.showInputDialog(this, "Bitte Gutschein-Nr. eingeben: ");
+                Integer gutscheinNr = null;
+                try {
+                    gutscheinNr = Integer.parseInt(gutscheinNrStr);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this,
+                        "Fehlerhafte Eingabe.",
+                        "Fehler", JOptionPane.ERROR_MESSAGE);
+                }
+                if (gutscheinNr != null) {
+                    if (gutscheinNr < 200) { // TODO ändern, nachdem alle alten Gutscheine (<200) eingelöst worden sind
+                        JOptionPane.showMessageDialog(this,
+                            "Es können nur Gutscheine mit Nr. unter 200 zurückgegeben werden.\n"+
+                            "Gutscheine mit Nr. unter 200 bitte einlösen.",
+                            "Info", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        BigDecimal restbetrag = queryGutscheinRestbetrag(gutscheinNr);
+                        if (restbetrag == null) {
+                            JOptionPane.showMessageDialog(this,
+                                "Gutschein wurde nicht gefunden.",
+                                "Info", JOptionPane.INFORMATION_MESSAGE);
+                        } else if (restbetrag.compareTo(bc.zero) <= 0) {
+                            JOptionPane.showMessageDialog(this,
+                                "Dieser Gutschein wurde bereits vollständig eingelöst.",
+                                "Info", JOptionPane.INFORMATION_MESSAGE);
+                        } else {
+                            gutscheinEinloesungHinzufuegen(gutscheinNr, restbetrag);
+                        }
+                    }
+                }
+            } else {
+                artikelRueckgabeHinzufuegen();
+            }
             return;
         }
         if (e.getSource() == zwischensummeButton) {
@@ -2035,9 +2506,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (e.getSource() == ecButton) {
             if ((new BigDecimal(getTotalPrice())).compareTo(ecSchwelle) < 0) {
                 int answer = JOptionPane.showConfirmDialog(this,
-                        "ACHTUNG: Gesamtbetrag unter " + bc.priceFormatter(ecSchwelle) + " " + bc.currencySymbol
-                                + " !\n" + "Wirklich EC-Zahlung erlauben?",
-                        "Warnung", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    "ACHTUNG: Gesamtbetrag unter " + bc.priceFormatter(ecSchwelle) + " " + bc.currencySymbol + " !\n" +
+                    "Wirklich EC-Zahlung erlauben?",
+                    "Warnung", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if (answer == JOptionPane.NO_OPTION) {
                     return;
                 }
@@ -2049,27 +2520,17 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             kundeGibtField.setText( bc.priceFormatter(getTotalPrice()) );
             return;
         }
-        if (e.getSource() == gutscheinButton) {
-            gutschein();
+        if (e.getSource() == gutscheinEinloesenButton) {
+            gutscheinEinloesen();
             return;
         }
         if (e.getSource() == stornoButton) {
             int answer = JOptionPane.showConfirmDialog(this,
-                    "Wirklich stornieren?", "Storno",
-                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                "Wirklich stornieren?", "Storno",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (answer == JOptionPane.YES_OPTION) {
                 stornieren();
             }
-            return;
-        }
-        if (e.getSource() == quittungsButton) {
-            if (zahlungsModus.equals("bar")) {
-                boolean ok = checkKundeGibtField();
-                if (!ok) {
-                    return;
-                }
-            }
-            printQuittung(null);
             return;
         }
         if (e.getSource() == neuerKundeButton) {
@@ -2128,20 +2589,53 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         if (e.getSource() == abweichenderPreisButton) {
             int i = getLastArticleIndex();
             BigDecimal neuerEinzelPreis = new BigDecimal(bc.priceFormatterIntern(abweichenderPreisField.getText()));
-            BigDecimal neuerGesPreis = neuerEinzelPreis.multiply(
-                    new BigDecimal(kassierArtikel.get(i).getStueckzahl())
-                    );
-            String neuerEinzelPreisString = bc.priceFormatter(neuerEinzelPreis)+' '+bc.currencySymbol;
-            String neuerGesPreisString = bc.priceFormatter(neuerGesPreis)+' '+bc.currencySymbol;
-            kassierArtikel.get(i).setEinzelpreis(neuerEinzelPreis);
-            kassierArtikel.get(i).setGesPreis(neuerGesPreis);
-            data.get(i).set(4, neuerEinzelPreisString);
-            data.get(i).set(5, neuerGesPreisString);
-            updateAll();
-            updateDisplay(kassierArtikel.get(i).getName(),
-                    kassierArtikel.get(i).getStueckzahl(), neuerEinzelPreisString);
+            BigDecimal alterEinzelPreis = kassierArtikel.get(i).getEinzelPreis();
+            BigDecimal rabatt = alterEinzelPreis.subtract(neuerEinzelPreis);
+            artikelRabattierenAbsolut(rabatt);
             unsetFields();
             return;
+        }
+        if (e.getSource() == anzahlungNeuButton) {
+            showAnzahlungNeuPanel();
+        }
+        if (e.getSource() == anzahlungNeuOKButton) {
+            anzahlungHinzufuegen();
+            zwischensumme();
+        }
+        if (e.getSource() == anzahlungAufloesButton) {
+            JDialog dialog = new JDialog(this.mainWindow, "Anzahlung auflösen", true);
+            AnzahlungAufloesDialog aad = new AnzahlungAufloesDialog(this.pool, this.mainWindow, dialog);
+            dialog.getContentPane().add(aad, BorderLayout.CENTER);
+            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+            dialog.pack();
+            dialog.setLocationRelativeTo(null);
+            dialog.setVisible(true);
+            boolean aborted = aad.getAborted();
+            if (!aborted) {
+                int anzahlungRechNr = aad.getSelectedRechNr();
+                Vector<KassierArtikel> kas = aad.getKassierArtikel();
+                for (KassierArtikel ka : kas) {
+                    boolean addPos = true, addRemButton = true;
+                    switch (ka.getType()) {
+                        case "rabatt": addPos = false; addRemButton = false; break;
+                        case "rabattrechnung": addPos = false; addRemButton = true; break;
+                        case "pfand": addPos = false; addRemButton = false; break;
+                        default: addPos = true; addRemButton = true; break;
+                    }
+                    hinzufuegenRaw(ka.getArtikelID(), ka.getRabattID(), ka.getName(),
+                                   ka.getArtikelNummer(), ka.getColor(), ka.getType(),
+                                   ka.getMenge(), ka.getStueckzahl(), ka.getEinzelPreis(),
+                                   ka.getGesPreis(), ka.getMwst(), ka.getGutscheinNr(),
+                                   addPos, addRemButton, null);
+                    if (ka.getType().equals("anzahlungsaufloesung")) {
+                        // store the anzahlungRechNr with the KassierArtikel;
+                        kassierArtikel.get(kassierArtikel.size() - 1).setAnzahlungRechNr(anzahlungRechNr);
+                    }
+                    updateAll();
+                    updateDisplay(ka.getName(), ka.getStueckzahl(), bc.priceFormatter(ka.getEinzelPreis()));
+                    zwischensumme();
+                }
+            }
         }
         int removeRow = -1;
         for (int i = 0; i < removeButtons.size(); i++) {
@@ -2151,6 +2645,9 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             }
         }
         if (removeRow > -1) {
+            if (kassierArtikel.get(removeRow).getType() == "anzahlung")
+                reconstructPrices();
+
             data.remove(removeRow);
             kassierArtikel.remove(removeRow);
             mwsts.remove(removeRow);
@@ -2170,13 +2667,15 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
                     kassierArtikel.get(i).setPosition(oldVal - 1);
                 }
             }
-
             removeRabattAufRechnung();
-
             refreshPositionsInData();
             updateAll();
             if (display != null && display.deviceWorks()) {
                 display.clearScreen();
+            }
+            if (kassierArtikel.size() == 0) {
+                // Last item was removed, cancel the TSE transaction
+                tse.cancelTransaction();
             }
             return;
         }

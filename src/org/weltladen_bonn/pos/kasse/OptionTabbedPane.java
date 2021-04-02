@@ -57,6 +57,11 @@ public class OptionTabbedPane extends TabbedPaneGrundlage {
         tabbedPane.addTab("Lieferanten", null, myLieferant, "Lieferanten bearbeiten/hinzufügen");
         tabbedPane.addTab("Produktgruppen", null, myProduktgruppe, "Produktgruppen bearbeiten/hinzufügen");
         tabbedPane.addTab("DB Import/Export", null, myDump, "Datenbank exportieren/importieren");
+        WeltladenTSE tse = ((MainWindow)mainWindow).getTSE();
+        if (tse.inUse()) {
+            TSEStatus myTSE = new TSEStatus(this.pool, (MainWindow)this.mainWindow, this);
+            tabbedPane.addTab("TSE", null, myTSE, "Status der TSE abfragen und TSE-Daten exportieren");
+        }
 
         this.add(tabbedPane, BorderLayout.CENTER);
     }

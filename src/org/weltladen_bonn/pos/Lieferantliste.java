@@ -126,7 +126,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         this.originalData = new Vector< Vector<Object> >();
@@ -335,7 +335,7 @@ public class Lieferantliste extends WindowContent implements ItemListener, Table
     void updateTable() {
         applyFilter(filterStr, displayData, displayIndices);
         lieferantListPanel.remove(scrollPane);
-	lieferantListPanel.revalidate();
+	    lieferantListPanel.revalidate();
 
         scrollPane = new JScrollPane(myTable);
         lieferantListPanel.add(scrollPane);

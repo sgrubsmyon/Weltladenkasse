@@ -81,7 +81,7 @@ public class TabbedPane extends TabbedPaneGrundlage implements ChangeListener {
     public void stateChanged(ChangeEvent e){
         if (kassenstandNeedsToChange && tabbedPane.getSelectedIndex() != 3) {
             JOptionPane.showMessageDialog(this, "Es muss noch der Kassenstand auf 150 € geändert werden\n(unter 'Kassenstand')!",
-                    "Fehler", JOptionPane.WARNING_MESSAGE);
+                "Fehler", JOptionPane.WARNING_MESSAGE);
         }
     }
 

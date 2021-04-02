@@ -10,23 +10,36 @@ import org.mariadb.jdbc.MariaDbPoolDataSource;
 // GUI stuff:
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
+import java.awt.Color;
 import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 import javax.swing.*; // JFrame, JPanel, JButton, JLabel, ...
 import javax.swing.Timer; // ambiguity with java.util.Timer
 
 import org.weltladen_bonn.pos.MainWindowGrundlage;
+import org.weltladen_bonn.pos.BaseClass;
+
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import org.weltladen_bonn.pos.SplashScreen;
 
 // Class holding the window of the application GUI:
 public class MainWindow extends MainWindowGrundlage implements ActionListener {
     //***************************************************
     // Members
     //***************************************************
+    private static final Logger logger = LogManager.getLogger(MainWindow.class);
+
     TabbedPane myTabbedPane;
 
     // class to talk to Kundendisplay
     private Kundendisplay display;
+
+    // class to talk to TSE
+    private WeltladenTSE tse;
 
     private JButton beendenButton = new JButton("Beenden");
 
@@ -37,20 +50,45 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
     /**
      *    The constructor.
      *       */
-    public MainWindow(){
-        super();
+    public MainWindow(SplashScreen spl, int nTasks) {
+        super(spl, nTasks);
 
+        // Initiate TSE (after connecting to DB)
+        // This can take up to 30-60 seconds of time, so do this while showing the user a splash screen to inform
+        splash.setStatusLabel("Stelle Verbindung zur TSE her (das kann 30 bis 60 Sekunden dauern)...");
+        splash.setProgress(4 * 100 / nTasks);
+        tse = new WeltladenTSE(this.pool, this, splash);
+
+        splash.setStatusLabel("Stelle Verbindung zum Kundendisplay her...");
+        splash.setProgress(5 * 100 / nTasks);
         display = new Kundendisplay(bc);
         setDisplayBlankTimer();
 
-        if (dbconn.connectionWorks){
+        if (dbconn.connectionWorks) {
+            splash.setStatusLabel("Lade die Tabs...");
+            splash.setProgress(6 * 100 / nTasks);
             myTabbedPane = new TabbedPane(this.pool, this);
-            setContentPanel(myTabbedPane);
+            JPanel contentPanel = new JPanel();
+            contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+            if (isInTrainingMode()) {
+                JPanel trainingPanel = new JPanel(new BorderLayout());
+                // center
+                JPanel centerPanel = new JPanel();
+                JButton trainingBadge = new BaseClass.BigButton("TRAININGSMODUS");
+                trainingBadge.setBackground(Color.RED);
+                trainingBadge.setForeground(Color.WHITE.brighter().brighter().brighter());
+                trainingBadge.setEnabled(false);
+                centerPanel.add(trainingBadge);
+                trainingPanel.add(centerPanel, BorderLayout.CENTER);
+                contentPanel.add(trainingPanel);
+            }
+            contentPanel.add(myTabbedPane);
+            setContentPanel(contentPanel);
         }
-	//topPanel.setLayout(new FlowLayout());
-	//beendenButton.addActionListener(this);
-	//topPanel.add(beendenButton);
-	//holdAll.add(topPanel, BorderLayout.NORTH);
+        //topPanel.setLayout(new FlowLayout());
+        //beendenButton.addActionListener(this);
+        //topPanel.add(beendenButton);
+        //holdAll.add(topPanel, BorderLayout.NORTH);
     }
 
     public void setDisplayWelcomeTimer() {
@@ -85,8 +123,13 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
 
     @Override
     public void dispose() {
-        if (display != null)
+        // Do clean-up:
+        if (display != null) {
+            logger.debug("Closing connection to customer display");
             display.closeDevice();
+        }
+        logger.debug("Closing connection to TSE");
+        tse.disconnectFromTSE();
         super.dispose();
     }
 
@@ -95,9 +138,17 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
         return display;
     }
 
+    public WeltladenTSE getTSE() {
+        return tse;
+    }
+
 
     public boolean isThereIncompleteAbrechnungTag() {
         return myTabbedPane.isThereIncompleteAbrechnungTag();
+    }
+
+    public boolean isInTrainingMode() {
+        return !bc.operationMode.equals("normal");
     }
 
     /**
@@ -106,7 +157,7 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
      *
      *    @param e the action event.
      **/
-    public void actionPerformed(ActionEvent e){
+    public void actionPerformed(ActionEvent e) {
 	//if (e.getSource() == beendenButton){
 	//    int answer = JOptionPane.showConfirmDialog(this,
 	//	    "Programm beenden?", "Beenden",

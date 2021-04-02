@@ -11,6 +11,8 @@ import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import org.weltladen_bonn.pos.SplashScreen;
+
 // Class holding only the main function
 public class Besteller {
     private static Logger logger = null;
@@ -23,25 +25,37 @@ public class Besteller {
     private static void createAndShowGUI() {
         //JFrame.setDefaultLookAndFeelDecorated(true);
 
-        final MainWindow myWindow = new MainWindow();
+        ImageIcon myImage = new ImageIcon(Besteller.class.getResource("/resources/images/splash_besteller.jpg"));
+        final SplashScreen splash = new SplashScreen(myImage, "Bitte warten, Besteller lädt...");
+        int nTasks = 5;
+
+        final MainWindow myWindow = new MainWindow(splash, nTasks);
         if (myWindow.dbconn.passwordReturn == "CANCEL"){
+            splash.dispose();
+            myWindow.dispose();
             return;
         }
         if (myWindow.dbconn.passwordReturn == "OK" && myWindow.dbconn.connectionWorks){
+            splash.setStatusLabel("Stelle GUI-Fenster dar...");
+            splash.setProgress(5 * 100 / nTasks);
+
             //myWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             myWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // (maybe better)
+
             myWindow.setTitle("Weltladenbesteller");
+            // myWindow.setPreferredSize(new Dimension(1024, 768));
+            myWindow.setPreferredSize(new Dimension(1200, 740));
+            myWindow.pack();
             // Specify where it will appear on the screen:
-            //	myWindow.setLocation(200, 100);
+            //myWindow.setLocation(200, 100);
             //myWindow.setSize(1024, 768);
             //myWindow.setSize(1024, 400);
-            myWindow.setPreferredSize(new Dimension(1024, 768));
-            myWindow.pack();
+            myWindow.setLocationRelativeTo(null); // this centers the window if called after "pack()"
 
-            //WelcomeScreen welcome = new WelcomeScreen();
-            //myWindow.setContentPanel(welcome);
+            // Remove splash screen
+            splash.dispose();
 
-            // Show it!
+            // Show the GUI!
             myWindow.setVisible(true);
             logger.info("Password was correct.");
             return;

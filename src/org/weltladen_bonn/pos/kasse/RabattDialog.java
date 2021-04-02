@@ -180,7 +180,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -217,7 +217,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }
@@ -327,13 +327,13 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                 vonPanel.setBorder(BorderFactory.createTitledBorder("Startdatum"));
                 Calendar nowCal = Calendar.getInstance();
                 //Date nowDate = nowCal.getTime();
-                now = new Date();
+                now = nowDate();
                 nowCal.add(Calendar.DATE, -1); // for strange reasons, we need day-1
                 Date yesterday = nowCal.getTime();
                 vonDateModel = new SpinnerDateModel(now, // Startwert
-                                             yesterday, // kleinster Wert
-                                             null, // groesster Wert
-                                             Calendar.YEAR);//ignored for user input
+                                                    yesterday, // kleinster Wert
+                                                    null, // groesster Wert
+                                                    Calendar.YEAR);//ignored for user input
                 vonSpinner = new JSpinner(vonDateModel);
                 vonSpinner.setEditor(new JSpinner.DateEditor(vonSpinner, "dd/MM/yyyy"));
                 vonSpinner.addChangeListener(this);
@@ -344,9 +344,9 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
             JPanel bisPanel = new JPanel();
                 bisPanel.setBorder(BorderFactory.createTitledBorder("Enddatum"));
                 bisDateModel = new SpinnerDateModel(now, // Startwert
-                                             yesterday, // kleinster Wert
-                                             null, // groesster Wert
-                                             Calendar.YEAR);//ignored for user input
+                                                    yesterday, // kleinster Wert
+                                                    null, // groesster Wert
+                                                    Calendar.YEAR);//ignored for user input
                 bisSpinner = new JSpinner(bisDateModel);
                 bisSpinner.setEditor(new JSpinner.DateEditor(bisSpinner, "dd/MM/yyyy"));
                 bisSpinner.addChangeListener(this);
@@ -639,7 +639,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                 pstmt.close();
                 connection.close();
             } catch (SQLException ex) {
-                logger.error("Exception: {}", ex);
+                logger.error("Exception:", ex);
                 showDBErrorDialog(ex.getMessage());
             }
         } else { // NO_OPTION
@@ -716,7 +716,7 @@ public class RabattDialog extends DialogWindow implements ChangeListener, Docume
                 pstmt.close();
                 connection.close();
             } catch (SQLException ex) {
-                logger.error("Exception: {}", ex);
+                logger.error("Exception:", ex);
                 showDBErrorDialog(ex.getMessage());
             }
         } else { // NO_OPTION

@@ -154,7 +154,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         this.originalData = new Vector< Vector<Object> >();
@@ -374,7 +374,7 @@ public class Produktgruppenliste extends WindowContent implements ItemListener, 
     void updateTable() {
         applyFilter(filterStr, displayData, displayIndices);
         produktgruppenListPanel.remove(scrollPane);
-	produktgruppenListPanel.revalidate();
+	    produktgruppenListPanel.revalidate();
 
         scrollPane = new JScrollPane(myTable);
         produktgruppenListPanel.add(scrollPane);

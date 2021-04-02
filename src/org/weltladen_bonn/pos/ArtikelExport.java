@@ -193,11 +193,11 @@ public class ArtikelExport extends WindowContent {
             SpreadSheet.createEmpty(model).saveAs(file);
             OOUtils.open(file);
         } catch (FileNotFoundException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
         } catch (IOException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             // System.out.println("Exception: " + ex.getMessage());
             // ex.printStackTrace();
         }

@@ -82,7 +82,7 @@ public class ProduktgruppeFormular extends WindowContent
                 pstmt.close();
                 connection.close();
             } catch (SQLException ex) {
-                logger.error("Exception: {}", ex);
+                logger.error("Exception:", ex);
                 showDBErrorDialog(ex.getMessage());
             }
         }
@@ -99,7 +99,7 @@ public class ProduktgruppeFormular extends WindowContent
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return id;
@@ -118,7 +118,7 @@ public class ProduktgruppeFormular extends WindowContent
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return id;
@@ -138,7 +138,7 @@ public class ProduktgruppeFormular extends WindowContent
             pstmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         return id;
@@ -233,7 +233,7 @@ public class ProduktgruppeFormular extends WindowContent
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
     }

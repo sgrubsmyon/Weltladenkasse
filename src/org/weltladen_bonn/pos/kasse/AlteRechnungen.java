@@ -7,6 +7,7 @@ import java.util.*; // for Vector
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 //import java.sql.Date;
 import org.mariadb.jdbc.MariaDbPoolDataSource;
@@ -65,10 +66,12 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
      * The constructor.
      */
     public AlteRechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw) {
-        super(pool, mw, "WHERE verkauf.verkaufsdatum <= " + "(SELECT MAX(zeitpunkt_real) FROM abrechnung_tag) AND "
-                + "verkauf.storniert = FALSE ", "Alte Rechnungen");
+        super(pool, mw, "", "Alte Rechnungen");
+        setFilterStr("WHERE v.rechnungs_nr <= "+
+            "(SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+") ");
         queryEarliestRechnung();
         initiateSpinners();
+        createAllPanel();
         showTable();
     }
 
@@ -82,8 +85,8 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
             Statement stmt = connection.createStatement();
             // Run MySQL command
             ResultSet rs = stmt
-                    .executeQuery("SELECT DAY(MIN(verkauf.verkaufsdatum)), MONTH(MIN(verkauf.verkaufsdatum)), "
-                            + "YEAR(MIN(verkauf.verkaufsdatum)) FROM verkauf WHERE verkauf.storniert = FALSE");
+                    .executeQuery("SELECT DAY(MIN(verkaufsdatum)), MONTH(MIN(verkaufsdatum)), "
+                            + "YEAR(MIN(verkaufsdatum)) FROM "+tableForMode("verkauf"));
             // Now do something with the ResultSet ...
             rs.next();
             day = rs.getInt(1);
@@ -93,7 +96,7 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
-            logger.error("Exception: {}", ex);
+            logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
         Calendar calendar = Calendar.getInstance();
@@ -105,7 +108,7 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
         calendar.set(Calendar.DAY_OF_MONTH, day);
         earliestDate = calendar.getTime();
 
-        Date now = new Date(); // current date
+        Date now = nowDate(); // current date
         if (year == 0) {
             oneDayBeforeEarliestDate = now;
             earliestDate = now;
@@ -180,6 +183,79 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
             myTable.setValueAt(detailButtons.get(i), i, 0);
         }
     }
+
+    protected String getZKasseId() {
+        // query the historical Z_KASSE_ID corresponding to the currently displayed
+        // detail rechnung (rechnungsNr)
+        String z_kasse_id = "";
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT z_kasse_id "+
+                "FROM "+tableForMode("abrechnung_tag")+" "+
+                "WHERE rechnungs_nr_von <= ? AND rechnungs_nr_bis >= ?"
+            );
+            pstmtSetInteger(pstmt, 1, rechnungsNr);
+            pstmtSetInteger(pstmt, 2, rechnungsNr);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                z_kasse_id = rs.getString(1);
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return z_kasse_id;
+    }
+
+    protected LinkedHashMap<String, String> getTSEStatusValues() {
+        // query the historical TSE status values corresponding to the currently displayed
+        // detail rechnung (rechnungsNr)
+        LinkedHashMap<String, String> tseStatusValues = new LinkedHashMap<String, String>();
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT "+
+                "tse_serial, "+
+                "tse_sig_algo, "+
+                "tse_time_format, "+
+                "tse_pd_encoding, "+
+                "tse_public_key, "+
+                "tse_cert_i, "+
+                "tse_cert_ii "+
+                "FROM "+tableForMode("abrechnung_tag_tse")+" "+
+                "INNER JOIN "+tableForMode("abrechnung_tag")+" USING (id) "+
+                "WHERE rechnungs_nr_von <= ? AND rechnungs_nr_bis >= ?"
+            );
+            pstmtSetInteger(pstmt, 1, rechnungsNr);
+            pstmtSetInteger(pstmt, 2, rechnungsNr);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                tseStatusValues.put("Seriennummer der TSE (Hex)", rs.getString(1));
+                tseStatusValues.put("Signatur-Algorithmus", rs.getString(2));
+                tseStatusValues.put("Zeitformat", rs.getString(3));
+                tseStatusValues.put("Encoding der processData-Strings", rs.getString(4));
+                tseStatusValues.put("Öffentlicher Schlüssel (Base64)", rs.getString(5));
+                String cert = rs.getString(6);
+                String cert_ii = rs.getString(7);
+                if (cert != null && cert_ii != null) {
+                    cert = cert + cert_ii;
+                }
+                tseStatusValues.put("TSE-Zertifikat (Base64)", cert);
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        return tseStatusValues;
+    }
+
 
     /**
      * * Each non abstract class that implements the ChangeListener must have
@@ -261,13 +337,13 @@ public class AlteRechnungen extends Rechnungen implements ChangeListener {
             java.sql.Date endDateSQL = new java.sql.Date(endDate.getTime());
             String startDateStr = startDateSQL.toString();
             String endDateStr = endDateSQL.toString();
-            this.filterStr = "WHERE DATE(verkauf.verkaufsdatum) >= DATE('" + startDateStr + "') "
-                    + "AND DATE(verkauf.verkaufsdatum) <= DATE('" + endDateStr + "') AND verkauf.storniert = FALSE ";
+            this.filterStr = "WHERE DATE(v.verkaufsdatum) >= DATE('" + startDateStr + "') "
+                    + "AND DATE(v.verkaufsdatum) <= DATE('" + endDateStr + "') ";
             updateTable();
             return;
         }
         if (e.getSource() == resetButton) {
-            this.filterStr = "WHERE DATE(verkauf.verkaufsdatum) < CURRENT_DATE() AND verkauf.storniert = FALSE ";
+            this.filterStr = "WHERE DATE(v.verkaufsdatum) < CURRENT_DATE() ";
             initiateSpinners();
             updateTable();
             return;
