@@ -128,6 +128,10 @@ DROP TABLE abrechnung_tag_copy;
 -- Grant default user access right to new MwSt. table: (need to do as root user)
 GRANT INSERT ON kasse.abrechnung_tag_mwst TO 'mitarbeiter'@'localhost';
 
+GRANT INSERT ON kasse.abrechnung_tag_mwst TO 'mitarbeiter'@'192.168.2.%';
+
+GRANT INSERT ON kasse.abrechnung_tag_mwst TO 'mitarbeiter'@'10.8.0.%';
+
 -- --------------------
 -- abrechnung_monat --
 -- --------------------
@@ -184,6 +188,10 @@ DROP TABLE abrechnung_monat_copy;
 
 -- Grant default user access right to new MwSt. table: (need to do as root user)
 GRANT INSERT, DELETE ON kasse.abrechnung_monat_mwst TO 'mitarbeiter'@'localhost';
+
+GRANT INSERT, DELETE ON kasse.abrechnung_monat_mwst TO 'mitarbeiter'@'192.168.2.%';
+
+GRANT INSERT, DELETE ON kasse.abrechnung_monat_mwst TO 'mitarbeiter'@'10.8.0.%';
 
 -- -------------------
 -- abrechnung_jahr --
@@ -244,6 +252,10 @@ DROP TABLE abrechnung_jahr_copy;
 -- Grant default user access right to new MwSt. table: (need to do as root user)
 GRANT INSERT, DELETE ON kasse.abrechnung_jahr_mwst TO 'mitarbeiter'@'localhost';
 
+GRANT INSERT, DELETE ON kasse.abrechnung_jahr_mwst TO 'mitarbeiter'@'192.168.2.%';
+
+GRANT INSERT, DELETE ON kasse.abrechnung_jahr_mwst TO 'mitarbeiter'@'10.8.0.%';
+
 -- -------------------
 -- tse_transaction --
 -- -------------------
@@ -264,7 +276,12 @@ CREATE TABLE tse_transaction (
     -- If planning to use method `getTransactionByTxNumber()`, can also create index on column `transaction_number`
     FOREIGN KEY (rechnungs_nr) REFERENCES verkauf(rechnungs_nr)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 GRANT INSERT ON kasse.tse_transaction TO 'mitarbeiter'@'localhost';
+
+GRANT INSERT ON kasse.tse_transaction TO 'mitarbeiter'@'192.168.2.%';
+
+GRANT INSERT ON kasse.tse_transaction TO 'mitarbeiter'@'10.8.0.%';
 
 -- ---------------
 -- Artikelmenge --
@@ -412,6 +429,32 @@ GRANT INSERT, DELETE ON kasse.training_abrechnung_monat TO 'mitarbeiter'@'localh
 GRANT INSERT, DELETE ON kasse.training_abrechnung_monat_mwst TO 'mitarbeiter'@'localhost';
 GRANT INSERT, DELETE ON kasse.training_abrechnung_jahr TO 'mitarbeiter'@'localhost';
 GRANT INSERT, DELETE ON kasse.training_abrechnung_jahr_mwst TO 'mitarbeiter'@'localhost';
+
+GRANT INSERT ON kasse.training_verkauf TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT ON kasse.training_verkauf_mwst TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT ON kasse.training_verkauf_details TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT ON kasse.training_kassenstand TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT ON kasse.training_abrechnung_tag TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT ON kasse.training_abrechnung_tag_mwst TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT, UPDATE ON kasse.training_zaehlprotokoll TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT ON kasse.training_zaehlprotokoll_details TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT, DELETE ON kasse.training_abrechnung_monat TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT, DELETE ON kasse.training_abrechnung_monat_mwst TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT, DELETE ON kasse.training_abrechnung_jahr TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT, DELETE ON kasse.training_abrechnung_jahr_mwst TO 'mitarbeiter'@'192.168.2.%';
+
+GRANT INSERT ON kasse.training_verkauf TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT ON kasse.training_verkauf_mwst TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT ON kasse.training_verkauf_details TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT ON kasse.training_kassenstand TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT ON kasse.training_abrechnung_tag TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT ON kasse.training_abrechnung_tag_mwst TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT, UPDATE ON kasse.training_zaehlprotokoll TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT ON kasse.training_zaehlprotokoll_details TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT, DELETE ON kasse.training_abrechnung_monat TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT, DELETE ON kasse.training_abrechnung_monat_mwst TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT, DELETE ON kasse.training_abrechnung_jahr TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT, DELETE ON kasse.training_abrechnung_jahr_mwst TO 'mitarbeiter'@'10.8.0.%';
 
 -- ------------------------------------
 -- verkauf (Storno als Gegenbuchung) --
@@ -911,6 +954,16 @@ GRANT INSERT ON kasse.anzahlung_details TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.training_anzahlung TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.training_anzahlung_details TO 'mitarbeiter'@'localhost';
 
+GRANT INSERT ON kasse.anzahlung TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT ON kasse.anzahlung_details TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT ON kasse.training_anzahlung TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT ON kasse.training_anzahlung_details TO 'mitarbeiter'@'192.168.2.%';
+
+GRANT INSERT ON kasse.anzahlung TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT ON kasse.anzahlung_details TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT ON kasse.training_anzahlung TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT ON kasse.training_anzahlung_details TO 'mitarbeiter'@'10.8.0.%';
+
 -- Set old Anzahlung articles to inactive:
 UPDATE artikel SET aktiv = FALSE WHERE artikel_ID IN (31293, 31294, 31295);
 -- check if any Anzahlung article is still found in article select panel
@@ -950,6 +1003,12 @@ CREATE TABLE training_abrechnung_tag_tse (
 GRANT INSERT ON kasse.abrechnung_tag_tse TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.training_abrechnung_tag_tse TO 'mitarbeiter'@'localhost';
 
+GRANT INSERT ON kasse.abrechnung_tag_tse TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT ON kasse.training_abrechnung_tag_tse TO 'mitarbeiter'@'192.168.2.%';
+
+GRANT INSERT ON kasse.abrechnung_tag_tse TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT ON kasse.training_abrechnung_tag_tse TO 'mitarbeiter'@'10.8.0.%';
+
 
 -- ------------
 -- gutschein --
@@ -985,3 +1044,9 @@ CREATE TABLE training_gutschein (
 
 GRANT INSERT ON kasse.gutschein TO 'mitarbeiter'@'localhost';
 GRANT INSERT ON kasse.training_gutschein TO 'mitarbeiter'@'localhost';
+
+GRANT INSERT ON kasse.gutschein TO 'mitarbeiter'@'192.168.2.%';
+GRANT INSERT ON kasse.training_gutschein TO 'mitarbeiter'@'192.168.2.%';
+
+GRANT INSERT ON kasse.gutschein TO 'mitarbeiter'@'10.8.0.%';
+GRANT INSERT ON kasse.training_gutschein TO 'mitarbeiter'@'10.8.0.%';
