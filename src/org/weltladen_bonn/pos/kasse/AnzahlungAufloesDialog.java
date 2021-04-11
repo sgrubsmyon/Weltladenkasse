@@ -523,15 +523,31 @@ public class AnzahlungAufloesDialog extends DialogWindow {
          * Button-Panel
          * */
         footerPanel = new JPanel();
+        footerPanel.setLayout(new BoxLayout(footerPanel, BoxLayout.PAGE_AXIS));
+
+        JPanel hinweisPanel = new JPanel();
+        // JPanel hinweisPanel = new JPanel(new FlowLayout());
+        hinweisPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        JTextArea niceArea = new JTextArea(2, 55);
+        niceArea.append("Bearbeiten/Löschen einer Anzahlung: Anzahlung anklicken, OK, dann die falschen Artikel löschen (ggf. alle bis auf die Anzahlung selbst), ggf. andere hinzufügen. Evtl. negativen Betrag auszahlen.");
+        niceArea = makeLabelStyle(niceArea);
+        niceArea.setFont(BaseClass.mediumFont);
+        niceArea.setAlignmentY(JTextArea.CENTER_ALIGNMENT);
+        hinweisPanel.add(niceArea);
+        footerPanel.add(hinweisPanel);
+        
+        JPanel buttonPanel = new JPanel();
         okButton = new JButton("OK" );
         okButton.setMnemonic(KeyEvent.VK_O);
         okButton.addActionListener(this);
         okButton.setEnabled(false);
-        footerPanel.add(okButton);
+        buttonPanel.add(okButton);
         cancelButton = new JButton("Abbrechen" );
         cancelButton.setMnemonic(KeyEvent.VK_A);
         cancelButton.addActionListener(this);
-        footerPanel.add(cancelButton);
+        buttonPanel.add(cancelButton);
+        footerPanel.add(buttonPanel);
+
         allPanel.add(footerPanel, BorderLayout.SOUTH);
     }
 
