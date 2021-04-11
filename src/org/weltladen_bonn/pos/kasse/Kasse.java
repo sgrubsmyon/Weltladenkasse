@@ -31,7 +31,7 @@ public class Kasse {
 
         ImageIcon myImage = new ImageIcon(Kasse.class.getResource("/resources/images/splash_kasse.jpg"));
         final SplashScreen splash = new SplashScreen(myImage, "Bitte warten, Kasse lädt...");
-        int nTasks = 7;
+        int nTasks = 8;
         
         final MainWindow myWindow = new MainWindow(splash, nTasks);
         if (myWindow.dbconn.passwordReturn == "CANCEL"){
@@ -41,7 +41,7 @@ public class Kasse {
         }
         if (myWindow.dbconn.passwordReturn == "OK" && myWindow.dbconn.connectionWorks){
             splash.setStatusLabel("Stelle GUI-Fenster dar...");
-            splash.setProgress(7 * 100 / nTasks);
+            splash.setProgress(8 * 100 / nTasks);
 
             //myWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             //myWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // (maybe better)
