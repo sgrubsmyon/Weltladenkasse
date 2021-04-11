@@ -7,6 +7,9 @@ import java.util.Date; // because Date alone ambiguous due to java.sql.Date
 import java.math.*; // for monetary value representation and arithmetic with correct rounding
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 
 // MySQL Connector/J stuff:
 import java.sql.*;
@@ -1721,5 +1724,22 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         retVec.add(dateChooser);
         retVec.add(dateSpinner);
         return retVec;
+    }
+
+    protected String[] setupFinDatDir() {
+        Date date = nowDate();
+        String year = new SimpleDateFormat("yyyy").format(date);
+        String dateStr = new SimpleDateFormat("yyyy-MM-dd").format(date);
+        String exportDir = System.getProperty("user.home")+bc.fileSep+bc.finDatDir+bc.fileSep+year;
+        Path path = Paths.get(exportDir);
+        if (!Files.exists(path)) {
+            // Create directory recursively:
+            try {
+                Files.createDirectories(path);
+            } catch (IOException ex) {
+                logger.error("Exception: {}", ex);
+            }
+        }
+        return new String[] {exportDir, dateStr};
     }
 }

@@ -5,11 +5,6 @@ import org.weltladen_bonn.pos.kasse.WeltladenTSE.TSEStatus;
 // Basic Java stuff:
 import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
-import java.text.SimpleDateFormat;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.Files;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -37,6 +32,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 class AbrechnungenTag extends Abrechnungen {
+    private static final long serialVersionUID = 1L;
+
     // Attribute:
     private static final Logger logger = LogManager.getLogger(AbrechnungenTag.class);
 
@@ -1065,19 +1062,9 @@ class AbrechnungenTag extends Abrechnungen {
         if (tse.inUse()) {
             lastSigCounter = tse.getSignatureCounter(); // this is the last sig counter that will be included in the export
             Integer prevLastSigCounter = previousLastSigCounter();
-            Date date = nowDate();
-            String year = new SimpleDateFormat("yyyy").format(date);
-            String dateStr = new SimpleDateFormat("yyyy-MM-dd").format(date);
-            String exportDir = System.getProperty("user.home")+bc.fileSep+bc.finDatDir+bc.fileSep+year;
-            Path path = Paths.get(exportDir);
-            if (!Files.exists(path)) {
-                // Create directory recursively:
-                try {
-                    Files.createDirectories(path);
-                } catch (IOException ex) {
-                    logger.error("Exception: {}", ex);
-                }
-            }
+            String[] res = setupFinDatDir();
+            String exportDir = res[0];
+            String dateStr = res[1];
             logger.info("previousLastSigCounter: {}", prevLastSigCounter);
             logger.info("lastSigCounter: {}", lastSigCounter);
             logger.info("Exporting TSE signatures from {} to {}", prevLastSigCounter + 1, lastSigCounter);

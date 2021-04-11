@@ -41,6 +41,9 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
     // class to talk to TSE
     private WeltladenTSE tse;
 
+    // class to export data as DSFinV-K CSV
+    private DSFinVKCSV dsfinvk;
+
     private JButton beendenButton = new JButton("Beenden");
 
     //***************************************************
@@ -53,20 +56,25 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
     public MainWindow(SplashScreen spl, int nTasks) {
         super(spl, nTasks);
 
+        // Initiate DSFinV-K CSV export
+        splash.setStatusLabel("Richte CSV-Export nach DSFinV-K ein...");
+        splash.setProgress(4 * 100 / nTasks);
+        dsfinvk = new DSFinVKCSV(this.pool, this);
+
         // Initiate TSE (after connecting to DB)
         // This can take up to 30-60 seconds of time, so do this while showing the user a splash screen to inform
         splash.setStatusLabel("Stelle Verbindung zur TSE her (das kann 30 bis 60 Sekunden dauern)...");
-        splash.setProgress(4 * 100 / nTasks);
+        splash.setProgress(5 * 100 / nTasks);
         tse = new WeltladenTSE(this.pool, this, splash);
 
         splash.setStatusLabel("Stelle Verbindung zum Kundendisplay her...");
-        splash.setProgress(5 * 100 / nTasks);
+        splash.setProgress(6 * 100 / nTasks);
         display = new Kundendisplay(bc);
         setDisplayBlankTimer();
 
         if (dbconn.connectionWorks) {
             splash.setStatusLabel("Lade die Tabs...");
-            splash.setProgress(6 * 100 / nTasks);
+            splash.setProgress(7 * 100 / nTasks);
             myTabbedPane = new TabbedPane(this.pool, this);
             JPanel contentPanel = new JPanel();
             contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
