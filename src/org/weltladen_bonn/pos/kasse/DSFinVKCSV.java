@@ -108,7 +108,7 @@ public class DSFinVKCSV extends WindowContent {
         if (!Files.exists(path)) {
             try {
                 Files.copy(
-                    Paths.get(getClass().getResource("/resources/dsfinv-k/index.xml").getPath()),
+                    Paths.get("dsfinv-k/index.xml"),
                     path
                 );
             } catch (IOException ex) {
@@ -119,7 +119,7 @@ public class DSFinVKCSV extends WindowContent {
         if (!Files.exists(path)) {
             try {
                 Files.copy(
-                    Paths.get(getClass().getResource("/resources/dsfinv-k/gdpdu-01-09-2004.dtd").getPath()),
+                    Paths.get("dsfinv-k/gdpdu-01-09-2004.dtd"),
                     path
                 );
             } catch (IOException ex) {
@@ -129,36 +129,36 @@ public class DSFinVKCSV extends WindowContent {
     }
 
     private void parseIndexXML() {
-        String filename = getClass().getResource("/resources/dsfinv-k/index.xml").getPath();
+        String filename = "dsfinv-k/index.xml";
         logger.debug(filename);
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         try {
             // https://stackoverflow.com/questions/8699620/how-to-validate-xml-with-dtd-using-java
             // Enable using the DTD file provided by DSFinV-K (does not work)
-            // dbf.setValidating(true);
+            dbf.setValidating(true);
 
             // optional, but recommended
             // process XML securely, avoid attacks like XML External Entities (XXE)
             dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
   
-            // // parse XML file
+            // parse XML file
             DocumentBuilder db = dbf.newDocumentBuilder();
-            // db.setErrorHandler(new ErrorHandler() { // for DTD
-            //     @Override
-            //     public void error(SAXParseException ex) throws SAXException {
-            //         // do something more useful in each of these handlers
-            //         logger.error(ex);
-            //     }
-            //     @Override
-            //     public void fatalError(SAXParseException ex) throws SAXException {
-            //         logger.error(ex);
-            //     }
+            db.setErrorHandler(new ErrorHandler() { // for DTD
+                @Override
+                public void error(SAXParseException ex) throws SAXException {
+                    // do something more useful in each of these handlers
+                    logger.error(ex);
+                }
+                @Override
+                public void fatalError(SAXParseException ex) throws SAXException {
+                    logger.error(ex);
+                }
             
-            //     @Override
-            //     public void warning(SAXParseException ex) throws SAXException {
-            //         logger.error(ex);
-            //     }
-            // });
+                @Override
+                public void warning(SAXParseException ex) throws SAXException {
+                    logger.error(ex);
+                }
+            });
             Document doc = db.parse(filename);
   
             // optional, but recommended
