@@ -130,9 +130,10 @@ public class DSFinVKCSV extends WindowContent {
 
     private void parseIndexXML() {
         String filename = "dsfinv-k/index.xml";
-        logger.debug(filename);
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        
+        Document doc = null;
         try {
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             // https://stackoverflow.com/questions/8699620/how-to-validate-xml-with-dtd-using-java
             // Enable using the DTD file provided by DSFinV-K (does not work)
             dbf.setValidating(true);
@@ -140,87 +141,99 @@ public class DSFinVKCSV extends WindowContent {
             // optional, but recommended
             // process XML securely, avoid attacks like XML External Entities (XXE)
             dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-  
+            
             // parse XML file
             DocumentBuilder db = dbf.newDocumentBuilder();
             db.setErrorHandler(new ErrorHandler() { // for DTD
                 @Override
                 public void error(SAXParseException ex) throws SAXException {
-                    // do something more useful in each of these handlers
                     logger.error(ex);
                 }
                 @Override
                 public void fatalError(SAXParseException ex) throws SAXException {
                     logger.error(ex);
                 }
-            
                 @Override
                 public void warning(SAXParseException ex) throws SAXException {
                     logger.error(ex);
                 }
             });
-            Document doc = db.parse(filename);
-  
-            // optional, but recommended
-            // http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
-            doc.getDocumentElement().normalize();
-  
-            NodeList tables = doc.getElementsByTagName("Table");
-            for (int i = 0; i < tables.getLength(); i++) {
-                // Node tableNode = tables.item(i);
-                // if (tableNode.getNodeType() == Node.ELEMENT_NODE) { // this check should be unnecessary
-                // }
-                Element table = (Element) tables.item(i);
-                String tableFileName = table.getElementsByTagName("URL").item(0).getTextContent();
-                String tableName = table.getElementsByTagName("Name").item(0).getTextContent();
-                String decimalSymbol = table.getElementsByTagName("DecimalSymbol").item(0).getTextContent();
-                String digitGroupingSymbol = table.getElementsByTagName("DigitGroupingSymbol").item(0).getTextContent();
-                
-                Element variable = (Element) table.getElementsByTagName("VariableLength").item(0); // there should be only one such node
-                String columnDelimiter = variable.getElementsByTagName("ColumnDelimiter").item(0).getTextContent();
-                String recordDelimiter = variable.getElementsByTagName("RecordDelimiter").item(0).getTextContent();
-                String textEncapsulator = variable.getElementsByTagName("TextEncapsulator").item(0).getTextContent();
-                
-                decimalSymbols.put(tableFileName, decimalSymbol);
-                digitGroupingSymbols.put(tableFileName, digitGroupingSymbol);
-                columnDelimiters.put(tableFileName, columnDelimiter);
-                recordDelimiters.put(tableFileName, recordDelimiter);
-                textEncapsulators.put(tableFileName, textEncapsulator);
-                
-                NodeList columns = variable.getElementsByTagName("VariableColumn");
-                HashMap<String, DSFinVKColumn> colMap = new HashMap<String, DSFinVKColumn>();
-                for (int j = 0; j < columns.getLength(); j++) {
-                    Element column = (Element) columns.item(j);
-                    String colName = column.getElementsByTagName("Name").item(0).getTextContent();
-                    DSFinVKColumn col = new DSFinVKColumn();
-                    if (column.getElementsByTagName("AlphaNumeric").getLength() > 0) {
-                        col.type = DSFinVKColumnType.ALPHANUMERIC;
-                        if (column.getElementsByTagName("MaxLength").getLength() > 0) {
-                            col.maxLength = Integer.parseInt(
-                                column.getElementsByTagName("MaxLength").item(0).getTextContent()
-                            );
-                        }
-                    } else if (column.getElementsByTagName("Numeric").getLength() > 0) {
-                        col.type = DSFinVKColumnType.NUMERIC;
-                        if (column.getElementsByTagName("Accuracy").getLength() > 0) {
-                            col.accuracy = Integer.parseInt(
-                                column.getElementsByTagName("Accuracy").item(0).getTextContent()
-                            );
-                        }
+            try {
+                doc = db.parse(filename);
+            } catch (SAXException ex) {
+                logger.error("Falling back to not using DTD!!!");
+                dbf = DocumentBuilderFactory.newInstance();
+                db = dbf.newDocumentBuilder();
+                try {
+                    doc = db.parse(filename);
+                } catch (SAXException | IOException ex2) {
+                    logger.error("Without DTD still not working!!!");
+                    logger.error(ex2);
+                }
+            } catch (IOException ex) {
+                logger.error(ex);
+            }
+        } catch (ParserConfigurationException ex) {
+            logger.error(ex);
+        }
+        
+        // optional, but recommended
+        // http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
+        doc.getDocumentElement().normalize();
+
+        NodeList tables = doc.getElementsByTagName("Table");
+        for (int i = 0; i < tables.getLength(); i++) {
+            // Node tableNode = tables.item(i);
+            // if (tableNode.getNodeType() == Node.ELEMENT_NODE) { // this check should be unnecessary
+            // }
+            Element table = (Element) tables.item(i);
+            String tableFileName = table.getElementsByTagName("URL").item(0).getTextContent();
+            String tableName = table.getElementsByTagName("Name").item(0).getTextContent();
+            String decimalSymbol = table.getElementsByTagName("DecimalSymbol").item(0).getTextContent();
+            String digitGroupingSymbol = table.getElementsByTagName("DigitGroupingSymbol").item(0).getTextContent();
+            
+            Element variable = (Element) table.getElementsByTagName("VariableLength").item(0); // there should be only one such node
+            String columnDelimiter = variable.getElementsByTagName("ColumnDelimiter").item(0).getTextContent();
+            String recordDelimiter = variable.getElementsByTagName("RecordDelimiter").item(0).getTextContent();
+            String textEncapsulator = variable.getElementsByTagName("TextEncapsulator").item(0).getTextContent();
+            
+            decimalSymbols.put(tableFileName, decimalSymbol);
+            digitGroupingSymbols.put(tableFileName, digitGroupingSymbol);
+            columnDelimiters.put(tableFileName, columnDelimiter);
+            recordDelimiters.put(tableFileName, recordDelimiter);
+            textEncapsulators.put(tableFileName, textEncapsulator);
+            
+            NodeList columns = variable.getElementsByTagName("VariableColumn");
+            HashMap<String, DSFinVKColumn> colMap = new HashMap<String, DSFinVKColumn>();
+            for (int j = 0; j < columns.getLength(); j++) {
+                Element column = (Element) columns.item(j);
+                String colName = column.getElementsByTagName("Name").item(0).getTextContent();
+                DSFinVKColumn col = new DSFinVKColumn();
+                if (column.getElementsByTagName("AlphaNumeric").getLength() > 0) {
+                    col.type = DSFinVKColumnType.ALPHANUMERIC;
+                    if (column.getElementsByTagName("MaxLength").getLength() > 0) {
+                        col.maxLength = Integer.parseInt(
+                            column.getElementsByTagName("MaxLength").item(0).getTextContent()
+                        );
                     }
-                    colMap.put(colName, col);
+                } else if (column.getElementsByTagName("Numeric").getLength() > 0) {
+                    col.type = DSFinVKColumnType.NUMERIC;
+                    if (column.getElementsByTagName("Accuracy").getLength() > 0) {
+                        col.accuracy = Integer.parseInt(
+                            column.getElementsByTagName("Accuracy").item(0).getTextContent()
+                        );
+                    }
                 }
-                csvFileColumns.put(tableFileName, colMap);
+                colMap.put(colName, col);
             }
-            for (String fn : csvFileColumns.keySet()) {
-                logger.debug("{}:", fn);
-                for (String cn : csvFileColumns.get(fn).keySet()) {
-                    logger.debug("    {}: type = {}, maxLength = {}, accuracy = {}", cn, csvFileColumns.get(fn).get(cn).type,
-                        csvFileColumns.get(fn).get(cn).maxLength, csvFileColumns.get(fn).get(cn).accuracy);
-                }
+            csvFileColumns.put(tableFileName, colMap);
+        }
+        for (String fn : csvFileColumns.keySet()) {
+            logger.debug("{}:", fn);
+            for (String cn : csvFileColumns.get(fn).keySet()) {
+                logger.debug("    {}: type = {}, maxLength = {}, accuracy = {}", cn, csvFileColumns.get(fn).get(cn).type,
+                    csvFileColumns.get(fn).get(cn).maxLength, csvFileColumns.get(fn).get(cn).accuracy);
             }
-        } catch (ParserConfigurationException | SAXException | IOException e) {
-            e.printStackTrace();
         }
     }
 
