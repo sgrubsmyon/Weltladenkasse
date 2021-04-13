@@ -47,6 +47,8 @@ import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.text.CollationElementIterator;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import org.mariadb.jdbc.MariaDbPoolDataSource;
@@ -63,9 +65,7 @@ public class DSFinVKCSV extends WindowContent {
 
     private static final Logger logger = LogManager.getLogger(DSFinVKCSV.class);
 
-    private MainWindow mw;
     private BaseClass bc;
-    private MariaDbPoolDataSource pool; // pool of connections to MySQL database
     
     private String exportDir;
 
@@ -90,6 +90,9 @@ public class DSFinVKCSV extends WindowContent {
 
     private HashMap<String, HashMap<String, DSFinVKColumn>> csvFileColumns = new HashMap<String, HashMap<String, DSFinVKColumn>>();
 
+    private SimpleDateFormat sqlDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private SimpleDateFormat zErstellungDateFormat = new SimpleDateFormat(WeltladenTSE.dateFormatZErstellung);
+
     /**
      *    The constructor.
      *
@@ -100,6 +103,9 @@ public class DSFinVKCSV extends WindowContent {
         exportDir = setupFinDatDir()[0]; // create financial data dir if it does not exist
         copySchemaFiles();
         parseIndexXML();
+
+        // XXX only for testing:
+        writeToCSV_Stamm_TSE(1510);
     }
 
     private void copySchemaFiles() {
@@ -228,14 +234,86 @@ public class DSFinVKCSV extends WindowContent {
             }
             csvFileColumns.put(tableFileName, colMap);
         }
-        for (String fn : csvFileColumns.keySet()) {
-            logger.debug("{}:", fn);
-            for (String cn : csvFileColumns.get(fn).keySet()) {
-                logger.debug("    {}: type = {}, maxLength = {}, accuracy = {}", cn, csvFileColumns.get(fn).get(cn).type,
-                    csvFileColumns.get(fn).get(cn).maxLength, csvFileColumns.get(fn).get(cn).accuracy);
-            }
-        }
+        // for (String fn : csvFileColumns.keySet()) {
+        //     logger.debug("{}:", fn);
+        //     for (String cn : csvFileColumns.get(fn).keySet()) {
+        //         logger.debug("    {}: type = {}, maxLength = {}, accuracy = {}", cn, csvFileColumns.get(fn).get(cn).type,
+        //             csvFileColumns.get(fn).get(cn).maxLength, csvFileColumns.get(fn).get(cn).accuracy);
+        //     }
+        // }
     }
+
+    private String zErstellungDate(String dateStr) {
+        String date = "";
+        try {
+            date = zErstellungDateFormat.format(sqlDateFormat.parse(dateStr));
+        } catch (ParseException ex) {
+            logger.error(ex);
+        }
+        return date;
+    }
+
+    /**
+     *  STAMMDATENMODUL
+     *
+     */
+    
+    public void writeToCSV_Stamm_TSE(int abrechnung_tag_id) {
+        String filename = "tse.csv";
+        HashMap<String, String> fields = new HashMap<String, String>();
+        // Add a row to the file for Tagesabrechnung with abrechnung_tag_id
+        // Get it mostly from the table `abrechnung_tag_tse`
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT "+
+                "  at.z_kasse_id, at.zeitpunkt_real, at.id, "+
+                "  att.tse_id, att.tse_serial, att.tse_sig_algo, "+
+                "  att.tse_time_format, att.tse_pd_encoding, att.tse_public_key, "+
+                "  att.tse_cert_i, att.tse_cert_ii "+
+                "FROM abrechnung_tag AS at LEFT JOIN abrechnung_tag_tse AS att "+
+                "  USING (id) "+
+                "WHERE id = ?");
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                fields.put("Z_KASSE_ID", rs.getString(1));
+                fields.put("Z_ERSTELLUNG", zErstellungDate(rs.getString(2)));
+                fields.put("Z_NR", rs.getString(3));
+                fields.put("TSE_ID", rs.getString(4));
+                fields.put("TSE_SERIAL", rs.getString(5));
+                fields.put("TSE_SIG_ALGO", rs.getString(6));
+                fields.put("TSE_ZEITFORMAT", rs.getString(7));
+                fields.put("TSE_PD_ENCODING", rs.getString(8));
+                fields.put("TSE_PUBLIC_KEY", rs.getString(9));
+                fields.put("TSE_ZERTIFIKAT_I", rs.getString(10));
+                fields.put("TSE_ZERTIFIKAT_II", rs.getString(11));
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        logger.debug(fields);
+    }
+
+    
+    /**
+     *  KASSENABSCHLUSSMODUL
+     *
+     */
+
+    /**
+     *  EINZELAUFZEICHNUNGSMODUL
+     *
+     */
+
+    public void writeToCSV_TSE_Transaktionen() {
+        String filename = "transactions_tse.csv";
+    }
+
 
     /**
      *    * Each non abstract class that implements the ActionListener
