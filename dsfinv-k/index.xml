@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- <!DOCTYPE DataSet SYSTEM "gdpdu-01-09-2004.dtd"> did not get it to work parsing index.xml with DTD in Java -->
+<!DOCTYPE DataSet SYSTEM "gdpdu-01-09-2004.dtd">
 <DataSet>
   <Version>1.0</Version>
   <DataSupplier>
