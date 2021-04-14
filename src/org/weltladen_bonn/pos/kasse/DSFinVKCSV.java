@@ -18,6 +18,7 @@ import org.weltladen_bonn.pos.WindowContent;
 
 // Basic Java stuff
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.Files;
@@ -41,6 +42,7 @@ import org.w3c.dom.Element;
 // CSV file writing
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.text.DecimalFormat;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -88,7 +90,7 @@ public class DSFinVKCSV extends WindowContent {
         public Integer accuracy = null;
     }
 
-    private HashMap<String, HashMap<String, DSFinVKColumn>> csvFileColumns = new HashMap<String, HashMap<String, DSFinVKColumn>>();
+    private HashMap<String, LinkedHashMap<String, DSFinVKColumn>> csvFileColumns = new HashMap<String, LinkedHashMap<String, DSFinVKColumn>>();
 
     private SimpleDateFormat sqlDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private SimpleDateFormat zErstellungDateFormat = new SimpleDateFormat(WeltladenTSE.dateFormatZErstellung);
@@ -210,7 +212,8 @@ public class DSFinVKCSV extends WindowContent {
             textEncapsulators.put(tableFileName, textEncapsulator);
             
             NodeList columns = variable.getElementsByTagName("VariableColumn");
-            HashMap<String, DSFinVKColumn> colMap = new HashMap<String, DSFinVKColumn>();
+            // LinkedHashMap preverves insertion order, in this case column order defined in the index.xml file
+            LinkedHashMap<String, DSFinVKColumn> colMap = new LinkedHashMap<String, DSFinVKColumn>();
             for (int j = 0; j < columns.getLength(); j++) {
                 Element column = (Element) columns.item(j);
                 String colName = column.getElementsByTagName("Name").item(0).getTextContent();
@@ -251,6 +254,73 @@ public class DSFinVKCSV extends WindowContent {
             logger.error(ex);
         }
         return date;
+    }
+
+    /**
+     * Writing of the CSV file
+     *
+    */
+
+    private void writeToCSV(String filename, HashMap<String, String> fields) {
+        String csvFilename = exportDir + bc.fileSep + filename;
+        File file = new File(csvFilename);
+
+        String colDel = columnDelimiters.get(filename);
+        String rowDel = recordDelimiters.get(filename);
+        String decSep = decimalSymbols.get(filename);
+        String grSep = digitGroupingSymbols.get(filename);
+        String textEnc = textEncapsulators.get(filename);
+
+        LinkedHashMap<String, DSFinVKColumn> colDefs = csvFileColumns.get(filename);
+
+        String csvStr = "";
+        for (String colName : colDefs.keySet()) {
+            String col = fields.get(colName);
+            if (col != null) {
+                // if necessary, format the column string according to index.xml specification
+                DSFinVKColumn colSpec = colDefs.get(col);
+                if (colSpec != null && colSpec.type == DSFinVKColumnType.ALPHANUMERIC) {
+                    // truncate string if too long
+                    if (colSpec.maxLength != null && col.length() > colSpec.maxLength) {
+                        col = col.substring(0, colSpec.maxLength);
+                    }
+                    // escape any occurrences of the text encapsulator with double occurrence of the text encapsulator
+                    // (this is meant for " as encapsulator, which is currently the only encapsulator used)
+                    col.replaceAll(textEnc, textEnc+textEnc);
+                    // now encapsulate the text with the text encapsulator
+                    col = textEnc + col + textEnc;
+                } else if (colSpec != null && colSpec.type == DSFinVKColumnType.NUMERIC) {
+                    if (colSpec.accuracy != null && colSpec.accuracy > 0) {
+                        Float colFloat = Float.parseFloat(col);
+                        DecimalFormat myFormatter = new DecimalFormat("###"+grSep+"###"+decSep+"###");
+                        col = myFormatter.format(colFloat);
+                    }
+                }
+            } else {
+                col = "";
+            }
+            csvStr += col + colDel;
+        }
+        // remove the very last column separator:
+        csvStr = csvStr.substring(0, csvStr.length() - colDel.length());
+        csvStr += rowDel;
+
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(file));
+            writer.write(csvStr);
+        } catch (Exception ex) {
+            logger.error("Error writing to file {}", file.getName());
+            logger.error("Exception:", ex);
+        } finally {
+            try {
+                // Close the writer regardless of what happens...
+                writer.close();
+            } catch (Exception ex) {
+                logger.error("Error closing file {}", file.getName());
+                logger.error("Exception:", ex);
+            }
+        }
     }
 
     /**
@@ -297,6 +367,7 @@ public class DSFinVKCSV extends WindowContent {
             showDBErrorDialog(ex.getMessage());
         }
         logger.debug(fields);
+        writeToCSV(filename, fields);
     }
 
     
