@@ -379,15 +379,6 @@ public class DSFinVKCSV extends WindowContent {
             logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
-        logger.debug(fields);
-
-        logger.debug(csvFileColumns.get(filename).get("TSE_ID").type);
-        logger.debug(csvFileColumns.get(filename).get("TSE_ID").maxLength);
-        csvFileColumns.get(filename).get("TSE_ID").accuracy = 2;
-        logger.debug(csvFileColumns.get(filename).get("TSE_ID").accuracy);
-        fields.put("TSE_ID", "12345.67890");
-        fields.put("TSE_ID", "12345.7");
-        fields.put("TSE_ID", "12345");
 
         writeToCSV(filename, fields);
     }
