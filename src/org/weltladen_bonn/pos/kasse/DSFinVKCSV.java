@@ -279,7 +279,7 @@ public class DSFinVKCSV extends WindowContent {
             String col = fields.get(colName);
             if (col != null) {
                 // if necessary, format the column string according to index.xml specification
-                DSFinVKColumn colSpec = colDefs.get(col);
+                DSFinVKColumn colSpec = colDefs.get(colName);
                 if (colSpec != null && colSpec.type == DSFinVKColumnType.ALPHANUMERIC) {
                     // truncate string if too long
                     if (colSpec.maxLength != null && col.length() > colSpec.maxLength) {
@@ -287,7 +287,7 @@ public class DSFinVKCSV extends WindowContent {
                     }
                     // escape any occurrences of the text encapsulator with double occurrence of the text encapsulator
                     // (this is meant for " as encapsulator, which is currently the only encapsulator used)
-                    col.replaceAll(textEnc, textEnc+textEnc);
+                    col = col.replaceAll(textEnc, textEnc+textEnc);
                     // now encapsulate the text with the text encapsulator
                     col = textEnc + col + textEnc;
                 } else if (colSpec != null && colSpec.type == DSFinVKColumnType.NUMERIC) {
