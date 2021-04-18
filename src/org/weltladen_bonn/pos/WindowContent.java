@@ -8,7 +8,6 @@ import java.math.*; // for monetary value representation and arithmetic with cor
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.Files;
 
 // MySQL Connector/J stuff:
@@ -1731,7 +1730,7 @@ public abstract class WindowContent extends JPanel implements ActionListener {
         String year = new SimpleDateFormat("yyyy").format(date);
         String dateStr = new SimpleDateFormat("yyyy-MM-dd").format(date);
         String exportDir = System.getProperty("user.home")+bc.fileSep+bc.finDatDir+bc.fileSep+year;
-        Path path = Paths.get(exportDir);
+        Path path = Path.of(exportDir);
         if (!Files.exists(path)) {
             // Create directory recursively:
             try {
