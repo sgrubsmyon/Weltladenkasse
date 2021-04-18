@@ -39,10 +39,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 
 // CSV file writing
-// legacy version (before Java 7):
-// import java.io.BufferedWriter;
-// import java.io.FileWriter;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.nio.file.StandardOpenOption;
 
 // MySQL Connector/J stuff:
@@ -73,8 +71,8 @@ public class DSFinVKCSV extends WindowContent {
     private String exportDir;
 
     // the CSV file settings, to be parsed from `index.xml`:
-    private HashMap<String, String> decimalSymbols = new HashMap<String, String>();
-    private HashMap<String, String> digitGroupingSymbols = new HashMap<String, String>();
+    private HashMap<String, Character> decimalSymbols = new HashMap<String, Character>();
+    private HashMap<String, Character> digitGroupingSymbols = new HashMap<String, Character>();
     private HashMap<String, String> columnDelimiters = new HashMap<String, String>();
     private HashMap<String, String> recordDelimiters = new HashMap<String, String>();
     private HashMap<String, String> textEncapsulators = new HashMap<String, String>();
@@ -108,7 +106,7 @@ public class DSFinVKCSV extends WindowContent {
         parseIndexXML();
 
         // XXX only for testing:
-        writeToCSV_Stamm_TSE(1510);
+        writeToCSV_Stamm_TSE(1487);
     }
 
     private void copySchemaFiles() {
@@ -198,8 +196,8 @@ public class DSFinVKCSV extends WindowContent {
             Element table = (Element) tables.item(i);
             String tableFileName = table.getElementsByTagName("URL").item(0).getTextContent();
             String tableName = table.getElementsByTagName("Name").item(0).getTextContent();
-            String decimalSymbol = table.getElementsByTagName("DecimalSymbol").item(0).getTextContent();
-            String digitGroupingSymbol = table.getElementsByTagName("DigitGroupingSymbol").item(0).getTextContent();
+            Character decimalSymbol = table.getElementsByTagName("DecimalSymbol").item(0).getTextContent().toCharArray()[0];
+            Character digitGroupingSymbol = table.getElementsByTagName("DigitGroupingSymbol").item(0).getTextContent().toCharArray()[0];
             
             Element variable = (Element) table.getElementsByTagName("VariableLength").item(0); // there should be only one such node
             String columnDelimiter = variable.getElementsByTagName("ColumnDelimiter").item(0).getTextContent();
@@ -268,8 +266,8 @@ public class DSFinVKCSV extends WindowContent {
 
         String colDel = columnDelimiters.get(filename);
         String rowDel = recordDelimiters.get(filename);
-        String decSep = decimalSymbols.get(filename);
-        String grSep = digitGroupingSymbols.get(filename);
+        Character decSep = decimalSymbols.get(filename);
+        Character grSep = digitGroupingSymbols.get(filename);
         String textEnc = textEncapsulators.get(filename);
 
         LinkedHashMap<String, DSFinVKColumn> colDefs = csvFileColumns.get(filename);
@@ -291,9 +289,31 @@ public class DSFinVKCSV extends WindowContent {
                     // now encapsulate the text with the text encapsulator
                     col = textEnc + col + textEnc;
                 } else if (colSpec != null && colSpec.type == DSFinVKColumnType.NUMERIC) {
+                    // if you also want grouping separators in integer numbers:
+                    // DecimalFormatSymbols mySymbols = new DecimalFormatSymbols(bc.myLocale);
+                    // mySymbols.setDecimalSeparator(decSep);
+                    // mySymbols.setGroupingSeparator(grSep);
+                    // DecimalFormat myFormatter = new DecimalFormat("###,###.###", mySymbols);
+                    // if (colSpec.accuracy != null && colSpec.accuracy > 0) {
+                    //     myFormatter.setMinimumFractionDigits(colSpec.accuracy);
+                    //     myFormatter.setMaximumFractionDigits(colSpec.accuracy);
+                    //     Float colFloat = Float.parseFloat(col);
+                    //     col = myFormatter.format(colFloat);
+                    // } else {
+                    //     myFormatter.setMinimumFractionDigits(0);
+                    //     myFormatter.setMaximumFractionDigits(0);
+                    //     Integer colInt = Integer.parseInt(col);
+                    //     col = myFormatter.format(colInt);
+                    // }
+                    // if not:
                     if (colSpec.accuracy != null && colSpec.accuracy > 0) {
+                        DecimalFormatSymbols mySymbols = new DecimalFormatSymbols(bc.myLocale);
+                        mySymbols.setDecimalSeparator(decSep);
+                        mySymbols.setGroupingSeparator(grSep);
+                        DecimalFormat myFormatter = new DecimalFormat("###,###.###", mySymbols);
+                        myFormatter.setMinimumFractionDigits(colSpec.accuracy);
+                        myFormatter.setMaximumFractionDigits(colSpec.accuracy);
                         Float colFloat = Float.parseFloat(col);
-                        DecimalFormat myFormatter = new DecimalFormat("###"+grSep+"###"+decSep+"###");
                         col = myFormatter.format(colFloat);
                     }
                 }
@@ -360,6 +380,15 @@ public class DSFinVKCSV extends WindowContent {
             showDBErrorDialog(ex.getMessage());
         }
         logger.debug(fields);
+
+        logger.debug(csvFileColumns.get(filename).get("TSE_ID").type);
+        logger.debug(csvFileColumns.get(filename).get("TSE_ID").maxLength);
+        csvFileColumns.get(filename).get("TSE_ID").accuracy = 2;
+        logger.debug(csvFileColumns.get(filename).get("TSE_ID").accuracy);
+        fields.put("TSE_ID", "12345.67890");
+        fields.put("TSE_ID", "12345.7");
+        fields.put("TSE_ID", "12345");
+
         writeToCSV(filename, fields);
     }
 
