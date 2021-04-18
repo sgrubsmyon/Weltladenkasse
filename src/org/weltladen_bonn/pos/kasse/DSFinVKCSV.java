@@ -20,7 +20,6 @@ import org.weltladen_bonn.pos.WindowContent;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.Files;
 
 // XML parsing
@@ -40,9 +39,11 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 
 // CSV file writing
-import java.io.BufferedWriter;
-import java.io.FileWriter;
+// legacy version (before Java 7):
+// import java.io.BufferedWriter;
+// import java.io.FileWriter;
 import java.text.DecimalFormat;
+import java.nio.file.StandardOpenOption;
 
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
@@ -112,22 +113,22 @@ public class DSFinVKCSV extends WindowContent {
 
     private void copySchemaFiles() {
         // copy the files `index.xml` and `gdpdu-01-09-2004.dtd` to the export dir if they do not already exist there
-        Path path = Paths.get(exportDir + bc.fileSep + "index.xml");
+        Path path = Path.of(exportDir + bc.fileSep + "index.xml");
         if (!Files.exists(path)) {
             try {
                 Files.copy(
-                    Paths.get("dsfinv-k/index.xml"),
+                    Path.of("dsfinv-k/index.xml"),
                     path
                 );
             } catch (IOException ex) {
                 logger.error("Exception: {}", ex);
             }
         }
-        path = Paths.get(exportDir + bc.fileSep + "gdpdu-01-09-2004.dtd");
+        path = Path.of(exportDir + bc.fileSep + "gdpdu-01-09-2004.dtd");
         if (!Files.exists(path)) {
             try {
                 Files.copy(
-                    Paths.get("dsfinv-k/gdpdu-01-09-2004.dtd"),
+                    Path.of("dsfinv-k/gdpdu-01-09-2004.dtd"),
                     path
                 );
             } catch (IOException ex) {
@@ -305,21 +306,13 @@ public class DSFinVKCSV extends WindowContent {
         csvStr = csvStr.substring(0, csvStr.length() - colDel.length());
         csvStr += rowDel;
 
-        BufferedWriter writer = null;
         try {
-            writer = new BufferedWriter(new FileWriter(file));
-            writer.write(csvStr);
-        } catch (Exception ex) {
-            logger.error("Error writing to file {}", file.getName());
+            Files.writeString(Path.of(csvFilename), csvStr,
+                StandardOpenOption.CREATE, // create file if not exists
+                StandardOpenOption.APPEND); // append to file if exists
+        } catch (IOException ex) {
+            logger.error("Error writing to file {}", csvFilename);
             logger.error("Exception:", ex);
-        } finally {
-            try {
-                // Close the writer regardless of what happens...
-                writer.close();
-            } catch (Exception ex) {
-                logger.error("Error closing file {}", file.getName());
-                logger.error("Exception:", ex);
-            }
         }
     }
 
