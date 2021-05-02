@@ -104,9 +104,6 @@ public class DSFinVKCSV extends WindowContent {
         exportDir = setupFinDatDir()[0]; // create financial data dir if it does not exist
         copySchemaFiles();
         parseIndexXML();
-
-        // XXX only for testing:
-        writeToCSV_Stamm_TSE(1487);
     }
 
     private void copySchemaFiles() {
@@ -344,7 +341,7 @@ public class DSFinVKCSV extends WindowContent {
     public void writeToCSV_Stamm_TSE(int abrechnung_tag_id) {
         String filename = "tse.csv";
         HashMap<String, String> fields = new HashMap<String, String>();
-        // Add a row to the file for Tagesabrechnung with abrechnung_tag_id
+        // Write a row to the file for the Tagesabrechnung with abrechnung_tag_id
         // Get it mostly from the table `abrechnung_tag_tse`
         try {
             Connection connection = this.pool.getConnection();
@@ -379,7 +376,6 @@ public class DSFinVKCSV extends WindowContent {
             logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
-
         writeToCSV(filename, fields);
     }
 
@@ -394,8 +390,48 @@ public class DSFinVKCSV extends WindowContent {
      *
      */
 
-    public void writeToCSV_TSE_Transaktionen() {
+    public void writeToCSV_TSE_Transaktionen(int abrechnung_tag_id) {
         String filename = "transactions_tse.csv";
+        // Write one row for each Rechnung contained in this Tagesabrechnung
+        // Get data mostly from the table `tse_transaction`
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT "+
+                "  at.z_kasse_id, at.zeitpunkt_real, at.id, "+
+                "  tt.rechnungs_nr, att.tse_id, tt.transaction_number, "+
+                "  tt.transaction_start, tt.transaction_end, tt.process_type, "+
+                "  tt.signature_counter, tt.signature_base64, tt.tse_error, tt.process_data "+
+                "FROM abrechnung_tag AS at LEFT JOIN abrechnung_tag_tse AS att USING (id), "+
+                "  tse_transaction AS tt "+
+                "WHERE at.id = ? AND tt.rechnungs_nr >= at.rechnungs_nr_von AND "+
+                "  tt.rechnungs_nr <= at.rechnungs_nr_bis");
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                HashMap<String, String> fields = new HashMap<String, String>();
+                fields.put("Z_KASSE_ID", rs.getString(1));
+                fields.put("Z_ERSTELLUNG", zErstellungDate(rs.getString(2)));
+                fields.put("Z_NR", rs.getString(3));
+                fields.put("BON_ID", rs.getString(4));
+                fields.put("TSE_ID", rs.getString(5));
+                fields.put("TSE_TANR", rs.getString(6));
+                fields.put("TSE_TA_START", rs.getString(7));
+                fields.put("TSE_TA_ENDE", rs.getString(8));
+                fields.put("TSE_TA_VORGANGSART", rs.getString(9));
+                fields.put("TSE_TA_SIGZ", rs.getString(10));
+                fields.put("TSE_TA_SIG", rs.getString(11));
+                fields.put("TSE_TA_FEHLER", rs.getString(12));
+                fields.put("TSE_VORGANGSDATEN", rs.getString(13));
+                writeToCSV(filename, fields);
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
     }
 
 
