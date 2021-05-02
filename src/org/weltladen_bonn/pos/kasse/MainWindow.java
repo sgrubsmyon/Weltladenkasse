@@ -150,6 +150,9 @@ public class MainWindow extends MainWindowGrundlage implements ActionListener {
         return tse;
     }
 
+    public DSFinVKCSV getDSFinVK() {
+        return dsfinvk;
+    }
 
     public boolean isThereIncompleteAbrechnungTag() {
         return myTabbedPane.isThereIncompleteAbrechnungTag();

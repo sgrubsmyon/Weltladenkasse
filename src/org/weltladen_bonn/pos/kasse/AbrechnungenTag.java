@@ -70,6 +70,7 @@ class AbrechnungenTag extends Abrechnungen {
     private Boolean kassenstandWasChanged = false;
 
     private WeltladenTSE tse;
+    private DSFinVKCSV dsfinvk;
 
     // Methoden:
     /**
@@ -81,8 +82,10 @@ class AbrechnungenTag extends Abrechnungen {
         if (mw instanceof MainWindow) {
             MainWindow mainw = (MainWindow) mw;
             tse = mainw.getTSE();
+            dsfinvk = mainw.getDSFinVK();
         } else {
             tse = null;
+            dsfinvk = null;
         }
         this.setExportDirFormat(bc.exportDirAbrechnungTag);
         this.abrechTabbedPane = atp;
@@ -91,6 +94,10 @@ class AbrechnungenTag extends Abrechnungen {
         if (exportIndex != null) {
           export(exportIndex);
         }
+
+        // XXX need to write all lines retroactively:
+        // dsfinvk.writeToCSV_Stamm_TSE(1487);
+        // dsfinvk.writeToCSV_TSE_Transaktionen(1487);
     }
 
     void setSelectedZeitpunkt(String zp) {
@@ -1222,8 +1229,9 @@ class AbrechnungenTag extends Abrechnungen {
                     "tse_cert_ii = ?"
                 );
                 pstmtSetInteger(pstmt, 1, id);
+                pstmtSetInteger(pstmt, 2, bc.TSE_ID);
+                // XXX UPDATE abrechnung_tag_tse SET tse_id = 1;
                 if (tseStatusValues != null) {
-                    pstmtSetInteger(pstmt, 2, bc.TSE_ID);
                     pstmt.setString(3, substrIfLongerThan(68, tseStatusValues.get("Seriennummer der TSE (Hex)")));
                     pstmt.setString(4, substrIfLongerThan(21, tseStatusValues.get("Signatur-Algorithmus")));
                     pstmt.setString(5, substrIfLongerThan(31, tseStatusValues.get("Zeitformat")));
@@ -1243,7 +1251,6 @@ class AbrechnungenTag extends Abrechnungen {
                         pstmt.setString(9, null);
                     }
                 } else { // TSE not operational, so do not store TSE status values
-                    pstmtSetInteger(pstmt, 2, null);
                     pstmt.setString(3, null);
                     pstmt.setString(4, null);
                     pstmt.setString(5, null);
@@ -1286,6 +1293,13 @@ class AbrechnungenTag extends Abrechnungen {
             // NEED TO REDO Monats/Jahresabrechnung if needed (check if zeitpunkt lies in old month/year)!!!
             deleteAbrechnungIfNeedBe(tableForMode("abrechnung_monat"), "monat", "DATE_FORMAT(?, '%Y-%m-01')", zeitpunkt);
             deleteAbrechnungIfNeedBe(tableForMode("abrechnung_jahr"), "jahr", "YEAR(?)", zeitpunkt);
+
+            // *********************************
+            // * Write into DSFinV-K CSV files *
+            // *********************************
+            if (id != null) {
+                writeIntoDSFinVKCSVFiles(id);
+            }
         } catch (SQLException ex) {
             logger.error("Exception:", ex);
             JOptionPane.showMessageDialog(this,
@@ -1296,6 +1310,14 @@ class AbrechnungenTag extends Abrechnungen {
             id = null;
         }
         return id;
+    }
+
+    private void writeIntoDSFinVKCSVFiles(Integer id) {
+        // STAMMDATENMODUL
+        dsfinvk.writeToCSV_Stamm_TSE(id);
+        // KASSENABSCHLUSSMODUL
+        // EINZELAUFZEICHNUNGSMODUL
+        dsfinvk.writeToCSV_TSE_Transaktionen(id);
     }
 
     private Integer maxZaehlprotokollID() {

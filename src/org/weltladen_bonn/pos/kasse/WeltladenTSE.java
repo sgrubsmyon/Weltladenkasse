@@ -176,7 +176,7 @@ public class WeltladenTSE extends WindowContent {
                     disconnectFromTSE();
                     status = TSEStatus.failed;
                     failReason = "Die Initialisierung der TSE wurde durch den/die Nutzer*in abgebrochen. "+
-                                 "Bitte evtl. länger warten (kann bis zu 60 Sekunden dauern).";
+                                 "               Bitte evtl. länger warten (kann bis zu 60 Sekunden dauern).";
                     showTSEFailWarning();
                 }
             };
@@ -267,9 +267,10 @@ public class WeltladenTSE extends WindowContent {
             logger.fatal("Exception:", ex);
             logger.fatal("Exception message:", ex.getMessage());
             status = TSEStatus.failed;
-            failReason = "Es konnte keine Verbindung zur TSE aufgebaut werden. Entweder die TSE (eine SD-Karte, die "+
-                         "in einem Schlitz des Kassen-PCs steckt)\n   sitzt nicht richtig drin oder die Konfiguration "+
-                         "(etwa der Pfad) in der Datei 'config_tse.txt' ist falsch.";
+            failReason = "Keine Verbindung zur TSE. TSE (SD-Karte, die seitlich in Laptop-Schlitz steckt) sitzt\n"+
+                         "               nicht richtig drin oder Konfiguration (z.B. Pfad) in Datei 'config_tse.txt' falsch.";
+            // XXX SQL command to change from old (too long) to new error message:
+            // UPDATE tse_transaction SET tse_error = 'Keine Verbindung zur TSE. TSE (SD-Karte, die seitlich in Laptop-Schlitz steckt) sitzt nicht richtig drin oder Konfiguration (z.B. Pfad) in Datei \'config_tse.txt\' falsch.' WHERE tse_error = 'Es konnte keine Verbindung zur TSE aufgebaut werden. Entweder die TSE (eine SD-Karte, die in einem Schlitz des Kassen-PCs steckt)\n   sitzt nicht richtig drin oder die Konfiguration (etwa der Pfad) in der Datei \'config_tse.txt\' ist falsch.';
         } catch (FileNotFoundException ex) {
             logger.fatal("TSE config file not found under '{}'", "config_tse.txt");
             logger.fatal("Exception:", ex);
@@ -366,7 +367,7 @@ public class WeltladenTSE extends WindowContent {
                     logger.fatal("TSE PIN and PUK setting failed! (TSE still in transport state after setting PINs and PUKs)");
                     status = TSEStatus.failed;
                     failReason = "Das Setzen der PINs und PUKs der TSE ist fehlgeschlagen.\n"+
-                                 "   Bitte beim nächsten Start der Kassensoftware erneut probieren.";
+                                 "               Bitte beim nächsten Start der Kassensoftware erneut probieren.";
                     showTSEFailWarning();
                     return;
                 }
@@ -382,7 +383,7 @@ public class WeltladenTSE extends WindowContent {
                     logger.fatal("TSE initialization failed!");
                     status = TSEStatus.failed;
                     failReason = "Die Initialisierung der TSE ist fehlgeschlagen.\n"+
-                                 "   Bitte beim nächsten Start der Kassensoftware erneut probieren.";
+                                 "               Bitte beim nächsten Start der Kassensoftware erneut probieren.";
                     showTSEFailWarning();
                     logOutAs("Admin");
                     loggedIn = false;
@@ -400,7 +401,7 @@ public class WeltladenTSE extends WindowContent {
                 logger.fatal("TSE time update failed!");
                 status = TSEStatus.failed;
                 failReason = "Die Aktualisierung der Zeit der TSE ist fehlgeschlagen.\n"+
-                             "   Bitte beim nächsten Start der Kassensoftware erneut probieren.";
+                             "               Bitte beim nächsten Start der Kassensoftware erneut probieren.";
                 showTSEFailWarning();
                 if (loggedIn) {
                     logOutAs("Admin");
@@ -438,7 +439,7 @@ public class WeltladenTSE extends WindowContent {
                     logger.fatal("Mapping of client ID to TSE key failed!");
                     status = TSEStatus.failed;
                     failReason = "Die Zuordnung der Kassen-ID (Z_KASSE_ID in config.properties) zum Schlüssel der TSE ist fehlgeschlagen.\n"+
-                                 "   Bitte beim nächsten Start der Kassensoftware erneut probieren.";
+                                 "               Bitte beim nächsten Start der Kassensoftware erneut probieren.";
                     showTSEFailWarning();
                     logOutAs("Admin");
                     loggedIn = false;
@@ -458,8 +459,8 @@ public class WeltladenTSE extends WindowContent {
             logger.fatal("Exception:", ex);
             status = TSEStatus.failed;
             failReason = "Es konnte nicht geprüft werden, ob die TSE bereits initialisiert ist.\n"+
-                         "   Fehler: "+ex.getMessage()+"\n"+
-                         "   Bitte Fehler beheben und erneut versuchen.";
+                         "               Fehler: "+ex.getMessage()+"\n"+
+                         "               Bitte Fehler beheben und erneut versuchen.";
             showTSEFailWarning();
             if (loggedIn) {
                 logOutAs("Admin");
@@ -896,7 +897,7 @@ public class WeltladenTSE extends WindowContent {
                 logger.fatal("Fatal Error: {}", message);
                 status = TSEStatus.failed;
                 failReason = "Authentifizierungsfehler als User '"+user+"' bei der TSE.\n"+
-                    "   authenticationResult: "+res.authenticationResult.toString()+".";
+                    "               authenticationResult: "+res.authenticationResult.toString()+".";
                 showTSEFailWarning();
             }
             passed = true;
@@ -933,7 +934,7 @@ public class WeltladenTSE extends WindowContent {
             if (failOnFatal) {
                 status = TSEStatus.failed;
                 failReason = "Es konnte sich nicht als User "+user+" an der TSE angemeldet werden.\n"+
-                    "   Fehler: "+message+".";
+                    "               Fehler: "+message+".";
                 showTSEFailWarning();
             }
         }
@@ -982,7 +983,7 @@ public class WeltladenTSE extends WindowContent {
         if (!passed) {
             status = TSEStatus.failed;
             failReason = "Es konnte sich nicht als "+user+" von der TSE abgemeldet werden.\n"+
-                "   Fehler: "+error+".";
+                "               Fehler: "+error+".";
             showTSEFailWarning();
         }
     }
@@ -1021,7 +1022,7 @@ public class WeltladenTSE extends WindowContent {
         if (!passed) {
             status = TSEStatus.failed;
             failReason = "Die TSE konnte nicht initialisiert werden.\n"+
-                "   Fehler: "+error+".";
+                "               Fehler: "+error+".";
             showTSEFailWarning();
             logOutAs("Admin");
             loggedIn = false;
@@ -1051,7 +1052,7 @@ public class WeltladenTSE extends WindowContent {
         if (!passed) {
             status = TSEStatus.failed;
             failReason = "Das Zeitaktualisierungsintervall der TSE konnte nicht ausgelesen werden.\n"+
-                "   Fehler: "+error+".";
+                "               Fehler: "+error+".";
             showTSEFailWarning();
         }
     }
@@ -1117,7 +1118,7 @@ public class WeltladenTSE extends WindowContent {
         if (!passed) {
             status = TSEStatus.failed;
             failReason = "Die Zeit der TSE konnte nicht aktualisiert werden.\n"+
-                "   Fehler: "+error+".";
+                "               Fehler: "+error+".";
             showTSEFailWarning();
             logOutAs("TimeAdmin");
         }
@@ -1138,14 +1139,14 @@ public class WeltladenTSE extends WindowContent {
             logger.fatal("Exception:", ex);
             status = TSEStatus.failed;
             failReason = "Die Kommunikation mit der TSE nach dem Setzen der Zeit ist fehlgeschlagen.\n"+
-                "   Fehler: "+ex.getMessage()+".";
+                "               Fehler: "+ex.getMessage()+".";
             showTSEFailWarning();
         } catch (SEException ex) {
             logger.fatal("SE Communication failed!");
             logger.fatal("Exception:", ex);
             status = TSEStatus.failed;
             failReason = "Unbekannter Fehler nach dem Setzen der Zeit der TSE.\n"+
-                "   Fehler: "+ex.getMessage()+".";
+                "               Fehler: "+ex.getMessage()+".";
             showTSEFailWarning();
         }
         logger.info("TSE time successfully updated!");
@@ -1172,7 +1173,7 @@ public class WeltladenTSE extends WindowContent {
         if (!passed) {
             status = TSEStatus.failed;
             failReason = "Die Seriennummer des TSE-Schlüssels konnte nicht ausgelesen werden.\n"+
-                "   Fehler: "+error+".";
+                "               Fehler: "+error+".";
             showTSEFailWarning();
             if (loggedIn) {
                 logOutAs("Admin");
@@ -1249,7 +1250,7 @@ public class WeltladenTSE extends WindowContent {
         if (!passed) {
             status = TSEStatus.failed;
             failReason = "Die ClientID konnte nicht dem TSE-Schlüssel zugeordnet werden.\n"+
-                "   Fehler: "+error+".";
+                "               Fehler: "+error+".";
             showTSEFailWarning();
             logOutAs("Admin");
             loggedIn = false;
@@ -1618,10 +1619,16 @@ public class WeltladenTSE extends WindowContent {
         if (!passed) {
             status = TSEStatus.failed;
             failReason = "Es konnte keine TSE-Transaktion gestartet werden.\n"+
-                "   Fehler: "+error+".";
+                "               Fehler: "+error+".";
             showTSEFailWarning();
         }
     };
+
+    private String parseFailReason(String fr) {
+        fr = fr.replaceAll("\n", " ");
+        fr = fr.replaceAll(" +", " ");
+        return fr;
+    }
 
     private String sendFinishTransaction(String processData, Integer rechnungsNr) {
         String message = "";
@@ -1633,7 +1640,7 @@ public class WeltladenTSE extends WindowContent {
             // TSE has failed. Instead of TSE, Kasse has to determine start and end times
             //    of transaction for Kassenbeleg (s. AEAO zu § 146a, Nr. 7, p. 16)
             tx.endTimeString = dateToCalTime(nowDate());
-            tx.tseError = failReason;
+            tx.tseError = parseFailReason(failReason);
             logger.debug("Finishing transaction:");
             logger.debug("Rechnungsnummer: {}", tx.rechnungsNr);
             logger.debug("!!! TSE FAILED !!! TX start time determined by Kasse: {}", tx.startTimeString);
@@ -1721,7 +1728,7 @@ public class WeltladenTSE extends WindowContent {
             // Setting status to failed would mean giving up. But the error might be only transient. But at least inform user.
             // status = TSEStatus.failed;
             // failReason = "Die TSE-Transaktion konnte nicht abgebrochen werden.\n"+
-            //     "   Fehler: "+message+".";
+            //     "               Fehler: "+message+".";
             // showTSEFailWarning();
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die TSE-Transaktion konnte nicht abgebrochen werden!!!\n"+
@@ -1823,7 +1830,7 @@ public class WeltladenTSE extends WindowContent {
             // Setting status to failed would mean giving up. But the error might be only transient. But at least inform user.
             // status = TSEStatus.failed;
             // failReason = "Die TSE-Transaktion konnte nicht abgeschlossen werden.\n"+
-            //     "   Fehler: "+message+".";
+            //     "               Fehler: "+message+".";
             // showTSEFailWarning();
             JOptionPane.showMessageDialog(this.mainWindow,
                 "ACHTUNG: Die TSE-Transaktion konnte nicht abgeschlossen werden!!!\n"+
