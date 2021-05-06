@@ -366,7 +366,7 @@ public class DSFinVKCSV extends WindowContent {
                 "  at.z_kasse_id, at.zeitpunkt_real, at.id, "+
                 "  DATE(at.zeitpunkt), at.rechnungs_nr_von, at.rechnungs_nr_bis, "+
                 "  (SELECT SUM(mwst_netto + mwst_betrag) FROM abrechnung_tag_mwst WHERE id = at.id), "+
-                "  (SELECT SUM(bar_brutto) FROM abrechnung_tag_mwst WHERE id = at.id), "+
+                "  (SELECT SUM(bar_brutto) FROM abrechnung_tag_mwst WHERE id = at.id) "+
                 "FROM abrechnung_tag AS at "+
                 "WHERE id = ?");
             pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
@@ -407,7 +407,7 @@ public class DSFinVKCSV extends WindowContent {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
                 "SELECT "+
-                "  at.z_kasse_id, at.zeitpunkt_real, at.id, "+
+                "  at.z_kasse_id, at.zeitpunkt_real, at.id "+
                 "FROM abrechnung_tag AS at "+
                 "WHERE id = ?");
             pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
@@ -441,7 +441,7 @@ public class DSFinVKCSV extends WindowContent {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
                 "SELECT "+
-                "  at.z_kasse_id, at.zeitpunkt_real, at.id, "+
+                "  at.z_kasse_id, at.zeitpunkt_real, at.id "+
                 "FROM abrechnung_tag AS at "+
                 "WHERE id = ?");
             pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
