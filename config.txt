@@ -71,7 +71,7 @@ TSE_PD_ENCODING = UTF-8
 KASSE_SW_BRAND = Weltladenkasse
 
 # Version der eingesetzten Kassen-Software:
-KASSE_SW_VERSION = v2.0.0
+KASSE_SW_VERSION = v2.0.1
 
 # Seriennummer der eingesetzten Kassen-Hardware: (Laptop?)
 KASSE_SERIENNR = XXXXXXXX
