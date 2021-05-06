@@ -55,7 +55,46 @@ PLZ = 53111
 ORT = Bonn
 LAND = DEU
 STNR = 205/5775/1014
-USTID = 123456789
+USTID = DE294978428
+
+#############################
+# Stamm_Orte (location.csv)
+#############################
+
+LOC_NAME = Weltladen Bonn
+LOC_STRASSE = Maxstraße 36
+LOC_PLZ = 53111
+LOC_ORT = Bonn
+LOC_LAND = DEU
+LOC_USTID = DE294978428
+
+##################################
+# Stamm_Kassen (cashregister.csv)
+##################################
+
+# Marke der eingesetzten Kassen-Hardware: (Laptop?)
+KASSE_BRAND = Lenovo
+# Modell der eingesetzten Kassen-Hardware: (Laptop?)
+KASSE_MODELL = Thinkpad XXXX
+# Seriennummer der eingesetzten Kassen-Hardware: (Laptop?)
+KASSE_SERIENNR = XXXXXXXX
+# Markenbezeichnung der eingesetzten Kassen-Software: (https://github.com/sgrubsmyon/Weltladenkasse)
+KASSE_SW_BRAND = Weltladenkasse
+# Version der eingesetzten Kassen-Software:
+KASSE_SW_VERSION = v2.0.0
+KASSE_BASISWAEH_CODE = EUR
+
+###############################
+# Stamm_Terminals (slaves.csv)
+###############################
+
+###########################
+# Stamm_Agenturen (pa.csv)
+###########################
+
+######################
+# Stamm_USt (vat.csv)
+######################
 
 ######################
 # Stamm_TSE (tse.csv)
@@ -66,18 +105,3 @@ USTID = 123456789
 # eingesetzt wird.
 TSE_ID = 1
 TSE_PD_ENCODING = UTF-8
-
-# Markenbezeichnung der eingesetzten Kassen-Software: (https://github.com/sgrubsmyon/Weltladenkasse)
-KASSE_SW_BRAND = Weltladenkasse
-
-# Version der eingesetzten Kassen-Software:
-KASSE_SW_VERSION = v2.0.0
-
-# Seriennummer der eingesetzten Kassen-Hardware: (Laptop?)
-KASSE_SERIENNR = XXXXXXXX
-
-# Marke der eingesetzten Kassen-Hardware: (Laptop?)
-KASSE_BRAND = Lenovo
-
-# Modell der eingesetzten Kassen-Hardware: (Laptop?)
-KASSE_MODELL = Thinkpad XXXX

@@ -270,63 +270,80 @@ public class DSFinVKCSV extends WindowContent {
         LinkedHashMap<String, DSFinVKColumn> colDefs = csvFileColumns.get(filename);
 
         String csvStr = "";
-        for (String colName : colDefs.keySet()) {
-            String col = fields.get(colName);
-            if (col != null) {
-                // if necessary, format the column string according to index.xml specification
-                DSFinVKColumn colSpec = colDefs.get(colName);
-                if (colSpec != null && colSpec.type == DSFinVKColumnType.ALPHANUMERIC) {
-                    // truncate string if too long
-                    if (colSpec.maxLength != null && col.length() > colSpec.maxLength) {
-                        col = col.substring(0, colSpec.maxLength);
+        if (fields.size() > 0) {
+            for (String colName : colDefs.keySet()) {
+                String col = fields.get(colName);
+                if (col != null) {
+                    // if necessary, format the column string according to index.xml specification
+                    DSFinVKColumn colSpec = colDefs.get(colName);
+                    if (colSpec != null && colSpec.type == DSFinVKColumnType.ALPHANUMERIC) {
+                        // truncate string if too long
+                        if (colSpec.maxLength != null && col.length() > colSpec.maxLength) {
+                            col = col.substring(0, colSpec.maxLength);
+                        }
+                        // escape any occurrences of the text encapsulator with double occurrence of the text encapsulator
+                        // (this is meant for " as encapsulator, which is currently the only encapsulator used)
+                        col = col.replaceAll(textEnc, textEnc+textEnc);
+                        // now encapsulate the text with the text encapsulator
+                        col = textEnc + col + textEnc;
+                    } else if (colSpec != null && colSpec.type == DSFinVKColumnType.NUMERIC) {
+                        // if you also want grouping separators in integer numbers:
+                        // DecimalFormatSymbols mySymbols = new DecimalFormatSymbols(bc.myLocale);
+                        // mySymbols.setDecimalSeparator(decSep);
+                        // mySymbols.setGroupingSeparator(grSep);
+                        // DecimalFormat myFormatter = new DecimalFormat("###,###.###", mySymbols);
+                        // if (colSpec.accuracy != null && colSpec.accuracy > 0) {
+                        //     myFormatter.setMinimumFractionDigits(colSpec.accuracy);
+                        //     myFormatter.setMaximumFractionDigits(colSpec.accuracy);
+                        //     Float colFloat = Float.parseFloat(col);
+                        //     col = myFormatter.format(colFloat);
+                        // } else {
+                        //     myFormatter.setMinimumFractionDigits(0);
+                        //     myFormatter.setMaximumFractionDigits(0);
+                        //     Integer colInt = Integer.parseInt(col);
+                        //     col = myFormatter.format(colInt);
+                        // }
+                        // if not:
+                        if (colSpec.accuracy != null && colSpec.accuracy > 0) {
+                            DecimalFormatSymbols mySymbols = new DecimalFormatSymbols(bc.myLocale);
+                            mySymbols.setDecimalSeparator(decSep);
+                            mySymbols.setGroupingSeparator(grSep);
+                            DecimalFormat myFormatter = new DecimalFormat("###,###.###", mySymbols);
+                            myFormatter.setMinimumFractionDigits(colSpec.accuracy);
+                            myFormatter.setMaximumFractionDigits(colSpec.accuracy);
+                            Float colFloat = Float.parseFloat(col);
+                            col = myFormatter.format(colFloat);
+                        }
                     }
-                    // escape any occurrences of the text encapsulator with double occurrence of the text encapsulator
-                    // (this is meant for " as encapsulator, which is currently the only encapsulator used)
-                    col = col.replaceAll(textEnc, textEnc+textEnc);
-                    // now encapsulate the text with the text encapsulator
-                    col = textEnc + col + textEnc;
-                } else if (colSpec != null && colSpec.type == DSFinVKColumnType.NUMERIC) {
-                    // if you also want grouping separators in integer numbers:
-                    // DecimalFormatSymbols mySymbols = new DecimalFormatSymbols(bc.myLocale);
-                    // mySymbols.setDecimalSeparator(decSep);
-                    // mySymbols.setGroupingSeparator(grSep);
-                    // DecimalFormat myFormatter = new DecimalFormat("###,###.###", mySymbols);
-                    // if (colSpec.accuracy != null && colSpec.accuracy > 0) {
-                    //     myFormatter.setMinimumFractionDigits(colSpec.accuracy);
-                    //     myFormatter.setMaximumFractionDigits(colSpec.accuracy);
-                    //     Float colFloat = Float.parseFloat(col);
-                    //     col = myFormatter.format(colFloat);
-                    // } else {
-                    //     myFormatter.setMinimumFractionDigits(0);
-                    //     myFormatter.setMaximumFractionDigits(0);
-                    //     Integer colInt = Integer.parseInt(col);
-                    //     col = myFormatter.format(colInt);
-                    // }
-                    // if not:
-                    if (colSpec.accuracy != null && colSpec.accuracy > 0) {
-                        DecimalFormatSymbols mySymbols = new DecimalFormatSymbols(bc.myLocale);
-                        mySymbols.setDecimalSeparator(decSep);
-                        mySymbols.setGroupingSeparator(grSep);
-                        DecimalFormat myFormatter = new DecimalFormat("###,###.###", mySymbols);
-                        myFormatter.setMinimumFractionDigits(colSpec.accuracy);
-                        myFormatter.setMaximumFractionDigits(colSpec.accuracy);
-                        Float colFloat = Float.parseFloat(col);
-                        col = myFormatter.format(colFloat);
-                    }
+                } else {
+                    col = "";
                 }
-            } else {
-                col = "";
+                csvStr += col + colDel;
             }
-            csvStr += col + colDel;
+            // remove the very last column separator:
+            csvStr = csvStr.substring(0, csvStr.length() - colDel.length());
+            csvStr += rowDel;
         }
-        // remove the very last column separator:
-        csvStr = csvStr.substring(0, csvStr.length() - colDel.length());
-        csvStr += rowDel;
 
         try {
-            Files.writeString(Path.of(csvFilename), csvStr,
-                StandardOpenOption.CREATE, // create file if not exists
-                StandardOpenOption.APPEND); // append to file if exists
+            if (!Files.exists(Path.of(csvFilename))) {
+                // create the file with a header row (data start at second row, as specified in index.xml: "<From>2</From>")
+                String headerStr = "";
+                for (String colName : colDefs.keySet()) {
+                    headerStr += colName + colDel;
+                }
+                // remove the very last column separator:
+                headerStr = headerStr.substring(0, headerStr.length() - colDel.length());
+                headerStr += rowDel;
+                Files.writeString(Path.of(csvFilename), headerStr,
+                    StandardOpenOption.CREATE, // create file if not exists
+                    StandardOpenOption.APPEND); // append to file if exists
+            }
+            if (csvStr.length() > 0) {
+                Files.writeString(Path.of(csvFilename), csvStr,
+                    StandardOpenOption.CREATE, // create file if not exists
+                    StandardOpenOption.APPEND); // append to file if exists
+            }
         } catch (IOException ex) {
             logger.error("Error writing to file {}", csvFilename);
             logger.error("Exception:", ex);
@@ -341,8 +358,7 @@ public class DSFinVKCSV extends WindowContent {
     public void writeToCSV_Stamm_Abschluss(int abrechnung_tag_id) {
         String filename = "cashpointclosing.csv";
         HashMap<String, String> fields = new HashMap<String, String>();
-        // Write a row to the file for the Tagesabrechnung with abrechnung_tag_id
-        // Get it mostly from the table `abrechnung_tag`
+        // Get data mostly from the table `abrechnung_tag`
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
@@ -382,12 +398,100 @@ public class DSFinVKCSV extends WindowContent {
         }
         writeToCSV(filename, fields);
     }
+
+    public void writeToCSV_Stamm_Orte(int abrechnung_tag_id) {
+        String filename = "location.csv";
+        HashMap<String, String> fields = new HashMap<String, String>();
+        // Get data mostly from file config.properties (config.txt)
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT "+
+                "  at.z_kasse_id, at.zeitpunkt_real, at.id, "+
+                "FROM abrechnung_tag AS at "+
+                "WHERE id = ?");
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                fields.put("Z_KASSE_ID", rs.getString(1));
+                fields.put("Z_ERSTELLUNG", zErstellungDate(rs.getString(2)));
+                fields.put("Z_NR", rs.getString(3));
+                fields.put("LOC_NAME", bc.LOC_NAME);
+                fields.put("LOC_STRASSE", bc.LOC_STRASSE);
+                fields.put("LOC_PLZ", bc.LOC_PLZ);
+                fields.put("LOC_ORT", bc.LOC_ORT);
+                fields.put("LOC_LAND", bc.LOC_LAND);
+                fields.put("LOC_USTID", bc.LOC_USTID);
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        writeToCSV(filename, fields);
+    }
+
+    public void writeToCSV_Stamm_Kassen(int abrechnung_tag_id) {
+        String filename = "cashregister.csv";
+        HashMap<String, String> fields = new HashMap<String, String>();
+        // Get data mostly from file config.properties (config.txt)
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT "+
+                "  at.z_kasse_id, at.zeitpunkt_real, at.id, "+
+                "FROM abrechnung_tag AS at "+
+                "WHERE id = ?");
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                fields.put("Z_KASSE_ID", rs.getString(1));
+                fields.put("Z_ERSTELLUNG", zErstellungDate(rs.getString(2)));
+                fields.put("Z_NR", rs.getString(3));
+                fields.put("KASSE_BRAND", bc.KASSE_BRAND);
+                fields.put("KASSE_MODELL", bc.KASSE_MODELL);
+                fields.put("KASSE_SERIENNR", bc.KASSE_SERIENNR);
+                fields.put("KASSE_SW_BRAND", bc.KASSE_SW_BRAND);
+                fields.put("KASSE_SW_VERSION", bc.KASSE_SW_VERSION);
+                fields.put("KASSE_BASISWAEH_CODE", bc.KASSE_BASISWAEH_CODE);
+                fields.put("KEINE_UST_ZUORDNUNG", "0");
+                // Anhang_G_Uebersicht.xlsx: KEINE_UST_ZUORDNUNG: string (1) -> 0,1 oder ""
+                // Bei uns (Nicht-Aktivierung des Feldes): immer "0"
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        writeToCSV(filename, fields);
+    }
+
+    public void writeToCSV_Stamm_Terminals(int abrechnung_tag_id) {
+        String filename = "slaves.csv";
+        HashMap<String, String> fields = new HashMap<String, String>();
+        writeToCSV(filename, fields); // do not write to file, but create file with header if not exists
+    }
+
+    public void writeToCSV_Stamm_Agenturen(int abrechnung_tag_id) {
+        String filename = "pa.csv";
+        HashMap<String, String> fields = new HashMap<String, String>();
+        writeToCSV(filename, fields); // do not write to file, but create file with header if not exists
+    }
+
+    public void writeToCSV_Stamm_USt(int abrechnung_tag_id) {
+        String filename = "vat.csv";
+        HashMap<String, String> fields = new HashMap<String, String>();
+        // XXX TODO need to implement this
+    }
     
     public void writeToCSV_Stamm_TSE(int abrechnung_tag_id) {
         String filename = "tse.csv";
         HashMap<String, String> fields = new HashMap<String, String>();
-        // Write a row to the file for the Tagesabrechnung with abrechnung_tag_id
-        // Get it mostly from the table `abrechnung_tag_tse`
+        // Get data mostly from the table `abrechnung_tag_tse`
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
@@ -437,7 +541,6 @@ public class DSFinVKCSV extends WindowContent {
 
     public void writeToCSV_TSE_Transaktionen(int abrechnung_tag_id) {
         String filename = "transactions_tse.csv";
-        // Write one row for each Rechnung contained in this Tagesabrechnung
         // Get data mostly from the table `tse_transaction`
         try {
             Connection connection = this.pool.getConnection();

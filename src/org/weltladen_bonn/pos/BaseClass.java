@@ -55,13 +55,20 @@ public class BaseClass {
     public String LAND;
     public String STNR;
     public String USTID;
-    public Integer TSE_ID = 1;
-    public String TSE_PD_ENCODING = "UTF-8";
-    public String KASSE_SW_BRAND;
-    public String KASSE_SW_VERSION;
-    public String KASSE_SERIENNR;
+    public String LOC_NAME;
+    public String LOC_STRASSE;
+    public String LOC_PLZ;
+    public String LOC_ORT;
+    public String LOC_LAND;
+    public String LOC_USTID;
     public String KASSE_BRAND;
     public String KASSE_MODELL;
+    public String KASSE_SERIENNR;
+    public String KASSE_SW_BRAND = "Weltladenkasse";
+    public String KASSE_SW_VERSION;
+    public String KASSE_BASISWAEH_CODE = "EUR";
+    public Integer TSE_ID;
+    public String TSE_PD_ENCODING = "UTF-8";
 
     public final String fileSep = System.getProperty("file.separator");
     public final String lineSep = System.getProperty("line.separator");
@@ -316,11 +323,32 @@ public class BaseClass {
         try { this.USTID = props.getProperty("USTID"); } catch (Exception ex) {
             parseErrorMessage(ex, "USTID", this.USTID);
         }
-        try { this.TSE_ID = Integer.parseInt(props.getProperty("TSE_ID")); } catch (Exception ex) {
-            parseErrorMessage(ex, "TSE_ID", this.TSE_ID);
+        try { this.LOC_NAME = props.getProperty("LOC_NAME"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LOC_NAME", this.LOC_NAME);
         }
-        try { this.TSE_PD_ENCODING = props.getProperty("TSE_PD_ENCODING"); } catch (Exception ex) {
-            parseErrorMessage(ex, "TSE_PD_ENCODING", this.TSE_PD_ENCODING);
+        try { this.LOC_STRASSE = props.getProperty("LOC_STRASSE"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LOC_STRASSE", this.LOC_STRASSE);
+        }
+        try { this.LOC_PLZ = props.getProperty("LOC_PLZ"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LOC_PLZ", this.LOC_PLZ);
+        }
+        try { this.LOC_ORT = props.getProperty("LOC_ORT"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LOC_ORT", this.LOC_ORT);
+        }
+        try { this.LOC_LAND = props.getProperty("LOC_LAND"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LOC_LAND", this.LOC_LAND);
+        }
+        try { this.LOC_USTID = props.getProperty("LOC_USTID"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LOC_USTID", this.LOC_USTID);
+        }
+        try { this.KASSE_BRAND = props.getProperty("KASSE_BRAND"); } catch (Exception ex) {
+            parseErrorMessage(ex, "KASSE_BRAND", this.KASSE_BRAND);
+        }
+        try { this.KASSE_MODELL = props.getProperty("KASSE_MODELL"); } catch (Exception ex) {
+            parseErrorMessage(ex, "KASSE_MODELL", this.KASSE_MODELL);
+        }
+        try { this.KASSE_SERIENNR = props.getProperty("KASSE_SERIENNR"); } catch (Exception ex) {
+            parseErrorMessage(ex, "KASSE_SERIENNR", this.KASSE_SERIENNR);
         }
         try { this.KASSE_SW_BRAND = props.getProperty("KASSE_SW_BRAND"); } catch (Exception ex) {
             parseErrorMessage(ex, "KASSE_SW_BRAND", this.KASSE_SW_BRAND);
@@ -328,14 +356,14 @@ public class BaseClass {
         try { this.KASSE_SW_VERSION = props.getProperty("KASSE_SW_VERSION"); } catch (Exception ex) {
             parseErrorMessage(ex, "KASSE_SW_VERSION", this.KASSE_SW_VERSION);
         }
-        try { this.KASSE_SERIENNR = props.getProperty("KASSE_SERIENNR"); } catch (Exception ex) {
-            parseErrorMessage(ex, "KASSE_SERIENNR", this.KASSE_SERIENNR);
+        try { this.KASSE_BASISWAEH_CODE = props.getProperty("KASSE_BASISWAEH_CODE"); } catch (Exception ex) {
+            parseErrorMessage(ex, "KASSE_BASISWAEH_CODE", this.KASSE_BASISWAEH_CODE);
         }
-        try { this.KASSE_BRAND = props.getProperty("KASSE_BRAND"); } catch (Exception ex) {
-            parseErrorMessage(ex, "KASSE_BRAND", this.KASSE_BRAND);
+        try { this.TSE_ID = Integer.parseInt(props.getProperty("TSE_ID")); } catch (Exception ex) {
+            parseErrorMessage(ex, "TSE_ID", this.TSE_ID);
         }
-        try { this.KASSE_MODELL = props.getProperty("KASSE_MODELL"); } catch (Exception ex) {
-            parseErrorMessage(ex, "KASSE_MODELL", this.KASSE_MODELL);
+        try { this.TSE_PD_ENCODING = props.getProperty("TSE_PD_ENCODING"); } catch (Exception ex) {
+            parseErrorMessage(ex, "TSE_PD_ENCODING", this.TSE_PD_ENCODING);
         }
        
         this.mysqlHost = removeQuotes(this.mysqlHost);
