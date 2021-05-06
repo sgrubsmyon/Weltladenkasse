@@ -96,6 +96,7 @@ class AbrechnungenTag extends Abrechnungen {
         }
 
         // XXX need to write all lines retroactively:
+        // dsfinvk.writeToCSV_Stamm_Abschluss(1487);
         // dsfinvk.writeToCSV_Stamm_TSE(1487);
         // dsfinvk.writeToCSV_TSE_Transaktionen(1487);
     }
@@ -1314,8 +1315,11 @@ class AbrechnungenTag extends Abrechnungen {
 
     private void writeIntoDSFinVKCSVFiles(Integer id) {
         // STAMMDATENMODUL
+        dsfinvk.writeToCSV_Stamm_Abschluss(id);
         dsfinvk.writeToCSV_Stamm_TSE(id);
+
         // KASSENABSCHLUSSMODUL
+
         // EINZELAUFZEICHNUNGSMODUL
         dsfinvk.writeToCSV_TSE_Transaktionen(id);
     }
