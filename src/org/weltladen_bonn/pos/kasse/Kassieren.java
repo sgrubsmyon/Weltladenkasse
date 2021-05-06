@@ -1971,7 +1971,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
-                "SELECT IFNULL(MAX(gutschein_nr), 199) FROM gutschein"
+                "SELECT IFNULL(MAX(gutschein_nr), 199) FROM gutschein WHERE gutschein_in_vd_id IS NOT NULL"
             );
             if (rs.next()) {
                 maxGutscheinNr = rs.getInt(1);
