@@ -337,6 +337,51 @@ public class DSFinVKCSV extends WindowContent {
      *  STAMMDATENMODUL
      *
      */
+
+    public void writeToCSV_Stamm_Abschluss(int abrechnung_tag_id) {
+        String filename = "cashpointclosing.csv";
+        HashMap<String, String> fields = new HashMap<String, String>();
+        // Write a row to the file for the Tagesabrechnung with abrechnung_tag_id
+        // Get it mostly from the table `abrechnung_tag`
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT "+
+                "  at.z_kasse_id, at.zeitpunkt_real, at.id, "+
+                "  DATE(at.zeitpunkt), at.rechnungs_nr_von, at.rechnungs_nr_bis, "+
+                "  (SELECT SUM(mwst_netto + mwst_betrag) FROM abrechnung_tag_mwst WHERE id = at.id), "+
+                "  (SELECT SUM(bar_brutto) FROM abrechnung_tag_mwst WHERE id = at.id), "+
+                "FROM abrechnung_tag AS at "+
+                "WHERE id = ?");
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                fields.put("Z_KASSE_ID", rs.getString(1));
+                fields.put("Z_ERSTELLUNG", zErstellungDate(rs.getString(2)));
+                fields.put("Z_NR", rs.getString(3));
+                fields.put("Z_BUCHUNGSTAG", rs.getString(4));
+                fields.put("TAXONOMIE_VERSION", bc.TAXONOMIE_VERSION);
+                fields.put("Z_START_ID", rs.getString(5));
+                fields.put("Z_ENDE_ID", rs.getString(6));
+                fields.put("NAME", bc.NAME);
+                fields.put("STRASSE", bc.STRASSE);
+                fields.put("PLZ", bc.PLZ);
+                fields.put("ORT", bc.ORT);
+                fields.put("LAND", bc.LAND);
+                fields.put("STNR", bc.STNR);
+                fields.put("USTID", bc.USTID);
+                fields.put("Z_SE_ZAHLUNGEN", rs.getString(7));
+                fields.put("Z_SE_BARZAHLUNGEN", rs.getString(8));
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        writeToCSV(filename, fields);
+    }
     
     public void writeToCSV_Stamm_TSE(int abrechnung_tag_id) {
         String filename = "tse.csv";
