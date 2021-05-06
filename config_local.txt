@@ -55,7 +55,7 @@ PLZ = 53111
 ORT = Bonn
 LAND = DEU
 STNR = 205/5775/1014
-USTID = 
+USTID = 123456789
 
 ######################
 # Stamm_TSE (tse.csv)
