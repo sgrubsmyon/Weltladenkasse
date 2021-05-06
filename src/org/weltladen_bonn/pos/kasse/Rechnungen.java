@@ -307,6 +307,7 @@ public abstract class Rechnungen extends RechnungsGrundlage {
                 "LEFT JOIN "+tableForMode("gutschein")+" AS gse ON vd.vd_id = gse.einloesung_in_vd_id " +
                 "WHERE vd.rechnungs_nr = ?"
             );
+            // XXX TODO: fix bug that gutschein sale appears twice after einloesung
             pstmtSetInteger(pstmt, 1, rechnungsNr);
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet ...

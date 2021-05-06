@@ -1,3 +1,8 @@
+## v2.0.1
+
+  * Kritischer Bug mit Gutscheinen behoben: Gutscheine mit neuem System und neuer Besteuerung (0%) wurden nicht beginnend bei Nr. 200 ausgestellt, sondern mit Nr. des höchsten eingelösten Gutscheins + 1 (im konkreten Fall 169). Gutschein 169, der in die Papierliste als 172 eingetragen wurde, wurde manuell in der Kasse auf Nr. 200 geändert, mit Verweis auf Papierliste.
+  * Letzte Rechnung mit v2.0.1: Nr. 34954 am 06.05.2021
+
 ## v2.0.0
 
   * Weltladenkasse ist TSE-ready
