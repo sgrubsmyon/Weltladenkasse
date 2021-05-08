@@ -41,6 +41,7 @@ import org.w3c.dom.Element;
 // CSV file writing
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.math.RoundingMode;
 import java.nio.file.StandardOpenOption;
 
 // MySQL Connector/J stuff:
@@ -292,6 +293,7 @@ public class DSFinVKCSV extends WindowContent {
                         // mySymbols.setDecimalSeparator(decSep);
                         // mySymbols.setGroupingSeparator(grSep);
                         // DecimalFormat myFormatter = new DecimalFormat("###,###.###", mySymbols);
+                        // myFormatter.setRoundingMode(RoundingMode.HALF_UP);
                         // if (colSpec.accuracy != null && colSpec.accuracy > 0) {
                         //     myFormatter.setMinimumFractionDigits(colSpec.accuracy);
                         //     myFormatter.setMaximumFractionDigits(colSpec.accuracy);
@@ -309,6 +311,7 @@ public class DSFinVKCSV extends WindowContent {
                             mySymbols.setDecimalSeparator(decSep);
                             mySymbols.setGroupingSeparator(grSep);
                             DecimalFormat myFormatter = new DecimalFormat("###,###.###", mySymbols);
+                            myFormatter.setRoundingMode(RoundingMode.HALF_UP);
                             myFormatter.setMinimumFractionDigits(colSpec.accuracy);
                             myFormatter.setMaximumFractionDigits(colSpec.accuracy);
                             Float colFloat = Float.parseFloat(col);
@@ -484,8 +487,34 @@ public class DSFinVKCSV extends WindowContent {
 
     public void writeToCSV_Stamm_USt(int abrechnung_tag_id) {
         String filename = "vat.csv";
-        HashMap<String, String> fields = new HashMap<String, String>();
-        // XXX TODO need to implement this
+        // Get data mostly from the table `mwst`
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT "+
+                "  at.z_kasse_id, at.zeitpunkt_real, at.id, "+
+                "  m.dsfinvk_ust_schluessel, 100 * m.mwst_satz, m.dsfinvk_ust_beschr "+
+                "FROM abrechnung_tag AS at, mwst AS m "+
+                "WHERE id = ?");
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                HashMap<String, String> fields = new HashMap<String, String>();
+                fields.put("Z_KASSE_ID", rs.getString(1));
+                fields.put("Z_ERSTELLUNG", zErstellungDate(rs.getString(2)));
+                fields.put("Z_NR", rs.getString(3));
+                fields.put("UST_SCHLUESSEL", rs.getString(4));
+                fields.put("UST_SATZ", rs.getString(5));
+                fields.put("UST_BESCHR", rs.getString(6));
+                writeToCSV(filename, fields);
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
     }
     
     public void writeToCSV_Stamm_TSE(int abrechnung_tag_id) {
