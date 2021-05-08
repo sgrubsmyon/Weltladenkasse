@@ -81,7 +81,7 @@ KASSE_SERIENNR = XXXXXXXX
 # Markenbezeichnung der eingesetzten Kassen-Software: (https://github.com/sgrubsmyon/Weltladenkasse)
 KASSE_SW_BRAND = Weltladenkasse
 # Version der eingesetzten Kassen-Software:
-KASSE_SW_VERSION = v2.0.0
+KASSE_SW_VERSION = v2.0.1
 KASSE_BASISWAEH_CODE = EUR
 
 ###############################
