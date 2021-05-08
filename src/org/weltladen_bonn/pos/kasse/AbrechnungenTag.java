@@ -95,29 +95,25 @@ class AbrechnungenTag extends Abrechnungen {
           export(exportIndex);
         }
 
-        // XXX need to write all rows retroactively:
+        // XXX Write into CSV files retroactively:
         String actualSWVersion = bc.KASSE_SW_VERSION;
-        bc.KASSE_SW_VERSION = "v2.0.0"; // for the v2.0.0 days
-        bc.TERMINAL_SW_VERSION = "v2.0.0"; // for the v2.0.0 days
 
-        // STAMMDATENMODUL
-        dsfinvk.writeToCSV_Stamm_Abschluss(1487);
-        dsfinvk.writeToCSV_Stamm_Orte(1487);
-        dsfinvk.writeToCSV_Stamm_Kassen(1487);
-        dsfinvk.writeToCSV_Stamm_Terminals(1487);
-        dsfinvk.writeToCSV_Stamm_Agenturen(1487);
-        dsfinvk.writeToCSV_Stamm_USt(1487);
-        dsfinvk.writeToCSV_Stamm_TSE(1487);
-        
-        // KASSENABSCHLUSSMODUL
+        // for the v2.0.0 days
+        bc.KASSE_SW_VERSION = "v2.0.0";
+        bc.TERMINAL_SW_VERSION = "v2.0.0";
+        for (int abr_id = 1511; abr_id <= 1533; abr_id++) {
+            writeIntoDSFinVKCSVFiles(abr_id);
+        }
 
-        // EINZELAUFZEICHNUNGSMODUL
-        dsfinvk.writeToCSV_TSE_Transaktionen(1487);
+        // for the v2.0.1 days
+        bc.KASSE_SW_VERSION = "v2.0.1";
+        bc.TERMINAL_SW_VERSION = "v2.0.1";
+        for (int abr_id = 1534; abr_id <= 1535; abr_id++) {
+            writeIntoDSFinVKCSVFiles(abr_id);
+        }
 
-        bc.KASSE_SW_VERSION = "v2.0.1"; // for the v2.0.1 days
-        bc.TERMINAL_SW_VERSION = "v2.0.1"; // for the v2.0.1 days
-
-        bc.KASSE_SW_VERSION = actualSWVersion; // back to normal
+        // back to normal
+        bc.KASSE_SW_VERSION = actualSWVersion;
         bc.TERMINAL_SW_VERSION = actualSWVersion;
     }
 
