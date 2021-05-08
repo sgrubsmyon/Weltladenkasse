@@ -290,24 +290,23 @@ public abstract class Rechnungen extends RechnungsGrundlage {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
                 "SELECT vd.position, vd.artikel_id, vd.rabatt_id, "+
-                "a.kurzname, a.artikel_name, ra.aktionsname, " +
-                "a.artikel_nr, a.sortiment, a.menge, a.einheit, " +
-                "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
-                "vd.stueckzahl, vd.ges_preis, " +
-                "IFNULL(ad.ges_preis / vd.stueckzahl, vd.ges_preis / vd.stueckzahl) AS einzelpreis, " +
-                "vd.mwst_satz, ad.ges_preis IS NOT NULL AS part_of_anzahlung, " +
-                "gsv.gutschein_nr AS gutschein_nr_verkauf, " +
-                "gse.gutschein_nr AS gutschein_nr_einloes " +
-                "FROM "+tableForMode("verkauf_details")+" AS vd " +
-                "LEFT JOIN artikel AS a USING (artikel_id) " +
+                "a.kurzname, a.artikel_name, ra.aktionsname, "+
+                "a.artikel_nr, a.sortiment, a.menge, a.einheit, "+
+                "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, "+
+                "vd.stueckzahl, vd.ges_preis, "+
+                "IFNULL(ad.ges_preis / vd.stueckzahl, vd.ges_preis / vd.stueckzahl) AS einzelpreis, "+
+                "vd.mwst_satz, ad.ges_preis IS NOT NULL AS part_of_anzahlung, "+
+                "gsv.gutschein_nr AS gutschein_nr_verkauf, "+
+                "gse.gutschein_nr AS gutschein_nr_einloes "+
+                "FROM "+tableForMode("verkauf_details")+" AS vd "+
+                "LEFT JOIN artikel AS a USING (artikel_id) "+
                 "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
-                "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
-                "LEFT JOIN "+tableForMode("anzahlung_details")+" AS ad USING (vd_id) " +
-                "LEFT JOIN "+tableForMode("gutschein")+" AS gsv ON vd.vd_id = gsv.gutschein_in_vd_id " +
-                "LEFT JOIN "+tableForMode("gutschein")+" AS gse ON vd.vd_id = gse.einloesung_in_vd_id " +
+                "LEFT JOIN rabattaktion AS ra USING (rabatt_id) "+
+                "LEFT JOIN "+tableForMode("anzahlung_details")+" AS ad USING (vd_id) "+
+                "LEFT JOIN "+tableForMode("gutschein")+" AS gsv ON vd.vd_id = gsv.gutschein_in_vd_id AND gsv.einloesung_in_vd_id IS NULL "+
+                "LEFT JOIN "+tableForMode("gutschein")+" AS gse ON vd.vd_id = gse.einloesung_in_vd_id "+
                 "WHERE vd.rechnungs_nr = ?"
             );
-            // XXX TODO: fix bug that gutschein sale appears twice after einloesung
             pstmtSetInteger(pstmt, 1, rechnungsNr);
             ResultSet rs = pstmt.executeQuery();
             // Now do something with the ResultSet ...
