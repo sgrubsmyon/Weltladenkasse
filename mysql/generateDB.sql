@@ -14,6 +14,8 @@ CREATE TABLE lieferant (
 CREATE TABLE mwst (
     mwst_id INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     mwst_satz DECIMAL(6,5) NOT NULL,
+    dsfinvk_ust_schluessel INTEGER(10) UNSIGNED NOT NULL,
+    dsfinvk_ust_beschr VARCHAR(55) DEFAULT NULL,
     PRIMARY KEY (mwst_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

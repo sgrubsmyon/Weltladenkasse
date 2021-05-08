@@ -1235,7 +1235,6 @@ class AbrechnungenTag extends Abrechnungen {
                 );
                 pstmtSetInteger(pstmt, 1, id);
                 pstmtSetInteger(pstmt, 2, bc.TSE_ID);
-                // XXX UPDATE abrechnung_tag_tse SET tse_id = 1;
                 if (tseStatusValues != null) {
                     pstmt.setString(3, substrIfLongerThan(68, tseStatusValues.get("Seriennummer der TSE (Hex)")));
                     pstmt.setString(4, substrIfLongerThan(21, tseStatusValues.get("Signatur-Algorithmus")));

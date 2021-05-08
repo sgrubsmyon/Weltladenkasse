@@ -8,11 +8,11 @@ UNLOCK TABLES;
 
 LOCK TABLES `mwst` WRITE;
 /*!40000 ALTER TABLE `mwst` DISABLE KEYS */;
-INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (1,0.00000);
-INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (2,0.07000);
-INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (3,0.19000);
-INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (4,0.05500);
-INSERT INTO `mwst` (`mwst_id`, `mwst_satz`) VALUES (5,0.10700);
+INSERT INTO `mwst` (`mwst_id`, `mwst_satz`, `dsfinvk_ust_schluessel`, `dsfinvk_ust_beschr`) VALUES (1,0.00000,6,'Umsatzsteuerfrei');
+INSERT INTO `mwst` (`mwst_id`, `mwst_satz`, `dsfinvk_ust_schluessel`, `dsfinvk_ust_beschr`) VALUES (2,0.07000,2,'Geltender ermäßigter Steuersatz (§ 12 Abs. 2 UStG)');
+INSERT INTO `mwst` (`mwst_id`, `mwst_satz`, `dsfinvk_ust_schluessel`, `dsfinvk_ust_beschr`) VALUES (3,0.19000,1,'Geltender allgemeiner Steuersatz (§ 12 Abs. 2 UStG)');
+INSERT INTO `mwst` (`mwst_id`, `mwst_satz`, `dsfinvk_ust_schluessel`, `dsfinvk_ust_beschr`) VALUES (4,0.05500,4,'Durchschnittsatz (§ 24 Abs. 1 Nr. 1 UStG)');
+INSERT INTO `mwst` (`mwst_id`, `mwst_satz`, `dsfinvk_ust_schluessel`, `dsfinvk_ust_beschr`) VALUES (5,0.10700,3,'Durchschnittsatz (§ 24 Abs. 1 Nr. 3 UStG) übrige Fälle');
 /*!40000 ALTER TABLE `mwst` ENABLE KEYS */;
 UNLOCK TABLES;
 

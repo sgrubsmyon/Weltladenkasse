@@ -269,8 +269,6 @@ public class WeltladenTSE extends WindowContent {
             status = TSEStatus.failed;
             failReason = "Keine Verbindung zur TSE. TSE (SD-Karte, die seitlich in Laptop-Schlitz steckt) sitzt\n"+
                          "               nicht richtig drin oder Konfiguration (z.B. Pfad) in Datei 'config_tse.txt' falsch.";
-            // XXX SQL command to change from old (too long) to new error message:
-            // UPDATE tse_transaction SET tse_error = 'Keine Verbindung zur TSE. TSE (SD-Karte, die seitlich in Laptop-Schlitz steckt) sitzt nicht richtig drin oder Konfiguration (z.B. Pfad) in Datei \'config_tse.txt\' falsch.' WHERE tse_error = 'Es konnte keine Verbindung zur TSE aufgebaut werden. Entweder die TSE (eine SD-Karte, die in einem Schlitz des Kassen-PCs steckt)\n   sitzt nicht richtig drin oder die Konfiguration (etwa der Pfad) in der Datei \'config_tse.txt\' ist falsch.';
         } catch (FileNotFoundException ex) {
             logger.fatal("TSE config file not found under '{}'", "config_tse.txt");
             logger.fatal("Exception:", ex);
