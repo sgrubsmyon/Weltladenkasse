@@ -40,6 +40,7 @@ finDatDir = .Weltladenkasse_Finanzdaten
 # wird die Identifikationsnummer erwartet, die ab dem 01.01.2020 der
 # Finanzverwaltung gemäß § 146a Abs. 4 AO zu melden ist:
 # (wird bei Kommunikation mit der TSE als "clientID" verwendet)
+# Bitte ändern, sobald die Master-Kasse (Raspberry Pi) ausgetauscht wird.
 
 # WLBONN converted to ASCII code numbers: (https://www.madeintext.com/text-to-ascii/)
 Z_KASSE_ID = 877666797878-01
@@ -72,12 +73,12 @@ LOC_USTID = DE294978428
 # Stamm_Kassen (cashregister.csv)
 ##################################
 
-# Marke der eingesetzten Kassen-Hardware: (Laptop?)
-KASSE_BRAND = Lenovo
-# Modell der eingesetzten Kassen-Hardware: (Laptop?)
-KASSE_MODELL = Thinkpad XXXX
-# Seriennummer der eingesetzten Kassen-Hardware: (Laptop?)
-KASSE_SERIENNR = XXXXXXXX
+# Marke der eingesetzten Kassen-Hardware: (Server)
+KASSE_BRAND = Raspberry Pi Foundation
+# Modell der eingesetzten Kassen-Hardware: (Server), gefunden mit `cat /proc/cpuinfo`
+KASSE_MODELL = Raspberry Pi 2 Model B Rev 1.1
+# Seriennummer der eingesetzten Kassen-Hardware: (Server), gefunden mit `cat /proc/cpuinfo`
+KASSE_SERIENNR = 000000003b8a8285
 # Markenbezeichnung der eingesetzten Kassen-Software: (https://github.com/sgrubsmyon/Weltladenkasse)
 KASSE_SW_BRAND = Weltladenkasse
 # Version der eingesetzten Kassen-Software:
@@ -87,6 +88,21 @@ KASSE_BASISWAEH_CODE = EUR
 ###############################
 # Stamm_Terminals (slaves.csv)
 ###############################
+
+# Die TERMINAL_ID muss nur innerhalb eines Betriebs eindeutig sein.
+# Bitte ändern, sobald der Ladenlaptop ausgetauscht, bzw. ein anderer
+# PC als Kassenterminal eingesetzt wird.
+TERMINAL_ID = 1
+# Marke der eingesetzten Kassen-Hardware: (Laptop)
+TERMINAL_BRAND = Lenovo
+# Modell der eingesetzten Kassen-Hardware: (Laptop)
+TERMINAL_MODELL = ThinkPad T420
+# Seriennummer der eingesetzten Kassen-Hardware: (Laptop)
+TERMINAL_SERIENNR = R8DXP4H
+# Markenbezeichnung der eingesetzten Kassen-Software: (https://github.com/sgrubsmyon/Weltladenkasse)
+TERMINAL_SW_BRAND = Weltladenkasse
+# Version der eingesetzten Kassen-Software:
+TERMINAL_SW_VERSION = v2.0.1
 
 ###########################
 # Stamm_Agenturen (pa.csv)

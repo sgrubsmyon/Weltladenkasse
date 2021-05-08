@@ -476,7 +476,35 @@ public class DSFinVKCSV extends WindowContent {
     public void writeToCSV_Stamm_Terminals(int abrechnung_tag_id) {
         String filename = "slaves.csv";
         HashMap<String, String> fields = new HashMap<String, String>();
-        writeToCSV(filename, fields); // do not write to file, but create file with header if not exists
+        // Get data mostly from file config.properties (config.txt)
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT "+
+                "  at.z_kasse_id, at.zeitpunkt_real, at.id "+
+                "FROM abrechnung_tag AS at "+
+                "WHERE id = ?");
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                fields.put("Z_KASSE_ID", rs.getString(1));
+                fields.put("Z_ERSTELLUNG", zErstellungDate(rs.getString(2)));
+                fields.put("Z_NR", rs.getString(3));
+                fields.put("TERMINAL_ID", bc.TERMINAL_ID.toString());
+                fields.put("TERMINAL_BRAND", bc.TERMINAL_BRAND);
+                fields.put("TERMINAL_MODELL", bc.TERMINAL_MODELL);
+                fields.put("TERMINAL_SERIENNR", bc.TERMINAL_SERIENNR);
+                fields.put("TERMINAL_SW_BRAND", bc.TERMINAL_SW_BRAND);
+                fields.put("TERMINAL_SW_VERSION", bc.TERMINAL_SW_VERSION);
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        writeToCSV(filename, fields);
     }
 
     public void writeToCSV_Stamm_Agenturen(int abrechnung_tag_id) {

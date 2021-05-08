@@ -67,6 +67,12 @@ public class BaseClass {
     public String KASSE_SW_BRAND = "Weltladenkasse";
     public String KASSE_SW_VERSION;
     public String KASSE_BASISWAEH_CODE = "EUR";
+    public Integer TERMINAL_ID;
+    public String TERMINAL_BRAND;
+    public String TERMINAL_MODELL;
+    public String TERMINAL_SERIENNR;
+    public String TERMINAL_SW_BRAND = "Weltladenkasse";
+    public String TERMINAL_SW_VERSION;
     public Integer TSE_ID;
     public String TSE_PD_ENCODING = "UTF-8";
 
@@ -358,6 +364,24 @@ public class BaseClass {
         }
         try { this.KASSE_BASISWAEH_CODE = props.getProperty("KASSE_BASISWAEH_CODE"); } catch (Exception ex) {
             parseErrorMessage(ex, "KASSE_BASISWAEH_CODE", this.KASSE_BASISWAEH_CODE);
+        }
+        try { this.TERMINAL_ID = Integer.parseInt(props.getProperty("TERMINAL_ID")); } catch (Exception ex) {
+            parseErrorMessage(ex, "TERMINAL_ID", this.TERMINAL_ID);
+        }
+        try { this.TERMINAL_BRAND = props.getProperty("TERMINAL_BRAND"); } catch (Exception ex) {
+            parseErrorMessage(ex, "TERMINAL_BRAND", this.TERMINAL_BRAND);
+        }
+        try { this.TERMINAL_MODELL = props.getProperty("TERMINAL_MODELL"); } catch (Exception ex) {
+            parseErrorMessage(ex, "TERMINAL_MODELL", this.TERMINAL_MODELL);
+        }
+        try { this.TERMINAL_SERIENNR = props.getProperty("TERMINAL_SERIENNR"); } catch (Exception ex) {
+            parseErrorMessage(ex, "TERMINAL_SERIENNR", this.TERMINAL_SERIENNR);
+        }
+        try { this.TERMINAL_SW_BRAND = props.getProperty("TERMINAL_SW_BRAND"); } catch (Exception ex) {
+            parseErrorMessage(ex, "TERMINAL_SW_BRAND", this.TERMINAL_SW_BRAND);
+        }
+        try { this.TERMINAL_SW_VERSION = props.getProperty("TERMINAL_SW_VERSION"); } catch (Exception ex) {
+            parseErrorMessage(ex, "TERMINAL_SW_VERSION", this.TERMINAL_SW_VERSION);
         }
         try { this.TSE_ID = Integer.parseInt(props.getProperty("TSE_ID")); } catch (Exception ex) {
             parseErrorMessage(ex, "TSE_ID", this.TSE_ID);
