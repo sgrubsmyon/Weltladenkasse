@@ -1,7 +1,7 @@
 -- Execute command:
---    sudo mysql --local-infile -u root < mysql/convertToNewVersion2.0.2Format.sql
+--    sudo mysql --local-infile -u kassenadmin < mysql/convertToNewVersion2.0.2Format.sql
 -- or:
---    mysql --local-infile -h localhost -u root -p < mysql/convertToNewVersion2.0.2Format.sql
+--    mysql --local-infile -h localhost -u kassenadmin -p < mysql/convertToNewVersion2.0.2Format.sql
 
 USE kasse;
 
