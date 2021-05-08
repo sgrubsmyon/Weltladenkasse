@@ -339,21 +339,21 @@ public class AnzahlungAufloesDialog extends DialogWindow {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
                 "SELECT vd.position, vd.artikel_id, vd.rabatt_id, "+
-                "a.kurzname, a.artikel_name, ra.aktionsname, " +
-                "a.artikel_nr, a.sortiment, a.menge, a.einheit, " +
-                "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, " +
-                "vd.stueckzahl, ad.ges_preis, vd.ges_preis, vd.mwst_satz, " +
-                "gsv.gutschein_nr AS gutschein_nr_verkauf, " +
-                "gse.gutschein_nr AS gutschein_nr_einloes " +
-                "FROM "+tableForMode("verkauf_details")+" AS vd " +
-                "LEFT JOIN "+tableForMode("anzahlung_details")+" AS ad " +
-                "  ON vd.rechnungs_nr = ad.rechnungs_nr AND vd.vd_id = ad.vd_id " +
-                "LEFT JOIN artikel AS a USING (artikel_id) " +
+                "a.kurzname, a.artikel_name, ra.aktionsname, "+
+                "a.artikel_nr, a.sortiment, a.menge, a.einheit, "+
+                "(p.toplevel_id IS NULL AND p.sub_id = 3) AS pfand, "+
+                "vd.stueckzahl, ad.ges_preis, vd.ges_preis, vd.mwst_satz, "+
+                "gsv.gutschein_nr AS gutschein_nr_verkauf, "+
+                "gse.gutschein_nr AS gutschein_nr_einloes "+
+                "FROM "+tableForMode("verkauf_details")+" AS vd "+
+                "LEFT JOIN "+tableForMode("anzahlung_details")+" AS ad "+
+                "  ON vd.rechnungs_nr = ad.rechnungs_nr AND vd.vd_id = ad.vd_id "+
+                "LEFT JOIN artikel AS a USING (artikel_id) "+
                 "LEFT JOIN produktgruppe AS p USING (produktgruppen_id) "+
-                "LEFT JOIN rabattaktion AS ra USING (rabatt_id) " +
-                "LEFT JOIN "+tableForMode("gutschein")+" AS gsv ON vd.vd_id = gsv.gutschein_in_vd_id " +
-                "LEFT JOIN "+tableForMode("gutschein")+" AS gse ON vd.vd_id = gse.einloesung_in_vd_id " +
-                "WHERE vd.rechnungs_nr = ? AND " +
+                "LEFT JOIN rabattaktion AS ra USING (rabatt_id) "+
+                "LEFT JOIN "+tableForMode("gutschein")+" AS gsv ON vd.vd_id = gsv.gutschein_in_vd_id AND gsv.einloesung_in_vd_id IS NULL "+
+                "LEFT JOIN "+tableForMode("gutschein")+" AS gse ON vd.vd_id = gse.einloesung_in_vd_id "+
+                "WHERE vd.rechnungs_nr = ? AND "+
                 "vd.vd_id <= ("+
                 "  SELECT MAX(vd_id) FROM "+tableForMode("verkauf_details")+" "+
                 "  WHERE rechnungs_nr = ? AND artikel_id = ?"+
