@@ -95,14 +95,19 @@ class AbrechnungenTag extends Abrechnungen {
           export(exportIndex);
         }
 
-        // XXX need to write all lines retroactively:
-        // dsfinvk.writeToCSV_Stamm_Abschluss(1487);
-        // dsfinvk.writeToCSV_Stamm_Orte(1487);
-        // dsfinvk.writeToCSV_Stamm_Kassen(1487);
-        // dsfinvk.writeToCSV_Stamm_Terminals(1487);
-        // dsfinvk.writeToCSV_Stamm_Agenturen(1487);
-        // dsfinvk.writeToCSV_Stamm_TSE(1487);
-        // dsfinvk.writeToCSV_TSE_Transaktionen(1487);
+        // XXX need to write all rows retroactively:
+        String actualSWVersion = bc.KASSE_SW_VERSION;
+        bc.KASSE_SW_VERSION = "v2.0.0"; // for the v2.0.0 days
+        dsfinvk.writeToCSV_Stamm_Abschluss(1487);
+        dsfinvk.writeToCSV_Stamm_Orte(1487);
+        dsfinvk.writeToCSV_Stamm_Kassen(1487);
+        dsfinvk.writeToCSV_Stamm_Terminals(1487);
+        dsfinvk.writeToCSV_Stamm_Agenturen(1487);
+        dsfinvk.writeToCSV_Stamm_USt(1487);
+        dsfinvk.writeToCSV_Stamm_TSE(1487);
+        dsfinvk.writeToCSV_TSE_Transaktionen(1487);
+        bc.KASSE_SW_VERSION = "v2.0.1"; // for the v2.0.1 days
+        bc.KASSE_SW_VERSION = actualSWVersion; // back to normal
     }
 
     void setSelectedZeitpunkt(String zp) {
@@ -1323,6 +1328,7 @@ class AbrechnungenTag extends Abrechnungen {
         dsfinvk.writeToCSV_Stamm_Kassen(id);
         dsfinvk.writeToCSV_Stamm_Terminals(id);
         dsfinvk.writeToCSV_Stamm_Agenturen(id);
+        dsfinvk.writeToCSV_Stamm_USt(id);
         dsfinvk.writeToCSV_Stamm_TSE(id);
 
         // KASSENABSCHLUSSMODUL
