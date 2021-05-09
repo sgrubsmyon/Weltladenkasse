@@ -119,5 +119,5 @@ TERMINAL_SW_VERSION = v2.0.1
 # Die TSE_ID muss nur innerhalb eines Betriebs eindeutig sein.
 # Bitte ändern, sobald die TSE ausgetauscht, bzw. eine neue TSE
 # eingesetzt wird.
-TSE_ID = 1
+TSE_ID = 2
 TSE_PD_ENCODING = UTF-8
