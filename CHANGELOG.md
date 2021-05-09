@@ -22,6 +22,7 @@
     * `transactions_tse.csv` (Einzelaufzeichnungsmodul)
   * Einmaliges rückwirkendes Beschreiben der obigen Dateien für die Daten aus den Perioden von v2.0.0 und v2.0.1
   * Letzte Rechnung mit v2.0.1: Nr. 34992 am 08.05.2021 (bis `Z_NR`/`abrechnung_tag.id` 1535)
+  * Erste Rechnung mit v2.0.2: Nr. 34993 am 09.05.2021 (ab `Z_NR`/`abrechnung_tag.id` 1536)
 
 ## v2.0.1
 
