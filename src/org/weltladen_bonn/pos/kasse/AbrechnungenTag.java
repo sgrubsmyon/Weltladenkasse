@@ -95,26 +95,26 @@ class AbrechnungenTag extends Abrechnungen {
           export(exportIndex);
         }
 
-        // XXX Write into CSV files retroactively:
-        String actualSWVersion = bc.KASSE_SW_VERSION;
+        // // XXX Write into DSFinV-K CSV files retroactively:
+        // String actualSWVersion = bc.KASSE_SW_VERSION;
 
-        // for the v2.0.0 days
-        bc.KASSE_SW_VERSION = "v2.0.0";
-        bc.TERMINAL_SW_VERSION = "v2.0.0";
-        for (int abr_id = 1511; abr_id <= 1533; abr_id++) {
-            writeIntoDSFinVKCSVFiles(abr_id);
-        }
+        // // for the v2.0.0 days
+        // bc.KASSE_SW_VERSION = "v2.0.0";
+        // bc.TERMINAL_SW_VERSION = "v2.0.0";
+        // for (int abr_id = 1511; abr_id <= 1533; abr_id++) {
+        //     writeIntoDSFinVKCSVFiles(abr_id);
+        // }
 
-        // for the v2.0.1 days
-        bc.KASSE_SW_VERSION = "v2.0.1";
-        bc.TERMINAL_SW_VERSION = "v2.0.1";
-        for (int abr_id = 1534; abr_id <= 1535; abr_id++) {
-            writeIntoDSFinVKCSVFiles(abr_id);
-        }
+        // // for the v2.0.1 days
+        // bc.KASSE_SW_VERSION = "v2.0.1";
+        // bc.TERMINAL_SW_VERSION = "v2.0.1";
+        // for (int abr_id = 1534; abr_id <= 1535; abr_id++) {
+        //     writeIntoDSFinVKCSVFiles(abr_id);
+        // }
 
-        // back to normal
-        bc.KASSE_SW_VERSION = actualSWVersion;
-        bc.TERMINAL_SW_VERSION = actualSWVersion;
+        // // back to normal
+        // bc.KASSE_SW_VERSION = actualSWVersion;
+        // bc.TERMINAL_SW_VERSION = actualSWVersion;
     }
 
     void setSelectedZeitpunkt(String zp) {
