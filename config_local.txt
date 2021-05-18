@@ -41,6 +41,9 @@ finDatDir = .Weltladenkasse_Finanzdaten
 # Finanzverwaltung gemäß § 146a Abs. 4 AO zu melden ist:
 # (wird bei Kommunikation mit der TSE als "clientID" verwendet)
 # Bitte ändern, sobald die Master-Kasse (Raspberry Pi) ausgetauscht wird.
+# In der Zukunft kann auch KASSE_SERIENNR verwendet werden (muss aber maximal
+# 30 Zeichen haben auf Grund der Firmware der TSE, siehe
+# https://tse-support.cryptovision.com/confluence/pages/viewpage.action?spaceKey=TDI&title=clientId+oder+Seriennummer+des+Aufzeichnungssystems)
 
 # WLBONN converted to ASCII code numbers: (https://www.madeintext.com/text-to-ascii/)
 Z_KASSE_ID = 877666797878-01
