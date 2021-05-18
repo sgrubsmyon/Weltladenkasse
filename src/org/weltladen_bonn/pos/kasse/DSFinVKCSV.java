@@ -609,8 +609,9 @@ public class DSFinVKCSV extends WindowContent {
                 "  tt.signature_counter, tt.signature_base64, tt.tse_error, tt.process_data "+
                 "FROM abrechnung_tag AS at LEFT JOIN abrechnung_tag_tse AS att USING (id), "+
                 "  tse_transaction AS tt "+
-                "WHERE at.id = ? AND tt.rechnungs_nr >= at.rechnungs_nr_von AND "+
-                "  tt.rechnungs_nr <= at.rechnungs_nr_bis");
+                "WHERE at.id = ? "+
+                "  AND STR_TO_DATE(tt.transaction_start, '%Y-%m-%dT%H:%i:%s.000+02:00') >= (SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = at.id - 1) "+
+                "  AND STR_TO_DATE(tt.transaction_start, '%Y-%m-%dT%H:%i:%s.000+02:00') <= at.zeitpunkt_real");
             pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
