@@ -7,8 +7,8 @@
 
 '''
 1.) In "Weltladenkasse -> Artikelliste" auf "Lebensmittel" klicken
-2.) Auf "Artikel exportieren" klicken, speichern als "Artikelliste_Lebensmittel.ods", auf
-    "Zurück"
+2.) Auf "Artikel exportieren" klicken, speichern als "Artikelliste_Lebensmittel.ods",
+    auf "Zurück" klicken
 3.) In Weltladenkasse -> Artikelliste auf "Getränke" klicken
 4.) Auf "Artikel exportieren" klicken, speichern als "Artikelliste_Getränke.ods"
 5.) Beide ods-Dateien öffnen, in Getränke alles außer erste Zeile markieren,
@@ -65,13 +65,13 @@
         diese erzeugen später weitere Fehlermeldungen (Fehler evtl. ans FHZ
         melden)
     * Änderungen prüfen und ggf. eingreifen
-    * ACHTUNG: Mini-Täfelchen nicht ändern, d.h. aus
-        preisänderung_irgendeine_änderung.csv und
-        preisänderung_geänderte_preise_sortiment.csv (Nr. 8901827 und 8901828)
-        löschen! (VPE ist zwar 5, aber auf 1 lassen, weil wir sowieso keinen Rabatt
+    * ACHTUNG: Mini-Täfelchen (Nr. 8901827 und 8901828) nicht ändern, d.h. entweder
+        vorher aus "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX.ods" oder
+        hinterher aus preisänderung_irgendeine_änderung.csv und preisänderung_geänderte_preise_sortiment.csv
+        löschen, außer wenn sich der Empf. VKP von 9 EUR tatsächlich ändert!
+        (VPE ist zwar 5, aber auf 1 lassen, weil wir sowieso keinen Rabatt
         kriegen und 500 Täfelchen ein MHD-Problem verursachen.)
-        (Außer wenn sich der Empf. VKP von 9 EUR tatsächlich ändert). Im WLB ist
-        der VKP mit Absicht höher als der Empf. VKP und die VPE ist mit Absicht
+        Im WLB ist der VKP mit Absicht höher als der Empf. VKP und die VPE ist mit Absicht
         (falsch) auf 1 gesetzt.
     * ACHTUNG: Wenn Menge oder Einheit sich geändert haben, muss ggf. der Artikelname
         in preisänderung.csv von Hand geändert werden, wenn nicht -n benutzt wird.
@@ -125,6 +125,16 @@
 23.) Evtl. schon vorhandene Artikel (z.B. Wein-Geschenkkartons), die jetzt rot
     markiert sind, aus "preisänderung_neue_artikel.ods" löschen. Wenn Änderungen
     nötig sind (z.B. Preis), dann Artikel von Hand verändern.
+24.) Die Datei "preisänderung_alte_artikel.csv" mit LibreOffice öffnen,
+    Semicolon als Separator, String Delimiter: '"'. Auch hier wieder: Die Spalte
+    "Artikelnummer" anklicken und Typ auf "Text" setzen, Spalte "Menge (kg/l/St.)"
+    anklicken und Typ auf "Text" setzen. Speichern als "preisänderung_alte_artikel.ods".
+25.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
+    die Datei "preisänderung_alte_artikel.ods" auswählen. Dadurch werden alle Artikel,
+    die es beim FHZ nicht mehr gibt, in der Kasse auf "ausgelistet" gesetzt, d.h.
+    sie dürften dann nicht mehr versehentlich bestellt werden. Falls nicht mehr im
+    Laden vorhanden, können die Artikel auch auf "inaktiv" gesetzt werden (manuell
+    zu prüfen).
 
 Alter Schritt 8) jetzt obsolet, hier noch falls es irgendwann noch mal gebraucht wird:
 
@@ -595,9 +605,9 @@ def main():
 
     writeOutAsCSV(irgendeine_aenderung, 'preisänderung_irgendeine_änderung.csv')
 
-    ####################
-    # Consistecy check #
-    ####################
+    #####################
+    # Consistency check #
+    #####################
 
     count = 0
     print('\n\n\n')
@@ -663,6 +673,9 @@ def main():
     # Show list of articles missing in FHZ (so not orderable!)
     print('\n\n\n')
     print("Alte Artikel (in WLB vorhanden, nicht in FHZ, können nicht mehr bestellt werden!):")
+    # Get empty df:
+    wlb_alte_artikel = pd.DataFrame(columns=wlb_neu.columns,
+            index=pd.MultiIndex.from_tuples([('','')], names=wlb_neu.index.names))
     count = 0
     # Loop over wlb numerical index
     for i in range(len(wlb_neu)):
@@ -672,8 +685,13 @@ def main():
             fhz.loc[name]
         except KeyError:
             count += 1
+            wlb_alte_artikel = wlb_alte_artikel.append(wlb_row)
+            # Change 'popularity' to 'ausgelistet' so that it will not be ordered any more:
+            wlb_alte_artikel.loc[name, 'Beliebtheit'] = 'ausgelistet'
             print('"%s" nicht in FHZ. (%s)' % (wlb_row['Bezeichnung | Einheit'], name))
     print(count, "Artikel nicht in FHZ.")
+    wlb_alte_artikel = removeEmptyRow(wlb_alte_artikel)
+    writeOutAsCSV(wlb_alte_artikel, 'preisänderung_alte_artikel.csv')
 
 
 if __name__ == '__main__':
