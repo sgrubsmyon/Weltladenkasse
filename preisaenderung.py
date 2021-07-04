@@ -113,6 +113,7 @@
     die Datei "Artikelliste_LM_neu.ods" auswählen.
 19.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
     "preisänderung_geänderte_preise_sortiment.csv" auswählen.
+    Im Moment wegen jOpenDocument mit aktuellem Java kaputt.
 20.) Die Datei "preisänderung_neue_artikel.csv" mit LibreOffice öffnen,
     Semicolon als Separator, String Delimiter: '"'. Auch hier wieder: Die Spalte
     "Artikelnummer" anklicken und Typ auf "Text" setzen, Spalte "Menge (kg/l/St.)"
