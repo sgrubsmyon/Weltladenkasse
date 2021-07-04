@@ -595,24 +595,24 @@ public abstract class Rechnungen extends RechnungsGrundlage {
     protected abstract LinkedHashMap<String, String> getTSEStatusValues();
 
     protected void printQuittung() {
-            DateTime datet = null;
-            if (!datum.equals(""))
-                datet = new DateTime(datum);
-            else
-                datet = new DateTime(now());
-            TreeMap<BigDecimal, Vector<BigDecimal>> mwstValues = calculateMwStValuesInRechnung();
-            BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
-            BigDecimal rueckgeld = null;
-            if (kundeGibt != null){
-                rueckgeld = kundeGibt.subtract(totalPrice);
-            }
-            TSETransaction tx = tse.getTransactionByRechNr(rechnungsNr);
-            Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
-                datet, rechnungsNr, stornoVon,
-                kassierArtikel, mwstValues, zahlungsModus,
-                totalPrice, kundeGibt, rueckgeld,
-                tx, getZKasseId(), getTSEStatusValues());
-            myQuittung.printReceipt();
+        DateTime datet = null;
+        if (!datum.equals(""))
+            datet = new DateTime(datum);
+        else
+            datet = new DateTime(now());
+        TreeMap<BigDecimal, Vector<BigDecimal>> mwstValues = calculateMwStValuesInRechnung();
+        BigDecimal totalPrice = new BigDecimal( getTotalPrice() );
+        BigDecimal rueckgeld = null;
+        if (kundeGibt != null){
+            rueckgeld = kundeGibt.subtract(totalPrice);
+        }
+        TSETransaction tx = tse.getTransactionByRechNr(rechnungsNr);
+        Quittung myQuittung = new Quittung(this.pool, this.mainWindow,
+            datet, rechnungsNr, stornoVon,
+            kassierArtikel, mwstValues, zahlungsModus,
+            totalPrice, kundeGibt, rueckgeld,
+            tx, getZKasseId(), getTSEStatusValues());
+        myQuittung.printReceipt();
     }
 
     /**
