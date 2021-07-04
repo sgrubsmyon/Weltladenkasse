@@ -95,11 +95,27 @@ public class HeutigeRechnungen extends Rechnungen {
         insertStornoIntoTSE(stornierendeRechNr);
         maybeInsertStornoIntoAnzahlung(stornierteRechNr, stornierendeRechNr);
         maybeInsertStornoIntoGutschein(stornierteRechNr, stornierendeRechNr);
-        BigDecimal betrag = insertStornoIntoKassenstand(stornierteRechNr, stornierendeRechNr);
-        if (betrag != null) {
-            JOptionPane.showMessageDialog(this, "Bitte jetzt "+bc.priceFormatter(betrag)+" "+bc.currencySymbol+
-                " in bar herausgeben.",
-                "Storno-Betrag auszahlen", JOptionPane.INFORMATION_MESSAGE);
+        
+        // Geld an Kunden auszahlen?
+        boolean auszahlen = false;
+        if (zahlMod.equals("Bar")) { // if Barzahlung
+            auszahlen = true;
+        } else { // EC-Zahlung
+            int answer = JOptionPane.showConfirmDialog(this,
+                "Wurde für die zu stornierende Rechnung bereits eine EC-Zahlung ausgeführt, also das Konto der Kundin belastet?", "EC-Zahlung ausgeführt?",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (answer == JOptionPane.YES_OPTION) {
+                auszahlen = true;
+            }
+        }
+
+        if (auszahlen) {
+            BigDecimal betrag = insertStornoIntoKassenstand(stornierteRechNr, stornierendeRechNr);
+            if (betrag != null) {
+                JOptionPane.showMessageDialog(this, "Bitte jetzt "+bc.priceFormatter(betrag)+" "+bc.currencySymbol+
+                    " in bar herausgeben.",
+                    "Storno-Betrag auszahlen", JOptionPane.INFORMATION_MESSAGE);
+            }
         }
         printQuittung();
         // This would only be relevant if we could refund via EC
