@@ -95,26 +95,36 @@ class AbrechnungenTag extends Abrechnungen {
           export(exportIndex);
         }
 
-        // // XXX Write into DSFinV-K CSV files retroactively:
-        // String actualSWVersion = bc.KASSE_SW_VERSION;
+        // XXX Write into DSFinV-K CSV files retroactively:
+        String actualSWVersion = bc.KASSE_SW_VERSION;
 
-        // // for the v2.0.0 days
-        // bc.KASSE_SW_VERSION = "v2.0.0";
-        // bc.TERMINAL_SW_VERSION = "v2.0.0";
-        // for (int abr_id = 1511; abr_id <= 1533; abr_id++) {
-        //     writeIntoDSFinVKCSVFiles(abr_id);
+        // for the v2.0.0 days
+        bc.KASSE_SW_VERSION = "v2.0.0";
+        bc.TERMINAL_SW_VERSION = "v2.0.0";
+        for (int abr_id = 1511; abr_id <= 1533; abr_id++) {
+            // writeIntoDSFinVKCSVFiles(abr_id);
+            writeIntoDSFinVKCSVFilesTemporary(abr_id);
+        }
+
+        // for the v2.0.1 days
+        bc.KASSE_SW_VERSION = "v2.0.1";
+        bc.TERMINAL_SW_VERSION = "v2.0.1";
+        for (int abr_id = 1534; abr_id <= 1535; abr_id++) {
+            // writeIntoDSFinVKCSVFiles(abr_id);
+            writeIntoDSFinVKCSVFilesTemporary(abr_id);
+        }
+
+        // // for the v2.0.2 days
+        // bc.KASSE_SW_VERSION = "v2.0.2";
+        // bc.TERMINAL_SW_VERSION = "v2.0.2";
+        // for (int abr_id = 1536; abr_id <= XXX; abr_id++) {
+        //    // writeIntoDSFinVKCSVFiles(abr_id);
+        //    writeIntoDSFinVKCSVFilesTemporary(abr_id);
         // }
 
-        // // for the v2.0.1 days
-        // bc.KASSE_SW_VERSION = "v2.0.1";
-        // bc.TERMINAL_SW_VERSION = "v2.0.1";
-        // for (int abr_id = 1534; abr_id <= 1535; abr_id++) {
-        //     writeIntoDSFinVKCSVFiles(abr_id);
-        // }
-
-        // // back to normal
-        // bc.KASSE_SW_VERSION = actualSWVersion;
-        // bc.TERMINAL_SW_VERSION = actualSWVersion;
+        // back to normal
+        bc.KASSE_SW_VERSION = actualSWVersion;
+        bc.TERMINAL_SW_VERSION = actualSWVersion;
     }
 
     void setSelectedZeitpunkt(String zp) {
@@ -1339,9 +1349,16 @@ class AbrechnungenTag extends Abrechnungen {
         dsfinvk.writeToCSV_Stamm_TSE(id);
 
         // KASSENABSCHLUSSMODUL
+        dsfinvk.writeToCSV_Z_GV_Typ(id);
 
         // EINZELAUFZEICHNUNGSMODUL
         dsfinvk.writeToCSV_TSE_Transaktionen(id);
+    }
+
+    private void writeIntoDSFinVKCSVFilesTemporary(Integer id) {
+        dsfinvk.writeToCSV_TSE_Transaktionen(id); // need to redo due to bug
+
+        dsfinvk.writeToCSV_Z_GV_Typ(id);
     }
 
     private Integer maxZaehlprotokollID() {

@@ -591,6 +591,71 @@ public class DSFinVKCSV extends WindowContent {
      *
      */
 
+    public void writeToCSV_Z_GV_Typ(int abrechnung_tag_id) {
+        String filename = "businesscases.csv";
+        // Get data from tables `kassenstand`, `abrechnung_tag_mwst`, ...
+        // Gruppiert nach GV_TYP und Umsatzsteuersatz jeweils die Summe der in dieser
+        //   Tagesabrechnung enthaltenen Beträge: (siehe Seite 28 der DSFinV-K und Anhang C, ab Seite 47):
+
+        // GV_TYP "Anfangsbestand" = 150 €, also der `kassenstand` zu Beginn eines Buchungstages
+        writeToCSV_Z_GV_Typ_Anfangsbestand(abrechnung_tag_id, filename);
+        // GV_TYP "Umsatz"
+        // GV_TYP "Pfand"
+        // GV_TYP "PfandRueckzahlung"
+        // GV_TYP "Rabatt"
+        // GV_TYP "Aufschlag" (nur für den hypothetischen Fall eines negativen Rabatts)
+        // GV_TYP "MehrzweckgutscheinKauf"
+        // GV_TYP "MehrzweckgutscheinEinloesung"
+        // GV_TYP "Anzahlungseinstellung"
+        // GV_TYP "Anzahlungsaufloesung"
+        // GV_TYP "Geldtransit" = Entnahme von Geld aus der Kasse bei Tagesabschluss (aus Tabelle `kassenstand` zu entnehmen)
+        // GV_TYP "DifferenzSollIst = Kassendifferenz bei Tagesabschluss
+    }
+
+    public void writeToCSV_Z_GV_Typ_Anfangsbestand(int abrechnung_tag_id, String filename) {
+        HashMap<String, String> fields = new HashMap<String, String>();
+        // Get data mostly from the table `kassenstand`
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                // SELECT at.z_kasse_id, at.zeitpunkt_real, at.id, (SELECT dsfinvk_ust_schluessel FROM mwst WHERE mwst_satz = 0.00) AS ust_schluessel, (SELECT neuer_kassenstand FROM kassenstand WHERE kassenstand_id > (SELECT kassenstand_id FROM kassenstand WHERE rechnungs_nr = 288) AND rechnungs_nr IS NULL AND manuell = TRUE AND entnahme = FALSE LIMIT 1) AS anfangsbestand FROM abrechnung_tag AS at WHERE id = 289;
+                "SELECT "+
+                "  at.z_kasse_id, at.zeitpunkt_real, at.id, "+
+                "  (SELECT dsfinvk_ust_schluessel FROM mwst WHERE mwst_satz = 0.00) AS ust_schluessel, "+
+                "  IFNULL("+
+                "    (SELECT neuer_kassenstand FROM kassenstand "+
+                "     WHERE kassenstand_id > "+
+                "       (SELECT kassenstand_id FROM kassenstand WHERE rechnungs_nr = ?) AND "+
+                "        rechnungs_nr IS NULL AND manuell = TRUE AND entnahme = FALSE "+
+                "     LIMIT 1 "+ // SELECT * FROM kassenstand WHERE kassenstand_id > (SELECT kassenstand_id FROM kassenstand WHERE rechnungs_nr = 288) AND rechnungs_nr IS NULL AND manuell = TRUE AND entnahme = FALSE LIMIT 1;
+                "    ), 150.00) AS anfangsbestand "+
+                "FROM abrechnung_tag AS at "+
+                "WHERE id = ?");
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
+            pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                fields.put("Z_KASSE_ID", rs.getString(1));
+                fields.put("Z_ERSTELLUNG", zErstellungDate(rs.getString(2)));
+                fields.put("Z_NR", rs.getString(3));
+                fields.put("GV_TYP", "Anfangsbestand");
+                fields.put("GV_NAME", "Anfangsbestand");
+                fields.put("AGENTUR_ID", "0");
+                fields.put("UST_SCHLUESSEL", rs.getString(4));
+                fields.put("Z_UMS_BRUTTO", rs.getString(5));
+                fields.put("Z_UMS_NETTO", rs.getString(5));
+                fields.put("Z_UST", "0.00");
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+        writeToCSV(filename, fields);
+    }
+
     /**
      *  EINZELAUFZEICHNUNGSMODUL
      *
