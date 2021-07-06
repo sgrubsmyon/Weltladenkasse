@@ -600,6 +600,7 @@ public class DSFinVKCSV extends WindowContent {
         // GV_TYP "Anfangsbestand" = 150 €, also der `kassenstand` zu Beginn eines Buchungstages
         writeToCSV_Z_GV_Typ_Anfangsbestand(abrechnung_tag_id, filename);
         // GV_TYP "Umsatz"
+        writeToCSV_Z_GV_Typ_Umsatz(abrechnung_tag_id, filename);
         // GV_TYP "Pfand"
         // GV_TYP "PfandRueckzahlung"
         // GV_TYP "Rabatt"
@@ -625,13 +626,13 @@ public class DSFinVKCSV extends WindowContent {
                 "  IFNULL("+
                 "    (SELECT neuer_kassenstand FROM kassenstand "+
                 "     WHERE kassenstand_id > "+
-                "       (SELECT kassenstand_id FROM kassenstand WHERE rechnungs_nr = ?) AND "+
+                "       (SELECT kassenstand_id FROM kassenstand WHERE rechnungs_nr = ? - 1) AND "+
                 "        rechnungs_nr IS NULL AND manuell = TRUE AND entnahme = FALSE "+
                 "     LIMIT 1 "+ // SELECT * FROM kassenstand WHERE kassenstand_id > (SELECT kassenstand_id FROM kassenstand WHERE rechnungs_nr = 288) AND rechnungs_nr IS NULL AND manuell = TRUE AND entnahme = FALSE LIMIT 1;
                 "    ), 150.00) AS anfangsbestand "+
                 "FROM abrechnung_tag AS at "+
                 "WHERE id = ?");
-            pstmtSetInteger(pstmt, 1, abrechnung_tag_id - 1);
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
             pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
@@ -654,6 +655,52 @@ public class DSFinVKCSV extends WindowContent {
             showDBErrorDialog(ex.getMessage());
         }
         writeToCSV(filename, fields);
+    }
+
+    public void writeToCSV_Z_GV_Typ_Umsatz(int abrechnung_tag_id, String filename) {
+        // Get data mostly from the table `verkauf_details`
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                "SELECT at.z_kasse_id, at.zeitpunkt_real, at.id FROM abrechnung_tag AS at WHERE id = ?"
+            );
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            String z_kasse_id = "", z_erstellung = "", z_nr = "";
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                z_kasse_id = rs.getString(1);
+                z_erstellung = zErstellungDate(rs.getString(2));
+                z_nr = rs.getString(3);
+            }
+            pstmt = connection.prepareStatement(
+                "SELECT mwst_satz, dsfinvk_ust_schluessel, SUM(mwst_netto + mwst_betrag), SUM(mwst_netto), SUM(mwst_betrag) "+
+                "FROM verkauf_mwst INNER JOIN abrechnung_tag AS at INNER JOIN mwst USING (mwst_satz) "+
+                "WHERE at.id = ? AND rechnungs_nr >= at.rechnungs_nr_von AND rechnungs_nr <= at.rechnungs_nr_bis "+
+                "GROUP BY mwst_satz ORDER BY dsfinvk_ust_schluessel"
+            );
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                HashMap<String, String> fields = new HashMap<String, String>();
+                fields.put("Z_KASSE_ID", z_kasse_id);
+                fields.put("Z_ERSTELLUNG", z_erstellung);
+                fields.put("Z_NR", z_nr);
+                fields.put("GV_TYP", "Umsatz");
+                fields.put("GV_NAME", "Umsatz");
+                fields.put("AGENTUR_ID", "0");
+                fields.put("UST_SCHLUESSEL", rs.getString(2));
+                fields.put("Z_UMS_BRUTTO", rs.getString(3));
+                fields.put("Z_UMS_NETTO", rs.getString(4));
+                fields.put("Z_UST", rs.getString(5));
+                writeToCSV(filename, fields);
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
     }
 
     /**
