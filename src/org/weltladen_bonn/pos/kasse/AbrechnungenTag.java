@@ -1352,16 +1352,21 @@ class AbrechnungenTag extends Abrechnungen {
         dsfinvk.writeToCSV_Stamm_TSE(id, zvalues);
 
         // KASSENABSCHLUSSMODUL
-        dsfinvk.writeToCSV_Z_GV_Typ(id);
+        dsfinvk.writeToCSV_Z_GV_Typ(id, zvalues);
 
         // EINZELAUFZEICHNUNGSMODUL
         dsfinvk.writeToCSV_TSE_Transaktionen(id);
     }
 
     private void writeIntoDSFinVKCSVFilesTemporary(Integer id) {
-        dsfinvk.writeToCSV_TSE_Transaktionen(id); // need to redo due to bug
+        // Retrieve generally used values
+        HashMap<String, String> zvalues = dsfinvk.get_ZKasseID_ZErstellung_ZNr(id);
 
-        dsfinvk.writeToCSV_Z_GV_Typ(id);
+        dsfinvk.writeToCSV_Stamm_USt(id, zvalues); // redo because now USt is sorted by DSFinV-K USt-Schlüssel
+
+        dsfinvk.writeToCSV_Z_GV_Typ(id, zvalues);
+        
+        dsfinvk.writeToCSV_TSE_Transaktionen(id); // need to redo due to bug
     }
 
     private Integer maxZaehlprotokollID() {
