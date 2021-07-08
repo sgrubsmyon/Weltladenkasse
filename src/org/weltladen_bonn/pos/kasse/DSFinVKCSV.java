@@ -270,6 +270,9 @@ public class DSFinVKCSV extends WindowContent {
                 zvalues.put("Z_ERSTELLUNG", zErstellungDate(rs.getString(2)));
                 zvalues.put("Z_NR", rs.getString(3));
             }
+            rs.close();
+            pstmt.close();
+            connection.close();
         } catch (SQLException ex) {
             logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
