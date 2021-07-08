@@ -1339,14 +1339,17 @@ class AbrechnungenTag extends Abrechnungen {
     }
 
     private void writeIntoDSFinVKCSVFiles(Integer id) {
+        // Retrieve generally used values
+        HashMap<String, String> zvalues = dsfinvk.get_ZKasseID_ZErstellung_ZNr(id);
+        
         // STAMMDATENMODUL
         dsfinvk.writeToCSV_Stamm_Abschluss(id);
-        dsfinvk.writeToCSV_Stamm_Orte(id);
-        dsfinvk.writeToCSV_Stamm_Kassen(id);
-        dsfinvk.writeToCSV_Stamm_Terminals(id);
+        dsfinvk.writeToCSV_Stamm_Orte(id, zvalues);
+        dsfinvk.writeToCSV_Stamm_Kassen(id, zvalues);
+        dsfinvk.writeToCSV_Stamm_Terminals(id, zvalues);
         dsfinvk.writeToCSV_Stamm_Agenturen(id);
-        dsfinvk.writeToCSV_Stamm_USt(id);
-        dsfinvk.writeToCSV_Stamm_TSE(id);
+        dsfinvk.writeToCSV_Stamm_USt(id, zvalues);
+        dsfinvk.writeToCSV_Stamm_TSE(id, zvalues);
 
         // KASSENABSCHLUSSMODUL
         dsfinvk.writeToCSV_Z_GV_Typ(id);
