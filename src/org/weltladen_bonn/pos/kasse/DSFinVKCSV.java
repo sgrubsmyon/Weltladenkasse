@@ -599,7 +599,6 @@ public class DSFinVKCSV extends WindowContent {
                 "     LIMIT 1"+ // SELECT * FROM kassenstand WHERE kassenstand_id > (SELECT kassenstand_id FROM kassenstand WHERE rechnungs_nr = 288) AND rechnungs_nr IS NULL AND manuell = TRUE AND entnahme = FALSE LIMIT 1;
                 "    ), 150.00) AS anfangsbestand");
             pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
-            pstmtSetInteger(pstmt, 2, abrechnung_tag_id);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 fields.put("Z_KASSE_ID", zvalues.get("Z_KASSE_ID"));
@@ -608,9 +607,9 @@ public class DSFinVKCSV extends WindowContent {
                 fields.put("GV_TYP", "Anfangsbestand");
                 fields.put("GV_NAME", "Anfangsbestand");
                 fields.put("AGENTUR_ID", "0");
-                fields.put("UST_SCHLUESSEL", rs.getString(4));
-                fields.put("Z_UMS_BRUTTO", rs.getString(5));
-                fields.put("Z_UMS_NETTO", rs.getString(5));
+                fields.put("UST_SCHLUESSEL", rs.getString(1));
+                fields.put("Z_UMS_BRUTTO", rs.getString(2));
+                fields.put("Z_UMS_NETTO", rs.getString(2));
                 fields.put("Z_UST", "0.00");
             }
             rs.close();
@@ -682,8 +681,8 @@ public class DSFinVKCSV extends WindowContent {
                 fields.put("Z_KASSE_ID", zvalues.get("Z_KASSE_ID"));
                 fields.put("Z_ERSTELLUNG", zvalues.get("Z_ERSTELLUNG"));
                 fields.put("Z_NR", zvalues.get("Z_NR"));
-                fields.put("GV_TYP", "Umsatz");
-                fields.put("GV_NAME", "Umsatz");
+                fields.put("GV_TYP", "Pfand");
+                fields.put("GV_NAME", "Pfand");
                 fields.put("AGENTUR_ID", "0");
                 fields.put("UST_SCHLUESSEL", rs.getString(2));
                 fields.put("Z_UMS_BRUTTO", rs.getString(3));
