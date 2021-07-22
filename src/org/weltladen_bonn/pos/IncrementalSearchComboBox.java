@@ -16,7 +16,13 @@ import java.lang.reflect.Field;
 import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 
+// Logging:
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public abstract class IncrementalSearchComboBox extends JComboBox<String> implements DocumentListener {
+    private static final Logger logger = LogManager.getLogger(IncrementalSearchComboBox.class);
+
     protected JTextComponent textFeld;
     protected String filterStr;
     protected int searchThresh = 3;
