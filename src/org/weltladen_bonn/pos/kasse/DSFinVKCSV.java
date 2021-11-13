@@ -534,14 +534,14 @@ public class DSFinVKCSV extends WindowContent {
                 fields.put("Z_KASSE_ID", zvalues.get("Z_KASSE_ID"));
                 fields.put("Z_ERSTELLUNG", zvalues.get("Z_ERSTELLUNG"));
                 fields.put("Z_NR", zvalues.get("Z_NR"));
-                fields.put("TSE_ID", rs.getString(4));
-                fields.put("TSE_SERIAL", rs.getString(5));
-                fields.put("TSE_SIG_ALGO", rs.getString(6));
-                fields.put("TSE_ZEITFORMAT", rs.getString(7));
-                fields.put("TSE_PD_ENCODING", rs.getString(8));
-                fields.put("TSE_PUBLIC_KEY", rs.getString(9));
-                fields.put("TSE_ZERTIFIKAT_I", rs.getString(10));
-                fields.put("TSE_ZERTIFIKAT_II", rs.getString(11));
+                fields.put("TSE_ID", rs.getString(1));
+                fields.put("TSE_SERIAL", rs.getString(2));
+                fields.put("TSE_SIG_ALGO", rs.getString(3));
+                fields.put("TSE_ZEITFORMAT", rs.getString(4));
+                fields.put("TSE_PD_ENCODING", rs.getString(5));
+                fields.put("TSE_PUBLIC_KEY", rs.getString(6));
+                fields.put("TSE_ZERTIFIKAT_I", rs.getString(7));
+                fields.put("TSE_ZERTIFIKAT_II", rs.getString(8));
             }
             rs.close();
             pstmt.close();
