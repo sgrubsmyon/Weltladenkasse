@@ -578,7 +578,9 @@ public class DSFinVKCSV extends WindowContent {
         // GV_TYP "Aufschlag" (nur für den hypothetischen Fall eines negativen Rabatts)
         writeToCSV_Z_GV_Typ_Aufschlag(abrechnung_tag_id, zvalues, filename);
         // GV_TYP "MehrzweckgutscheinKauf"
+        writeToCSV_Z_GV_Typ_MehrzweckgutscheinKauf(abrechnung_tag_id, zvalues, filename);
         // GV_TYP "MehrzweckgutscheinEinloesung"
+        writeToCSV_Z_GV_Typ_MehrzweckgutscheinEinloesung(abrechnung_tag_id, zvalues, filename);
         // GV_TYP "Anzahlungseinstellung"
         // GV_TYP "Anzahlungsaufloesung"
         // GV_TYP "Geldtransit" = Entnahme von Geld aus der Kasse bei Tagesabschluss (aus Tabelle `kassenstand` zu entnehmen)
@@ -787,13 +789,13 @@ public class DSFinVKCSV extends WindowContent {
         try {
             Connection connection = this.pool.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(
-                // SELECT mwst_satz, dsfinvk_ust_schluessel, SUM(ges_preis), SUM(ROUND(ges_preis / (1 + mwst_satz), 2)), SUM(ROUND(mwst_satz * ges_preis / (1 + mwst_satz), 2)) FROM verkauf_details INNER JOIN abrechnung_tag AS at INNER JOIN mwst USING (mwst_satz) WHERE at.id = 1689 AND rechnungs_nr >= at.rechnungs_nr_von AND rechnungs_nr <= at.rechnungs_nr_bis AND (artikel_id = 3) GROUP BY mwst_satz ORDER BY dsfinvk_ust_schluessel;
+                // SELECT mwst_satz, dsfinvk_ust_schluessel, SUM(ges_preis), SUM(ROUND(ges_preis / (1 + mwst_satz), 2)), SUM(ROUND(mwst_satz * ges_preis / (1 + mwst_satz), 2)) FROM verkauf_details INNER JOIN abrechnung_tag AS at INNER JOIN mwst USING (mwst_satz) WHERE at.id = 1689 AND rechnungs_nr >= at.rechnungs_nr_von AND rechnungs_nr <= at.rechnungs_nr_bis AND artikel_id = 3 GROUP BY mwst_satz ORDER BY dsfinvk_ust_schluessel;
                 "SELECT mwst_satz, dsfinvk_ust_schluessel, "+
                 "SUM(ges_preis), SUM(ROUND(ges_preis / (1 + mwst_satz), 2)), "+
                 "SUM(ROUND(mwst_satz * ges_preis / (1 + mwst_satz), 2)) "+
                 "FROM verkauf_details INNER JOIN abrechnung_tag AS at INNER JOIN mwst USING (mwst_satz) "+
                 "WHERE at.id = ? AND rechnungs_nr >= at.rechnungs_nr_von AND rechnungs_nr <= at.rechnungs_nr_bis "+
-                "AND (artikel_id = 3) "+ // select Aufschlag: special article "Manuelle Preisanpassung"
+                "AND artikel_id = 3 "+ // select Aufschlag: special article "Manuelle Preisanpassung"
                 "GROUP BY mwst_satz ORDER BY dsfinvk_ust_schluessel"
             );
             pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
@@ -820,6 +822,85 @@ public class DSFinVKCSV extends WindowContent {
             showDBErrorDialog(ex.getMessage());
         }
     }
+
+    public void writeToCSV_Z_GV_Typ_MehrzweckgutscheinKauf(int abrechnung_tag_id, HashMap<String, String> zvalues, String filename) {
+        // Get data mostly from the table `verkauf_details`
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                // SELECT mwst_satz, dsfinvk_ust_schluessel, SUM(ges_preis), SUM(ROUND(ges_preis / (1 + mwst_satz), 2)), SUM(ROUND(mwst_satz * ges_preis / (1 + mwst_satz), 2)) FROM verkauf_details INNER JOIN abrechnung_tag AS at INNER JOIN mwst USING (mwst_satz) WHERE at.id = 1578 AND rechnungs_nr >= at.rechnungs_nr_von AND rechnungs_nr <= at.rechnungs_nr_bis AND artikel_id = 6 GROUP BY mwst_satz ORDER BY dsfinvk_ust_schluessel;
+                "SELECT mwst_satz, dsfinvk_ust_schluessel, "+
+                "SUM(ges_preis), SUM(ROUND(ges_preis / (1 + mwst_satz), 2)), "+
+                "SUM(ROUND(mwst_satz * ges_preis / (1 + mwst_satz), 2)) "+
+                "FROM verkauf_details INNER JOIN abrechnung_tag AS at INNER JOIN mwst USING (mwst_satz) "+
+                "WHERE at.id = ? AND rechnungs_nr >= at.rechnungs_nr_von AND rechnungs_nr <= at.rechnungs_nr_bis "+
+                "AND artikel_id = 6 "+ // select MehrzweckgutscheinKauf: special article "Gutschein"
+                "GROUP BY mwst_satz ORDER BY dsfinvk_ust_schluessel"
+            );
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                HashMap<String, String> fields = new HashMap<String, String>();
+                fields.put("Z_KASSE_ID", zvalues.get("Z_KASSE_ID"));
+                fields.put("Z_ERSTELLUNG", zvalues.get("Z_ERSTELLUNG"));
+                fields.put("Z_NR", zvalues.get("Z_NR"));
+                fields.put("GV_TYP", "MehrzweckgutscheinKauf");
+                fields.put("GV_NAME", "MehrzweckgutscheinKauf");
+                fields.put("AGENTUR_ID", "0");
+                fields.put("UST_SCHLUESSEL", rs.getString(2));
+                fields.put("Z_UMS_BRUTTO", rs.getString(3));
+                fields.put("Z_UMS_NETTO", rs.getString(4));
+                fields.put("Z_UST", rs.getString(5));
+                writeToCSV(filename, fields);
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+    }
+    
+    public void writeToCSV_Z_GV_Typ_MehrzweckgutscheinEinloesung(int abrechnung_tag_id, HashMap<String, String> zvalues, String filename) {
+        // Get data mostly from the table `verkauf_details`
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                // SELECT mwst_satz, dsfinvk_ust_schluessel, SUM(ges_preis), SUM(ROUND(ges_preis / (1 + mwst_satz), 2)), SUM(ROUND(mwst_satz * ges_preis / (1 + mwst_satz), 2)) FROM verkauf_details INNER JOIN abrechnung_tag AS at INNER JOIN mwst USING (mwst_satz) WHERE at.id = 1659 AND rechnungs_nr >= at.rechnungs_nr_von AND rechnungs_nr <= at.rechnungs_nr_bis AND artikel_id = 7 GROUP BY mwst_satz ORDER BY dsfinvk_ust_schluessel;
+                "SELECT mwst_satz, dsfinvk_ust_schluessel, "+
+                "SUM(ges_preis), SUM(ROUND(ges_preis / (1 + mwst_satz), 2)), "+
+                "SUM(ROUND(mwst_satz * ges_preis / (1 + mwst_satz), 2)) "+
+                "FROM verkauf_details INNER JOIN abrechnung_tag AS at INNER JOIN mwst USING (mwst_satz) "+
+                "WHERE at.id = ? AND rechnungs_nr >= at.rechnungs_nr_von AND rechnungs_nr <= at.rechnungs_nr_bis "+
+                "AND artikel_id = 7 "+ // select MehrzweckgutscheinEinloesung: special article "Gutscheineinlösung"
+                "GROUP BY mwst_satz ORDER BY dsfinvk_ust_schluessel"
+            );
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                HashMap<String, String> fields = new HashMap<String, String>();
+                fields.put("Z_KASSE_ID", zvalues.get("Z_KASSE_ID"));
+                fields.put("Z_ERSTELLUNG", zvalues.get("Z_ERSTELLUNG"));
+                fields.put("Z_NR", zvalues.get("Z_NR"));
+                fields.put("GV_TYP", "MehrzweckgutscheinEinloesung");
+                fields.put("GV_NAME", "MehrzweckgutscheinEinloesung");
+                fields.put("AGENTUR_ID", "0");
+                fields.put("UST_SCHLUESSEL", rs.getString(2));
+                fields.put("Z_UMS_BRUTTO", rs.getString(3));
+                fields.put("Z_UMS_NETTO", rs.getString(4));
+                fields.put("Z_UST", rs.getString(5));
+                writeToCSV(filename, fields);
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+    }
+    
 
     /**
      *  EINZELAUFZEICHNUNGSMODUL
