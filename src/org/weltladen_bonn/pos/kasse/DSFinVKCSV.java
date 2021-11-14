@@ -574,6 +574,7 @@ public class DSFinVKCSV extends WindowContent {
         // GV_TYP "PfandRueckzahlung"
         writeToCSV_Z_GV_Typ_PfandRueckzahlung(abrechnung_tag_id, zvalues, filename);
         // GV_TYP "Rabatt"
+        writeToCSV_Z_GV_Typ_Rabatt(abrechnung_tag_id, zvalues, filename);
         // GV_TYP "Aufschlag" (nur für den hypothetischen Fall eines negativen Rabatts)
         // GV_TYP "MehrzweckgutscheinKauf"
         // GV_TYP "MehrzweckgutscheinEinloesung"
@@ -723,6 +724,47 @@ public class DSFinVKCSV extends WindowContent {
                 fields.put("Z_NR", zvalues.get("Z_NR"));
                 fields.put("GV_TYP", "PfandRueckzahlung");
                 fields.put("GV_NAME", "PfandRueckzahlung");
+                fields.put("AGENTUR_ID", "0");
+                fields.put("UST_SCHLUESSEL", rs.getString(2));
+                fields.put("Z_UMS_BRUTTO", rs.getString(3));
+                fields.put("Z_UMS_NETTO", rs.getString(4));
+                fields.put("Z_UST", rs.getString(5));
+                writeToCSV(filename, fields);
+            }
+            rs.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+    }
+
+    public void writeToCSV_Z_GV_Typ_Rabatt(int abrechnung_tag_id, HashMap<String, String> zvalues, String filename) {
+        // Get data mostly from the table `verkauf_details`
+        try {
+            Connection connection = this.pool.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(
+                // SELECT mwst_satz, dsfinvk_ust_schluessel, SUM(ges_preis), SUM(ROUND(ges_preis / (1 + mwst_satz), 2)), SUM(ROUND(mwst_satz * ges_preis / (1 + mwst_satz), 2)) FROM verkauf_details INNER JOIN abrechnung_tag AS at INNER JOIN mwst USING (mwst_satz) WHERE at.id = 1686 AND rechnungs_nr >= at.rechnungs_nr_von AND rechnungs_nr <= at.rechnungs_nr_bis AND (artikel_id = 1 OR artikel_id = 2 OR rabatt_id IS NOT NULL) GROUP BY mwst_satz ORDER BY dsfinvk_ust_schluessel;
+                // SELECT mwst_satz, dsfinvk_ust_schluessel, SUM(ges_preis), SUM(ROUND(ges_preis / (1 + mwst_satz), 2)), SUM(ROUND(mwst_satz * ges_preis / (1 + mwst_satz), 2)) FROM verkauf_details INNER JOIN abrechnung_tag AS at INNER JOIN mwst USING (mwst_satz) WHERE at.id = 1689 AND rechnungs_nr >= at.rechnungs_nr_von AND rechnungs_nr <= at.rechnungs_nr_bis AND (artikel_id = 1 OR artikel_id = 2 OR rabatt_id IS NOT NULL) GROUP BY mwst_satz ORDER BY dsfinvk_ust_schluessel;
+                // SELECT mwst_satz, dsfinvk_ust_schluessel, SUM(ges_preis), SUM(ROUND(ges_preis / (1 + mwst_satz), 2)), SUM(ROUND(mwst_satz * ges_preis / (1 + mwst_satz), 2)) FROM verkauf_details INNER JOIN abrechnung_tag AS at INNER JOIN mwst USING (mwst_satz) WHERE at.id = 1690 AND rechnungs_nr >= at.rechnungs_nr_von AND rechnungs_nr <= at.rechnungs_nr_bis AND (artikel_id = 1 OR artikel_id = 2 OR rabatt_id IS NOT NULL) GROUP BY mwst_satz ORDER BY dsfinvk_ust_schluessel;
+                "SELECT mwst_satz, dsfinvk_ust_schluessel, "+
+                "SUM(ges_preis), SUM(ROUND(ges_preis / (1 + mwst_satz), 2)), "+
+                "SUM(ROUND(mwst_satz * ges_preis / (1 + mwst_satz), 2)) "+
+                "FROM verkauf_details INNER JOIN abrechnung_tag AS at INNER JOIN mwst USING (mwst_satz) "+
+                "WHERE at.id = ? AND rechnungs_nr >= at.rechnungs_nr_von AND rechnungs_nr <= at.rechnungs_nr_bis "+
+                "AND (artikel_id = 1 OR artikel_id = 2 OR rabatt_id IS NOT NULL) "+ // select Rabatt: either "Manueller Rabatt" (on single item) or "Rabatt auf Rechnung" (on whole order) or via Rabattaktion
+                "GROUP BY mwst_satz ORDER BY dsfinvk_ust_schluessel"
+            );
+            pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                HashMap<String, String> fields = new HashMap<String, String>();
+                fields.put("Z_KASSE_ID", zvalues.get("Z_KASSE_ID"));
+                fields.put("Z_ERSTELLUNG", zvalues.get("Z_ERSTELLUNG"));
+                fields.put("Z_NR", zvalues.get("Z_NR"));
+                fields.put("GV_TYP", "Rabatt");
+                fields.put("GV_NAME", "Rabatt");
                 fields.put("AGENTUR_ID", "0");
                 fields.put("UST_SCHLUESSEL", rs.getString(2));
                 fields.put("Z_UMS_BRUTTO", rs.getString(3));

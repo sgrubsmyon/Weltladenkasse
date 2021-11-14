@@ -1364,6 +1364,7 @@ class AbrechnungenTag extends Abrechnungen {
 
         dsfinvk.writeToCSV_Stamm_USt(id, zvalues); // redo because now USt is sorted by DSFinV-K USt-Schlüssel
 
+        // added in this version update:
         dsfinvk.writeToCSV_Z_GV_Typ(id, zvalues);
         
         dsfinvk.writeToCSV_TSE_Transaktionen(id); // need to redo due to bug
