@@ -212,10 +212,11 @@ Guide":
     1. Scan barcode "Enter/Exit Configuration Mode" on page 1-1 (p. 7)
     2. Scan barcode "Configurable Prefix Character #1" on page 8-1 (p. 43)
     3. Scan barcodes "1", "7", "5" on page 16-1 (81) for left ctrl key /
-	"1", "7", "4" on page 16-1 (81) for left alt key
-    4. Scan barcode "Configurable Prefix Character #2" on page 8-1
-    5. Scan barcodes "0", "9", "9" on page 16-2 (82) for "c"
-    6. Scan barcode "Enter/Exit Configuration Mode" on page 1-1
+	"1", "7", "4" on page 16-1 (81) for left alt key /
+	"1", "4", "6" on page 16-1 (81) for F3 key
+    4. Only for Ctrl/Alt: Scan barcode "Configurable Prefix Character #2" on page 8-1 (p. 43)
+    5. Only for Ctrl/Alt: Scan barcodes "0", "9", "9" on page 16-2 (82) for "c"
+    6. Scan barcode "Enter/Exit Configuration Mode" on page 1-1 (p. 7)
 
 Set beeper options with codes on page 7-4 (p. 36).
 
