@@ -12,11 +12,7 @@ installed_via_pm() {
 
 # Check if mysql is in the $PATH, argument can be mysql root password:
 path_check() {
-    if [ -n "$1" ]; then
-        mysqladmin -p$1 --version &> /dev/null
-    else
-        mysqladmin --version &> /dev/null
-    fi
+    sudo mysqladmin --version &> /dev/null
     mysql_in_path=$(echo $?)
     echo $mysql_in_path
     #return $mysql_in_path
@@ -24,11 +20,7 @@ path_check() {
 
 # Check if mysql is executable, argument can be mysql root password:
 run_check() {
-    if [ -n "$1" ]; then
-        mysql -h localhost -u root -p$1 --execute="quit"
-    else
-        mysql -h localhost -u root -p --execute="quit"
-    fi
+    sudo mysql -u root --execute="quit"
     mysql_runs_ok=$(echo $?)
     echo $mysql_runs_ok
 }
@@ -41,20 +33,18 @@ print_problem_help() {
 
 echo -n "Checking if MySQL is installed via package manager... "
 echo $(installed_via_pm)
-read -s -p "Enter MySQL root password: " root_pwd; echo
 echo -n "Checking if MySQL admin tool is executable... "
-mysqladmin_executable=$(path_check $root_pwd)
+mysqladmin_executable=$(path_check)
 if [[ $mysqladmin_executable -eq 0 ]]; then echo "yes"; else echo "no"; fi
 echo -n "Checking if MySQL works... "
-mysql_works=$(run_check $root_pwd)
+mysql_works=$(run_check)
 if [[ $mysql_works -eq 0 ]]; then echo "yes"; else echo "no"; fi
 
 if [[ $(installed_via_pm) != "yes" && $mysql_works -ne 0 ]]; then
     echo -e "MySQL seems to be not installed. Trying to install it now (need root privileges)."
     sudo apt-get install mysql-server
-    read -s -p "Enter MySQL root password: " root_pwd; echo
     echo -n "Checking if MySQL works... "
-    mysql_works=$(run_check $root_pwd)
+    mysql_works=$(run_check)
     if [[ $(installed_via_pm) == "yes" && $mysql_works -eq 0 ]]; then
         echo -e "MySQL is now successfully installed."
     else
@@ -73,7 +63,7 @@ if [[ $(installed_via_pm) != "yes" && $mysql_works -ne 0 ]]; then
 fi
 
 echo ""
-`dirname $0`/mysql/generateDB.sh $root_pwd
+`dirname $0`/mysql/generateDB.sh -n
 
 exit 0
 
