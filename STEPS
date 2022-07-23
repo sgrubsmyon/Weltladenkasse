@@ -1,0 +1,9 @@
+  1. Run Kasse and check if last rechnungs_nr and Z_NR are as expected (if not, update retroactive CSV write code in AbrechnungenTag.java and CHANGELOG.md)
+  2. Install new software version (but still v2.0.2) on Ladenlaptop
+  3. Move old version of CSV file `transactions_tse.csv` out of the way
+  4. Move old version of CSV file `vat.csv` out of the way
+  5. Execute Kasse once for the retroactive CSV writeout
+  6. Check if everything OK (diff old and new CSV files)
+  7. Remove/Comment out lines doing retroactive CSV writeout (AbrechnungenTag.java)
+  8. Do version bump to v2.0.3 and add git tag
+  9. Install new software version v2.0.3 on Ladenlaptop
