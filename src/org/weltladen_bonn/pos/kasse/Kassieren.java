@@ -41,7 +41,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
     // Attribute:
     private final BigDecimal mitarbeiterRabatt = new BigDecimal("0.1");
     private final boolean allowMitarbeiterRabatt = true;
-    private final BigDecimal ecSchwelle = new BigDecimal("20.00");
+    private final BigDecimal ecSchwelle = new BigDecimal("10.00");
 
     private MainWindow mw;
     private Kundendisplay display;
