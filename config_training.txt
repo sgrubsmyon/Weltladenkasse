@@ -85,7 +85,7 @@ KASSE_SERIENNR = 000000003b8a8285
 # Markenbezeichnung der eingesetzten Kassen-Software: (https://github.com/sgrubsmyon/Weltladenkasse)
 KASSE_SW_BRAND = Weltladenkasse
 # Version der eingesetzten Kassen-Software:
-KASSE_SW_VERSION = v2.0.2
+KASSE_SW_VERSION = v2.0.3
 KASSE_BASISWAEH_CODE = EUR
 
 ###############################
@@ -105,7 +105,7 @@ TERMINAL_SERIENNR = R8DXP4H
 # Markenbezeichnung der eingesetzten Kassen-Software: (https://github.com/sgrubsmyon/Weltladenkasse)
 TERMINAL_SW_BRAND = Weltladenkasse
 # Version der eingesetzten Kassen-Software:
-TERMINAL_SW_VERSION = v2.0.2
+TERMINAL_SW_VERSION = v2.0.3
 
 ###########################
 # Stamm_Agenturen (pa.csv)

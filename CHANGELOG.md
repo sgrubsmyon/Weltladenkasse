@@ -5,8 +5,21 @@
 +---------+------------+------------+
 | v2.0.0  | 1511       | 1533       |
 | v2.0.1  | 1534       | 1535       |
-| v2.0.2  | 1536       |            |
+| v2.0.2  | 1536       | 1888       |
+| v2.0.3  | 1889       |            |
 +-----------------------------------+
+
+## v2.0.3
+
+  * Bug (eingeführt mit v2.0.0) behoben, durch den bei Storno von EC-Rechnungen fälschlicherweise immer der Kassenstand um den Rechnungsbetrag reduziert wurde. User wird nun gefragt, ob eine EC-Buchung ausgeführt wurde, also das Konto de\*r Kund\*in belastet wurde und der/die Kund\*in ausbezahlt werden muss. Falls nein, wird Kassenstand nicht geändert.
+  * Bug behoben, durch den abgebrochene Transaktionen (AVBelegabbruch) nicht in `transactions_tse.csv` geschrieben wurden. Fehlende Transaktionen wurden einmalig retrospektiv geschrieben.
+  * Ab jetzt werden die USt-Sätze in der Datei `vat.csv` nach dem DSFinV-K-USt-Schlüssel sortiert geschrieben. Für die Einheitlichkeit wurde retrospektiv neu geschrieben.
+  * EC-Schwelle (Mindestwert für EC-Zahlungen) von 20 € auf 10 € herabgesetzt.
+  * Implementierung der CSV-Exports in die Dateien:
+    * `businesscases.csv` (Kassenabschlussmodul)
+  * Einmaliges rückwirkendes Beschreiben Datei `businesscases.csv` für die Daten aus den Perioden von v2.0.0 und v2.0.1
+  * Letzte Rechnung mit v2.0.2: Nr. 40047 am 24.07.2022 (bis `Z_NR`/`abrechnung_tag.id` 1888)
+  * Erste Rechnung mit v2.0.3: Nr. 40047 am 25.07.2022 (ab `Z_NR`/`abrechnung_tag.id` 1889)
 
 ## v2.0.2
 

@@ -6,8 +6,8 @@
     <property name="build-resources" location="build/resources"/>
     <property name="lib" location="lib"/>
     <property name="resources" location="resources"/>
-    <property name="jarfile-kasse" location="Weltladenkasse_v2.0.2.jar"/>
-    <property name="jarfile-besteller" location="Weltladenbesteller_v2.0.2.jar"/>
+    <property name="jarfile-kasse" location="Weltladenkasse_v2.0.3.jar"/>
+    <property name="jarfile-besteller" location="Weltladenbesteller_v2.0.3.jar"/>
 
     <!-- with a little help from: https://ant.apache.org/manual/tutorial-HelloWorldWithAnt.html -->
     <path id="classpath">
