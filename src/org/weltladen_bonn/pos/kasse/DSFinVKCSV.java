@@ -509,6 +509,7 @@ public class DSFinVKCSV extends WindowContent {
             rs.close();
             pstmt.close();
             connection.close();
+            System.out.println("Done with vat.csv");
         } catch (SQLException ex) {
             logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
@@ -585,6 +586,7 @@ public class DSFinVKCSV extends WindowContent {
         // GV_TYP "Anzahlungsaufloesung"
         // GV_TYP "Geldtransit" = Entnahme von Geld aus der Kasse bei Tagesabschluss (aus Tabelle `kassenstand` zu entnehmen)
         // GV_TYP "DifferenzSollIst = Kassendifferenz bei Tagesabschluss
+        System.out.println("Done with businesscases.csv");
     }
 
     public void writeToCSV_Z_GV_Typ_Anfangsbestand(int abrechnung_tag_id, HashMap<String, String> zvalues, String filename) {
@@ -945,6 +947,7 @@ public class DSFinVKCSV extends WindowContent {
             rs.close();
             pstmt.close();
             connection.close();
+            System.out.println("Done with transactions_tse.csv");
         } catch (SQLException ex) {
             logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
