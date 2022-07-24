@@ -122,9 +122,9 @@ class AbrechnungenTag extends Abrechnungen {
         //    writeIntoDSFinVKCSVFilesTemporary(abr_id);
         // }
 
-        // back to normal
-        bc.KASSE_SW_VERSION = actualSWVersion;
-        bc.TERMINAL_SW_VERSION = actualSWVersion;
+        // // back to normal
+        // bc.KASSE_SW_VERSION = actualSWVersion;
+        // bc.TERMINAL_SW_VERSION = actualSWVersion;
     }
 
     void setSelectedZeitpunkt(String zp) {
