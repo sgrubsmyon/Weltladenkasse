@@ -114,13 +114,13 @@ class AbrechnungenTag extends Abrechnungen {
             writeIntoDSFinVKCSVFilesTemporary(abr_id);
         }
 
-        // // for the v2.0.2 days
-        // bc.KASSE_SW_VERSION = "v2.0.2";
-        // bc.TERMINAL_SW_VERSION = "v2.0.2";
-        // for (int abr_id = 1536; abr_id <= XXX; abr_id++) {
-        //    // writeIntoDSFinVKCSVFiles(abr_id);
-        //    writeIntoDSFinVKCSVFilesTemporary(abr_id);
-        // }
+        // for the v2.0.2 days
+        bc.KASSE_SW_VERSION = "v2.0.2";
+        bc.TERMINAL_SW_VERSION = "v2.0.2";
+        for (int abr_id = 1536; abr_id <= 1888; abr_id++) {
+           // writeIntoDSFinVKCSVFiles(abr_id);
+           writeIntoDSFinVKCSVFilesTemporary(abr_id);
+        }
 
         // back to normal
         bc.KASSE_SW_VERSION = actualSWVersion;
