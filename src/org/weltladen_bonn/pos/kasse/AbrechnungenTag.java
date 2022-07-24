@@ -1359,6 +1359,8 @@ class AbrechnungenTag extends Abrechnungen {
     }
 
     private void writeIntoDSFinVKCSVFilesTemporary(Integer id) {
+        System.out.println(id);
+
         // Retrieve generally used values
         HashMap<String, String> zvalues = dsfinvk.get_ZKasseID_ZErstellung_ZNr(id);
 
