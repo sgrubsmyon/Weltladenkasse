@@ -509,7 +509,6 @@ public class DSFinVKCSV extends WindowContent {
             rs.close();
             pstmt.close();
             connection.close();
-            System.out.println("Done with vat.csv");
         } catch (SQLException ex) {
             logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
@@ -586,7 +585,6 @@ public class DSFinVKCSV extends WindowContent {
         // GV_TYP "Anzahlungsaufloesung"
         // GV_TYP "Geldtransit" = Entnahme von Geld aus der Kasse bei Tagesabschluss (aus Tabelle `kassenstand` zu entnehmen)
         // GV_TYP "DifferenzSollIst = Kassendifferenz bei Tagesabschluss
-        System.out.println("Done with businesscases.csv");
     }
 
     public void writeToCSV_Z_GV_Typ_Anfangsbestand(int abrechnung_tag_id, HashMap<String, String> zvalues, String filename) {
@@ -923,8 +921,8 @@ public class DSFinVKCSV extends WindowContent {
                 "FROM abrechnung_tag AS at LEFT JOIN abrechnung_tag_tse AS att USING (id), "+
                 "  tse_transaction AS tt "+
                 "WHERE at.id = ? "+
-                "  AND STR_TO_DATE(tt.transaction_start, '%Y-%m-%dT%H:%i:%s.000+02:00') >= (SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = at.id - 1) "+
-                "  AND STR_TO_DATE(tt.transaction_start, '%Y-%m-%dT%H:%i:%s.000+02:00') <= at.zeitpunkt_real");
+                "  AND STR_TO_DATE(SUBSTRING(tt.transaction_start, 1, 19), '%Y-%m-%dT%H:%i:%s') >= (SELECT zeitpunkt_real FROM abrechnung_tag WHERE id = at.id - 1) "+
+                "  AND STR_TO_DATE(SUBSTRING(tt.transaction_start, 1, 19), '%Y-%m-%dT%H:%i:%s') <= at.zeitpunkt_real");
             pstmtSetInteger(pstmt, 1, abrechnung_tag_id);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -947,7 +945,6 @@ public class DSFinVKCSV extends WindowContent {
             rs.close();
             pstmt.close();
             connection.close();
-            System.out.println("Done with transactions_tse.csv");
         } catch (SQLException ex) {
             logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
