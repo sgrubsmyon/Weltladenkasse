@@ -86,8 +86,10 @@ Aufruf des Skripts mit:
 $ ./einkaufspreise.py --host=mangopi -i 246,247,249 (-n) (-e)
 Angabe der Bestellnummern der Inventur über -i, komma-separiert.
 Nutzung von '-n' (DRY_RUN), um erst mal zu testen, was passieren wird.
-Eventuell Nutzung von '-e', falls bereits korrekte Einkaufsrabatte/Einkaufspreise
-beibehalten werden sollen. (Habe ich beim letzten mal genutzt, man kann aber
+Man kann ruhig '-e' benutzen, dann werden bereits korrekte Einkaufsrabatte/Einkaufspreise
+beibehalten (keine unnötigen Upadte-Queries, die gar nichts ändern). Wenn der EKP/Rabatt
+sich geändert hat, wird das Produkt auch bei '-e' aktualisiert.
+(Habe ich beim letzten mal genutzt, man kann aber
 gerne -n setzen und mal vergleichen, was sich ohne -e so tut. Eventuell gibt es
 Produkte, die zwar den richtigen Rabattwert haben, aber trotzdem einen falschen
 EK-Preis, der durch -e dann nicht neu berechnet wird. Das wird dann aber als
@@ -285,6 +287,19 @@ def select_ekp_by_name(conn, lieferant='FairMail', name='FairMail Postkarte',
     return res
 
 
+def select_ekp_by_evp(conn, lieferant='Bingenheimer Saatgut AG', empf_vk_preis=3.10,
+        prod_gr='Saatgut', einkaufspreis=1.91):
+    selector_str = "lieferant_name = %s AND empf_vk_preis = %s"
+    selector_vals = [lieferant, empf_vk_preis]
+    if options.EXCLUDE_EXISTING:
+        selector_str += " AND (ek_preis IS NULL OR ek_preis != %s)"
+        selector_vals += [einkaufspreis]
+    res = select_ekp(conn, selector_str=selector_str,
+            selector_vals=selector_vals, prod_gr=prod_gr,
+            einkaufspreis=einkaufspreis)
+    return res
+
+
 
 ###
 
@@ -369,6 +384,18 @@ def update_ekp_by_name(conn, lieferant='FairMail', name='FairMail Postkarte',
             einkaufspreis=einkaufspreis)
 
 
+def update_ekp_by_evp(conn, lieferant='Bingenheimer Saatgut AG', empf_vk_preis=3.10,
+        prod_gr='Saatgut', einkaufspreis=1.91):
+    selector_str = "lieferant_name = %s AND empf_vk_preis = %s"
+    selector_vals = [lieferant, empf_vk_preis]
+    if options.EXCLUDE_EXISTING:
+        selector_str += " AND (ek_preis IS NULL OR ek_preis != %s)"
+        selector_vals += [einkaufspreis]
+    update_ekp(conn, selector_str=selector_str,
+            selector_vals=selector_vals, prod_gr=prod_gr,
+            einkaufspreis=einkaufspreis)
+
+
 
 ###
 
@@ -406,6 +433,15 @@ def ekp_setzen_by_name(conn, lieferant='FairMail', name='FairMail Postkarte',
             einkaufspreis=einkaufspreis)
     if not options.DRY_RUN:
         update_ekp_by_name(conn, lieferant=lieferant, name=name, prod_gr=prod_gr,
+                einkaufspreis=einkaufspreis)
+
+
+def ekp_setzen_by_evp(conn, lieferant='Bingenheimer Saatgut AG', empf_vk_preis=3.10,
+        prod_gr='Saatgut', einkaufspreis=1.91):
+    select_ekp_by_evp(conn, lieferant=lieferant, empf_vk_preis=empf_vk_preis, prod_gr=prod_gr,
+            einkaufspreis=einkaufspreis)
+    if not options.DRY_RUN:
+        update_ekp_by_evp(conn, lieferant=lieferant, empf_vk_preis=empf_vk_preis, prod_gr=prod_gr,
                 einkaufspreis=einkaufspreis)
 
 
@@ -739,6 +775,33 @@ ekp_setzen_by_name(conn, lieferant='Exil Music', name='Putumayo%',
 ekp_setzen_by_name(conn, lieferant='Bonner Geschichtswerkstatt', name='Lieber Leser%',
         prod_gr='Bücher', einkaufspreis=3.00)
 
+
+### Bingenheimer Saatgut
+
+# Alle Infos vom https://fachhandel.bingenheimersaatgut.de/bestellen nach Login
+# (VPE ist 5, daher wird hier durch 5 geteilt)
+# > 5.65/5  # Preisgruppe 1 (Preis ist 1.85 €)
+# > 8.35/5  # Preisgruppe 2 (Preis ist 2.75 €)
+# > 9.55/5  # Preisgruppe 3 (Preis ist 3.10 €)
+# > 12.85/5 # Preisgruppe 4 (Preis ist 4.20 €)
+
+###### Preisgruppe 1:
+ekp_setzen_by_evp(conn, lieferant='Bingenheimer Saatgut AG', empf_vk_preis=1.85, prod_gr='Saatgut', einkaufspreis=5.65/5)
+###### Preisgruppe 2:
+ekp_setzen_by_evp(conn, lieferant='Bingenheimer Saatgut AG', empf_vk_preis=2.75, prod_gr='Saatgut', einkaufspreis=8.35/5)
+###### Preisgruppe 3:
+ekp_setzen_by_evp(conn, lieferant='Bingenheimer Saatgut AG', empf_vk_preis=3.10, prod_gr='Saatgut', einkaufspreis=9.55/5)
+###### Preisgruppe 4:
+ekp_setzen_by_evp(conn, lieferant='Bingenheimer Saatgut AG', empf_vk_preis=4.20, prod_gr='Saatgut', einkaufspreis=12.85/5)
+###### Fridays Tomate
+# EKP = 11.00/20 (VPE 20)
+ekp_setzen_by_name(conn, lieferant='Bingenheimer Saatgut AG', name='%Friday Tomate Saatgut%', prod_gr='Saatgut', einkaufspreis=11.00/20)
+
+### Chocolatemakers
+ekp_setzen_by_name(conn, lieferant='chocolate makers', name='%Chocozeiltjes%', prod_gr='Tafelschokolade', einkaufspreis=3.22)
+ekp_setzen_by_name(conn, lieferant='chocolate makers', name='%40%%%', prod_gr='Tafelschokolade', einkaufspreis=2.49)
+ekp_setzen_by_name(conn, lieferant='chocolate makers', name='%52%%%', prod_gr='Tafelschokolade', einkaufspreis=2.49)
+ekp_setzen_by_name(conn, lieferant='chocolate makers', name='%75%%%', prod_gr='Tafelschokolade', einkaufspreis=2.49)
 
 conn.close()
 
