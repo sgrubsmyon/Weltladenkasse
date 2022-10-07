@@ -582,9 +582,14 @@ public class DSFinVKCSV extends WindowContent {
         // GV_TYP "MehrzweckgutscheinEinloesung"
         writeToCSV_Z_GV_Typ_MehrzweckgutscheinEinloesung(abrechnung_tag_id, zvalues, filename);
         // GV_TYP "Anzahlungseinstellung"
+        writeToCSV_Z_GV_Typ_Anzahlungseinstellung(abrechnung_tag_id, zvalues, filename);
         // GV_TYP "Anzahlungsaufloesung"
+        writeToCSV_Z_GV_Typ_Anzahlungsaufloesung(abrechnung_tag_id, zvalues, filename);
         // GV_TYP "Geldtransit" = Entnahme von Geld aus der Kasse bei Tagesabschluss (aus Tabelle `kassenstand` zu entnehmen)
+        writeToCSV_Z_GV_Typ_Geldtransit(abrechnung_tag_id, zvalues, filename);
         // GV_TYP "DifferenzSollIst = Kassendifferenz bei Tagesabschluss
+        writeToCSV_Z_GV_Typ_DifferenzSollIst(abrechnung_tag_id, zvalues, filename);
+
     }
 
     public void writeToCSV_Z_GV_Typ_Anfangsbestand(int abrechnung_tag_id, HashMap<String, String> zvalues, String filename) {
@@ -899,6 +904,16 @@ public class DSFinVKCSV extends WindowContent {
             logger.error("Exception:", ex);
             showDBErrorDialog(ex.getMessage());
         }
+    }
+
+    // ----------------------------------------
+
+    public void writeToCSV_Z_Zahlart(int abrechnung_tag_id, HashMap<String, String> zvalues) {
+        String filename = "payment.csv";
+        // Get data from tables `verkauf`, `verkauf_details`
+        // Gruppiert nach GV_TYP, Umsatzsteuersatz und Zahlart (Bar, EC, ..., bzw. Bar/Unbar)
+        //   jeweils die Summe der in dieser Tagesabrechnung enthaltenen Beträge:
+        //   (siehe Seite 28 der DSFinV-K und Anhang D, ab Seite 58):
     }
     
 

@@ -1353,6 +1353,7 @@ class AbrechnungenTag extends Abrechnungen {
 
         // KASSENABSCHLUSSMODUL
         dsfinvk.writeToCSV_Z_GV_Typ(id, zvalues);
+        dsfinvk.writeToCSV_Z_Zahlart(id, zvalues);
 
         // EINZELAUFZEICHNUNGSMODUL
         dsfinvk.writeToCSV_TSE_Transaktionen(id);
