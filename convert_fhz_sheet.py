@@ -56,3 +56,6 @@ def main():
 
     # Delete empty rows (e.g. only a category heading)
     fhz = fhz.loc[fhz['Artikelnummer'].notnull()]
+
+    # For rows with empty "Lieferant": set to FHZ Rheinland
+    fhz.loc[fhz['Lieferant'].isnull(), 'Lieferant'] = 'FHZ Rheinland'
