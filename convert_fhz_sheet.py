@@ -32,8 +32,6 @@ def main():
     fhz = read_ods(options.FHZ)
 
 # # For testing in ipython3:
-# import pandas as pd 
-# from pandas_ods_reader import read_ods                                                                                                          
 # fhz = read_ods('Bestellvorlage Lebensmittelpreisliste 3.0 2022.ods')
 
     # Find out where data actually starts
@@ -55,3 +53,6 @@ def main():
     fhz = fhz.iloc[(header_index+1):, :]
     # Set real column names
     fhz.columns = colnames
+
+    # Delete empty rows (e.g. only a category heading)
+    fhz = fhz.loc[fhz['Artikelnummer'].notnull()]
