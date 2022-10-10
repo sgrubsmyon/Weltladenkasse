@@ -54,8 +54,17 @@ def main():
     # Set real column names
     fhz.columns = colnames
 
-    # Delete empty rows (e.g. only a category heading)
+    # Extract the product groups
+    prod_groups = fhz.loc[fhz['Artikelnummer'].isnull(), 'Bezeichnung']
+    prod_groups = prod_groups[prod_groups.notnull()]
+
+    # Delete empty rows (e.g. only a group heading)
     fhz = fhz.loc[fhz['Artikelnummer'].notnull()]
 
     # For rows with empty "Lieferant": set to FHZ Rheinland
     fhz.loc[fhz['Lieferant'].isnull(), 'Lieferant'] = 'FHZ Rheinland'
+    
+    # Generate a column containing the FHZ product group for each product
+    fhz.loc[:, 'Produktgruppe'] = [prod_groups.loc[prod_groups.index < i].tolist()[-1] for i in fhz.index]
+
+    # Delete all products in groups 'Pfand' and 'Pfandeimer' because we have a different Pfand system
