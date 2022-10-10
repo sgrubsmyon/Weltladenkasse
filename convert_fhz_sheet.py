@@ -68,3 +68,4 @@ def main():
     fhz.loc[:, 'Produktgruppe'] = [prod_groups.loc[prod_groups.index < i].tolist()[-1] for i in fhz.index]
 
     # Delete all products in groups 'Pfand' and 'Pfandeimer' because we have a different Pfand system
+    fhz = fhz.loc[(fhz['Produktgruppe'] != 'Pfand') & (fhz['Produktgruppe'] != 'Pfandeimer')]
