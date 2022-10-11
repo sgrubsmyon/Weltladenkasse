@@ -28,6 +28,7 @@ def main():
 #     import numpy as np
     import pandas as pd
     from pandas_ods_reader import read_ods
+    import re
 
     fhz = read_ods(options.FHZ)
 
@@ -76,6 +77,21 @@ def main():
     # deviations from default:
     fhz.loc[no_einheit & (fhz.Bezeichnung.str.contains('Mango-Monkeys')), 'Einheit'] = 'g'
     fhz.loc[no_einheit & (fhz.Bezeichnung.str.contains('Mandeln geröstet & gesalzen')), 'Einheit'] = 'g'
+
+    # Set missing values of 'Menge'
+    no_menge = fhz['Menge (kg/l/St.)'].isnull()
+    fhz.loc[no_menge, 'Menge (kg/l/St.)'] = 1 # default value
+    # deviations from default
+    pattern = re.compile(r'(\b[0-9]+) St')
+    muskatnuss = fhz.Bezeichnung.str.contains('Muskatnu')
+    str = fhz.loc[no_menge & muskatnuss].Bezeichnung.to_string()
+    fhz.loc[no_menge & muskatnuss, 'Menge (kg/l/St.)'] = re.search(pattern, str).group(1)
+    vanille = fhz.Bezeichnung.str.contains('Vanille Schoten')
+    str = fhz.loc[no_menge & vanille].Bezeichnung.to_string()
+    fhz.loc[no_menge & vanille, 'Menge (kg/l/St.)'] = re.search(pattern, str).group(1)
+
+    # fhz.loc[no_einheit, ['Bezeichnung', 'Menge (kg/l/St.)', 'Einheit']]
+    # fhz.loc[no_menge, ['Bezeichnung', 'Menge (kg/l/St.)', 'Einheit']]
 
 
     # Write out resulting CSV file
