@@ -25,7 +25,7 @@ def main():
     # Load data #
     #############
 
-#     import numpy as np
+    import numpy as np
     import pandas as pd
     from pandas_ods_reader import read_ods
     import re
@@ -83,16 +83,75 @@ def main():
     fhz.loc[no_menge, 'Menge (kg/l/St.)'] = 1 # default value
     # deviations from default
     pattern = re.compile(r'(\b[0-9]+) St')
-    muskatnuss = fhz.Bezeichnung.str.contains('Muskatnu')
-    str = fhz.loc[no_menge & muskatnuss].Bezeichnung.to_string()
-    fhz.loc[no_menge & muskatnuss, 'Menge (kg/l/St.)'] = re.search(pattern, str).group(1)
-    vanille = fhz.Bezeichnung.str.contains('Vanille Schoten')
-    str = fhz.loc[no_menge & vanille].Bezeichnung.to_string()
-    fhz.loc[no_menge & vanille, 'Menge (kg/l/St.)'] = re.search(pattern, str).group(1)
+    muskatnuss = fhz.Bezeichnung.str.contains('Muskatnu') # caveat: this only works if there is only one atching row
+    string = fhz.loc[no_menge & muskatnuss].Bezeichnung.to_string()
+    fhz.loc[no_menge & muskatnuss, 'Menge (kg/l/St.)'] = re.search(pattern, string).group(1)
+    vanille = fhz.Bezeichnung.str.contains('Vanille Schoten') # caveat: this only works if there is only one atching row
+    string = fhz.loc[no_menge & vanille].Bezeichnung.to_string()
+    fhz.loc[no_menge & vanille, 'Menge (kg/l/St.)'] = re.search(pattern, string).group(1)
 
+    # For debugging:
     # fhz.loc[no_einheit, ['Bezeichnung', 'Menge (kg/l/St.)', 'Einheit']]
     # fhz.loc[no_menge, ['Bezeichnung', 'Menge (kg/l/St.)', 'Einheit']]
 
+    # Add missing columns:
+    fhz['Bezeichnung | Einheit'] = fhz.Bezeichnung + ' | ' + \
+        fhz['Menge (kg/l/St.)'].astype(int).astype(str) + ' ' + fhz.Einheit + ' ' + \
+            fhz.Verpackung
+    fhz['Kurzname'] = fhz.Bezeichnung
+    fhz['Sortiment'] = ''
+    fhz['Beliebtheit'] = ''
+    fhz['Barcode'] = ''
+    fhz['Setgröße'] = ''
+    fhz['VK-Preis'] = ''
+    fhz['Empf. VK-Preis'] = fhz['je Einheit']
+    fhz['EK-Rabatt'] = ''
+    fhz['EK-Preis'] = ''
+    fhz['Variabel'] = 'Nein'
+    fhz['Bestand'] = ''
 
+    # Modify some columns:
+    fhz.loc[(fhz.Einheit == 'g') | (fhz.Einheit == 'ml'), 'Menge (kg/l/St.)'] = \
+        fhz.loc[(fhz.Einheit == 'g') | (fhz.Einheit == 'ml'), 'Menge (kg/l/St.)'] / 1000.0
+    fhz.loc[fhz.Einheit == 'g', 'Einheit'] = 'kg'
+    fhz.loc[fhz.Einheit == 'ml', 'Einheit'] = 'l'
+    fhz['Sofort lieferbar'] = [ "Ja" if x == "x" else "Nein" for x in fhz['Sofort lieferbar'] ]
+
+    # Use correct datatypes for columns
+    artnummer_float = [ type(x) == float for x in fhz.Artikelnummer ]
+    fhz.loc[artnummer_float, 'Artikelnummer'] = fhz.loc[artnummer_float, 'Artikelnummer'] \
+        .astype(int).astype(str)
+    fhz['Artikelnummer'] = fhz['Artikelnummer'].astype(str)
+    fhz['Menge (kg/l/St.)'] = fhz['Menge (kg/l/St.)'].astype(float)
+    fhz['VPE'] = fhz['VPE'].astype(int)
+    fhz['Empf. VK-Preis'] = fhz['Empf. VK-Preis'].astype(float)
+
+    # Reorder columns to be in the correct format that is needed
+    fhz = fhz[[
+        'Produktgruppe',
+        'Lieferant',
+        'Artikelnummer',
+        'Bezeichnung | Einheit',
+        'Kurzname',
+        'Menge (kg/l/St.)',
+        'Einheit',
+        'Sortiment',
+        'Sofort lieferbar',
+        'Beliebtheit',
+        'Barcode',
+        'VPE',
+        'Setgröße',
+        'VK-Preis',
+        'Empf. VK-Preis',
+        'EK-Rabatt',
+        'EK-Preis',
+        'Variabel',
+        'Herkunftsland',
+        'Bestand'
+    ]]
+
+    # TODO check if file exists and ask if user wants it overwritten
     # Write out resulting CSV file
-    fhz.to_csv(options.FHZ[:-3]+'csv', sep=';')
+    fhz.to_csv(options.FHZ[:-3]+'csv', sep=';', index = False)
+    # For testing:
+    # fhz.to_csv('Bestellvorlage Lebensmittelpreisliste 3.0 2022.csv', sep=';', index = False)
