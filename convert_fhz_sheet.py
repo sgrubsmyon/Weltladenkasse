@@ -69,3 +69,11 @@ def main():
 
     # Delete all products in groups 'Pfand' and 'Pfandeimer' because we have a different Pfand system
     fhz = fhz.loc[(fhz['Produktgruppe'] != 'Pfand') & (fhz['Produktgruppe'] != 'Pfandeimer')]
+
+    # Set missing values for products without 'Einheit'
+    no_einheit = fhz.Einheit.isnull()
+    fhz.loc[no_einheit, 'Einheit'] = 'St.' # default value
+    # deviations from default:
+    fhz.loc[no_einheit & (fhz.Bezeichnung.str.contains('Mango-Monkeys')), 'Einheit'] = 'g'
+    fhz.loc[no_einheit & (fhz.Bezeichnung.str.contains('Mandeln geröstet & gesalzen')), 'Einheit'] = 'g'
+
