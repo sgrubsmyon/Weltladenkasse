@@ -77,3 +77,6 @@ def main():
     fhz.loc[no_einheit & (fhz.Bezeichnung.str.contains('Mango-Monkeys')), 'Einheit'] = 'g'
     fhz.loc[no_einheit & (fhz.Bezeichnung.str.contains('Mandeln geröstet & gesalzen')), 'Einheit'] = 'g'
 
+
+    # Write out resulting CSV file
+    fhz.to_csv(options.FHZ[:-3]+'csv', sep=';')
