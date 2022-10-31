@@ -12,7 +12,7 @@ def main():
     parser.add_option("--fhz", type="string",
                       default='Bestellvorlage Lebensmittelpreisliste 3.0 2022.ods',
                       dest="FHZ",
-                      help="The path to the FHZ .ods file.")
+                      help="The path to the FHZ .ods file. Output is written to the same filename, but with extension .csv.")
 #     parser.add_option("-n", action="store_true",
 #                       default=False,
 #                       dest="ADOPT_NAMES",
@@ -155,3 +155,7 @@ def main():
     fhz.to_csv(options.FHZ[:-3]+'csv', sep=';', index = False)
     # For testing:
     # fhz.to_csv('Bestellvorlage Lebensmittelpreisliste 3.0 2022.csv', sep=';', index = False)
+
+
+if __name__ == '__main__':
+    main()
