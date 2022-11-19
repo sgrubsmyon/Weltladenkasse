@@ -64,7 +64,7 @@ def main():
     fhz.columns = colnames
 
     # Extract the product groups
-    prod_groups = fhz.loc[fhz['Artikelnummer'].isnull(), 'Bezeichnung']
+    prod_groups = fhz.loc[(fhz['Artikelnummer'].isnull()) & (fhz['Lieferant'].isnull()), 'Bezeichnung']
     prod_groups = prod_groups[prod_groups.notnull()]
 
     # Delete empty rows (e.g. only a group heading)
@@ -93,7 +93,6 @@ def main():
         sg_indices.sort()
         super_group = ' - '.join([g.strip() for g in prod_groups.iloc[sg_indices]])
         pg = super_group + ' - ' + prod_group
-        print(pg)
         fhz.loc[i, 'Produktgruppe'] = pg
 
     # Delete all products in groups 'Pfand' and 'Pfandeimer' because we have a different Pfand system
