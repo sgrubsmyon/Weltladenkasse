@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Find index of last occurrence of item in list l:
+def index_of_last(item, l):
+    # Take reverse of the list
+    ll = l[::-1]
+    # Find first occurrence in the reversed list
+    rev_index = ll.index(item)
+    index = len(ll) - 1 - rev_index
+    return index
 
 def main():
     from optparse import OptionParser
@@ -12,7 +20,7 @@ def main():
     parser.add_option("--fhz", type="string",
                       default='Bestellvorlage Lebensmittelpreisliste 3.0 2022.ods',
                       dest="FHZ",
-                      help="The path to the FHZ .ods file.")
+                      help="The path to the FHZ .ods file. Output is written to the same filename, but with extension .csv.")
 #     parser.add_option("-n", action="store_true",
 #                       default=False,
 #                       dest="ADOPT_NAMES",
@@ -64,12 +72,32 @@ def main():
 
     # For rows with empty "Lieferant": set to FHZ Rheinland
     fhz.loc[fhz['Lieferant'].isnull(), 'Lieferant'] = 'FHZ Rheinland'
-    
+
     # Generate a column containing the FHZ product group for each product
-    fhz.loc[:, 'Produktgruppe'] = [prod_groups.loc[prod_groups.index < i].tolist()[-1] for i in fhz.index]
+    fhz.loc[:, 'Produktgruppe'] = '' # start with emtpy string and fill it later
+    for i in fhz.index:
+        pg_indices = prod_groups.index[prod_groups.index < i]
+        # Actual product group is located at last index:
+        prod_group = prod_groups.loc[pg_indices[-1]].strip()
+        # Product super group is harder to find:
+        # Find last occurrence of several product groups one after the other (adjacent rows), so last diff of 1
+        pg_index_diffs = pg_indices[1:] - pg_indices[:-1]
+        sg_index = index_of_last(1, pg_index_diffs.tolist())
+        # Now add all indices of 1 that are directly preceding (all other adjacent product group rows), if any
+        sg_indices = [sg_index]
+        is_one = True
+        while is_one and sg_index >= 0:
+            sg_index = sg_index - 1
+            is_one = pg_index_diffs[sg_index] == 1
+            if is_one: sg_indices.append(sg_index)
+        sg_indices.sort()
+        super_group = ' - '.join([g.strip() for g in prod_groups.iloc[sg_indices]])
+        pg = super_group + ' - ' + prod_group
+        print(pg)
+        fhz.loc[i, 'Produktgruppe'] = pg
 
     # Delete all products in groups 'Pfand' and 'Pfandeimer' because we have a different Pfand system
-    fhz = fhz.loc[(fhz['Produktgruppe'] != 'Pfand') & (fhz['Produktgruppe'] != 'Pfandeimer')]
+    fhz = fhz.loc[(fhz['Produktgruppe'] != 'Erfrischungsgetränke - Pfand') & (fhz['Produktgruppe'] != 'Großpackungen/Unverpackt - Kaffee - Pfandeimer')]
 
     # Set missing values for products without 'Einheit'
     no_einheit = fhz.Einheit.isnull()
@@ -155,3 +183,7 @@ def main():
     fhz.to_csv(options.FHZ[:-3]+'csv', sep=';', index = False)
     # For testing:
     # fhz.to_csv('Bestellvorlage Lebensmittelpreisliste 3.0 2022.csv', sep=';', index = False)
+
+
+if __name__ == '__main__':
+    main()
