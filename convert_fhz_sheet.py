@@ -114,12 +114,16 @@ def main():
     fhz.loc[no_menge, 'Menge (kg/l/St.)'] = 1 # default value
     # deviations from default
     pattern = re.compile(r'(\b[0-9]+) St')
-    muskatnuss = fhz.Bezeichnung.str.contains('Muskatnu') # caveat: this only works if there is only one atching row
-    string = fhz.loc[no_menge & muskatnuss].Bezeichnung.to_string()
-    fhz.loc[no_menge & muskatnuss, 'Menge (kg/l/St.)'] = re.search(pattern, string).group(1)
-    vanille = fhz.Bezeichnung.str.contains('Vanille Schoten') # caveat: this only works if there is only one atching row
-    string = fhz.loc[no_menge & vanille].Bezeichnung.to_string()
-    fhz.loc[no_menge & vanille, 'Menge (kg/l/St.)'] = re.search(pattern, string).group(1)
+    muskatnuss = fhz.Bezeichnung.str.contains('Muskatnu') # caveat: this only works if there is exactly one matching row
+    muskatnuss_no_menge = no_menge & muskatnuss
+    if (sum(muskatnuss_no_menge) == 1):
+        string = fhz.loc[muskatnuss_no_menge].Bezeichnung.to_string()
+        fhz.loc[muskatnuss_no_menge, 'Menge (kg/l/St.)'] = re.search(pattern, string).group(1)
+    vanille = fhz.Bezeichnung.str.contains('Vanille Schoten') # caveat: this only works if there is exactly one matching row
+    vanille_no_menge = no_menge & vanille
+    if (sum(vanille_no_menge) == 1):
+        string = fhz.loc[vanille_no_menge].Bezeichnung.to_string()
+        fhz.loc[vanille_no_menge, 'Menge (kg/l/St.)'] = re.search(pattern, string).group(1)
 
     # For debugging:
     # fhz.loc[no_einheit, ['Bezeichnung', 'Menge (kg/l/St.)', 'Einheit']]
@@ -127,8 +131,9 @@ def main():
 
     # Add missing columns:
     fhz['Bezeichnung | Einheit'] = fhz.Bezeichnung + ' | ' + \
-        fhz['Menge (kg/l/St.)'].astype(int).astype(str) + ' ' + fhz.Einheit + ' ' + \
-            fhz.Verpackung
+        np.where(fhz['Menge (kg/l/St.)'].notnull(), fhz['Menge (kg/l/St.)'].astype(int).astype(str), '') + \
+            np.where(fhz.Einheit.notnull(), ' ' + fhz.Einheit, '') + \
+            np.where(fhz.Verpackung.notnull(), ' ' + fhz.Verpackung, '')
     fhz['Kurzname'] = fhz.Bezeichnung
     fhz['Sortiment'] = ''
     fhz['Beliebtheit'] = ''
