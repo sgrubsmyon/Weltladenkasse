@@ -21,10 +21,10 @@ def main():
                       default='Bestellvorlage Lebensmittelpreisliste 3.0 2022.ods',
                       dest="FHZ",
                       help="The path to the FHZ .ods file. Output is written to the same filename, but with extension .csv.")
-#     parser.add_option("-n", action="store_true",
-#                       default=False,
-#                       dest="ADOPT_NAMES",
-#                       help="Artikelnamen ('Bezeichnung | Einheit') vom FHZ übernehmen?")
+    parser.add_option("--only-arrows", action="store_true",
+                      default=False,
+                      dest="ARROWS",
+                      help="Keep only rows with arrows (changes in price). Remove all other rows.")
 
     # get parsed args
     (options, args) = parser.parse_args()
@@ -69,6 +69,10 @@ def main():
 
     # Delete empty rows (e.g. only a group heading)
     fhz = fhz.loc[fhz['Artikelnummer'].notnull()]
+
+    if options.ARROWS:
+        # Delete rows not containing an arrow (indicating a price change)
+        fhz = fhz.loc[fhz['Preisänderung'].notnull()]
 
     # For rows with empty "Lieferant": set to FHZ Rheinland
     fhz.loc[fhz['Lieferant'].isnull(), 'Lieferant'] = 'FHZ Rheinland'
