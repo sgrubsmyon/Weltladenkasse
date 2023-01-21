@@ -467,8 +467,8 @@ def main():
                     print("Ändere Preis von:", str(wlb_preis), " zu:", str(fhz_preis))
                     sth_printed = True
                 wlb_neu.loc[name, 'VK-Preis'] = str(fhz_preis)
-                geaenderte_preise = pd.concat([geaenderte_preise, wlb_neu.loc[name]])
-                irgendeine_aenderung = pd.concat([irgendeine_aenderung, wlb_neu.loc[name]])
+                geaenderte_preise = pd.concat([geaenderte_preise, wlb_neu.loc[[name]]])
+                irgendeine_aenderung = pd.concat([irgendeine_aenderung, wlb_neu.loc[[name]]])
                 price_changed = True
                 sth_changed = True
 
@@ -483,7 +483,7 @@ def main():
             wlb_neu.loc[name, 'VPE'] = fhz_row['VPE']
             sth_printed = True
             if not sth_changed:
-                irgendeine_aenderung = pd.concat([irgendeine_aenderung, wlb_neu.loc[name]])
+                irgendeine_aenderung = pd.concat([irgendeine_aenderung, wlb_neu.loc[[name]]])
                 sth_changed = True
             else:
                 irgendeine_aenderung.loc[name, 'VPE'] = fhz_row['VPE']
@@ -497,10 +497,10 @@ def main():
             wlb_neu.loc[name, 'Menge (kg/l/St.)'] = '%.5f' % fhz_menge
             sth_printed = True
             if not price_changed:
-                geaenderte_preise = pd.concat([geaenderte_preise, wlb_neu.loc[name]])
+                geaenderte_preise = pd.concat([geaenderte_preise, wlb_neu.loc[[name]]])
                 price_changed = True
             if not sth_changed:
-                irgendeine_aenderung = pd.concat([irgendeine_aenderung, wlb_neu.loc[name]])
+                irgendeine_aenderung = pd.concat([irgendeine_aenderung, wlb_neu.loc[[name]]])
                 sth_changed = True
             else:
                 irgendeine_aenderung.loc[name, 'Menge (kg/l/St.)'] = '%.5f' % fhz_menge
@@ -512,7 +512,7 @@ def main():
             wlb_neu.loc[name, 'Einheit'] = fhz_row['Einheit']
             sth_printed = True
             if not sth_changed:
-                irgendeine_aenderung = pd.concat([irgendeine_aenderung, wlb_neu.loc[name]])
+                irgendeine_aenderung = pd.concat([irgendeine_aenderung, wlb_neu.loc[[name]]])
                 sth_changed = True
             else:
                 irgendeine_aenderung.loc[name, 'Einheit'] = fhz_row['Einheit']
@@ -582,8 +582,8 @@ def main():
                     '(%s, %s)' % (wlb_row['Bezeichnung | Einheit'],
                     wlb_row['Sortiment']))
             wlb_neu.loc[name, 'VK-Preis'] = str(neuer_preis)
-            geaenderte_preise = pd.concat([geaenderte_preise, wlb_row])
-            irgendeine_aenderung = pd.concat([irgendeine_aenderung, wlb_row])
+            geaenderte_preise = pd.concat([geaenderte_preise, wlb_neu.iloc[[i]]])
+            irgendeine_aenderung = pd.concat([irgendeine_aenderung, wlb_neu.iloc[[i]]])
     print(count, "VK-Preise wurden gerundet.")
     geaenderte_preise = removeEmptyRow(geaenderte_preise)
     irgendeine_aenderung = removeEmptyRow(irgendeine_aenderung)
@@ -662,7 +662,7 @@ def main():
             count += 1
             # From:
             # http://stackoverflow.com/questions/10715965/add-one-row-in-a-pandas-dataframe
-            wlb_neue_artikel = pd.concat([wlb_neue_artikel, fhz_row])
+            wlb_neue_artikel = pd.concat([wlb_neue_artikel, fhz.iloc[[i]]])
             fhz_preis = returnRoundedPrice(fhz_preis)
             wlb_neue_artikel.loc[name, 'VK-Preis'] = str(fhz_preis)
             print('"%s" nicht in WLB. (%s)' % (fhz_row['Bezeichnung | Einheit'], name))
@@ -690,7 +690,7 @@ def main():
             fhz.loc[name]
         except KeyError:
             count += 1
-            wlb_alte_artikel = pd.concat([wlb_alte_artikel, wlb_row])
+            wlb_alte_artikel = pd.concat([wlb_alte_artikel, wlb_neu.iloc[[i]]])
             # Change 'popularity' to 'ausgelistet' so that it will not be ordered any more:
             wlb_alte_artikel.loc[name, 'Beliebtheit'] = 'ausgelistet'
             print('"%s" nicht in FHZ. (%s)' % (wlb_row['Bezeichnung | Einheit'], name))
