@@ -382,10 +382,6 @@ def main():
     wlb.replace(to_replace=';', value=',', inplace=True, regex=True)
 
     # homogenize Lieferanten:
-    print('\n\n\n')
-    print('Lieferanten-Vergleich:')
-    print("WLB:", sorted(set(map(lambda i: i[0], wlb.index))))
-    print("FHZ:", set(map(lambda i: i[0], fhz.index)))
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('El Puente', i[1])
         if i[0] == 'EP' else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('El Puente', i[1])
@@ -407,8 +403,18 @@ def main():
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('unbekannt', i[1])
         if type(i[0]) == float and np.isnan(i[0]) else i, fhz.index.tolist())), names=fhz.index.names)
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('FHZ Rheinland', i[1])
+        if i[0] == 'FHZ' else i, fhz.index.tolist())), names=fhz.index.names)
+    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('FHZ Rheinland', i[1])
         if i[0] == 'unbekannt' else i, fhz.index.tolist())), names=fhz.index.names)
-    print("FHZ neu:", sorted(set(map(lambda i: i[0], fhz.index))))
+    print('\n\n\n')
+    print('Lieferanten in FHZ, die es nicht in WLB gibt (bitte ggf. in Kasse neu anlegen vor Einlesen der Produkte):')
+    fhz_lieferanten = sorted(set(map(lambda i: i[0], fhz.index)))
+    wlb_lieferanten = sorted(set(map(lambda i: i[0], wlb.index)))
+    missing_lieferanten = set()
+    for l in fhz_lieferanten:
+        if not l in wlb_lieferanten:
+            missing_lieferanten.add(l)
+    print(sorted(missing_lieferanten))
 
     # add '-' sign to article numbers in FHZ:
     # El Puente:
