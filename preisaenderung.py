@@ -224,47 +224,6 @@ def indexDuplicationCheck(df):
     return dup_indices
 
 
-def convertArtNumberEP(art_number):
-    '''
-    Convert El Puente (EP) article number from FHZ system to original system.
-    This means:
-        * First remove all '-' that might be there
-        * Insert a '-' after 3 chars
-        * Insert another '-' after 2 more chars
-    '''
-    art_number_temp = art_number.replace('-','').replace(' ','')
-    if len(art_number_temp) >= 8:
-        art_number_new = art_number_temp[0:3]+'-'+art_number_temp[3:5]+'-'+art_number_temp[5:]
-    else: # special case of short number (only 'ko4-1904' for Schalke coffee)
-        art_number_new = art_number_temp[0:3]+'-'+art_number_temp[3:]
-    return art_number_new
-
-
-def convertArtNumberWP(art_number):
-    '''
-    Convert wp article number from FHZ system to original system.
-    This means:
-        * First remove all '-' that might be there
-        * Remove leading 'r' if `art_number` starts with 3 or more letters
-        * Insert a '-' after 3 chars
-        * Insert another '-' after 2 more chars
-        * If `art_number` is long enough: insert another '-' after 3 more chars
-    '''
-    art_number_temp = art_number.replace('-','').replace(' ','')
-    try:
-        num_letters = len( re.search('^[a-zA-Z]*', art_number).group() )
-    except:
-        num_letters = 0
-    if (num_letters >= 3) and art_number.startswith('r'):
-        art_number_temp = art_number[1:]
-    art_number_new = art_number_temp[0:3]+'-'+art_number_temp[3:5]+'-'+art_number_temp[5:8]
-    if len(art_number_temp) > 8:
-        art_number_new += '-'+art_number_temp[8:10]
-    if len(art_number_temp) > 10:
-        art_number_new += '-'+art_number_temp[10:]
-    return art_number_new
-
-
 def specialTreatment(row, preis):
     '''
     `row`: One row of the FHZ DataFrame
@@ -417,14 +376,6 @@ def main():
         if not l in wlb_lieferanten:
             missing_lieferanten.add(l)
     print(sorted(missing_lieferanten))
-
-    # add '-' sign to article numbers in FHZ:
-    # El Puente:
-    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('El Puente', convertArtNumberEP(i[1]))
-        if i[0] == 'El Puente' else i, fhz.index.tolist())), names=fhz.index.names)
-    # wp:
-    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('WeltPartner', convertArtNumberWP(i[1]))
-        if i[0] == 'WeltPartner' else i, fhz.index.tolist())), names=fhz.index.names)
 
     # Make all article numbers lower case for better comparison:
       # First store the original article numbers:
