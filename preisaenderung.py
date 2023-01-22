@@ -224,7 +224,7 @@ def indexDuplicationCheck(df):
     return dup_indices
 
 
-def convert_art_number_ep(art_number):
+def convertArtNumberEP(art_number):
     '''
     Convert El Puente (EP) article number from FHZ system to original system.
     This means:
@@ -240,7 +240,7 @@ def convert_art_number_ep(art_number):
     return art_number_new
 
 
-def convert_art_number_wp(art_number):
+def convertArtNumberWP(art_number):
     '''
     Convert wp article number from FHZ system to original system.
     This means:
@@ -265,6 +265,15 @@ def convert_art_number_wp(art_number):
     return art_number_new
 
 
+def specialTreatment(row, preis):
+    '''
+    `row`: One row of the FHZ DataFrame
+    `preis`: Price as Decimal
+    '''
+    # Mini-Schoko-Täfelchen Großpackung GEPA
+    if row.Artikelnummer == '8901827' or row.Artikelnummer == '8901828':
+        preis += Decimal('1.00') # Always add 1 EUR to the price so that we earn something from it
+    return preis
 
 def returnRoundedPrice(preis):
     '''
@@ -279,11 +288,11 @@ def returnRoundedPrice(preis):
             preis += Decimal('0.01')
         elif ( (len(preis_str) > cent_index) and
                 (preis_str[cent_index] == '8') ):
-            # round up, i.e. add one cent:
+            # round up, i.e. add two cents:
             preis += Decimal('0.02')
         elif ( (len(preis_str) > cent_index) and
                 (preis_str[cent_index-1:cent_index+1] == '45') ):
-            # round up, i.e. add one cent:
+            # round up, i.e. add five cents:
             preis += Decimal('0.05')
     return preis
 
@@ -364,13 +373,6 @@ def main():
         print("---------------")
     print("---------------")
 
-    # Remove all newlines ('\n') from all fields
-    fhz.replace(to_replace='\n', value=', ', inplace=True, regex=True)
-    wlb.replace(to_replace='\n', value=', ', inplace=True, regex=True)
-    fhz.replace(to_replace=';', value=',', inplace=True, regex=True)
-    wlb.replace(to_replace=';', value=',', inplace=True, regex=True)
-
-
     ###################
     # Homogenize data #
     ###################
@@ -418,10 +420,10 @@ def main():
 
     # add '-' sign to article numbers in FHZ:
     # El Puente:
-    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('El Puente', convert_art_number_ep(i[1]))
+    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('El Puente', convertArtNumberEP(i[1]))
         if i[0] == 'El Puente' else i, fhz.index.tolist())), names=fhz.index.names)
     # wp:
-    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('WeltPartner', convert_art_number_wp(i[1]))
+    fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('WeltPartner', convertArtNumberWP(i[1]))
         if i[0] == 'WeltPartner' else i, fhz.index.tolist())), names=fhz.index.names)
 
     # Make all article numbers lower case for better comparison:
@@ -471,6 +473,7 @@ def main():
                     fhz_preis))
                 print("")
                 sth_printed = True
+            fhz_preis = specialTreatment(fhz_row, fhz_preis)
             fhz_preis = returnRoundedPrice(fhz_preis)
             #if ( abs(fhz_preis - wlb_preis) > 0.021 ):
             if ( abs(fhz_preis - wlb_preis) > 0. ):
