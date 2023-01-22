@@ -635,8 +635,6 @@ def main():
             wlb_neu.loc[name]
         except KeyError:
             count += 1
-            # From:
-            # http://stackoverflow.com/questions/10715965/add-one-row-in-a-pandas-dataframe
             wlb_neue_artikel = pd.concat([wlb_neue_artikel, fhz.iloc[[i]]])
             fhz_preis = returnRoundedPrice(fhz_preis)
             wlb_neue_artikel.loc[name, 'VK-Preis'] = str(fhz_preis)
