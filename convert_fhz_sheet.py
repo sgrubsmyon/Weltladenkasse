@@ -190,8 +190,6 @@ def main():
     # Mini-Schoko-Täfelchen Großpackung GEPA
     minis = [fhz.Artikelnummer == '8901827', fhz.Artikelnummer == '8901828']
     for mini in minis:
-        # XXX As this changes the Empf. VKP, move this to preisaenderung.py and modify only VKP, not Empf. VKP
-        fhz.loc[mini, 'Empf. VK-Preis'] = fhz.loc[mini, 'Empf. VK-Preis'] + 1 # Always add 1 EUR to the price so that we earn something from it
         fhz.loc[mini, 'VPE'] = 1 # VPE ist zwar 5, aber auf 1 lassen, weil wir sowieso keinen Rabatt kriegen und 500 Täfelchen ein MHD-Problem verursachen
         fhz.loc[mini, 'Menge (kg/l/St.)'] = 100.0
         fhz.loc[mini, 'Einheit'] = 'St.'

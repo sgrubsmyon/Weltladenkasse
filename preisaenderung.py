@@ -224,13 +224,16 @@ def indexDuplicationCheck(df):
     return dup_indices
 
 
-def specialTreatment(row, preis):
+def specialTreatment(row, preis, wlb_neu, name):
     '''
     `row`: One row of the FHZ DataFrame
     `preis`: Price as Decimal
+    `wlb_neu`: DataFrame holding the new WLB data
+    `name`: ID (combination Lieferant and Artikelnummer) to identify product
     '''
     # Mini-Schoko-Täfelchen Großpackung GEPA
     if row.Artikelnummer == '8901827' or row.Artikelnummer == '8901828':
+        wlb_neu.loc[name, 'EK-Preis'] = preis # Adopt the recommented sales price as procurement price
         preis += Decimal('1.00') # Always add 1 EUR to the price so that we earn something from it
     return preis
 
@@ -424,7 +427,7 @@ def main():
                     fhz_preis))
                 print("")
                 sth_printed = True
-            fhz_preis = specialTreatment(fhz_row, fhz_preis)
+            fhz_preis = specialTreatment(fhz_row, fhz_preis, wlb_neu, name)
             fhz_preis = returnRoundedPrice(fhz_preis)
             #if ( abs(fhz_preis - wlb_preis) > 0.021 ):
             if ( abs(fhz_preis - wlb_preis) > 0. ):
