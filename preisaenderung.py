@@ -31,14 +31,6 @@
         diese erzeugen später weitere Fehlermeldungen (Fehler evtl. ans FHZ
         melden)
     * Änderungen prüfen und ggf. eingreifen
-    * ACHTUNG: Mini-Täfelchen (Nr. 8901827 und 8901828) nicht ändern, d.h. entweder
-        vorher aus "Artikelliste_Bestellvorlage_Lebensmittelpreisliste_XXX.ods" oder
-        hinterher aus preisänderung_irgendeine_änderung.csv und preisänderung_geänderte_preise_sortiment.csv
-        löschen, außer wenn sich der Empf. VKP von 9 EUR tatsächlich ändert!
-        (VPE ist zwar 5, aber auf 1 lassen, weil wir sowieso keinen Rabatt
-        kriegen und 500 Täfelchen ein MHD-Problem verursachen.)
-        Im WLB ist der VKP mit Absicht höher als der Empf. VKP und die VPE ist mit Absicht
-        (falsch) auf 1 gesetzt.
     * ACHTUNG: Wenn Menge oder Einheit sich geändert haben, muss ggf. der Artikelname
         in preisänderung_irgendeine_änderung.csv von Hand geändert werden, wenn nicht -n benutzt wird.
         Am besten auf einem Zettel oder in `change_name.txt` notieren und hinterher händisch machen.
@@ -46,7 +38,7 @@
         ist (Fehler evtl. ans FHZ melden)
     * Auch gucken, ob neue Artikel eigentlich beim FHZ durchgestrichen sind und
         wir sie schon aus der DB entfernt haben.
-11.) Punkte 12 und 13 so lange ausführen, bis alles OK ist.
+11.) Punkte 9 und 10 so lange ausführen, bis alles OK ist.
 12.) Ergebnisse werden gespeichert in Dateien:
     * "preisänderung.csv" (alle Artikel, aktualisiert)
     * "preisänderung_irgendeine_änderung.csv" (alle Artikel, bei denen sich
