@@ -62,16 +62,11 @@
         werden.
         Daher: Die Spalte "Menge (kg/l/St.)" anklicken und Typ auf "Text"
             setzen.
-14.) Als ods-Datei speichern (Save As, "Artikelliste_LM_neu.ods"). Bis
-     jOpenDocument ODF Version 1.3 unterstützt (neu in LibreOffice 7.0, siehe
-     https://groups.google.com/g/jopendocument/c/Ueqx_vQmGog): 
-     Auf ODF v1.2 zurücksetzen unter Tools -> Options -> Load/Save -> General ODF format version:
-     "1.2 Extended"
+14.) Als ods-Datei speichern (Save As, "Artikelliste_LM_neu.ods").
 15.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
     die Datei "Artikelliste_LM_neu.ods" auswählen.
 16.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
     "preisänderung_geänderte_preise_sortiment.csv" auswählen.
-    Im Moment wegen jOpenDocument mit aktuellem Java kaputt.
 17.) Die Datei "preisänderung_neue_artikel.csv" mit LibreOffice öffnen,
     Semicolon als Separator, String Delimiter: '"'. Auch hier wieder: Die Spalte
     "Artikelnummer" anklicken und Typ auf "Text" setzen, Spalte "Menge (kg/l/St.)"
