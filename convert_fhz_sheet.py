@@ -197,7 +197,7 @@ def main():
 
     # Reorder columns to be in the correct format that is needed
     fhz = fhz[[
-        'Produktgruppe',
+        'Produktgruppe_WLB',
         'Lieferant',
         'Artikelnummer',
         'Bezeichnung | Einheit',
