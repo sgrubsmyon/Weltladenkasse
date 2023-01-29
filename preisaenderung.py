@@ -71,13 +71,7 @@
     Semicolon als Separator, String Delimiter: '"'. Auch hier wieder: Die Spalte
     "Artikelnummer" anklicken und Typ auf "Text" setzen, Spalte "Menge (kg/l/St.)"
     anklicken und Typ auf "Text" setzen.
-18.) Für jeden neuen Artikel eine existierende Produktgruppe wählen und in die
-    entspr. Spalte eintragen. Speichern als "preisänderung_neue_artikel.ods".
-    Produktgruppen können aus "Produktgruppen.ods" im Ordner der Weltladenkasse übernommen werden.
-    Wein-Geschenkkarton: "Ergänzungsprodukte"
-    Kaffee-/Teefilter/Teefilterclip: "Ergänzungsprodukte"
-    Papiertragetaschen etc.: "Ergänzungsprodukte"
-    Kokoblock: "Sonstiges Kunsthandwerk"
+18.) Speichern als "preisänderung_neue_artikel.ods".
 19.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
     die Datei "preisänderung_neue_artikel.ods" auswählen.
 20.) Evtl. schon vorhandene Artikel (z.B. Wein-Geschenkkartons), die jetzt rot
