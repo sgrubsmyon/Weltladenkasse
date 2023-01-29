@@ -77,16 +77,6 @@
 20.) Evtl. schon vorhandene Artikel (z.B. Wein-Geschenkkartons), die jetzt rot
     markiert sind, aus "preisänderung_neue_artikel.ods" löschen. Wenn Änderungen
     nötig sind (z.B. Preis), dann Artikel von Hand verändern.
-21.) Die Datei "preisänderung_alte_artikel.csv" mit LibreOffice öffnen,
-    Semicolon als Separator, String Delimiter: '"'. Auch hier wieder: Die Spalte
-    "Artikelnummer" anklicken und Typ auf "Text" setzen, Spalte "Menge (kg/l/St.)"
-    anklicken und Typ auf "Text" setzen. Speichern als "preisänderung_alte_artikel.ods".
-22.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
-    die Datei "preisänderung_alte_artikel.ods" auswählen. Dadurch werden alle Artikel,
-    die es beim FHZ nicht mehr gibt, in der Kasse auf "ausgelistet" gesetzt, d.h.
-    sie dürften dann nicht mehr versehentlich bestellt werden. Falls nicht mehr im
-    Laden vorhanden, können die Artikel auch auf "inaktiv" gesetzt werden (manuell
-    zu prüfen).
 
 ###
 
