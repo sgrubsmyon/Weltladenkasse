@@ -84,7 +84,7 @@ def main():
     fhz.loc[fhz['Lieferant'].isnull(), 'Lieferant'] = 'FHZ Rheinland'
 
     # Generate a column containing the FHZ product group for each product
-    fhz.loc[:, 'Produktgruppe'] = '' # start with emtpy string and fill it later
+    fhz['Produktgruppe'] = ''  # start with emtpy string and fill it later
     for i in fhz.index:
         pg_indices = prod_groups.index[prod_groups.index < i]
         # Actual product group is located at last index:
