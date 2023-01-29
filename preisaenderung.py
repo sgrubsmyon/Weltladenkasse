@@ -630,9 +630,9 @@ def main():
             wlb_neue_artikel = pd.concat([wlb_neue_artikel, fhz.iloc[[i]]])
             fhz_preis = returnRoundedPrice(fhz_preis)
             wlb_neue_artikel.loc[name, 'VK-Preis'] = str(fhz_preis)
-            print('"%s" nicht in WLB. (%s)' %
+            print('"%s" nicht in WLB. %s' %
                   (fhz_row['Bezeichnung | Einheit'], name))
-    print(count, "Artikel nicht in WLB.")
+    print(count, 'Artikel nicht in WLB.')
     wlb_neue_artikel = removeEmptyRow(wlb_neue_artikel)
     writeOutAsCSV(wlb_neue_artikel, 'preisänderung_neue_artikel.csv')
 
@@ -661,15 +661,15 @@ def main():
             if not name in irgendeine_aenderung.index:
                 irgendeine_aenderung = pd.concat([irgendeine_aenderung, wlb_neu.iloc[[i]]])
             irgendeine_aenderung.loc[name, 'Beliebtheit'] = 'ausgelistet'
-            print('"%s" nicht in FHZ. (%s)' %
+            print('"%s" nicht in FHZ. %s' %
                   (wlb_row['Bezeichnung | Einheit'], name))
-    print(count, "Artikel nicht in FHZ.")
+    print(count, 'Artikel nicht in FHZ.')
     wlb_alte_artikel = removeEmptyRow(wlb_alte_artikel)
     writeOutAsCSV(wlb_alte_artikel, 'preisänderung_alte_artikel.csv')
 
     # Check for duplicates in irgendeine_aenderung:
     gp_dup_indices = indexDuplicationCheck(irgendeine_aenderung)
-    print("Folgende Artikel kommen mehrfach in 'irgendeine_aenderung' vor:")
+    print('Folgende Artikel kommen mehrfach in "irgendeine_aenderung" vor:')
     for i in gp_dup_indices:
         print(irgendeine_aenderung.loc[i])
 
