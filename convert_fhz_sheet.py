@@ -10,6 +10,7 @@ def index_of_last(item, l):
     index = len(ll) - 1 - rev_index
     return index
 
+
 def main():
     from optparse import OptionParser
 
@@ -41,10 +42,12 @@ def main():
     import warnings
 
     fhz = read_ods(options.FHZ)
+    # fhz = read_ods('../releases/Preisänderungen/Preisänderung_2023-01-01/Bestellvorlage Lebensmittelpreisliste 3.2 2022.ods')
 
     path = os.path.dirname(os.path.realpath(__file__))
     prod_group_dict = pd.read_csv(os.path.join(
         path, 'prod_group_dicts', 'fhz.csv'), sep=';', dtype=str)
+    # prod_group_dict = pd.read_csv('prod_group_dicts/fhz.csv', sep=';', dtype=str)
 
 # # For testing in ipython3:
 # fhz = read_ods('Bestellvorlage Lebensmittelpreisliste 3.0 2022.ods')
@@ -70,7 +73,8 @@ def main():
     fhz.columns = colnames
 
     # Extract the product groups
-    prod_groups = fhz.loc[(fhz['Artikelnummer'].isnull()) & (fhz['Lieferant'].isnull()), 'Bezeichnung']
+    prod_groups = fhz.loc[(fhz['Artikelnummer'].isnull()) & (
+        fhz['Lieferant'].isnull()), 'Bezeichnung']
     prod_groups = prod_groups[prod_groups.notnull()]
 
     # Delete empty rows (e.g. only a group heading)
@@ -99,9 +103,11 @@ def main():
         while is_one and sg_index >= 0:
             sg_index = sg_index - 1
             is_one = pg_index_diffs[sg_index] == 1
-            if is_one: sg_indices.append(sg_index)
+            if is_one:
+                sg_indices.append(sg_index)
         sg_indices.sort()
-        super_group = ' - '.join([g.strip() for g in prod_groups.iloc[sg_indices]])
+        super_group = ' - '.join([g.strip()
+                                 for g in prod_groups.iloc[sg_indices]])
         pg = super_group + ' - ' + prod_group
         fhz.loc[i, 'Produktgruppe'] = pg
 
@@ -123,26 +129,32 @@ def main():
 
     # Set missing values for products without 'Einheit'
     no_einheit = fhz.Einheit.isnull()
-    fhz.loc[no_einheit, 'Einheit'] = 'St.' # default value
+    fhz.loc[no_einheit, 'Einheit'] = 'St.'  # default value
     # deviations from default:
-    fhz.loc[no_einheit & (fhz.Bezeichnung.str.contains('Mango-Monkeys')), 'Einheit'] = 'g'
-    fhz.loc[no_einheit & (fhz.Bezeichnung.str.contains('Mandeln geröstet & gesalzen')), 'Einheit'] = 'g'
+    fhz.loc[no_einheit & (fhz.Bezeichnung.str.contains(
+        'Mango-Monkeys')), 'Einheit'] = 'g'
+    fhz.loc[no_einheit & (fhz.Bezeichnung.str.contains(
+        'Mandeln geröstet & gesalzen')), 'Einheit'] = 'g'
 
     # Set missing values of 'Menge'
     no_menge = fhz['Menge (kg/l/St.)'].isnull()
-    fhz.loc[no_menge, 'Menge (kg/l/St.)'] = 1 # default value
+    fhz.loc[no_menge, 'Menge (kg/l/St.)'] = 1  # default value
     # deviations from default
     pattern = re.compile(r'(\b[0-9]+) St')
-    muskatnuss = fhz.Bezeichnung.str.contains('Muskatnu') # caveat: this only works if there is exactly one matching row
+    # caveat: this only works if there is exactly one matching row
+    muskatnuss = fhz.Bezeichnung.str.contains('Muskatnu')
     muskatnuss_no_menge = no_menge & muskatnuss
     if (sum(muskatnuss_no_menge) == 1):
         string = fhz.loc[muskatnuss_no_menge].Bezeichnung.to_string()
-        fhz.loc[muskatnuss_no_menge, 'Menge (kg/l/St.)'] = re.search(pattern, string).group(1)
-    vanille = fhz.Bezeichnung.str.contains('Vanille Schoten') # caveat: this only works if there is exactly one matching row
+        fhz.loc[muskatnuss_no_menge,
+                'Menge (kg/l/St.)'] = re.search(pattern, string).group(1)
+    # caveat: this only works if there is exactly one matching row
+    vanille = fhz.Bezeichnung.str.contains('Vanille Schoten')
     vanille_no_menge = no_menge & vanille
     if (sum(vanille_no_menge) == 1):
         string = fhz.loc[vanille_no_menge].Bezeichnung.to_string()
-        fhz.loc[vanille_no_menge, 'Menge (kg/l/St.)'] = re.search(pattern, string).group(1)
+        fhz.loc[vanille_no_menge,
+                'Menge (kg/l/St.)'] = re.search(pattern, string).group(1)
 
     # For debugging:
     # fhz.loc[no_einheit, ['Bezeichnung', 'Menge (kg/l/St.)', 'Einheit']]
@@ -151,8 +163,8 @@ def main():
     # Add missing columns:
     fhz['Bezeichnung | Einheit'] = fhz.Bezeichnung + ' | ' + \
         np.where(fhz['Menge (kg/l/St.)'].notnull(), fhz['Menge (kg/l/St.)'].astype(int).astype(str), '') + \
-            np.where(fhz.Einheit.notnull(), ' ' + fhz.Einheit, '') + \
-            np.where(fhz.Verpackung.notnull(), ' ' + fhz.Verpackung, '')
+        np.where(fhz.Einheit.notnull(), ' ' + fhz.Einheit, '') + \
+        np.where(fhz.Verpackung.notnull(), ' ' + fhz.Verpackung, '')
     fhz['Kurzname'] = fhz.Bezeichnung
     fhz['Sortiment'] = ''
     fhz['Beliebtheit'] = ''
@@ -167,13 +179,15 @@ def main():
 
     # Modify some columns:
     fhz.loc[(fhz.Einheit == 'g') | (fhz.Einheit == 'ml'), 'Menge (kg/l/St.)'] = \
-        fhz.loc[(fhz.Einheit == 'g') | (fhz.Einheit == 'ml'), 'Menge (kg/l/St.)'] / 1000.0
+        fhz.loc[(fhz.Einheit == 'g') | (fhz.Einheit == 'ml'),
+                'Menge (kg/l/St.)'] / 1000.0
     fhz.loc[fhz.Einheit == 'g', 'Einheit'] = 'kg'
     fhz.loc[fhz.Einheit == 'ml', 'Einheit'] = 'l'
-    fhz['Sofort lieferbar'] = [ "Ja" if x == "x" else "Nein" for x in fhz['Sofort lieferbar'] ]
+    fhz['Sofort lieferbar'] = ["Ja" if x ==
+                               "x" else "Nein" for x in fhz['Sofort lieferbar']]
 
     # Use correct datatypes for columns
-    artnummer_float = [ type(x) == float for x in fhz.Artikelnummer ]
+    artnummer_float = [type(x) == float for x in fhz.Artikelnummer]
     fhz.loc[artnummer_float, 'Artikelnummer'] = fhz.loc[artnummer_float, 'Artikelnummer'] \
         .astype(int).astype(str)
     fhz['Artikelnummer'] = fhz['Artikelnummer'].astype(str)
@@ -205,17 +219,18 @@ def main():
         'Bestand'
     ]]
 
-    ######### Special treatment of certain products
+    # Special treatment of certain products
     # Mini-Schoko-Täfelchen Großpackung GEPA
     minis = [fhz.Artikelnummer == '8901827', fhz.Artikelnummer == '8901828']
     for mini in minis:
-        fhz.loc[mini, 'VPE'] = 1 # VPE ist zwar 5, aber auf 1 lassen, weil wir sowieso keinen Rabatt kriegen und 500 Täfelchen ein MHD-Problem verursachen
+        # VPE ist zwar 5, aber auf 1 lassen, weil wir sowieso keinen Rabatt kriegen und 500 Täfelchen ein MHD-Problem verursachen
+        fhz.loc[mini, 'VPE'] = 1
         fhz.loc[mini, 'Menge (kg/l/St.)'] = 100.0
         fhz.loc[mini, 'Einheit'] = 'St.'
 
     # TODO check if file exists and ask if user wants it overwritten
     # Write out resulting CSV file
-    fhz.to_csv(options.FHZ[:-3]+'csv', sep=';', index = False)
+    fhz.to_csv(options.FHZ[:-3]+'csv', sep=';', index=False)
     # For testing:
     # fhz.to_csv('Bestellvorlage Lebensmittelpreisliste 3.0 2022.csv', sep=';', index = False)
 
