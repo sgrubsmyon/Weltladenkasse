@@ -37,8 +37,14 @@ def main():
     import pandas as pd
     from pandas_ods_reader import read_ods
     import re
+    import os
+    import warnings
 
     fhz = read_ods(options.FHZ)
+
+    path = os.path.dirname(os.path.realpath(__file__))
+    prod_group_dict = pd.read_csv(os.path.join(
+        path, 'prod_group_dicts', 'fhz.csv'), sep=';', dtype=str)
 
 # # For testing in ipython3:
 # fhz = read_ods('Bestellvorlage Lebensmittelpreisliste 3.0 2022.ods')
@@ -100,7 +106,20 @@ def main():
         fhz.loc[i, 'Produktgruppe'] = pg
 
     # Delete all products in groups 'Pfand' and 'Pfandeimer' because we have a different Pfand system
-    fhz = fhz.loc[(fhz['Produktgruppe'] != 'Erfrischungsgetränke - Pfand') & (fhz['Produktgruppe'] != 'Großpackungen/Unverpackt - Kaffee - Pfandeimer')]
+    fhz = fhz.loc[(fhz['Produktgruppe'] != 'Erfrischungsgetränke - Pfand') &
+                  (fhz['Produktgruppe'] != 'Großpackungen/Unverpackt - Kaffee - Pfandeimer')]
+
+    # Translate the FHZ product groups to WLB product groups using the dictionary
+    # start with empty string by default for those without match
+    fhz['Produktgruppe_WLB'] = ''
+    for i in fhz.index:
+        pg_fhz = fhz.loc[i, 'Produktgruppe']
+        pg_series = prod_group_dict.loc[prod_group_dict.FHZ == pg_fhz, 'WLB']
+        if len(pg_series) > 0:
+            pg = pg_series.iloc[0]  # get first element
+            fhz.loc[i, 'Produktgruppe_WLB'] = pg
+        else:
+            warnings.warn(f'FHZ-Produktgruppe "{pg_fhz}" bisher unbekannt!!! Bitte in `prod_group_dicts/fhz.csv` eintragen!')
 
     # Set missing values for products without 'Einheit'
     no_einheit = fhz.Einheit.isnull()
