@@ -578,15 +578,6 @@ def main():
     writeOutAsCSV(gp_sortiment,
                   'preisänderung_geänderte_preise_sortiment_alle_felder.csv')
 
-    # Check for duplicates in irgendeine_aenderung:
-    gp_dup_indices = indexDuplicationCheck(irgendeine_aenderung)
-    print("Folgende Artikel kommen mehrfach in 'irgendeine_aenderung' vor:")
-    for i in gp_dup_indices:
-        print(irgendeine_aenderung.loc[i])
-
-    writeOutAsCSV(irgendeine_aenderung,
-                  'preisänderung_irgendeine_änderung.csv')
-
     #####################
     # Consistency check #
     #####################
@@ -667,11 +658,23 @@ def main():
             wlb_alte_artikel = pd.concat([wlb_alte_artikel, wlb_neu.iloc[[i]]])
             # Change 'popularity' to 'ausgelistet' so that it will not be ordered any more:
             wlb_alte_artikel.loc[name, 'Beliebtheit'] = 'ausgelistet'
+            if not name in irgendeine_aenderung.index:
+                irgendeine_aenderung = pd.concat([irgendeine_aenderung, wlb_neu.iloc[[i]]])
+            irgendeine_aenderung.loc[name, 'Beliebtheit'] = 'ausgelistet'
             print('"%s" nicht in FHZ. (%s)' %
                   (wlb_row['Bezeichnung | Einheit'], name))
     print(count, "Artikel nicht in FHZ.")
     wlb_alte_artikel = removeEmptyRow(wlb_alte_artikel)
     writeOutAsCSV(wlb_alte_artikel, 'preisänderung_alte_artikel.csv')
+
+    # Check for duplicates in irgendeine_aenderung:
+    gp_dup_indices = indexDuplicationCheck(irgendeine_aenderung)
+    print("Folgende Artikel kommen mehrfach in 'irgendeine_aenderung' vor:")
+    for i in gp_dup_indices:
+        print(irgendeine_aenderung.loc[i])
+
+    writeOutAsCSV(irgendeine_aenderung,
+                  'preisänderung_irgendeine_änderung.csv')
 
 
 if __name__ == '__main__':
