@@ -125,7 +125,8 @@ def main():
             pg = pg_series.iloc[0]  # get first element
             fhz.loc[i, 'Produktgruppe_WLB'] = pg
         else:
-            warnings.warn(f'FHZ-Produktgruppe "{pg_fhz}" bisher unbekannt!!! Bitte in `prod_group_dicts/fhz.csv` eintragen!')
+            warnings.warn(
+                f'FHZ-Produktgruppe "{pg_fhz}" bisher unbekannt!!! Bitte in `prod_group_dicts/fhz.csv` eintragen!')
 
     # Set missing values for products without 'Einheit'
     no_einheit = fhz.Einheit.isnull()
@@ -195,9 +196,15 @@ def main():
     fhz['VPE'] = fhz['VPE'].astype(int)
     fhz['Empf. VK-Preis'] = fhz['Empf. VK-Preis'].astype(float)
 
+    # Rename columns
+    fhz = fhz.rename(
+        columns={'Produktgruppe': 'Produktgruppe_FHZ'})
+    fhz = fhz.rename(
+        columns={'Produktgruppe_WLB': 'Produktgruppe'})
+
     # Reorder columns to be in the correct format that is needed
     fhz = fhz[[
-        'Produktgruppe_WLB',
+        'Produktgruppe',
         'Lieferant',
         'Artikelnummer',
         'Bezeichnung | Einheit',
