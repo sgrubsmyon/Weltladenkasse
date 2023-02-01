@@ -638,15 +638,25 @@ def main():
         try:
             fhz.loc[name]
         except KeyError:
-            count += 1
-            wlb_alte_artikel = pd.concat([wlb_alte_artikel, wlb_neu.iloc[[i]]])
-            # Change 'popularity' to 'ausgelistet' so that it will not be ordered any more:
-            wlb_alte_artikel.loc[name, 'Beliebtheit'] = 'ausgelistet'
-            if not name in irgendeine_aenderung.index:
-                irgendeine_aenderung = pd.concat([irgendeine_aenderung, wlb_neu.iloc[[i]]])
-            irgendeine_aenderung.loc[name, 'Beliebtheit'] = 'ausgelistet'
-            print('"%s" nicht in FHZ. %s' %
-                  (wlb_row['Bezeichnung | Einheit'], name))
+            # Add exceptions here:
+            if \
+                    not wlb_row['Artikelnummer'].startswith('SONSTIGES'):
+                    # and not name[0] == 'Christoph Bäcker' \
+                    # and not name[0] == 'Bingenheimer Saatgut AG' \
+                    # and not name[0] == 'Bantam' \
+                    # and not name[0] == 'Biologische Station Bonn' \
+                    # and not name[0] == 'Imkerei Uni Bonn':
+                count += 1
+                wlb_alte_artikel = pd.concat(
+                    [wlb_alte_artikel, wlb_neu.iloc[[i]]])
+                # Change 'popularity' to 'ausgelistet' so that it will not be ordered any more:
+                wlb_alte_artikel.loc[name, 'Beliebtheit'] = 'ausgelistet'
+                if not name in irgendeine_aenderung.index:
+                    irgendeine_aenderung = pd.concat(
+                        [irgendeine_aenderung, wlb_neu.iloc[[i]]])
+                irgendeine_aenderung.loc[name, 'Beliebtheit'] = 'ausgelistet'
+                print('"%s" nicht in FHZ. %s' %
+                      (wlb_row['Bezeichnung | Einheit'], name))
     print(count, 'Artikel nicht in FHZ.')
     wlb_alte_artikel = removeEmptyRow(wlb_alte_artikel)
     writeOutAsCSV(wlb_alte_artikel, 'preisänderung_alte_artikel.csv')
