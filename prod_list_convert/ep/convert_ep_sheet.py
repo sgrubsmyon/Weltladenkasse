@@ -43,8 +43,10 @@ def main():
     ep = ep.loc[ep.Rubrik != 'Ausgelistet']
     ep = ep.loc[ep['VK-Preis von'] > 0]
     ep = ep.loc[ep.Warengruppe != 'Transport, Versandkosten']
+    # ep = ep.loc[(ep.Warengruppe != 'Verpackung') | (ep.Artikelgruppe != 'Verpackung')]
     ep = ep.loc[ep.Artikelnummer != 'XXX']
-    # excluce temporary price reductions ("Abverkauf"/"Angebot") whose article number ends with "A"
+    ep = ep.loc[ep.Artikelnummer != 'KANTINE']
+    # Excluce temporary price reductions ("Abverkauf"/"Angebot") whose article number ends with "A"
     pattern = re.compile(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{2}-[a-zA-Z0-9]{3}A$')
     ep = ep.loc[ep.Artikelnummer.map(lambda a: pattern.search(a) == None)]
     ep = ep.loc[ep['Bezeichnung 1'] != 'test']
@@ -53,6 +55,32 @@ def main():
     ep = ep.loc[ep['Bezeichnung 2'] != 'Test 2']
     ep = ep.loc[ep['Bezeichnung 2'] != 'Test 3']
     ep = ep.loc[ep['Bezeichnung 2'] != 'Test 4']
+    # Exclude all Pfand articles because we have a different Pfand system
+    ep = ep.loc[np.invert(ep.Artikelnummer.str.contains('PFAND'))]
+    ep = ep.loc[ep.Artikelnummer != 'COLAFLASCHE']
+    ep = ep.loc[ep.Artikelnummer != 'COLAKISTE']
+    ep = ep.loc[ep.Artikelnummer != 'EINWEG']
+    # Exclude "Etiketten" (labels)
+    # pattern = re.compile(r'[0-9]{3}RS$')
+    # ep = ep.loc[ep.Artikelnummer.map(lambda a: pattern.search(a) == None)]
+    # pattern = re.compile(r'[0-9]{3}VS$')
+    # ep = ep.loc[ep.Artikelnummer.map(lambda a: pattern.search(a) == None)]
+    # pattern = re.compile(r'[0-9]{3}VR$')
+    # ep = ep.loc[ep.Artikelnummer.map(lambda a: pattern.search(a) == None)]
+    # pattern = re.compile(r'[0-9]{3}ITVR$')
+    # ep = ep.loc[ep.Artikelnummer.map(lambda a: pattern.search(a) == None)]
+    ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('Rückenetikett'))]
+    ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('Rückeetikett'))]
+    ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('Rückenretikett'))]
+    ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('Vorderetikett'))]
+    ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('Vorderretikett'))]
+    ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('Zusatzetikett'))]
+    ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('46 Zusatzetikett'))]
+    ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('34 Zusatzetiket'))]
+    
+    # ep.to_excel('prod_list_convert/ep/test.xlsx') # look for strange things
+    # pattern = re.compile(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{2}-[a-zA-Z0-9]+$')
+    # ep.loc[ep.Artikelnummer.map(lambda a: pattern.search(a) == None)].to_excel('prod_list_convert/ep/test.xlsx') # look for strange things
 
     # Extract the product groups
     ep['Produktgruppe'] = ep['Hauptgruppe'] + ' - ' + \
