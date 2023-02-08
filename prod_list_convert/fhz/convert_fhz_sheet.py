@@ -46,11 +46,8 @@ def main():
 
     path = os.path.dirname(os.path.realpath(__file__))
     prod_group_dict = pd.read_csv(os.path.join(
-        path, 'prod_group_dicts', 'fhz.csv'), sep=';', dtype=str)
-    # prod_group_dict = pd.read_csv('prod_group_dicts/fhz.csv', sep=';', dtype=str)
-
-# # For testing in ipython3:
-# fhz = read_ods('Bestellvorlage Lebensmittelpreisliste 3.0 2022.ods')
+        path, 'prod_group_dict_fhz.csv'), sep=';', dtype=str)
+    # prod_group_dict = pd.read_csv('prod_list_convert/fhz/prod_group_dict_fhz.csv', sep=';', dtype=str)
 
     # Find out where data actually starts
     header_index = fhz.index[fhz.iloc[:, 0] == 'Neu'][0]
