@@ -88,88 +88,44 @@ def main():
     prod_groups = ep['Produktgruppe'].unique()
     # print(prod_groups) # Copy from terminal and insert into LibreOffice
 
-############################
-    # XXX Continue here
 
-    # Delete empty rows (e.g. only a group heading)
-    fhz = fhz.loc[fhz['Artikelnummer'].notnull()]
-
-    # For rows with empty "Lieferant": set to FHZ Rheinland
-    fhz.loc[fhz['Lieferant'].isnull(), 'Lieferant'] = 'FHZ Rheinland'
-
-    # Generate a column containing the FHZ product group for each product
-    fhz['Produktgruppe'] = ''  # start with emtpy string and fill it later
-    for i in fhz.index:
-        pg_indices = prod_groups.index[prod_groups.index < i]
-        # Actual product group is located at last index:
-        prod_group = prod_groups.loc[pg_indices[-1]].strip()
-        # Product super group is harder to find:
-        # Find last occurrence of several product groups one after the other (adjacent rows), so last diff of 1
-        pg_index_diffs = pg_indices[1:] - pg_indices[:-1]
-        sg_index = index_of_last(1, pg_index_diffs.tolist())
-        # Now add all indices of 1 that are directly preceding (all other adjacent product group rows), if any
-        sg_indices = [sg_index]
-        is_one = True
-        while is_one and sg_index >= 0:
-            sg_index = sg_index - 1
-            is_one = pg_index_diffs[sg_index] == 1
-            if is_one:
-                sg_indices.append(sg_index)
-        sg_indices.sort()
-        super_group = ' - '.join([g.strip()
-                                 for g in prod_groups.iloc[sg_indices]])
-        pg = super_group + ' - ' + prod_group
-        fhz.loc[i, 'Produktgruppe'] = pg
-
-    # Delete all products in groups 'Pfand' and 'Pfandeimer' because we have a different Pfand system
-    fhz = fhz.loc[(fhz['Produktgruppe'] != 'Erfrischungsgetränke - Pfand') &
-                  (fhz['Produktgruppe'] != 'Großpackungen/Unverpackt - Kaffee - Pfandeimer')]
-
-    # Translate the FHZ product groups to WLB product groups using the dictionary
-    # start with empty string by default for those without match
-    fhz['Produktgruppe_WLB'] = ''
-    for i in fhz.index:
-        pg_fhz = fhz.loc[i, 'Produktgruppe']
-        pg_series = prod_group_dict.loc[prod_group_dict.FHZ == pg_fhz, 'WLB']
+    # Translate the EP product groups to WLB product groups using the dictionary.
+    # Start with empty string by default for those without match.
+    ep['Produktgruppe_WLB'] = ''
+    for i in ep.index:
+        pg_ep = ep.loc[i, 'Produktgruppe']
+        pg_series = prod_group_dict.loc[prod_group_dict.EP == pg_ep, 'WLB']
         if len(pg_series) > 0:
             pg = pg_series.iloc[0]  # get first element
-            fhz.loc[i, 'Produktgruppe_WLB'] = pg
+            ep.loc[i, 'Produktgruppe_WLB'] = pg
         else:
             warnings.warn(
-                f'FHZ-Produktgruppe "{pg_fhz}" bisher unbekannt!!! Bitte in `prod_group_dicts/fhz.csv` eintragen!')
+                f'EP-Produktgruppe "{pg_ep}" bisher unbekannt!!! Bitte in `prod_group_dict_ep.csv` eintragen!')
 
     # Set missing values for products without 'Einheit'
-    no_einheit = fhz.Einheit.isnull()
-    fhz.loc[no_einheit, 'Einheit'] = 'St.'  # default value
-    # deviations from default:
-    fhz.loc[no_einheit & (fhz.Bezeichnung.str.contains(
-        'Mango-Monkeys')), 'Einheit'] = 'g'
-    fhz.loc[no_einheit & (fhz.Bezeichnung.str.contains(
-        'Mandeln geröstet & gesalzen')), 'Einheit'] = 'g'
-
+    no_gewichteinheit = ep.Gewichteinheit.isnull()
+    no_mengenschluessel = ep.Mengenschlüssel.isnull()
+    ep['Einheit'] = 'St.' # default value
+    # Take Gewichteinheit if not null: (primary)
+    ep.loc[~no_gewichteinheit, 'Einheit'] = ep.loc[~no_gewichteinheit, 'Gewichteinheit']
+    # Take Mengenschlüssel if not null: (secondary)
+    ep.loc[no_gewichteinheit & ~no_mengenschluessel, 'Einheit'] = ep.loc[no_gewichteinheit & ~no_mengenschluessel, 'Mengenschlüssel']
+    
     # Set missing values of 'Menge'
-    no_menge = fhz['Menge (kg/l/St.)'].isnull()
-    fhz.loc[no_menge, 'Menge (kg/l/St.)'] = 1  # default value
-    # deviations from default
-    pattern = re.compile(r'(\b[0-9]+) St')
-    # caveat: this only works if there is exactly one matching row
-    muskatnuss = fhz.Bezeichnung.str.contains('Muskatnu')
-    muskatnuss_no_menge = no_menge & muskatnuss
-    if (sum(muskatnuss_no_menge) == 1):
-        string = fhz.loc[muskatnuss_no_menge].Bezeichnung.to_string()
-        fhz.loc[muskatnuss_no_menge,
-                'Menge (kg/l/St.)'] = re.search(pattern, string).group(1)
-    # caveat: this only works if there is exactly one matching row
-    vanille = fhz.Bezeichnung.str.contains('Vanille Schoten')
-    vanille_no_menge = no_menge & vanille
-    if (sum(vanille_no_menge) == 1):
-        string = fhz.loc[vanille_no_menge].Bezeichnung.to_string()
-        fhz.loc[vanille_no_menge,
-                'Menge (kg/l/St.)'] = re.search(pattern, string).group(1)
+    ep['Menge (kg/l/St.)'] = 1 # default value
+    no_gewicht = (ep.Gewicht.isnull()) | (ep.Gewicht <= 0)
+    ep.loc[~no_gewicht, 'Menge (kg/l/St.)'] = ep.loc[~no_gewicht, 'Gewicht']
+############################
+    # XXX Continue here
+    # If "Einheit" = "Set", try to parse set size from Bezeichnung Fließtext with regex r/[0-9]+er.Set/
+    
+    # Convert 'g' to 'kg'
 
     # For debugging:
-    # fhz.loc[no_einheit, ['Bezeichnung', 'Menge (kg/l/St.)', 'Einheit']]
-    # fhz.loc[no_menge, ['Bezeichnung', 'Menge (kg/l/St.)', 'Einheit']]
+    # ep.loc[no_gewichteinheit, ['Bezeichnung Fließtext', 'Gewicht', 'Gewichteinheit']]
+    # ep.loc[no_mengenschluessel, ['Bezeichnung Fließtext', 'Gewicht', 'Gewichteinheit']]
+    # ep.iloc[1:30][['Artikelnummer', 'Gewichteinheit', 'Mengenschlüssel', 'Einheit']]
+    # ep.loc[~no_gewicht, ['Menge (kg/l/St.)', 'Bezeichnung Fließtext', 'Gewicht']]
 
     # Add missing columns:
     fhz['Bezeichnung | Einheit'] = fhz.Bezeichnung + ' | ' + \
