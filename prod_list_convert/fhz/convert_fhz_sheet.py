@@ -123,7 +123,7 @@ def main():
             fhz.loc[i, 'Produktgruppe_WLB'] = pg
         else:
             warnings.warn(
-                f'FHZ-Produktgruppe "{pg_fhz}" bisher unbekannt!!! Bitte in `prod_group_dicts/fhz.csv` eintragen!')
+                f'FHZ-Produktgruppe "{pg_fhz}" bisher unbekannt!!! Bitte in `prod_group_dict_fhz.csv` eintragen!')
 
     # Set missing values for products without 'Einheit'
     no_einheit = fhz.Einheit.isnull()
