@@ -71,13 +71,17 @@ def main():
     # ep = ep.loc[ep.Artikelnummer.map(lambda a: pattern.search(a) == None)]
     ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('Rückenetikett'))]
     ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('Rückeetikett'))]
-    ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('Rückenretikett'))]
+    ep = ep.loc[np.invert(
+        ep['Bezeichnung 1'].str.startswith('Rückenretikett'))]
     ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('Vorderetikett'))]
-    ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('Vorderretikett'))]
+    ep = ep.loc[np.invert(
+        ep['Bezeichnung 1'].str.startswith('Vorderretikett'))]
     ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('Zusatzetikett'))]
-    ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('46 Zusatzetikett'))]
-    ep = ep.loc[np.invert(ep['Bezeichnung 1'].str.startswith('34 Zusatzetiket'))]
-    
+    ep = ep.loc[np.invert(
+        ep['Bezeichnung 1'].str.startswith('46 Zusatzetikett'))]
+    ep = ep.loc[np.invert(
+        ep['Bezeichnung 1'].str.startswith('34 Zusatzetiket'))]
+
     # ep.to_excel('prod_list_convert/ep/test.xlsx') # look for strange things
     # pattern = re.compile(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{2}-[a-zA-Z0-9]+$')
     # ep.loc[ep.Artikelnummer.map(lambda a: pattern.search(a) == None)].to_excel('prod_list_convert/ep/test.xlsx') # look for strange things
@@ -87,7 +91,6 @@ def main():
         ep['Warengruppe'] + ' - ' + ep['Artikelgruppe']
     prod_groups = ep['Produktgruppe'].unique()
     # print(prod_groups) # Copy from terminal and insert into LibreOffice
-
 
     # Translate the EP product groups to WLB product groups using the dictionary.
     # Start with empty string by default for those without match.
@@ -103,29 +106,40 @@ def main():
                 f'EP-Produktgruppe "{pg_ep}" bisher unbekannt!!! Bitte in `prod_group_dict_ep.csv` eintragen!')
 
     # Set missing values for products without 'Einheit'
-    no_gewichteinheit = ep.Gewichteinheit.isnull()
-    no_mengenschluessel = ep.Mengenschlüssel.isnull()
-    ep['Einheit'] = 'St.' # default value
+    ep['Einheit'] = 'St.'  # default value
     # Take Gewichteinheit if not null: (primary)
+    no_gewichteinheit = ep.Gewichteinheit.isnull()
     ep.loc[~no_gewichteinheit, 'Einheit'] = ep.loc[~no_gewichteinheit, 'Gewichteinheit']
-    # Take Mengenschlüssel if not null: (secondary)
-    ep.loc[no_gewichteinheit & ~no_mengenschluessel, 'Einheit'] = ep.loc[no_gewichteinheit & ~no_mengenschluessel, 'Mengenschlüssel']
-    
+    # # Take Mengenschlüssel if not null: (secondary)
+    # no_mengenschluessel = ep.Mengenschlüssel.isnull()
+    # ep.loc[no_gewichteinheit & ~no_mengenschluessel, 'Einheit'] = ep.loc[no_gewichteinheit & ~no_mengenschluessel, 'Mengenschlüssel']
+
     # Set missing values of 'Menge'
-    ep['Menge (kg/l/St.)'] = 1 # default value
+    ep['Menge (kg/l/St.)'] = 1  # default value
     no_gewicht = (ep.Gewicht.isnull()) | (ep.Gewicht <= 0)
     ep.loc[~no_gewicht, 'Menge (kg/l/St.)'] = ep.loc[~no_gewicht, 'Gewicht']
-############################
-    # XXX Continue here
     # If "Einheit" = "Set", try to parse set size from Bezeichnung Fließtext with regex r/[0-9]+er.Set/
     pattern = re.compile(r'^.*([0-9]+)er.Set.*$')
-    set_products = ep['Bezeichnung Fließtext'].map(lambda bez: pattern.search(bez) != None)
-    guessed_setsize = ep.loc[set_products, 'Bezeichnung Fließtext'].map(lambda bez: int(re.sub(r'^.*([0-9]+)er.Set.*$', r'\1', bez)))
+    set_products = ep['Bezeichnung Fließtext'].map(
+        lambda bez: pattern.search(bez) != None)
+    guessed_setsize = ep.loc[set_products, 'Bezeichnung Fließtext'].map(
+        lambda bez: int(re.sub(r'^.*([0-9]+)er.Set.*$', r'\1', bez)))
     ep.loc[set_products, 'Menge (kg/l/St.)'] = guessed_setsize
     ep.loc[set_products, 'Einheit'] = 'St.'
-    
+
     # Convert 'g' to 'kg'
+    ep.loc[ep.Einheit == 'g',
+           'Menge (kg/l/St.)'] = ep.loc[ep.Einheit == 'g', 'Menge (kg/l/St.)'] / 1000
+    ep.loc[ep.Einheit == 'g', 'Einheit'] = 'kg'
     # Convert 'ml' to 'l'
+    ep.loc[ep.Einheit == 'ml',
+           'Menge (kg/l/St.)'] = ep.loc[ep.Einheit == 'ml', 'Menge (kg/l/St.)'] / 1000
+    ep.loc[ep.Einheit == 'ml', 'Einheit'] = 'l'
+
+    # We don't want no 'Set' in 'Einheit'
+    ep.loc[ep.Einheit == 'Set', 'Einheit'] = 'St.'
+
+    # Now, we should have only 'kg', 'l', and 'St.' left in 'Einheit'
 
     # For debugging:
     # ep.loc[no_gewichteinheit, ['Bezeichnung Fließtext', 'Gewicht', 'Gewichteinheit']]
@@ -133,8 +147,17 @@ def main():
     # ep.iloc[1:30][['Artikelnummer', 'Gewichteinheit', 'Mengenschlüssel', 'Einheit']]
     # ep.loc[~no_gewicht, ['Menge (kg/l/St.)', 'Bezeichnung Fließtext', 'Gewicht']]
 
+############################
+    # XXX Continue here
+    ep.index.map(lambda idx: [ep.loc[idx, 'Bezeichnung 1'], ep.loc[idx, 'Bezeichnung 2'],
+                 ep.loc[idx, 'Bezeichnung 3'], ep.loc[idx, 'Bezeichnung 4']])
+
     # Add missing columns:
-    ep['Bezeichnung | Einheit'] = ep['Bezeichnung Fließtext'] + ' | ' + \
+    
+    # np.where(ep['Bezeichnung 1'].notnull() * ep['Bezeichnung 1'].str.strip() != '', ep['Bezeichnung 1'], '') + \
+    # ' | ' + \
+    
+    ep['Bezeichnung | Einheit'] = ep['Bezeichnung | Einheit'] = ep['Bezeichnung Fließtext'] + ' | ' + \
         np.where(ep['Menge (kg/l/St.)'].notnull(), ep['Menge (kg/l/St.)'].astype(int).astype(str), '') + \
         np.where(ep.Einheit.notnull(), ' ' + ep.Einheit, '') + \
         np.where(ep.Mengenschlüssel.notnull(), ' ' + ep.Mengenschlüssel, '')
