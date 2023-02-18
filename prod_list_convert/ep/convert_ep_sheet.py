@@ -118,8 +118,14 @@ def main():
 ############################
     # XXX Continue here
     # If "Einheit" = "Set", try to parse set size from Bezeichnung Fließtext with regex r/[0-9]+er.Set/
+    pattern = re.compile(r'^.*([0-9]+)er.Set.*$')
+    set_products = ep['Bezeichnung Fließtext'].map(lambda bez: pattern.search(bez) != None)
+    guessed_setsize = ep.loc[set_products, 'Bezeichnung Fließtext'].map(lambda bez: int(re.sub(r'^.*([0-9]+)er.Set.*$', r'\1', bez)))
+    ep.loc[set_products, 'Menge (kg/l/St.)'] = guessed_setsize
+    ep.loc[set_products, 'Einheit'] = 'St.'
     
     # Convert 'g' to 'kg'
+    # Convert 'ml' to 'l'
 
     # For debugging:
     # ep.loc[no_gewichteinheit, ['Bezeichnung Fließtext', 'Gewicht', 'Gewichteinheit']]
@@ -128,10 +134,10 @@ def main():
     # ep.loc[~no_gewicht, ['Menge (kg/l/St.)', 'Bezeichnung Fließtext', 'Gewicht']]
 
     # Add missing columns:
-    fhz['Bezeichnung | Einheit'] = fhz.Bezeichnung + ' | ' + \
-        np.where(fhz['Menge (kg/l/St.)'].notnull(), fhz['Menge (kg/l/St.)'].astype(int).astype(str), '') + \
-        np.where(fhz.Einheit.notnull(), ' ' + fhz.Einheit, '') + \
-        np.where(fhz.Verpackung.notnull(), ' ' + fhz.Verpackung, '')
+    ep['Bezeichnung | Einheit'] = ep['Bezeichnung Fließtext'] + ' | ' + \
+        np.where(ep['Menge (kg/l/St.)'].notnull(), ep['Menge (kg/l/St.)'].astype(int).astype(str), '') + \
+        np.where(ep.Einheit.notnull(), ' ' + ep.Einheit, '') + \
+        np.where(ep.Mengenschlüssel.notnull(), ' ' + ep.Mengenschlüssel, '')
     fhz['Kurzname'] = fhz.Bezeichnung
     fhz['Sortiment'] = ''
     fhz['Beliebtheit'] = ''
