@@ -8,10 +8,10 @@ def main():
     usage = "Usage: %prog   [OPTIONS]"
     parser = OptionParser(usage)
 
-    # parser.add_option("--fhz", type="string",
-    #                   default='Bestellvorlage Lebensmittelpreisliste 3.0 2022.ods',
-    #                   dest="FHZ",
-    #                   help="The path to the FHZ .ods file. Output is written to the same filename, but with extension .csv.")
+    parser.add_option("--output", type="string",
+                      default='Artikelliste_El_Puente_Master.csv',
+                      dest="OUTPUT",
+                      help="The path to the output .csv file being written to.")
     # parser.add_option("--only-arrows", action="store_true",
     #                   default=False,
     #                   dest="ARROWS",
@@ -19,6 +19,8 @@ def main():
 
     # get parsed args
     (options, args) = parser.parse_args()
+
+    print("Writing result to CSV file '" + options.OUTPUT + "'.")
 
     #############
     # Load data #
@@ -109,7 +111,8 @@ def main():
     ep['Einheit'] = 'St.'  # default value
     # Take Gewichteinheit if not null: (primary)
     no_gewichteinheit = ep.Gewichteinheit.isnull()
-    ep.loc[~no_gewichteinheit, 'Einheit'] = ep.loc[~no_gewichteinheit, 'Gewichteinheit']
+    ep.loc[~no_gewichteinheit,
+           'Einheit'] = ep.loc[~no_gewichteinheit, 'Gewichteinheit']
     # # Take Mengenschlüssel if not null: (secondary)
     # no_mengenschluessel = ep.Mengenschlüssel.isnull()
     # ep.loc[no_gewichteinheit & ~no_mengenschluessel, 'Einheit'] = ep.loc[no_gewichteinheit & ~no_mengenschluessel, 'Mengenschlüssel']
@@ -149,16 +152,19 @@ def main():
 
 ############################
     # Add missing columns:
-    
+
+    ep['Lieferant'] = 'El Puente'
     # Make joined Bezeichnung, but better than 'Bezeichnung Fließtext'
-    rem_trailing_comma = lambda s: re.sub(r',+$', r'', str(s).strip()).strip()
-    ep['Bezeichnung']  = [
+
+    def rem_trailing_comma(s): return re.sub(
+        r',+$', r'', str(s).strip()).strip()
+    ep['Bezeichnung'] = [
         ', '.join([
-        bez for bez in [
-            rem_trailing_comma(bez1),
-            rem_trailing_comma(bez2),
-            rem_trailing_comma(bez3),
-            rem_trailing_comma(bez4)
+            bez for bez in [
+                rem_trailing_comma(bez1),
+                rem_trailing_comma(bez2),
+                rem_trailing_comma(bez3),
+                rem_trailing_comma(bez4)
             ] if str(bez) != 'nan' and not bez == ''
         ])
         for bez1, bez2, bez3, bez4 in zip(
@@ -170,10 +176,11 @@ def main():
     ]
     ep['Bezeichnung | Einheit'] = ep['Bezeichnung'] + ' | ' + \
         np.where(ep.Gewicht.notnull() & (ep.Gewicht > 0), ep.Gewicht.apply('{0:g}'.format),
-            np.where(ep['Menge (kg/l/St.)'].notnull(), ep['Menge (kg/l/St.)'].apply('{0:g}'.format), '')) + \
+                 np.where(ep['Menge (kg/l/St.)'].notnull(), ep['Menge (kg/l/St.)'].apply('{0:g}'.format), '')) + \
         np.where(ep.Gewicht.notnull() & (ep.Gewicht > 0) & ep.Gewichteinheit.notnull(), ' ' + ep.Gewichteinheit,
-            np.where(ep.Einheit.notnull(), ' ' + ep.Einheit, '')) + \
-        np.where(ep.Gewicht.notnull() & (ep.Gewicht > 0) & ep.Gewichteinheit.notnull() & ep.Mengenschlüssel.notnull(), ' ' + ep.Mengenschlüssel, '')
+                 np.where(ep.Einheit.notnull(), ' ' + ep.Einheit, '')) + \
+        np.where(ep.Gewicht.notnull() & (ep.Gewicht > 0) & ep.Gewichteinheit.notnull(
+        ) & ep.Mengenschlüssel.notnull(), ' ' + ep.Mengenschlüssel, '')
     ep['Kurzname'] = ep['Bezeichnung 1']
     ep['Sortiment'] = ''
     ep['Beliebtheit'] = ''
@@ -187,24 +194,18 @@ def main():
     ep['Bestand'] = ''
     ep['Sofort lieferbar'] = ''
 
-    # XXX Continue here
     # Use correct datatypes for columns
-    artnummer_float = [type(x) == float for x in fhz.Artikelnummer]
-    fhz.loc[artnummer_float, 'Artikelnummer'] = fhz.loc[artnummer_float, 'Artikelnummer'] \
-        .astype(int).astype(str)
-    fhz['Artikelnummer'] = fhz['Artikelnummer'].astype(str)
-    fhz['Menge (kg/l/St.)'] = fhz['Menge (kg/l/St.)'].astype(float)
-    fhz['VPE'] = fhz['VPE'].astype(int)
-    fhz['Empf. VK-Preis'] = fhz['Empf. VK-Preis'].astype(float)
+    # ep['Artikelnummer'] = ep['Artikelnummer'].astype(str)
+    ep['VPE'] = ep['VPE'].astype(int) # XXX This causes issue with nans
 
     # Rename columns
-    fhz = fhz.rename(
-        columns={'Produktgruppe': 'Produktgruppe_FHZ'})
-    fhz = fhz.rename(
+    ep = ep.rename(
+        columns={'Produktgruppe': 'Produktgruppe_EP'})
+    ep = ep.rename(
         columns={'Produktgruppe_WLB': 'Produktgruppe'})
 
     # Reorder columns to be in the correct format that is needed
-    fhz = fhz[[
+    ep = ep[[
         'Produktgruppe',
         'Lieferant',
         'Artikelnummer',
@@ -228,17 +229,11 @@ def main():
     ]]
 
     # Special treatment of certain products
-    # Mini-Schoko-Täfelchen Großpackung GEPA
-    minis = [fhz.Artikelnummer == '8901827', fhz.Artikelnummer == '8901828']
-    for mini in minis:
-        # VPE ist zwar 5, aber auf 1 lassen, weil wir sowieso keinen Rabatt kriegen und 500 Täfelchen ein MHD-Problem verursachen
-        fhz.loc[mini, 'VPE'] = 1
-        fhz.loc[mini, 'Menge (kg/l/St.)'] = 100.0
-        fhz.loc[mini, 'Einheit'] = 'St.'
+    # ...
 
     # TODO check if file exists and ask if user wants it overwritten
     # Write out resulting CSV file
-    fhz.to_csv(options.FHZ[:-3]+'csv', sep=';', index=False)
+    ep.to_csv(options.OUTPUT, sep=';', index=False)
     # For testing:
     # fhz.to_csv('Bestellvorlage Lebensmittelpreisliste 3.0 2022.csv', sep=';', index = False)
 
