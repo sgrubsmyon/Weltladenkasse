@@ -148,40 +148,46 @@ def main():
     # ep.loc[~no_gewicht, ['Menge (kg/l/St.)', 'Bezeichnung Fließtext', 'Gewicht']]
 
 ############################
-    # XXX Continue here
-    ep.index.map(lambda idx: [ep.loc[idx, 'Bezeichnung 1'], ep.loc[idx, 'Bezeichnung 2'],
-                 ep.loc[idx, 'Bezeichnung 3'], ep.loc[idx, 'Bezeichnung 4']])
-
     # Add missing columns:
     
-    # np.where(ep['Bezeichnung 1'].notnull() * ep['Bezeichnung 1'].str.strip() != '', ep['Bezeichnung 1'], '') + \
-    # ' | ' + \
-    
-    ep['Bezeichnung | Einheit'] = ep['Bezeichnung | Einheit'] = ep['Bezeichnung Fließtext'] + ' | ' + \
-        np.where(ep['Menge (kg/l/St.)'].notnull(), ep['Menge (kg/l/St.)'].astype(int).astype(str), '') + \
-        np.where(ep.Einheit.notnull(), ' ' + ep.Einheit, '') + \
-        np.where(ep.Mengenschlüssel.notnull(), ' ' + ep.Mengenschlüssel, '')
-    fhz['Kurzname'] = fhz.Bezeichnung
-    fhz['Sortiment'] = ''
-    fhz['Beliebtheit'] = ''
-    fhz['Barcode'] = ''
-    fhz['Setgröße'] = ''
-    fhz['VK-Preis'] = ''
-    fhz['Empf. VK-Preis'] = fhz['je Einheit']
-    fhz['EK-Rabatt'] = ''
-    fhz['EK-Preis'] = ''
-    fhz['Variabel'] = 'Nein'
-    fhz['Bestand'] = ''
+    # Make joined Bezeichnung, but better than 'Bezeichnung Fließtext'
+    rem_trailing_comma = lambda s: re.sub(r',+$', r'', str(s).strip()).strip()
+    ep['Bezeichnung']  = [
+        ', '.join([
+        bez for bez in [
+            rem_trailing_comma(bez1),
+            rem_trailing_comma(bez2),
+            rem_trailing_comma(bez3),
+            rem_trailing_comma(bez4)
+            ] if str(bez) != 'nan' and not bez == ''
+        ])
+        for bez1, bez2, bez3, bez4 in zip(
+            ep['Bezeichnung 1'],
+            ep['Bezeichnung 2'],
+            ep['Bezeichnung 3'],
+            ep['Bezeichnung 4']
+        )
+    ]
+    ep['Bezeichnung | Einheit'] = ep['Bezeichnung'] + ' | ' + \
+        np.where(ep.Gewicht.notnull() & (ep.Gewicht > 0), ep.Gewicht.apply('{0:g}'.format),
+            np.where(ep['Menge (kg/l/St.)'].notnull(), ep['Menge (kg/l/St.)'].apply('{0:g}'.format), '')) + \
+        np.where(ep.Gewicht.notnull() & (ep.Gewicht > 0) & ep.Gewichteinheit.notnull(), ' ' + ep.Gewichteinheit,
+            np.where(ep.Einheit.notnull(), ' ' + ep.Einheit, '')) + \
+        np.where(ep.Gewicht.notnull() & (ep.Gewicht > 0) & ep.Gewichteinheit.notnull() & ep.Mengenschlüssel.notnull(), ' ' + ep.Mengenschlüssel, '')
+    ep['Kurzname'] = ep['Bezeichnung 1']
+    ep['Sortiment'] = ''
+    ep['Beliebtheit'] = ''
+    ep['Barcode'] = ep['EAN-Produkt']
+    ep['Setgröße'] = ''
+    ep['VK-Preis'] = ep['VK-Preis bis']
+    ep['Empf. VK-Preis'] = ep['VK-Preis von']
+    ep['EK-Rabatt'] = ''
+    ep['EK-Preis'] = ''
+    ep['Variabel'] = 'Nein'
+    ep['Bestand'] = ''
+    ep['Sofort lieferbar'] = ''
 
-    # Modify some columns:
-    fhz.loc[(fhz.Einheit == 'g') | (fhz.Einheit == 'ml'), 'Menge (kg/l/St.)'] = \
-        fhz.loc[(fhz.Einheit == 'g') | (fhz.Einheit == 'ml'),
-                'Menge (kg/l/St.)'] / 1000.0
-    fhz.loc[fhz.Einheit == 'g', 'Einheit'] = 'kg'
-    fhz.loc[fhz.Einheit == 'ml', 'Einheit'] = 'l'
-    fhz['Sofort lieferbar'] = ["Ja" if x ==
-                               "x" else "Nein" for x in fhz['Sofort lieferbar']]
-
+    # XXX Continue here
     # Use correct datatypes for columns
     artnummer_float = [type(x) == float for x in fhz.Artikelnummer]
     fhz.loc[artnummer_float, 'Artikelnummer'] = fhz.loc[artnummer_float, 'Artikelnummer'] \
