@@ -20,7 +20,7 @@ def main():
     # get parsed args
     (options, args) = parser.parse_args()
 
-    print("Writing result to CSV file '" + options.OUTPUT + "'.")
+    print(f'Writing result to CSV file "{options.OUTPUT}".')
 
     #############
     # Load data #
