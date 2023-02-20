@@ -99,13 +99,23 @@ def main():
     ep['Produktgruppe_WLB'] = ''
     for i in ep.index:
         pg_ep = ep.loc[i, 'Produktgruppe']
-        pg_series = prod_group_dict.loc[prod_group_dict.EP == pg_ep, 'WLB']
-        if len(pg_series) > 0:
-            pg = pg_series.iloc[0]  # get first element
-            ep.loc[i, 'Produktgruppe_WLB'] = pg
+        # Special cases of product group depending on parameters of the product:
+        if pg_ep == 'Lebensmittel - Getränke - Säfte (19% Mwst.)':
+            if ep.loc[i, 'Gewicht'] == 330: # 330 ml --> 8 Cent Pfand
+                ep.loc[i, 'Produktgruppe_WLB'] = 'Alkoholfreie Getränke 8 Cent Pfand'
+            elif ep.loc[i, 'Gewicht'] == 1000: # 1 Liter --> 15 Cent Pfand
+                ep.loc[i, 'Produktgruppe_WLB'] = 'Alkoholfreie Getränke 15 Cent Pfand'
+            else:
+                ep.loc[i, 'Produktgruppe_WLB'] = 'Sonstige Getränke'
         else:
-            warnings.warn(
-                f'EP-Produktgruppe "{pg_ep}" bisher unbekannt!!! Bitte in `prod_group_dict_ep.csv` eintragen!')
+            # Normal case: (can use the dictionary to look up product group)
+            pg_series = prod_group_dict.loc[prod_group_dict.EP == pg_ep, 'WLB']
+            if len(pg_series) > 0:
+                pg = pg_series.iloc[0]  # get first element
+                ep.loc[i, 'Produktgruppe_WLB'] = pg
+            else:
+                warnings.warn(
+                    f'EP-Produktgruppe "{pg_ep}" bisher unbekannt!!! Bitte in `prod_group_dict_ep.csv` eintragen!')
 
     # Set missing values for products without 'Einheit'
     ep['Einheit'] = 'St.'  # default value
