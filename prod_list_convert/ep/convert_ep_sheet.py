@@ -196,7 +196,7 @@ def main():
 
     # Use correct datatypes for columns
     # ep['Artikelnummer'] = ep['Artikelnummer'].astype(str)
-    ep['VPE'] = ep['VPE'].astype(int) # XXX This causes issue with nans
+    ep['VPE'] = np.nan_to_num(ep['VPE']).astype(int)
 
     # Rename columns
     ep = ep.rename(
