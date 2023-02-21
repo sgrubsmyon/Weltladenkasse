@@ -206,7 +206,8 @@ def main():
 
     # Use correct datatypes for columns
     # ep['Artikelnummer'] = ep['Artikelnummer'].astype(str)
-    ep['VPE'] = np.nan_to_num(ep['VPE']).astype(int)
+    ep.loc[ep.VPE.isna(), 'VPE'] = 1
+    ep['VPE'] = ep['VPE'].astype(int)
     ep['Barcode'] = ep['Barcode'].astype(int)
 
     # Rename columns
