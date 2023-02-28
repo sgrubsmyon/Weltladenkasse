@@ -381,9 +381,11 @@ def main():
         # http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy,
         # very bottom
         wlb_neu.loc[name, 'Empf. VK-Preis'] = str(fhz_preis)
-        wlb_neu.loc[name, 'Sofort lieferbar'] = fhz_row['Sofort lieferbar']
+        if (fhz_row['Sofort lieferbar'] == 'Ja' or fhz_row['Sofort lieferbar'] == 'Nein'):
+            wlb_neu.loc[name, 'Sofort lieferbar'] = fhz_row['Sofort lieferbar']
         # print(wlb_row['VK-Preis'])
         # print(type(wlb_row['VK-Preis']))
+        # print(Decimal(wlb_row['VK-Preis']))
         wlb_preis = Decimal(wlb_row['VK-Preis'])
         setgroesse = int(wlb_row['Setgröße'])
 
