@@ -98,8 +98,10 @@ angezeigt.)
 
 Check, ob noch EK-Preise fehlen (auch wieder Bestellnummern anpassen):
 
+# Anzahl der betroffenen Produkte nach Produktgruppe:
 > SELECT produktgruppen_id, produktgruppen_name, COUNT(*) FROM artikel JOIN produktgruppe USING (produktgruppen_id) WHERE ek_preis IS NULL AND vk_preis IS NOT NULL AND artikel.artikel_id IN (SELECT artikel_id FROM bestellung_details WHERE bestell_nr IN (246,247,249)) GROUP BY produktgruppen_id;
-> SELECT produktgruppen_id, produktgruppen_name, lieferant_name, artikel_name FROM artikel JOIN produktgruppe USING (produktgruppen_id) JOIN lieferant USING (lieferant_id) WHERE ek_preis IS NULL AND vk_preis IS NOT NULL AND artikel.artikel_id IN (SELECT artikel_id FROM bestellung_details WHERE bestell_nr IN (246,247,249));
+# Details zu betroffenen Produkten:
+> SELECT artikel_id, produktgruppen_id, produktgruppen_name, lieferant_name, artikel_name FROM artikel JOIN produktgruppe USING (produktgruppen_id) JOIN lieferant USING (lieferant_id) WHERE ek_preis IS NULL AND vk_preis IS NOT NULL AND artikel.artikel_id IN (SELECT artikel_id FROM bestellung_details WHERE bestell_nr IN (246,247,249));
 '''
 
 # install parser
@@ -505,7 +507,7 @@ rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Nudeln', rabatt=0.17
 ### KHW gepa
 rabatt_setzen_by_lieferant(conn, lieferant='GEPA', prod_gr='Kunsthandwerk', rabatt=0.40)
 ### KHW gepa Dr. Bronner
-rabatt_setzen_by_name(conn, lieferant='GEPA', name='%Dr. Bronner%', prod_gr='Kosmetik', rabatt=0.25)
+rabatt_setzen_by_name(conn, lieferant='GEPA', name='%Dr. Bronner%', prod_gr='Kosmetik, Bad und Wellness', rabatt=0.25)
 
 
 ### Kaffee ep
@@ -541,38 +543,41 @@ rabatt_setzen_by_lieferant(conn, lieferant='El Puente', prod_gr='Süßwaren und 
 rabatt_setzen_by_lieferant(conn, lieferant='El Puente', prod_gr='Kunsthandwerk', rabatt=0.42)
 
 
-### Kaffee dwp
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Kaffeeprodukte', rabatt=0.17)
-rabatt_setzen_by_name(conn, lieferant='dwp', name='%kaffee%',
+### Kaffee WeltPartner
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Kaffeeprodukte', rabatt=0.17)
+rabatt_setzen_by_name(conn, lieferant='WeltPartner', name='%kaffee%',
         prod_gr='Saisonartikel', rabatt=0.17)
-### LM dwp1
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Gewürze und Kräuter', rabatt=0.33)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Soßen und Würzpasten', rabatt=0.33)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Brotaufstriche', rabatt=0.33)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Nüsse', rabatt=0.33)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Trockenfrüchte', rabatt=0.33)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Tee', rabatt=0.33)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Getreide und Hülsenfrüchte', rabatt=0.33)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Nudeln', rabatt=0.33)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Sonstige Lebensmittel', rabatt=0.33)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Essig und Öl', rabatt=0.33)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Feinkost', rabatt=0.33)
-rabatt_setzen_by_name(conn, lieferant='dwp', name='%tee%',
+### LM WeltPartner1
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Gewürze und Kräuter', rabatt=0.33)
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Soßen und Würzpasten', rabatt=0.33)
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Brotaufstriche', rabatt=0.33)
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Nüsse', rabatt=0.33)
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Trockenfrüchte', rabatt=0.33)
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Tee', rabatt=0.33)
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Getreide und Hülsenfrüchte', rabatt=0.33)
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Nudeln', rabatt=0.33)
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Sonstige Lebensmittel', rabatt=0.33)
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Essig und Öl', rabatt=0.33)
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Feinkost', rabatt=0.33)
+rabatt_setzen_by_name(conn, lieferant='WeltPartner', name='%tee%',
         prod_gr='Saisonartikel', rabatt=0.33)
-### LM dwp2 + Zotter-Schokoladen (solange der Rabatt gleich wie bei dwp bleibt! wird vom FHZ über dwp bestellt)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Zucker', rabatt=0.29)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Kakao und Trinkschokolade', rabatt=0.29)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Getränke', rabatt=0.29)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Süßwaren und Snacks', rabatt=0.29)
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Saisonartikel', rabatt=0.29)
-### KHW dwp
-rabatt_setzen_by_lieferant(conn, lieferant='dwp', prod_gr='Kunsthandwerk', rabatt=0.40)
-
+### LM WeltPartner2 + Zotter-Schokoladen (solange der Rabatt gleich wie bei WeltPartner bleibt! wird vom FHZ über WeltPartner bestellt)
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Zucker', rabatt=0.29)
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Kakao und Trinkschokolade', rabatt=0.29)
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Getränke', rabatt=0.29)
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Süßwaren und Snacks', rabatt=0.29)
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Saisonartikel', rabatt=0.29)
+### KHW WeltPartner
+rabatt_setzen_by_lieferant(conn, lieferant='WeltPartner', prod_gr='Kunsthandwerk', rabatt=0.40)
 
 ### Libera Terra
 rabatt_setzen_by_lieferant(conn, lieferant='Libera Terra', prod_gr='Lebensmittel', rabatt=0.33)
 rabatt_setzen_by_lieferant(conn, lieferant='Libera Terra', prod_gr='Getränke', rabatt=0.33)
 
+### GOEL wie Libera Terra
+rabatt_setzen_by_lieferant(conn, lieferant='GOEL', prod_gr='Lebensmittel', rabatt=0.33)
+### Valdibella wie Libera Terra
+rabatt_setzen_by_lieferant(conn, lieferant='Valdibella', prod_gr='Lebensmittel', rabatt=0.33)
 
 ### ctm
 rabatt_setzen_by_lieferant(conn, lieferant='CTM', prod_gr='Lebensmittel', rabatt=0.23)
@@ -603,8 +608,6 @@ rabatt_setzen_by_lieferant(conn, lieferant='Fairtrade Center Breisgau', prod_gr=
 
 ### LM Hans Pfeffer --> besser Lieferant für beides "Bannmühle"
 rabatt_setzen_by_lieferant(conn, lieferant='Bannmühle', prod_gr='Getränke', rabatt=0.23)
-rabatt_setzen_by_lieferant(conn, lieferant='Bannmühle/dwp', prod_gr='Getränke', rabatt=0.23)
-
 
 ### Café Libertad
 rabatt_setzen_by_lieferant(conn, lieferant='Café Libertad', prod_gr='Kaffeeprodukte', rabatt=0.17)
@@ -655,7 +658,6 @@ rabatt_setzen_by_lieferant(conn, lieferant='El Puente', prod_gr='Bücher', rabat
 
 ### Frida Feeling
 rabatt_setzen_by_lieferant(conn, lieferant='Frida Feeling', prod_gr='Kunsthandwerk', rabatt=0.40)
-
 
 
 ####################################################################
@@ -723,6 +725,8 @@ ekp_setzen_by_name(conn, lieferant='FairMail', name='FairMail Klappkarte',
 ### Postkarten Ackermann
 ekp_setzen_by_lieferant(conn, lieferant='Postkarten Ackermann', prod_gr='Grußkarten',
         einkaufspreis=0.70)
+ekp_setzen_by_lieferant(conn, lieferant='Postkarten Ackermann', prod_gr='Briefpapier und -umschläge',
+        einkaufspreis=0.10)
 
 
 ### Biolog. Station
