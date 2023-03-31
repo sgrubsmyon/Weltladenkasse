@@ -292,22 +292,6 @@ def main():
     #   Kunsthandwerk and other (KHW), if that's the case also for the FHZ CSV list
     wlb = pd.read_csv(options.WLB, sep=';', dtype=str, index_col=(1, 2))
 
-    # Check for duplicates in fhz:
-    fhz_dup_indices = indexDuplicationCheck(fhz)
-    print("Folgende Artikel kommen mehrfach in '%s' vor:" % options.FHZ)
-    for i in fhz_dup_indices:
-        print(fhz.loc[i])
-        print("---------------")
-    print("---------------")
-
-    # Check for duplicates in wlb:
-    wlb_dup_indices = indexDuplicationCheck(wlb)
-    print("Folgende Artikel kommen mehrfach in '%s' vor:" % options.WLB)
-    for i in wlb_dup_indices:
-        print(wlb.loc[i])
-        print("---------------")
-    print("---------------")
-
     ###################
     # Homogenize data #
     ###################
@@ -368,11 +352,31 @@ def main():
     wlb.index = pd.MultiIndex.from_tuples(list(map(lambda i: (i[0], i[1].lower()),
                                                    wlb.index.tolist())), names=wlb.index.names)
 
+    # Improve performance and avoid PerformanceWarning:
+    fhz = fhz.sort_index()
+    wlb = wlb.sort_index()
+
+    # Check for duplicates in fhz:
+    fhz_dup_indices = indexDuplicationCheck(fhz)
+    print("Folgende Artikel kommen mehrfach in '%s' vor:" % options.FHZ)
+    for i in fhz_dup_indices:
+        print(fhz.loc[i])
+        print("---------------")
+    print("---------------")
+
+    # Check for duplicates in wlb:
+    wlb_dup_indices = indexDuplicationCheck(wlb)
+    print("Folgende Artikel kommen mehrfach in '%s' vor:" % options.WLB)
+    for i in wlb_dup_indices:
+        print(wlb.loc[i])
+        print("---------------")
+    print("---------------")
+
     #################################################
     # Adopt values from FHZ (for existing articles) #
     #################################################
 
-    def adopt_values(fhz_row, fhz_preis, name, sth_printed, price_changed, sth_changed,
+    def adopt_values(fhz_row, fhz_preis, fhz_preis_empf, name, sth_printed, price_changed, sth_changed,
                      wlb_neu, wlb_row, geaenderte_preise, irgendeine_aenderung, count):
         # print(wlb_row)
         # print(type(wlb_row))
@@ -380,7 +384,7 @@ def main():
         # See
         # http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy,
         # very bottom
-        wlb_neu.loc[name, 'Empf. VK-Preis'] = str(fhz_preis)
+        wlb_neu.loc[name, 'Empf. VK-Preis'] = str(fhz_preis_empf)
         if (fhz_row['Sofort lieferbar'] == 'Ja' or fhz_row['Sofort lieferbar'] == 'Nein'):
             wlb_neu.loc[name, 'Sofort lieferbar'] = fhz_row['Sofort lieferbar']
         # print(wlb_row['VK-Preis'])
@@ -484,14 +488,25 @@ def main():
     count = 0
     print('\n\n\n')
     wlb_neu = wlb.copy()
+    # Improve performance and avoid PerformanceWarning:
+    wlb_neu = wlb_neu.sort_index()
     geaenderte_preise = pd.DataFrame(columns=wlb_neu.columns,
                                      index=pd.MultiIndex.from_tuples([('', '')], names=wlb_neu.index.names))
     irgendeine_aenderung = pd.DataFrame(columns=wlb_neu.columns,
                                         index=pd.MultiIndex.from_tuples([('', '')], names=wlb_neu.index.names))
+    geaenderte_preise = geaenderte_preise.sort_index()
+    irgendeine_aenderung = irgendeine_aenderung.sort_index()
     # Loop over fhz numerical index
     for i in range(len(fhz)):
         fhz_row = fhz.iloc[i]
-        fhz_preis = Decimal(fhz_row['Empf. VK-Preis'])
+        fhz_preis_empf = Decimal(fhz_row['Empf. VK-Preis'])
+        fhz_preis = Decimal()
+        try:
+            fhz_preis = Decimal(fhz_row['VK-Preis'])
+            if fhz_preis == 0:
+                fhz_preis = fhz_preis_empf
+        except:
+            fhz_preis = fhz_preis_empf
         name = fhz_row.name
         sth_printed = False
         price_changed = False
@@ -504,14 +519,14 @@ def main():
                     (fhz_row, fhz_preis, name, sth_printed, price_changed,
                      sth_changed, wlb_neu, wlb_row, geaenderte_preise,
                      irgendeine_aenderung, count) = adopt_values(
-                        fhz_row, fhz_preis, name, sth_printed,
+                        fhz_row, fhz_preis, fhz_preis_empf, name, sth_printed,
                         price_changed, sth_changed, wlb_neu, wlb_row,
                         geaenderte_preise, irgendeine_aenderung, count)
             else:
                 (fhz_row, fhz_preis, name, sth_printed, price_changed,
                  sth_changed, wlb_neu, wlb_match, geaenderte_preise,
                  irgendeine_aenderung, count) = adopt_values(
-                    fhz_row, fhz_preis, name, sth_printed,
+                    fhz_row, fhz_preis, fhz_preis_empf, name, sth_printed,
                     price_changed, sth_changed, wlb_neu, wlb_match,
                     geaenderte_preise, irgendeine_aenderung, count)
 
@@ -604,10 +619,18 @@ def main():
     # Get empty df:
     wlb_neue_artikel = pd.DataFrame(columns=wlb_neu.columns,
                                     index=pd.MultiIndex.from_tuples([('', '')], names=wlb_neu.index.names))
+    wlb_neue_artikel = wlb_neue_artikel.sort_index()
     count = 0
     for i in range(len(fhz)):
         fhz_row = fhz.iloc[i]
-        fhz_preis = Decimal(fhz_row['Empf. VK-Preis'])
+        fhz_preis_empf = Decimal(fhz_row['Empf. VK-Preis'])
+        fhz_preis = Decimal()
+        try:
+            fhz_preis = Decimal(fhz_row['VK-Preis'])
+            if fhz_preis == 0:
+                fhz_preis = fhz_preis_empf
+        except:
+            fhz_preis = fhz_preis_empf
         name = fhz_row.name
         try:
             wlb_neu.loc[name]
@@ -632,6 +655,7 @@ def main():
     # Get empty df:
     wlb_alte_artikel = pd.DataFrame(columns=wlb_neu.columns,
                                     index=pd.MultiIndex.from_tuples([('', '')], names=wlb_neu.index.names))
+    wlb_alte_artikel = wlb_alte_artikel.sort_index()
     count = 0
     # Loop over wlb numerical index
     for i in range(len(wlb_neu)):
