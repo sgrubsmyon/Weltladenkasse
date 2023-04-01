@@ -46,7 +46,7 @@ public class BaseClass {
 
     // TSE and DSFinV-K setup:
     public String finDatDir = ".Weltladenkasse_Finanzdaten"; // for export of financial data
-    public String Z_KASSE_ID = "877666797878-01"; // is used as clientID when talking to TSE
+    public String Z_KASSE_ID = "YLUE036019"; // is used as clientID when talking to TSE
     public String TAXONOMIE_VERSION = "2.2";
     public String NAME;
     public String STRASSE;
