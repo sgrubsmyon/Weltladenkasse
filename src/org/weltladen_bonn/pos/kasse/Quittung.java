@@ -138,25 +138,25 @@ public class Quittung extends WindowContent {
             PrintService printService = PrinterOutputStream.getPrintServiceByName(bc.printerName);
             EscPos escpos;
             escpos = new EscPos(new PrinterOutputStream(printService));
-            
+
             // Unfortunately, printer does not react to the more fine-grained "Style" commands, but only to PrintModeStyle commands:
             // Style smallStyle = new Style()
             //     .setFontSize(Style.FontSize._1, Style.FontSize._1);
             // Style bigStyle = new Style()
             //     .setFontSize(Style.FontSize._8, Style.FontSize._8);
-            
+
             // for German umlauts etc.:
             escpos.setCharacterCodeTable(CharacterCodeTable.CP858_Euro);
             // if it does not work, use this code to explicitly set to CP858:
             // escpos.setPrinterCharacterTable(19);
             // escpos.setCharsetName("cp858");
-            
+
             printEscPosHeader(escpos);
             printEscPosItems(escpos);
             printEscPosTotals(escpos);
             printEscPosTSEValues(escpos);
             // printEscPosTSEQRCode(escpos); // unfortunately, it seems our printer does not support QR code printing
-            
+
             escpos.feed(6).cut(EscPos.CutMode.FULL);
             escpos.close();
         } catch (IllegalArgumentException ex) {
@@ -526,16 +526,22 @@ public class Quittung extends WindowContent {
                 }
                 if (tseStatusValues != null) {
                     String serial_id = tseStatusValues.get("Seriennummer der TSE (Hex)");
-                    int chars = 16; // print first 16 chars on first row
-                    escpos.writeLF(normal, indent + spaceBetweenStrings(
-                        "TSE-Seriennr.:", serial_id.substring(0, chars)
-                    ));
-                    while (chars < serial_id.length()) {
-                        // now 24 chars per row
-                        escpos.writeLF(normal, indent + rightAlignedString(
-                            serial_id.substring(chars, chars + 24)
+                    if (serial_id != null) {
+                        int chars = 16; // print first 16 chars on first row
+                        escpos.writeLF(normal, indent + spaceBetweenStrings(
+                            "TSE-Seriennr.:", serial_id.substring(0, chars)
                         ));
-                        chars += 24;
+                        while (chars < serial_id.length()) {
+                            // now 24 chars per row
+                            escpos.writeLF(normal, indent + rightAlignedString(
+                                serial_id.substring(chars, chars + 24)
+                            ));
+                            chars += 24;
+                        }
+                    } else {
+                        escpos.writeLF(normal, indent + spaceBetweenStrings(
+                            "TSE-Seriennr.:", "nicht verfügbar"
+                        ));
                     }
                 }
             }
