@@ -6,6 +6,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 import java.io.*;
 import java.lang.Process; // for executing system commands
 import java.lang.Runtime; // for executing system commands
+import java.lang.IllegalArgumentException;
 import java.text.SimpleDateFormat; // for parsing and formatting dates
 import java.text.ParseException;
 
@@ -133,9 +134,9 @@ public class Quittung extends WindowContent {
     */
     private void printQuittungWithEscPos() {
         // First test of ESC/POS printing
-        PrintService printService = PrinterOutputStream.getPrintServiceByName(bc.printerName);
-        EscPos escpos;
         try {
+            PrintService printService = PrinterOutputStream.getPrintServiceByName(bc.printerName);
+            EscPos escpos;
             escpos = new EscPos(new PrinterOutputStream(printService));
             
             // Unfortunately, printer does not react to the more fine-grained "Style" commands, but only to PrintModeStyle commands:
@@ -149,7 +150,7 @@ public class Quittung extends WindowContent {
             // if it does not work, use this code to explicitly set to CP858:
             // escpos.setPrinterCharacterTable(19);
             // escpos.setCharsetName("cp858");
-
+            
             printEscPosHeader(escpos);
             printEscPosItems(escpos);
             printEscPosTotals(escpos);
@@ -158,6 +159,8 @@ public class Quittung extends WindowContent {
             
             escpos.feed(6).cut(EscPos.CutMode.FULL);
             escpos.close();
+        } catch (IllegalArgumentException ex) {
+            logger.error("Probably receipt printer is not installed in OS: {}", ex);
         } catch (IOException ex) {
             logger.error("{}", ex);
         }
