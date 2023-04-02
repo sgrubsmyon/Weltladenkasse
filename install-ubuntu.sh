@@ -2,7 +2,7 @@
 
 # Check if mysql is already installed via package manager:
 installed_via_pm() {
-  dpkg --get-selections | grep mysql-server > /dev/null
+  dpkg --get-selections | grep mariadb-server > /dev/null
   if [ $? == 0 ]; then
     echo "yes"
   else
@@ -28,7 +28,7 @@ run_check() {
 print_problem_help() {
     echo -e "There seems to be a problem with your MySQL install."
     echo -e "Please try to install it again through your package manager."
-    echo -e "Try running \`sudo apt-get remove mysql-server' and then \`sudo apt-get install mysql-server'."
+    echo -e "Try running \`sudo apt-get remove mariadb-server' and then \`sudo apt-get install mariadb-server'."
 }
 
 echo -n "Checking if MySQL is installed via package manager... "
@@ -42,7 +42,7 @@ if [[ $mysql_works -eq 0 ]]; then echo "yes"; else echo "no"; fi
 
 if [[ $(installed_via_pm) != "yes" && $mysql_works -ne 0 ]]; then
     echo -e "MySQL seems to be not installed. Trying to install it now (need root privileges)."
-    sudo apt-get install mysql-server
+    sudo apt-get install mariadb-server
     echo -n "Checking if MySQL works... "
     mysql_works=$(run_check)
     if [[ $(installed_via_pm) == "yes" && $mysql_works -eq 0 ]]; then
