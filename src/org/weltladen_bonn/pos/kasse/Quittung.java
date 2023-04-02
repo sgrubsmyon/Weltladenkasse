@@ -78,10 +78,10 @@ public class Quittung extends WindowContent {
     private int rowLength = 31; // 31 chars fit on one row of a receipt
     private int bezLaenge = 23; // make article names shorter for improved aesthetics (totals appear more to be in one column)
     // for header:
-    private String shopName = "WELTLADEN BONN";
+    private String shopName = bc.NAME_FOR_RECEIPT;
     private String shopAddress = String.join(" ", String.join(", ", bc.STRASSE, bc.PLZ), bc.ORT);
-    private String shopPhone = "Telefon: 0228 / 69 70 52";
-    private String shopURL = "www.weltladen-bonn.org";
+    private String shopPhone = bc.PHONE;
+    private String shopURL = bc.URL;
     private String qrCodeVersion = "V0"; // defined in DSFinV-K, update it here if it ever changes in DSFinV-K
 
     /**

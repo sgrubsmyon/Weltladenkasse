@@ -60,6 +60,11 @@ LAND = DEU
 STNR = 205/5775/1014
 USTID = DE294978428
 
+# Extra data printed on receipt:
+NAME_FOR_RECEIPT = WELTLADEN BONN
+PHONE = Telefon: 0228 / 69 70 52
+URL = www.weltladen-bonn.org
+
 #############################
 # Stamm_Orte (location.csv)
 #############################
