@@ -2,7 +2,7 @@
 
 # Check if mysql is already installed via package manager:
 installed_via_pm() {
-  dpkg --get-selections | grep mariadb-server > /dev/null
+  dpkg --get-selections | grep '\<install\>' | grep mariadb-server > /dev/null
   if [ $? == 0 ]; then
     echo "yes"
   else
