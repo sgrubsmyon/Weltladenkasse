@@ -46,7 +46,7 @@ public class BaseClass {
 
     // TSE and DSFinV-K setup:
     public String finDatDir = ".Weltladenkasse_Finanzdaten"; // for export of financial data
-    public String Z_KASSE_ID = "877666797878-01"; // is used as clientID when talking to TSE
+    public String Z_KASSE_ID = "YLUE036019"; // is used as clientID when talking to TSE
     public String TAXONOMIE_VERSION = "2.2";
     public String NAME;
     public String STRASSE;
@@ -55,6 +55,9 @@ public class BaseClass {
     public String LAND;
     public String STNR;
     public String USTID;
+    public String NAME_FOR_RECEIPT;
+    public String PHONE;
+    public String URL;
     public String LOC_NAME;
     public String LOC_STRASSE;
     public String LOC_PLZ;
@@ -328,6 +331,15 @@ public class BaseClass {
         }
         try { this.USTID = props.getProperty("USTID"); } catch (Exception ex) {
             parseErrorMessage(ex, "USTID", this.USTID);
+        }
+        try { this.NAME_FOR_RECEIPT = props.getProperty("NAME_FOR_RECEIPT"); } catch (Exception ex) {
+            parseErrorMessage(ex, "NAME_FOR_RECEIPT", this.NAME_FOR_RECEIPT);
+        }
+        try { this.PHONE = props.getProperty("PHONE"); } catch (Exception ex) {
+            parseErrorMessage(ex, "PHONE", this.PHONE);
+        }
+        try { this.URL = props.getProperty("URL"); } catch (Exception ex) {
+            parseErrorMessage(ex, "URL", this.URL);
         }
         try { this.LOC_NAME = props.getProperty("LOC_NAME"); } catch (Exception ex) {
             parseErrorMessage(ex, "LOC_NAME", this.LOC_NAME);

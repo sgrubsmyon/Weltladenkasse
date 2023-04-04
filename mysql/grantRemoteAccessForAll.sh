@@ -2,21 +2,22 @@
 
 cd `dirname $0`
 
-if [ -n "$1" ]; then
-    root_pwd=$1
-fi
+# if [ -n "$1" ]; then
+#     root_pwd=$1
+# fi
 
-# Check if MySQL root password is correct
+# Check if MySQL root access works
 while : ; do
-    if [ -z "$root_pwd" ]; then
-        read -s -p "Enter MySQL root password: " root_pwd; echo
-    fi
-    mysql -h localhost -u root -p$root_pwd --execute="SELECT 1;" > /dev/null
+    # if [ -z "$root_pwd" ]; then
+    #     read -s -p "Enter MySQL root password: " root_pwd; echo
+    # fi
+    # mysql -h localhost -u root -p$root_pwd --execute="SELECT 1;" > /dev/null
+    sudo mysql --execute="SELECT 1;" > /dev/null
     if [[ $? -eq 0 ]]; then
         break
     else
         echo "Wrong password. Try again."
-        root_pwd=""
+        # root_pwd=""
     fi
 done
 
@@ -52,7 +53,8 @@ sed "s/localhost/$host%/" grants.sql > grants_temp.sql
 # create DB, grant access rights, and create tables
 echo ""
 echo "Will now create the remote MySQL users..."
-mysql --local-infile -h localhost -u root -p$root_pwd --execute="
+# mysql --local-infile -h localhost -u root -p$root_pwd --execute="
+sudo mysql --local-infile --execute="
 #GRANT USAGE ON *.* TO 'kassenadmin'@'$host%';
 #GRANT USAGE ON *.* TO 'mitarbeiter'@'$host%';
 DROP USER IF EXISTS 'kassenadmin'@'$host%';

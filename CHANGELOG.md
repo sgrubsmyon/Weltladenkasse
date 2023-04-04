@@ -6,8 +6,16 @@
 | v2.0.0  | 1511       | 1533       |
 | v2.0.1  | 1534       | 1535       |
 | v2.0.2  | 1536       | 1888       |
-| v2.0.3  | 1889       |            |
+| v2.0.3  | 1889       | 2091       |
+| v2.0.4  | 2092       |            |
 +-----------------------------------+
+
+## v2.0.4
+
+  * Wechsel des Kassenservers, der die Kassierdaten in MySQL speichert
+  * Wechsel von Raspberry Pi 2 Model B Rev 1.1 (Seriennr. 000000003b8a8285) auf Thin Client Fujitso Futro S920 (Seriennr. YLUE036019)
+  * Letzte Rechnung mit v2.0.3: Nr. 43562 am 01.04.2023 (bis `Z_NR`/`abrechnung_tag.id` 2091)
+  * Erste Rechnung mit v2.0.4: Nr. 43563 am 03.04.2023 (ab `Z_NR`/`abrechnung_tag.id` 2092)
 
 ## v2.0.3
 
