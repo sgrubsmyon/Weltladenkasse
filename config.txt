@@ -1,5 +1,5 @@
 operationMode = normal
-mysqlHost = mangopi
+mysqlHost = futon
 mysqlPath =
 sofficePath =
 printerName = quittungsdrucker
@@ -40,13 +40,12 @@ finDatDir = .Weltladenkasse_Finanzdaten
 # wird die Identifikationsnummer erwartet, die ab dem 01.01.2020 der
 # Finanzverwaltung gemäß § 146a Abs. 4 AO zu melden ist:
 # (wird bei Kommunikation mit der TSE als "clientID" verwendet)
-# Bitte ändern, sobald die Master-Kasse (Raspberry Pi) ausgetauscht wird.
-# In der Zukunft kann auch KASSE_SERIENNR verwendet werden (muss aber maximal
-# 30 Zeichen haben auf Grund der Firmware der TSE, siehe
+# Bitte ändern, sobald die Master-Kasse (Server) ausgetauscht wird.
+# Kann selbst vergeben werden, es kann aber auch KASSE_SERIENNR verwendet werden
+# (muss aber maximal 30 Zeichen haben auf Grund der Firmware der TSE, siehe
 # https://tse-support.cryptovision.com/confluence/pages/viewpage.action?spaceKey=TDI&title=clientId+oder+Seriennummer+des+Aufzeichnungssystems)
 
-# WLBONN converted to ASCII code numbers: (https://www.madeintext.com/text-to-ascii/)
-Z_KASSE_ID = 877666797878-01
+Z_KASSE_ID = YLUE036019
 
 #########################################
 # Stamm_Abschluss (cashpointclosing.csv)
@@ -60,6 +59,11 @@ ORT = Bonn
 LAND = DEU
 STNR = 205/5775/1014
 USTID = DE294978428
+
+# Extra data printed on receipt:
+NAME_FOR_RECEIPT = WELTLADEN BONN
+PHONE = Telefon: 0228 / 69 70 52
+URL = www.weltladen-bonn.org
 
 #############################
 # Stamm_Orte (location.csv)
@@ -76,16 +80,19 @@ LOC_USTID = DE294978428
 # Stamm_Kassen (cashregister.csv)
 ##################################
 
+# Seit Wechsel von Raspberry Pi auf Fujitso Futro: Bekomme Infos
+# nicht mehr mit `cat /proc/cpuinfo`, sondern mit `sudo dmidecode`:
+# Im Block "System Information" unterhalb von "BIOS"
 # Marke der eingesetzten Kassen-Hardware: (Server)
-KASSE_BRAND = Raspberry Pi Foundation
-# Modell der eingesetzten Kassen-Hardware: (Server), gefunden mit `cat /proc/cpuinfo`
-KASSE_MODELL = Raspberry Pi 2 Model B Rev 1.1
-# Seriennummer der eingesetzten Kassen-Hardware: (Server), gefunden mit `cat /proc/cpuinfo`
-KASSE_SERIENNR = 000000003b8a8285
+KASSE_BRAND = FUJITSU
+# Modell der eingesetzten Kassen-Hardware: (Server)
+KASSE_MODELL = FUTRO S920
+# Seriennummer der eingesetzten Kassen-Hardware: (Server)
+KASSE_SERIENNR = YLUE036019
 # Markenbezeichnung der eingesetzten Kassen-Software: (https://github.com/sgrubsmyon/Weltladenkasse)
 KASSE_SW_BRAND = Weltladenkasse
 # Version der eingesetzten Kassen-Software:
-KASSE_SW_VERSION = v2.0.3
+KASSE_SW_VERSION = v2.0.4
 KASSE_BASISWAEH_CODE = EUR
 
 ###############################
@@ -105,7 +112,7 @@ TERMINAL_SERIENNR = R8DXP4H
 # Markenbezeichnung der eingesetzten Kassen-Software: (https://github.com/sgrubsmyon/Weltladenkasse)
 TERMINAL_SW_BRAND = Weltladenkasse
 # Version der eingesetzten Kassen-Software:
-TERMINAL_SW_VERSION = v2.0.3
+TERMINAL_SW_VERSION = v2.0.4
 
 ###########################
 # Stamm_Agenturen (pa.csv)

@@ -6,6 +6,7 @@ import java.math.BigDecimal; // for monetary value representation and arithmetic
 import java.io.*;
 import java.lang.Process; // for executing system commands
 import java.lang.Runtime; // for executing system commands
+import java.lang.IllegalArgumentException;
 import java.text.SimpleDateFormat; // for parsing and formatting dates
 import java.text.ParseException;
 
@@ -77,10 +78,10 @@ public class Quittung extends WindowContent {
     private int rowLength = 31; // 31 chars fit on one row of a receipt
     private int bezLaenge = 23; // make article names shorter for improved aesthetics (totals appear more to be in one column)
     // for header:
-    private String shopName = "WELTLADEN BONN";
+    private String shopName = bc.NAME_FOR_RECEIPT;
     private String shopAddress = String.join(" ", String.join(", ", bc.STRASSE, bc.PLZ), bc.ORT);
-    private String shopPhone = "Telefon: 0228 / 69 70 52";
-    private String shopURL = "www.weltladen-bonn.org";
+    private String shopPhone = bc.PHONE;
+    private String shopURL = bc.URL;
     private String qrCodeVersion = "V0"; // defined in DSFinV-K, update it here if it ever changes in DSFinV-K
 
     /**
@@ -133,17 +134,17 @@ public class Quittung extends WindowContent {
     */
     private void printQuittungWithEscPos() {
         // First test of ESC/POS printing
-        PrintService printService = PrinterOutputStream.getPrintServiceByName(bc.printerName);
-        EscPos escpos;
         try {
+            PrintService printService = PrinterOutputStream.getPrintServiceByName(bc.printerName);
+            EscPos escpos;
             escpos = new EscPos(new PrinterOutputStream(printService));
-            
+
             // Unfortunately, printer does not react to the more fine-grained "Style" commands, but only to PrintModeStyle commands:
             // Style smallStyle = new Style()
             //     .setFontSize(Style.FontSize._1, Style.FontSize._1);
             // Style bigStyle = new Style()
             //     .setFontSize(Style.FontSize._8, Style.FontSize._8);
-            
+
             // for German umlauts etc.:
             escpos.setCharacterCodeTable(CharacterCodeTable.CP858_Euro);
             // if it does not work, use this code to explicitly set to CP858:
@@ -155,9 +156,11 @@ public class Quittung extends WindowContent {
             printEscPosTotals(escpos);
             printEscPosTSEValues(escpos);
             // printEscPosTSEQRCode(escpos); // unfortunately, it seems our printer does not support QR code printing
-            
+
             escpos.feed(6).cut(EscPos.CutMode.FULL);
             escpos.close();
+        } catch (IllegalArgumentException ex) {
+            logger.error("Probably receipt printer is not installed in OS: {}", ex);
         } catch (IOException ex) {
             logger.error("{}", ex);
         }
@@ -523,16 +526,22 @@ public class Quittung extends WindowContent {
                 }
                 if (tseStatusValues != null) {
                     String serial_id = tseStatusValues.get("Seriennummer der TSE (Hex)");
-                    int chars = 16; // print first 16 chars on first row
-                    escpos.writeLF(normal, indent + spaceBetweenStrings(
-                        "TSE-Seriennr.:", serial_id.substring(0, chars)
-                    ));
-                    while (chars < serial_id.length()) {
-                        // now 24 chars per row
-                        escpos.writeLF(normal, indent + rightAlignedString(
-                            serial_id.substring(chars, chars + 24)
+                    if (serial_id != null) {
+                        int chars = 16; // print first 16 chars on first row
+                        escpos.writeLF(normal, indent + spaceBetweenStrings(
+                            "TSE-Seriennr.:", serial_id.substring(0, chars)
                         ));
-                        chars += 24;
+                        while (chars < serial_id.length()) {
+                            // now 24 chars per row
+                            escpos.writeLF(normal, indent + rightAlignedString(
+                                serial_id.substring(chars, chars + 24)
+                            ));
+                            chars += 24;
+                        }
+                    } else {
+                        escpos.writeLF(normal, indent + spaceBetweenStrings(
+                            "TSE-Seriennr.:", "nicht verfügbar"
+                        ));
                     }
                 }
             }
