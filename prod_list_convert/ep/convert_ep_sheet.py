@@ -20,7 +20,8 @@ def main():
     # get parsed args
     (options, args) = parser.parse_args()
 
-    print(f'Writing result to CSV file "{options.OUTPUT}".')
+    xlsx_output = options.OUTPUT[:-3] + 'xlsx'
+    print(f'Writing result to CSV file "{options.OUTPUT}" and "{xlsx_output}".')
 
     #############
     # Load data #
@@ -28,13 +29,19 @@ def main():
 
     import numpy as np
     import pandas as pd
+    import requests
     import re
     import os
     import warnings
 
+    # Download file for parsing with pandas
     url = 'http://www.epsupport.de/download/Artikelliste_El_Puente_Master.xlsx'
     # url = 'prod_list_convert/ep/data/Artikelliste_El_Puente_Master.xlsx'
     ep = pd.read_excel(url)
+
+    # As service to user, also download and store the original .xlsx file
+    myfile = requests.get(url)
+    open(xlsx_output, 'wb').write(myfile.content)
 
     path = os.path.dirname(os.path.realpath(__file__))
     prod_group_dict = pd.read_csv(os.path.join(
@@ -47,7 +54,9 @@ def main():
     ep = ep.loc[ep.Warengruppe != 'Transport, Versandkosten']
     # ep = ep.loc[(ep.Warengruppe != 'Verpackung') | (ep.Artikelgruppe != 'Verpackung')]
     ep = ep.loc[ep.Artikelnummer != 'XXX']
-    ep = ep.loc[ep.Artikelnummer != 'KANTINE']
+    # Excluce all article numbers starting with at least 4 consecutive letters without numbers
+    pattern = re.compile(r'^[a-zA-Z]{4}')
+    ep = ep.loc[ep.Artikelnummer.map(lambda a: pattern.search(a) == None)]
     # Excluce temporary price reductions ("Abverkauf"/"Angebot") whose article number ends with "A"
     pattern = re.compile(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{2}-[a-zA-Z0-9]{3}A$')
     ep = ep.loc[ep.Artikelnummer.map(lambda a: pattern.search(a) == None)]
@@ -57,11 +66,6 @@ def main():
     ep = ep.loc[ep['Bezeichnung 2'] != 'Test 2']
     ep = ep.loc[ep['Bezeichnung 2'] != 'Test 3']
     ep = ep.loc[ep['Bezeichnung 2'] != 'Test 4']
-    # Exclude all Pfand articles because we have a different Pfand system
-    ep = ep.loc[np.invert(ep.Artikelnummer.str.contains('PFAND'))]
-    ep = ep.loc[ep.Artikelnummer != 'COLAFLASCHE']
-    ep = ep.loc[ep.Artikelnummer != 'COLAKISTE']
-    ep = ep.loc[ep.Artikelnummer != 'EINWEG']
     # Exclude "Etiketten" (labels)
     # pattern = re.compile(r'[0-9]{3}RS$')
     # ep = ep.loc[ep.Artikelnummer.map(lambda a: pattern.search(a) == None)]
