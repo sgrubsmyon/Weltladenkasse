@@ -906,6 +906,50 @@ public class DSFinVKCSV extends WindowContent {
         }
     }
 
+    public void writeToCSV_Z_GV_Typ_Anzahlungseinstellung(int abrechnung_tag_id, HashMap<String, String> zvalues, String filename) {
+        // Get data mostly from the table `verkauf_details`
+        try {
+            Connection connection = this.pool.getConnection();
+            // PreparedStatement pstmt = connection.prepareStatement();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+    }
+
+    public void writeToCSV_Z_GV_Typ_Anzahlungsaufloesung(int abrechnung_tag_id, HashMap<String, String> zvalues, String filename) {
+        // Get data mostly from the table `verkauf_details`
+        try {
+            Connection connection = this.pool.getConnection();
+            // PreparedStatement pstmt = connection.prepareStatement();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+    }
+
+    public void writeToCSV_Z_GV_Typ_Geldtransit(int abrechnung_tag_id, HashMap<String, String> zvalues, String filename) {
+        // Get data mostly from the table `verkauf_details`
+        try {
+            Connection connection = this.pool.getConnection();
+            // PreparedStatement pstmt = connection.prepareStatement();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+    }
+
+    public void writeToCSV_Z_GV_Typ_DifferenzSollIst(int abrechnung_tag_id, HashMap<String, String> zvalues, String filename) {
+        // Get data mostly from the table `verkauf_details`
+        try {
+            Connection connection = this.pool.getConnection();
+            // PreparedStatement pstmt = connection.prepareStatement();
+        } catch (SQLException ex) {
+            logger.error("Exception:", ex);
+            showDBErrorDialog(ex.getMessage());
+        }
+    }
+
     // ----------------------------------------
 
     public void writeToCSV_Z_Zahlart(int abrechnung_tag_id, HashMap<String, String> zvalues) {
