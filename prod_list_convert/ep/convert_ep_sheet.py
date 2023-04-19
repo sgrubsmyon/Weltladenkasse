@@ -11,7 +11,7 @@ def main():
     parser.add_option("--output", type="string",
                       default='Artikelliste_El_Puente_Master.csv',
                       dest="OUTPUT",
-                      help="The path to the output .csv file being written to.")
+                      help="The path to the output '.csv' file being written to. It will also be written to the same filenane with extension '.xlsx'.")
     # parser.add_option("--only-arrows", action="store_true",
     #                   default=False,
     #                   dest="ARROWS",
@@ -250,8 +250,6 @@ def main():
     # TODO check if file exists and ask if user wants it overwritten
     # Write out resulting CSV file
     ep.to_csv(options.OUTPUT, sep=';', index=False)
-    # For testing:
-    # fhz.to_csv('Bestellvorlage Lebensmittelpreisliste 3.0 2022.csv', sep=';', index = False)
 
 
 if __name__ == '__main__':
