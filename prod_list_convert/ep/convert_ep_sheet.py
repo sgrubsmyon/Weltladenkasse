@@ -87,6 +87,12 @@ def main():
         ep['Bezeichnung 1'].str.startswith('46 Zusatzetikett'))]
     ep = ep.loc[np.invert(
         ep['Bezeichnung 1'].str.startswith('34 Zusatzetiket'))]
+    
+    # Convert article numbers in wrong format (no minus signs) to correct format
+    pattern = re.compile(r'^[a-zA-Z]{2}[0-9]{6}$')
+    wrong_artnum = ep.Artikelnummer.map(lambda a: pattern.search(a) != None)
+    ep.loc[wrong_artnum, "Artikelnummer"] = ep.loc[wrong_artnum, "Artikelnummer"].map(
+        lambda a: re.sub(r'^([a-zA-Z]{2}[0-9])([0-9]{2})([0-9]{3})', r'\1-\2-\3', a))
 
     # ep.to_excel('prod_list_convert/ep/test.xlsx') # look for strange things
     # pattern = re.compile(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{2}-[a-zA-Z0-9]+$')
