@@ -53,6 +53,7 @@ def main():
     ep = ep.loc[ep['VK-Preis von'] > 0]
     ep = ep.loc[ep.Warengruppe != 'Transport, Versandkosten']
     # ep = ep.loc[(ep.Warengruppe != 'Verpackung') | (ep.Artikelgruppe != 'Verpackung')]
+    ep = ep.loc[(ep.Hauptgruppe != 'Handwerk') | (ep.Warengruppe != 'Verpackung')]
     ep = ep.loc[ep.Artikelnummer != 'XXX']
     # Excluce all article numbers starting with at least 4 consecutive letters without numbers
     pattern = re.compile(r'^[a-zA-Z]{4}')
@@ -89,10 +90,10 @@ def main():
         ep['Bezeichnung 1'].str.startswith('34 Zusatzetiket'))]
     
     # Convert article numbers in wrong format (no minus signs) to correct format
-    pattern = re.compile(r'^[a-zA-Z]{2}[0-9]{6}$')
+    pattern = re.compile(r'^[a-zA-Z]{2}[a-zA-Z0-9][0-9]{5}$')
     wrong_artnum = ep.Artikelnummer.map(lambda a: pattern.search(a) != None)
     ep.loc[wrong_artnum, "Artikelnummer"] = ep.loc[wrong_artnum, "Artikelnummer"].map(
-        lambda a: re.sub(r'^([a-zA-Z]{2}[0-9])([0-9]{2})([0-9]{3})', r'\1-\2-\3', a))
+        lambda a: re.sub(r'^([a-zA-Z]{2}[a-zA-Z0-9])([0-9]{2})([0-9]{3})', r'\1-\2-\3', a))
 
     # ep.to_excel('prod_list_convert/ep/test.xlsx') # look for strange things
     # pattern = re.compile(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{2}-[a-zA-Z0-9]+$')
