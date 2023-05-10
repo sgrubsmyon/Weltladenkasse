@@ -1,0 +1,39 @@
+Weihnachten:
+r"Weihnacht|Baumanhänger|Engel"
+
+Ostern:
+r"Oster|\"Ei\"|\bEi\b"
+
+---------
+
+Weihnachten:
+
+Baumanhänger "Stern"
+Baumanhänger "Herz, Stern, Krippe"
+Baumanhänger "Herz mit Glöckchen"
+Baumanhänger mit Klangstäben "Glocke"
+Weihnachtsstern aus Glanzpapier
+Weihnachtsglöckchen aus Holz
+Engel
+Dekoanhänger "Engel"
+Weihnachtsdeko "Engel mit Silberflügeln"
+
+Ostern:
+
+Osterdeko, 3er-Set
+Ostereier
+Dekoanhänger "Ei"
+Deko-Ei "Jugendstil"
+Hängedeko "Ei", 4er-Set
+Osterhase,
+Osterdeko "Henne"
+
+Allgemein:
+
+Garderobenhaken
+Schrankknopf
+Bengel
+Schwengel
+Toaster
+Osterweiterung
+Nahosterweiterung
