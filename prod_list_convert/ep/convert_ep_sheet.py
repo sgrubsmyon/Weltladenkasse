@@ -21,7 +21,8 @@ def main():
     (options, args) = parser.parse_args()
 
     xlsx_output = options.OUTPUT[:-3] + 'xlsx'
-    print(f'Writing result to CSV file "{options.OUTPUT}" and "{xlsx_output}".')
+    print(
+        f'Writing result to CSV file "{options.OUTPUT}" and "{xlsx_output}".')
 
     #############
     # Load data #
@@ -37,6 +38,7 @@ def main():
     # Download file for parsing with pandas
     url = 'http://www.epsupport.de/download/Artikelliste_El_Puente_Master.xlsx'
     # url = 'prod_list_convert/ep/data/Artikelliste_El_Puente_Master.xlsx'
+    # url = 'Artikelliste_El_Puente_Master.xlsx'
     ep = pd.read_excel(url)
 
     # As service to user, also download and store the original .xlsx file
@@ -44,6 +46,7 @@ def main():
     open(xlsx_output, 'wb').write(myfile.content)
 
     path = os.path.dirname(os.path.realpath(__file__))
+    # path = "/home/mvoge/code/Weltladenkasse/git/prod_list_convert/ep"
     prod_group_dict = pd.read_csv(os.path.join(
         path, 'prod_group_dict_ep.csv'), sep=';', dtype=str)
     # prod_group_dict = pd.read_csv('prod_list_convert/ep/prod_group_dict_ep.csv', sep=';', dtype=str)
@@ -53,7 +56,8 @@ def main():
     ep = ep.loc[ep['VK-Preis von'] > 0]
     ep = ep.loc[ep.Warengruppe != 'Transport, Versandkosten']
     # ep = ep.loc[(ep.Warengruppe != 'Verpackung') | (ep.Artikelgruppe != 'Verpackung')]
-    ep = ep.loc[(ep.Hauptgruppe != 'Handwerk') | (ep.Warengruppe != 'Verpackung')]
+    ep = ep.loc[(ep.Hauptgruppe != 'Handwerk') |
+                (ep.Warengruppe != 'Verpackung')]
     ep = ep.loc[ep.Artikelnummer != 'XXX']
     # Excluce all article numbers starting with at least 4 consecutive letters without numbers
     pattern = re.compile(r'^[a-zA-Z]{4}')
@@ -88,12 +92,38 @@ def main():
         ep['Bezeichnung 1'].str.startswith('46 Zusatzetikett'))]
     ep = ep.loc[np.invert(
         ep['Bezeichnung 1'].str.startswith('34 Zusatzetiket'))]
-    
+
     # Convert article numbers in wrong format (no minus signs) to correct format
     pattern = re.compile(r'^[a-zA-Z]{2}[a-zA-Z0-9][0-9]{5}$')
-    wrong_artnum = ep.Artikelnummer.map(lambda a: pattern.search(a) != None)
-    ep.loc[wrong_artnum, "Artikelnummer"] = ep.loc[wrong_artnum, "Artikelnummer"].map(
-        lambda a: re.sub(r'^([a-zA-Z]{2}[a-zA-Z0-9])([0-9]{2})([0-9]{3})', r'\1-\2-\3', a))
+    wrong_artnum_filter = ep.Artikelnummer.map(
+        lambda a: pattern.search(a) != None)
+
+    # Correct the wrong formatted article numbers:
+    # correct_artnum = ep.loc[wrong_artnum_filter, "Artikelnummer"].map(
+    #     lambda a: re.sub(
+    #         r'^([a-zA-Z]{2}[a-zA-Z0-9])([0-9]{2})([0-9]{3})', r'\1-\2-\3', a)
+    # )
+    # correct_artnum_filter = ep.Artikelnummer.map(lambda a: a in correct_artnum.tolist())
+    # ep.loc[wrong_artnum_filter, "Artikelnummer"] = correct_artnum
+
+    # Compare:
+    # Wrong article number format:
+    # wrong_df = ep.loc[wrong_artnum_filter, ["Artikelnummer", "VK-Preis bis"]]
+    # wrong_df = wrong_df.rename(columns = {"VK-Preis bis": "VK-Preis wrong"})
+    # ### Same article number in correct format: (duplicates)
+    # correct_df = ep.loc[correct_artnum_filter, ["Artikelnummer", "VK-Preis bis"]]
+    # correct_df = correct_df.rename(columns = {"VK-Preis bis": "VK-Preis correct"})
+    # # These are duplicates, present both in "wrong" and "correct" format.
+    # # It seems that the "wrong formatted" articles are simply outdated (usually lower price, can check with https://shop.el-puente.de/art_number):
+    # wrong_df.merge(correct_df, on = "Artikelnummer")
+    # # What about "wrong formatted" articles not listed in correct format? (they do not have duplicates)
+    # list(filter(lambda a: a not in correct_df.Artikelnummer.tolist(), wrong_df.Artikelnummer))
+    # # It seems all except two (BO1-10-201 and BO1-10-202, which is Dinkel-Quinoa-Gebäck) do not exist anymore in
+    # # shop.el-puente.de and there is no "correct formatted" duplicate because the correct duplicate is "Ausgelistet"
+    # # and was filtered out.
+
+    # Decision: remove all the articles with wrong formatted article numbers
+    ep = ep.loc[~wrong_artnum_filter]
 
     # ep.to_excel('prod_list_convert/ep/test.xlsx') # look for strange things
     # pattern = re.compile(r'^[a-zA-Z0-9]{3}-[a-zA-Z0-9]{2}-[a-zA-Z0-9]+$')
@@ -102,7 +132,7 @@ def main():
     # Extract the product groups
     ep['Produktgruppe'] = ep['Hauptgruppe'] + ' - ' + \
         ep['Warengruppe'] + ' - ' + ep['Artikelgruppe']
-    prod_groups = ep['Produktgruppe'].unique()
+    # prod_groups = ep['Produktgruppe'].unique()
     # print(prod_groups) # Copy from terminal and insert into LibreOffice
 
     # Translate the EP product groups to WLB product groups using the dictionary.
@@ -112,9 +142,9 @@ def main():
         pg_ep = ep.loc[i, 'Produktgruppe']
         # Special cases of product group depending on parameters of the product:
         if pg_ep == 'Lebensmittel - Getränke - Säfte (19% Mwst.)':
-            if ep.loc[i, 'Gewicht'] == 330: # 330 ml --> 8 Cent Pfand
+            if ep.loc[i, 'Gewicht'] == 330:  # 330 ml --> 8 Cent Pfand
                 ep.loc[i, 'Produktgruppe_WLB'] = 'Alkoholfreie Getränke 8 Cent Pfand'
-            elif ep.loc[i, 'Gewicht'] == 1000: # 1 Liter --> 15 Cent Pfand
+            elif ep.loc[i, 'Gewicht'] == 1000:  # 1 Liter --> 15 Cent Pfand
                 ep.loc[i, 'Produktgruppe_WLB'] = 'Alkoholfreie Getränke 15 Cent Pfand'
             else:
                 ep.loc[i, 'Produktgruppe_WLB'] = 'Sonstige Getränke'
@@ -127,6 +157,19 @@ def main():
             else:
                 warnings.warn(
                     f'EP-Produktgruppe "{pg_ep}" bisher unbekannt!!! Bitte in `prod_group_dict_ep.csv` eintragen!')
+
+    # Adjustments of the product group
+    # Seasonal articles inside the group "Dekoartikel" (mapped from "Kleindeko")
+    xmas_pattern = re.compile(r'Weihnacht|Baumanhänger|Engel|Krippe')
+    easter_pattern = re.compile(r'Oster|\"Ei\"|\bEi\b')
+    ep.loc[
+        (ep['Bezeichnung 1'].map(lambda a: xmas_pattern.search(a) != None)),
+        "Produktgruppe_WLB"
+    ] = "KHW Weihnachten"
+    ep.loc[
+        (ep['Bezeichnung 1'].map(lambda a: easter_pattern.search(a) != None)),
+        "Produktgruppe_WLB"
+    ] = "KHW Ostern"
 
     # Set missing values for products without 'Einheit'
     ep['Einheit'] = 'St.'  # default value
