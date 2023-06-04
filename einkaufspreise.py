@@ -149,6 +149,7 @@ if (pwd is None):
     pwd = getpass("Please enter mitarbeiter password of MySQL DB. ")
 
 # https://dev.mysql.com/downloads/connector/python/
+# Or faster (check if version is same): `pip install mysql-connector-python`
 import mysql.connector
 import numpy as np
 #import decimal
@@ -769,6 +770,10 @@ ekp_setzen_by_name(conn, lieferant='Memo', name='teelichtbehälter%',
         prod_gr='Ergänzungsprodukte', einkaufspreis=0.53)
 ekp_setzen_by_name(conn, lieferant='Memo', name='tafelkerze%',
         prod_gr='Ergänzungsprodukte', einkaufspreis=1.18)
+ekp_setzen_by_name(conn, lieferant='Memo', name='spülschwamm%',
+        prod_gr='Ergänzungsprodukte', einkaufspreis=1.59)
+ekp_setzen_by_name(conn, lieferant='Memo', name='scheuerschwamm%',
+        prod_gr='Ergänzungsprodukte', einkaufspreis=1.59)
 
 ### Exil Music
 ekp_setzen_by_name(conn, lieferant='Exil Music', name='Putumayo%',
