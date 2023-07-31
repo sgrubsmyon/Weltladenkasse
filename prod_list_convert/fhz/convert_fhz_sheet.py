@@ -19,7 +19,7 @@ def main():
     parser = OptionParser(usage)
 
     parser.add_option("--fhz", type="string",
-                      default='Bestellvorlage Lebensmittelpreisliste 3.0 2022.ods',
+                      default="Bestellvorlage Lebensmittelpreisliste 3.0 2022.ods",
                       dest="FHZ",
                       help="The path to the FHZ .ods file. Output is written to the same filename, but with extension .csv.")
     parser.add_option("--only-arrows", action="store_true",
