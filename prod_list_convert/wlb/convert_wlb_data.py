@@ -81,9 +81,16 @@ def main():
     # Convert some columns, esp. boolean:
     wlb["sortiment"] = ["Ja" if b == 1 else "Nein" for b in wlb["sortiment"]]
     wlb["lieferbar"] = ["Ja" if b == 1 else "Nein" for b in wlb["lieferbar"]]
-    wlb["beliebtheit"] = ["ausgelistet" if d == -1 else "niedrig" if d == 1 else "mittel" if d ==
-                          2 else "hoch" if d == 3 else "keine Angabe" for d in wlb["beliebtheit"]]
-    wlb["variabler_preis"] = ["Ja" if b == 1 else "Nein" for b in wlb["variabler_preis"]]
+    wlb["beliebtheit"] = [
+        "ausgelistet" if d == -1 else "niedrig" if d == 1 else "mittel" if d == 2
+        else "hoch" if d == 3 else "keine Angabe" for d in wlb["beliebtheit"]
+    ]
+    print(wlb["vpe"])
+    wlb["vpe"] = wlb["vpe"].fillna(0).astype(np.int64)
+    print(wlb["vpe"])
+    wlb["variabler_preis"] = [
+        "Ja" if b == 1 else "Nein" for b in wlb["variabler_preis"]
+    ]
 
     wlb.to_csv(options.WLB, sep=';', index=False, header=[
         "Produktgruppe",
