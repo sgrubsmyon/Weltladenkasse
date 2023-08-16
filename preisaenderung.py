@@ -15,8 +15,8 @@
     Das Skript erstellt eine CSV-Datei im selben Ordner mit selbem Namen wie die ODS-Datei,
     nur mit Endung ".csv".
 5.) Dieses Skript aufrufen mit:
-    ../../../git/preisaenderung.py --fhz Bestellvorlage_XXX.csv --wlb Artikelliste_LM.csv (-n) > log.txt
-     (-n übernimmt den Artikelnamen vom FHZ, wir haben
+    ../../../git/preisaenderung.py --fhz Bestellvorlage_XXX.csv --wlb Artikelliste_LM.csv > log.txt
+     (Optionaler Parameter -n übernimmt den Artikelnamen vom FHZ, wir haben
      aber häufig Fehler im Namen korrigiert/angepasst, daher lieber nicht -n
      benutzen. Außerdem generiert das unnötig viele Änderungen.)
 6.) Datei log.txt anschauen und evtl. Probleme beheben, z.B.:
