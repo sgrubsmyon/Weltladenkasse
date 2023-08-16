@@ -402,7 +402,6 @@ def main():
                 sth_printed = True
             fhz_preis = specialTreatment(fhz_row, fhz_preis, wlb_neu, name)
             fhz_preis = returnRoundedPrice(fhz_preis)
-            # if ( abs(fhz_preis - wlb_preis) > 0.021 ):
             if (abs(fhz_preis - wlb_preis) > 0.):
                 # price seems to deviate more than usual
                 count += 1
@@ -496,7 +495,7 @@ def main():
         fhz_preis = Decimal()
         try:
             fhz_preis = Decimal(fhz_row['VK-Preis'])
-            if fhz_preis == 0:
+            if fhz_preis.is_nan() or fhz_preis == 0:
                 fhz_preis = fhz_preis_empf
         except:
             fhz_preis = fhz_preis_empf
