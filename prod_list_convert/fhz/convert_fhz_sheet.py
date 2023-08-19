@@ -168,7 +168,7 @@ def main():
     fhz['Beliebtheit'] = ''
     fhz['Barcode'] = ''
     fhz['Setgröße'] = ''
-    fhz['VK-Preis'] = ''
+    fhz['VK-Preis'] = fhz['je Einheit']
     fhz['Empf. VK-Preis'] = fhz['je Einheit']
     fhz['EK-Rabatt'] = ''
     fhz['EK-Preis'] = ''
