@@ -199,8 +199,8 @@ def specialTreatment(row, preis, wlb_neu, name):
     if row.Artikelnummer == '8901827' or row.Artikelnummer == '8901828':
         # Adopt the recommented sales price as procurement price
         wlb_neu.loc[name, 'EK-Preis'] = preis
-        # Always add 1 EUR to the price so that we earn something from it
-        preis += Decimal('1.00')
+        # Always add 2.40 EUR to the price so that we earn something from it
+        preis += Decimal('2.40')
     return preis
 
 
