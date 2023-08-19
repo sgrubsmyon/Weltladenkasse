@@ -1,3 +1,3 @@
 #!/bin/bash
 
-mysql --local-infile -hlocalhost -ukassenadmin -p -e "source DB_Dump_kasse_nach_preisaenderung.sql" kasse && sudo systemctl start mariadb.service && systemctl status mariadb.service
+sudo systemctl start mariadb.service && mysql --local-infile -hlocalhost -ukassenadmin -p -e "source DB_Dump_kasse_nach_preisaenderung.sql" kasse && systemctl status mariadb.service
