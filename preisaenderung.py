@@ -619,7 +619,7 @@ def main():
         fhz_preis = Decimal()
         try:
             fhz_preis = Decimal(fhz_row['VK-Preis'])
-            if fhz_preis == 0:
+            if fhz_preis == 0 or fhz_preis.is_nan():
                 fhz_preis = fhz_preis_empf
         except:
             fhz_preis = fhz_preis_empf
