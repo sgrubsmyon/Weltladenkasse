@@ -31,11 +31,11 @@
         ist (Fehler evtl. ans FHZ melden)
     * Auch gucken, ob neue Artikel eigentlich beim FHZ durchgestrichen sind und
         wir sie schon aus der DB entfernt haben.
-7.) Punkte 9 und 10 so lange ausführen, bis alles OK ist.
+7.) Punkte 5 und 6 so lange ausführen, bis alles OK ist.
 8.) Ergebnisse werden gespeichert in Dateien:
     * "preisänderung.csv" (alle Artikel, aktualisiert)
     * "preisänderung_irgendeine_änderung.csv" (alle Artikel, bei denen sich
-        irgendwas geändert hat; für beschleunigtes Einlesen ggü. preisänderung.csv,
+        irgendwas geändert hat; für beschleunigtes Einlesen ggü. "preisänderung.csv",
         denn Artikel ohne Änderung würden beim Einlesen sowieso ignoriert werden,
         verlangsamen aber den Einleseprozess)
     * "preisänderung_geänderte_preise.csv" (alle Artikel, deren Preis sich verändert hat)
@@ -56,20 +56,30 @@
         Daher: Die Spalte "Menge (kg/l/St.)" anklicken und Typ auf "Text"
             setzen.
 10.) Als ods-Datei speichern (Save As, "Artikelliste_LM_neu.ods").
-11.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
-    die Datei "Artikelliste_LM_neu.ods" auswählen.
-12.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
-    "preisänderung_geänderte_preise_sortiment.csv" auswählen.
-13.) Die Datei "preisänderung_neue_artikel.csv" mit LibreOffice öffnen,
+11.) Die Datei "preisänderung_neue_artikel.csv" mit LibreOffice öffnen,
     Semicolon als Separator, String Delimiter: '"'. Auch hier wieder: Die Spalte
     "Artikelnummer" anklicken und Typ auf "Text" setzen, Spalte "Menge (kg/l/St.)"
     anklicken und Typ auf "Text" setzen.
-14.) Speichern als "preisänderung_neue_artikel.ods".
-15.) In "Weltladenkasse -> Artikelliste" auf "Artikel importieren" klicken und
+12.) Speichern als "preisänderung_neue_artikel.ods".
+13.) Auf Kassen-Server Skript "./dump_and_stop_db.sh" ausführen. Dies stoppt
+    den Kassenserver, sodass niemand in der Zwischenzeit kassieren kann, weil
+    jegliche Änderung an der DB, die in der Zwischenzeit passiert, verloren
+    gehen würde.
+14.) Lokal Skript "../../../git/preisaenderung_01_import_db.sh" ausführen.
+15.) Weltladenkasse lokal starten mit "run_kasse.sh".
+16.) In "Weltladenkasse -> Optionen -> Artikelliste" auf "Artikel importieren" klicken und
+    die Datei "Artikelliste_LM_neu.ods" auswählen.
+17.) In "Weltladenkasse -> Optionen -> Artikelliste" auf "Artikel importieren" klicken und
     die Datei "preisänderung_neue_artikel.ods" auswählen.
-16.) Evtl. schon vorhandene Artikel (z.B. Wein-Geschenkkartons), die jetzt rot
+18.) Evtl. schon vorhandene Artikel (z.B. Wein-Geschenkkartons), die jetzt rot
     markiert sind, aus "preisänderung_neue_artikel.ods" löschen. Wenn Änderungen
-    nötig sind (z.B. Preis), dann Artikel von Hand verändern.
+    nötig sind (z.B. Preis), dann die hier rot markierten Artikel von Hand
+    verändern.
+19.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
+    "preisänderung_geänderte_preise_sortiment.csv" auswählen. Neue Preisliste
+    speichern und Koordination schicken.
+20.) Lokal Skript "../../../git/preisaenderung_02_dump_db.sh" ausführen.
+21.) Auf Kassen-Server Skript "import_and_start_db.sh" ausführen.
 
 ###
 
