@@ -6,7 +6,8 @@
 #   und Verpackung, Art.-Nr. gleich!
 
 '''
-1.) Aktuellen DB-Dump einspielen.
+1.) Aktuellen DB-Dump einspielen:
+    mysql --local-infile -hlocalhost -ukassenadmin -p -e "source DB_Dump_kasse_XXX.sql" kasse
 2.) In Verzeichnis der Preisänderung wechseln.
 3.) Skript "convert_wlb_data.py" aufrufen:
     ../../../git/prod_list_convert/wlb/convert_wlb_data.py
