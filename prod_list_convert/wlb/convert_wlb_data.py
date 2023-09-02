@@ -64,7 +64,12 @@ def main():
              "FROM artikel "
              "INNER JOIN produktgruppe USING (produktgruppen_id) "
              "INNER JOIN lieferant USING (lieferant_id) "
-             "WHERE produktgruppe.toplevel_id IN (2, 3) AND "
+             "WHERE ( "
+             "  produktgruppe.toplevel_id IN (2, 3) "
+             "  OR lieferant.lieferant_name = 'El Puente' AND artikel.artikel_nr = 'IN7-30-250' " # Weihnachtskarte Besinnliche & faire Weihnachten
+             "  OR lieferant.lieferant_name = 'FHZ Rheinland' AND artikel.artikel_nr = 'Z007' "
+             "  OR lieferant.lieferant_name = 'FHZ Rheinland' AND artikel.artikel_nr = 'Z009' "
+             ") AND "
              "artikel.aktiv = TRUE AND artikel.artikel_nr NOT LIKE 'SONSTIGES%';")  # AND a.aktiv = TRUE
     # print(query)
     wlb = pd.read_sql(query, conn)
@@ -85,9 +90,7 @@ def main():
         "ausgelistet" if d == -1 else "niedrig" if d == 1 else "mittel" if d == 2
         else "hoch" if d == 3 else "keine Angabe" for d in wlb["beliebtheit"]
     ]
-    print(wlb["vpe"])
     wlb["vpe"] = wlb["vpe"].fillna(0).astype(np.int64)
-    print(wlb["vpe"])
     wlb["variabler_preis"] = [
         "Ja" if b == 1 else "Nein" for b in wlb["variabler_preis"]
     ]
