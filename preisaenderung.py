@@ -11,6 +11,7 @@
 2.) In Verzeichnis der Preisänderung wechseln.
 3.) Skript "convert_wlb_data.py" aufrufen:
     ../../../git/prod_list_convert/wlb/convert_wlb_data.py
+    Das Skript erstellt die Datei "Artikelliste_LM.csv" im aktuellen Verzeichnis.
 4.) Skript "convert_fhz_sheet.py" aufrufen mit dem Pfad zur FHZ-Bestellvorlage:
     ../../../git/prod_list_convert/fhz/convert_fhz_sheet.py --fhz Bestellvorlage_XXX.ods
     Das Skript erstellt eine CSV-Datei im selben Ordner mit selbem Namen wie die ODS-Datei,
@@ -76,6 +77,7 @@
     markiert sind, aus "preisänderung_neue_artikel.ods" löschen. Wenn Änderungen
     nötig sind (z.B. Preis), dann die hier rot markierten Artikel von Hand
     verändern.
+19.) Umbenennungen etc. z.B. aus `change_name.txt` anwenden.
 19.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
     "preisänderung_geänderte_preise_sortiment.csv" auswählen. Neue Preisliste
     speichern und Koordination schicken.

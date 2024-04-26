@@ -124,6 +124,8 @@ def main():
         else:
             warnings.warn(
                 f'FHZ-Produktgruppe "{pg_fhz}" bisher unbekannt!!! Bitte in `prod_group_dict_fhz.csv` eintragen!')
+            warnings.warn(
+                f'      Betroffener Artikel: "{fhz.loc[i, "Bezeichnung"]}"')
 
     # Set missing values for products without 'Einheit'
     no_einheit = fhz.Einheit.isnull()
