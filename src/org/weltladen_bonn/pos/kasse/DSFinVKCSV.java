@@ -287,7 +287,6 @@ public class DSFinVKCSV extends WindowContent {
 
     private void writeToCSV(String filename, HashMap<String, String> fields) {
         String csvFilename = exportDir + bc.fileSep + filename;
-        File file = new File(csvFilename);
 
         String colDel = columnDelimiters.get(filename);
         String rowDel = recordDelimiters.get(filename);
