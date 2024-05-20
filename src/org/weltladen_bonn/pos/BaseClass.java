@@ -474,13 +474,13 @@ public class BaseClass {
         try { this.LEXWARE_HABEN_KONTO_KASSENDIFFERENZ = Integer.parseInt(props.getProperty("LEXWARE_HABEN_KONTO_KASSENDIFFERENZ")); } catch (Exception ex) {
             parseErrorMessage(ex, "LEXWARE_HABEN_KONTO_KASSENDIFFERENZ", this.LEXWARE_HABEN_KONTO_KASSENDIFFERENZ);
         }
-        try { this.LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER = Integer.parseInt(props.getProperty("LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER")); } catch (Exception ex) {
+        try { this.LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER = props.getProperty("LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER").equals("") ? null : Integer.parseInt(props.getProperty("LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER")); } catch (Exception ex) {
             parseErrorMessage(ex, "LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER", this.LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER);
         }
-        try { this.LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER = Integer.parseInt(props.getProperty("LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER")); } catch (Exception ex) {
+        try { this.LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER = props.getProperty("LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER").equals("") ? null : Integer.parseInt(props.getProperty("LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER")); } catch (Exception ex) {
             parseErrorMessage(ex, "LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER", this.LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER);
         }
-        try { this.LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER = Integer.parseInt(props.getProperty("LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER")); } catch (Exception ex) {
+        try { this.LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER = props.getProperty("LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER").equals("") ? null : Integer.parseInt(props.getProperty("LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER")); } catch (Exception ex) {
             parseErrorMessage(ex, "LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER", this.LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER);
         }
         try { this.LEXWARE_KOSTENSTELLE_1 = props.getProperty("LEXWARE_KOSTENSTELLE_1"); } catch (Exception ex) {
@@ -489,7 +489,7 @@ public class BaseClass {
         try { this.LEXWARE_KOSTENSTELLE_2 = props.getProperty("LEXWARE_KOSTENSTELLE_2"); } catch (Exception ex) {
             parseErrorMessage(ex, "LEXWARE_KOSTENSTELLE_2", this.LEXWARE_KOSTENSTELLE_2);
         }
-        try { this.LEXWARE_ZUSATZANGABEN = props.getProperty("LEXWARE_ZUSATZANGABEN") == "null" ? null : Integer.parseInt(props.getProperty("LEXWARE_ZUSATZANGABEN")); } catch (Exception ex) {
+        try { this.LEXWARE_ZUSATZANGABEN = props.getProperty("LEXWARE_ZUSATZANGABEN").equals("") ? null : Integer.parseInt(props.getProperty("LEXWARE_ZUSATZANGABEN")); } catch (Exception ex) {
             parseErrorMessage(ex, "LEXWARE_ZUSATZANGABEN", this.LEXWARE_ZUSATZANGABEN);
         }
        
