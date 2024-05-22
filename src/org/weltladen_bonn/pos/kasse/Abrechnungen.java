@@ -632,6 +632,29 @@ public abstract class Abrechnungen extends WindowContent {
         }
     }
 
+    private void writeLexwareCSVFile(String filepathString) {
+        // CSV write testing
+        HashMap<String, String> fields = new HashMap<String, String>();
+        fields.put("Belegdatum", new Date().toString());
+        fields.put("Belegnummernkreis", "K");
+        fields.put("Belegnummer", "23456");
+
+        LinkedHashMap<String, CSVColumn> colDefs = new LinkedHashMap<String, CSVColumn>();
+        CSVColumn col = new CSVColumn();
+        col.type = CSVColumnType.ALPHANUMERIC;
+        colDefs.put("Belegdatum", col);
+        col = new CSVColumn();
+        col.type = CSVColumnType.ALPHANUMERIC;
+        colDefs.put("Belegnummernkreis", col);
+        col = new CSVColumn();
+        col.type = CSVColumnType.NUMERIC;
+        colDefs.put("Belegnummer", col);
+
+        CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\n", ',', '.', "\"");
+        
+        logger.info("Written CSV file to " + filepathString);
+    }
+
     void export(int exportIndex){
         String date = abrechnungsDates.get(exportIndex);
         File exportDir = new File(System.getProperty("user.home")+bc.fileSep+formatDate(date, this.exportDirFormat));
@@ -656,7 +679,10 @@ public abstract class Abrechnungen extends WindowContent {
             Sheet sheet = (Sheet) v.firstElement();
             writeSpreadSheet(sheet, file);
 
-            logger.info("Written to " + file.getName());
+            logger.info("Written ODS file to " + file.getAbsolutePath());
+
+            // Also write CSV file with data for import into Lexware
+            writeLexwareCSVFile(file.getAbsolutePath().replace(".ods", ".csv"));
         } else {
             logger.info("Save command cancelled by user.");
         }
