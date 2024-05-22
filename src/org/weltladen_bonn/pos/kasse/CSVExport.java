@@ -17,20 +17,7 @@ import org.apache.logging.log4j.Logger;
 import org.weltladen_bonn.pos.BaseClass;
 
 public class CSVExport {
-
   private static final Logger logger = LogManager.getLogger(CSVExport.class);
-
-  private enum CSVColumnType {
-    ALPHANUMERIC,
-    NUMERIC,
-    UNKNOWN,
-  };
-
-  private class CSVColumn {
-    public CSVColumnType type = CSVColumnType.UNKNOWN;
-    public Integer maxLength = null;
-    public Integer accuracy = null;
-  }
 
   public static void writeToCSV(String csvFilename, HashMap<String, String> fields,
       LinkedHashMap<String, CSVColumn> colDefs, BaseClass bc,
