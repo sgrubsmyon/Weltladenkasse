@@ -567,7 +567,6 @@ public abstract class Abrechnungen extends WindowContent {
         // Get data
         String date = abrechnungsDates.get(exportIndex);
         Date ddate = createDate(date);
-        logger.trace("ddate: " + ddate);
         Integer id = abrechnungsIDs.get(exportIndex);
         Vector<BigDecimal> totals = abrechnungsTotals.get(exportIndex);
         HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(exportIndex); // map with values for each mwst
@@ -632,24 +631,82 @@ public abstract class Abrechnungen extends WindowContent {
         }
     }
 
-    private void writeLexwareCSVFile(String filepathString) {
-        // CSV write testing
-        HashMap<String, String> fields = new HashMap<String, String>();
-        fields.put("Belegdatum", new Date().toString());
-        fields.put("Belegnummernkreis", "K");
-        fields.put("Belegnummer", "23456");
+    private String toStringIfNotNull(Object thing) {
+        if (thing != null) {
+            return thing.toString();
+        } else {
+            return "";
+        }
+    }
 
+    private void writeLexwareCSVFile(String filepathString, int exportIndex) {
+        // Get data
+        String date = abrechnungsDates.get(exportIndex);
+        String formattedDate = formatDate(date, bc.LEXWARE_BELEGDATUM_FORMAT);
+        Integer id = abrechnungsIDs.get(exportIndex); // Laufende Nummer
+        Vector<BigDecimal> totals = abrechnungsTotals.get(exportIndex);
+        HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(exportIndex); // map with values for each mwst
+
+        // Prepare meta-data on the CSV columns (defined in 'Schnittstellenbeschreibung Lexware buchhaltung.pdf',
+        //   downloaded from https://delta.lexware.de/sf_get_wmattachment.php?att=13299f5270c5ed27c1dff8f1470d0e,
+        //   linked on page https://www.lexware.de/support/faq/faq-beitrag/000015582/?tx_support%5Bproduct%5D=34&tx_support_faqdetail%5Baction%5D=detail&tx_support_faqdetail%5Bcontroller%5D=Faq&cHash=61d8c14be3c71240cd4f5736203f97f1#section2)
         LinkedHashMap<String, CSVColumn> colDefs = new LinkedHashMap<String, CSVColumn>();
         CSVColumn col = new CSVColumn();
         col.type = CSVColumnType.ALPHANUMERIC;
         colDefs.put("Belegdatum", col);
         col = new CSVColumn();
         col.type = CSVColumnType.ALPHANUMERIC;
+        col.maxLength = 9;
         colDefs.put("Belegnummernkreis", col);
         col = new CSVColumn();
-        col.type = CSVColumnType.NUMERIC;
+        col.type = CSVColumnType.ALPHANUMERIC;
+        col.maxLength = 10;
         colDefs.put("Belegnummer", col);
+        col = new CSVColumn();
+        col.type = CSVColumnType.ALPHANUMERIC;
+        col.maxLength = 79;
+        colDefs.put("Buchungstext", col);
+        col = new CSVColumn();
+        col.type = CSVColumnType.NUMERIC;
+        colDefs.put("Sollkonto", col);
+        col = new CSVColumn();
+        col.type = CSVColumnType.NUMERIC;
+        colDefs.put("Habenkonto", col);
+        col = new CSVColumn();
+        col.type = CSVColumnType.NUMERIC;
+        colDefs.put("Steuerschlüssel", col);
+        col = new CSVColumn();
+        col.type = CSVColumnType.ALPHANUMERIC;
+        col.maxLength = 19;
+        colDefs.put("Kostenstelle 1", col);
+        col = new CSVColumn();
+        col.type = CSVColumnType.ALPHANUMERIC;
+        col.maxLength = 19;
+        colDefs.put("Kostenstelle 2", col);
+        col = new CSVColumn();
+        col.type = CSVColumnType.NUMERIC;
+        col.accuracy = 2;
+        colDefs.put("Buchungsbetrag Euro", col);
+        col = new CSVColumn();
+        col.type = CSVColumnType.NUMERIC;
+        colDefs.put("Zusatzangaben", col);
 
+        // Prepare the data for writing
+        // 1. Row for the card-based paymenys
+        HashMap<String, String> fields = new HashMap<String, String>();
+        fields.put("Belegdatum", formattedDate);
+        fields.put("Belegnummernkreis", bc.LEXWARE_BELEGNUMMERNKREIS);
+        fields.put("Belegnummer", id.toString()); // Laufende Nummer
+        fields.put("Buchungstext", bc.LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KARTE);
+        fields.put("Sollkonto", bc.LEXWARE_SOLL_KONTO_GELDTRANSIT_KARTE.toString());
+        fields.put("Habenkonto", bc.LEXWARE_HABEN_KONTO_GELDTRANSIT_KARTE.toString());
+        fields.put("Steuerschlüssel", "");
+        fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
+        fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
+        fields.put("Buchungsbetrag Euro", totals.get(2).toString());
+        fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
+
+        // Write the CSV file
         CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\n", ',', '.', "\"");
         
         logger.info("Written CSV file to " + filepathString);
@@ -682,7 +739,7 @@ public abstract class Abrechnungen extends WindowContent {
             logger.info("Written ODS file to " + file.getAbsolutePath());
 
             // Also write CSV file with data for import into Lexware
-            writeLexwareCSVFile(file.getAbsolutePath().replace(".ods", ".csv"));
+            writeLexwareCSVFile(file.getAbsolutePath().replace(".ods", ".csv"), exportIndex);
         } else {
             logger.info("Save command cancelled by user.");
         }
