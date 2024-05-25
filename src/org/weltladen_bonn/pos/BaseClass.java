@@ -79,6 +79,7 @@ public class BaseClass {
     public String TSE_PD_ENCODING = "UTF-8";
 
     // Lexware setup:
+    public String LEXWARE_BELEGDATUM_FORMAT;
     public String LEXWARE_BELEGNUMMERNKREIS;
     public String LEXWARE_BUCHUNGSTEXT_ERLOESE;
     public String LEXWARE_BUCHUNGSTEXT_ERLOESE_OHNE_STEUER;
@@ -426,6 +427,9 @@ public class BaseClass {
         }
 
         // Lexware setup:
+        try { this.LEXWARE_BELEGDATUM_FORMAT = props.getProperty("LEXWARE_BELEGDATUM_FORMAT"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_BELEGDATUM_FORMAT", this.LEXWARE_BELEGDATUM_FORMAT);
+        }
         try { this.LEXWARE_BELEGNUMMERNKREIS = props.getProperty("LEXWARE_BELEGNUMMERNKREIS"); } catch (Exception ex) {
             parseErrorMessage(ex, "LEXWARE_BELEGNUMMERNKREIS", this.LEXWARE_BELEGNUMMERNKREIS);
         }
