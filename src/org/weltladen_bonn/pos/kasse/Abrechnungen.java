@@ -78,9 +78,9 @@ public abstract class Abrechnungen extends WindowContent {
     JButton prevButton;
     JButton nextButton;
     private Vector<JButton> exportButtons;
-    private Vector<String> abrechnungsDates;
+    protected Vector<String> abrechnungsDates;
     protected Vector<Integer> abrechnungsIDs;
-    private Vector<Vector<BigDecimal>> abrechnungsTotals;
+    protected Vector<Vector<BigDecimal>> abrechnungsTotals;
     protected Vector<HashMap<BigDecimal, Vector<BigDecimal>>> abrechnungsVATs;
     protected String incompleteAbrechnungsDate;
     protected Vector<BigDecimal> incompleteAbrechnungsTotals;
@@ -674,184 +674,9 @@ public abstract class Abrechnungen extends WindowContent {
         }
     }
 
-    private String toStringIfNotNull(Object thing) {
-        if (thing != null) {
-            return thing.toString();
-        } else {
-            return "";
-        }
-    }
-
-    // public HashMap<BigDecimal, Integer> getMwstDSFinVKSchluessel() {
-    // HashMap<BigDecimal, Integer> result = new HashMap<BigDecimal, Integer>();
-    // try {
-    // Connection connection = this.pool.getConnection();
-    // PreparedStatement pstmt = connection.prepareStatement(
-    // "SELECT mwst_satz, dsfinvk_ust_schluessel "+ // dsfinvk_ust_beschr
-    // "FROM mwst");
-    // ResultSet rs = pstmt.executeQuery();
-    // while (rs.next()) {
-    // result.put(rs.getBigDecimal(1), rs.getInt(2));
-    // }
-    // rs.close();
-    // pstmt.close();
-    // connection.close();
-    // } catch (SQLException ex) {
-    // logger.error("Exception:", ex);
-    // showDBErrorDialog(ex.getMessage());
-    // }
-    // return result;
-    // }
-
-    // private String getSteuerschluessel(BigDecimal mwst, HashMap<BigDecimal, Integer> mwstDSFinVKSchluessel) {
-    //     String steuerschluessel = "";
-    //     Integer dsfinvk_schluessel = mwstDSFinVKSchluessel.get(mwst);
-    //     if (dsfinvk_schluessel == 6) {
-    //         // these are bookings without VAT (tax-free)
-    //         steuerschluessel = toStringIfNotNull(bc.LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER);
-    //     } else if (dsfinvk_schluessel == 2) {
-    //         // reduced VAT rate
-    //         steuerschluessel = toStringIfNotNull(bc.LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER);
-    //     } else if (dsfinvk_schluessel == 1) {
-    //         // normal VAT rate
-    //         steuerschluessel = toStringIfNotNull(bc.LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER);
-    //     }
-    //     return steuerschluessel;
-    // }
-    // problem with above approach: when VAT changes, we cannot export old
-    // data correctly anymore
-
-    private HashMap<String, String> getLexwareDataErloese(BigDecimal mwst) {
-        String buchungstext = "";
-        String sollkonto = "";
-        String habenkonto = "";
-        String steuerschluessel = "";
-        if (mwst.compareTo(new BigDecimal("0")) <= 0) {
-            // these are bookings without VAT (tax-free)
-            buchungstext = bc.LEXWARE_BUCHUNGSTEXT_ERLOESE_OHNE_STEUER;
-            sollkonto = toStringIfNotNull(bc.LEXWARE_SOLL_KONTO_ERLOESE);
-            habenkonto = toStringIfNotNull(bc.LEXWARE_HABEN_KONTO_ERLOESE_OHNE_STEUER);
-            steuerschluessel = toStringIfNotNull(bc.LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER);
-        } else if (mwst.compareTo(new BigDecimal("0.14")) < 0) {
-            // if VAT smaller than 14%, assume that this is the "reduced" VAT rate
-            // this leaves room for normal VAT being reduced (e.g. to 16%)
-            // as well as reduced VAT being raised (e.g. to 10% or 12%)
-            buchungstext = bc.LEXWARE_BUCHUNGSTEXT_ERLOESE.replaceAll("\\{\\{MWST\\}\\}", bc.vatFormatter(mwst));
-            sollkonto = toStringIfNotNull(bc.LEXWARE_SOLL_KONTO_ERLOESE);
-            habenkonto = toStringIfNotNull(bc.LEXWARE_HABEN_KONTO_ERLOESE_REDUZIERTE_STEUER);
-            steuerschluessel = toStringIfNotNull(bc.LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER);
-        } else {
-            // assume that this is the normal VAT rate
-            buchungstext = bc.LEXWARE_BUCHUNGSTEXT_ERLOESE.replaceAll("\\{\\{MWST\\}\\}", bc.vatFormatter(mwst));
-            sollkonto = toStringIfNotNull(bc.LEXWARE_SOLL_KONTO_ERLOESE);
-            habenkonto = toStringIfNotNull(bc.LEXWARE_HABEN_KONTO_ERLOESE_NORMALE_STEUER);
-            steuerschluessel = toStringIfNotNull(bc.LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER);
-        }
-        HashMap<String, String> result = new HashMap<String, String>();
-        result.put("buchungstext", buchungstext);
-        result.put("sollkonto", sollkonto);
-        result.put("habenkonto", habenkonto);
-        result.put("steuerschluessel", steuerschluessel);
-        return result;
-    }
-
-    private void writeLexwareCSVFile(String filepathString, int exportIndex) {
-        // Get data
-        String date = abrechnungsDates.get(exportIndex);
-        String formattedDate = formatDate(date, bc.LEXWARE_BELEGDATUM_FORMAT);
-        String id = abrechnungsIDs.get(exportIndex).toString(); // Laufende Nummer
-        Vector<BigDecimal> totals = abrechnungsTotals.get(exportIndex);
-        HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(exportIndex); // map with values for each
-        // HashMap<BigDecimal, Integer> mwstDSFinVKSchluessel =
-        // getMwstDSFinVKSchluessel();
-
-        // Prepare meta-data on the CSV columns (defined in 'Schnittstellenbeschreibung
-        // Lexware buchhaltung.pdf',
-        // downloaded from
-        // https://delta.lexware.de/sf_get_wmattachment.php?att=13299f5270c5ed27c1dff8f1470d0e,
-        // linked on page
-        // https://www.lexware.de/support/faq/faq-beitrag/000015582/?tx_support%5Bproduct%5D=34&tx_support_faqdetail%5Baction%5D=detail&tx_support_faqdetail%5Bcontroller%5D=Faq&cHash=61d8c14be3c71240cd4f5736203f97f1#section2)
-        LinkedHashMap<String, CSVColumn> colDefs = new LinkedHashMap<String, CSVColumn>();
-        CSVColumn col = new CSVColumn();
-        col.type = CSVColumnType.ALPHANUMERIC;
-        colDefs.put("Belegdatum", col);
-        col = new CSVColumn();
-        col.type = CSVColumnType.ALPHANUMERIC;
-        col.maxLength = 9;
-        colDefs.put("Belegnummernkreis", col);
-        col = new CSVColumn();
-        col.type = CSVColumnType.ALPHANUMERIC;
-        col.maxLength = 10;
-        colDefs.put("Belegnummer", col);
-        col = new CSVColumn();
-        col.type = CSVColumnType.ALPHANUMERIC;
-        col.maxLength = 79;
-        colDefs.put("Buchungstext", col);
-        col = new CSVColumn();
-        col.type = CSVColumnType.NUMERIC;
-        colDefs.put("Sollkonto", col);
-        col = new CSVColumn();
-        col.type = CSVColumnType.NUMERIC;
-        colDefs.put("Habenkonto", col);
-        col = new CSVColumn();
-        col.type = CSVColumnType.NUMERIC;
-        colDefs.put("Steuerschlüssel", col);
-        col = new CSVColumn();
-        col.type = CSVColumnType.ALPHANUMERIC;
-        col.maxLength = 19;
-        colDefs.put("Kostenstelle 1", col);
-        col = new CSVColumn();
-        col.type = CSVColumnType.ALPHANUMERIC;
-        col.maxLength = 19;
-        colDefs.put("Kostenstelle 2", col);
-        col = new CSVColumn();
-        col.type = CSVColumnType.NUMERIC;
-        col.accuracy = 2;
-        colDefs.put("Buchungsbetrag Euro", col);
-        col = new CSVColumn();
-        col.type = CSVColumnType.NUMERIC;
-        colDefs.put("Zusatzangaben", col);
-
-        // 1. Row for the card-based paymenys
-        // Prepare the data for writing
-        HashMap<String, String> fields = new HashMap<String, String>();
-        fields.put("Belegdatum", formattedDate);
-        fields.put("Belegnummernkreis", bc.LEXWARE_BELEGNUMMERNKREIS);
-        fields.put("Belegnummer", id); // Laufende Nummer
-        fields.put("Buchungstext", bc.LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KARTE);
-        fields.put("Sollkonto", toStringIfNotNull(bc.LEXWARE_SOLL_KONTO_GELDTRANSIT_KARTE));
-        fields.put("Habenkonto", toStringIfNotNull(bc.LEXWARE_HABEN_KONTO_GELDTRANSIT_KARTE));
-        fields.put("Steuerschlüssel", "");
-        fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
-        fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
-        fields.put("Buchungsbetrag Euro", totals.get(2).toString());
-        fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
-        // Write to the CSV file
-        CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\n", ',', '.', "\"");
-
-        // 2. Rows for each VAT rate
-        // Prepare the data for writing
-        for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : vats.entrySet()) {
-            BigDecimal mwst = entry.getKey();
-            HashMap<String, String> lex_data = getLexwareDataErloese(mwst);
-
-            fields = new HashMap<String, String>();
-            fields.put("Belegdatum", formattedDate);
-            fields.put("Belegnummernkreis", bc.LEXWARE_BELEGNUMMERNKREIS);
-            fields.put("Belegnummer", id); // Laufende Nummer
-            fields.put("Buchungstext", lex_data.get("buchungstext"));
-            fields.put("Sollkonto", lex_data.get("sollkonto"));
-            fields.put("Habenkonto", lex_data.get("habenkonto"));
-            fields.put("Steuerschlüssel", lex_data.get("steuerschluessel"));
-            fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
-            fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
-            fields.put("Buchungsbetrag Euro", entry.getValue().get(0).toString());
-            fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
-            // Write to the CSV file
-            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\n", ',', '.', "\"");
-        }
-
-        logger.info("Written CSV file to " + filepathString);
+    void writeLexwareCSVFile(String filepathString, int exportIndex) {
+        // do nothing here (only AbrechnungTag.java writes Lexware CSV file
+        //  and overrides this method)
     }
 
     void export(int exportIndex) {
