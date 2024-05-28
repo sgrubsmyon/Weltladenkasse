@@ -1131,9 +1131,8 @@ class AbrechnungenTag extends Abrechnungen {
                         tse.showTSEFailWarning();
                     }
                     JOptionPane.showMessageDialog(this,
-                        "Fehler: TSE-Export des Tagesabschlusses konnte nicht erstellt werden!\n"+
-                        "Das ist übel.\n"+
-                        "Bitte der/dem Administrator*in Bescheid geben.\n"+
+                        "Hinweis: TSE-Export des Tagesabschlusses konnte nicht erstellt werden.\n"+
+                        "Das passiert leider hin und wieder und wir können nichts dagegen tun.\n"+
                         "     Fehlermeldung: "+message,
                         "Fehler", JOptionPane.ERROR_MESSAGE);
                 }
