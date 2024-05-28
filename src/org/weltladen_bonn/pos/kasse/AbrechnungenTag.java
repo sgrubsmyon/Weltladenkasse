@@ -1761,11 +1761,11 @@ class AbrechnungenTag extends Abrechnungen {
         CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\n", ',', '.', "\"");
 
         // 2. Rows for each VAT rate
-        // Prepare the data for writing
         for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : vats.entrySet()) {
             BigDecimal mwst = entry.getKey();
             HashMap<String, String> lex_data = getLexwareDataErloese(mwst);
-
+            
+            // Prepare the data for writing
             fields = new HashMap<String, String>();
             fields.put("Belegdatum", formattedDate);
             fields.put("Belegnummernkreis", bc.LEXWARE_BELEGNUMMERNKREIS);
@@ -1782,9 +1782,11 @@ class AbrechnungenTag extends Abrechnungen {
             CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\n", ',', '.', "\"");
         }
 
-        // 3. Row for the cash-based payments
         if (zpNumber > 0) {
             int i = 0; // only use first (most recent) zaehlprotokoll
+            
+            // 3. Row for the cash-based payments
+            // Prepare the data for writing
             fields = new HashMap<String, String>();
             fields.put("Belegdatum", formattedDate);
             fields.put("Belegnummernkreis", bc.LEXWARE_BELEGNUMMERNKREIS);
@@ -1799,9 +1801,25 @@ class AbrechnungenTag extends Abrechnungen {
             fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
             // Write to the CSV file
             CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\n", ',', '.', "\"");
+            
+            // 4. Row for the cashier difference
+            // Prepare the data for writing
+            fields = new HashMap<String, String>();
+            fields.put("Belegdatum", formattedDate);
+            fields.put("Belegnummernkreis", bc.LEXWARE_BELEGNUMMERNKREIS);
+            fields.put("Belegnummer", id); // Laufende Nummer
+            fields.put("Buchungstext", bc.LEXWARE_BUCHUNGSTEXT_KASSENDIFFERENZ);
+            fields.put("Sollkonto", toStringIfNotNull(bc.LEXWARE_SOLL_KONTO_KASSENDIFFERENZ));
+            fields.put("Habenkonto", toStringIfNotNull(bc.LEXWARE_HABEN_KONTO_KASSENDIFFERENZ));
+            fields.put("Steuerschlüssel", "");
+            fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
+            fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
+            fields.put("Buchungsbetrag Euro", zaehlprotokollDifferenzen.get(exportIndex).get(i).toString());
+            fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
+            // Write to the CSV file
+            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\n", ',', '.', "\"");
         }
 
-        // 4. Row for the cashier difference
 
         logger.info("Written CSV file to " + filepathString);
     }
