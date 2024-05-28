@@ -70,8 +70,9 @@ public abstract class Abrechnungen extends WindowContent {
     // The bottom panel which holds button.
     protected JPanel allPanel;
     protected JPanel headerPanel;
-    //protected JPanel footerPanel;
-    // The table holding the invoices. This is "anonymously subclassed" and two method are overridden
+    // protected JPanel footerPanel;
+    // The table holding the invoices. This is "anonymously subclassed" and two
+    // methods are overridden
     protected AbrechnungsTable myTable;
 
     JButton prevButton;
@@ -79,15 +80,15 @@ public abstract class Abrechnungen extends WindowContent {
     private Vector<JButton> exportButtons;
     private Vector<String> abrechnungsDates;
     protected Vector<Integer> abrechnungsIDs;
-    private Vector< Vector<BigDecimal> > abrechnungsTotals;
-    protected Vector< HashMap<BigDecimal, Vector<BigDecimal>> > abrechnungsVATs;
+    private Vector<Vector<BigDecimal>> abrechnungsTotals;
+    protected Vector<HashMap<BigDecimal, Vector<BigDecimal>>> abrechnungsVATs;
     protected String incompleteAbrechnungsDate;
     protected Vector<BigDecimal> incompleteAbrechnungsTotals;
     protected HashMap<BigDecimal, Vector<BigDecimal>> incompleteAbrechnungsVATs;
     protected TreeSet<BigDecimal> mwstSet;
-    protected Vector< Vector<Object> > data;
-    protected Vector< Vector<Color> > colors;
-    protected Vector< Vector<String> > fontStyles;
+    protected Vector<Vector<Object>> data;
+    protected Vector<Vector<Color>> colors;
+    protected Vector<Vector<String>> fontStyles;
     protected Vector<String> columnLabels;
     private int abrechnungsZahl;
     private FileExistsAwareFileChooser odsChooser;
@@ -95,11 +96,11 @@ public abstract class Abrechnungen extends WindowContent {
     // Methoden:
 
     /**
-     *    The constructor.
-     *       */
-    public Abrechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw, String fs, String ts, String dif, String dof,
-                        String tn, String atn)
-    {
+     * The constructor.
+     */
+    public Abrechnungen(MariaDbPoolDataSource pool, MainWindowGrundlage mw, String fs, String ts, String dif,
+            String dof,
+            String tn, String atn) {
         super(pool, mw);
         filterStr = fs;
         titleStr = ts;
@@ -108,9 +109,9 @@ public abstract class Abrechnungen extends WindowContent {
         timeName = tn;
         abrechnungsTableName = tableForMode(atn);
 
-        //footerPanel = new JPanel();
-        //footerPanel.setLayout(new FlowLayout());
-        //this.add(footerPanel, BorderLayout.SOUTH);
+        // footerPanel = new JPanel();
+        // footerPanel.setLayout(new FlowLayout());
+        // this.add(footerPanel, BorderLayout.SOUTH);
 
         fillDataArray();
 
@@ -135,9 +136,10 @@ public abstract class Abrechnungen extends WindowContent {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
-                "SELECT MAX(id) FROM "+abrechnungsTableName
-            );
-            rs.next(); id = rs.getInt(1); rs.close();
+                    "SELECT MAX(id) FROM " + abrechnungsTableName);
+            rs.next();
+            id = rs.getInt(1);
+            rs.close();
             stmt.close();
             connection.close();
         } catch (SQLException ex) {
@@ -151,7 +153,8 @@ public abstract class Abrechnungen extends WindowContent {
 
     abstract void queryAbrechnungenSpecial();
 
-    // since all Abrechnungen need to include the incomplete Tagesabrechnung, include code here to share
+    // since all Abrechnungen need to include the incomplete Tagesabrechnung,
+    // include code here to share
     protected Vector<BigDecimal> queryIncompleteAbrechnungTag_Totals() {
         Vector<BigDecimal> values = new Vector<>();
         try {
@@ -163,24 +166,23 @@ public abstract class Abrechnungen extends WindowContent {
             // Gesamt Brutto
             ResultSet rs = stmt.executeQuery(
                     "SELECT SUM(ges_preis) AS ges_brutto " +
-                    "FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
-                    "WHERE rechnungs_nr > " +
-                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) "
-                    );
+                            "FROM " + tableForMode("verkauf_details") + " INNER JOIN " + tableForMode("verkauf")
+                            + " USING (rechnungs_nr) " +
+                            "WHERE rechnungs_nr > " +
+                            "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM " + tableForMode("abrechnung_tag") + "), 0) ");
             rs.next();
-            BigDecimal tagesGesamtBrutto =
-                new BigDecimal(rs.getString(1) == null ? "0" : rs.getString(1));
+            BigDecimal tagesGesamtBrutto = new BigDecimal(rs.getString(1) == null ? "0" : rs.getString(1));
             rs.close();
             // Gesamt Bar Brutto
             rs = stmt.executeQuery(
                     "SELECT SUM(ges_preis) AS ges_bar_brutto " +
-                    "FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
-                    "WHERE rechnungs_nr > " +
-                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) AND ec_zahlung = FALSE "
-                    );
+                            "FROM " + tableForMode("verkauf_details") + " INNER JOIN " + tableForMode("verkauf")
+                            + " USING (rechnungs_nr) " +
+                            "WHERE rechnungs_nr > " +
+                            "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM " + tableForMode("abrechnung_tag")
+                            + "), 0) AND ec_zahlung = FALSE ");
             rs.next();
-            BigDecimal tagesGesamtBarBrutto =
-                new BigDecimal(rs.getString(1) == null ?  "0" : rs.getString(1));
+            BigDecimal tagesGesamtBarBrutto = new BigDecimal(rs.getString(1) == null ? "0" : rs.getString(1));
             rs.close();
             // Gesamt EC Brutto
             BigDecimal tagesGesamtECBrutto = tagesGesamtBrutto.subtract(tagesGesamtBarBrutto);
@@ -197,6 +199,7 @@ public abstract class Abrechnungen extends WindowContent {
         }
         return values;
     }
+
     ///////////
     protected HashMap<BigDecimal, Vector<BigDecimal>> queryIncompleteAbrechnungTag_VATs() {
         HashMap<BigDecimal, Vector<BigDecimal>> map = new HashMap<>();
@@ -204,47 +207,57 @@ public abstract class Abrechnungen extends WindowContent {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(
-                // OLD: SUM OF ROUND in MySQL (MySQL's round is ROUND_HALF_UP
-                // as in Java (away from zero), "kaufmännisches Runden", see
-                // http://dev.mysql.com/doc/refman/5.0/en/precision-math-rounding.html,
-                // https://en.wikipedia.org/wiki/Rounding,
-                // https://de.wikipedia.org/wiki/Rundung)
-                    //"SELECT mwst_satz, SUM( ROUND(ges_preis / (1.+mwst_satz), 2) ) AS mwst_netto, " +
-                    //"SUM( ROUND(ges_preis / (1. + mwst_satz) * mwst_satz, 2) ) AS mwst_betrag " +
-                    //"FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
-                    //"WHERE rechnungs_nr > " +
-                    //"IFNULL((SELECT MAX(rechnungs_nr_bis) FROM +"tableForMode("abrechnung_tag")+"), 0) " +
-                    //"GROUP BY mwst_satz"
-                // NEW: ROUND OF SUM
-                    //"SELECT mwst_satz, SUM( ges_preis / (1.+mwst_satz) ) AS mwst_netto, " +
-                    //"SUM( ges_preis / (1. + mwst_satz) * mwst_satz ) AS mwst_betrag " +
-                    //"FROM "+tableForMode("verkauf_details")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
-                    //"WHERE rechnungs_nr > " +
-                    //"IFNULL((SELECT MAX(rechnungs_nr_bis) FROM +"tableForMode("abrechnung_tag")+"), 0) " +
-                    //"GROUP BY mwst_satz"
-                // NEWER: Da für jede Rechnung einzeln summiert (und dann gerundet) werden müsste,
-                // ist es einfacher (und auch sicherer), die gerundete MwSt.-Information separat für jede
-                // Rechnung zu speichern (in Tabelle `verkauf_mwst`) und nur noch darüber zu summieren
-                    "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag) "+
-                    "FROM "+tableForMode("verkauf_mwst")+" INNER JOIN "+tableForMode("verkauf")+" USING (rechnungs_nr) "+
-                    "WHERE rechnungs_nr > " +
-                    "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM "+tableForMode("abrechnung_tag")+"), 0) " +
-                    "GROUP BY mwst_satz"
-                    );
+                    // OLD: SUM OF ROUND in MySQL (MySQL's round is ROUND_HALF_UP
+                    // as in Java (away from zero), "kaufmännisches Runden", see
+                    // http://dev.mysql.com/doc/refman/5.0/en/precision-math-rounding.html,
+                    // https://en.wikipedia.org/wiki/Rounding,
+                    // https://de.wikipedia.org/wiki/Rundung)
+                    // "SELECT mwst_satz, SUM( ROUND(ges_preis / (1.+mwst_satz), 2) ) AS mwst_netto,
+                    // " +
+                    // "SUM( ROUND(ges_preis / (1. + mwst_satz) * mwst_satz, 2) ) AS mwst_betrag " +
+                    // "FROM "+tableForMode("verkauf_details")+" INNER JOIN
+                    // "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
+                    // "WHERE rechnungs_nr > " +
+                    // "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM
+                    // +"tableForMode("abrechnung_tag")+"), 0) " +
+                    // "GROUP BY mwst_satz"
+                    // NEW: ROUND OF SUM
+                    // "SELECT mwst_satz, SUM( ges_preis / (1.+mwst_satz) ) AS mwst_netto, " +
+                    // "SUM( ges_preis / (1. + mwst_satz) * mwst_satz ) AS mwst_betrag " +
+                    // "FROM "+tableForMode("verkauf_details")+" INNER JOIN
+                    // "+tableForMode("verkauf")+" USING (rechnungs_nr) " +
+                    // "WHERE rechnungs_nr > " +
+                    // "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM
+                    // +"tableForMode("abrechnung_tag")+"), 0) " +
+                    // "GROUP BY mwst_satz"
+                    // NEWER: Da für jede Rechnung einzeln summiert (und dann gerundet) werden
+                    // müsste,
+                    // ist es einfacher (und auch sicherer), die gerundete MwSt.-Information separat
+                    // für jede
+                    // Rechnung zu speichern (in Tabelle `verkauf_mwst`) und nur noch darüber zu
+                    // summieren
+                    "SELECT mwst_satz, SUM(mwst_netto), SUM(mwst_betrag) " +
+                            "FROM " + tableForMode("verkauf_mwst") + " INNER JOIN " + tableForMode("verkauf")
+                            + " USING (rechnungs_nr) " +
+                            "WHERE rechnungs_nr > " +
+                            "IFNULL((SELECT MAX(rechnungs_nr_bis) FROM " + tableForMode("abrechnung_tag") + "), 0) " +
+                            "GROUP BY mwst_satz");
             while (rs.next()) {
-                //System.out.println(rs.getBigDecimal(1));
+                // System.out.println(rs.getBigDecimal(1));
                 BigDecimal mwst_satz = rs.getBigDecimal(1);
-            // OLD: SUM OF ROUND (see above, rounding in MySQL)
-                //BigDecimal mwst_netto = rs.getBigDecimal(2);
-                //BigDecimal mwst_betrag = rs.getBigDecimal(3);
-            // NEW: ROUND OF SUM (rounding in Java)
-                //BigDecimal mwst_netto = new BigDecimal( bc.priceFormatterIntern(rs.getBigDecimal(2)) );
-                //BigDecimal mwst_betrag = new BigDecimal( bc.priceFormatterIntern(rs.getBigDecimal(3)) );
-            // NEWER: Rounding was already done when Rechnung was saved, not necessary here
+                // OLD: SUM OF ROUND (see above, rounding in MySQL)
+                // BigDecimal mwst_netto = rs.getBigDecimal(2);
+                // BigDecimal mwst_betrag = rs.getBigDecimal(3);
+                // NEW: ROUND OF SUM (rounding in Java)
+                // BigDecimal mwst_netto = new BigDecimal(
+                // bc.priceFormatterIntern(rs.getBigDecimal(2)) );
+                // BigDecimal mwst_betrag = new BigDecimal(
+                // bc.priceFormatterIntern(rs.getBigDecimal(3)) );
+                // NEWER: Rounding was already done when Rechnung was saved, not necessary here
                 BigDecimal mwst_netto = rs.getBigDecimal(2);
                 BigDecimal mwst_betrag = rs.getBigDecimal(3);
                 Vector<BigDecimal> values = new Vector<>();
-                values.add( mwst_netto.add(mwst_betrag) ); // = brutto
+                values.add(mwst_netto.add(mwst_betrag)); // = brutto
                 values.add(mwst_netto);
                 values.add(mwst_betrag);
                 map.put(mwst_satz, values);
@@ -268,30 +281,34 @@ public abstract class Abrechnungen extends WindowContent {
         abrechnungsVATs = new Vector<>();
         mwstSet = new TreeSet<>();
 
-        if (this.currentPage == 1){
+        if (this.currentPage == 1) {
             queryIncompleteAbrechnung();
         }
 
         try {
             Connection connection = this.pool.getConnection();
             Statement stmt = connection.createStatement();
-            // first, derive the limits of the real query from the number of rows that belong to
+            // first, derive the limits of the real query from the number of rows that
+            // belong to
             // the desired abrechnung range:
-            int offset = ((currentPage-1)*abrechnungenProSeite-1); // "-1" because of one red column on 1st page
+            int offset = ((currentPage - 1) * abrechnungenProSeite - 1); // "-1" because of one red column on 1st page
             offset = offset < 0 ? 0 : offset;
-            int noOfColumns = currentPage > 1 ? abrechnungenProSeite : abrechnungenProSeite-1; // "-1" on first page only (because red column needs space too)
+            int noOfColumns = currentPage > 1 ? abrechnungenProSeite : abrechnungenProSeite - 1; // "-1" on first page
+                                                                                                 // only (because red
+                                                                                                 // column needs space
+                                                                                                 // too)
 
             // second, get the total amounts
-            String query = "SELECT id, "+timeName+", SUM(mwst_netto + mwst_betrag), "+
-                    // ^^^ Gesamt Brutto
-                    "SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) "+
-                    // ^^^ Gesamt Bar Brutto      ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
-                    "FROM "+abrechnungsTableName+" "+
-                    "INNER JOIN "+abrechnungsTableName+"_mwst "+
-                    "USING (id) "+
-                    "WHERE TRUE "+
+            String query = "SELECT id, " + timeName + ", SUM(mwst_netto + mwst_betrag), " +
+            // ^^^ Gesamt Brutto
+                    "SUM(bar_brutto), SUM(mwst_netto + mwst_betrag) - SUM(bar_brutto) " +
+                    // ^^^ Gesamt Bar Brutto ^^^ Gesamt EC Brutto = Ges. Brutto - Ges. Bar Brutto
+                    "FROM " + abrechnungsTableName + " " +
+                    "INNER JOIN " + abrechnungsTableName + "_mwst " +
+                    "USING (id) " +
+                    "WHERE TRUE " +
                     filterStr +
-                    "GROUP BY id ORDER BY id DESC "+
+                    "GROUP BY id ORDER BY id DESC " +
                     "LIMIT " + offset + "," + noOfColumns;
             ResultSet rs = stmt.executeQuery(query);
             while (rs.next()) {
@@ -309,25 +326,25 @@ public abstract class Abrechnungen extends WindowContent {
             rs.close();
 
             // third, get the actual abrechnungen (for each date):
-            for (String date : abrechnungsDates){
+            for (String date : abrechnungsDates) {
                 PreparedStatement pstmt = connection.prepareStatement(
                         "SELECT mwst_satz, mwst_netto, mwst_betrag " +
-                        "FROM "+abrechnungsTableName+" "+
-                        "INNER JOIN "+abrechnungsTableName+"_mwst "+
-                        "USING (id) "+
-                        "WHERE "+timeName+" = ? " +
-                        filterStr +
-                        "ORDER BY mwst_satz "
-                        );
+                                "FROM " + abrechnungsTableName + " " +
+                                "INNER JOIN " + abrechnungsTableName + "_mwst " +
+                                "USING (id) " +
+                                "WHERE " + timeName + " = ? " +
+                                filterStr +
+                                "ORDER BY mwst_satz ");
                 pstmt.setString(1, date);
                 rs = pstmt.executeQuery();
                 while (rs.next()) {
                     BigDecimal mwst = rs.getBigDecimal(1);
                     Vector<BigDecimal> values = new Vector<BigDecimal>();
-                    values.add( rs.getBigDecimal(2).add(rs.getBigDecimal(3)) ); // brutto: sum of the two
+                    values.add(rs.getBigDecimal(2).add(rs.getBigDecimal(3))); // brutto: sum of the two
                     values.add(rs.getBigDecimal(2)); // netto
                     values.add(rs.getBigDecimal(3)); // betrag (amount)
-                    // store the values at the positions that match abrechnungsDates and abrechnungsTotals:
+                    // store the values at the positions that match abrechnungsDates and
+                    // abrechnungsTotals:
                     int index = abrechnungsDates.indexOf(date);
                     abrechnungsVATs.get(index).put(mwst, values);
                     mwstSet.add(mwst);
@@ -337,13 +354,12 @@ public abstract class Abrechnungen extends WindowContent {
 
             // fourth, get total number of abrechnungen:
             rs = stmt.executeQuery(
-                    "SELECT COUNT(DISTINCT id) FROM "+abrechnungsTableName+" " +
-                    "WHERE TRUE " +
-                    filterStr
-                    );
+                    "SELECT COUNT(DISTINCT id) FROM " + abrechnungsTableName + " " +
+                            "WHERE TRUE " +
+                            filterStr);
             rs.next();
             abrechnungsZahl = rs.getInt(1) + 1;
-            totalPage = (abrechnungsZahl-1)/abrechnungenProSeite + 1;
+            totalPage = (abrechnungsZahl - 1) / abrechnungenProSeite + 1;
             rs.close();
             stmt.close();
             connection.close();
@@ -358,7 +374,7 @@ public abstract class Abrechnungen extends WindowContent {
         SimpleDateFormat sdfOut = new SimpleDateFormat(dateFormat);
         String formattedDate = "";
         try {
-            formattedDate = sdfOut.format( sdfIn.parse(date) );
+            formattedDate = sdfOut.format(sdfIn.parse(date));
         } catch (ParseException ex) {
             logger.error("ParseException:", ex);
         }
@@ -383,35 +399,60 @@ public abstract class Abrechnungen extends WindowContent {
     void fillHeaderColumn() {
         // fill header column
         columnLabels.add("");
-        data.add(new Vector<>()); data.lastElement().add("Laufende Nr. (Z_NR)");
-        colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
-        fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
-        data.add(new Vector<>()); data.lastElement().add("Gesamt Brutto");
-        colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
-        fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
-        data.add(new Vector<>()); data.lastElement().add("Gesamt Bar Brutto");
-        colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
-        fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
-        data.add(new Vector<>()); data.lastElement().add("Gesamt EC Brutto");
-        colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
-        fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
-        for (BigDecimal mwst : mwstSet){
-            data.add(new Vector<>()); data.lastElement().add(bc.vatFormatter(mwst)+" MwSt. Brutto");
-            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
-            fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
-            data.add(new Vector<>()); data.lastElement().add(bc.vatFormatter(mwst)+" MwSt. Netto");
-            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
-            fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
-            data.add(new Vector<>()); data.lastElement().add(bc.vatFormatter(mwst)+" MwSt. Betrag");
-            colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
-            fontStyles.add(new Vector<>()); fontStyles.lastElement().add("bold");
+        data.add(new Vector<>());
+        data.lastElement().add("Laufende Nr. (Z_NR)");
+        colors.add(new Vector<>());
+        colors.lastElement().add(Color.BLACK);
+        fontStyles.add(new Vector<>());
+        fontStyles.lastElement().add("bold");
+        data.add(new Vector<>());
+        data.lastElement().add("Gesamt Brutto");
+        colors.add(new Vector<>());
+        colors.lastElement().add(Color.BLACK);
+        fontStyles.add(new Vector<>());
+        fontStyles.lastElement().add("bold");
+        data.add(new Vector<>());
+        data.lastElement().add("Gesamt Bar Brutto");
+        colors.add(new Vector<>());
+        colors.lastElement().add(Color.BLACK);
+        fontStyles.add(new Vector<>());
+        fontStyles.lastElement().add("bold");
+        data.add(new Vector<>());
+        data.lastElement().add("Gesamt EC Brutto");
+        colors.add(new Vector<>());
+        colors.lastElement().add(Color.BLACK);
+        fontStyles.add(new Vector<>());
+        fontStyles.lastElement().add("bold");
+        for (BigDecimal mwst : mwstSet) {
+            data.add(new Vector<>());
+            data.lastElement().add(bc.vatFormatter(mwst) + " MwSt. Brutto");
+            colors.add(new Vector<>());
+            colors.lastElement().add(Color.BLACK);
+            fontStyles.add(new Vector<>());
+            fontStyles.lastElement().add("bold");
+            data.add(new Vector<>());
+            data.lastElement().add(bc.vatFormatter(mwst) + " MwSt. Netto");
+            colors.add(new Vector<>());
+            colors.lastElement().add(Color.BLACK);
+            fontStyles.add(new Vector<>());
+            fontStyles.lastElement().add("bold");
+            data.add(new Vector<>());
+            data.lastElement().add(bc.vatFormatter(mwst) + " MwSt. Betrag");
+            colors.add(new Vector<>());
+            colors.lastElement().add(Color.BLACK);
+            fontStyles.add(new Vector<>());
+            fontStyles.lastElement().add("bold");
         }
-        data.add(new Vector<>()); data.lastElement().add(""); // row for exportButtons
-        colors.add(new Vector<>()); colors.lastElement().add(Color.BLACK);
-        fontStyles.add(new Vector<>()); fontStyles.lastElement().add("normal");
+        data.add(new Vector<>());
+        data.lastElement().add(""); // row for exportButtons
+        colors.add(new Vector<>());
+        colors.lastElement().add(Color.BLACK);
+        fontStyles.add(new Vector<>());
+        fontStyles.lastElement().add("normal");
     }
 
-    int fillDataArrayColumnWithData(String date, Integer z_nr, Vector<BigDecimal> totals, HashMap<BigDecimal, Vector<BigDecimal>> vats, Color color) {
+    int fillDataArrayColumnWithData(String date, Integer z_nr, Vector<BigDecimal> totals,
+            HashMap<BigDecimal, Vector<BigDecimal>> vats, Color color) {
         String formattedDate = formatDate(date, this.dateOutFormat);
         columnLabels.add(formattedDate);
         // add Laufende Nr.
@@ -419,26 +460,26 @@ public abstract class Abrechnungen extends WindowContent {
         colors.get(0).add(color);
         fontStyles.get(0).add("normal");
         // add Gesamt Brutto
-        data.get(1).add( bc.priceFormatter( totals.get(0) )+" "+bc.currencySymbol );
+        data.get(1).add(bc.priceFormatter(totals.get(0)) + " " + bc.currencySymbol);
         colors.get(1).add(color);
         fontStyles.get(1).add("normal");
         // add Gesamt Bar Brutto
-        data.get(2).add( bc.priceFormatter( totals.get(1) )+" "+bc.currencySymbol );
+        data.get(2).add(bc.priceFormatter(totals.get(1)) + " " + bc.currencySymbol);
         colors.get(2).add(color);
         fontStyles.get(2).add("normal");
         // add Gesamt EC Brutto
-        data.get(3).add( bc.priceFormatter( totals.get(2) )+" "+bc.currencySymbol );
+        data.get(3).add(bc.priceFormatter(totals.get(2)) + " " + bc.currencySymbol);
         colors.get(3).add(color);
         fontStyles.get(3).add("normal");
         // add VATs
         int rowIndex = 4;
-        for (BigDecimal mwst : mwstSet){
-            for (int i=0; i<3; i++){
-                if (vats != null && vats.containsKey(mwst)){
+        for (BigDecimal mwst : mwstSet) {
+            for (int i = 0; i < 3; i++) {
+                if (vats != null && vats.containsKey(mwst)) {
                     BigDecimal bd = vats.get(mwst).get(i);
-                    data.get(rowIndex).add( bc.priceFormatter(bd)+" "+bc.currencySymbol );
+                    data.get(rowIndex).add(bc.priceFormatter(bd) + " " + bc.currencySymbol);
                 } else {
-                    data.get(rowIndex).add( bc.priceFormatter("0")+" "+bc.currencySymbol );
+                    data.get(rowIndex).add(bc.priceFormatter("0") + " " + bc.currencySymbol);
                 }
                 colors.get(rowIndex).add(color);
                 fontStyles.get(rowIndex).add("normal");
@@ -449,7 +490,8 @@ public abstract class Abrechnungen extends WindowContent {
     }
 
     int fillIncompleteDataColumn() {
-        int rowIndex = fillDataArrayColumnWithData(incompleteAbrechnungsDate, null, incompleteAbrechnungsTotals, incompleteAbrechnungsVATs, Color.RED);
+        int rowIndex = fillDataArrayColumnWithData(incompleteAbrechnungsDate, null, incompleteAbrechnungsTotals,
+                incompleteAbrechnungsVATs, Color.RED);
         data.get(rowIndex).add(""); // instead of exportButton
         colors.get(rowIndex).add(Color.BLACK);
         fontStyles.get(rowIndex).add("normal");
@@ -478,7 +520,7 @@ public abstract class Abrechnungen extends WindowContent {
         return rowIndex;
     }
 
-    void fillDataArray(){
+    void fillDataArray() {
         queryAbrechnungen();
 
         columnLabels = new Vector<>();
@@ -489,23 +531,23 @@ public abstract class Abrechnungen extends WindowContent {
 
         fillHeaderColumn();
 
-        if (currentPage == 1){
+        if (currentPage == 1) {
             // fill red (incomplete, so unsaved) data column
             fillIncompleteDataColumn();
         }
 
         // fill data columns with black (already saved in DB) abrechnungen
-        for (int colIndex=0; colIndex<abrechnungsDates.size(); colIndex++){
+        for (int colIndex = 0; colIndex < abrechnungsDates.size(); colIndex++) {
             fillDataArrayColumn(colIndex);
         }
         myTable = new AbrechnungsTable(data, columnLabels);
-        //	myTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
-        //	myTable.setFillsViewportHeight(true);
+        // myTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
+        // myTable.setFillsViewportHeight(true);
     }
 
     abstract void addOtherStuff();
 
-    void showTable(){
+    void showTable() {
         allPanel = new JPanel(new BorderLayout());
         allPanel.setBorder(BorderFactory.createTitledBorder(titleStr));
 
@@ -513,7 +555,7 @@ public abstract class Abrechnungen extends WindowContent {
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.PAGE_AXIS));
         JPanel pageChangePanel = new JPanel();
         pageChangePanel.setLayout(new FlowLayout(FlowLayout.LEADING));
-        //	pageChangePanel.setMaximumSize(new Dimension(1024,30));
+        // pageChangePanel.setMaximumSize(new Dimension(1024,30));
         prevButton = new JButton("<<");
         if (this.currentPage <= 1)
             prevButton.setEnabled(false);
@@ -524,11 +566,11 @@ public abstract class Abrechnungen extends WindowContent {
         pageChangePanel.add(nextButton);
         prevButton.addActionListener(this);
         nextButton.addActionListener(this);
-        int currentPageMin = (currentPage-1)*abrechnungenProSeite + 1;
-        int currentPageMax = abrechnungenProSeite*currentPage;
+        int currentPageMin = (currentPage - 1) * abrechnungenProSeite + 1;
+        int currentPageMax = abrechnungenProSeite * currentPage;
         currentPageMax = (currentPageMax <= abrechnungsZahl) ? currentPageMax : abrechnungsZahl;
-        JLabel header = new JLabel("Seite "+ currentPage +" von "+ totalPage + ", Abrechnungen "+
-                currentPageMin + " bis "+ currentPageMax +" von "+ abrechnungsZahl);
+        JLabel header = new JLabel("Seite " + currentPage + " von " + totalPage + ", Abrechnungen " +
+                currentPageMin + " bis " + currentPageMax + " von " + abrechnungsZahl);
         pageChangePanel.add(header);
         headerPanel.add(pageChangePanel);
 
@@ -543,7 +585,7 @@ public abstract class Abrechnungen extends WindowContent {
         this.add(allPanel, BorderLayout.CENTER);
     }
 
-    protected void updateTable(){
+    protected void updateTable() {
         this.remove(allPanel);
         this.revalidate();
         fillDataArray();
@@ -552,9 +594,9 @@ public abstract class Abrechnungen extends WindowContent {
 
     protected void setTableProperties(AnyJComponentJTable table) {
         // Spalteneigenschaften:
-        for (int i=0; i<table.getColumnCount(); i++){
+        for (int i = 0; i < table.getColumnCount(); i++) {
             TableColumn column = table.getColumnModel().getColumn(i);
-            if (i==0){
+            if (i == 0) {
                 column.setPreferredWidth(20);
             } else {
                 column.setCellRenderer(rechtsAusrichter);
@@ -569,7 +611,8 @@ public abstract class Abrechnungen extends WindowContent {
         Date ddate = createDate(date);
         Integer id = abrechnungsIDs.get(exportIndex);
         Vector<BigDecimal> totals = abrechnungsTotals.get(exportIndex);
-        HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(exportIndex); // map with values for each mwst
+        HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(exportIndex); // map with values for each
+                                                                                         // mwst
 
         // Load the template file
         final Sheet sheet;
@@ -639,17 +682,95 @@ public abstract class Abrechnungen extends WindowContent {
         }
     }
 
+    // public HashMap<BigDecimal, Integer> getMwstDSFinVKSchluessel() {
+    // HashMap<BigDecimal, Integer> result = new HashMap<BigDecimal, Integer>();
+    // try {
+    // Connection connection = this.pool.getConnection();
+    // PreparedStatement pstmt = connection.prepareStatement(
+    // "SELECT mwst_satz, dsfinvk_ust_schluessel "+ // dsfinvk_ust_beschr
+    // "FROM mwst");
+    // ResultSet rs = pstmt.executeQuery();
+    // while (rs.next()) {
+    // result.put(rs.getBigDecimal(1), rs.getInt(2));
+    // }
+    // rs.close();
+    // pstmt.close();
+    // connection.close();
+    // } catch (SQLException ex) {
+    // logger.error("Exception:", ex);
+    // showDBErrorDialog(ex.getMessage());
+    // }
+    // return result;
+    // }
+
+    // private String getSteuerschluessel(BigDecimal mwst, HashMap<BigDecimal, Integer> mwstDSFinVKSchluessel) {
+    //     String steuerschluessel = "";
+    //     Integer dsfinvk_schluessel = mwstDSFinVKSchluessel.get(mwst);
+    //     if (dsfinvk_schluessel == 6) {
+    //         // these are bookings without VAT (tax-free)
+    //         steuerschluessel = toStringIfNotNull(bc.LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER);
+    //     } else if (dsfinvk_schluessel == 2) {
+    //         // reduced VAT rate
+    //         steuerschluessel = toStringIfNotNull(bc.LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER);
+    //     } else if (dsfinvk_schluessel == 1) {
+    //         // normal VAT rate
+    //         steuerschluessel = toStringIfNotNull(bc.LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER);
+    //     }
+    //     return steuerschluessel;
+    // }
+    // problem with above approach: when VAT changes, we cannot export old
+    // data correctly anymore
+
+    private HashMap<String, String> getLexwareDataErloese(BigDecimal mwst) {
+        String buchungstext = "";
+        String sollkonto = "";
+        String habenkonto = "";
+        String steuerschluessel = "";
+        if (mwst.compareTo(new BigDecimal("0")) <= 0) {
+            // these are bookings without VAT (tax-free)
+            buchungstext = bc.LEXWARE_BUCHUNGSTEXT_ERLOESE_OHNE_STEUER;
+            sollkonto = toStringIfNotNull(bc.LEXWARE_SOLL_KONTO_ERLOESE);
+            habenkonto = toStringIfNotNull(bc.LEXWARE_HABEN_KONTO_ERLOESE_OHNE_STEUER);
+            steuerschluessel = toStringIfNotNull(bc.LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER);
+        } else if (mwst.compareTo(new BigDecimal("0.14")) < 0) {
+            // if VAT smaller than 14%, assume that this is the "reduced" VAT rate
+            // this leaves room for normal VAT being reduced (e.g. to 16%)
+            // as well as reduced VAT being raised (e.g. to 10% or 12%)
+            buchungstext = bc.LEXWARE_BUCHUNGSTEXT_ERLOESE.replaceAll("\\{\\{MWST\\}\\}", bc.vatFormatter(mwst));
+            sollkonto = toStringIfNotNull(bc.LEXWARE_SOLL_KONTO_ERLOESE);
+            habenkonto = toStringIfNotNull(bc.LEXWARE_HABEN_KONTO_ERLOESE_REDUZIERTE_STEUER);
+            steuerschluessel = toStringIfNotNull(bc.LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER);
+        } else {
+            // assume that this is the normal VAT rate
+            buchungstext = bc.LEXWARE_BUCHUNGSTEXT_ERLOESE.replaceAll("\\{\\{MWST\\}\\}", bc.vatFormatter(mwst));
+            sollkonto = toStringIfNotNull(bc.LEXWARE_SOLL_KONTO_ERLOESE);
+            habenkonto = toStringIfNotNull(bc.LEXWARE_HABEN_KONTO_ERLOESE_NORMALE_STEUER);
+            steuerschluessel = toStringIfNotNull(bc.LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER);
+        }
+        HashMap<String, String> result = new HashMap<String, String>();
+        result.put("buchungstext", buchungstext);
+        result.put("sollkonto", sollkonto);
+        result.put("habenkonto", habenkonto);
+        result.put("steuerschluessel", steuerschluessel);
+        return result;
+    }
+
     private void writeLexwareCSVFile(String filepathString, int exportIndex) {
         // Get data
         String date = abrechnungsDates.get(exportIndex);
         String formattedDate = formatDate(date, bc.LEXWARE_BELEGDATUM_FORMAT);
-        Integer id = abrechnungsIDs.get(exportIndex); // Laufende Nummer
+        String id = abrechnungsIDs.get(exportIndex).toString(); // Laufende Nummer
         Vector<BigDecimal> totals = abrechnungsTotals.get(exportIndex);
-        HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(exportIndex); // map with values for each mwst
+        HashMap<BigDecimal, Vector<BigDecimal>> vats = abrechnungsVATs.get(exportIndex); // map with values for each
+        // HashMap<BigDecimal, Integer> mwstDSFinVKSchluessel =
+        // getMwstDSFinVKSchluessel();
 
-        // Prepare meta-data on the CSV columns (defined in 'Schnittstellenbeschreibung Lexware buchhaltung.pdf',
-        //   downloaded from https://delta.lexware.de/sf_get_wmattachment.php?att=13299f5270c5ed27c1dff8f1470d0e,
-        //   linked on page https://www.lexware.de/support/faq/faq-beitrag/000015582/?tx_support%5Bproduct%5D=34&tx_support_faqdetail%5Baction%5D=detail&tx_support_faqdetail%5Bcontroller%5D=Faq&cHash=61d8c14be3c71240cd4f5736203f97f1#section2)
+        // Prepare meta-data on the CSV columns (defined in 'Schnittstellenbeschreibung
+        // Lexware buchhaltung.pdf',
+        // downloaded from
+        // https://delta.lexware.de/sf_get_wmattachment.php?att=13299f5270c5ed27c1dff8f1470d0e,
+        // linked on page
+        // https://www.lexware.de/support/faq/faq-beitrag/000015582/?tx_support%5Bproduct%5D=34&tx_support_faqdetail%5Baction%5D=detail&tx_support_faqdetail%5Bcontroller%5D=Faq&cHash=61d8c14be3c71240cd4f5736203f97f1#section2)
         LinkedHashMap<String, CSVColumn> colDefs = new LinkedHashMap<String, CSVColumn>();
         CSVColumn col = new CSVColumn();
         col.type = CSVColumnType.ALPHANUMERIC;
@@ -691,30 +812,52 @@ public abstract class Abrechnungen extends WindowContent {
         col.type = CSVColumnType.NUMERIC;
         colDefs.put("Zusatzangaben", col);
 
-        // Prepare the data for writing
         // 1. Row for the card-based paymenys
+        // Prepare the data for writing
         HashMap<String, String> fields = new HashMap<String, String>();
         fields.put("Belegdatum", formattedDate);
         fields.put("Belegnummernkreis", bc.LEXWARE_BELEGNUMMERNKREIS);
-        fields.put("Belegnummer", id.toString()); // Laufende Nummer
+        fields.put("Belegnummer", id); // Laufende Nummer
         fields.put("Buchungstext", bc.LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KARTE);
-        fields.put("Sollkonto", bc.LEXWARE_SOLL_KONTO_GELDTRANSIT_KARTE.toString());
-        fields.put("Habenkonto", bc.LEXWARE_HABEN_KONTO_GELDTRANSIT_KARTE.toString());
+        fields.put("Sollkonto", toStringIfNotNull(bc.LEXWARE_SOLL_KONTO_GELDTRANSIT_KARTE));
+        fields.put("Habenkonto", toStringIfNotNull(bc.LEXWARE_HABEN_KONTO_GELDTRANSIT_KARTE));
         fields.put("Steuerschlüssel", "");
         fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
         fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
         fields.put("Buchungsbetrag Euro", totals.get(2).toString());
         fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
-
-        // Write the CSV file
+        // Write to the CSV file
         CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\n", ',', '.', "\"");
-        
+
+        // 2. Rows for each VAT rate
+        // Prepare the data for writing
+        for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : vats.entrySet()) {
+            BigDecimal mwst = entry.getKey();
+            HashMap<String, String> lex_data = getLexwareDataErloese(mwst);
+
+            fields = new HashMap<String, String>();
+            fields.put("Belegdatum", formattedDate);
+            fields.put("Belegnummernkreis", bc.LEXWARE_BELEGNUMMERNKREIS);
+            fields.put("Belegnummer", id); // Laufende Nummer
+            fields.put("Buchungstext", lex_data.get("buchungstext"));
+            fields.put("Sollkonto", lex_data.get("sollkonto"));
+            fields.put("Habenkonto", lex_data.get("habenkonto"));
+            fields.put("Steuerschlüssel", lex_data.get("steuerschluessel"));
+            fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
+            fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
+            fields.put("Buchungsbetrag Euro", entry.getValue().get(0).toString());
+            fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
+            // Write to the CSV file
+            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\n", ',', '.', "\"");
+        }
+
         logger.info("Written CSV file to " + filepathString);
     }
 
-    void export(int exportIndex){
+    void export(int exportIndex) {
         String date = abrechnungsDates.get(exportIndex);
-        File exportDir = new File(System.getProperty("user.home")+bc.fileSep+formatDate(date, this.exportDirFormat));
+        File exportDir = new File(
+                System.getProperty("user.home") + bc.fileSep + formatDate(date, this.exportDirFormat));
         boolean ok = true;
         if (!exportDir.exists()) {
             ok = exportDir.mkdirs();
@@ -723,13 +866,13 @@ public abstract class Abrechnungen extends WindowContent {
             odsChooser.setCurrentDirectory(exportDir);
         } else {
             JOptionPane.showMessageDialog(this,
-                    "Fehler: Ordner für "+titleStr+" unter "+exportDir+" existiert nicht "+
+                    "Fehler: Ordner für " + titleStr + " unter " + exportDir + " existiert nicht " +
                             "und konnte nicht angelegt werden.",
                     "Fehler", JOptionPane.ERROR_MESSAGE);
         }
-        odsChooser.setSelectedFile(new File(titleStr+"_WL_Bonn_"+dateForFilename(date)+".ods"));
+        odsChooser.setSelectedFile(new File(titleStr + "_WL_Bonn_" + dateForFilename(date) + ".ods"));
         int returnVal = odsChooser.showSaveDialog(this);
-        if (returnVal == JFileChooser.APPROVE_OPTION){
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = odsChooser.getSelectedFile();
 
             Vector<Object> v = fillSpreadSheet(exportIndex);
@@ -746,21 +889,21 @@ public abstract class Abrechnungen extends WindowContent {
     }
 
     /**
-     *    * Each non abstract class that implements the ActionListener
-     *      must have this method.
+     * * Each non abstract class that implements the ActionListener
+     * must have this method.
      *
-     *    @param e the action event.
+     * @param e the action event.
      **/
     public void actionPerformed(ActionEvent e) {
         int exportIndex = -1;
-        for (int i=0; i<exportButtons.size(); i++){
-            if (e.getSource() == exportButtons.get(i) ){
+        for (int i = 0; i < exportButtons.size(); i++) {
+            if (e.getSource() == exportButtons.get(i)) {
                 exportIndex = i;
-                logger.trace("exportIndex: "+exportIndex);
+                logger.trace("exportIndex: " + exportIndex);
                 break;
             }
         }
-        if (exportIndex > -1){
+        if (exportIndex > -1) {
             export(exportIndex);
         }
     }
@@ -769,6 +912,7 @@ public abstract class Abrechnungen extends WindowContent {
         AbrechnungsTable(Vector<Vector<Object>> data, Vector<String> columns) {
             super(data, columns);
         }
+
         @Override
         public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
             Component c = super.prepareRenderer(renderer, row, column);
