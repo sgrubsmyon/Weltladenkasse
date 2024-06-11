@@ -1008,7 +1008,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
         // set up spinner column:
         TableColumn col = myTable.getColumn("Stückzahl");
-        SpinnerNumberModel model = new SpinnerNumberModel(1, 1, bc.smallintMax, 1);
+        SpinnerNumberModel model = new SpinnerNumberModel(1, -bc.smallintMax, bc.smallintMax, 1);
         col.setCellRenderer(new JSpinnerRenderer(model));
         JSpinnerEditor se = new JSpinnerEditor(model);
         preventSpinnerOverflow(se.getSpinner());
@@ -1923,6 +1923,15 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
         updateAll();
         updateDisplay(kurzname, stueck, bc.priceFormatter(artikelPreis));
+
+        // set focus to the new entered row (assumed to be at the top, so row index 0) at cell "Stückzahl"
+        myTable.requestFocus();
+        // myTable.requestFocusInWindow();
+        myTable.editCellAt(0, 1);
+        // myTable.changeSelection(0, 3, false, false);
+        // myTable.editCellAt(0, 3);
+        // myTable.setRowSelectionInterval(0, 0);
+        // myTable.setColumnSelectionInterval(3, 3);
     }
 
     private void artikelHinzufuegen(Integer stueck, String type, String color) {
