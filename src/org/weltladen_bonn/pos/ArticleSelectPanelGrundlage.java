@@ -485,7 +485,7 @@ public abstract class ArticleSelectPanelGrundlage extends ArtikelGrundlage imple
 
     public void emptyArtikelBox() {
         resetForm();
-        artikelBox.requestFocus();
+        // artikelBox.requestFocus(); // we don't want this anymore, we want focus to go into table (no enter required after barcode)
     }
 
     public void emptyNummerBox() {
