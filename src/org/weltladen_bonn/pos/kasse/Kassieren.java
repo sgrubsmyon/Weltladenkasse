@@ -1910,6 +1910,28 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
+    public void doubleClick(int x, int y) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    Robot bot = new Robot();
+                    bot.mouseMove(x, y);    
+                    bot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+                    bot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
+                    // try {
+                    //     Thread.sleep(1000); // milliseconds
+                    // } catch (InterruptedException ie) {
+                    //     Thread.currentThread().interrupt();
+                    // }
+                    bot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+                    bot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
+                } catch (AWTException e) {
+                    logger.error("Exception in doubleClick", e);
+                }
+            }
+        });
+    }
+
     private void hinzufuegen(int artID, String kurzname, String artikelNummer, String color, String type, String menge,
             Integer stueck, BigDecimal artikelPreis, BigDecimal gesPreis, String artikelMwSt,
             Integer gutscheinNr) {
@@ -1924,14 +1946,36 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         updateAll();
         updateDisplay(kurzname, stueck, bc.priceFormatter(artikelPreis));
 
-        // set focus to the new entered row (assumed to be at the top, so row index 0) at cell "Stückzahl"
-        myTable.requestFocus();
-        // myTable.requestFocusInWindow();
-        myTable.editCellAt(0, 1);
+        
+        // XXX TODO does not work yet:
+        // set focus to the new entered row (assumed to be at the top, so row index 0)
+        // at cell "Stückzahl"
+        
+        mw.validate(); // needed for getting correct coordinates
+        Point p = myTable.getLocationOnScreen();
+        // Point p2 = articleListPanel.getLocation();
+        // Window win = SwingUtilities.getWindowAncestor(articleListPanel);
+        // Point p3 = SwingUtilities.convertPoint(articleListPanel, articleListPanel.getLocation(), win);
+        // // Convert a coordinate relative to a component's bounds to screen coordinates 
+        // Point pt = new Point(articleListPanel.getLocationOnScreen());
+        // SwingUtilities.convertPointToScreen(pt, articleListPanel.getParent());
+        System.out.println(p);
+        Rectangle r = myTable.getCellRect(0, 3, false);
+        System.out.println(r);
+
+        // click on table cell `holding the number spinner:
+        int x = (int)(p.getX() + r.getX() + r.getWidth()/2);
+        int y = (int)(p.getY() + r.getY() + r.getHeight()/2);
+        System.out.println("x: "+x+" y: "+y);
+        doubleClick(x, y);
+        
+        // myTable.requestFocus();
         // myTable.changeSelection(0, 3, false, false);
         // myTable.editCellAt(0, 3);
-        // myTable.setRowSelectionInterval(0, 0);
-        // myTable.setColumnSelectionInterval(3, 3);
+        // myTable.requestFocusInWindow();
+        // // myTable.setRowSelectionInterval(0, 0);
+        // // myTable.setColumnSelectionInterval(3, 3);
+        // mySpinnerRenderer.requestFocus();
     }
 
     private void artikelHinzufuegen(Integer stueck, String type, String color) {
