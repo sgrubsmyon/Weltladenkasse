@@ -3,6 +3,7 @@ package org.weltladen_bonn.pos.kasse;
 import java.io.File;
 import java.io.IOException;
 import java.math.RoundingMode;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -22,6 +23,13 @@ public class CSVExport {
   public static void writeToCSV(String csvFilename, HashMap<String, String> fields,
       LinkedHashMap<String, CSVColumn> colDefs, BaseClass bc,
       String colDel, String rowDel, Character decSep, Character grSep, String textEnc) {
+    writeToCSV(csvFilename, fields, colDefs, bc, colDel, rowDel, decSep, grSep, textEnc, "UTF-8");
+  }
+
+  public static void writeToCSV(String csvFilename, HashMap<String, String> fields,
+      LinkedHashMap<String, CSVColumn> colDefs, BaseClass bc,
+      String colDel, String rowDel, Character decSep, Character grSep, String textEnc,
+      String charset) {
 
     String csvStr = "";
     if (fields.size() > 0) {
@@ -83,6 +91,7 @@ public class CSVExport {
       csvStr += rowDel;
     }
 
+    Charset cs = Charset.forName(charset);
     try {
       if (!Files.exists(Path.of(csvFilename))) {
         // create the file with a header row (data start at second row, as specified in
@@ -94,12 +103,12 @@ public class CSVExport {
         // remove the very last column separator:
         headerStr = headerStr.substring(0, headerStr.length() - colDel.length());
         headerStr += rowDel;
-        Files.writeString(Path.of(csvFilename), headerStr,
+        Files.writeString(Path.of(csvFilename), headerStr, cs,
             StandardOpenOption.CREATE, // create file if not exists
             StandardOpenOption.APPEND); // append to file if exists
       }
       if (csvStr.length() > 0) {
-        Files.writeString(Path.of(csvFilename), csvStr,
+        Files.writeString(Path.of(csvFilename), csvStr, cs,
             StandardOpenOption.CREATE, // create file if not exists
             StandardOpenOption.APPEND); // append to file if exists
       }

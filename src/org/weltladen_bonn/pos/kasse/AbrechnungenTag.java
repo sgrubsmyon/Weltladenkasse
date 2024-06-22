@@ -5,7 +5,8 @@ import org.weltladen_bonn.pos.kasse.WeltladenTSE.TSEStatus;
 // Basic Java stuff:
 import java.util.*; // for Vector
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
-
+import java.nio.file.Files;
+import java.nio.file.Path;
 // MySQL Connector/J stuff:
 import java.sql.SQLException;
 import java.sql.Connection;
@@ -17,6 +18,8 @@ import org.mariadb.jdbc.MariaDbPoolDataSource;
 // GUI stuff:
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
+
 import javax.swing.*;
 
 // DateTime from date4j (http://www.date4j.net/javadoc/index.html)
@@ -1755,7 +1758,7 @@ class AbrechnungenTag extends Abrechnungen {
         fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
         fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
         fields.put("Buchungsbetrag Euro", totals.get(2).toString());
-        fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
+        fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));   
 
         // Delete file if it already exists to not double-write to the file when exported multiple times
         if (Files.exists(Path.of(filepathString))) {
@@ -1768,7 +1771,7 @@ class AbrechnungenTag extends Abrechnungen {
         }
 
         // Write to the CSV file
-        CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"");
+        CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"", "ISO-8859-1");
 
         // 2. Rows for each VAT rate
         for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : vats.entrySet()) {
@@ -1789,7 +1792,7 @@ class AbrechnungenTag extends Abrechnungen {
             fields.put("Buchungsbetrag Euro", entry.getValue().get(0).toString());
             fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
             // Write to the CSV file
-            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"");
+            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"", "ISO-8859-1");
         }
 
         if (zpNumber > 0) {
@@ -1810,7 +1813,7 @@ class AbrechnungenTag extends Abrechnungen {
             fields.put("Buchungsbetrag Euro", zaehlprotokollEinnahmen.get(exportIndex).get(i).toString());
             fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
             // Write to the CSV file
-            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"");
+            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"", "ISO-8859-1");
             
             // 4. Row for the cashier difference
             // Prepare the data for writing
@@ -1827,7 +1830,7 @@ class AbrechnungenTag extends Abrechnungen {
             fields.put("Buchungsbetrag Euro", zaehlprotokollDifferenzen.get(exportIndex).get(i).toString());
             fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
             // Write to the CSV file
-            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"");
+            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"", "ISO-8859-1");
         }
 
 
