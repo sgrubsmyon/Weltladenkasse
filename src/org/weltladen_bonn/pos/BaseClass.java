@@ -8,7 +8,6 @@ import java.io.FileInputStream;
 import java.text.*; // for NumberFormat
 import java.awt.*; // for Color
 import javax.swing.*;
-import javax.swing.text.*; // for DocumentFilter
 
 // Logging:
 import org.apache.logging.log4j.LogManager;
@@ -78,6 +77,31 @@ public class BaseClass {
     public String TERMINAL_SW_VERSION;
     public Integer TSE_ID;
     public String TSE_PD_ENCODING = "UTF-8";
+
+    // Lexware setup:
+    public String LEXWARE_BELEGDATUM_FORMAT;
+    public String LEXWARE_BELEGNUMMERNKREIS;
+    public String LEXWARE_BUCHUNGSTEXT_ERLOESE;
+    public String LEXWARE_BUCHUNGSTEXT_ERLOESE_OHNE_STEUER;
+    public String LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KARTE;
+    public String LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KASSE;
+    public String LEXWARE_BUCHUNGSTEXT_KASSENDIFFERENZ;
+    public Integer LEXWARE_SOLL_KONTO_ERLOESE;
+    public Integer LEXWARE_SOLL_KONTO_GELDTRANSIT_KARTE;
+    public Integer LEXWARE_SOLL_KONTO_GELDTRANSIT_KASSE;
+    public Integer LEXWARE_SOLL_KONTO_KASSENDIFFERENZ;
+    public Integer LEXWARE_HABEN_KONTO_ERLOESE_OHNE_STEUER;
+    public Integer LEXWARE_HABEN_KONTO_ERLOESE_REDUZIERTE_STEUER;
+    public Integer LEXWARE_HABEN_KONTO_ERLOESE_NORMALE_STEUER;
+    public Integer LEXWARE_HABEN_KONTO_GELDTRANSIT_KARTE;
+    public Integer LEXWARE_HABEN_KONTO_GELDTRANSIT_KASSE;
+    public Integer LEXWARE_HABEN_KONTO_KASSENDIFFERENZ;
+    public Integer LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER = null;
+    public Integer LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER = null;
+    public Integer LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER = null;
+    public String LEXWARE_KOSTENSTELLE_1 = "";
+    public String LEXWARE_KOSTENSTELLE_2 = "";
+    public Integer LEXWARE_ZUSATZANGABEN = null;
 
     public final String fileSep = System.getProperty("file.separator");
     public final String lineSep = System.getProperty("line.separator");
@@ -400,6 +424,77 @@ public class BaseClass {
         }
         try { this.TSE_PD_ENCODING = props.getProperty("TSE_PD_ENCODING"); } catch (Exception ex) {
             parseErrorMessage(ex, "TSE_PD_ENCODING", this.TSE_PD_ENCODING);
+        }
+
+        // Lexware setup:
+        try { this.LEXWARE_BELEGDATUM_FORMAT = props.getProperty("LEXWARE_BELEGDATUM_FORMAT"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_BELEGDATUM_FORMAT", this.LEXWARE_BELEGDATUM_FORMAT);
+        }
+        try { this.LEXWARE_BELEGNUMMERNKREIS = props.getProperty("LEXWARE_BELEGNUMMERNKREIS"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_BELEGNUMMERNKREIS", this.LEXWARE_BELEGNUMMERNKREIS);
+        }
+        try { this.LEXWARE_BUCHUNGSTEXT_ERLOESE = props.getProperty("LEXWARE_BUCHUNGSTEXT_ERLOESE"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_BUCHUNGSTEXT_ERLOESE", this.LEXWARE_BUCHUNGSTEXT_ERLOESE);
+        }
+        try { this.LEXWARE_BUCHUNGSTEXT_ERLOESE_OHNE_STEUER = props.getProperty("LEXWARE_BUCHUNGSTEXT_ERLOESE_OHNE_STEUER"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_BUCHUNGSTEXT_ERLOESE_OHNE_STEUER", this.LEXWARE_BUCHUNGSTEXT_ERLOESE_OHNE_STEUER);
+        }
+        try { this.LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KARTE = props.getProperty("LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KARTE"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KARTE", this.LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KARTE);
+        }
+        try { this.LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KASSE = props.getProperty("LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KASSE"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KASSE", this.LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KASSE);
+        }
+        try { this.LEXWARE_BUCHUNGSTEXT_KASSENDIFFERENZ = props.getProperty("LEXWARE_BUCHUNGSTEXT_KASSENDIFFERENZ"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_BUCHUNGSTEXT_KASSENDIFFERENZ", this.LEXWARE_BUCHUNGSTEXT_KASSENDIFFERENZ);
+        }
+        try { this.LEXWARE_SOLL_KONTO_ERLOESE = Integer.parseInt(props.getProperty("LEXWARE_SOLL_KONTO_ERLOESE")); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_SOLL_KONTO_ERLOESE", this.LEXWARE_SOLL_KONTO_ERLOESE);
+        }
+        try { this.LEXWARE_SOLL_KONTO_GELDTRANSIT_KARTE = Integer.parseInt(props.getProperty("LEXWARE_SOLL_KONTO_GELDTRANSIT_KARTE")); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_SOLL_KONTO_GELDTRANSIT_KARTE", this.LEXWARE_SOLL_KONTO_GELDTRANSIT_KARTE);
+        }
+        try { this.LEXWARE_SOLL_KONTO_GELDTRANSIT_KASSE = Integer.parseInt(props.getProperty("LEXWARE_SOLL_KONTO_GELDTRANSIT_KASSE")); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_SOLL_KONTO_GELDTRANSIT_KASSE", this.LEXWARE_SOLL_KONTO_GELDTRANSIT_KASSE);
+        }
+        try { this.LEXWARE_SOLL_KONTO_KASSENDIFFERENZ = Integer.parseInt(props.getProperty("LEXWARE_SOLL_KONTO_KASSENDIFFERENZ")); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_SOLL_KONTO_KASSENDIFFERENZ", this.LEXWARE_SOLL_KONTO_KASSENDIFFERENZ);
+        }
+        try { this.LEXWARE_HABEN_KONTO_ERLOESE_OHNE_STEUER = Integer.parseInt(props.getProperty("LEXWARE_HABEN_KONTO_ERLOESE_OHNE_STEUER")); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_HABEN_KONTO_ERLOESE_OHNE_STEUER", this.LEXWARE_HABEN_KONTO_ERLOESE_OHNE_STEUER);
+        }
+        try { this.LEXWARE_HABEN_KONTO_ERLOESE_REDUZIERTE_STEUER = Integer.parseInt(props.getProperty("LEXWARE_HABEN_KONTO_ERLOESE_REDUZIERTE_STEUER")); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_HABEN_KONTO_ERLOESE_REDUZIERTE_STEUER", this.LEXWARE_HABEN_KONTO_ERLOESE_REDUZIERTE_STEUER);
+        }
+        try { this.LEXWARE_HABEN_KONTO_ERLOESE_NORMALE_STEUER = Integer.parseInt(props.getProperty("LEXWARE_HABEN_KONTO_ERLOESE_NORMALE_STEUER")); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_HABEN_KONTO_ERLOESE_NORMALE_STEUER", this.LEXWARE_HABEN_KONTO_ERLOESE_NORMALE_STEUER);
+        }
+        try { this.LEXWARE_HABEN_KONTO_GELDTRANSIT_KARTE = Integer.parseInt(props.getProperty("LEXWARE_HABEN_KONTO_GELDTRANSIT_KARTE")); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_HABEN_KONTO_GELDTRANSIT_KARTE", this.LEXWARE_HABEN_KONTO_GELDTRANSIT_KARTE);
+        }
+        try { this.LEXWARE_HABEN_KONTO_GELDTRANSIT_KASSE = Integer.parseInt(props.getProperty("LEXWARE_HABEN_KONTO_GELDTRANSIT_KASSE")); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_HABEN_KONTO_GELDTRANSIT_KASSE", this.LEXWARE_HABEN_KONTO_GELDTRANSIT_KASSE);
+        }
+        try { this.LEXWARE_HABEN_KONTO_KASSENDIFFERENZ = Integer.parseInt(props.getProperty("LEXWARE_HABEN_KONTO_KASSENDIFFERENZ")); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_HABEN_KONTO_KASSENDIFFERENZ", this.LEXWARE_HABEN_KONTO_KASSENDIFFERENZ);
+        }
+        try { this.LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER = props.getProperty("LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER").equals("") ? null : Integer.parseInt(props.getProperty("LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER")); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER", this.LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER);
+        }
+        try { this.LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER = props.getProperty("LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER").equals("") ? null : Integer.parseInt(props.getProperty("LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER")); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER", this.LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER);
+        }
+        try { this.LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER = props.getProperty("LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER").equals("") ? null : Integer.parseInt(props.getProperty("LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER")); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER", this.LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER);
+        }
+        try { this.LEXWARE_KOSTENSTELLE_1 = props.getProperty("LEXWARE_KOSTENSTELLE_1"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_KOSTENSTELLE_1", this.LEXWARE_KOSTENSTELLE_1);
+        }
+        try { this.LEXWARE_KOSTENSTELLE_2 = props.getProperty("LEXWARE_KOSTENSTELLE_2"); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_KOSTENSTELLE_2", this.LEXWARE_KOSTENSTELLE_2);
+        }
+        try { this.LEXWARE_ZUSATZANGABEN = props.getProperty("LEXWARE_ZUSATZANGABEN").equals("") ? null : Integer.parseInt(props.getProperty("LEXWARE_ZUSATZANGABEN")); } catch (Exception ex) {
+            parseErrorMessage(ex, "LEXWARE_ZUSATZANGABEN", this.LEXWARE_ZUSATZANGABEN);
         }
        
         this.mysqlHost = removeQuotes(this.mysqlHost);
