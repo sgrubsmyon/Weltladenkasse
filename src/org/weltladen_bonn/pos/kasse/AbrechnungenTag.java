@@ -1757,7 +1757,7 @@ class AbrechnungenTag extends Abrechnungen {
         fields.put("Buchungsbetrag Euro", totals.get(2).toString());
         fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
         // Write to the CSV file
-        CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\n", ',', '.', "\"");
+        CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"");
 
         // 2. Rows for each VAT rate
         for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : vats.entrySet()) {
@@ -1778,7 +1778,7 @@ class AbrechnungenTag extends Abrechnungen {
             fields.put("Buchungsbetrag Euro", entry.getValue().get(0).toString());
             fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
             // Write to the CSV file
-            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\n", ',', '.', "\"");
+            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"");
         }
 
         if (zpNumber > 0) {
@@ -1799,7 +1799,7 @@ class AbrechnungenTag extends Abrechnungen {
             fields.put("Buchungsbetrag Euro", zaehlprotokollEinnahmen.get(exportIndex).get(i).toString());
             fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
             // Write to the CSV file
-            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\n", ',', '.', "\"");
+            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"");
             
             // 4. Row for the cashier difference
             // Prepare the data for writing
@@ -1816,7 +1816,7 @@ class AbrechnungenTag extends Abrechnungen {
             fields.put("Buchungsbetrag Euro", zaehlprotokollDifferenzen.get(exportIndex).get(i).toString());
             fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
             // Write to the CSV file
-            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\n", ',', '.', "\"");
+            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"");
         }
 
 
