@@ -707,7 +707,7 @@ public abstract class Abrechnungen extends WindowContent {
             logger.info("Written ODS file to " + file.getAbsolutePath());
 
             // Also write CSV file with data for import into Lexware
-            writeLexwareCSVFile(file.getAbsolutePath().replace(".ods", ".csv"), exportIndex);
+            writeLexwareCSVFile(file.getAbsolutePath().replace(".ods", ".txt"), exportIndex);
         } else {
             logger.info("Save command cancelled by user.");
         }
