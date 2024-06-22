@@ -17,10 +17,10 @@ currencySymbol = €
 rowsPerPage = 32
 sollMuenzKassenstand = 50.00
 sollScheinKassenstand = 100.00
-exportDirAbrechnungTag = 'Dokumente/Kasse/Tagesabrechnungen/'yyyy'/'MM MMMM
-exportDirAbrechnungMonat = 'Dokumente/Kasse/Monatsabrechnungen/'yyyy
-exportDirAbrechnungJahr = 'Dokumente/Kasse/Jahresabrechnungen'
-exportDirBestellung = 'Dokumente/Bestellungen/Bestellungen FHZ 'yyyy
+exportDirAbrechnungTag = 'Nextcloud/Team Ladenbetrieb/Kasse/Tagesabrechnungen/'yyyy'/'MM MMMM
+exportDirAbrechnungMonat = 'Nextcloud/Team Ladenbetrieb/Kasse/Monatsabrechnungen/'yyyy
+exportDirAbrechnungJahr = 'Nextcloud/Team Ladenbetrieb/Kasse/Jahresabrechnungen'
+exportDirBestellung = 'Nextcloud/Team Ladenbetrieb/Bestellungen/Bestellungen FHZ 'yyyy
 
 ###################################################################
 # Statische Kassendaten, die für TSE und DSFinV-K benötigt werden #
@@ -30,7 +30,7 @@ exportDirBestellung = 'Dokumente/Bestellungen/Bestellungen FHZ 'yyyy
 # Siehe auch https://tse-support.cryptovision.com/confluence/display/TDI/clientId+oder+Seriennummer+des+Aufzeichnungssystems
 
 # Finanzdatenverzeichnis für den Export der TSE und DSFinV-K-Daten:
-finDatDir = .Weltladenkasse_Finanzdaten
+finDatDir = Nextcloud/Team Ladenbetrieb/Kasse/Finanzdaten
 
 ##################
 # Schlüsselfelder
