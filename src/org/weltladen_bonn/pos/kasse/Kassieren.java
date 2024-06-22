@@ -2,7 +2,6 @@ package org.weltladen_bonn.pos.kasse;
 
 // Basic Java stuff:
 import java.util.*; // for Vector
-import java.util.Date;
 import java.math.BigDecimal; // for monetary value representation and arithmetic with correct rounding
 import java.math.RoundingMode;
 
@@ -1910,26 +1909,27 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         }
     }
 
-    public void doubleClick(int x, int y) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    Robot bot = new Robot();
-                    bot.mouseMove(x, y);    
-                    bot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-                    bot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-                    // try {
-                    //     Thread.sleep(1000); // milliseconds
-                    // } catch (InterruptedException ie) {
-                    //     Thread.currentThread().interrupt();
-                    // }
-                    bot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-                    bot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-                } catch (AWTException e) {
-                    logger.error("Exception in doubleClick", e);
-                }
-            }
-        });
+    public void click(int x, int y) {
+        try {
+            Robot bot = new Robot();
+            bot.mouseMove(x, y);    
+            bot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+            bot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
+        } catch (AWTException e) {
+            logger.error("Exception in click():", e);
+        }
+    }
+
+    public void pressCtrlA() {
+        try {
+            Robot bot = new Robot();
+            bot.keyPress(KeyEvent.VK_CONTROL);
+            bot.keyPress(KeyEvent.VK_A);
+            bot.keyRelease(KeyEvent.VK_A);
+            bot.keyRelease(KeyEvent.VK_CONTROL);
+        } catch (AWTException e) {
+            logger.error("Exception in pressCtrlA():", e);
+        }
     }
 
     private void hinzufuegen(int artID, String kurzname, String artikelNummer, String color, String type, String menge,
@@ -1946,36 +1946,20 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         updateAll();
         updateDisplay(kurzname, stueck, bc.priceFormatter(artikelPreis));
 
-        
-        // XXX TODO does not work yet:
         // set focus to the new entered row (assumed to be at the top, so row index 0)
-        // at cell "Stückzahl"
+        // at cell "Stückzahl" (column index 3)
         
         mw.validate(); // needed for getting correct coordinates
         Point p = myTable.getLocationOnScreen();
-        // Point p2 = articleListPanel.getLocation();
-        // Window win = SwingUtilities.getWindowAncestor(articleListPanel);
-        // Point p3 = SwingUtilities.convertPoint(articleListPanel, articleListPanel.getLocation(), win);
-        // // Convert a coordinate relative to a component's bounds to screen coordinates 
-        // Point pt = new Point(articleListPanel.getLocationOnScreen());
-        // SwingUtilities.convertPointToScreen(pt, articleListPanel.getParent());
-        System.out.println(p);
         Rectangle r = myTable.getCellRect(0, 3, false);
-        System.out.println(r);
 
         // click on table cell `holding the number spinner:
         int x = (int)(p.getX() + r.getX() + r.getWidth()/2);
         int y = (int)(p.getY() + r.getY() + r.getHeight()/2);
-        System.out.println("x: "+x+" y: "+y);
-        doubleClick(x, y);
+        click(x, y);
         
-        // myTable.requestFocus();
-        // myTable.changeSelection(0, 3, false, false);
-        // myTable.editCellAt(0, 3);
-        // myTable.requestFocusInWindow();
-        // // myTable.setRowSelectionInterval(0, 0);
-        // // myTable.setColumnSelectionInterval(3, 3);
-        // mySpinnerRenderer.requestFocus();
+        // press Ctrl-A to select content of table cell
+        pressCtrlA();
     }
 
     private void artikelHinzufuegen(Integer stueck, String type, String color) {
