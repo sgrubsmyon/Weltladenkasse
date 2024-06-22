@@ -1740,7 +1740,7 @@ class AbrechnungenTag extends Abrechnungen {
         col = new CSVColumn();
         col.type = CSVColumnType.NUMERIC;
         col.accuracy = 2;
-        colDefs.put("Buchungsbetrag Euro", col);
+        colDefs.put("Buchungsbetrag", col);
         col = new CSVColumn();
         col.type = CSVColumnType.NUMERIC;
         colDefs.put("Zusatzangaben", col);
@@ -1757,7 +1757,7 @@ class AbrechnungenTag extends Abrechnungen {
         fields.put("Steuerschlüssel", "");
         fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
         fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
-        fields.put("Buchungsbetrag Euro", totals.get(2).toString());
+        fields.put("Buchungsbetrag", totals.get(2).toString());
         fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));   
 
         // Delete file if it already exists to not double-write to the file when exported multiple times
@@ -1789,7 +1789,7 @@ class AbrechnungenTag extends Abrechnungen {
             fields.put("Steuerschlüssel", lex_data.get("steuerschluessel"));
             fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
             fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
-            fields.put("Buchungsbetrag Euro", entry.getValue().get(0).toString());
+            fields.put("Buchungsbetrag", entry.getValue().get(0).toString());
             fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
             // Write to the CSV file
             CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"", "ISO-8859-1");
@@ -1810,7 +1810,7 @@ class AbrechnungenTag extends Abrechnungen {
             fields.put("Steuerschlüssel", "");
             fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
             fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
-            fields.put("Buchungsbetrag Euro", zaehlprotokollEinnahmen.get(exportIndex).get(i).toString());
+            fields.put("Buchungsbetrag", zaehlprotokollEinnahmen.get(exportIndex).get(i).toString());
             fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
             // Write to the CSV file
             CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"", "ISO-8859-1");
@@ -1827,7 +1827,7 @@ class AbrechnungenTag extends Abrechnungen {
             fields.put("Steuerschlüssel", "");
             fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
             fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
-            fields.put("Buchungsbetrag Euro", zaehlprotokollDifferenzen.get(exportIndex).get(i).toString());
+            fields.put("Buchungsbetrag", zaehlprotokollDifferenzen.get(exportIndex).get(i).toString());
             fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
             // Write to the CSV file
             CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"", "ISO-8859-1");
