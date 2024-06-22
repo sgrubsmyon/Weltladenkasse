@@ -126,7 +126,7 @@ stats=$?
 echo ""
 if [[ $stats -eq 0 ]]; then
     echo "Looks like the MySQL server was set up without any errors!"
-    echo "You can start using the Kasse software by issuing \`java -jar Weltladenkasse_v2.0.4.jar'!"
+    echo "You can start using the Kasse software by issuing \`java -jar Weltladenkasse_v2.0.5.jar'!"
 else
     echo "Seems there was a problem. Please check any error messages and try to solve the problem or ask for help."
 fi
