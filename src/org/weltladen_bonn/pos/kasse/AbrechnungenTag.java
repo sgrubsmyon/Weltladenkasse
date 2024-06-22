@@ -1756,6 +1756,17 @@ class AbrechnungenTag extends Abrechnungen {
         fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
         fields.put("Buchungsbetrag Euro", totals.get(2).toString());
         fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
+
+        // Delete file if it already exists to not double-write to the file when exported multiple times
+        if (Files.exists(Path.of(filepathString))) {
+            try {
+                Files.delete(Path.of(filepathString));
+            } catch (IOException e) {
+                logger.error("Error deleting already existing Lexware file {}", filepathString);
+                logger.error("Exception:", e);
+            }
+        }
+
         // Write to the CSV file
         CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"");
 
