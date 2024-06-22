@@ -1745,22 +1745,8 @@ class AbrechnungenTag extends Abrechnungen {
         col.type = CSVColumnType.NUMERIC;
         colDefs.put("Zusatzangaben", col);
 
-        // 1. Row for the card-based payments
-        // Prepare the data for writing
-        HashMap<String, String> fields = new HashMap<String, String>();
-        fields.put("Belegdatum", formattedDate);
-        fields.put("Belegnummernkreis", bc.LEXWARE_BELEGNUMMERNKREIS);
-        fields.put("Belegnummer", id); // Laufende Nummer
-        fields.put("Buchungstext", bc.LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KARTE);
-        fields.put("Sollkonto", toStringIfNotNull(bc.LEXWARE_SOLL_KONTO_GELDTRANSIT_KARTE));
-        fields.put("Habenkonto", toStringIfNotNull(bc.LEXWARE_HABEN_KONTO_GELDTRANSIT_KARTE));
-        fields.put("Steuerschlüssel", "");
-        fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
-        fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
-        fields.put("Buchungsbetrag", totals.get(2).toString());
-        fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));   
-
-        // Delete file if it already exists to not double-write to the file when exported multiple times
+        // Delete file if it already exists to not double-write to the file when
+        // exported multiple times
         if (Files.exists(Path.of(filepathString))) {
             try {
                 Files.delete(Path.of(filepathString));
@@ -1770,69 +1756,100 @@ class AbrechnungenTag extends Abrechnungen {
             }
         }
 
-        // Write to the CSV file
-        CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"", "ISO-8859-1");
+        HashMap<String, String> fields = new HashMap<String, String>();
 
-        // 2. Rows for each VAT rate
-        for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : vats.entrySet()) {
-            BigDecimal mwst = entry.getKey();
-            HashMap<String, String> lex_data = getLexwareDataErloese(mwst);
-            
+        // 1. Row for the card-based payments
+        BigDecimal buchungsbetrag = totals.get(2);
+        // We must omit zero values in the table since Lexware throws errors then
+        if (buchungsbetrag.compareTo(new BigDecimal("0")) != 0) {
             // Prepare the data for writing
-            fields = new HashMap<String, String>();
             fields.put("Belegdatum", formattedDate);
             fields.put("Belegnummernkreis", bc.LEXWARE_BELEGNUMMERNKREIS);
             fields.put("Belegnummer", id); // Laufende Nummer
-            fields.put("Buchungstext", lex_data.get("buchungstext"));
-            fields.put("Sollkonto", lex_data.get("sollkonto"));
-            fields.put("Habenkonto", lex_data.get("habenkonto"));
-            fields.put("Steuerschlüssel", lex_data.get("steuerschluessel"));
+            fields.put("Buchungstext", bc.LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KARTE);
+            fields.put("Sollkonto", toStringIfNotNull(bc.LEXWARE_SOLL_KONTO_GELDTRANSIT_KARTE));
+            fields.put("Habenkonto", toStringIfNotNull(bc.LEXWARE_HABEN_KONTO_GELDTRANSIT_KARTE));
+            fields.put("Steuerschlüssel", "");
             fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
             fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
-            fields.put("Buchungsbetrag", entry.getValue().get(0).toString());
-            fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
+            fields.put("Buchungsbetrag", buchungsbetrag.toString());
+            fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));   
             // Write to the CSV file
             CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"", "ISO-8859-1");
+        }
+
+        // 2. Rows for each VAT rate
+        for (Map.Entry<BigDecimal, Vector<BigDecimal>> entry : vats.entrySet()) {
+            buchungsbetrag = entry.getValue().get(0);
+            // We must omit zero values in the table since Lexware throws errors then
+            if (buchungsbetrag.compareTo(new BigDecimal("0")) != 0) {
+                BigDecimal mwst = entry.getKey();
+                HashMap<String, String> lex_data = getLexwareDataErloese(mwst);
+                
+                // Prepare the data for writing
+                fields = new HashMap<String, String>();
+                fields.put("Belegdatum", formattedDate);
+                fields.put("Belegnummernkreis", bc.LEXWARE_BELEGNUMMERNKREIS);
+                fields.put("Belegnummer", id); // Laufende Nummer
+                fields.put("Buchungstext", lex_data.get("buchungstext"));
+                fields.put("Sollkonto", lex_data.get("sollkonto"));
+                fields.put("Habenkonto", lex_data.get("habenkonto"));
+                fields.put("Steuerschlüssel", lex_data.get("steuerschluessel"));
+                fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
+                fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
+                fields.put("Buchungsbetrag", buchungsbetrag.toString());
+                fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
+                // Write to the CSV file
+                CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"",
+                        "ISO-8859-1");
+            }
         }
 
         if (zpNumber > 0) {
             int i = 0; // only use first (most recent) zaehlprotokoll
             
             // 3. Row for the cash-based payments
-            // Prepare the data for writing
-            fields = new HashMap<String, String>();
-            fields.put("Belegdatum", formattedDate);
-            fields.put("Belegnummernkreis", bc.LEXWARE_BELEGNUMMERNKREIS);
-            fields.put("Belegnummer", id); // Laufende Nummer
-            fields.put("Buchungstext", bc.LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KASSE);
-            fields.put("Sollkonto", toStringIfNotNull(bc.LEXWARE_SOLL_KONTO_GELDTRANSIT_KASSE));
-            fields.put("Habenkonto", toStringIfNotNull(bc.LEXWARE_HABEN_KONTO_GELDTRANSIT_KASSE));
-            fields.put("Steuerschlüssel", "");
-            fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
-            fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
-            fields.put("Buchungsbetrag", zaehlprotokollEinnahmen.get(exportIndex).get(i).toString());
-            fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
-            // Write to the CSV file
-            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"", "ISO-8859-1");
+            buchungsbetrag = zaehlprotokollEinnahmen.get(exportIndex).get(i);
+            // We must omit zero values in the table since Lexware throws errors then
+            if (buchungsbetrag.compareTo(new BigDecimal("0")) != 0) {
+                // Prepare the data for writing
+                fields = new HashMap<String, String>();
+                fields.put("Belegdatum", formattedDate);
+                fields.put("Belegnummernkreis", bc.LEXWARE_BELEGNUMMERNKREIS);
+                fields.put("Belegnummer", id); // Laufende Nummer
+                fields.put("Buchungstext", bc.LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KASSE);
+                fields.put("Sollkonto", toStringIfNotNull(bc.LEXWARE_SOLL_KONTO_GELDTRANSIT_KASSE));
+                fields.put("Habenkonto", toStringIfNotNull(bc.LEXWARE_HABEN_KONTO_GELDTRANSIT_KASSE));
+                fields.put("Steuerschlüssel", "");
+                fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
+                fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
+                fields.put("Buchungsbetrag", buchungsbetrag.toString());
+                fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
+                // Write to the CSV file
+                CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"", "ISO-8859-1");
+            }
             
             // 4. Row for the cashier difference
-            // Prepare the data for writing
-            fields = new HashMap<String, String>();
-            fields.put("Belegdatum", formattedDate);
-            fields.put("Belegnummernkreis", bc.LEXWARE_BELEGNUMMERNKREIS);
-            fields.put("Belegnummer", id); // Laufende Nummer
-            fields.put("Buchungstext", bc.LEXWARE_BUCHUNGSTEXT_KASSENDIFFERENZ);
-            fields.put("Sollkonto", toStringIfNotNull(bc.LEXWARE_SOLL_KONTO_KASSENDIFFERENZ));
-            fields.put("Habenkonto", toStringIfNotNull(bc.LEXWARE_HABEN_KONTO_KASSENDIFFERENZ));
-            fields.put("Steuerschlüssel", "");
-            fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
-            fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
-            fields.put("Buchungsbetrag", zaehlprotokollDifferenzen.get(exportIndex).get(i).toString());
-            fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
-            // Write to the CSV file
-            CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"", "ISO-8859-1");
+            buchungsbetrag = zaehlprotokollDifferenzen.get(exportIndex).get(i);
+            // We must omit zero values in the table since Lexware throws errors then
+            if (buchungsbetrag.compareTo(new BigDecimal("0")) != 0) {
+                // Prepare the data for writing
+                fields = new HashMap<String, String>();
+                fields.put("Belegdatum", formattedDate);
+                fields.put("Belegnummernkreis", bc.LEXWARE_BELEGNUMMERNKREIS);
+                fields.put("Belegnummer", id); // Laufende Nummer
+                fields.put("Buchungstext", bc.LEXWARE_BUCHUNGSTEXT_KASSENDIFFERENZ);
+                fields.put("Sollkonto", toStringIfNotNull(bc.LEXWARE_SOLL_KONTO_KASSENDIFFERENZ));
+                fields.put("Habenkonto", toStringIfNotNull(bc.LEXWARE_HABEN_KONTO_KASSENDIFFERENZ));
+                fields.put("Steuerschlüssel", "");
+                fields.put("Kostenstelle 1", bc.LEXWARE_KOSTENSTELLE_1);
+                fields.put("Kostenstelle 2", bc.LEXWARE_KOSTENSTELLE_2);
+                fields.put("Buchungsbetrag", buchungsbetrag.toString());
+                fields.put("Zusatzangaben", toStringIfNotNull(bc.LEXWARE_ZUSATZANGABEN));
+                // Write to the CSV file
+                CSVExport.writeToCSV(filepathString, fields, colDefs, this.bc, ";", "\r\n", ',', '.', "\"", "ISO-8859-1");
+            }
         }
-
 
         logger.info("Written CSV file to " + filepathString);
     }
