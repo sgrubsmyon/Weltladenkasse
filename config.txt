@@ -17,10 +17,10 @@ currencySymbol = €
 rowsPerPage = 32
 sollMuenzKassenstand = 50.00
 sollScheinKassenstand = 100.00
-exportDirAbrechnungTag = 'Dokumente/Kasse/Tagesabrechnungen/'yyyy'/'MM MMMM
-exportDirAbrechnungMonat = 'Dokumente/Kasse/Monatsabrechnungen/'yyyy
-exportDirAbrechnungJahr = 'Dokumente/Kasse/Jahresabrechnungen'
-exportDirBestellung = 'Dokumente/Bestellungen/Bestellungen FHZ 'yyyy
+exportDirAbrechnungTag = 'Nextcloud/Team Ladenbetrieb/Kasse/Tagesabrechnungen/'yyyy'/'MM MMMM
+exportDirAbrechnungMonat = 'Nextcloud/Team Ladenbetrieb/Kasse/Monatsabrechnungen/'yyyy
+exportDirAbrechnungJahr = 'Nextcloud/Team Ladenbetrieb/Kasse/Jahresabrechnungen'
+exportDirBestellung = 'Nextcloud/Team Ladenbetrieb/Bestellungen/Bestellungen FHZ 'yyyy
 
 ###################################################################
 # Statische Kassendaten, die für TSE und DSFinV-K benötigt werden #
@@ -30,7 +30,7 @@ exportDirBestellung = 'Dokumente/Bestellungen/Bestellungen FHZ 'yyyy
 # Siehe auch https://tse-support.cryptovision.com/confluence/display/TDI/clientId+oder+Seriennummer+des+Aufzeichnungssystems
 
 # Finanzdatenverzeichnis für den Export der TSE und DSFinV-K-Daten:
-finDatDir = .Weltladenkasse_Finanzdaten
+finDatDir = Nextcloud/Team Ladenbetrieb/Kasse/Finanzdaten
 
 ##################
 # Schlüsselfelder
@@ -92,7 +92,7 @@ KASSE_SERIENNR = YLUE036019
 # Markenbezeichnung der eingesetzten Kassen-Software: (https://github.com/sgrubsmyon/Weltladenkasse)
 KASSE_SW_BRAND = Weltladenkasse
 # Version der eingesetzten Kassen-Software:
-KASSE_SW_VERSION = v2.0.4
+KASSE_SW_VERSION = v2.0.5
 KASSE_BASISWAEH_CODE = EUR
 
 ###############################
@@ -112,7 +112,7 @@ TERMINAL_SERIENNR = F4N0CV585724171
 # Markenbezeichnung der eingesetzten Kassen-Software: (https://github.com/sgrubsmyon/Weltladenkasse)
 TERMINAL_SW_BRAND = Weltladenkasse
 # Version der eingesetzten Kassen-Software:
-TERMINAL_SW_VERSION = v2.0.4
+TERMINAL_SW_VERSION = v2.0.5
 
 ###########################
 # Stamm_Agenturen (pa.csv)
@@ -131,3 +131,33 @@ TERMINAL_SW_VERSION = v2.0.4
 # eingesetzt wird.
 TSE_ID = 2
 TSE_PD_ENCODING = UTF-8
+
+#################################################
+
+###########################
+# Lexware Buchhaltung plus
+###########################
+
+LEXWARE_BELEGDATUM_FORMAT = dd.MM.yyyy
+LEXWARE_BELEGNUMMERNKREIS = K
+LEXWARE_BUCHUNGSTEXT_ERLOESE = Erlöse {{MWST}} USt.
+LEXWARE_BUCHUNGSTEXT_ERLOESE_OHNE_STEUER = Erlöse ohne Steuer
+LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KARTE = Geldtransit Kartenzahlung Ausgang
+LEXWARE_BUCHUNGSTEXT_GELDTRANSIT_KASSE = Geldtransit Kasse Ausgang
+LEXWARE_BUCHUNGSTEXT_KASSENDIFFERENZ = Kassendifferenz
+LEXWARE_SOLL_KONTO_ERLOESE = 1600
+LEXWARE_SOLL_KONTO_GELDTRANSIT_KARTE = 1460
+LEXWARE_SOLL_KONTO_GELDTRANSIT_KASSE = 1461
+LEXWARE_SOLL_KONTO_KASSENDIFFERENZ = 1600
+LEXWARE_HABEN_KONTO_ERLOESE_OHNE_STEUER = 4200
+LEXWARE_HABEN_KONTO_ERLOESE_REDUZIERTE_STEUER = 4300
+LEXWARE_HABEN_KONTO_ERLOESE_NORMALE_STEUER = 4400
+LEXWARE_HABEN_KONTO_GELDTRANSIT_KARTE = 1600
+LEXWARE_HABEN_KONTO_GELDTRANSIT_KASSE = 1600
+LEXWARE_HABEN_KONTO_KASSENDIFFERENZ = 6969
+LEXWARE_STEUERSCHLUESSEL_OHNE_STEUER = 
+LEXWARE_STEUERSCHLUESSEL_REDUZIERTE_STEUER = 2
+LEXWARE_STEUERSCHLUESSEL_NORMALE_STEUER = 3
+LEXWARE_KOSTENSTELLE_1 =
+LEXWARE_KOSTENSTELLE_2 =
+LEXWARE_ZUSATZANGABEN = 

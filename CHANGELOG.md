@@ -1,14 +1,25 @@
 ## Übersicht über die Versionen und ihre Verwendung
 
-+-----------------------------------+
-| Version | `Z_NR` von | `Z_NR` bis |
-+---------+------------+------------+
-| v2.0.0  | 1511       | 1533       |
-| v2.0.1  | 1534       | 1535       |
-| v2.0.2  | 1536       | 1888       |
-| v2.0.3  | 1889       | 2091       |
-| v2.0.4  | 2092       |            |
-+-----------------------------------+
++-----------------------------------+------------------------------------+
+| Version | `Z_NR` von | `Z_NR` bis | Datum des Wechsels auf die Version |
++---------+------------+------------+------------------------------------+
+| v2.0.0  | 1511       | 1533       | 02.04.2021                         |
+| v2.0.1  | 1534       | 1535       | 06.05.2021                         |
+| v2.0.2  | 1536       | 1888       | 09.05.2021                         |
+| v2.0.3  | 1889       | 2091       | 24.07.2022                         |
+| v2.0.4  | 2092       | 2443       | 02.04.2023                         |
+| v2.0.5  | 2444       |            | 22.06.2024                         |
++-----------------------------------+------------------------------------+
+
+## v2.0.5
+
+* Header des Kassenbons kann konfiguriert werden
+* Kassenbon kann auch dann gedruckt werden, wenn TSE ausfiel während Tagesabschluss
+* Tagesabrechnungen werden als Lexware-kompatible CSV-Datei rausgeschrieben
+* Sinnvollere Fehlermeldung, wenn TSE während Tagesabschluss ausfällt
+* Export der Tagesabrechnungen und TSE-Daten in die Nextcloud
+* Letzte Rechnung mit v2.0.4: Nr. 49238 am 22.06.2024 (bis `Z_NR`/`abrechnung_tag.id` 2443)
+* Erste Rechnung mit v2.0.5: Nr. 49239 am 22.06.2024 (ab `Z_NR`/`abrechnung_tag.id` 2444)
 
 ## v2.0.4
 
@@ -25,7 +36,7 @@
   * EC-Schwelle (Mindestwert für EC-Zahlungen) von 20 € auf 10 € herabgesetzt.
   * Implementierung der CSV-Exports in die Dateien:
     * `businesscases.csv` (Kassenabschlussmodul)
-  * Einmaliges rückwirkendes Beschreiben Datei `businesscases.csv` für die Daten aus den Perioden von v2.0.0 und v2.0.1
+  * Einmaliges rückwirkendes Beschreiben Datei `businesscases.csv` für die Daten aus den Perioden von v2.0.0 und v2.0.1 und v2.0.2
   * Letzte Rechnung mit v2.0.2: Nr. 40047 am 24.07.2022 (bis `Z_NR`/`abrechnung_tag.id` 1888)
   * Erste Rechnung mit v2.0.3: Nr. 40047 am 25.07.2022 (ab `Z_NR`/`abrechnung_tag.id` 1889)
 
