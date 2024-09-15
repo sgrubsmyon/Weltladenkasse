@@ -7,7 +7,7 @@
 
 '''
 1.) Aktuellen DB-Dump einspielen:
-    mysql --local-infile -hlocalhost -ukassenadmin -p -e "source DB_Dump_kasse_XXX.sql" kasse
+    ./preisaenderung_00_import_recent_db_dump.sh
 2.) In Verzeichnis der Preisänderung wechseln.
 3.) Skript "convert_wlb_data.py" aufrufen:
     ../../../git/prod_list_convert/wlb/convert_wlb_data.py
@@ -79,10 +79,10 @@
     verändern.
 19.) Umbenennungen etc. z.B. aus `change_name.txt` anwenden.
 19.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
-    "preisänderung_geänderte_preise_sortiment.csv" auswählen. Neue Preisliste
-    speichern und Koordination schicken.
+    "preisänderung_geänderte_preise_sortiment.csv" auswählen. Neue Preislisten
+    mit "Artikel drucken" speichern (ODS-Dateien) und an Koordination schicken.
 20.) Lokal Skript "../../../git/preisaenderung_02_dump_db.sh" ausführen.
-21.) Auf Kassen-Server Skript "import_and_start_db.sh" ausführen.
+21.) Auf Kassen-Server Skript "./import_and_start_db.sh" ausführen.
 
 ###
 
