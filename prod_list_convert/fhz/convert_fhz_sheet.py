@@ -192,6 +192,7 @@ def main():
         .astype(int).astype(str)
     fhz['Artikelnummer'] = fhz['Artikelnummer'].astype(str)
     fhz['Menge (kg/l/St.)'] = fhz['Menge (kg/l/St.)'].astype(float)
+    fhz.loc[ [ vpe is None for vpe in fhz['VPE'] ] ] = 0
     fhz['VPE'] = fhz['VPE'].astype(int)
     fhz['Empf. VK-Preis'] = fhz['Empf. VK-Preis'].astype(float)
 
