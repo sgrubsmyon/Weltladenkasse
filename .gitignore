@@ -13,3 +13,5 @@ __pycache__/
 .idea/
 out/
 git.iml
+
+preisaenderung_00_import_recent_db_dump_with_credentials.sh
