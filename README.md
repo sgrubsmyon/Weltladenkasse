@@ -36,52 +36,63 @@ java -jar Weltladenkasse_v2.0.5.jar
 Eine Version des Java Runtime Environment (JRE) muss installiert sein,
 um die Software ausführen zu können (z.B. mit dem Befehl `sudo apt-get install default-jre`).
 
-Auf Windows-System installieren:
---------------------------------
+Install on a Windows system:
+----------------------------
 
-1. Falls noch nicht geschehen, Java von http://www.java.com/de/ herunterladen und installieren.
+1. If not yet done, download Java from https://www.java.com/ and install it.
 
-2. Falls noch nicht geschehen, MySQL von http://dev.mysql.com/downloads/windows/installer/ herunterladen und installieren.
+2. Download MariaDB from https://mariadb.org and install it.
 
-  * Port in der Firewall nicht öffnen.
+  * Do not open ports in the firewall.
 
-  * "Development Default" oder (vermutlich besser) "Server only" auswählen
+  * Choose "Development Default" or (presumably better) "Server only"
 
-  * "Development Machine" auswählen
+  * Choose "Development Machine"
 
-  * Root-Passwort setzen und 2 User erstellen (Passwörter merken oder notieren):
-  Die Usernamen müssen **EXAKT** stimmen!
-    1. Username: mitarbeiter (klein geschrieben), Host: localhost, Role: Backup Admin
-    2. Username: kassenadmin (klein geschrieben), Host: localhost, Role: DB Admin
+  * Set root password (write down or memorise password):
 
-  * Ansonsten Vorgaben übernehmen.
+3. Open MariaDB console app and run these commands to create two users (change password to something appropriate and write down or memorise passwords):
 
-3. Im Ordner `mysql` (befindet sich im selben Ordner wie diese Datei) auf `generateDB.bat` doppelklicken.
+```sql
+DROP USER IF EXISTS 'kassenadmin'@'localhost';
+DROP USER IF EXISTS 'mitarbeiter'@'localhost';    
+CREATE USER 'kassenadmin'@'localhost' IDENTIFIED BY 'CHOOSE_YOUR_OWN_PWD';
+CREATE USER 'mitarbeiter'@'localhost' IDENTIFIED BY 'CHOOSE_YOUR_OWN_PWD';
+```
 
-  * Root-Passwort (bei MySQL-Installation gesetzt) dreimal eingeben.
+4. Then run some commands in old-school Windows command prompt (PowerShell not working):
 
-  * Bei Fehlern (wenn nicht dreimal nach Passwort gefragt wurde) die Datei
-  `generateDB.bat` bearbeiten (mit Editor/Notepad) und den Pfad zu MySQL
-  anpassen (muss auf Verzeichnis mit `mysql.exe` und `mysqldump.exe`
-  verweisen).
+5. First change directory to the subdirectory `mysql` of the cloned git repository, e.g.:
 
-4. Datei `config.properties` löschen und Datei `config_Windows.properties` in `config.properties` umbenennen.
+```batch
+cd "C:\Users\username\Documents\GitHub\Weltladenkasse\mysql"
+```
 
-5. Ggf. Pfad zu MySQL in `config.properties` anpassen (muss auf Verzeichnis mit `mysql.exe` und
-      `mysqldump.exe` verweisen).
+6. Find out the path to the mariadb executable `mysql.exe` using Windows explorer. Copy the path and use it in the following commands, e.g.:
 
-6. Ggf. Pfad zu soffice (LibreOffice/OpenOffice) in `config.properties`
-   anpassen (muss auf Verzeichnis mit `soffice.exe` verweisen). Dies wird
-   nur benörigt, wenn man Quittungen drucken möchte.
+```batch
+"C:\Program Files\MariaDB 10.6\bin\mysql.exe" --local-infile -h localhost -u root -p < generateDB.sql
+"C:\Program Files\MariaDB 10.6\bin\mysql.exe" --local-infile -h localhost -u root -p < fillWithInternalValues.sql
+"C:\Program Files\MariaDB 10.6\bin\mysql.exe" --local-infile -h localhost -u root -p < fillWithExampleData.sql
+```
 
-7. Bei Bedarf Namen des Quittungsdruckers in Datei `config.properties` anpassen
+7. Delete file `config.properties` and rename `config_Windows.properties` to `config.properties`.
 
-Software auf Windows ausführen:
--------------------------------
+8. Change path to MySQL in `config.properties` (must point to directory containing `mysql.exe` and
+   `mysqldump.exe`, e.g. `C:\Program Files\MariaDB 10.6\bin\`).
 
-Zum Starten der Software auf `Weltladenbesteller_vX.X.X.jar` (für
-Bestell-Programm) oder `Weltladenkasse_vX.X.X.jar` (für Kassier-Software)
-doppelklicken. Danach Mitarbeiter-Passwort (oben notiert) eingeben.
+9. Change path to soffice (LibreOffice/OpenOffice) in `config.properties`
+   (must point to directory containing `soffice.exe`). This is only required
+   if you want to print receipts.
+
+10. Optionally change name of the receipt printer ('Quittungsdrucker') in file `config.properties`.
+
+Run Software on Windows:
+------------------------
+
+To run the software, double click on `Weltladenbesteller_vX.X.X.jar` (for ordering
+app) or `Weltladenkasse_vX.X.X.jar` (for point-of-sale app).
+Then enter password of user 'mitarbeiter' (written down in an above step).
 
 Datenbank-Daten im-/exportieren:
 --------------------------------
