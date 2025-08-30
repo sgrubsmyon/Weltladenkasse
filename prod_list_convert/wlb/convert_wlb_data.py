@@ -4,16 +4,11 @@
 from optparse import OptionParser
 from getpass import getpass
 
-# https://dev.mysql.com/downloads/connector/python/
-import mysql.connector
-
-# from sqlalchemy import create_engine
+# Need to: pip3 install mariadb SQLAlchemy
+import sqlalchemy
 
 import numpy as np
 import pandas as pd
-import re
-import os
-import warnings
 
 
 def main():
@@ -42,19 +37,10 @@ def main():
     # Load data #
     #############
 
-    conn = mysql.connector.connect(host=options.HOST, user="mitarbeiter",
-                                   password=pwd, db="kasse")
+    engine = sqlalchemy.create_engine(
+            "mariadb+mariadbconnector://mitarbeiter:%s@%s:3306/kasse" % (pwd, options.HOST)
+            )
 
-    # Need to:
-    #   sudo apt install libmariadb3 libmariadb-dev
-    #   pip install mariadb
-    # db_connection_str = f"mariadb+mariadbconnector://mitarbeiter:{pwd}@{options.HOST}/kasse" # optional: ...:port/kasse
-    # db_connection_str = 'mysql+mysql.connector://mitarbeiter:{pwd}@{options.HOST}/kasse'
-    # db_connection_str = f"mariadb:///?User=mitarbeiter&Password={pwd}&Database=kasse&Server={options.HOST}" # optional: &Port=3306
-    # db_connection = create_engine(db_connection_str)
-    # print(db_connection)
-
-    # cursor = conn.cursor()
     query = ("SELECT "
              "produktgruppe.produktgruppen_name, lieferant.lieferant_name, artikel.artikel_nr, "
              "artikel.artikel_name, artikel.kurzname, artikel.menge, artikel.einheit, artikel.sortiment, "
@@ -72,16 +58,7 @@ def main():
              ") AND "
              "artikel.aktiv = TRUE AND artikel.artikel_nr NOT LIKE 'SONSTIGES%';")  # AND a.aktiv = TRUE
     # print(query)
-    wlb = pd.read_sql(query, conn)
-
-    # cursor.execute(query)
-    # ids, numbers, aktivs = np.array(cursor.fetchall()).transpose()
-    # print(np.array(cursor.fetchall()).transpose())
-    # ids = np.array(ids, dtype=int)
-    # aktivs = np.array(ids, dtype=bool)
-    # cursor.close()
-
-    conn.close()
+    wlb = pd.read_sql(query, engine)
 
     # Convert some columns, esp. boolean:
     wlb["sortiment"] = ["Ja" if b == 1 else "Nein" for b in wlb["sortiment"]]
