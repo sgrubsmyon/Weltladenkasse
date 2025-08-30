@@ -414,7 +414,7 @@ def main():
                 print("")
                 sth_printed = True
             fhz_preis = specialTreatment(fhz_row, fhz_preis, wlb_neu, name)
-            fhz_preis = returnRoundedPrice(fhz_preis)
+            #fhz_preis = returnRoundedPrice(fhz_preis) # Do not round anymore
             if (abs(fhz_preis - wlb_preis) > 0.):
                 # price seems to deviate more than usual
                 count += 1
@@ -542,32 +542,33 @@ def main():
             print("---------------")
     print(count, "Artikel haben geänderten Preis.")
 
-    #################################
-    # Round up all articles' prices #
-    #################################
+    ##################################
+    ## Round up all articles' prices #
+    ##################################
+    # No, not anymore
 
-    # Round up all articles' prices:
-    count = 0
-    print('\n\n\n')
-    for i in range(len(wlb_neu)):
-        wlb_row = wlb_neu.iloc[i]
-        name = wlb_row.name
-        alter_preis = Decimal(wlb_row['VK-Preis'])
-        neuer_preis = returnRoundedPrice(alter_preis)
-        if (not alter_preis.is_nan() and not neuer_preis.is_nan() and
-                neuer_preis != alter_preis):
-            count += 1
-            print("Runde Preis von:", str(alter_preis), " zu:", str(neuer_preis),
-                  '(%s, %s)' % (wlb_row['Bezeichnung | Einheit'],
-                                wlb_row['Sortiment']))
-            wlb_neu.loc[name, 'VK-Preis'] = str(neuer_preis)
-            geaenderte_preise = pd.concat(
-                [geaenderte_preise, wlb_neu.iloc[[i]]])
-            irgendeine_aenderung = pd.concat(
-                [irgendeine_aenderung, wlb_neu.iloc[[i]]])
-    print(count, "VK-Preise wurden gerundet.")
-    geaenderte_preise = removeEmptyRow(geaenderte_preise)
-    irgendeine_aenderung = removeEmptyRow(irgendeine_aenderung)
+    ## Round up all articles' prices:
+    #count = 0
+    #print('\n\n\n')
+    #for i in range(len(wlb_neu)):
+    #    wlb_row = wlb_neu.iloc[i]
+    #    name = wlb_row.name
+    #    alter_preis = Decimal(wlb_row['VK-Preis'])
+    #    neuer_preis = returnRoundedPrice(alter_preis)
+    #    if (not alter_preis.is_nan() and not neuer_preis.is_nan() and
+    #            neuer_preis != alter_preis):
+    #        count += 1
+    #        print("Runde Preis von:", str(alter_preis), " zu:", str(neuer_preis),
+    #              '(%s, %s)' % (wlb_row['Bezeichnung | Einheit'],
+    #                            wlb_row['Sortiment']))
+    #        wlb_neu.loc[name, 'VK-Preis'] = str(neuer_preis)
+    #        geaenderte_preise = pd.concat(
+    #            [geaenderte_preise, wlb_neu.iloc[[i]]])
+    #        irgendeine_aenderung = pd.concat(
+    #            [irgendeine_aenderung, wlb_neu.iloc[[i]]])
+    #print(count, "VK-Preise wurden gerundet.")
+    #geaenderte_preise = removeEmptyRow(geaenderte_preise)
+    #irgendeine_aenderung = removeEmptyRow(irgendeine_aenderung)
 
     # Check for duplicates in geaenderte_preise:
     gp_dup_indices = indexDuplicationCheck(geaenderte_preise)
@@ -592,6 +593,7 @@ def main():
     print('\n\n\n')
     for i in range(len(fhz)):
         fhz_row = fhz.iloc[i]
+        wlb_row = {'Bezeichnung | Einheit': 'Nicht gefunden'}
         name = fhz_row.name
         fhz_preis = Decimal(fhz_row['Empf. VK-Preis'])
         try:
@@ -642,7 +644,7 @@ def main():
         except KeyError:
             count += 1
             wlb_neue_artikel = pd.concat([wlb_neue_artikel, fhz.iloc[[i]]])
-            fhz_preis = returnRoundedPrice(fhz_preis)
+            #fhz_preis = returnRoundedPrice(fhz_preis) # Do not round anymore
             wlb_neue_artikel.loc[name, 'VK-Preis'] = str(fhz_preis)
             print('"%s" nicht in WLB. %s' %
                   (fhz_row['Bezeichnung | Einheit'], name))
