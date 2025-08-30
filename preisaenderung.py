@@ -303,10 +303,11 @@ def main():
     ###################
 
     # Remove all newlines ('\n') from all fields
-    fhz.replace(to_replace='\n', value=', ', inplace=True, regex=True)
-    wlb.replace(to_replace='\n', value=', ', inplace=True, regex=True)
-    fhz.replace(to_replace=';', value=',', inplace=True, regex=True)
-    wlb.replace(to_replace=';', value=',', inplace=True, regex=True)
+    pd.set_option('future.no_silent_downcasting', True) # see https://stackoverflow.com/questions/79226735/pandas-replace-and-downcasting-deprecation-since-version-2-2-0
+    fhz.replace(to_replace='\n', value=', ', inplace=True, regex=True) # Maybe add `.infer_objects(copy=False)`?
+    wlb.replace(to_replace='\n', value=', ', inplace=True, regex=True) # Maybe add `.infer_objects(copy=False)`?
+    fhz.replace(to_replace=';', value=',', inplace=True, regex=True) # Maybe add `.infer_objects(copy=False)`?
+    wlb.replace(to_replace=';', value=',', inplace=True, regex=True) # Maybe add `.infer_objects(copy=False)`?
 
     # homogenize Lieferanten:
     fhz.index = pd.MultiIndex.from_tuples(list(map(lambda i: ('El Puente', i[1])
