@@ -139,10 +139,10 @@ public class Rabattaktionen extends ArtikelGrundlage implements ChangeListener, 
         Calendar earlyCalendar = Calendar.getInstance();
         earlyCalendar.set(Calendar.YEAR, earlyYear);
         earlyCalendar.set(Calendar.MONTH, earlyMonth-1);
-        earlyCalendar.set(Calendar.DAY_OF_MONTH, earlyDay-1); // for strange reasons, we need day-1
-        oneDayBeforeEarliestDate = earlyCalendar.getTime();
         earlyCalendar.set(Calendar.DAY_OF_MONTH, earlyDay);
         earliestDate = earlyCalendar.getTime();
+        earlyCalendar.add(Calendar.DATE, -1); // for strange reasons, we need day-1
+        oneDayBeforeEarliestDate = earlyCalendar.getTime();
 
         Date now = nowDate(); // current date
         if ( earlyYear == 0 ){
