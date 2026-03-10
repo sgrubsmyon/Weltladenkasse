@@ -2160,7 +2160,12 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
 
         if (ec == false) { // if Barzahlung
             insertIntoKassenstand(rechnungsNr);
-            printQuittung(rechnungsNr, tx, tseStatusValues); // always print receipt, it's not optional anymore
+            int answer = JOptionPane.showConfirmDialog(mainWindow,
+                "Kund*in fragen: Braucht sie/er eine Quittung?",
+                "Quittung drucken?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (answer == JOptionPane.YES_OPTION) {
+                printQuittung(rechnungsNr, tx, tseStatusValues); // always print receipt, it's not optional anymore
+            }
         } else { // EC-Zahlung
             printQuittung(rechnungsNr, tx, tseStatusValues);
             // Thread.sleep(5000); // wait for 5 seconds, no, printer is too slow anyway and this blocks UI unnecessarily
