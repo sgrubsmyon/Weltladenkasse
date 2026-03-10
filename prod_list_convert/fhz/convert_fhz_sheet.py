@@ -140,7 +140,7 @@ def main():
     no_menge = fhz['Menge (kg/l/St.)'].isnull()
     fhz.loc[no_menge, 'Menge (kg/l/St.)'] = 1  # default value
     # deviations from default
-    pattern = re.compile(r'(\b[0-9]+) St')
+    pattern = re.compile(r'[\\n\W]([0-9]+) St')
     # caveat: this only works if there is exactly one matching row
     muskatnuss = fhz.Bezeichnung.str.contains('Muskatnu')
     muskatnuss_no_menge = no_menge & muskatnuss
