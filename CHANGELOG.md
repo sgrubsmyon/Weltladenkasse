@@ -22,6 +22,8 @@
   antworten und wird dadurch angeregt, den/die Kund\*in zu fragen. Bei "Ja" wird die Quittung gedruckt. So werden
   Ressourcen gespart, aber die Fiskal-Transparenz bleibt trotzdem bestehen, wenn immer eine Quittung angeboten wird.
 * Bugfix: In Rabattaktionen war fehlerhafter Code zur Bestimmung des frühesten Datums für den Datumsfilter-Spinner
+* Letzte Rechnung mit v2.0.5: Nr. ????? am ??.03.2026 (bis `Z_NR`/`abrechnung_tag.id` ????)
+* Erste Rechnung mit v2.0.6: Nr. ????? am ??.03.2026 (ab `Z_NR`/`abrechnung_tag.id` ????)
 
 ## v2.0.5
 
