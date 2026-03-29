@@ -244,12 +244,13 @@ public class WeltladenTSE extends WindowContent {
 
     public void showTSEFailWarning() {
         JOptionPane.showMessageDialog(this.mainWindow,
-            "ACHTUNG: Die TSE funktioniert nicht!!!\n"+
+            "TSE ausgefallen.\n"+
             "Grund:   '"+failReason+"'\n"+
-            "Bitte schließe jetzt das Kassenprogramm, versuche den Fehler zu beheben, und starte es dann erneut.\n"+
-            "Falls der Fehler nicht verschwindet, darf nur ausnahmsweise diese Warnung ignoriert und ohne TSE kassiert werden!\n"+
-            "Bitte dann sofort den/die Administrator*in informieren, damit das Problem so schnell wie möglich behoben wird!!!",
-            "Wirklich ohne TSE kassieren?", JOptionPane.WARNING_MESSAGE);
+            "Die TSE ist ausgefallen. Das kommt leider hin und wieder vor und wir können es nicht verhindern.\n"+
+            "Wenn möglich, Rechner neu starten, damit die TSE wieder arbeitet. Wenn du gerade mitten in einem\n"+
+            "Vorgang bist und Daten verloren gehen würden (z.B. bei der Tagesabrechnung), dann mache erst mal\n"+
+            "ohne TSE weiter.",
+            "Ohne TSE weitermachen?", JOptionPane.WARNING_MESSAGE);
     }
 
     /**
