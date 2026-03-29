@@ -8,8 +8,20 @@
 | v2.0.2  | 1536       | 1888       | 09.05.2021                         |
 | v2.0.3  | 1889       | 2091       | 24.07.2022                         |
 | v2.0.4  | 2092       | 2443       | 02.04.2023                         |
-| v2.0.5  | 2444       |            | 22.06.2024                         |
+| v2.0.5  | 2444       | ????       | 22.06.2024                         |
+| v2.0.6  | ????       |            | 29.03.2026                         |
 +-----------------------------------+------------------------------------+
+
+## v2.0.6
+
+* Die Hinweise bei der Geldentnahme aus der Kasse nach Tagesabschluss sind nun etwas prägnanter und der Hinweis,
+  dass möglichst kleine Geldscheine in der Kasse verbleiben sollen, ist mit roter Farbe hervorgehoben
+* Die Warnung beim Ausfall der TSE reflektiert nun besser die gelebte Praxis und ordnet den Vorfall besser ein
+* Anstatt Quittungen zu drucken, wenn der/die Kund\*in sie gar nicht braucht, wird der/die Kassierer\*in bei jedem
+  Rechnungsabschluss gefragt, ob der/die Kund*in eine Quittung benötigt. Der/die Kassierer\*in muss mit "Ja" oder "Nein"
+  antworten und wird dadurch angeregt, den/die Kund\*in zu fragen. Bei "Ja" wird die Quittung gedruckt. So werden
+  Ressourcen gespart, aber die Fiskal-Transparenz bleibt trotzdem bestehen, wenn immer eine Quittung angeboten wird.
+* Bugfix: In Rabattaktionen war fehlerhafter Code zur Bestimmung des frühesten Datums für den Datumsfilter-Spinner
 
 ## v2.0.5
 
