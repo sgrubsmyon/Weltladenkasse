@@ -117,19 +117,17 @@ class KassenstandZuruecksetzenDialog extends DialogWindow
                 "Vorschlag:</p>\n"+
                 "<ul>\n"+
                 "  <li><span class='red'>"+bc.priceFormatter(scheinDelta)+" "+bc.currencySymbol+"</span> Scheingeld ";
-	if (!muenzMangel & !scheinMangel) {
-		t = t + "(am besten so, dass fünf 10 €-Scheine und zehn 5 €-Scheine verbleiben) ";
-	}
+    t = t + "<span class='red'>in möglichst großen Scheinen</span> ";
 	t = t + "und</li>\n"+
-                "  <li><span class='red'>"+bc.priceFormatter(muenzDelta)+" "+bc.currencySymbol+"</span> Münzgeld.</li>\n"+
-                "</ul>\n";
+            "  <li><span class='red'>"+bc.priceFormatter(muenzDelta)+" "+bc.currencySymbol+"</span> Münzgeld.</li>\n"+
+            "</ul>\n";
 	if (muenzMangel & !scheinMangel) {
 		t = t + "<p><b>NACH</b> der Geldentnahme zu beachten:</p>\n"+
 			"<p>Weniger als <span class='blue'>"+bc.priceFormatter(bc.sollMuenzKassenstand)+" "+bc.currencySymbol+"</span> Münzgeld in der Kasse! "+
 			"Bitte versuche, Scheine in Münzen zu tauschen.</p>\n"+
 			"<p>Vorschlag: Nimm <span class='red'>"+bc.priceFormatter(muenzTausch)+" "+bc.currencySymbol+"</span> Scheingeld aus der Kasse und tausche "+
-			"es mit Münzgeld aus der Wechselgeldkasse "+
-			"(am besten so, dass fünf 10 €-Scheine und zehn 5 €-Scheine in der Kasse verbleiben).</p>\n"+
+			"es mit Münzgeld aus der Wechselgeldkasse.</p>\n"+
+			"<p><span class='red'>Nimm dabei möglichst große Scheine.</span></p>\n"+
 			"<p>Die Wechselgeldkasse befindet sich hinten im Lager (siehe Wiki).</p>\n"+
 			"<p><b>WICHTIG:</b> Der Betrag in der Kasse darf sich durchs Tauschen nicht verändern und soll "+
 			"immer noch <span class='blue'>"+bc.priceFormatter(sollKassenstand)+" "+bc.currencySymbol+"</span> betragen!</p>\n";
@@ -138,8 +136,8 @@ class KassenstandZuruecksetzenDialog extends DialogWindow
 			"<p>Weniger als <span class='blue'>"+bc.priceFormatter(bc.sollScheinKassenstand)+" "+bc.currencySymbol+"</span> Scheingeld in der Kasse! "+
 			"Bitte versuche, Münzen in Scheine zu tauschen.</p>\n"+
 			"<p>Vorschlag: Nimm <span class='red'>"+bc.priceFormatter(scheinTausch)+" "+bc.currencySymbol+"</span> Münzgeld aus der Kasse und tausche "+
-			"es mit Scheingeld aus der Wechselgeldkasse "+
-			"(am besten so, dass sich danach fünf 10 €-Scheine und zehn 5 €-Scheine in der Kasse befinden).</p>\n"+
+			"es mit Scheingeld aus der Wechselgeldkasse.</p>\n"+
+			"<p><span class='red'>Nimm dabei möglichst kleine Scheine (5 € und 10 €).</span></p>\n"+
 			"<p>Die Wechselgeldkasse befindet sich hinten im Lager (siehe Wiki).</p>\n"+
 			"<p><b>WICHTIG:</b> Der Betrag in der Kasse darf sich durchs Tauschen nicht verändern und soll "+
 			"immer noch <span class='blue'>"+bc.priceFormatter(sollKassenstand)+" "+bc.currencySymbol+"</span> betragen.</p>\n";
