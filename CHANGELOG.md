@@ -8,8 +8,8 @@
 | v2.0.2  | 1536       | 1888       | 09.05.2021                         |
 | v2.0.3  | 1889       | 2091       | 24.07.2022                         |
 | v2.0.4  | 2092       | 2443       | 02.04.2023                         |
-| v2.0.5  | 2444       | ????       | 22.06.2024                         |
-| v2.0.6  | ????       |            | 29.03.2026                         |
+| v2.0.5  | 2444       | 2962       | 22.06.2024                         |
+| v2.0.6  | 2963       |            | 29.03.2026                         |
 +-----------------------------------+------------------------------------+
 
 ## v2.0.6
@@ -22,8 +22,8 @@
   antworten und wird dadurch angeregt, den/die Kund\*in zu fragen. Bei "Ja" wird die Quittung gedruckt. So werden
   Ressourcen gespart, aber die Fiskal-Transparenz bleibt trotzdem bestehen, wenn immer eine Quittung angeboten wird.
 * Bugfix: In Rabattaktionen war fehlerhafter Code zur Bestimmung des frühesten Datums für den Datumsfilter-Spinner
-* Letzte Rechnung mit v2.0.5: Nr. ????? am ??.03.2026 (bis `Z_NR`/`abrechnung_tag.id` ????)
-* Erste Rechnung mit v2.0.6: Nr. ????? am ??.03.2026 (ab `Z_NR`/`abrechnung_tag.id` ????)
+* Letzte Rechnung mit v2.0.5: Nr. 57937 am 28.03.2026 (bis `Z_NR`/`abrechnung_tag.id` 2962)
+* Erste Rechnung mit v2.0.6: Nr. 57938 am 29.03.2026 (ab `Z_NR`/`abrechnung_tag.id` 2963)
 
 ## v2.0.5
 
