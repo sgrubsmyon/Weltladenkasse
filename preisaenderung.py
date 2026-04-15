@@ -7,7 +7,7 @@
 
 '''
 1.) Aktuellen DB-Dump einspielen:
-    ./preisaenderung_00_import_recent_db_dump.sh
+    ./preisaenderung_00_import_recent_db_dump_with_credentials.sh
 2.) In Verzeichnis der Preisänderung wechseln.
 3.) Skript "convert_wlb_data.py" aufrufen:
     ../../../git/prod_list_convert/wlb/convert_wlb_data.py
