@@ -115,6 +115,11 @@ def main():
     # Translate the FHZ product groups to WLB product groups using the dictionary
     # start with empty string by default for those without match
     fhz['Produktgruppe_WLB'] = ''
+
+    # We store infos about missing product groups in a Pandas DataFrame
+    missing_prod_groups_betroffene_artikel = pd.DataFrame(columns=['FHZ Produktgruppe', 'Betroffener Artikel'])
+    # And the names of the product groups themselves in a set, to avoid duplicates
+    missing_prod_groups = set()
     for i in fhz.index:
         pg_fhz = fhz.loc[i, 'Produktgruppe']
         pg_series = prod_group_dict.loc[prod_group_dict.FHZ == pg_fhz, 'WLB']
@@ -122,10 +127,41 @@ def main():
             pg = pg_series.iloc[0]  # get first element
             fhz.loc[i, 'Produktgruppe_WLB'] = pg
         else:
-            warnings.warn(
-                f'FHZ-Produktgruppe "{pg_fhz}" bisher unbekannt!!! Bitte in `prod_group_dict_fhz.csv` eintragen!')
-            warnings.warn(
-                f'      Betroffener Artikel: "{fhz.loc[i, "Bezeichnung"]}"')
+            # add this product group to the set
+            missing_prod_groups.add(pg_fhz)
+            # add new row to the DataFrame
+            missing_prod_groups_betroffene_artikel = pd.concat(
+                [
+                    missing_prod_groups_betroffene_artikel,
+                    pd.DataFrame([
+                        {
+                            'FHZ Produktgruppe': pg_fhz,
+                            'Betroffener Artikel': fhz.loc[i, 'Bezeichnung']
+                        }
+                    ])
+                ], ignore_index=True)
+            # warnings.warn(
+            #     f'FHZ-Produktgruppe "{pg_fhz}" bisher unbekannt!!! Bitte in `prod_group_dict_fhz.csv` eintragen!')
+            # warnings.warn(
+            #     f'      Betroffener Artikel: "{fhz.loc[i, "Bezeichnung"]}"')
+    
+    # Only write out missing product groups and affected articles if there are any, otherwise skip this step
+    if len(missing_prod_groups) > 0:
+        outpath = os.path.dirname(os.path.realpath(options.FHZ))
+        # Write out missing product groups to a text file for easier handling
+        with open(os.path.join(outpath, 'missing_prod_groups_fhz.csv'), 'w') as f:
+            for pg in missing_prod_groups:
+                f.write(f'{pg}\n')
+        # Write out missing product groups and affected articles to a CSV file for easier handling
+        missing_prod_groups_betroffene_artikel.to_csv(os.path.join(outpath, 'missing_prod_groups_fhz_with_missing_articles.csv'), sep=';', index=False)
+
+        print(
+            f'Es gibt {len(missing_prod_groups)} fehlende Produktgruppen! Bitte die Datei "missing_prod_groups_fhz.csv" öffnen, die Produktgruppen in `prod_group_dict_fhz.ods` kopieren und die Datei `prod_group_dict_fhz.csv` neu erstellen!')
+        print()
+        print(
+            f'Für betroffene Artikel siehe "missing_prod_groups_fhz_with_missing_articles.csv"')
+    else:
+        print('Alle FHZ-Produktgruppen sind in `prod_group_dict_fhz.csv` eingetragen. Gut gemacht! :)')
 
     # Set missing values for products without 'Einheit'
     no_einheit = fhz.Einheit.isnull()
