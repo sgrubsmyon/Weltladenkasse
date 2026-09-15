@@ -14,7 +14,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 // jOpenDocument stuff:
-import org.jopendocument.dom.template.*; // JavaScriptTemplate, TemplateException
+import org.jopendocument.dom.template.*; // JavaScriptTemplate, RhinoTemplate, TemplateException
 import org.jopendocument.dom.OOUtils;
 import org.jdom.JDOMException;
 
@@ -67,8 +67,8 @@ public class PreisschilderExport extends WindowContent {
         createPriceTagFile();
     }
 
-    private JavaScriptTemplate loadTemplate() {
-        final JavaScriptTemplate template;
+    private RhinoTemplate loadTemplate() {
+        final RhinoTemplate template;
         try {
             String filename = "vorlagen" + bc.fileSep;
             if (typ.equals("lm")) {
@@ -86,7 +86,7 @@ public class PreisschilderExport extends WindowContent {
                         JOptionPane.ERROR_MESSAGE);
                 return null;
             }
-            template = new JavaScriptTemplate(infile);
+            template = new RhinoTemplate(infile);
         } catch (IOException ex) {
             logger.error("Exception:", ex);
             return null;
@@ -153,7 +153,8 @@ public class PreisschilderExport extends WindowContent {
         while (fieldCounter < namen.size()) {
             // Load the template.
             // Java 5 users will have to use RhinoFileTemplate instead
-            JavaScriptTemplate template = loadTemplate();
+            // JavaScriptTemplate template = loadTemplate();
+            RhinoTemplate template = loadTemplate();
             if (template == null)
                 return;
             pageCounter++;
