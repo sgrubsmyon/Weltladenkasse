@@ -226,6 +226,16 @@ Might need to change the hexnumbers of vendor id and product id according to
 your make and model. Get the numbers (in decimal) by running Weltladenkasse on
 terminal with display plugged in.
 
+To prevent power problems (display stopping functioning with errors in dmesg), disable USB power savings of the kernel.
+
+First, look up the USB device ID (USB port where the display is connected). It is printed in dmesg when display is connected/disconnected.
+
+Then, put the correct USB ID in the command below (in this example, it is "1-1").
+
+```
+$ echo -1 | sudo tee /sys/bus/usb/devices/1-1/power/autosuspend
+$ echo "on" | sudo tee /sys/bus/usb/devices/1-1/power/control
+```
 
 ## Optionally: Configure barcode scanner
 
