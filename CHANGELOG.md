@@ -9,8 +9,8 @@
 | v2.0.3  | 1889       | 2091       | 24.07.2022                         |
 | v2.0.4  | 2092       | 2443       | 02.04.2023                         |
 | v2.0.5  | 2444       | 2962       | 22.06.2024                         |
-| v2.0.6  | 2963       | 3115       | 29.03.2026                         |
-| v2.0.7  | 3116       |            | 30.09.2026                         |
+| v2.0.6  | 2963       | 3117       | 29.03.2026                         |
+| v2.0.7  | 3118       |            | 03.10.2026                         |
 +-----------------------------------+------------------------------------+
 
 ## v2.0.7
@@ -18,8 +18,8 @@
   * Wechsel des Terminals (Ladenlaptop):
     * Wechsel von ASUSTeK COMPUTER INC. X553MA (Seriennr. F4N0CV585724171) zu LENOVO ThinkPad T580 (Seriennr. R90R8HK3)
   * Bugfix: Preisschilder-Export funktioniert nun auch mit neuerem Java dank Wechsel von `JavaScriptTemplate` zu `RhinoTemplate` (Bibliothek `jopendocument`)
-  * Letzte Rechnung mit v2.0.6: Nr. 60215 am 30.09.2026 (bis `Z_NR`/`abrechnung_tag.id` 3115)
-  * Erste Rechnung mit v2.0.7: Nr. 60216 am 01.10.2026 (ab `Z_NR`/`abrechnung_tag.id` 3116)
+  * Letzte Rechnung mit v2.0.6: Nr. 60251 am 02.10.2026 (bis `Z_NR`/`abrechnung_tag.id` 3117)
+  * Erste Rechnung mit v2.0.7: Nr. 60252 am 05.10.2026 (ab `Z_NR`/`abrechnung_tag.id` 3118)
 
 ## v2.0.6
 
