@@ -146,6 +146,18 @@ For using TSE (German fiscalisation "Secure Element") from Bundesdruckerei/D-Tru
     (`jar xvf bcprov-jdk15on-1.62.jar`), delete all META-INF/*.SF and META-INF/*.DSA files
     and recreate jar (`jar cvf bcprov-jdk15on-1.62_deleted_sf_dsa.jar *`).
 
+## Instal TSE
+
+For TSE to be mounted correctly, add `/etc/fstab` entry, e.g.:
+
+```
+# Auto-mount the TSE plugged into the SD card reader
+/dev/disk/by-uuid/0A72-FAFD /run/media/mitarbeiterin/0A72-FAFD/ vfat rw,nosuid,nodev,relatime,uid=1000,gid=1000,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,showexec,utf8,flush,errors=remount-ro,uhelper=udisks2 0 0
+# ^^^^^^^^^^^^^^^^^^^^^^^^^ Change this to the actual device path on your system
+```
+
+WARNING: After adding this line to fstab, PC might only boot when TSE is plugged in.
+
 ## Optionally: Install receipt printer
 
 ### EPSON TM-U220 dot matrix printer
@@ -186,6 +198,8 @@ Flow Control = DTR/DSR
   * Use printer name `quittungsdrucker`.
   * At least on Arch, might need to manually choose the PPD file from the downloaded and
     built printer driver dir in CUPS.
+  * On modern Linux systems, proprietary EPSON driver is not needed anymore (even cannot be downloaded from EPSON anymore). It works natively on Linux via ESC/POS printer langauge. When asked to select driver in CUPS, choose manufacturer "Generic" or "Epson" and model "Generic ESC/P Dot Matrix Printer" or "Epson ESC/P 9-pin Printer" / "Epson TM Series" (source: Drivers.eu via Gemini)
+  * It is also possible to add the printer to CUPS as a "raw queue" and send print data to serial port without conversion. Choose as driver in CUPS "Generic / Raw Queue".
 
   * Set paper roll width to 58 mm
   * Set lower resolution for faster printing
