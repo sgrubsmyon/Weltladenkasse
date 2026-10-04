@@ -42,7 +42,7 @@ def main():
     import warnings
 
     fhz = read_ods(options.FHZ)
-    # fhz = read_ods('../releases/Preisänderungen/Preisänderung_2023-01-01/Bestellvorlage Lebensmittelpreisliste 3.2 2022.ods')
+    #fhz = pd.read_excel(options.FHZ, engine="odf")
 
     path = os.path.dirname(os.path.realpath(__file__))
     prod_group_dict = pd.read_csv(os.path.join(
