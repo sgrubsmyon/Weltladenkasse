@@ -211,7 +211,7 @@ def specialTreatment(row, preis, wlb_neu, name):
     # Mini-Schoko-Täfelchen Großpackung GEPA
     if row.Artikelnummer == '8901827' or row.Artikelnummer == '8901828':
         # Adopt the recommented sales price as procurement price
-        wlb_neu.loc[name, 'EK-Preis'] = preis
+        wlb_neu.loc[name, 'EK-Preis'] = str(preis)
         # Always add 2.40 EUR to the price so that we earn something from it
         preis += Decimal('2.40')
     return preis
