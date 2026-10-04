@@ -670,6 +670,7 @@ def main():
                                     index=pd.MultiIndex.from_tuples([('', '')], names=wlb_neu.index.names))
     wlb_alte_artikel = wlb_alte_artikel.sort_index()
     count = 0
+    added_names = set()
     # Loop over wlb numerical index
     for i in range(len(wlb_neu)):
         wlb_row = wlb_neu.iloc[i]
@@ -690,9 +691,11 @@ def main():
                     [wlb_alte_artikel, wlb_neu.iloc[[i]]])
                 # Change 'popularity' to 'ausgelistet' so that it will not be ordered any more:
                 wlb_alte_artikel.loc[name, 'Beliebtheit'] = 'ausgelistet'
-                if not name in irgendeine_aenderung.index:
+                if name not in added_names:
                     irgendeine_aenderung = pd.concat(
                         [irgendeine_aenderung, wlb_neu.iloc[[i]]])
+                    irgendeine_aenderung = irgendeine_aenderung.sort_index()
+                    added_names.add(name)
                 irgendeine_aenderung.loc[name, 'Beliebtheit'] = 'ausgelistet'
                 print('"%s" nicht in FHZ. %s' %
                       (wlb_row['Bezeichnung | Einheit'], name))
