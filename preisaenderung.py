@@ -28,7 +28,7 @@
     * Änderungen prüfen und ggf. eingreifen
     * ACHTUNG: Wenn Menge oder Einheit sich geändert haben, muss ggf. der Artikelname
         in preisänderung_irgendeine_änderung.csv von Hand geändert werden, wenn nicht -n benutzt wird.
-        Am besten auf einem Zettel oder in `change_name.txt` notieren und hinterher händisch machen.
+        Am besten auf einem Zettel oder in `notes.txt` notieren und hinterher händisch machen.
     * Angebliche neue Artikel prüfen, ob nur ein Tippfehler in der Artikelnummer
         ist (Fehler evtl. ans FHZ melden)
     * Auch gucken, ob neue Artikel eigentlich beim FHZ durchgestrichen sind und
@@ -77,7 +77,7 @@
     markiert sind, aus "preisänderung_neue_artikel.ods" löschen. Wenn Änderungen
     nötig sind (z.B. Preis), dann die hier rot markierten Artikel von Hand
     verändern.
-19.) Umbenennungen etc. z.B. aus `change_name.txt` anwenden.
+19.) Umbenennungen etc. z.B. aus `notes.txt` anwenden.
 19.) In "Weltladenkasse -> Preisschilder" auf "Datei einlesen" klicken und
     "preisänderung_geänderte_preise_sortiment.csv" auswählen. Neue Preislisten
     mit "Artikel drucken" speichern (ODS-Dateien) und an Koordination schicken.
