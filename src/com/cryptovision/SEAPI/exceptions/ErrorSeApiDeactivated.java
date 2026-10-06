@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019
+ * Copyright (c) 2019-2021
  * cv cryptovision GmbH
  * Munscheidstr. 14
  * 45886 Gelsenkirchen
@@ -27,7 +27,7 @@
 package com.cryptovision.SEAPI.exceptions;
 
 /**
- * Attempt to invoked a method though the SE API after the TSE has been deactivated.
+ * Attempt to invoked a method though the SE API after the TSE has been deactivated / transaction logging has been locked.
  */
 public class ErrorSeApiDeactivated extends SEException {
 	private static final long serialVersionUID = 1L;

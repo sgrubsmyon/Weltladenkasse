@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022
+ * Copyright (c) 2021
  * cv cryptovision GmbH
  * Munscheidstr. 14
  * 45886 Gelsenkirchen
@@ -27,15 +27,27 @@
 package com.cryptovision.SEAPI.exceptions;
 
 /**
- * Invalid command data - thrown by API or transport layer.
+ * Firmware update could not be applied.
  */
-public class ErrorTSECommandDataInvalid extends SEException {
+public class ErrorFirmwareUpdateFailed extends SEException {
 	private static final long serialVersionUID = 1L;
+	private short reason;
 
-	public ErrorTSECommandDataInvalid() {
+	public ErrorFirmwareUpdateFailed(short reason) {
+		this.reason = reason;
 	}
 
-	public ErrorTSECommandDataInvalid(String msg) {
-		super(msg);
+	public short getReason() {
+		return reason;
+	}
+	
+	@Override
+	public String getMessage() {
+		String message = super.getMessage();
+		if(message != null && message.length() > 0)
+			message += ", ";
+		else
+			message = "";
+		return String.format("%s"+"reason code: 0x%04X", message, reason);
 	}
 }

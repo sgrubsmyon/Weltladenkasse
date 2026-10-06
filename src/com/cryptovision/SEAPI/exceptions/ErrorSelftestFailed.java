@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022
+ * Copyright (c) 2023
  * cv cryptovision GmbH
  * Munscheidstr. 14
  * 45886 Gelsenkirchen
@@ -26,16 +26,40 @@
 
 package com.cryptovision.SEAPI.exceptions;
 
-/**
- * Invalid command data - thrown by API or transport layer.
- */
-public class ErrorTSECommandDataInvalid extends SEException {
-	private static final long serialVersionUID = 1L;
+import com.cryptovision.SEAPI.TSE;
 
-	public ErrorTSECommandDataInvalid() {
+/**
+ * Some hardware test failed during {@link TSE#open()}.<br/>
+ * Device might or might not be usable depending on {@link com.cryptovision.SEAPI.TSE.TestResult TestResult}.<p/>
+ * If possible, this error should be reported to your backend / central services.<br/>
+ * For further processing, @see <a href="https://support.cryptovision.com/tse/">online FAQ</a>.
+ */
+public class ErrorSelftestFailed extends SEException {
+	private static final long serialVersionUID = 1L;
+	
+	TSE tse;
+	byte result;
+	String data;
+
+	public ErrorSelftestFailed(TSE tse, byte result, String data) {
+		this.tse = tse;
+		this.result = result;
+		this.data = data;
 	}
 
-	public ErrorTSECommandDataInvalid(String msg) {
-		super(msg);
+	/**
+	 * @return {@link TSE} instance with limited capabilities.
+	 */
+	public TSE getTse() {
+		return tse;
+	}
+	
+	@Override
+	public String toString() {
+		return super.toString() + " with result " + result;
+	}
+
+	public String getData() {
+		return data;
 	}
 }

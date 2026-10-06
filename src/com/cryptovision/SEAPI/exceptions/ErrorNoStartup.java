@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019
+ * Copyright (c) 2019-2022
  * cv cryptovision GmbH
  * Munscheidstr. 14
  * 45886 Gelsenkirchen
@@ -26,8 +26,12 @@
 
 package com.cryptovision.SEAPI.exceptions;
 
+import com.cryptovision.SEAPI.TSE;
+
 /**
  * Attempt to invoked a method though the SE API has not been initialized.
+ * <p>
+ * See {@link TSE#open()}.
  */
 public class ErrorNoStartup extends SEException {
 	private static final long serialVersionUID = 1L;
