@@ -34,11 +34,11 @@
             <AppenderRef ref="LogBestellerToRollingFile"/>
         </Logger>
         <!-- Log for Kasse -->
-        <Logger name="org.weltladen_bonn.pos.kasse" level="debug" additivity="true">
+        <Logger name="org.weltladen_bonn.pos.kasse" level="debug" additivity="false">
             <AppenderRef ref="LogKasseToRollingFile"/>
         </Logger>
         <!-- Log for Besteller -->
-        <Logger name="org.weltladen_bonn.pos.besteller" level="debug" additivity="true">
+        <Logger name="org.weltladen_bonn.pos.besteller" level="debug" additivity="false">
             <AppenderRef ref="LogBestellerToRollingFile"/>
         </Logger>
         <Root level="error">
