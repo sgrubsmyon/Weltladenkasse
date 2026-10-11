@@ -1610,6 +1610,15 @@ public class WeltladenTSE extends WindowContent {
             error = "Secure Element disabled";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
+        } catch (ErrorTSECommunicationError ex) {
+            error = "TSE communication error during startTransaction()";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
+        } catch (ErrorNoStartup ex) {
+            // Transient error — TSE needs time to boot after voltage loss
+            error = "TSE error 'no startup' during startTransaction() (transient)";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
         } catch (SEException ex) {
             error = "Unknown error during startTransaction(): "+ex.getMessage();
             logger.fatal("Fatal Error: {}", error);
@@ -1619,6 +1628,10 @@ public class WeltladenTSE extends WindowContent {
             status = TSEStatus.failed;
             failReason = "Es konnte keine TSE-Transaktion gestartet werden.\n"+
                 "               Fehler: "+error+".";
+            if (tx.startTimeString == null) {
+                tx.startTimeString = dateToCalTime(nowDate());
+                logger.debug("!!! TSE FAILED !!! TX start time determined by Kasse: {}", tx.startTimeString);
+            }
             showTSEFailWarning();
         }
     };
