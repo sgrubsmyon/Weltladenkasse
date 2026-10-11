@@ -152,11 +152,58 @@ For TSE to be mounted correctly, add `/etc/fstab` entry, e.g.:
 
 ```
 # Auto-mount the TSE plugged into the SD card reader
-/dev/disk/by-uuid/0A72-FAFD /run/media/mitarbeiterin/0A72-FAFD/ vfat rw,nosuid,nodev,relatime,uid=1000,gid=1000,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,showexec,utf8,flush,errors=remount-ro,uhelper=udisks2 0 0
+/dev/disk/by-uuid/0A72-FAFD /run/media/mitarbeiterin/0A72-FAFD/ vfat rw,nosuid,nodev,relatime,uid=1000,gid=1000,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,showexec,utf8,flush,errors=remount-ro 0 0
 # ^^^^^^^^^^^^^^^^^^^^^^^^^ Change this to the actual device path on your system
 ```
 
 WARNING: After adding this line to fstab, PC might only boot when TSE is plugged in.
+
+To prevent power problems (TSE losing power, resulting in spontaneous `ErrorNoStartup` errors), disable USB power savings of the kernel.
+
+Find the USB device for the SD card reader:
+
+```
+ls -l /sys/bus/usb/devices/
+```
+
+Then for that device (e.g., 1-1.2):
+
+```
+echo "on" | sudo tee /sys/bus/usb/devices/1-1.2/power/control
+echo -1 | sudo tee /sys/bus/usb/devices/1-1.2/power/autosuspend
+```
+
+Persist it with a udev rule in `/etc/udev/rules.d/99-tse-sd-card-reader.rules`:
+
+```
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="XXXX", ATTR{idProduct}=="XXXX", ATTR{power/control}="on", ATTR{power/autosuspend}="-1"
+Find vendor/product with lsusb before the XXXX/XXXX placeholders.
+```
+
+Find the SD card reader's USB vendor/product ID:
+
+```
+lsusb
+```
+
+Look for the SD card reader (e.g., Bus 001 Device 005: ID 058f:6387 Alcor Micro Corp. Flash Drive Reader). Note the vendor ID (058f) and product ID (6387).
+
+Create a udev rule in `/etc/udev/rules.d/99-tse-no-automount.rules`:
+
+```
+# Tell udisks2 to ignore the TSE SD card reader
+SUBSYSTEM=="usb", ATTR{idVendor}=="058f", ATTR{idProduct}=="6387", ENV{UDISKS_IGNORE}="1"
+```
+
+(Replace 058f and 6387 with the actual IDs.)
+
+Reload rules:
+
+```
+sudo udevadm control --reload && sudo udevadm trigger
+```
+
+This blocks udisks2 from seeing/auto-mounting only that SD card reader USB device. USB sticks and other devices are unaffected.
 
 ## Optionally: Install receipt printer
 
