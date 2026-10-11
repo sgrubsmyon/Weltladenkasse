@@ -146,7 +146,10 @@ For using TSE (German fiscalisation "Secure Element") from Bundesdruckerei/D-Tru
     (`jar xvf bcprov-jdk15on-1.62.jar`), delete all META-INF/*.SF and META-INF/*.DSA files
     and recreate jar (`jar cvf bcprov-jdk15on-1.62_deleted_sf_dsa.jar *`).
 
-## Instal TSE
+
+## Install TSE
+
+### Mount TSE correctly with fstab
 
 For TSE to be mounted correctly, add `/etc/fstab` entry, e.g.:
 
@@ -158,7 +161,29 @@ For TSE to be mounted correctly, add `/etc/fstab` entry, e.g.:
 
 WARNING: After adding this line to fstab, PC might only boot when TSE is plugged in.
 
-To prevent power problems (TSE losing power, resulting in spontaneous `ErrorNoStartup` errors), disable USB power savings of the kernel.
+### Prevent udisks2 automount
+
+Create a udev rule in `/etc/udev/rules.d/99-tse-no-automount.rules`:
+
+```
+# Tell udisks2 to ignore the TSE SD card reader
+SUBSYSTEM=="usb", ATTR{idVendor}=="XXXX", ATTR{idProduct}=="YYYY", ENV{UDISKS_IGNORE}="1"
+```
+
+(Replace XXXX and YYYY with the actual IDs.)
+
+Reload rules:
+
+```
+sudo udevadm control --reload && sudo udevadm trigger
+```
+
+This blocks udisks2 from seeing/auto-mounting only that SD card reader USB device. USB sticks and other devices are unaffected.
+
+
+### Power management
+
+To prevent power problems (TSE losing power, resulting in spontaneous `ErrorNoStartup` errors after idle times), disable USB power savings of the kernel.
 
 Find the USB device for the SD card reader:
 
@@ -173,37 +198,58 @@ echo "on" | sudo tee /sys/bus/usb/devices/1-1.2/power/control
 echo -1 | sudo tee /sys/bus/usb/devices/1-1.2/power/autosuspend
 ```
 
-Persist it with a udev rule in `/etc/udev/rules.d/99-tse-sd-card-reader.rules`:
-
-```
-ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="XXXX", ATTR{idProduct}=="XXXX", ATTR{power/control}="on", ATTR{power/autosuspend}="-1"
-Find vendor/product with lsusb before the XXXX/XXXX placeholders.
-```
-
-Find the SD card reader's USB vendor/product ID:
+Find the SD card reader's USB or PCIe vendor/product ID:
 
 ```
 lsusb
+# or:
+lspci
 ```
 
 Look for the SD card reader (e.g., Bus 001 Device 005: ID 058f:6387 Alcor Micro Corp. Flash Drive Reader). Note the vendor ID (058f) and product ID (6387).
 
-Create a udev rule in `/etc/udev/rules.d/99-tse-no-automount.rules`:
+Persist the power managenent change with a udev rule in `/etc/udev/rules.d/99-tse-sd-card-reader.rules`:
 
 ```
-# Tell udisks2 to ignore the TSE SD card reader
-SUBSYSTEM=="usb", ATTR{idVendor}=="058f", ATTR{idProduct}=="6387", ENV{UDISKS_IGNORE}="1"
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="XXXX", ATTRS{idProduct}=="YYYY", ATTR{power/control}="on", ATTR{power/autosuspend}="-1"
 ```
 
-(Replace 058f and 6387 with the actual IDs.)
+(Replace XXXX and YYYY with the actual IDs.)
 
-Reload rules:
+Validate: Reboot and check with `cat /sys/bus/usb/devices/.../power/control` if the state is "on" instead of "auto".
+
+#### In addition: MMC power mgmt
+
+Some SD card controller turn off the power supply of the SD card by themselves. You can configure the module of the card reader (usualy `sdi` or `mmc_core`) such that no automatic standby occurs, or set the power management for the corresponding mmc host in `/sys/class/mmc_host/` to on.
+
+Find the path of the SD card reader:
 
 ```
-sudo udevadm control --reload && sudo udevadm trigger
+ls -l /sys/bus/mmc/devices/
 ```
 
-This blocks udisks2 from seeing/auto-mounting only that SD card reader USB device. USB sticks and other devices are unaffected.
+Turn off power mgmt for the device:
+
+```
+echo "on" | sudo tee /sys/bus/mmc/devices/mmc0:0001/power/control
+```
+
+Check: This should print "on": `cat /sys/bus/mmc/devices/mmc0:0001/power/control`.
+
+Validate: Check if the TSE stays available after one hour of inactivity without error message.
+
+Make change permanent with udev rule in file `/etc/udev/rules.d/81-mmc-power.rules`:
+
+```
+ACTION=="add", SUBSYSTEM=="mmc", ATTR{power/control}="on"
+```
+
+Reload udev rules with
+
+```
+sudo udevadm control --reload-rules && sudo udevadm trigger
+```
+
 
 ## Optionally: Install receipt printer
 
