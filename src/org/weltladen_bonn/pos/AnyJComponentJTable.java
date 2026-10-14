@@ -21,6 +21,7 @@ public class AnyJComponentJTable extends JTable {
     // methods:
     public AnyJComponentJTable(){
         super();
+        setRowHeight(30);
     }
 
     public AnyJComponentJTable(TableModel m){

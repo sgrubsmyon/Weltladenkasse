@@ -980,7 +980,7 @@ public class Kassieren extends RechnungsGrundlage implements ArticleSelectUser, 
         removeDefaultKeyBindings(myTable, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         myTable.addKeyListener(removeNumPadAdapter);
         myTable.setFont(BaseClass.mediumFont);
-        myTable.setRowHeight(20);
+        myTable.setRowHeight(30);
         // myTable.setBounds(71,53,150,100);
         setTableProperties(myTable);
         TableColumn entf = myTable.getColumn("Entfernen");
