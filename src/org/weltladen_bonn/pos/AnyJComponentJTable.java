@@ -21,18 +21,18 @@ public class AnyJComponentJTable extends JTable {
     // methods:
     public AnyJComponentJTable(){
         super();
-        setRowHeight(30);
+        setRowHeight(25);
     }
 
     public AnyJComponentJTable(TableModel m){
         super(m);
-        setRowHeight(30);
+        setRowHeight(25);
     }
 
     public AnyJComponentJTable(TableModel m, Integer columnMargin,
             Integer minColumnWidth, Integer maxColumnWidth){
         super(m);
-        setRowHeight(30);
+        setRowHeight(25);
         for (int colIndex=0; colIndex<this.getColumnCount(); colIndex++){
             resizeColumnToFitContent(colIndex, columnMargin, minColumnWidth,
                     maxColumnWidth);
@@ -41,13 +41,13 @@ public class AnyJComponentJTable extends JTable {
 
     public AnyJComponentJTable(Vector< Vector<Object> > data, Vector<String> columns){
         super(data, columns);
-        setRowHeight(30);
+        setRowHeight(25);
     }
 
     public AnyJComponentJTable(Vector< Vector<Object> > data, Vector<String> labels,
             Integer columnMargin, Integer minColumnWidth, Integer maxColumnWidth){
         super(data, labels);
-        setRowHeight(30);
+        setRowHeight(25);
         for (int colIndex=0; colIndex<this.getColumnCount(); colIndex++){
             resizeColumnToFitContent(colIndex, columnMargin, minColumnWidth,
                     maxColumnWidth);
@@ -57,7 +57,7 @@ public class AnyJComponentJTable extends JTable {
     public AnyJComponentJTable(Vector< Vector<Object> > data, Vector<String> labels,
             Set<Integer> edCol){
         super(data, labels);
-        setRowHeight(30);
+        setRowHeight(25);
         editableCols = new HashSet<Integer>(edCol);
     }
 
