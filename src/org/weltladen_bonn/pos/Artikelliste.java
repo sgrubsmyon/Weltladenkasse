@@ -376,8 +376,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         linksColumns.add("Nummer");
         linksColumns.add("Produktgruppe"); linksColumns.add("Lieferant");
         linksColumns.add("Name"); linksColumns.add("Kurzname");
-        linksColumns.add("Herkunft"); linksColumns.add("Ab/Seit");
-        linksColumns.add("Bis");
+        linksColumns.add("Herkunft");
         //
         rechtsColumns = new Vector<String>();
         rechtsColumns.add("Menge");
@@ -386,6 +385,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         rechtsColumns.add("Empf. VK-Preis"); rechtsColumns.add("EK-Rabatt");
         rechtsColumns.add("EK-Preis"); rechtsColumns.add("MwSt.");
         rechtsColumns.add("Bestand");
+        rechtsColumns.add("Ab/Seit"); rechtsColumns.add("Bis");
         //
         zentralColumns = new Vector<String>();
         zentralColumns.add("Beliebtheit");
@@ -796,7 +796,7 @@ public class Artikelliste extends ArtikelGrundlage implements ItemListener,
         }
         // resize small columns:
         for (String cname : smallColumns){
-            myTable.getColumn(cname).setPreferredWidth(minColumnWidth);
+            myTable.getColumn(cname).setPreferredWidth(5 * minColumnWidth);
         }
     }
 
