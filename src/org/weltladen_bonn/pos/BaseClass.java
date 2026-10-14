@@ -119,6 +119,7 @@ public class BaseClass {
 
     public static Font mediumFont = new Font("Tahoma", Font.BOLD, 20);
     public static Font bigFont = new Font("Tahoma", Font.BOLD, 38);
+    public static Font uiFont = new Font("Tahoma", Font.PLAIN, 16);
 
     public PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
     public PositiveNumberDocumentFilter relFilter = new PositiveNumberDocumentFilter(3, 6);

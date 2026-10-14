@@ -15,6 +15,7 @@ import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import org.weltladen_bonn.pos.BaseClass;
 import org.weltladen_bonn.pos.SplashScreen;
 
 // Class holding only the main function
@@ -128,7 +129,7 @@ public class Kasse {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 logger.info("Hello from Log4j2");
-                
+
                 //Turn off metal's use of bold fonts
                 //UIManager.put("swing.boldMetal", Boolean.FALSE);
 
@@ -138,6 +139,17 @@ public class Kasse {
                 } catch (Exception ex) {
                     logger.error("Exception:", ex);
                 }
+
+                // Set global font defaults for high-DPI displays
+                UIManager.put("Label.font", BaseClass.uiFont.deriveFont(Font.BOLD));
+                UIManager.put("Button.font", BaseClass.uiFont.deriveFont(Font.BOLD));
+                UIManager.put("TabbedPane.font", BaseClass.uiFont);
+                UIManager.put("TitledBorder.font", BaseClass.uiFont.deriveFont(Font.BOLD));
+                UIManager.put("TableHeader.font", BaseClass.uiFont.deriveFont(Font.BOLD));
+                UIManager.put("TextField.font", BaseClass.uiFont);
+                UIManager.put("ComboBox.font", BaseClass.uiFont);
+                UIManager.put("TextArea.font", BaseClass.uiFont);
+                UIManager.put("Table.font", BaseClass.uiFont);
 
                 createAndShowGUI();
             }

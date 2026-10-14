@@ -4,6 +4,7 @@ import java.util.Vector;
 
 // GUI stuff:
 import java.awt.Dimension;
+import java.awt.Font;
 
 import javax.swing.*;
 
@@ -11,6 +12,7 @@ import javax.swing.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import org.weltladen_bonn.pos.BaseClass;
 import org.weltladen_bonn.pos.SplashScreen;
 
 // Class holding only the main function
@@ -98,6 +100,18 @@ public class Besteller {
                 */
 
                 logger.info("Hello from Log4j2");
+
+                // Set global font defaults for high-DPI displays
+                UIManager.put("Label.font", BaseClass.uiFont.deriveFont(Font.BOLD));
+                UIManager.put("Button.font", BaseClass.uiFont.deriveFont(Font.BOLD));
+                UIManager.put("TabbedPane.font", BaseClass.uiFont);
+                UIManager.put("TitledBorder.font", BaseClass.uiFont.deriveFont(Font.BOLD));
+                UIManager.put("TableHeader.font", BaseClass.uiFont.deriveFont(Font.BOLD));
+                UIManager.put("TextField.font", BaseClass.uiFont);
+                UIManager.put("ComboBox.font", BaseClass.uiFont);
+                UIManager.put("TextArea.font", BaseClass.uiFont);
+                UIManager.put("Table.font", BaseClass.uiFont);
+
                 createAndShowGUI();
             }
         });
