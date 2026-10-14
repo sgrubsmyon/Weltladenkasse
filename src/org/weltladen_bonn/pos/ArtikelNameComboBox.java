@@ -144,7 +144,7 @@ public class ArtikelNameComboBox extends IncrementalSearchComboBox {
                 columns[1].setText(items.get(index)[1]);
                 columns[2].setText(items.get(index)[2]);
 
-                int height = 20;
+                int height = 25;
                 columns[0].setPreferredSize(new Dimension(columnWidths.get(0), height));
                 columns[1].setPreferredSize(new Dimension(columnWidths.get(1), height));
                 columns[2].setPreferredSize(new Dimension(columnWidths.get(2), height));
