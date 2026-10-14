@@ -113,6 +113,8 @@ public class Besteller {
                 UIManager.put("Table.font", BaseClass.uiFont);
                 UIManager.put("RadioButton.font", BaseClass.uiFont.deriveFont(Font.BOLD));
                 UIManager.put("CheckBox.font", BaseClass.uiFont.deriveFont(Font.BOLD));
+                UIManager.put("PasswordField.font", BaseClass.uiFont);
+                UIManager.put("Spinner.font", BaseClass.uiFont);
 
                 createAndShowGUI();
             }
