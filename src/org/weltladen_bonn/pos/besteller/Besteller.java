@@ -44,7 +44,7 @@ public class Besteller {
 
             myWindow.setTitle("Weltladenbesteller");
             // myWindow.setPreferredSize(new Dimension(1024, 768));
-            myWindow.setPreferredSize(new Dimension(1200, 740));
+            myWindow.setPreferredSize(new Dimension(1800, 900));
             myWindow.pack();
             // Specify where it will appear on the screen:
             //myWindow.setLocation(200, 100);

@@ -117,8 +117,8 @@ public class BaseClass {
     //protected NumberFormat amountFormat;
     protected NumberFormat vatFormat;
 
-    public static Font mediumFont = new Font("Tahoma", Font.BOLD, 16);
-    public static Font bigFont = new Font("Tahoma", Font.BOLD, 32);
+    public static Font mediumFont = new Font("Tahoma", Font.BOLD, 20);
+    public static Font bigFont = new Font("Tahoma", Font.BOLD, 38);
 
     public PositiveNumberDocumentFilter geldFilter = new PositiveNumberDocumentFilter(2, 13);
     public PositiveNumberDocumentFilter relFilter = new PositiveNumberDocumentFilter(3, 6);
