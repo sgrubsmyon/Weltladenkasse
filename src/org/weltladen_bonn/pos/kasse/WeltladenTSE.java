@@ -1681,7 +1681,7 @@ public class WeltladenTSE extends WindowContent {
                 }
                 message = "OK";
             } catch (ErrorFinishTransactionFailed ex) {
-                message = "Start transaction failed";
+                message = "Finish transaction failed";
                 logger.fatal("Fatal Error: {}", message);
                 logger.fatal("Exception:", ex);
             } catch (ErrorNoTransaction ex) {
@@ -1713,7 +1713,7 @@ public class WeltladenTSE extends WindowContent {
                 logger.fatal("Fatal Error: {}", message);
                 logger.fatal("Exception:", ex);
             } catch (SEException ex) {
-                message = "Unknown error during startTransaction(): "+ex.getMessage();
+                message = "Unknown error during sendFinishTransaction(): "+ex.getMessage();
                 logger.fatal("Fatal Error: {}", message);
                 logger.fatal("Exception:", ex);
             }
