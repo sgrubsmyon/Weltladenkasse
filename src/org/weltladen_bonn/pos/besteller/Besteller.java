@@ -111,6 +111,8 @@ public class Besteller {
                 UIManager.put("ComboBox.font", BaseClass.uiFont);
                 UIManager.put("TextArea.font", BaseClass.uiFont);
                 UIManager.put("Table.font", BaseClass.uiFont);
+                UIManager.put("RadioButton.font", BaseClass.uiFont.deriveFont(Font.BOLD));
+                UIManager.put("CheckBox.font", BaseClass.uiFont.deriveFont(Font.BOLD));
 
                 createAndShowGUI();
             }
