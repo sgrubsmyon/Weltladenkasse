@@ -155,11 +155,16 @@ For TSE to be mounted correctly, add `/etc/fstab` entry, e.g.:
 
 ```
 # Auto-mount the TSE plugged into the SD card reader
-/dev/disk/by-uuid/0A72-FAFD /run/media/mitarbeiterin/0A72-FAFD/ vfat rw,nosuid,nodev,relatime,uid=1000,gid=1000,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,showexec,utf8,flush,errors=remount-ro 0 0
+/dev/disk/by-uuid/0A72-FAFD /run/media/mitarbeiterin/0A72-FAFD/ vfat rw,nosuid,nodev,nofail,relatime,uid=1000,gid=1000,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,showexec,utf8,errors=remount-ro 0 0
 # ^^^^^^^^^^^^^^^^^^^^^^^^^ Change this to the actual device path on your system
 ```
 
 WARNING: After adding this line to fstab, PC might only boot when TSE is plugged in.
+
+Hinweise (Gemini):
+
+- Die Option `flush` erzwingt, dass Schreibvorgänge synchront beziehungsweise sehr zeitnah auf das Medium geschrieben werden. Bei einer microSD-TSE führt das zu einer massiv erhöhten Schreibfrequenz (I/O-Last) bei jedem kleinen Zugriff, was den Flash-Speicher der TSE unnötig verschleißt. Zudem blockiert es bei Schreibzugriffen den Prozess, was zu Timouts führen kann. Für eine TSE ist `flush` in der Regel kontraproduktiv.
+- Wenn das System neu startet oder die TSE im internen Leser beim Booten (oder nach einem kurzen Bus-Reset) nicht sofort adäquat ansprechbar ist, kann ein fehlendes `nofail` dazu führen, dass der Bootvorgang hängen bleibt oder in den Wartungsmodus (Emergency Mode) fällt.
 
 ### Prevent udisks2 automount
 

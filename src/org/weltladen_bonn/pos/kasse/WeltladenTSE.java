@@ -280,6 +280,13 @@ public class WeltladenTSE extends WindowContent {
             logger.fatal("Exception:", ex);
             status = TSEStatus.failed;
             failReason = "Datei 'config_tse.txt' konnte nicht eingelesen werden";
+        } catch (ErrorNoStartup ex) {
+            // Transient error — TSE needs time to boot after voltage loss
+            logger.fatal("Fatal Error: TSE error 'no startup' during connectToTSE() (transient)");
+            logger.fatal("Exception:", ex);
+            status = TSEStatus.failed;
+            failReason = "Es konnte keine Verbindung zur TSE aufgebaut werden. TSE Error 'no startup' (transient): "+
+                         ex.getMessage();
         } catch (SEException ex) {
             logger.fatal("Unknown TSE error during connectToTSE()", "config_tse.txt");
             logger.fatal("Exception:", ex);
@@ -786,6 +793,15 @@ public class WeltladenTSE extends WindowContent {
                 error = "Storage failure";
                 logger.fatal("Fatal Error: {}", error);
                 logger.fatal("Exception:", ex);
+            } catch (ErrorTSECommunicationError ex) {
+                error = "TSE communication error during setPINandPUK()";
+                logger.fatal("Fatal Error: {}", error);
+                logger.fatal("Exception:", ex);
+            } catch (ErrorNoStartup ex) {
+                // Transient error — TSE needs time to boot after voltage loss
+                error = "TSE error 'no startup' during setPINandPUK() (transient)";
+                logger.fatal("Fatal Error: {}", error);
+                logger.fatal("Exception:", ex);
             } catch (SEException ex) {
                 error = "Unknown error during initializePinValues(): "+ex.getMessage();
                 logger.fatal("Fatal Error: {}", error);
@@ -974,6 +990,14 @@ public class WeltladenTSE extends WindowContent {
             error = "Secure element disabled";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
+        } catch (ErrorTSECommunicationError ex) {
+            error = "TSE communication error during logOutAs(), which is normal for first connection after TSE losing voltage";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
+        } catch (ErrorNoStartup ex) {
+            error = "TSE error 'no startup' during logOutAs(), which can happen on first connection after TSE losing voltage";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
         } catch (SEException ex) {
             error = "Unknown error during logOut(): "+ex.getMessage();
             logger.fatal("Fatal Error: {}", error);
@@ -1013,8 +1037,16 @@ public class WeltladenTSE extends WindowContent {
             error = "Secure Element disabled";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
+        } catch (ErrorTSECommunicationError ex) {
+            error = "TSE communication error during initializeTSE(), which is normal for first connection after TSE losing voltage";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
+        } catch (ErrorNoStartup ex) {
+            error = "TSE error 'no startup' during initializeTSE(), which can happen on first connection after TSE losing voltage";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
         } catch (SEException ex) {
-            error = "Unknown error during initialize(): "+ex.getMessage();
+            error = "Unknown error during initializeTSE(): "+ex.getMessage();
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         }
@@ -1043,8 +1075,16 @@ public class WeltladenTSE extends WindowContent {
             error = "Secure Element disabled";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
+        } catch (ErrorTSECommunicationError ex) {
+            error = "TSE communication error during initTimeVars(), which is normal for first connection after TSE losing voltage";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
+        } catch (ErrorNoStartup ex) {
+            error = "TSE error 'no startup' during initTimeVars(), which can happen on first connection after TSE losing voltage";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
         } catch (SEException ex) {
-            error = "Unknown error during getTimeSyncInterval(): "+ex.getMessage();
+            error = "Unknown error during initTimeVars(): "+ex.getMessage();
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         }
@@ -1109,8 +1149,16 @@ public class WeltladenTSE extends WindowContent {
             error = "User not authenticated";
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
+        } catch (ErrorTSECommunicationError ex) {
+            error = "TSE communication error during updateTimeWithoutChecking(), which is normal for first connection after TSE losing voltage";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
+        } catch (ErrorNoStartup ex) {
+            error = "TSE error 'no startup' during updateTimeWithoutChecking(), which can happen on first connection after TSE losing voltage";
+            logger.fatal("Fatal Error: {}", error);
+            logger.fatal("Exception:", ex);
         } catch (SEException ex) {
-            error = "Unknown error during updateTime(): "+ex.getMessage();
+            error = "Unknown error during updateTimeWithoutChecking(): "+ex.getMessage();
             logger.fatal("Fatal Error: {}", error);
             logger.fatal("Exception:", ex);
         }
@@ -1412,6 +1460,14 @@ public class WeltladenTSE extends WindowContent {
             logger.error("Error: Too many records during exportTransactionData(). Maximum number of records is too small.");
             logger.error("Exception:", ex);
             return "ErrorTooManyRecords";
+        } catch (ErrorTSECommunicationError ex) {
+            logger.error("Error: TSE communication error during updateTimeWithoutChecking(), which is normal for first connection after TSE losing voltage");
+            logger.error("Exception:", ex);
+            return "ErrorTSECommunicationError";
+        } catch (ErrorNoStartup ex) {
+            logger.error("Error: TSE error 'no startup' during updateTimeWithoutChecking(), which can happen on first connection after TSE losing voltage");
+            logger.error("Exception:", ex);
+            return "ErrorNoStartup";
         } catch (SEException ex) {
             logger.fatal("SE exception during exportTransactionData()");
             logger.fatal("Exception:", ex);
@@ -1710,6 +1766,15 @@ public class WeltladenTSE extends WindowContent {
                 logger.fatal("Exception:", ex);
             } catch (ErrorSecureElementDisabled ex) {
                 message = "Secure Element disabled";
+                logger.fatal("Fatal Error: {}", message);
+                logger.fatal("Exception:", ex);
+            } catch (ErrorTSECommunicationError ex) {
+                message = "TSE communication error during sendFinishTransaction()";
+                logger.fatal("Fatal Error: {}", message);
+                logger.fatal("Exception:", ex);
+            } catch (ErrorNoStartup ex) {
+                // Transient error — TSE needs time to boot after voltage loss
+                message = "TSE error 'no startup' during sendFinishTransaction() (transient)";
                 logger.fatal("Fatal Error: {}", message);
                 logger.fatal("Exception:", ex);
             } catch (SEException ex) {
