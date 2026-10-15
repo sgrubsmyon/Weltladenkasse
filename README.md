@@ -163,6 +163,17 @@ WARNING: After adding this line to fstab, PC might only boot when TSE is plugged
 
 ### Prevent udisks2 automount
 
+Find the SD card reader's USB or PCIe vendor/product ID:
+
+```
+lsusb
+# or:
+lspci
+```
+
+Look for the SD card reader (e.g., `Bus 002 Device 002: ID 0bda:0316 Realtek Semiconductor Corp. Card Reader`).
+Note the vendor ID (0bda) and product ID (0316).
+
 Create a udev rule in `/etc/udev/rules.d/99-tse-no-automount.rules`:
 
 ```
