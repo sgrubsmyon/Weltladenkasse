@@ -1605,7 +1605,7 @@ public class WeltladenTSE extends WindowContent {
         }
     }
 
-    /** Start a new transaction on the TSE */
+/** Start a new transaction on the TSE */
     public void startTransaction() {
         String error = "";
         boolean passed = false;
@@ -1621,64 +1621,95 @@ public class WeltladenTSE extends WindowContent {
             logger.debug("!!! TSE FAILED !!! TX start time determined by Kasse: {}", tx.startTimeString);
             return;
         }
-        try {
-            /* Zitat DSFinV-K v2.2 (Anhang I, S. 115): (https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html)
-                "Für alle Vorgangstypen gilt, dass processType und processData für die StartTransaction-Operation immer leer sind."
-                "StartTransaction wird unmittelbar mit Beginn eines Vorgangs an der Kasse aufgerufen."
-                "Die UpdateTransaction-Operation wird beim processType Kassenbeleg nicht verwendet, da die processData sich erst
-                bei FinishTransaction ändern."
-            */
-            tx = new TSETransaction();
-            StartTransactionResult result = tse.startTransaction(bc.Z_KASSE_ID, null, null, null);
-            tx.txNumber = result.transactionNumber;
-            tx.startTimeUnix = result.logTime;
-            tx.startTimeString = unixTimeToCalTime(result.logTime);
-            logger.debug("Number of open transactions: {}", tse.getCurrentNumberOfTransactions());
-            logger.debug("New transaction:");
-            logger.debug("TX number: {}", tx.txNumber);
-            logger.debug("TX start time: {}", tx.startTimeString);
-            passed = true;
-        } catch (ErrorStartTransactionFailed ex) {
-            error = "Start transaction failed";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorRetrieveLogMessageFailed ex) {
-            error = "Retrieve log message failed";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorStorageFailure ex) {
-            error = "Storage failure";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorSeApiNotInitialized ex) {
-            error = "SE API not initialized";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorTimeNotSet ex) {
-            error = "Time not set";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorCertificateExpired ex) {
-            error = "Certificate expired";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorSecureElementDisabled ex) {
-            error = "Secure Element disabled";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorTSECommunicationError ex) {
-            error = "TSE communication error during startTransaction()";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception:", ex);
-        } catch (ErrorNoStartup ex) {
-            // Transient error — TSE needs time to boot after voltage loss
-            error = "TSE error 'no startup' during startTransaction() (transient)";
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception:", ex);
-        } catch (SEException ex) {
-            error = "Unknown error during startTransaction(): "+ex.getMessage();
-            logger.fatal("Fatal Error: {}", error);
-            logger.fatal("Exception:", ex);
+        /* ErrorNoStartup and ErrorTSECommunicationError are transient errors that
+         * occur when the TSE has just lost voltage and needs time to boot up.
+         * Retry a few times to give the TSE time to become operational again.
+         * This is the same approach used in tseStartUpWorkaroundLoop() during init. */
+        int maxRetries = 5;
+        for (int attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                /* Zitat DSFinV-K v2.2 (Anhang I, S. 115): (https://www.bzst.de/DE/Unternehmen/Aussenpruefungen/DigitaleSchnittstelleFinV/digitaleschnittstellefinv_node.html)
+                    "Für alle Vorgangstypen gilt, dass processType und processData für die StartTransaction-Operation immer leer sind."
+                    "StartTransaction wird unmittelbar mit Beginn eines Vorgangs an der Kasse aufgerufen."
+                    "Die UpdateTransaction-Operation wird beim processType Kassenbeleg nicht verwendet, da die processData sich erst
+                    bei FinishTransaction ändern."
+                */
+                tx = new TSETransaction();
+                StartTransactionResult result = tse.startTransaction(bc.Z_KASSE_ID, null, null, null);
+                tx.txNumber = result.transactionNumber;
+                tx.startTimeUnix = result.logTime;
+                tx.startTimeString = unixTimeToCalTime(result.logTime);
+                logger.debug("Number of open transactions: {}", tse.getCurrentNumberOfTransactions());
+                logger.debug("New transaction:");
+                logger.debug("TX number: {}", tx.txNumber);
+                logger.debug("TX start time: {}", tx.startTimeString);
+                passed = true;
+                break;
+            } catch (ErrorStartTransactionFailed ex) {
+                error = "Start transaction failed";
+                logger.fatal("Fatal Error: {}", error);
+                logger.fatal("Exception:", ex);
+                break; // do not retry permanent failures
+            } catch (ErrorRetrieveLogMessageFailed ex) {
+                error = "Retrieve log message failed";
+                logger.fatal("Fatal Error: {}", error);
+                logger.fatal("Exception:", ex);
+                break;
+            } catch (ErrorStorageFailure ex) {
+                error = "Storage failure";
+                logger.fatal("Fatal Error: {}", error);
+                logger.fatal("Exception:", ex);
+                break;
+            } catch (ErrorSeApiNotInitialized ex) {
+                error = "SE API not initialized";
+                logger.fatal("Fatal Error: {}", error);
+                logger.fatal("Exception:", ex);
+                break;
+            } catch (ErrorTimeNotSet ex) {
+                error = "Time not set";
+                logger.fatal("Fatal Error: {}", error);
+                logger.fatal("Exception:", ex);
+                break;
+            } catch (ErrorCertificateExpired ex) {
+                error = "Certificate expired";
+                logger.fatal("Fatal Error: {}", error);
+                logger.fatal("Exception:", ex);
+                break;
+            } catch (ErrorSecureElementDisabled ex) {
+                error = "Secure element disabled";
+                logger.fatal("Fatal Error: {}", error);
+                logger.fatal("Exception:", ex);
+                break;
+            } catch (ErrorNoStartup ex) {
+                // TSE is still booting — retry
+                logger.debug("TSE not ready yet, retrying startTransaction() (attempt {} of {})", attempt + 1, maxRetries);
+                if (attempt < maxRetries - 1) {
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException ie) {
+                        logger.warn("Retry interrupted while waiting for TSE boot");
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            } catch (ErrorTSECommunicationError ex) {
+                // TSE communication error — may be transient during boot, retry
+                logger.debug("TSE communication error, retrying startTransaction() (attempt {} of {})", attempt + 1, maxRetries);
+                if (attempt < maxRetries - 1) {
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException ie) {
+                        logger.warn("Retry interrupted while waiting for TSE boot");
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            } catch (SEException ex) {
+                error = "Unknown error during startTransaction(): "+ex.getMessage();
+                logger.fatal("Fatal Error: {}", error);
+                logger.fatal("Exception:", ex);
+                break; // do not retry unknown errors
+            }
         }
         if (!passed) {
             status = TSEStatus.failed;
