@@ -10,15 +10,18 @@
 | v2.0.4  | 2092       | 2443       | 02.04.2023                         |
 | v2.0.5  | 2444       | 2962       | 22.06.2024                         |
 | v2.0.6  | 2963       | 3117       | 29.03.2026                         |
-| v2.0.7  | 3118       |            | 03.10.2026                         |
-| v2.0.8  |            |            | 15.10.2026                         |
+| v2.0.7  | 3118       | 3126       | 03.10.2026                         |
+| v2.0.8  | 3127       |            | 15.10.2026                         |
 +-----------------------------------+------------------------------------+
 
 ## v2.0.8
 
-...
-To be added
-...
+  * Doppelte Logeinträge behoben
+  * Logs werden automatisch in Nextcloud abgelegt und synchronisiert
+  * TSE-Fehler "ErrorNoStartup" wird korrekt abgefangen, es gibt eine Schleife, die mehrfach versucht, sich mit der TSE zu verbinden, falls diese etwas mehr Zeit benötigt zum Starten
+  * Die Schriftgröße wurde in der gesamten App vergrößert, um an den neuen Monitor mit FullHD-Auflösung anzupassen, damit alles lesbar ist, auch für eingeschränkt Sehende
+  * Letzte Rechnung mit v2.0.7: Nr. 60415 am 14.10.2026 (bis `Z_NR`/`abrechnung_tag.id` 3117)
+  * Erste Rechnung mit v2.0.8: Nr. 60416 am 15.10.2026 (ab `Z_NR`/`abrechnung_tag.id` 3118)
 
 ## v2.0.7
 
